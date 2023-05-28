@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -8,7 +7,6 @@
         <LangVersion>latest</LangVersion>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
-
     <ItemGroup>
         <PackageReference Include="Prism.Avalonia" Version="8.1.97.4-preview.11.5" />
         <PackageReference Include="Prism.DryIoc.Avalonia" Version="8.1.97.4-preview.11.5" />

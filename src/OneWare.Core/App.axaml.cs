@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Core.Data;
@@ -42,12 +43,8 @@ namespace OneWare.Core
 {
     public class App : PrismApplication
     {
-        public static bool LaunchUpdaterOnExit { get; set; }
-
-        public static readonly ISettingsService SettingsService = new SettingsService();
         public override void Initialize()
         {
-            new ThemeManager(SettingsService).Initialize(this);
             AvaloniaXamlLoader.Load(this);
             base.Initialize();
         }
@@ -147,10 +144,7 @@ namespace OneWare.Core
 
         protected override IModuleCatalog CreateModuleCatalog()
         {
-            return new DirectoryModuleCatalog()
-            {
-                ModulePath = ContainerLocator.Current.Resolve<IPaths>().ModulesPath
-            };
+            return new AggregateModuleCatalog();
         }
         
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -295,6 +289,8 @@ namespace OneWare.Core
                     
                     await LoadContentAsync();
 
+                    await Task.Delay(1000);
+                    
                     splash?.Close();
                 }
                 

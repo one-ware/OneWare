@@ -1,7 +1,5 @@
 ﻿<Style xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:data="clr-namespace:OneWare.Core.Data;assembly=OneWare.Core"
-        xmlns:dock="clr-namespace:OneWare.Core.Dock;assembly=OneWare.Core"
         xmlns:sys="clr-namespace:System;assembly=netstandard">
     
     <Design.PreviewWith>

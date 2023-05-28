@@ -18,11 +18,11 @@ internal abstract class Program
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
-        App.SettingsService.Register("LastVersion", Global.VersionCode);
-        App.SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        App.SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog", "Use Managed File Dialog",
+        DemoApp.SettingsService.Register("LastVersion", Global.VersionCode);
+        DemoApp.SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
+        DemoApp.SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog", "Use Managed File Dialog",
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-        App.SettingsService.Load(DemoApp.Paths.SettingsPath);
+        DemoApp.SettingsService.Load(DemoApp.Paths.SettingsPath);
 
         var app = AppBuilder.Configure<DemoApp>().UsePlatformDetect()
             .With(new X11PlatformOptions
@@ -41,7 +41,7 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (App.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog")) app.UseManagedSystemDialogs();
+        if (DemoApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog")) app.UseManagedSystemDialogs();
 
         return app;
     }

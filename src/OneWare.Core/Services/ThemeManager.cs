@@ -27,19 +27,18 @@ namespace OneWare.Core.Services
     public class ThemeManager : ObservableObject
     {
         private readonly ISettingsService _settingsService;
-        
+
         private readonly Uri _baseUri = new("avares://OneWare.Core/Styles/Themes");
 
         private readonly Styles _base;
-        
+
         private string? _appliedTheme;
         private List<Theme> Themes { get; }
 
-        public ThemeManager(ISettingsService settingsService)
+        public ThemeManager(ISettingsService settingsService, string? styleOverridePath)
         {
             _settingsService = settingsService;
-            
-                        
+
             _base = new Styles()
             {
                 new StyleInclude(_baseUri)
@@ -47,6 +46,14 @@ namespace OneWare.Core.Services
                     Source = new Uri("avares://OneWare.Core/Styles/Themes/BaseTheme.axaml")
                 }
             };
+
+            if (styleOverridePath != null)
+            {
+                _base.Add(new StyleInclude(_baseUri)
+                {
+                    Source = new Uri(styleOverridePath)
+                });
+            }
             
             Themes = new List<Theme>
             {
@@ -85,6 +92,7 @@ namespace OneWare.Core.Services
             application.Styles.Insert(0, _base);
             application.Styles.Insert(1, theme.Style);
             application.Styles.Insert(2, (IStyle)AvaloniaXamlLoader.Load(new Uri("avares://OneWare.Core/Styles/Icons.axaml")));
+            
             _appliedTheme = themeName;
 
             _settingsService.GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
