@@ -36,7 +36,7 @@
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Line Ending" />
                     <ComboBox ItemsSource="{Binding AvailableLineEndings}"
-                              SelectedItem="{Binding SelectedLineEncoding}"/>
+                              SelectedItem="{Binding SelectedLineEnding}"/>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Encoding" />
                     <ComboBox ItemsSource="{Binding AvailableEncodings}"  

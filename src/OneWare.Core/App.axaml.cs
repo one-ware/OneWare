@@ -110,8 +110,7 @@ namespace OneWare.Core
             settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover", "Enable Hover Information", "Enable Hover Information", true);
             settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion", "Enable Code Suggestions", "Enable completion suggestions", true);
             settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting", "Enable Auto Formatting", "Enable automatic formatting", true);
-
-            //Error List
+            
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
@@ -248,6 +247,8 @@ namespace OneWare.Core
 
         public override void OnFrameworkInitializationCompleted()
         {
+            Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
+            
             TypeAssistanceIconStore.Instance.Load();
             
             Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
@@ -382,6 +383,8 @@ namespace OneWare.Core
             //Save active layout
             Container.Resolve<IDockService>().SaveLayout();
             
+            //Save settings
+            Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
 
             Environment.Exit(0);
         }
