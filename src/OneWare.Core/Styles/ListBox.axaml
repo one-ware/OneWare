@@ -1,0 +1,26 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <Border Padding="10" Background="Gray">
+            <ListBox Height="400" Width="400">
+                <ListBoxItem Content="Test" />
+                <ListBoxItem Content="Test2" />
+                <ListBoxItem Content="Test3" />
+            </ListBox>
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+    </Style>
+
+    <Style Selector="ListBox.InvisibleSelection ListBoxItem:selected > ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBox.InvisibleSelection ListBoxItem:pointerover > ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+</Styles>

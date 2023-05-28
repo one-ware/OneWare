@@ -1,0 +1,6 @@
+[submodule "src/AvaloniaEdit"]
+	path = src/AvaloniaEdit
+	url = https://github.com/HendrikMennen/AvaloniaEdit
+[submodule "src/AvalonStudio.TerminalEmulator"]
+	path = src/AvalonStudio.TerminalEmulator
+	url = https://github.com/HendrikMennen/AvalonStudio.TerminalEmulator

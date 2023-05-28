@@ -1,0 +1,45 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        <Style Selector="ScrollBar:vertical">
+                <Setter Property="Cursor" Value="Arrow" />
+                <Setter Property="Template">
+                        <ControlTemplate>
+                                <Border Background="Transparent"
+                                        UseLayoutRounding="False">
+                                        <Grid RowDefinitions="*">
+                                                <Track 
+                                                        Minimum="{TemplateBinding Minimum}"
+                                                        Maximum="{TemplateBinding Maximum}"
+                                                        Value="{TemplateBinding Value, Mode=TwoWay}"
+                                                        ViewportSize="{TemplateBinding ViewportSize}"
+                                                        Orientation="{TemplateBinding Orientation}"
+                                                        IsDirectionReversed="True">
+                                                        <Thumb Name="thumb" />
+                                                </Track>
+                                        </Grid>
+                                </Border>
+                        </ControlTemplate>
+                </Setter>
+        </Style>
+        <Style Selector="ScrollBar:horizontal">
+                <Setter Property="Cursor" Value="Arrow" />
+                <Setter Property="Template">
+                        <ControlTemplate>
+                                <Border Background="Transparent"
+                                        UseLayoutRounding="False">
+                                        <Grid RowDefinitions="*">
+                                                <Track 
+                                                        Minimum="{TemplateBinding Minimum}"
+                                                        Maximum="{TemplateBinding Maximum}"
+                                                        Value="{TemplateBinding Value, Mode=TwoWay}"
+                                                        ViewportSize="{TemplateBinding ViewportSize}"
+                                                        Orientation="{TemplateBinding Orientation}"
+                                                        IsDirectionReversed="False">
+                                                        <Thumb Name="thumb" />
+                                                </Track>
+                                        </Grid>
+                                </Border>
+                        </ControlTemplate>
+                </Setter>
+        </Style>
+</Styles>

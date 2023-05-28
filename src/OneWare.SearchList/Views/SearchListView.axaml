@@ -1,0 +1,153 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:viewModels="clr-namespace:OneWare.SearchList.ViewModels"
+             xmlns:models="clr-namespace:OneWare.SearchList.Models"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="250"
+             x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+    <UserControl.Styles>
+        <Style Selector="Border.TopGrid">
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="BorderThickness" Value="1,0,0,1" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style Selector="Border.ChildBorder">
+            <Setter Property="Padding" Value="5,0,1,0" />
+            <Setter Property="Margin" Value="0,2,0,2" />
+        </Style>
+        <Style Selector="TextBlock.ChildText">
+            <Setter Property="Margin" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+
+        <Style Selector="ToolTip">
+            <Setter Property="MaxWidth" Value="300" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_ContentPresenter"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+    </UserControl.Styles>
+
+
+    <Grid RowDefinitions="26,*">
+
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
+            <DockPanel Name="InformationPanel">
+                <ComboBox
+                    SelectedIndex="{Binding SearchListFilterMode}"
+                    Width="140">
+                    <ComboBoxItem>All open projects</ComboBoxItem>
+                    <ComboBoxItem>Current project</ComboBoxItem>
+                    <ComboBoxItem>Current file</ComboBoxItem>
+                </ComboBox>
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+
+                <ToggleButton Background="Transparent" IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
+                    <Image Source="{DynamicResource VsImageLib.CaseSensitive16X}" />
+                </ToggleButton>
+                <ToggleButton Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding WholeWord}"
+                              ToolTip.Tip="Match whole words">
+                    <Image Source="{DynamicResource VsCodeLight.Whole-Word}" />
+                </ToggleButton>
+                <ToggleButton Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding UseRegex}"
+                              ToolTip.Tip="Use Regex">
+                    <Image Source="{DynamicResource VsCodeLight.Regex}" />
+                </ToggleButton>
+
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+                <Border DockPanel.Dock="Left" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <views:SearchBox SearchText="{Binding LastSearchString}" Name="Search" BorderThickness="0"
+                                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                        HorizontalAlignment="Stretch" />
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <DataGrid Padding="2, 0, 2, 2" BorderThickness="0" VerticalGridLinesBrush="Transparent"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  Grid.Row="1" Background="Transparent"
+                  RowBackground="Transparent" IsReadOnly="True"
+                  Name="SearchList" ItemsSource="{Binding Items}"
+                  SelectedItem="{Binding SelectedItem}"
+                  CanUserResizeColumns="True" CanUserSortColumns="True">
+            <DataGrid.Columns>
+
+                <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:SearchResultModel">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Margin="4, 1, 1, 1" Text="{Binding DescriptionLeft}"
+                                           ToolTip.Tip="{Binding Description}" Padding="0" Height="18" />
+                                <TextBlock Background="#774287f5" Text="{Binding DescriptionMid}" TextDecorations=""
+                                           ToolTip.Tip="{Binding Description}" Padding="0" Height="18" />
+                                <TextBlock Text="{Binding DescriptionRight}" ToolTip.Tip="{Binding Description}"
+                                           Padding="0" Height="18" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Margin="4, 2, 1, 2" Text="Code" Height="19" />
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="Project.Header">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:SearchResultModel">
+                            <TextBlock Margin="4, 1, 1, 1" Text="{Binding Project.Header}" Height="18" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Margin="4, 2, 1, 2" Text="Project" Height="19" />
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="File.Header">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:SearchResultModel">
+                            <TextBlock Margin="4, 1, 1, 1" Text="{Binding File.Header}" Height="18" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Margin="4, 2, 1, 2" Text="File" Height="19" />
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn CanUserResize="True" Width="40" SortMemberPath="Line">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:SearchResultModel">
+                            <TextBlock Margin="4, 1, 1, 1" Text="{Binding LineString}" Height="18" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Margin="4, 2, 1, 2" Text="Line" Height="19" />
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Right"
+                    VerticalAlignment="Top">
+            <views:Spinner Height="15" Width="15" Margin="0, 5, 45, 0"
+                              IsVisible="{Binding IsLoading}"
+                              Foreground="{DynamicResource DarkBlue}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

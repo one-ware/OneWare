@@ -1,0 +1,186 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cc="clr-namespace:AvaloniaEdit.CodeCompletion;assembly=AvaloniaEdit"
+        xmlns:search="clr-namespace:AvaloniaEdit.Search;assembly=AvaloniaEdit"
+        xmlns:editing="clr-namespace:AvaloniaEdit.Editing;assembly=AvaloniaEdit"
+        xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+        xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+        xmlns:editorEx="clr-namespace:OneWare.Core.EditorExtensions"
+        xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit">
+    
+    <Style Selector="avaloniaEdit|TextEditor">
+        <Setter Property="folding:FoldingMargin.FoldingMarkerBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
+        <Setter Property="folding:FoldingMargin.FoldingMarkerBackgroundBrush" Value="{DynamicResource ThemeControlLowBrush}"/>
+        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBrush" Value="{DynamicResource ThemeForegroundBrush}"/>
+        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBackgroundBrush" Value="{DynamicResource ThemeControlLowBrush}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}"/>
+        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}"/>
+    </Style>
+    
+    <!--Code completion-->
+    <Style Selector="cc|CompletionList">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="1" Padding="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" Margin="0" Padding="0"
+                                      Name="PART_ListBox" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0">
+                    <cc:CompletionListBox.ItemTemplate>
+                        <DataTemplate DataType="cc:ICompletionData">
+                            <Border>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Image VerticalAlignment="Center" Source="{Binding Image}"
+                                           Width="{Binding #CompletionName.Bounds.Height}"
+                                           Height="{Binding #CompletionName.Bounds.Height}" />
+                                    <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
+                                               Margin="8,0,0,0" Text="{Binding Content}"
+                                               Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </cc:CompletionListBox.ItemTemplate>
+                </cc:CompletionListBox>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="cc|CompletionList > ListBox">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+
+    <Style Selector="cc|CompletionList > ListBox > ListBoxItem">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="5, 3, 3, 3" />
+    </Style>
+
+    <Style Selector="ContentControl.ToolTip">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="MaxHeight" Value="350"/>
+        <Setter Property="MaxWidth" Value="700" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Padding="1" CornerRadius="1" BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            Background="{DynamicResource ThemeBackgroundBrush}">
+                        <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
+                            <md:MarkdownScrollViewer.Styles>
+                                <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
+                                
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
+                                    <Style.Setters>
+                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
+                                    </Style.Setters>
+                                </Style>
+                            </md:MarkdownScrollViewer.Styles>
+                        </md:MarkdownScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style Selector="search|SearchPanel">
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="editing|TextArea">
+        <Setter Property="SelectionBrush" Value="{DynamicResource SelectionBrush}" />
+    </Style>
+
+    <Style Selector="cc|OverloadViewer">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="Padding"
+                Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}">
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,*">
+
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,7,0"
+                                    Orientation="Horizontal"
+                                    IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
+                            <Button Name="PART_UP">
+                                <Path Stroke="{TemplateBinding Foreground}"
+                                      Fill="{TemplateBinding Foreground}"
+                                      Data="M 0,0.866 L 1,0.866 L 0.5,0 Z"
+                                      Stretch="UniformToFill" />
+                            </Button>
+                            <TextBlock VerticalAlignment="Center" Margin="2,0,2,0"
+                                       Text="{Binding Provider.CurrentIndexText, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Button Name="PART_DOWN">
+                                <Path Stroke="{TemplateBinding Foreground}"
+                                      Fill="{TemplateBinding Foreground}"
+                                      Data="M 0,0 L 1,0 L 0.5,0.866 Z"
+                                      Stretch="UniformToFill" />
+                            </Button>
+                        </StackPanel>
+                        <md:MarkdownScrollViewer Classes="ToolTip" Margin="0" Grid.Row="0" Grid.Column="1"
+                                                 Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
+                            <md:MarkdownScrollViewer.Styles>
+                                <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
+                                    <Style.Setters>
+                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
+                                    </Style.Setters>
+                                </Style>
+                            </md:MarkdownScrollViewer.Styles>
+                        </md:MarkdownScrollViewer>
+
+                        <md:MarkdownScrollViewer Classes="ToolTip" Margin="0" Grid.Row="1" Grid.Column="1"
+                                                 Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
+                            <md:MarkdownScrollViewer.Styles>
+                                <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
+                                    <Style.Setters>
+                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
+                                    </Style.Setters>
+                                </Style>
+                            </md:MarkdownScrollViewer.Styles>
+                        </md:MarkdownScrollViewer>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="editorEx|TextInputControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <TextBox Name="inputBox" IsReadOnly="False"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+</Styles>

@@ -1,0 +1,186 @@
+﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                       xmlns:data="clr-namespace:OneWare.Core.Data"
+                       xmlns:controls="clr-namespace:OneWare.Core.Views.Controls;assembly=OneWare.Core"
+                       mc:Ignorable="d" d:DesignWidth="1366" d:DesignHeight="768"
+                       x:Class="OneWare.Core.Views.Windows.MainWindow"
+                       Padding="5 0 5 5"
+                       Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
+                       CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                       Width="1366"
+                       Height="768"
+                       Name="MainWindowView"
+                       ExtendClientAreaToDecorationsHint="True"
+                       Title="{Binding Title}"
+                       WindowStartupLocation="CenterScreen"
+                       xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                       xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+                       xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
+                       xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"
+                       xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                       x:DataType="windows:MainWindowViewModel">
+    
+    <Window.DataTemplates>
+        <DataTemplate DataType="controls1:CustomNotificationViewModel">
+            <controls:CustomNotificationView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
+
+        <!--Icon Tray-->
+        <DockPanel Margin="3 0" Grid.Row="0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
+
+            <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal" HorizontalAlignment="Left">
+
+                <Button ToolTip.Tip="Undo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Undo}">
+                    <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
+                </Button>
+                <Button ToolTip.Tip="Redo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Redo}">
+                    <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
+                </Button>
+                
+                <Border Classes="RoundToolBar" Margin="5 0 0 0"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+
+                    <StackPanel Orientation="Horizontal">
+                        
+                        <ItemsControl ItemsSource="{Binding RoundToolBarIcons}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            
+            <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
+                <Button ToolTip.Tip="Settings" Command="{Binding OpenSettings}">
+                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                </Button>
+            </StackPanel>
+        </DockPanel>
+
+        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding DockService.Layout}" UseLayoutRounding="False" />
+    </Grid>
+
+    <shared:AdvancedWindow.TitleBarContent>
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <Image IsHitTestVisible="False" Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="20" Width="20"
+                   IsVisible="{Binding $parent[Window].IsExtendedIntoWindowDecorations}" />
+            
+            <Menu Height="30" Name="MainMenu" Classes="BindMainMenu" ItemsSource="{Binding MainMenu}">
+                <Menu.Styles>
+                    <Style Selector="Menu > MenuItem AccessText">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                </Menu.Styles>
+            </Menu>
+        </StackPanel>
+    </shared:AdvancedWindow.TitleBarContent>
+
+    <shared:AdvancedWindow.BottomContent>
+        <Border Padding="2" CornerRadius="{x:Static data:Global.WindowsCornerRadiusBottom}"
+                Background="{StaticResource ThemeAccentBrush}">
+            <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
+                <!--Left elements-->
+                <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
+                                  IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
+
+                <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}" Foreground="White" />
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
+                            VerticalAlignment="Center" Margin="10 0">
+                    <StackPanel.Styles>
+                        <Style Selector=":is(Control)">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </StackPanel.Styles>
+
+
+
+                    <!--
+                    <Button Cursor="Hand"
+                            IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Command="{Binding Source={x:Static dock:MainDock.SourceControl}, Path=SyncAsync}"
+                            ToolTip.Tip="Synchronize Changes">
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                            <controls:Spinner Foreground="White" Height="13"
+                                              CustomIcon="{DynamicResource VsCode.SyncWhite}"
+                                              IsIntermediate="True"
+                                              IsAnimationRunning="{Binding GitIconAnimation}" />
+
+                            <TextBlock Text="{Binding PullCommits}" Foreground="White" />
+                            <Image Height="13"
+                                   Source="{DynamicResource Entypo+.ArrowLongDownWhite}" />
+
+                            <TextBlock
+                                Text="{Binding PushCommits}" Foreground="White" />
+                            <Image Height="13"
+                                   Source="{DynamicResource Entypo+.ArrowLongUpWhite}" />
+                        </StackPanel>
+                    </Button>
+                    -->
+
+                    <Menu Classes="BindMenu">
+                        <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
+                            <MenuItem.Header>
+                                <StackPanel Cursor="Hand">
+                                    <TextBlock x:CompileBindings="False" Text="{Binding DockService.CurrentDocument.Extension}"
+                                               Foreground="White" />
+                                </StackPanel>
+                            </MenuItem.Header>
+                        </MenuItem>
+                    </Menu>
+
+               
+
+                    <!--
+                    <Menu IsVisible="{Binding States.ActiveArduinoProject^}">
+                        <MenuItem>
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal" Cursor="Hand">
+                                    <TextBlock
+                                        Text="{Binding SelectedFqbnName, Source={x:Static data:Global.Options}}"
+                                        Foreground="White" />
+                                </StackPanel>
+                            </MenuItem.Header>
+                            <MenuItem.Items>
+                                <MenuItem Command="{Binding ShowWindow}" IsEnabled="{Binding States.ArduinoCliValid^}"
+                                          CommandParameter="{x:Type windows:ArduinoBoardManagerWindow}">
+                                    <MenuItem.Header>Arduino Board Manager</MenuItem.Header>
+                                    <MenuItem.Icon>
+                                        <Image Source="{DynamicResource NiosIcon}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuItem.Items>
+                        </MenuItem>
+                    </Menu>
+                    -->
+
+                   
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+
+                        <TextBlock Foreground="White"
+                                   Text="Col " />
+
+                        <TextBlock Foreground="White"
+                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}" />
+
+                        <TextBlock Foreground="White" Margin="10 0 0 0"
+                                   Text="Ln " />
+
+                        <TextBlock Foreground="White"
+                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </shared:AdvancedWindow.BottomContent>
+
+
+</shared:AdvancedWindow>

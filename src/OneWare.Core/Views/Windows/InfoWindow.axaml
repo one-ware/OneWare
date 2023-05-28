@@ -1,0 +1,44 @@
+﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        xmlns:controls="clr-namespace:OneWare.Core.Views.Controls"
+                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
+                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                        xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
+                        xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
+                        x:Class="OneWare.Core.Views.Windows.InfoWindow"
+                        Width="400" Height="400" Padding="4"
+                        Title="About OneWare.Core"
+                        Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
+                        CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
+                        WindowStartupLocation="CenterScreen"
+                        Background="{DynamicResource ThemeBackgroundBrushOp}"
+                        TransparencyLevelHint="AcrylicBlur"
+                        ExtendClientAreaToDecorationsHint="True"
+                        x:DataType="windows1:InfoWindowViewModel">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="70" Width="70" />
+            <TextBlock Text="{Binding AppName}" FontSize="30" Margin="10, 20, 10, 20" />
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfo}" />
+
+        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding Platform}" />
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+            <TextBlock Text="Home Page: " />
+            <controls:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
+        </StackPanel>
+
+        <StackPanel Margin="4" Classes="WindowButtons" DockPanel.Dock="Bottom" HorizontalAlignment="Right">
+            <Button Command="{Binding Close}" CommandParameter="{Binding $parent[Window]}" 
+                    HorizontalAlignment="Right" Content="Close" />
+        </StackPanel>
+        
+        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" />
+    </DockPanel>
+</shared:AdvancedWindow>

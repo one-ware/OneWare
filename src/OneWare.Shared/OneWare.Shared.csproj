@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\Base.props" />
+    <Import Project="..\..\build\OneWare.Module.props" />
+    
+    <ItemGroup>
+      <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
+    </ItemGroup>
+    
+</Project>

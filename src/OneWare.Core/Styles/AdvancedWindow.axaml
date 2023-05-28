@@ -1,0 +1,70 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:layout="clr-namespace:Avalonia.Layout;assembly=Avalonia.Base"
+        xmlns:data="clr-namespace:OneWare.Core.Data"
+        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared">
+
+    <Style Selector="shared|AdvancedWindow">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+        <Setter Property="ExtendClientAreaToDecorationsHint" Value="True"/>
+        <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30"/>
+        <Setter Property="Padding" Value="{TemplateBinding Padding}"/>
+        <Setter Property="CornerRadius" Value="{x:Static data:Global.WindowsCornerRadius}"/>
+        <Setter Property="TransparencyLevelHint" Value="Transparent"/>
+        <Setter Property="UseLayoutRounding" Value="False"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="PART_TransparencyFallback"
+                            IsHitTestVisible="False" />
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="{x:Static data:Global.WindowsOnlyBorder}"
+                            IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
+                    <Panel Margin="{TemplateBinding WindowDecorationMargin}"
+                           Background="Transparent" />
+                    <VisualLayerManager>
+                        <VisualLayerManager.ChromeOverlayLayer>
+                            <TitleBar />
+                        </VisualLayerManager.ChromeOverlayLayer>
+                        <Panel Margin="{TemplateBinding OffScreenMargin}">
+                            <Panel Margin="{TemplateBinding WindowDecorationMargin}">
+                                <Panel Margin="{x:Static data:Global.WindowsOnlyBorder}">
+                                    <Grid RowDefinitions="Auto,*, Auto">
+                                        <Border IsVisible="{TemplateBinding IsExtendedIntoWindowDecorations, Converter={x:Static BoolConverters.Not}}" 
+                                                Height="{Binding #TitleBarContent.Bounds.Height}" Background="Transparent" Width="1"/>
+                                        <ContentPresenter Grid.Row="1"
+                                                          Margin="{TemplateBinding Padding}"
+                                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                          Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}" />
+                                        <ContentPresenter Grid.Row="2"
+                                                          Content="{TemplateBinding BottomContent}"/>
+                                    </Grid>
+                                </Panel>
+                            </Panel>
+                            <Panel Name="TitlePanel" IsVisible="{TemplateBinding IsExtendedIntoWindowDecorations}" VerticalAlignment="Top">
+                                <StackPanel Name="TitleBar" Margin="8 0" Orientation="Horizontal" HorizontalAlignment="{TemplateBinding HorizontalAlignmentTitle}" Spacing="5" Height="{TemplateBinding ExtendClientAreaTitleBarHeightHint}">
+                                    <StackPanel IsHitTestVisible="False" IsVisible="{TemplateBinding ShowTitle}" Orientation="Horizontal" Spacing="8">
+                                        <Image Source="{TemplateBinding CustomIcon}" Height="16" Width="16" VerticalAlignment="Center">
+                                            <Image.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="$parent[shared:AdvancedWindow].HorizontalAlignmentTitle" Converter="{x:Static converters:SharedConverters.ComparisonConverter}" ConverterParameter="{x:Static layout:HorizontalAlignment.Left}"/>
+                                                    <Binding Path="$parent[shared:AdvancedWindow].CustomIcon" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                                                </MultiBinding>
+                                            </Image.IsVisible>
+                                        </Image>
+                                        <TextBlock Height="16" Text="{TemplateBinding Title}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Panel>
+                            <ContentControl Margin="8 0" Name="TitleBarContent" Content="{TemplateBinding TitleBarContent}" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                        </Panel>
+                    </VisualLayerManager>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

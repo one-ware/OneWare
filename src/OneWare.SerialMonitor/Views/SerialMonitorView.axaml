@@ -1,0 +1,117 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="250"
+             xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
+             xmlns:viewModels="clr-namespace:OneWare.SerialMonitor.ViewModels"
+             x:Class="OneWare.SerialMonitor.Views.SerialMonitorView"
+             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:SerialMonitorBaseViewModel">
+    
+    <Grid RowDefinitions="*, 27">
+        <avaloniaEdit:TextEditor Name="Output"
+                                 DockPanel.Dock="Left"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 VerticalScrollBarVisibility="Visible"
+                                 ShowLineNumbers="False"
+                                 VerticalAlignment="Stretch"
+                                 Margin="0"
+                                 HorizontalAlignment="Stretch"
+                                 IsReadOnly="True"
+                                 Foreground="{DynamicResource ThemeForegroundBrush}"
+                                 FontWeight="Regular"
+                                 Document="{Binding OutputDocument}"
+                                 FontFamily="{DynamicResource EditorFont}"
+                                 Padding="5" />
+
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            
+            <DockPanel >
+                <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+                    <TextBlock Text="AutoScroll" />
+                    <CheckBox IsChecked="{Binding AutoScroll}" />
+                    <Border Classes="SplitterBorder" />
+                    <TextBlock Text="Line Ending" />
+                    <ComboBox ItemsSource="{Binding AvailableLineEndings}"
+                              SelectedItem="{Binding SelectedLineEncoding}"/>
+                    <Border Classes="SplitterBorder" />
+                    <TextBlock Text="Encoding" />
+                    <ComboBox ItemsSource="{Binding AvailableEncodings}"  
+                              SelectedItem="{Binding SelectedLineEncoding}"/>
+                    <Border Classes="SplitterBorder" />
+                </StackPanel>
+
+                <StackPanel Classes="HToolBar" DockPanel.Dock="Right">
+                    <Button Command="{Binding SendText}"
+                            CommandParameter="{Binding #CommandBox.Text}">
+                        <Image Source="{DynamicResource BoxIcons.SolidSend}" />
+                    </Button>
+                    <Border Classes="SplitterBorder" />
+                    <TextBlock Name="BaudLable" Text="Baud Rate:" />
+                    <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
+                              SelectedItem="{Binding SelectedBaudRate}"/>
+                    <Border Classes="SplitterBorder" />
+
+                    <TextBlock Text="Serial Port:" />
+                    <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
+                              ItemsSource="{Binding SerialPorts}"
+                              SelectedItem="{Binding SelectedSerialPort}" />
+                    <Button IsEnabled="{Binding AllowConnecting}"
+                            Command="{Binding RefreshSerialPorts}"
+                            ToolTip.Tip="Refresh serial ports">
+                        <Image Source="{DynamicResource Modern.Refresh}" Width="15"/>
+                    </Button>
+                    <Button Command="{Binding Disconnect}"
+                            IsEnabled="{Binding IsConnected}" ToolTip.Tip="Disconnect">
+                        <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="15"/>
+                    </Button>
+                    <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
+                        <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" Width="15" />
+                    </Button>
+                    <Border Classes="SplitterBorder" />
+                    <Menu DockPanel.Dock="Right">
+                        <Menu.Items>
+                            <MenuItem Width="22" Height="22">
+                                <MenuItem.Header>
+                                    <Image Source="{DynamicResource BoxIcons.RegularMenu}" Width="14" />
+                                </MenuItem.Header>
+                                <MenuItem.Items>
+                                    <!--
+                                    <MenuItem Header="LogicAnalyzer" Command="{Binding LogicAnalyzer}">
+                                        <MenuItem.Icon>
+                                            <Image Source="{DynamicResource Material.Pulse}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    
+                                    <MenuItem Header="Plot" Command="{Binding PlotWindow}">
+                                        <MenuItem.Icon>
+                                            <Image Source="{DynamicResource Plot}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    
+                                    <MenuItem Header="ImageViewer" Command="{Binding ImageViewer}">
+                                        <MenuItem.Icon>
+                                            <Image Source="{DynamicResource BoxIcons.RegularImage}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    -->
+                                </MenuItem.Items>
+                            </MenuItem>
+                        </Menu.Items>
+                    </Menu>
+                </StackPanel>
+                
+                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="22"
+                         HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
+                    <i:Interaction.Behaviors>
+                        <behaviours:CommandOnEnterBehavior Command="{Binding SendText}"
+                                                          CommandParameter="{Binding #CommandBox.Text}" />
+                    </i:Interaction.Behaviors>
+                </TextBox>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

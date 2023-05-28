@@ -1,0 +1,36 @@
+<UserControl x:Class="OneWare.Terminal.Views.TerminalView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vt100="clr-namespace:VtNetCore.Avalonia;assembly=VtNetCore.Avalonia"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Terminal.ViewModels"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200" x:DataType="viewModels:TerminalViewModel">
+    
+    <UserControl.Styles>
+        <StyleInclude Source="avares://VtNetCore.Avalonia/VirtualTerminalControl.xaml" />
+        <Style Selector="vt100|VirtualTerminalControl">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel Background="{DynamicResource ThemeControlLowBrush}">
+        <TextBlock Text="Terminal is not connected." IsVisible="{Binding !TerminalVisible}" VerticalAlignment="Center"
+                   HorizontalAlignment="Center" />
+        <vt100:VirtualTerminalControl Connection="{Binding Connection}"
+                                      Terminal="{Binding Terminal}" TextPadding="5"
+                                      FontFamily="{DynamicResource EditorFont}"
+                                      IsVisible="{Binding TerminalVisible}" />
+        <Border Margin="0, 10, 22, 0" Height="30" VerticalAlignment="Top">
+            <views:Spinner HorizontalAlignment="Right"
+                              IsVisible="{Binding TerminalLoading}"
+                              Foreground="{DynamicResource DarkBlue}">
+                <Image Source="{DynamicResource Material.SettingsOutline}"></Image>
+            </views:Spinner>
+        </Border>
+    </Panel>
+
+</UserControl>

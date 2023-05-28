@@ -1,0 +1,58 @@
+﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        mc:Ignorable="d"
+                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
+                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                        xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
+                        xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        x:Class="OneWare.Core.Views.Windows.WaitCalculatorWindow"
+                        Width="300" SizeToContent="Height" x:DataType="windows1:WaitCalculatorWindowViewModel"
+                        Title="Wait Calculator" Padding="5"
+                        Icon="avares://OneWare.Core/Assets/Images/Icons/WaitCalc_White.png"
+                        CustomIcon="{DynamicResource WaitCalculatorIcon}"
+                        Background="{DynamicResource ThemeBackgroundBrush}"
+                        ExtendClientAreaToDecorationsHint="True"
+                        WindowStartupLocation="CenterOwner">
+
+    <Design.DataContext>
+        <windows1:WaitCalculatorWindowViewModel />
+    </Design.DataContext>
+
+    <StackPanel Orientation="Vertical" Spacing="10">
+        
+        <DockPanel>
+            <TextBlock Margin="0 0 0 2" Text="Cycle frequency of thread (frequency of CLK):" DockPanel.Dock="Top" />
+            <ComboBox Width="50" DockPanel.Dock="Right" SelectedIndex="{Binding FrequencyUnit}" BorderThickness="0, 1, 1, 1"
+                      Name="ComboBoxFrequencyUnit">
+                <ComboBoxItem>Hz</ComboBoxItem>
+                <ComboBoxItem>KHz</ComboBoxItem>
+                <ComboBoxItem>MHz</ComboBoxItem>
+                <ComboBoxItem>GHz</ComboBoxItem>
+            </ComboBox>
+            <TextBox DockPanel.Dock="Left" Padding="6, 1, 0, 0"  Height="22" Text="{Binding Frequency}" />
+        </DockPanel>
+        
+        <DockPanel>
+            <TextBlock Margin="0 0 0 2" Text="Time to wait:" DockPanel.Dock="Top" />
+            <ComboBox Width="50" DockPanel.Dock="Right" SelectedIndex="{Binding WaitUnit}" BorderThickness="0, 1, 1, 1"
+                      Name="ComboBoxWaitUnit">
+                <ComboBoxItem>ps</ComboBoxItem>
+                <ComboBoxItem>ns</ComboBoxItem>
+                <ComboBoxItem>µs</ComboBoxItem>
+                <ComboBoxItem>ms</ComboBoxItem>
+                <ComboBoxItem>s</ComboBoxItem>
+            </ComboBox>
+            <TextBox Padding="6, 1, 0, 0"  Height="22" Text="{Binding Wait, Mode=TwoWay}" />
+        </DockPanel>
+        
+        <DockPanel>
+            <TextBlock Margin="0 0 0 2" Text="Calculated Result: " DockPanel.Dock="Top" />
+
+            <TextBlock DockPanel.Dock="Right" Width="50" Text="Cycles" VerticalAlignment="Center" TextAlignment="Center" />
+            <TextBox IsReadOnly="True" Padding="6, 1, 0, 0"  Height="22" Text="{Binding Result}" />
+        </DockPanel>
+    </StackPanel>
+
+</shared:AdvancedWindow>

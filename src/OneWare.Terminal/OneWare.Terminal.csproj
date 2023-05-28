@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\Base.props" />
+    <Import Project="..\..\build\OneWare.Module.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\AvalonStudio.TerminalEmulator\src\AvalonStudio.Terminals\AvalonStudio.Terminals.csproj" />
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+    </ItemGroup>
+</Project>

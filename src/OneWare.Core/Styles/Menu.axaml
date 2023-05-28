@@ -1,0 +1,52 @@
+﻿<Styles xmlns="https://github.com/avaloniaui">
+
+    <Design.PreviewWith>
+        <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
+            <Menu Height="30" Width="100">
+                <MenuItem Header="File">
+                    <MenuItem Header="Test" />
+                    <MenuItem Header="Test" />
+                    <Separator/>
+                    <MenuItem Header="Test" />
+                </MenuItem>
+            </Menu>
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="Expander.Invisible /template/ ToggleButton#PART_toggle">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                  Background="Transparent"
+                                  Content="{TemplateBinding Content}"
+                                  VerticalAlignment="Center"
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  Padding="{TemplateBinding Padding}" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="MenuItem:selected /template/ Border#root">
+      <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="MenuItem:pointerover /template/ Border#root">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}"/>
+    </Style>
+    
+    <Style Selector="MenuItem Image">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Menu > MenuItem Border">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    
+    <Style Selector="Menu > MenuItem AccessText">
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    
+</Styles>

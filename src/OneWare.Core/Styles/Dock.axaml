@@ -1,0 +1,79 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:idc="using:Dock.Avalonia.Controls"
+        xmlns:core="using:Dock.Model.Core"
+        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+        xmlns:sharedConverters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+        xmlns:coreConverters="clr-namespace:OneWare.Core.Converters">
+
+    <Design.PreviewWith>
+        <idc:DocumentControl Width="300" Height="400" />
+    </Design.PreviewWith>
+
+    <Style Selector="ToolTabStripItem:selected">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+    </Style>
+
+    <Style Selector="DocumentTabStripItem">
+        <Setter Property="MinHeight" Value="25" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Padding" Value="4 1 4 0" />
+        <Style Selector="^:selected">
+            <Setter Property="BorderThickness" Value="1 1 1 0" />
+            <Setter Property="Padding" Value="3 0 3 0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        </Style>
+    </Style>
+
+    <Style Selector="DocumentControl /template/ Grid#PART_Grid">
+        <Setter Property="Height" Value="0" />
+    </Style>
+
+    <Style Selector="ToolChromeControl /template/ Path#PART_ClosePath">
+        <Setter Property="Fill" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="ToolChromeControl /template/ Path#PART_PinPath">
+        <Setter Property="Fill" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="ToolTabStripItem">
+        <Setter Property="Padding" Value="4 0" />
+        <Setter Property="Height" Value="24" />
+    </Style>
+    <Style Selector="ToolTabStripItem:selected">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="BorderThickness" Value="1 0 1 1" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="4 0" />
+    </Style>
+
+    <Style Selector="DocumentControl">
+        <Setter Property="HeaderTemplate">
+            <DataTemplate DataType="core:IDockable">
+                <ContentControl Content="{Binding}">
+                    <ContentControl.DataTemplates>
+                        <DataTemplate DataType="shared:IEditor">
+                            <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding CurrentFile.FullPath}">
+                                <Image
+                                    IsVisible="{Binding CurrentFile, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                                    Height="17" Width="17"
+                                    Source="{Binding CurrentFile.Extension, Converter={x:Static sharedConverters:SharedConverters.FileExtensionIconConverter}}"
+                                    VerticalAlignment="Center" />
+                                <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center"/>
+                                <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
+                            </StackPanel>
+                        </DataTemplate>
+                        <DataTemplate DataType="core:IDockable">
+                            <StackPanel Orientation="Horizontal" Margin="0 1">
+                                <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ContentControl.DataTemplates>
+                </ContentControl>
+            </DataTemplate>
+        </Setter>
+    </Style>
+</Styles>

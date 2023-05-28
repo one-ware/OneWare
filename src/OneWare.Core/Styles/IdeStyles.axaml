@@ -1,0 +1,176 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OneWare.Core"
+        xmlns:data="clr-namespace:OneWare.Core.Data;assembly=OneWare.Core"
+        xmlns:dock="clr-namespace:OneWare.Core.Dock;assembly=OneWare.Core"
+        xmlns:sharedModels="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+        
+        <StyleInclude Source="avares://OneWare.Core/Styles/HostWindow.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/Dock.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/TreeView.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/ListBox.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/TabControl.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/Editor.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/AdvancedWindow.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/Menu.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/ToolTip.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/ScrollViewer.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
+        <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
+        
+        <Style Selector=":is(Window)">
+            <Setter Property="FontFamily" Value="{StaticResource Noto Sans}"/>
+        </Style>
+        
+        <Style Selector="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="ComboBox:disabled">
+            <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+        </Style>
+        
+        <Style Selector="ComboBox">
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Padding" Value="3 1" />
+        </Style>
+        
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Height" Value="22" />
+        </Style>
+        
+        <Style Selector="StackPanel.HToolBar TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="StackPanel.HToolBar">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Spacing" Value="5"/>
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Margin" Value="5 0" />
+        </Style>
+        <Style Selector="StackPanel.HToolBar Button">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Width" Value="24"/>
+        </Style>
+        
+        <Style Selector="TextBox.ToolBar">
+            <Setter Property="Padding" Value="3 1" />
+            <Setter Property="Height" Value="24" />
+        </Style>
+
+        <!--IconTray-->
+        <Style Selector="Border.SplitterBorder">
+            <Setter Property="BorderThickness" Value="1,0,0,0" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Margin" Value="3 1 1 1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="Width" Value="4" />
+        </Style>
+
+        <Style Selector="ContentPresenter#PART_MessageContent">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Content" Value="" />
+        </Style>
+
+        <Style Selector="Button.BorderButton">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        </Style>
+        
+        <Style Selector="StackPanel.WindowButtons > Button">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Height" Value="25" />
+            <Setter Property="MinWidth" Value="60" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+        </Style>
+        
+        <Style Selector="StackPanel.WindowButtons">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="10" />
+        </Style>
+        
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}"/>
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar">
+            <Setter Property="CornerRadius" Value="3"></Setter>
+            <Setter Property="BorderThickness" Value="1"></Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"></Setter>
+            <Setter Property="Height" Value="24" />
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar > StackPanel">
+            <Setter Property="Margin" Value="0"></Setter>
+            <Setter Property="Orientation" Value="Horizontal"></Setter>
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar > StackPanel > Separator">
+            <Setter Property="Margin" Value="0"></Setter>
+            <Setter Property="Height" Value="24"></Setter>
+            <Setter Property="Width" Value="1"></Setter>
+            <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}"></Setter>
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar > StackPanel > ComboBox">
+            <Setter Property="BorderThickness" Value="0"></Setter>
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar Button">
+            <Setter Property="Height" Value="22" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Width" Value="NaN"/>
+            <Setter Property="Padding" Value="5 0" />
+        </Style>
+        
+        <Style Selector="Border.RoundToolBar TextBlock">
+            <Setter Property="Height" Value="18" />
+        </Style>
+        
+        <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemViewModel">
+            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+            <Setter Property="Header" Value="{Binding Header}" />
+            <Setter Property="ItemsSource" Value="{Binding Items}" />
+            <Setter Property="Command" Value="{Binding Command}" />
+            <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+            <Setter Property="HotKey" Value="{Binding Hotkey}"></Setter>
+            <Setter Property="Icon">
+                <Setter.Value>
+                    <Template>
+                        <Image Source="{Binding Icon}" />
+                    </Template>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem" x:DataType="sharedModels:MenuItemViewModel">
+            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+            <Setter Property="Header" Value="{Binding Header}" />
+            <Setter Property="ItemsSource" Value="{Binding Items}" />
+            <Setter Property="Command" Value="{Binding Command}" />
+            <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+            <Setter Property="Icon">
+                <Setter.Value>
+                    <Template>
+                        <Image Source="{Binding Icon}" />
+                    </Template>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="MenuItem > Separator">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+            <Setter Property="Margin" Value="29,1,0,1" />
+            <Setter Property="Height" Value="1" />
+        </Style>
+</Styles>

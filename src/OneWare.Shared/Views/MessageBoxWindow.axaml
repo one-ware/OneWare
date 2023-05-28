@@ -1,0 +1,55 @@
+﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        mc:Ignorable="d"
+                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                        xmlns:viewModels="clr-namespace:OneWare.Shared.ViewModels"
+                        x:Class="OneWare.Shared.Views.MessageBoxWindow"
+                        SizeToContent="Height"
+                        MinHeight="100"
+                        Width="350"
+                        Padding="4"
+                        Title="{Binding Title}"
+                        Foreground="{DynamicResource ThemeForegroundBrush}"
+                        Name="MessageWindow" x:CompileBindings="True" x:DataType="viewModels:MessageBoxViewModel"
+                        ExtendClientAreaToDecorationsHint="True"
+                        WindowStartupLocation="CenterOwner">
+
+    <DockPanel Margin="4" LastChildFill="False">
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
+            <TextBlock Margin="2" Background="Transparent" Name="Message" TextWrapping="Wrap"
+                       Text="{Binding Message}" />
+            <DockPanel IsVisible="{Binding ShowInput}">
+                <Button IsVisible="{Binding ShowFolderButton}" DockPanel.Dock="Right" Classes="BorderButton"
+                        Width="22"
+                        BorderThickness="0,1,1,1" Height="22" Command="{Binding SelectPathAsync}"
+                        CommandParameter="{Binding #MessageWindow}">
+                    <Image Source="{DynamicResource VsImageLib.FolderOpen16X}" VerticalAlignment="Center" />
+                </Button>
+                <Border BorderThickness="1" Height="22" HorizontalAlignment="Stretch"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <TextBox PasswordChar="{Binding PasswordChar}" Name="InputBox" BorderThickness="0"
+                             Height="20" Text="{Binding Input}" Padding="4 2 4 0" FontSize="12"
+                             HorizontalAlignment="Stretch" />
+                </Border>
+            </DockPanel>
+            <ComboBox IsVisible="{Binding ShowSelection}" ItemsSource="{Binding SelectionItems}"
+                      SelectedItem="{Binding SelectedItem}" />
+        </StackPanel>
+        <StackPanel Margin="0 8 0 0" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="WindowButtons">
+            <Button Command="{Binding Yes}" Background="{DynamicResource HighlightBrush}"
+                    CommandParameter="{Binding #MessageWindow}"
+                    IsVisible="{Binding ShowYes}" Name="Button1" Content="Yes" />
+            <Button Command="{Binding No}" CommandParameter="{Binding #MessageWindow}"
+                    IsVisible="{Binding ShowNo}" Name="Button2" Content="No" />
+            <Button Command="{Binding Cancel}"
+                    CommandParameter="{Binding #MessageWindow}"
+                    IsVisible="{Binding ShowCancel}" Name="Button3" Content="Cancel" />
+            <Button Command="{Binding Yes}" CommandParameter="{Binding #MessageWindow}"
+                    IsVisible="{Binding ShowOk}" Name="Button4" Content="Ok" />
+        </StackPanel>
+    </DockPanel>
+
+
+</shared:AdvancedWindow>

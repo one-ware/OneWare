@@ -1,0 +1,26 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
+             xmlns:models="clr-namespace:OneWare.ProjectExplorer.Models"
+             xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerMainWindowToolBarExtension" x:DataType="viewModels:ProjectExplorerViewModel">
+    
+    <ComboBox Width="150" IsEnabled="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Idle}}"
+              BorderThickness="0"
+              ItemsSource="{Binding Items}"
+              SelectedItem="{Binding ActiveProject}">
+        <ComboBox.ItemTemplate>
+            <DataTemplate DataType="models:ProjectRoot">
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="5 0">
+                    <Image Height="17" Width="17"
+                           Source="{Binding Icon, Converter={StaticResource FileTypeIconConverter}}" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding Header}" />
+                </StackPanel>
+            </DataTemplate>
+        </ComboBox.ItemTemplate>
+    </ComboBox>
+</UserControl>

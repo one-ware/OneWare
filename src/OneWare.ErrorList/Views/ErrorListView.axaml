@@ -1,0 +1,204 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:viewModels="clr-namespace:OneWare.ErrorList.ViewModels"
+             xmlns:models="clr-namespace:OneWare.ErrorList.Models"
+             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.ErrorList.Views.ErrorListView" x:DataType="viewModels:ErrorListViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+    
+    <UserControl.Styles>
+        <Style Selector="Border.TopGrid">
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="BorderThickness" Value="1,0,0,1" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style Selector="Border.ChildBorder">
+            <Setter Property="Padding" Value="5,0,1,0" />
+            <Setter Property="Margin" Value="0,2,0,2" />
+        </Style>
+        <Style Selector="TextBlock.ChildText">
+            <Setter Property="Margin" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+
+        <Style Selector="ToolTip">
+            <Setter Property="MaxWidth" Value="300" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_ContentPresenter"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        
+        <Style Selector="ToggleButton.ErrorToggle">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        </Style>
+        
+        <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        </Style>
+
+    </UserControl.Styles>
+
+
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="26" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
+            <DockPanel Name="InformationPanel">
+                <ComboBox SelectedIndex="{Binding ErrorListFilterMode}"
+                    Width="140">
+                    <ComboBoxItem>All open projects</ComboBoxItem>
+                    <ComboBoxItem>Current project</ComboBoxItem>
+                    <ComboBoxItem>Current file</ComboBoxItem>
+                </ComboBox>
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+                <ComboBox
+                          ItemsSource="{Binding ErrorListVisibleSource}"
+                          SelectedItem="{Binding ErrorListVisibleSource}"
+                          Width="140">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+                <ToggleButton Classes="ErrorToggle" IsChecked="{Binding ErrorEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
+                        <TextBlock Background="Transparent" Height="20" Margin="6, 1, 0, 0"
+                                   Text="{Binding ErrorCountVisible}" />
+                    </StackPanel>
+                </ToggleButton>
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+                <ToggleButton Classes="ErrorToggle" IsChecked="{Binding WarningEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
+                        <TextBlock Background="Transparent" Height="20" Margin="6, 1, 0, 0"
+                                   Text="{Binding WarningCountVisible}" />
+                    </StackPanel>
+                </ToggleButton>
+                <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
+                <ToggleButton Classes="ErrorToggle" IsChecked="{Binding HintEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
+                        <TextBlock Background="Transparent" Height="20" Margin="6, 1, 0, 0"
+                                   Text="{Binding HintCountVisible}" />
+                    </StackPanel>
+                </ToggleButton>
+
+                <Border DockPanel.Dock="Right" Width="280" BorderThickness="1" HorizontalAlignment="Right"
+                        BorderBrush="{DynamicResource ThemeBorderMidBrush}">
+                    <views:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}" Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
+                </Border>
+            </DockPanel>
+
+        </Border>
+
+        <DataGrid Padding="2, 0, 2, 2" BorderThickness="0"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent"
+                  RowBackground="Transparent" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
+                  CanUserResizeColumns="True" CanUserSortColumns="True">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn CanUserResize="False" Width="25" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <Grid ToolTip.Tip="{Binding Code}">
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource VsImageLib.StatusInformation16X}"
+                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Hint}}" />
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource VsImageLib.StatusCriticalError16X}"
+                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Error}}" />
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource VsImageLib.StatusWarning16X}"
+                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Warning}}" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="4*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Description}" Text="{Binding Description}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Description"></TextBlock>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Source}" Text="{Binding Source}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Source"></TextBlock>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn CanUserResize="True" CanUserSort="True" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Root.Header, FallbackValue={x:Null}}" Text="{Binding Root.Header, FallbackValue={x:Null}}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Project"></TextBlock>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding File.Header}" Text="{Binding File.Header}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="File"></TextBlock>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="Auto" CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding StartLine}" Text="{Binding StartLine}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Line"></TextBlock>
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
+                <!--
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Source" Binding="{Binding Source}"></DataGridTextColumn>
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Project" Binding="{Binding File.Root.Header}"></DataGridTextColumn>
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="File" Binding="{Binding File.Header}"></DataGridTextColumn>
+                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItemModel" Header="Line" Binding="{Binding StartLine}"></DataGridTextColumn>
+                -->
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </Grid>
+</UserControl>

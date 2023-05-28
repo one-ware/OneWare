@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="OneWare.Core.Views.Controls.VariableControlView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:OneWare.Core.Models" x:DataType="models:ObjectValueModel">
+    <Grid>
+        <TreeView SelectionMode="Toggle" ItemsSource="{Binding Children}" BorderThickness="0"
+                  Background="{DynamicResource ThemeControlBackgroundBrush}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.Styles>
+
+            <TreeView.DataTemplates>
+                <TreeDataTemplate DataType="models:ObjectValueModel" ItemsSource="{Binding Children, Mode=TwoWay}">
+                    <Grid>
+                        <!--
+            <Grid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Delete" Command="{Binding Delete}"/>
+                <MenuItem Header="Add WatchPoint" Command="{Binding AddWatchPoint}" />
+                <MenuItem Header="Display as">
+                  <MenuItem Header="Hexadecimal" Command="{Binding DisplayFormat}" CommandParameter="hex" />
+                  <MenuItem Header="Decimal" Command="{Binding DisplayFormat}" CommandParameter="dec" />
+                  <MenuItem Header="Octal" Command="{Binding DisplayFormat}" CommandParameter="oct" />
+                  <MenuItem Header="Binary" Command="{Binding DisplayFormat}" CommandParameter="bin" />
+                  <MenuItem Header="Natural" Command="{Binding DisplayFormat}" CommandParameter="nat" />
+                </MenuItem>
+              </ContextMenu>
+            </Grid.ContextMenu>
+            -->
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock Margin="2 0 2 0" Text="="
+                                       IsVisible="{Binding Value, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            <TextBlock Margin="0 0 0 0" Text="{Binding Value}" Foreground="CornflowerBlue" />
+                            <TextBlock Margin="5 0 0 0" Opacity="0.7" Text="{Binding TypeName}" />
+                        </StackPanel>
+                    </Grid>
+                </TreeDataTemplate>
+            </TreeView.DataTemplates>
+        </TreeView>
+    </Grid>
+</UserControl>
