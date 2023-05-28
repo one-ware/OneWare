@@ -1,3 +1,3 @@
-![OneWare Banner](https://raw.githubusercontent.com/ProtopSolutions/OneWare/main/Banner.jpg)
+![OneWare Banner](relative%20Banner.jpg?raw=true "OneWare Banner")
 
 [![.NET](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml)
