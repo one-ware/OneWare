@@ -1,4 +1,3 @@
-# OneWare
+![OneWare Banner](https://raw.githubusercontent.com/ProtopSolutions/OneWare/main/Banner.jpg)
 
-![OneWare Banner](https://raw.githubusercontent.com/ProtopSolutions/OneWare/main/Banner.jpg?token=GHSAT0AAAAAACAHWWE2UEQVDLUTEE2FLAAQZDTW77A)
-
+[![.NET](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml)
