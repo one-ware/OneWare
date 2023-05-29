@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 using OneWare.Core.Extensions;
 using OneWare.Shared;
+using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 

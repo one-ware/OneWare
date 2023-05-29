@@ -2,9 +2,9 @@
 using Avalonia.Collections;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
-using OneWare.ErrorList.Models;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using ListEx = DynamicData.ListEx;
 
@@ -17,7 +17,7 @@ namespace OneWare.ErrorList.ViewModels
         CurrentFile,
     }
     
-    public class ErrorListViewModel : Tool
+    public class ErrorListViewModel : Tool, IErrorService
     {
         private readonly IDockService _dockService;
         private readonly ISettingsService _settingsService;

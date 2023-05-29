@@ -9,11 +9,11 @@ using Avalonia.Media;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
-using OneWare.Core.EditorExtensions;
-using OneWare.Core.LanguageService;
 using OneWare.Core.Services;
 using Prism.Ioc;
 using OneWare.Shared;
+using OneWare.Shared.EditorExtensions;
+using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
@@ -114,7 +114,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 {
                     // TODO Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, currentFile, Global.Breakpoints));
                 }
-                if(service is { IsActivated: false, CanActivate: true }) _ = service.ActivateAsync();
+                if(service is { IsActivated: false }) _ = service.ActivateAsync();
             }
                 
             settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>

@@ -21,17 +21,18 @@ public class ErrorListModule : IModule
         _settingsService = settingsService;
         _windowService = windowService;
         _dockService = dockService;
-        
-        _dockService.RegisterLayoutExtension<ErrorListViewModel>(DockShowLocation.Bottom);
     }
     
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        containerRegistry.RegisterSingleton<ErrorListViewModel>();
+        containerRegistry.RegisterManySingleton<ErrorListViewModel>(typeof(IErrorService),
+            typeof(ErrorListViewModel));
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
+        _dockService.RegisterLayoutExtension<IErrorService>(DockShowLocation.Bottom);
+        
         _settingsService.Register(KeyErrorListFilterMode, 0);
         _settingsService.Register(KeyErrorListShowExternalErrors, true);
         _settingsService.Register(KeyErrorListVisibleSource, 0);

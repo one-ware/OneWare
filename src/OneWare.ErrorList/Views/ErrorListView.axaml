@@ -5,8 +5,8 @@
              xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.ErrorList.ViewModels"
-             xmlns:models="clr-namespace:OneWare.ErrorList.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             xmlns:models="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ErrorList.Views.ErrorListView" x:DataType="viewModels:ErrorListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">

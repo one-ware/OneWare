@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Core.LanguageService;
+using OneWare.Shared.LanguageService;
 using Prism.Ioc;
 using OneWare.Shared.Services;
 

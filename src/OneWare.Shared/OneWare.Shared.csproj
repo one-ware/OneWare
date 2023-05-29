@@ -7,4 +7,9 @@
       <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
     </ItemGroup>
     
+    <ItemGroup>
+        <PackageReference Include="OmniSharp.Extensions.LanguageClient" Version="0.19.7" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
+    </ItemGroup>
+    
 </Project>
