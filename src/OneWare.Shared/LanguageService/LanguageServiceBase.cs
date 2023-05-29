@@ -23,26 +23,20 @@ namespace OneWare.Shared.LanguageService
     {
         private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
         public LanguageClient? Client { get; private set; }
-
         public bool IsActivated { get; protected set; }
-        public abstract bool WorkspaceDependent { get; }
-        public abstract string Name { get; }
-        
+        public string Name { get; }
         public string[] SupportedFileExtensions { get; }
-        public string ErrorSource { get; protected set; }
-        public string Workspace { get; protected set; }
+        public string? Workspace { get; protected set; }
         public bool IsLanguageServiceReady { get; private set; }
-
         private Process? Process { get; set; }
-
         public event EventHandler? LanguageServiceActivated;
         public event EventHandler? LanguageServiceDeactivated;
 
-        public LanguageServiceBase(string workspace, string[] supportedFileExtensions, string errorSource)
+        public LanguageServiceBase(string name, string[] supportedFileExtensions, string? workspace = null)
         {
+            Name = name;
             Workspace = workspace;
             SupportedFileExtensions = supportedFileExtensions;
-            ErrorSource = errorSource;
         }
 
         public abstract Task ActivateAsync();
@@ -74,7 +68,7 @@ namespace OneWare.Shared.LanguageService
                     ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
                 }
 
-                ContainerLocator.Container.Resolve<IErrorService>()?.Clear(ErrorSource);
+                ContainerLocator.Container.Resolve<IErrorService>()?.Clear(Name);
                 LanguageServiceDeactivated?.Invoke(this, EventArgs.Empty);
             });
         }
@@ -894,7 +888,7 @@ namespace OneWare.Shared.LanguageService
             {
                 var file = ContainerLocator.Container.Resolve<IProjectService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
                 file ??= ContainerLocator.Container.Resolve<IProjectService>().GetTemporaryFile(pdp.Uri.GetFileSystemPath());
-                ContainerLocator.Container.Resolve<IErrorService>().RefreshErrors(ConvertErrors(pdp, file).ToList(), ErrorSource, file);
+                ContainerLocator.Container.Resolve<IErrorService>().RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
                 //file.Diagnostics = pdp.Diagnostics;
             }, DispatcherPriority.Background);
         }
@@ -912,7 +906,7 @@ namespace OneWare.Shared.LanguageService
                         _ => ErrorType.Hint
                     };
 
-                yield return new ErrorListItemModel(p.Message, errorType, file, ErrorSource, p.Range.Start.Line+1,
+                yield return new ErrorListItemModel(p.Message, errorType, file, Name, p.Range.Start.Line+1,
                     p.Range.Start.Character+1, p.Range.End.Line+1, p.Range.End.Character+1)
                 {
                     Code = p.Code?.String ?? p.Code?.Long.ToString() ?? "",

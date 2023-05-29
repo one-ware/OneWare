@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using OneWare.Shared.EditorExtensions;
 
 namespace OneWare.Vhdl
 {

@@ -38,7 +38,7 @@
                       SelectedItem="{Binding SelectedItem}" />
         </StackPanel>
         <StackPanel Margin="0 8 0 0" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="WindowButtons">
-            <Button Command="{Binding Yes}" Background="{DynamicResource ThemeHighlightBrush}"
+            <Button Command="{Binding Yes}" Background="{DynamicResource HighlightBrush}"
                     CommandParameter="{Binding #MessageWindow}"
                     IsVisible="{Binding ShowYes}" Name="Button1" Content="Yes" />
             <Button Command="{Binding No}" CommandParameter="{Binding #MessageWindow}"

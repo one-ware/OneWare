@@ -5,6 +5,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Highlighting;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using Prism.Ioc;
@@ -13,25 +14,15 @@ namespace OneWare.Vhdl
 {
     internal class TypeAssistanceVhdl : TypeAssistanceLsp, ITypeAssistance
     {
-        public static string[,] SectionInfo;
-
-        public TypeAssistanceVhdl(TextEditor editor, ProjectFile file, EditViewModelBase editViewModel, LanguageServiceVhdl ls) : base(editor, file, editViewModel, ls)
+        public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
             FoldingStrategy = new VhdlFoldingStrategy();
-            
-            SectionInfo = new string[VHDP.SectionInfo.Info.Count, 2];
-
-            for (var i = 0; i < VHDP.SectionInfo.Info.Count; i++)
-            {
-                SectionInfo[i, 0] = VHDP.SectionInfo.Info.ElementAt(i).Key;
-                SectionInfo[i, 1] = VHDP.SectionInfo.Info.ElementAt(i).Value;
-            }
         }
 
-        public override void Initialize(CompletionWindow completion, CompositeDisposable disposableReg)
+        public override void Initialize(CompletionWindow completion)
         {
-            base.Initialize(completion, disposableReg);
+            base.Initialize(completion);
             EditorThemeManager.Instance.Languages["VHDL"].WhenAnyValue(x => x.SelectedTheme).Subscribe(theme =>
             {
                 CodeBox.SyntaxHighlighting = theme.Load();

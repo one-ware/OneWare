@@ -34,7 +34,7 @@
         <SolidColorBrush x:Key="ThemeControlHighlightMidBrush" Color="{StaticResource ThemeControlHighlightMidColor}" />
         <SolidColorBrush x:Key="ThemeControlHighlightHighBrush" Color="{StaticResource ThemeControlHighlightHighColor}" />
         <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-        <SolidColorBrush x:Key="ThemeHighlightBrush" Color="{StaticResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="HighlightBrush" Color="{StaticResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
         
     </Style.Resources>

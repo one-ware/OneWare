@@ -4,7 +4,7 @@ using Prism.Ioc;
 
 namespace OneWare.Shared.LanguageService
 {
-    internal class GenericLanguageService : LanguageServiceBase
+    internal class GenericLanguageService : LanguageServiceBase, ILanguageService
     {
         private readonly string _arguments;
         private readonly string _serverName;
@@ -12,6 +12,8 @@ namespace OneWare.Shared.LanguageService
 
         public override bool WorkspaceDependent => false;
         public override string Name => "Generic LS";
+
+        public ITypeAssistance TypeAssistance => new GenericTypeAssistanceLsp();
 
         public GenericLanguageService(string name, string executablePath, string arguments, string workspace, params string[] supportedFiles) : base (workspace, supportedFiles, name)
         {

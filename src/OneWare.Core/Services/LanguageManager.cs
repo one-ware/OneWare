@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
@@ -24,9 +26,14 @@ internal class LanguageManager : ILanguageManager
             return _allServers.Where(x => x is T).Cast<T>();
         }
 
-        public void RegisterService<T>(bool workspaceDependent)
+        public void RegisterService(Type type, bool workspaceDependent)
         {
-            //if(!workspaceDependent) SingleInstanceServers.Add(new Language);
+            if (!workspaceDependent)
+            {
+                var service = ContainerLocator.Current.Resolve(type) as LanguageServiceBase;
+                if (service == null) throw new NullReferenceException(nameof(service));
+                _singleInstanceServers.Add(service);
+            }
         }
 
         public LanguageServiceBase? GetLanguageService(IFile file) //TODO introduce projectType
@@ -48,7 +55,7 @@ internal class LanguageManager : ILanguageManager
         
         public void RemoveProject(IProjectRoot project)
         {
-            var remove = _allServers.Where(x => x.WorkspaceDependent && x.Workspace == project.FullPath).ToArray();
+            var remove = _allServers.Where(x => x.Workspace == project.FullPath).ToArray();
 
             foreach (var r in remove)
             {

@@ -9,10 +9,7 @@ namespace OneWare.Vhdl
 {
     public class LanguageServiceVhdl : LanguageServiceBase
     {
-        public override bool WorkspaceDependent => true;
-        public override string Name => "VHDL LS";
-
-        public LanguageServiceVhdl(string workSpace) : base (workSpace, new []{".vhd", ".vhdl"}, "VHDLLS")
+        public LanguageServiceVhdl() : base ("VHDL LS", new []{".vhd", ".vhdl"})
         {
             // Global.Options.WhenAnyValue(x => x.VhdlLspActivated).Subscribe(x =>
             // {
