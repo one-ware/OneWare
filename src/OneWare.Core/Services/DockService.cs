@@ -22,7 +22,7 @@ using OneWare.Shared.Services;
 
 namespace OneWare.Core.Services
 {
-    public class DockService : Factory, IDockService, INotifyPropertyChanged
+    public class DockService : Factory, IDockService
     {
         private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
 

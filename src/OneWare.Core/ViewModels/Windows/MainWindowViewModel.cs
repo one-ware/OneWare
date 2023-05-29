@@ -1,12 +1,18 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia.Controls;
+using Avalonia.Input;
+using DynamicData.Binding;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
+using OneWare.Shared;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
+using DynamicData.Binding;
+using ObservableExtensions = System.ObservableExtensions;
 
 namespace OneWare.Core.ViewModels.Windows
 {
@@ -54,20 +60,19 @@ namespace OneWare.Core.ViewModels.Windows
             MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
 
             _title = paths.AppName;
-
             
-            // this.WhenValueChanged(x => dockService.CurrentDocument).Subscribe(x =>
-            // {
-            //     if (x is EditViewModel evm)
-            //     {
-            //         CurrentEditor = evm;
-            //         Title = $"{paths.AppName} IDE {evm.CurrentFile.Header}";
-            //     }
-            //     else
-            //     {
-            //         Title = $"{paths.AppName} IDE";
-            //     }
-            // });
+            ObservableExtensions.Subscribe(DockService.WhenValueChanged(x => x.CurrentDocument), x =>
+            {
+                if (x is EditViewModel evm)
+                {
+                    CurrentEditor = evm;
+                    Title = $"{paths.AppName} IDE {evm.CurrentFile.Header}";
+                }
+                else
+                {
+                    Title = $"{paths.AppName} IDE";
+                }
+            });
         }
 
         #region MainWindowButtons

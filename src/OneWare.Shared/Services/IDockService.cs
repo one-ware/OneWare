@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
@@ -5,7 +6,7 @@ using OneWare.Shared.Enums;
 
 namespace OneWare.Shared.Services;
 
-public interface IDockService
+public interface IDockService : INotifyPropertyChanged
 {
     public IRootDock? Layout { get; }
     
