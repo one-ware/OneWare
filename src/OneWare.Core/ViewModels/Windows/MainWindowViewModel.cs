@@ -11,7 +11,6 @@ using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using DynamicData.Binding;
 using ObservableExtensions = System.ObservableExtensions;
 
 namespace OneWare.Core.ViewModels.Windows

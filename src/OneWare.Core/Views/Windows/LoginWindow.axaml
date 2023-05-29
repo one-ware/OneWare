@@ -43,7 +43,7 @@
                     Content="Cancel" />
         
             <Button Command="{Binding LoginAsync}" CommandParameter="{Binding #LoginWindowView}"
-                    Content="Login" Background="{DynamicResource HighlightBrush}" />
+                    Content="Login" Background="{DynamicResource ThemeHighlightBrush}" />
         </StackPanel>
         
     </DockPanel>

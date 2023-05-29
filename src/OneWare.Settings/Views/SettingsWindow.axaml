@@ -182,7 +182,7 @@
                         CommandParameter="{Binding #SettingsWindowView}" Name="ResetButton">
                     Reset
                 </Button>
-                <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Okay}"
+                <Button Background="{DynamicResource ThemeHighlightBrush}" Command="{Binding Okay}"
                         CommandParameter="{Binding #SettingsWindowView}"
                         Name="OkButton">
                     <TextBlock Text="Save" />

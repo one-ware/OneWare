@@ -10,7 +10,7 @@
                 <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="Foreground" Value="{StaticResource ThemeAccentBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource HighlightBrush}" />
             </Style>
             <Style Selector="Button:pressed  /template/ ContentPresenter">
                 <Setter Property="Background" Value="Transparent" />
