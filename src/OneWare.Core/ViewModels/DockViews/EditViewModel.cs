@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
@@ -16,6 +17,7 @@ using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
+using TextMateSharp.Grammars;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
@@ -49,7 +51,6 @@ namespace OneWare.Core.ViewModels.DockViews
         }
         
         private bool _isDirty;
-
         public bool IsDirty
         {
             get => _isDirty;
@@ -66,7 +67,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public event EventHandler? FileSaved;
 
-        public EditViewModel(IFile currentFile, ILogger logger, ISettingsService settingsService, IDockService dockService, ILanguageManager languageManager,  IWindowService windowService, BackupService backupService)
+        public EditViewModel(IFile currentFile, ILogger logger, ISettingsService settingsService, IDockService dockService, ILanguageManager languageManager, IWindowService windowService, BackupService backupService)
         {
             _logger = logger;
             _settingsService = settingsService;
@@ -80,11 +81,29 @@ namespace OneWare.Core.ViewModels.DockViews
             Title = currentFile is ExternalFile ? $"[{currentFile.Header}]" : currentFile.Header;
             CurrentFile = currentFile;
             
-            var service = (languageManager as LanguageManager)?.GetLanguageService(currentFile);
+            var service = languageManager.GetLanguageService(currentFile);
+
+            //Syntax Highlighting
+            var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
+            var registryOptions = new RegistryOptions(syntaxTheme);
+            var lang = service?.TextMateLanguage ?? registryOptions.GetLanguageByExtension(CurrentFile.Extension);
+            if (lang != null)
+            {
+                var textMateInstallation = Editor.InstallTextMate(registryOptions);
+            
+                _settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme")
+                    .Subscribe(
+                        x =>
+                        {
+                            if(x != syntaxTheme) textMateInstallation.SetTheme(registryOptions.LoadTheme(x));
+                            syntaxTheme = x;
+                        });
+                textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(lang.Id));
+            }
             
             if (service != null)
             {
-                //TypeAssistance = service.TypeAssistance;
+                TypeAssistance = service.GetTypeAssistance(this);
 
                 if (TypeAssistance != null)
                 {
@@ -251,7 +270,6 @@ namespace OneWare.Core.ViewModels.DockViews
                 CurrentFile.LoadingFailed = false;
                 return true;
             }
-
             return false;
         }
 

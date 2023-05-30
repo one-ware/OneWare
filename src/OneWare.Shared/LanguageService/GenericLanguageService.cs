@@ -4,22 +4,20 @@ using Prism.Ioc;
 
 namespace OneWare.Shared.LanguageService
 {
-    internal class GenericLanguageService : LanguageServiceBase, ILanguageService
+    public class GenericLanguageService : LanguageServiceBase, ILanguageService
     {
         private readonly string _arguments;
-        private readonly string _serverName;
         private readonly string _langSrvPath;
 
-        public override bool WorkspaceDependent => false;
-        public override string Name => "Generic LS";
-
-        public ITypeAssistance TypeAssistance => new GenericTypeAssistanceLsp();
-
-        public GenericLanguageService(string name, string executablePath, string arguments, string workspace, params string[] supportedFiles) : base (workspace, supportedFiles, name)
+        public GenericLanguageService(string name, string executablePath, string arguments, string? workspace, params string[] supportedFiles) : base (name, supportedFiles, workspace)
         {
-            _serverName = name;
             _langSrvPath = executablePath;
             _arguments = arguments;
+        }
+
+        public ITypeAssistance GetTypeAssistance(IEditor editor)
+        {
+            return new GenericTypeAssistanceLsp(editor, this);
         }
 
         public override async Task ActivateAsync()
@@ -29,7 +27,7 @@ namespace OneWare.Shared.LanguageService
 
             if (!File.Exists(_langSrvPath) && !Tools.ExistsOnPath(_langSrvPath))
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(_serverName + " language server not found!", null, false);
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(Name + " language server not found!", null, false);
                 return;
             }
 
@@ -49,7 +47,7 @@ namespace OneWare.Shared.LanguageService
                 StartInfo = processStartInfo
             };
 
-            process.ErrorDataReceived += (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Log(_serverName + " " + i.Data, ConsoleColor.Yellow);
+            process.ErrorDataReceived += (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Log(Name + " " + i.Data, ConsoleColor.Yellow);
             try
             {
                 process.Start();

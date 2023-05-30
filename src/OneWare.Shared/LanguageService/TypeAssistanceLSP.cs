@@ -38,7 +38,7 @@ namespace OneWare.Shared.LanguageService
 
         private readonly TimeSpan _timerTimeSpan = new(200);
         private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
-        public string LineCommentSequence => "//";
+        public virtual string LineCommentSequence => "//";
         public LanguageServiceBase Service { get; }
 
         protected virtual TimeSpan RefreshTime => TimeSpan.FromMilliseconds(200);

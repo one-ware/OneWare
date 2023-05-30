@@ -3,10 +3,7 @@ using AvaloniaEdit.Folding;
 
 namespace OneWare.Shared.LanguageService
 {
-    /// <summary>
-    ///     A simple folding strategy for C# files.
-    /// </summary>
-    internal class LspFoldingStrategy : IFoldingStrategy
+    public class LspFoldingStrategy : IFoldingStrategy
     {
         private readonly List<FoldingEntry> _foldings = new();
         private readonly LanguageService.LanguageServiceBase _languageService;

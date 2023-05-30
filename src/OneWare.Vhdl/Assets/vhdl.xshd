@@ -1,0 +1,251 @@
+﻿<SyntaxDefinition name="VHDL" extensions=".vhd" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Digits"        foreground="#90b37f" exampleText="123"       />
+  <Color name="String"        foreground="fuchsia" exampleText="&quot; ... &quot;" />
+  <Color name="ReplaceString" foreground="#f5cd56" exampleText="s&quot; ... &quot;"/>
+  <Color name="Comment"       foreground="#608B4E" fontWeight="regular"  exampleText="--comment"      />
+  <Color name="Brackets"      foreground="#e67fe8" exampleText="{ }"       />
+  <Color name="Operators"     foreground="#008b8b" exampleText="AND"       />
+  <Color name="Keywords"      foreground="#47ba86" exampleText="STD_LOGIC" />
+  <Color name="VHDPKeywords"  foreground="#4299c7" exampleText="Thread"    />
+  <Color name="VHDLKeywords"  foreground="#4299c7" exampleText="SIGNAL"    />
+  <Color name="Region"  foreground="#955096" fontWeight="bold"  exampleText="#region"    />
+  <Color name="Merge"   foreground="#04DB04" exampleText=">>>>>>>"    />
+  <Color name="Merge2"   foreground="#8a8a8a" exampleText="======="    />
+  
+  <RuleSet ignoreCase="true">
+    <Keywords color="Merge">
+      <Word>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</Word>
+      <Word>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</Word>
+    </Keywords>
+
+    <Keywords color="Merge2">
+      <Word>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</Word>
+      <Word>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</Word>
+      <Word>=======</Word>
+    </Keywords>
+    
+    <Keywords color="Operators">
+      <Word>not</Word>
+      <Word>rising_edge</Word>
+      <Word>falling_edge</Word>
+      <Word>event</Word>
+      <Word>and</Word>
+      <Word>nand</Word>
+      <Word>or</Word>
+      <Word>nor</Word>
+      <Word>xor</Word>
+      <Word>xnor</Word>
+    </Keywords>
+    <Keywords color="VHDPKeywords">
+      <Word>access</Word>
+      <Word>after</Word>
+      <Word>alias</Word>
+      <Word>all</Word>
+      <Word>architecture</Word>
+      <Word>array</Word>
+      <Word>assert</Word>
+      <Word>attribute</Word>
+      <Word>begin</Word>
+      <Word>block</Word>
+      <Word>body</Word>
+      <Word>buffer</Word>
+      <Word>bus</Word>
+      <Word>case</Word>
+      <Word>component</Word>
+      <Word>configuration</Word>
+      <Word>constant</Word>
+      <Word>disconnect</Word>
+      <Word>downto</Word>
+      <Word>else</Word>
+      <Word>elsif</Word>
+      <Word>end</Word>
+      <Word>entity</Word>
+      <Word>exit</Word>
+      <Word>file</Word>
+      <Word>for</Word>
+      <Word>function</Word>
+      <Word>generate</Word>
+      <Word>generic</Word>
+      <Word>group</Word>
+      <Word>guarded</Word>
+      <Word>if</Word>
+      <Word>impure</Word>
+      <Word>in</Word>
+      <Word>inertial</Word>
+      <Word>inout</Word>
+      <Word>is</Word>
+      <Word>label</Word>
+      <Word>library</Word>
+      <Word>linkage</Word>
+      <Word>literal</Word>
+      <Word>loop</Word>
+      <Word>map</Word>
+      <Word>new</Word>
+      <Word>next</Word>
+      <Word>null</Word>
+      <Word>of</Word>
+      <Word>on</Word>
+      <Word>open</Word>
+      <Word>others</Word>
+      <Word>out</Word>
+      <Word>package</Word>
+      <Word>port</Word>
+      <Word>postponed</Word>
+      <Word>procedure</Word>
+      <Word>process</Word>
+      <Word>protected</Word>
+      <Word>pure</Word>
+      <Word>range</Word>
+      <Word>record</Word>
+      <Word>register</Word>
+      <Word>reject</Word>
+      <Word>report</Word>
+      <Word>return</Word>
+      <Word>select</Word>
+      <Word>severity</Word>
+      <Word>shared</Word>
+      <Word>signal</Word>
+      <Word>subtype</Word>
+      <Word>then</Word>
+      <Word>to</Word>
+      <Word>transport</Word>
+      <Word>type</Word>
+      <Word>unaffected</Word>
+      <Word>units</Word>
+      <Word>until</Word>
+      <Word>use</Word>
+      <Word>variable</Word>
+      <Word>wait</Word>
+      <Word>when</Word>
+      <Word>while</Word>
+      <Word>with</Word>
+    </Keywords>
+    <Keywords color="VHDLKeywords">
+      <Word>'length</Word>
+      <Word>to_integer</Word>
+      <Word>abs</Word>
+      <Word>mod</Word>
+      <Word>rem</Word>
+      <Word>resize</Word>
+      <Word>to_bit</Word>
+      <Word>to_bitvector</Word>
+      <Word>to_stdlogicvector</Word>
+      <Word>to_unsigned</Word>
+      <Word>to_signed</Word>
+      <Word>out</Word>
+      <Word>inout</Word>
+      <Word>buffer</Word>
+      <Word>to</Word>
+      <Word>downto</Word>
+      <Word>in</Word>
+      <Word>signal</Word>
+      <Word>constant</Word>
+      <Word>variable</Word>
+      <Word>file</Word>
+      <Word>alias</Word>
+      <Word>range</Word>
+      <Word>reverse_range</Word>
+      <Word>others</Word>
+      <Word>type</Word>
+      <Word>record</Word>
+      <Word>array</Word>
+      <Word>begin</Word>
+      <Word>with</Word>
+      <Word>select</Word>
+      <Word>port</Word>
+      <Word>body</Word>
+      <Word>map</Word>
+      <Word>end</Word>
+      <Word>name</Word>
+      <Word>entity</Word>
+      <Word>is</Word>
+      <Word>library</Word>
+      <Word>use</Word>
+      <Word>of</Word>
+      <Word>architecture</Word>
+      <Word>function</Word>
+      <Word>do</Word>
+      <Word>null</Word>
+      <Word>open</Word>
+      <Word>case</Word>
+      <Word>when</Word>
+      <Word>else</Word>
+      <Word>elsif</Word>
+      <Word>if</Word>
+      <Word>then</Word>
+      <Word>parwhile</Word>
+      <Word>parfor</Word>
+      <Word>loop</Word>
+      <Word>exit</Word>
+      <Word>default</Word>
+      <Word>return</Word>
+      <Word>true</Word>
+      <Word>false</Word>
+      <Word>attribute</Word>
+      <Word>assert</Word>
+      <Word>severity</Word>
+      <Word>impure</Word>
+      <Word>until</Word>
+      <Word>after</Word>
+      <Word>sll</Word>
+      <Word>srl</Word>
+      <Word>sla</Word>
+      <Word>subtype</Word>
+      <Word>sra</Word>
+      <Word>shift_right</Word>
+      <Word>shift_left</Word>
+      <Word>transport</Word>
+      <Word>inertial</Word>
+      <Word>reject</Word>
+      <Word>delayed</Word>
+      <Word>write</Word>
+      <Word>hwrite</Word>
+      <Word>writeline</Word>
+      <Word>text</Word>
+      <Word>line</Word>
+    </Keywords>
+    <Keywords color="Keywords">
+      <Word>std_logic_vector</Word>
+      <Word>std_ulogic_vector</Word>
+      <Word>std_logic</Word>
+      <Word>std_ulogic</Word>
+      <Word>bit_vector</Word>
+      <Word>bit</Word>
+      <Word>boolean</Word>
+      <Word>natural</Word>
+      <Word>positive</Word>
+      <Word>integer</Word>
+      <Word>real</Word>
+      <Word>character</Word>
+      <Word>string</Word>
+      <Word>unsigned</Word>
+      <Word>signed</Word>
+      <Word>time</Word>
+    </Keywords>
+    
+    <Span color="Comment">
+      <Begin>--</Begin>
+    </Span>
+  
+    <Span color="Comment" multiline="true">
+      <Begin>/\*</Begin>
+      <End>\*/</End>
+    </Span>
+
+    <Span color="Comment">
+      <Begin>\[</Begin>
+      <End>\]</End>
+    </Span>
+    
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+    <!--<Rule color="MethodName">[\d\w_]+(?=(\s*\())</Rule>-->
+    <Rule color="Digits">\b\d+[m,n]{0,1}[s]?</Rule>
+    
+  </RuleSet>
+</SyntaxDefinition>

@@ -13,4 +13,6 @@ public interface IProjectFolder : IProjectEntry
     public IProjectFile AddFile(string path, bool createNew = false);
 
     public IProjectFolder AddFolder(string path, bool createNew = false);
+
+    public IProjectEntry? Search(string path, bool recursive = true);
 }

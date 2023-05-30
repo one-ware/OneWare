@@ -21,6 +21,8 @@ namespace OneWare.Shared.LanguageService
 
         public IEditor Editor { get; }
 
+        public IFile CurrentFile => Editor.CurrentFile;
+
         public IIndentationStrategy? IndentationStrategy { get; protected set; }
 
         public CustomHighlightManager? CustomHighlightManager { get; protected set; }

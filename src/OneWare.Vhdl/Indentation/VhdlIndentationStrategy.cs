@@ -1,9 +1,9 @@
 ﻿using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
-using AvaloniaEdit.Indentation.CSharp;
+using OneWare.Shared.EditorExtensions;
 
-namespace OneWare.Vhdl
+namespace OneWare.Vhdl.Indentation
 {
     public class VhdlIndentationStrategy : DefaultIndentationStrategy
     {

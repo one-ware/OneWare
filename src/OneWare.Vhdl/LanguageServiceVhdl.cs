@@ -3,11 +3,14 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
+using OneWare.Shared.Services;
 using Prism.Ioc;
+using TextMateSharp.Grammars;
+using IFile = OneWare.Shared.IFile;
 
 namespace OneWare.Vhdl
 {
-    public class LanguageServiceVhdl : LanguageServiceBase
+    public class LanguageServiceVhdl : LanguageServiceBase, ILanguageService
     {
         public LanguageServiceVhdl() : base ("VHDL LS", new []{".vhd", ".vhdl"})
         {
@@ -19,6 +22,12 @@ namespace OneWare.Vhdl
             //     if (anyFile && x && !IsActivated) _ = ActivateAsync();
             //     else if (!x && IsActivated) _ = DeactivateAsync();
             // });
+            //TextMateLanguage = new Language()
+        }
+        
+        public ITypeAssistance GetTypeAssistance(IEditor editor)
+        {
+            return new TypeAssistanceVhdl(editor, this);
         }
 
         public override async Task ActivateAsync()
@@ -26,15 +35,17 @@ namespace OneWare.Vhdl
             if (IsActivated) return;
             IsActivated = true;
 
-            if (!Tools.Exists(Global.Options.VhdlLspPath))
-            {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error("VHDL language server not found!", null, false);
-                return;
-            }
+            var vhdlPath = @"C:\Users\Hendrik\VHDPlus\Packages\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\bin\vhdl_ls.exe";
+
+            // if (!Tools.Exists(Global.Options.VhdlLspPath))
+            // {
+            //     ContainerLocator.Container.Resolve<ILogger>()?.Error("VHDL language server not found!", null, false);
+            //     return;
+            // }
 
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = Global.Options.VhdlLspPath,
+                FileName = vhdlPath,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -59,10 +70,9 @@ namespace OneWare.Vhdl
             }
         }
 
-        public override IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, ProjectFile file)
+        public override IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
         {
-            if (file.IsValid() && file.HasRoot &&
-                file.TopFolder.Search(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip", false) != null)
+            if (file is IProjectFile pf && pf.TopFolder?.Search(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip", false) != null)
                 return new List<ErrorListItemModel>();
 
             return base.ConvertErrors(pdp, file);

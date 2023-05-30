@@ -14,6 +14,7 @@ using OneWare.Shared.Extensions;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
+using TextMateSharp.Grammars;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
@@ -26,12 +27,14 @@ namespace OneWare.Shared.LanguageService
         public bool IsActivated { get; protected set; }
         public string Name { get; }
         public string[] SupportedFileExtensions { get; }
-        public string? Workspace { get; protected set; }
+        public string? Workspace { get; }
         public bool IsLanguageServiceReady { get; private set; }
         private Process? Process { get; set; }
         public event EventHandler? LanguageServiceActivated;
         public event EventHandler? LanguageServiceDeactivated;
-
+        
+        public Language? TextMateLanguage { get; protected set; }
+        
         public LanguageServiceBase(string name, string[] supportedFileExtensions, string? workspace = null)
         {
             Name = name;
@@ -91,7 +94,11 @@ namespace OneWare.Shared.LanguageService
                 {
                     options.WithClientInfo(new ClientInfo { Name = "OneWare.Core" });
                     options.WithInput(process.StandardOutput.BaseStream).WithOutput(process.StandardInput.BaseStream);
-                    options.WithRootPath(Workspace);
+                    if (Workspace != null)
+                    {
+                        options.WithRootPath(Workspace);
+                        options.WithWorkspaceFolder(new WorkspaceFolder { Name = Workspace, Uri = Workspace });
+                    }
                     options.WithMaximumRequestTimeout(TimeSpan.FromMilliseconds(500));
                     options.OnLogMessage(WriteLog);
                     options.OnWorkDoneProgressCreate(CreateWorkDoneProgress);
@@ -102,9 +109,7 @@ namespace OneWare.Shared.LanguageService
                     options.EnableDynamicRegistration();
                     options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.Magenta));
                     options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta); });
-
-                    options.WithWorkspaceFolder(new WorkspaceFolder { Name = "VHDP", Uri = Workspace });
-
+                    
                     options.WithCapability(new SynchronizationCapability
                     {
                         DidSave = true,

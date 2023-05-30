@@ -2,8 +2,15 @@
 using System.Text;
 using OneWare.Shared.EditorExtensions;
 
-namespace OneWare.Vhdl
+namespace OneWare.Vhdl.Indentation
 {
+    internal sealed class IndentationSettings
+    {
+        public string IndentString { get; set; } = "\t";
+
+        public bool LeaveEmptyLines { get; set; } = true;
+    }
+    
     internal sealed class IndentationReformatterVhdl
     {
         private Block _block; // block is the current block

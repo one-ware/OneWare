@@ -11,8 +11,8 @@ namespace OneWare.Core.Services;
 
 internal class LanguageManager : ILanguageManager
 {
-        private readonly List<LanguageServiceBase> _singleInstanceServers = new();
-        private readonly List<LanguageServiceBase> _allServers = new();
+        private readonly List<ILanguageService> _singleInstanceServers = new();
+        private readonly List<ILanguageService> _allServers = new();
 
         static LanguageManager()
         {
@@ -30,20 +30,17 @@ internal class LanguageManager : ILanguageManager
         {
             if (!workspaceDependent)
             {
-                var service = ContainerLocator.Current.Resolve(type) as LanguageServiceBase;
-                if (service == null) throw new NullReferenceException(nameof(service));
+                if (ContainerLocator.Current.Resolve(type) is not ILanguageService service) throw new NullReferenceException(nameof(service));
                 _singleInstanceServers.Add(service);
             }
         }
 
-        public LanguageServiceBase? GetLanguageService(IFile file) //TODO introduce projectType
+        public ILanguageService? GetLanguageService(IFile file) //TODO introduce projectType
         {
             var existing =
                 _singleInstanceServers.FirstOrDefault(x => x.SupportedFileExtensions.Contains(file.Extension));
             
-            
-            if (existing != null) return existing;
-            return null;
+            return existing;
         }
 
         public void AddProject(IProjectRoot project)

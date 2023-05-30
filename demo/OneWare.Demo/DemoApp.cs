@@ -1,7 +1,9 @@
 using OneWare.Core;
 using OneWare.Core.Services;
+using OneWare.Cpp;
 using OneWare.Settings;
 using OneWare.Shared.Services;
+using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -37,5 +39,12 @@ public class DemoApp : App
         {
             ModulePath = Paths.ModulesPath
         };
+    }
+
+    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    {
+        base.ConfigureModuleCatalog(moduleCatalog);
+        moduleCatalog.AddModule<VhdlModule>();
+        moduleCatalog.AddModule<CppModule>();
     }
 }
