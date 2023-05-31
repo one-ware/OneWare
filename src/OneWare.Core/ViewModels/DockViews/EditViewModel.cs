@@ -7,7 +7,6 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
-using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
@@ -17,7 +16,6 @@ using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using TextMateSharp.Grammars;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
@@ -84,6 +82,8 @@ namespace OneWare.Core.ViewModels.DockViews
             var service = languageManager.GetLanguageService(currentFile);
 
             //Syntax Highlighting
+            Editor.SyntaxHighlighting = languageManager.GetHighlighting(currentFile.Extension);
+            /*//Syntax Highlighting
             var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
             var registryOptions = new RegistryOptions(syntaxTheme);
             var lang = service?.TextMateLanguage ?? registryOptions.GetLanguageByExtension(CurrentFile.Extension);
@@ -99,7 +99,7 @@ namespace OneWare.Core.ViewModels.DockViews
                             syntaxTheme = x;
                         });
                 textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(lang.Id));
-            }
+            }*/
             
             if (service != null)
             {

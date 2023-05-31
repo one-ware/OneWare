@@ -4,7 +4,6 @@
     <Import Project="..\..\build\OneWare.Module.props" />
     
     <ItemGroup>
-      <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit.TextMate\AvaloniaEdit.TextMate.csproj" />
       <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
     </ItemGroup>
     

@@ -5,7 +5,6 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using TextMateSharp.Grammars;
 using IFile = OneWare.Shared.IFile;
 
 namespace OneWare.Vhdl

@@ -9,21 +9,8 @@
   <Color name="VHDPKeywords"  foreground="#4299c7" exampleText="Thread"    />
   <Color name="VHDLKeywords"  foreground="#4299c7" exampleText="SIGNAL"    />
   <Color name="Region"  foreground="#955096" fontWeight="bold"  exampleText="#region"    />
-  <Color name="Merge"   foreground="#04DB04" exampleText=">>>>>>>"    />
-  <Color name="Merge2"   foreground="#8a8a8a" exampleText="======="    />
   
   <RuleSet ignoreCase="true">
-    <Keywords color="Merge">
-      <Word>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</Word>
-      <Word>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</Word>
-    </Keywords>
-
-    <Keywords color="Merge2">
-      <Word>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</Word>
-      <Word>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</Word>
-      <Word>=======</Word>
-    </Keywords>
-    
     <Keywords color="Operators">
       <Word>not</Word>
       <Word>rising_edge</Word>

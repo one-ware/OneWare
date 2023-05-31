@@ -14,7 +14,6 @@ using OneWare.Shared.Extensions;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using TextMateSharp.Grammars;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
@@ -31,9 +30,7 @@ namespace OneWare.Shared.LanguageService
         private Process? Process { get; set; }
         public event EventHandler? LanguageServiceActivated;
         public event EventHandler? LanguageServiceDeactivated;
-        
-        public Language? TextMateLanguage { get; protected set; }
-        
+
         public LanguageServiceBase(string name, string? workspace = null)
         {
             Name = name;

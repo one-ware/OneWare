@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Highlighting.Xshd;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
@@ -17,6 +20,25 @@ internal class LanguageManager : ILanguageManager
         private readonly Dictionary<Type, ILanguageService> _singleInstanceServers = new();
         private readonly Dictionary<Type, Dictionary<string,ILanguageService>> _workspaceServers = new();
 
+        private readonly Dictionary<string, IHighlightingDefinition> _highlightingDefinitions = new();
+
+        public void RegisterHighlighting(string path, params string[] supportedFileTypes)
+        {
+            using var s = new StreamReader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+            using var reader = new XmlTextReader(s);
+            var hl = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+            foreach (var fileType in supportedFileTypes)
+            {
+                _highlightingDefinitions[fileType] = hl;
+            }
+        }
+
+        public IHighlightingDefinition? GetHighlighting(string fileExtension)
+        {
+            _highlightingDefinitions.TryGetValue(fileExtension, out var highlightingDefinition);
+            return highlightingDefinition;
+        }
+        
         public void RegisterService(Type type, bool workspaceDependent, params string[] supportedFileTypes)
         {
             foreach (var s in supportedFileTypes)

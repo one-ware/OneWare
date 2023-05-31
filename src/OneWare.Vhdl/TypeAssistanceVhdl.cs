@@ -1,10 +1,11 @@
 ﻿using System.Reactive.Disposables;
+using System.Xml;
 using Avalonia.Input;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.TextMate;
+using AvaloniaEdit.Highlighting.Xshd;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
@@ -12,7 +13,6 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Vhdl.Indentation;
 using Prism.Ioc;
-using TextMateSharp.Grammars;
 
 namespace OneWare.Vhdl
 {

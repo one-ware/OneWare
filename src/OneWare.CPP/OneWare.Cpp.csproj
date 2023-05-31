@@ -6,4 +6,11 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\CPP-Mode.xshd" />
+      <Content Include="Assets\CPP-Mode.xshd">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
 </Project>

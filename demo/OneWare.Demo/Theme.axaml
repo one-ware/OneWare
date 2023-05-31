@@ -1,10 +1,10 @@
 ﻿<Style xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style.Resources>
-        <Color x:Key="ThemeAccentColor">#BB1C1C1C</Color>
-        <Color x:Key="ThemeAccentColor2">#991C1C1C</Color>
-        <Color x:Key="ThemeAccentColor3">#771C1C1C</Color>
-        <Color x:Key="ThemeAccentColor4">#551C1C1C</Color>
+        <Color x:Key="ThemeAccentColor">#009688</Color>
+        <Color x:Key="ThemeAccentColor2">#99009688</Color>
+        <Color x:Key="ThemeAccentColor3">#88009688</Color>
+        <Color x:Key="ThemeAccentColor4">#77009688</Color>
         <SolidColorBrush x:Key="ThemeAccentBrush2" Color="{StaticResource ThemeAccentColor2}" />
         <SolidColorBrush x:Key="ThemeAccentBrush3" Color="{StaticResource ThemeAccentColor3}" />
         <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{StaticResource ThemeAccentColor4}" />
