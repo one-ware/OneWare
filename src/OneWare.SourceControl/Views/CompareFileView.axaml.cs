@@ -1,16 +1,14 @@
-﻿using System.Reactive.Disposables;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
+﻿using Avalonia.Controls;
 using AvaloniaEdit;
+using DynamicData.Binding;
 using OneWare.Shared.Services;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.ViewModels;
 using Prism.Ioc;
-using ReactiveUI;
 
 namespace OneWare.SourceControl.Views
 {
-    public partial class CompareFileView : UserControl, IViewFor<CompareFileViewModel>
+    public partial class CompareFileView : UserControl
     {
         private readonly DiffLineBackgroundRenderer _leftBackgroundRenderer, _rightBackgroundRenderer;
         private readonly DiffInfoMargin _leftInfoMargin, _rightInfoMargin;
@@ -53,23 +51,24 @@ namespace OneWare.SourceControl.Views
                 // else DiffEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
             };
 
-            this.WhenActivated(disposable =>
+            this.DataContextChanged += (_, _) =>
             {
-                ViewModel = DataContext as CompareFileViewModel;
-
-                this.ViewModel.WhenAnyValue(x => x.Chunks)
-                    .Subscribe(x =>
+                if (DataContext is not CompareFileViewModel vm) return;
+                
+                Load(vm);
+                
+                vm.WhenValueChanged(a => a.Chunks)
+                    .Subscribe(b =>
                     {
-                        if(x != null) this.Load(ViewModel);
-                    })
-                    .DisposeWith(disposable);
-            });
+                        if (b != null) Load(vm);
+                    });
+            };
         }
-
-
-
+        
         public void Load(CompareFileViewModel vm)
         {
+            if (vm.Path == null) return;
+            
             if (vm.Chunks.Count > 1)
             {
                 DiffEditor.IsVisible = false;
@@ -151,19 +150,12 @@ namespace OneWare.SourceControl.Views
             }
             
             var language = Path.GetExtension(vm.Path);
-            if (ContainerLocator.Container.Resolve<ILanguageManager>().GetHighlighting(language) is {} highlighting)
+            
+            if (language != null && ContainerLocator.Container.Resolve<ILanguageManager>().GetHighlighting(language) is {} highlighting)
             {
                 DiffEditor.SyntaxHighlighting = highlighting;
                 HeadEditor.SyntaxHighlighting = highlighting;
             }
         }
-
-        object IViewFor.ViewModel
-        {
-            get => ViewModel;
-            set => ViewModel = value as CompareFileViewModel;
-        }
-
-        public CompareFileViewModel ViewModel { get; set; }
     }
 }

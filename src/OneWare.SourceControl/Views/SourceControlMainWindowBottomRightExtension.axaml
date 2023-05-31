@@ -1,0 +1,30 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.SourceControl.Views.SourceControlMainWindowBottomRightExtension" x:DataType="viewModels:SourceControlViewModel">
+    
+    <Button Cursor="Hand"
+            IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+            Command="{Binding SyncAsync}"
+            ToolTip.Tip="Synchronize Changes">
+        <StackPanel Orientation="Horizontal" Spacing="3">
+            <views:Spinner Foreground="White" Height="13"
+                              CustomIcon="{DynamicResource VsCode.SyncWhite}"
+                              IsIntermediate="True"
+                              IsAnimationRunning="{Binding IsLoading}" />
+
+            <TextBlock Text="{Binding PullCommits}" Foreground="White" />
+            <Image Height="13"
+                   Source="{DynamicResource Entypo+.ArrowLongDownWhite}" />
+
+            <TextBlock
+                Text="{Binding PushCommits}" Foreground="White" />
+            <Image Height="13"
+                   Source="{DynamicResource Entypo+.ArrowLongUpWhite}" />
+        </StackPanel>
+    </Button>
+</UserControl>

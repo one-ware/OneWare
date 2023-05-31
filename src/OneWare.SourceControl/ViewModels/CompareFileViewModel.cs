@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using Avalonia.Media;
 using DiffPlex;
 using Dock.Model.Mvvm.Controls;
@@ -16,18 +17,19 @@ namespace OneWare.SourceControl.ViewModels
 
         private Dictionary<IBrush, int[]> _scrollInfoRight = new();
         
-        private Patch _patchFile;
-        public Patch PatchFile
+        private Patch? _patchFile;
+        public Patch? PatchFile
         {
             get => _patchFile;
             set
             {
-                this.SetProperty(ref _patchFile, value);
+                SetProperty(ref _patchFile, value);
                 _ = ParsePatchFileAsync();
             }
         }
 
-        public string Path { get; }
+        [DataMember]
+        public string Path { get; init; }
 
         public List<DiffSectionViewModel> Chunks
         {
@@ -58,10 +60,10 @@ namespace OneWare.SourceControl.ViewModels
             WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
         }
 
-        public CompareFileViewModel(string path, Patch patch)
+        public CompareFileViewModel(string path, SourceControlViewModel sourceControlViewModel)
         {
             Path = path;
-            _patchFile = patch;
+            PatchFile = sourceControlViewModel.GetPatch(path, 3);
         }
 
         public override bool OnClose()
@@ -72,6 +74,8 @@ namespace OneWare.SourceControl.ViewModels
 
         public async Task ParsePatchFileAsync()
         {
+            if (PatchFile == null) return;
+            
             var diffContents = PatchFile.Content;
 
             var result = await Task.Run(() =>

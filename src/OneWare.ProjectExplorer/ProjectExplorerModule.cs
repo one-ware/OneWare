@@ -35,7 +35,7 @@ public class ProjectExplorerModule : IModule
         
         _dockService.RegisterLayoutExtension<IProjectService>(DockShowLocation.Left);
 
-        _windowService.RegisterUiExtension("MainWindow_RoundToolBar", new ProjectExplorerMainWindowToolBarExtension()
+        _windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new ProjectExplorerMainWindowToolBarExtension()
         {
             DataContext = vm,
         });

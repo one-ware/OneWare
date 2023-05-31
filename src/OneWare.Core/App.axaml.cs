@@ -13,6 +13,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -212,6 +213,11 @@ namespace OneWare.Core
                 //_ = Global.MainWindowViewModel.RefreshHardwareAsync();
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
                 //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
+
+                var dummy = new ProjectRoot(@"C:\Users\Hendrik\OneWareStudio\Projects\Test", null);
+                dummy.AddFile("Test.vhd");
+                
+                Container.Resolve<IProjectService>().Items.Add(dummy);
 
                 _ = FinishedLoadingAsync();
             }

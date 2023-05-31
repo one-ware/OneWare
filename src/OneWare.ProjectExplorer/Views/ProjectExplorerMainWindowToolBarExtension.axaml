@@ -17,7 +17,7 @@
             <DataTemplate DataType="models:ProjectRoot">
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="5 0">
                     <Image Height="17" Width="17"
-                           Source="{Binding Icon, Converter={StaticResource FileTypeIconConverter}}" />
+                           Source="{Binding Icon}" />
                     <TextBlock VerticalAlignment="Center" Text="{Binding Header}" />
                 </StackPanel>
             </DataTemplate>

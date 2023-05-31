@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Reactive;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,6 +9,7 @@ using Prism.Ioc;
 
 using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
+using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectExplorer.Models;
@@ -51,7 +53,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set
         {
             SetProperty(ref _loadingFailed, value);
-            IsExpanded = false;
+            if(value) IsExpanded = false;
         }
     }
         
@@ -85,7 +87,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         }
     }
 
-    public string FullPath => Path.Combine(Root.RootFolderPath, RelativePath);
+    public virtual string FullPath => Path.Combine(Root.RootFolderPath, RelativePath);
     
     public IProjectRoot Root
     {
@@ -108,7 +110,8 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     {
         Header = fileName;
         TopFolder = top;
-
+        
+        Icon = SharedConverters.FileExtensionIconConverter.Convert(fileName, typeof(IImage), null, CultureInfo.CurrentCulture) as IImage;
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
     

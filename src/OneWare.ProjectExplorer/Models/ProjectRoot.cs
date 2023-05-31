@@ -14,6 +14,8 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
     
     public List<IProjectFile> Files { get; } = new();
 
+    public override string FullPath => RootFolderPath;
+
     public ProjectRoot(string folderPath, string? projectFileName = null) : base(Path.GetFileName(folderPath), null)
     {
         RootFolderPath = folderPath;

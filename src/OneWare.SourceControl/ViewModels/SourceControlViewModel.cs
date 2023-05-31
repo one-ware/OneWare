@@ -10,6 +10,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
+using DynamicData;
 using LibGit2Sharp;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -35,7 +36,7 @@ namespace OneWare.SourceControl.ViewModels
 
         private bool _dllNotFound;
         private readonly object _lock = new();
-
+        
         public ObservableCollection<SourceControlModel> Changes { get; set; } = new();
 
         public ObservableCollection<SourceControlModel> StagedChanges { get; set; } = new();
@@ -112,8 +113,8 @@ namespace OneWare.SourceControl.ViewModels
         public AsyncRelayCommand AddRemoteDialogAsyncCommand { get; }
         public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
         public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
-        
-        public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; }
+
+        public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
         
         public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
             IDockService dockService, IWindowService windowService, IProjectService projectService)
@@ -148,7 +149,6 @@ namespace OneWare.SourceControl.ViewModels
             SetUserIdentityAsyncCommand = new AsyncRelayCommand<bool>(SetUserIdentityAsync);
 
             settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay").Subscribe(SetupTimer);
-            AvailableBranchesMenu = windowService.GetMenuItems("MainWindow_BottomRightMenu");
         }
 
         public void InitializeRepository()
@@ -266,10 +266,7 @@ namespace OneWare.SourceControl.ViewModels
                     //ContainerLocator.Container.Resolve<ILogger>()?.Log("Refresh GIT " + WorkingPath + " " + Repository.IsValid(WorkingPath), ConsoleColor.Red);          
 
                     HeadBranch = null;
-                    _windowService.RegisterMenuItem("MainWindow_BottomRightMenu", new MenuItemViewModel()
-                    {
-                        Header = "Branches"
-                    });
+                    AvailableBranchesMenu.Clear();
 
                     if (CurrentRepo == null || Tools.NormalizePath(CurrentRepo.Info.WorkingDirectory) !=
                         Tools.NormalizePath(WorkingPath))
@@ -297,20 +294,20 @@ namespace OneWare.SourceControl.ViewModels
                             };
                             if (branch.IsCurrentRepositoryHead)
                             {
-                                menuItem.Icon = Application.Current.FindResource("PicolIcons.Accept") as IImage;
+                                menuItem.Icon = Application.Current!.FindResource("PicolIcons.Accept") as IImage;
                                 menuItem.IsEnabled = false;
                             }
-
-                            _windowService.RegisterMenuItem("MainWindow_BottomRightMenu/Branches", menuItem);
+                            
+                            AvailableBranchesMenu.Add(menuItem);
                         }
 
-                        //if (Global.MainWindowViewModel.AvailableBranchesMenu.Count > 0)
-                        //Global.MainWindowViewModel.AvailableBranchesMenu.Add(new Separator());
+                        //if (AvailableBranchesMenu.Count > 0)
+                        //        AvailableBranchesMenu.Add(new Separator());
 
-                        _windowService.RegisterMenuItem("MainWindow_BottomRightMenu/Branches", new MenuItemViewModel
+                        AvailableBranchesMenu.Add(new MenuItemViewModel
                         {
                             Header = "New Branch...",
-                            Icon = Application.Current.FindResource("BoxIcons.RegularGitBranch") as IImage,
+                            Icon = Application.Current!.FindResource("BoxIcons.RegularGitBranch") as IImage,
                             Command = ReactiveCommand.Create(CreateBranchDialogAsync)
                         });
 
@@ -358,7 +355,7 @@ namespace OneWare.SourceControl.ViewModels
 
         public void SetupTimer(int seconds)
         {
-            if (_timer != null && _timer.Interval.TotalSeconds == seconds) return;
+            if (_timer != null && Math.Abs(_timer.Interval.TotalSeconds - seconds) < 1) return;
             _timer?.Stop();
             _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, TimerCallback);
             _timer.Start();
@@ -1026,6 +1023,13 @@ namespace OneWare.SourceControl.ViewModels
             _ = CompareChangesAsync(path, "Changes: ");
         }
 
+        public Patch? GetPatch(string path, int contextLines)
+        {
+            return CurrentRepo?.Diff.Compare<Patch>(new List<string> { path }, false,
+                new ExplicitPathsOptions(),
+                new CompareOptions { ContextLines = contextLines });
+        }
+        
         public async Task CompareChangesAsync(string path, string titlePrefix, int contextLines = 3,
             bool switchTab = true)
         {
@@ -1036,13 +1040,8 @@ namespace OneWare.SourceControl.ViewModels
                 var fullPath = Path.IsPathRooted(path)
                     ? path
                     : Path.Combine(CurrentRepo.Info.WorkingDirectory, path.Replace('/', Path.DirectorySeparatorChar));
-                var patch = CurrentRepo.Diff.Compare<Patch>(new List<string> { path }, false,
-                    new ExplicitPathsOptions(),
-                    new CompareOptions { ContextLines = contextLines });
-
-                CompareFileViewModel vm;
-
-                vm = new CompareFileViewModel(fullPath, patch)
+                
+                var vm = new CompareFileViewModel(fullPath, this)
                 {
                     Title = titlePrefix + Path.GetFileName(path),
                     Id = titlePrefix + fullPath

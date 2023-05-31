@@ -42,9 +42,10 @@ namespace OneWare.Core.ViewModels.Windows
             set => SetProperty(ref _currentEditor, value);
         }
         
-        public ObservableCollection<Control> RoundToolBarIcons { get; }
-        
+        public ObservableCollection<Control> RoundToolBarExtension { get; }
+        public ObservableCollection<Control> BottomRightExtension { get; }
         public ObservableCollection<MenuItemViewModel> MainMenu { get; }
+        
 
         public MainWindowViewModel(IPaths paths, IActive active, IWindowService windowService, IDockService dockService,
             ISettingsService settingsService)
@@ -55,7 +56,9 @@ namespace OneWare.Core.ViewModels.Windows
             Paths = paths;
             _settingsService = settingsService;
             
-            RoundToolBarIcons = windowService.GetUiExtensions("MainWindow_RoundToolBar");
+            RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
+            BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
+
             MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
 
             _title = paths.AppName;

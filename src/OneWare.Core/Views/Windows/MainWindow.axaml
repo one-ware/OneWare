@@ -47,7 +47,7 @@
 
                     <StackPanel Orientation="Horizontal">
                         
-                        <ItemsControl ItemsSource="{Binding RoundToolBarIcons}">
+                        <ItemsControl ItemsSource="{Binding RoundToolBarExtension}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal"/>
@@ -102,7 +102,14 @@
                     </StackPanel.Styles>
 
 
-
+                    <ItemsControl ItemsSource="{Binding BottomRightExtension}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    
                     <!--
                     <Button Cursor="Hand"
                             IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"

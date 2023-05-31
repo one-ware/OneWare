@@ -36,6 +36,9 @@ public class Paths : IPaths
         Directory.CreateDirectory(AppDataDirectory);
         Directory.CreateDirectory(DocumentsDirectory);
         Directory.CreateDirectory(ModulesPath);
+        Directory.CreateDirectory(CrashReportsDirectory);
+        Directory.CreateDirectory(ProjectsDirectory);
+        Directory.CreateDirectory(PackagesDirectory);
         //...
     }
 }

@@ -23,6 +23,7 @@ namespace OneWare.Shared.Converters
                     ".hpp" => Application.Current.FindResource("VsImageLib.HeaderFile16X"),
                     ".cs" => Application.Current.FindResource("VsImageLib.Cs16X"),
                     ".vhdp" => Application.Current.FindResource("VhdpFileIcon"),
+                    ".vhd" => Application.Current.FindResource("VhdlFileIcon"),
                     ".vhdl" => Application.Current.FindResource("VhdlFileIcon"),
                     ".v" => Application.Current.FindResource("VerilogFileIcon"),
                     ".sv" => Application.Current.FindResource("SystemVerilogFileIcon"),

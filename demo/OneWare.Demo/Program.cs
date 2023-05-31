@@ -51,14 +51,6 @@ internal abstract class Program
     {
         try
         {
-            //Create all default directories if not existing              
-            Directory.CreateDirectory(DemoApp.Paths.CrashReportsDirectory);
-            Directory.CreateDirectory(DemoApp.Paths.LibrariesDirectory);
-            Directory.CreateDirectory(DemoApp.Paths.ProjectsDirectory);
-            Directory.CreateDirectory(DemoApp.Paths.AppDataDirectory);
-            Directory.CreateDirectory(DemoApp.Paths.PackagesDirectory);
-
-
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
