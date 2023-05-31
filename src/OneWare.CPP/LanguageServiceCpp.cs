@@ -12,7 +12,7 @@ namespace OneWare.Cpp
 {
     public class LanguageServiceCpp : LanguageServiceBase, ILanguageService
     {
-        public LanguageServiceCpp() : base("CPP", new []{".cpp", ".h", ".c", ".hpp"})
+        public LanguageServiceCpp() : base("CPP LS")
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
             // {

@@ -130,13 +130,10 @@ namespace OneWare.Core.Services
                 if (vm is EditViewModel evm)
                 {
                     if (vm.IsDirty && !await evm.TryCloseAsync()) return false;
-                    evm.TypeAssistance?.Close();
-                   
                 }
-                CloseDockable(vm);
                 OpenFiles.Remove(pf);
+                CloseDockable(vm);
             }
-
             return true;
         }
 

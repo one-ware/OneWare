@@ -231,7 +231,13 @@ namespace OneWare.Core.ViewModels.DockViews
                 _ = _dockService.CloseFileAsync(CurrentFile);
                 return false;
             }
+            else
+            {
+                _dockService.OpenFiles.Remove(CurrentFile);
+            }
+
             TypeAssistance?.Close();
+            if(CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
             return true;
         }
         
@@ -239,7 +245,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             if (!IsDirty) return true;
 
-            var result = await _windowService.ShowYesNoAsync("Warning",
+            var result = await _windowService.ShowYesNoCancelAsync("Warning",
                 "Do you want to save changes to the file " + CurrentFile.Header + "?", MessageBoxIcon.Warning, _dockService.GetWindowOwner(this));
             
             if (result == MessageBoxStatus.Yes)
