@@ -69,7 +69,19 @@ namespace OneWare.Shared.Views
             }
         }
 
-        public MessageBoxStatus BoxStatus =>
-            (DataContext as MessageBoxViewModel)?.BoxStatus ?? MessageBoxStatus.Canceled;
+        public MessageBoxStatus BoxStatus => (DataContext as MessageBoxViewModel)!.BoxStatus;
+
+        public string? Input
+        {
+            get => (DataContext as MessageBoxViewModel)!.Input;
+            set => (DataContext as MessageBoxViewModel)!.Input = value;
+        }
+        public ObservableCollection<object> SelectionItems => (DataContext as MessageBoxViewModel)!.SelectionItems;
+
+        public object? SelectedItem
+        {
+            get => (DataContext as MessageBoxViewModel)!.SelectedItem;
+            set => (DataContext as MessageBoxViewModel)!.SelectedItem = value;
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
@@ -71,9 +72,16 @@ public class WindowService : IWindowService
             }
 
         if (menuItems.Length == 0) return;
+        
         foreach (var a in menuItems)
         {
             var insert = false;
+            
+            if (activeCollection.FirstOrDefault(x => x.Header == a.Header) is {} duplicate)
+            {
+                activeCollection.Remove(duplicate);
+            }
+            
             for(var i = 0; i < activeCollection.Count; i++)
             {
                 if (a.Priority <= activeCollection[i].Priority)
@@ -137,9 +145,39 @@ public class WindowService : IWindowService
         return msg.BoxStatus;
     }
 
-    public void ShowNotification(string title, string message)
+    public async Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue, Window? owner = null)
     {
-        throw new System.NotImplementedException();
+        var msg = new MessageBoxWindow(title, message,
+            MessageBoxMode.Input, icon);
+        msg.Input = defaultValue;
+        await ShowDialogAsync(msg, owner);
+        if (msg.BoxStatus == MessageBoxStatus.Canceled) return null;
+        return msg.Input;
+    }
+
+    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, Window? owner = null)
+    {
+        var msg = new MessageBoxWindow(title, message,
+            MessageBoxMode.SelectFolder, icon);
+        await ShowDialogAsync(msg, owner);
+        if (msg.BoxStatus == MessageBoxStatus.Canceled) return null;
+        return msg.Input;
+    }
+
+    public async Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon, IEnumerable<object> options, object? defaultOption, Window? owner = null)
+    {
+        var msg = new MessageBoxWindow(title, message,
+            MessageBoxMode.SelectItem, MessageBoxIcon.Info);
+        msg.SelectionItems.AddRange(options);
+        msg.SelectedItem = defaultOption;
+        await ShowDialogAsync(msg, owner);
+        if (msg.BoxStatus == MessageBoxStatus.Canceled) return msg.SelectedItem;
+        return null;
+    }
+
+    public void ShowNotification(string title, string message, NotificationType type)
+    {
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
     }
 
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)

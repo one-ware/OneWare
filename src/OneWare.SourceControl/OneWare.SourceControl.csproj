@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\Base.props" />
+    <Import Project="..\..\build\OneWare.Module.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DiffPlex" Version="1.7.1" />
+        <PackageReference Include="LibGit2Sharp" Version="0.27.0-preview-0182" />
+    </ItemGroup>
+</Project>

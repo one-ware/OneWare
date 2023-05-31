@@ -31,11 +31,39 @@ namespace OneWare.Shared.ViewModels
 
     public class MessageBoxViewModel : ViewModelBase
     {
-        private string _input = "";
+        private string? _input;
+        public string? Input
+        {
+            get => _input;
+            set => SetProperty(ref _input, value);
+        }
 
-        private object _selectedItem;
+        private object? _selectedItem;
+        public object? SelectedItem
+        {
+            get => _selectedItem;
+            set => SetProperty(ref _selectedItem, value);
+        }
 
         private ObservableCollection<object> _selectionItems = new();
+        public ObservableCollection<object> SelectionItems
+        {
+            get => _selectionItems;
+            set => SetProperty(ref _selectionItems, value);
+        }
+        
+        public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
+        public string Title { get; }
+        public string Message { get; }
+        public bool ShowYes { get; } = true;
+        public bool ShowNo { get; } = true;
+        public bool ShowCancel { get; } = true;
+        public bool ShowOk { get; }
+        public bool ShowInput { get; }
+        public bool ShowFolderButton { get; }
+        public bool ShowSelection { get; }
+
+        public string PasswordChar { get; } = "";
         
         public MessageBoxViewModel(string title, string message, MessageBoxMode mode)
         {
@@ -78,38 +106,6 @@ namespace OneWare.Shared.ViewModels
                     break;
             }
         }
-
-        public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
-        public string Title { get; } = "";
-        public string Message { get; } = "";
-
-        public string Input
-        {
-            get => _input;
-            set => SetProperty(ref _input, value);
-        }
-
-        public bool ShowYes { get; } = true;
-        public bool ShowNo { get; } = true;
-        public bool ShowCancel { get; } = true;
-        public bool ShowOk { get; }
-        public bool ShowInput { get; }
-        public bool ShowFolderButton { get; }
-        public bool ShowSelection { get; }
-
-        public ObservableCollection<object> SelectionItems
-        {
-            get => _selectionItems;
-            set => SetProperty(ref _selectionItems, value);
-        }
-
-        public object SelectedItem
-        {
-            get => _selectedItem;
-            set => SetProperty(ref _selectedItem, value);
-        }
-
-        public string PasswordChar { get; } = "";
 
         public void No(Window window)
         {

@@ -35,6 +35,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
     </ItemGroup>
 

@@ -3,6 +3,7 @@ using OneWare.Core.Services;
 using OneWare.Cpp;
 using OneWare.Settings;
 using OneWare.Shared.Services;
+using OneWare.SourceControl;
 using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -46,5 +47,6 @@ public class DemoApp : App
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<SourceControlModule>();
     }
 }

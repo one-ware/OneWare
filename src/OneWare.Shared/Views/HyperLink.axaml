@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Core.Views.Controls.HyperLink" Name="HyperLinkView">
+             x:Class="OneWare.Shared.Views.HyperLink" Name="HyperLinkView">
     <Button Name="PartButton" Click="Open_Click" Padding="0">
         <Button.Styles>
             <Style Selector="Button">

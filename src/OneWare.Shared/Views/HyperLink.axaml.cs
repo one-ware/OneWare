@@ -1,21 +1,19 @@
-﻿using System.IO;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Prism.Ioc;
-using OneWare.Shared;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 
-namespace OneWare.Core.Views.Controls
+namespace OneWare.Shared.Views
 {
     public partial class HyperLink : UserControl
     {
         public static readonly StyledProperty<string> UrlProperty =
-            AvaloniaProperty.Register<TimeSelectorBox, string>(nameof(Url));
+            AvaloniaProperty.Register<HyperLink, string>(nameof(Url));
 
         public static readonly StyledProperty<string> LabelProperty =
-            AvaloniaProperty.Register<TimeSelectorBox, string>(nameof(Label));
+            AvaloniaProperty.Register<HyperLink, string>(nameof(Label));
 
         public static readonly StyledProperty<TextDecorationCollection> TextDecorationsProperty =
             AvaloniaProperty.Register<TextBlock, TextDecorationCollection>(nameof(TextDecorations));

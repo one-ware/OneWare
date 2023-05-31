@@ -1,0 +1,1259 @@
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Reactive;
+using System.Runtime.InteropServices;
+using System.Text;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
+using Avalonia.Media;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
+using Dock.Model.Mvvm.Controls;
+using LibGit2Sharp;
+using OneWare.Shared;
+using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
+using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
+using OneWare.Shared.Views;
+using OneWare.SourceControl.Models;
+using Prism.Ioc;
+using ReactiveUI;
+using Notification = Avalonia.Controls.Notifications.Notification;
+
+namespace OneWare.SourceControl.ViewModels
+{
+    public class SourceControlViewModel : Tool
+    {
+        private readonly ILogger _logger;
+        private readonly ISettingsService _settingsService;
+        private readonly IActive _active;
+        private readonly IDockService _dockService;
+        private readonly IWindowService _windowService;
+        public IProjectService ProjectService { get; }
+
+        private bool _dllNotFound;
+        private readonly object _lock = new();
+
+        public ObservableCollection<SourceControlModel> Changes { get; set; } = new();
+
+        public ObservableCollection<SourceControlModel> StagedChanges { get; set; } = new();
+
+        public ObservableCollection<SourceControlModel> MergeChanges { get; set; } = new();
+
+        public Repository? CurrentRepo { get; private set; }
+
+        private string _commitMessage = "";
+
+        private DispatcherTimer? _timer;
+
+        public string CommitMessage
+        {
+            get => _commitMessage;
+            set => SetProperty(ref _commitMessage, value);
+        }
+
+        private string _workingPath = "";
+
+        public string WorkingPath
+        {
+            get => _workingPath;
+            set => SetProperty(ref _workingPath, value);
+        }
+
+        private bool _isLoading;
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
+        private Branch? _headBranch;
+
+        public Branch? HeadBranch
+        {
+            get => _headBranch;
+            set => SetProperty(ref _headBranch, value);
+        }
+
+        private int _pullCommits;
+
+        public int PullCommits
+        {
+            get => _pullCommits;
+            set => SetProperty(ref _pullCommits, value);
+        }
+
+        private int _pushCommits;
+
+        public int PushCommits
+        {
+            get => _pushCommits;
+            set => SetProperty(ref _pushCommits, value);
+        }
+
+        public AsyncRelayCommand RefreshAsyncCommand { get; }
+        public AsyncRelayCommand CloneDialogAsyncCommand { get; }
+        public AsyncRelayCommand SyncAsyncCommand { get; }
+        public AsyncRelayCommand PullAsyncCommand { get; }
+        public AsyncRelayCommand PushAsyncCommand { get; }
+        public AsyncRelayCommand FetchAsyncCommand { get; }
+        public AsyncRelayCommand<bool> CommitAsyncCommand { get; }
+        public AsyncRelayCommand<ResetMode> DiscardAllAsyncCommand { get; }
+        public RelayCommand StageAllCommand { get; }
+        public RelayCommand UnStageAllCommand { get; }
+        public RelayCommand<string> StageCommand { get; }
+        public RelayCommand<string> UnStageCommand { get; }
+        public AsyncRelayCommand CreateBranchDialogAsyncCommand { get; }
+        public AsyncRelayCommand MergeBranchDialogAsyncCommand { get; }
+        public AsyncRelayCommand DeleteBranchDialogAsyncCommand { get; }
+        public AsyncRelayCommand AddRemoteDialogAsyncCommand { get; }
+        public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
+        public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
+        
+        public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; }
+        
+        public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
+            IDockService dockService, IWindowService windowService, IProjectService projectService)
+        {
+            _logger = logger;
+            _settingsService = settingsService;
+            _active = active;
+            _dockService = dockService;
+            _windowService = windowService;
+            ProjectService = projectService;
+
+            Id = "SourceControl";
+            Title = "Source Control";
+
+            RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
+            CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);
+            SyncAsyncCommand = new AsyncRelayCommand(SyncAsync);
+            PullAsyncCommand = new AsyncRelayCommand(PullAsync);
+            PushAsyncCommand = new AsyncRelayCommand(PushAsync); // new AsyncRelayCommand(PushAsync);
+            FetchAsyncCommand = new AsyncRelayCommand(FetchAsync);
+            CommitAsyncCommand = new AsyncRelayCommand<bool>(CommitAsync);
+            DiscardAllAsyncCommand = new AsyncRelayCommand<ResetMode>(DiscardAllAsync);
+            StageAllCommand = new RelayCommand(StageAll);
+            UnStageAllCommand = new RelayCommand(UnStageAll);
+            StageCommand = new RelayCommand<string>(Stage);
+            UnStageCommand = new RelayCommand<string>(UnStage);
+            CreateBranchDialogAsyncCommand = new AsyncRelayCommand(CreateBranchDialogAsync);
+            MergeBranchDialogAsyncCommand = new AsyncRelayCommand(MergeBranchDialogAsync);
+            DeleteBranchDialogAsyncCommand = new AsyncRelayCommand(DeleteBranchDialogAsync);
+            AddRemoteDialogAsyncCommand = new AsyncRelayCommand(AddRemoteDialogAsync);
+            DeleteRemoteDialogAsyncCommand = new AsyncRelayCommand(DeleteRemoteDialogAsync);
+            SetUserIdentityAsyncCommand = new AsyncRelayCommand<bool>(SetUserIdentityAsync);
+
+            settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay").Subscribe(SetupTimer);
+            AvailableBranchesMenu = windowService.GetMenuItems("MainWindow_BottomRightMenu");
+        }
+
+        public void InitializeRepository()
+        {
+            if (ProjectService.ActiveProject == null) return;
+
+            lock (_lock)
+            {
+                try
+                {
+                    Repository.Init(ProjectService.ActiveProject.RootFolderPath);
+                    _ = RefreshAsync();
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                }
+            }
+        }
+
+        public async Task CloneDialogAsync()
+        {
+            var url = await _windowService.ShowInputAsync("Clone",
+                "Enter the remote URL for the repository you want to clone", MessageBoxIcon.Info,
+                null, _dockService.GetWindowOwner(this));
+
+            if (url == null) return;
+
+            var folder = await _windowService.ShowFolderSelectAsync("Clone",
+                "Select the location for the new repository", MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
+
+            if (folder == null) return;
+
+            folder = Path.Combine(folder, Path.GetFileNameWithoutExtension(url) ?? "");
+            Directory.CreateDirectory(folder);
+
+            var result = await CloneAsync(url, folder);
+            if (!result) return;
+
+            await Task.Delay(200);
+
+            var startFilePath = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this),
+                "Open Project from cloned repository",
+                folder);
+
+            foreach (var file in startFilePath)
+            {
+                //var proj = await MainDock.ProjectFiles.LoadProjectAsync(file);
+            }
+        }
+
+        public async Task<bool> CloneAsync(string url, string path)
+        {
+            var success = true;
+
+            var key = _active.AddState("Cloning " + Path.GetFileName(url) + "...", AppState.Loading);
+            try
+            {
+                await WaitUntilFreeAsync();
+                IsLoading = true;
+                //Active.SetStatus("Cloning from " + url, Active.AppState.Loading);
+
+                await Task.Run(() =>
+                {
+                    var options = new CloneOptions
+                    {
+                        CredentialsProvider = (url, usernameFromUrl, types) =>
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result,
+                        RecurseSubmodules = true
+                    };
+                    Repository.Clone(url, path, options);
+                });
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+
+                success = false;
+            }
+
+            _active.RemoveState(key);
+
+            IsLoading = false;
+            //Active.SetStatus(success ? "Done" : "Finished with errors", Active.AppState.Idle);
+
+            return success;
+        }
+
+        public async Task RefreshAsync()
+        {
+            if (_dllNotFound) return;
+
+            if (ProjectService.ActiveProject == null) return;
+
+            await WaitUntilFreeAsync();
+
+            lock (_lock)
+            {
+                IsLoading = true;
+
+                try
+                {
+                    WorkingPath = Repository.Discover(ProjectService.ActiveProject.RootFolderPath) ??
+                                  ProjectService.ActiveProject.RootFolderPath;
+
+                    // //Reset
+                    // foreach (var change in Changes)
+                    //     if (change.ProjectFile != null)
+                    //         change.ProjectFile.GitChangeStatus = FileStatus.Unaltered;
+
+                    Changes.Clear();
+                    StagedChanges.Clear();
+                    MergeChanges.Clear();
+
+                    //ContainerLocator.Container.Resolve<ILogger>()?.Log("Refresh GIT " + WorkingPath + " " + Repository.IsValid(WorkingPath), ConsoleColor.Red);          
+
+                    HeadBranch = null;
+                    _windowService.RegisterMenuItem("MainWindow_BottomRightMenu", new MenuItemViewModel()
+                    {
+                        Header = "Branches"
+                    });
+
+                    if (CurrentRepo == null || Tools.NormalizePath(CurrentRepo.Info.WorkingDirectory) !=
+                        Tools.NormalizePath(WorkingPath))
+                    {
+                        if (Repository.IsValid(WorkingPath))
+                            CurrentRepo = new Repository(WorkingPath);
+                        else
+                            CurrentRepo = null;
+                    }
+
+                    if (CurrentRepo != null &&
+                        Tools.NormalizePath(CurrentRepo.Info.Path) == Tools.NormalizePath(WorkingPath))
+                    {
+                        HeadBranch = CurrentRepo.Head;
+
+                        foreach (var branch in CurrentRepo.Branches)
+                        {
+                            //if (branch.IsRemote) continue;
+
+                            var menuItem = new MenuItemViewModel
+                            {
+                                Header = branch.FriendlyName,
+                                Command = ReactiveCommand.Create<Branch>(ChangeBranch),
+                                CommandParameter = branch
+                            };
+                            if (branch.IsCurrentRepositoryHead)
+                            {
+                                menuItem.Icon = Application.Current.FindResource("PicolIcons.Accept") as IImage;
+                                menuItem.IsEnabled = false;
+                            }
+
+                            _windowService.RegisterMenuItem("MainWindow_BottomRightMenu/Branches", menuItem);
+                        }
+
+                        //if (Global.MainWindowViewModel.AvailableBranchesMenu.Count > 0)
+                        //Global.MainWindowViewModel.AvailableBranchesMenu.Add(new Separator());
+
+                        _windowService.RegisterMenuItem("MainWindow_BottomRightMenu/Branches", new MenuItemViewModel
+                        {
+                            Header = "New Branch...",
+                            Icon = Application.Current.FindResource("BoxIcons.RegularGitBranch") as IImage,
+                            Command = ReactiveCommand.Create(CreateBranchDialogAsync)
+                        });
+
+                        foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
+                        {
+                            var smodel = new SourceControlModel(this, item,
+                                ProjectService.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                                        item.FilePath))
+                                    as IProjectFile);
+
+
+                            if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
+                                item.State.HasFlag(FileStatus.RenamedInIndex) ||
+                                item.State.HasFlag(FileStatus.DeletedFromIndex) ||
+                                item.State.HasFlag(FileStatus.NewInIndex) ||
+                                item.State.HasFlag(FileStatus.ModifiedInIndex))
+                                StagedChanges.Add(smodel);
+                            if (item.State.HasFlag(FileStatus.TypeChangeInWorkdir) ||
+                                item.State.HasFlag(FileStatus.RenamedInWorkdir) ||
+                                item.State.HasFlag(FileStatus.DeletedFromWorkdir) ||
+                                item.State.HasFlag(FileStatus.NewInWorkdir) ||
+                                item.State.HasFlag(FileStatus.ModifiedInWorkdir))
+                                Changes.Add(smodel);
+                            if (item.State.HasFlag(FileStatus.Conflicted)) MergeChanges.Add(smodel);
+
+                            //if (smodel.File is ProjectEntry entry) entry.GitChangeStatus = item.State;
+                        }
+
+                        PullCommits = CurrentRepo?.Head.TrackingDetails.BehindBy ?? 0;
+                        PushCommits = CurrentRepo?.Head.TrackingDetails.AheadBy ?? 0;
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (e is TypeInitializationException) _dllNotFound = true;
+                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                }
+
+
+                IsLoading = false;
+            }
+        }
+
+        #region General
+
+        public void SetupTimer(int seconds)
+        {
+            if (_timer != null && _timer.Interval.TotalSeconds == seconds) return;
+            _timer?.Stop();
+            _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, TimerCallback);
+            _timer.Start();
+        }
+
+        private void TimerCallback(object? sender, EventArgs args)
+        {
+            if (_settingsService.GetSettingValue<bool>("SourceControl_AutoFetchEnable")) _ = FetchAsync();
+        }
+
+        public void ViewInProjectExplorer(IProjectEntry entry)
+        {
+            _dockService.Show(ProjectService);
+            ProjectService.ExpandToRoot(entry);
+            ProjectService.SelectedItems.Clear();
+            ProjectService.SelectedItems.Add(entry);
+        }
+
+        #endregion
+
+        #region Branches & Remotes
+
+        public void ChangeBranch(Branch branch)
+        {
+            if (CurrentRepo == null) return;
+
+            try
+            {
+                if (branch.IsRemote)
+                {
+                    var remoteBranch = branch;
+                    var branchName = branch.FriendlyName.Split("/");
+
+                    if (CurrentRepo.Branches[branchName[1]] is Branch localB)
+                    {
+                        branch = localB;
+                    }
+                    else
+                    {
+                        branch = CurrentRepo.CreateBranch(branchName[1], branch.Tip);
+                        branch = CurrentRepo.Branches.Update(branch,
+                            b => b.TrackedBranch = remoteBranch.CanonicalName);
+                    }
+                }
+
+                Commands.Checkout(CurrentRepo, branch);
+
+                _ = RefreshAsync();
+
+                _logger.Log("Switched to branch '" + branch.FriendlyName + "'", ConsoleColor.Green, true, Brushes.Green);
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+        }
+
+        public async Task CreateBranchDialogAsync()
+        {
+            var newBranchName = await _windowService.ShowInputAsync("Create Branch",
+                "Please enter a name for the new branch", MessageBoxIcon.Info, null, _dockService.GetWindowOwner(this));
+            if(newBranchName != null) CreateBranch(newBranchName);
+        }
+
+        public Branch? CreateBranch(string name, bool checkout = true)
+        {
+            if (CurrentRepo == null || string.IsNullOrWhiteSpace(name)) return null;
+
+            try
+            {
+                var newBranch = CurrentRepo.CreateBranch(name);
+
+                if (checkout) Commands.Checkout(CurrentRepo, newBranch);
+
+                _ = RefreshAsync();
+
+                return newBranch;
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                return null;
+            }
+        }
+
+        public async Task DeleteBranchDialogAsync()
+        {
+            if(CurrentRepo == null) return;
+
+            var selectedBranchName = await _windowService.ShowInputSelectAsync("Delete Branch", "Select the branch you want to delete", MessageBoxIcon.Info, 
+                CurrentRepo.Branches.Select(x => x.FriendlyName), CurrentRepo.Branches.LastOrDefault()?.FriendlyName, _dockService.GetWindowOwner(this)) as string;
+
+            if (selectedBranchName == null) return;
+            
+            var deleteBranch = CurrentRepo.Branches
+                .FirstOrDefault(x => x.FriendlyName == selectedBranchName);
+            
+            if (deleteBranch != null){
+                await DeleteBranchAsync(deleteBranch);
+                _ = RefreshAsync();
+            }
+        }
+
+        public async Task<bool> DeleteBranchAsync(Branch branch)
+        {
+            if (CurrentRepo == null) return false;
+            try
+            {
+                CurrentRepo.Branches.Remove(branch);
+                if (branch.IsRemote)
+                {
+                    await WaitUntilFreeAsync();
+                    //Active.SetStatus("Deleting remote branch", Active.AppState.Loading);                   
+                    IsLoading = true;
+
+                    await Task.Run(() =>
+                    {
+                        var remote = CurrentRepo.Network.Remotes[branch.RemoteName];
+                        var pushRefSpec = $"+:refs/heads/{branch.FriendlyName.Split('/')[1]}";
+                        var options = new PushOptions
+                        {
+                            CredentialsProvider = (url, usernameFromUrl, types) =>
+                                GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        };
+                        CurrentRepo.Network.Push(remote, pushRefSpec, options);
+                    });
+                    //Active.SetStatus("Done", Active.AppState.Idle);
+                    IsLoading = false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                IsLoading = false;
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                return false;
+            }
+        }
+
+        public async Task MergeBranchDialogAsync()
+        {
+            if (CurrentRepo == null) return;
+            
+            var selectedBranchName = await _windowService.ShowInputSelectAsync("Merge Branch", "Select the branch to merge from", MessageBoxIcon.Info,
+                CurrentRepo.Branches.Select(x => x.FriendlyName), CurrentRepo.Branches.LastOrDefault()?.FriendlyName,
+                _dockService.GetWindowOwner(this)) as string;
+            
+            if (selectedBranchName == null) return;
+            
+            var mergeBranch = CurrentRepo.Branches
+                .FirstOrDefault(x => x.FriendlyName == selectedBranchName);
+
+            if(mergeBranch != null)
+                await MergeBranchAsync(mergeBranch);
+        }
+
+        public async Task MergeBranchAsync(Branch source)
+        {
+            if(CurrentRepo == null) return;
+            
+            try
+            {
+                var options = new MergeOptions();
+                var result = CurrentRepo.Merge(source.Tip, await GetSignatureAsync(), options);
+                if (result != null) PublishMergeResult(result);
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+        }
+
+        public async Task<bool> PublishBranchDialogAsync()
+        {
+            if (CurrentRepo == null) return false;
+
+            try
+            {
+                if (!CurrentRepo.Head.IsTracking)
+                {
+                    var result = await _windowService.ShowYesNoAsync("Info", 
+                        $"The branch {CurrentRepo.Head.FriendlyName} has no upstream branch. Would you like to publish this branch?",
+                        MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
+                    if (result is MessageBoxStatus.Yes)
+                    {
+                        CurrentRepo.Branches.Update(CurrentRepo.Head,
+                            b => b.Remote = CurrentRepo.Network.Remotes.First().Name,
+                            b => b.UpstreamBranch = CurrentRepo.Head.CanonicalName);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                return false;
+            }
+        }
+
+        public async Task<bool> AddRemoteDialogAsync()
+        {
+            if (CurrentRepo == null) return false;
+
+            if (!CurrentRepo.Head.IsTracking)
+            {
+                var url = await _windowService.ShowInputAsync("Add Remote", "Please enter the repository URL", MessageBoxIcon.Info,
+                    null, _dockService.GetWindowOwner(this));
+                if (url == null) return false;
+                
+                var remoteName = await _windowService.ShowInputAsync("Add Remote", "Please enter a name for the remote. If this is the first remote you can leave the name as origin.", MessageBoxIcon.Info,
+                    "origin", _dockService.GetWindowOwner(this));
+                if (remoteName == null) return false;
+                
+                return AddRemote(url, remoteName);
+            }
+
+            return false;
+        }
+
+        public bool AddRemote(string url, string name)
+        {
+            if (CurrentRepo == null || string.IsNullOrEmpty(url) || string.IsNullOrEmpty(name)) return false;
+            try
+            {
+                var remote = CurrentRepo.Network.Remotes.Add(name, url);
+                if (remote != null) return true;
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+
+            return false;
+        }
+
+        public async Task DeleteRemoteDialogAsync()
+        {
+            if (CurrentRepo == null) return;
+            
+            var selectedRemoteName = await _windowService.ShowInputSelectAsync("Delete Remote", "Select the remote you want to delete", MessageBoxIcon.Info,
+                CurrentRepo.Network.Remotes.Select(x => x.Name), CurrentRepo.Network.Remotes.LastOrDefault()?.Name,
+                _dockService.GetWindowOwner(this)) as string;
+            
+            if(selectedRemoteName != null)
+                DeleteRemote(selectedRemoteName);
+        }
+
+        public bool DeleteRemote(string name)
+        {
+            if (CurrentRepo == null || string.IsNullOrEmpty(name)) return false;
+            try
+            {
+                CurrentRepo.Network.Remotes.Remove(name);
+                return true;
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Commit & Sync
+
+        public async Task CommitAsync(bool staged)
+        {
+            if (CurrentRepo == null) return;
+
+            try
+            {
+                if (!staged) Commands.Stage(CurrentRepo, "*");
+
+                var author = await GetSignatureAsync();
+                var committer = author;
+                var commit = CurrentRepo.Commit(CommitMessage, author, committer);
+
+                _logger.Log($"Commit {commit.Message}", ConsoleColor.Green, true, Brushes.Green);
+                CommitMessage = "";
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+
+            _ = RefreshAsync();
+            _ = FetchAsync();
+        }
+
+        public async Task SyncAsync()
+        {
+            if (CurrentRepo == null) return;
+
+            var push = true;
+            if (!CurrentRepo.Network.Remotes.Any())
+            {
+                var result = await _windowService.ShowYesNoAsync("Warning",
+                    "This repository does not have a remote. Do you want to add one?", MessageBoxIcon.Warning,
+                    _dockService.GetWindowOwner(this));
+                if (result is MessageBoxStatus.Yes)
+                {
+                    if (!await AddRemoteDialogAsync()) return;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (!CurrentRepo.Head.IsTracking)
+            {
+                if (!await PublishBranchDialogAsync()) return;
+            }
+            else
+            {
+                var mergeResult = await PullAsync();
+                if (mergeResult == null || mergeResult.Status == MergeStatus.Conflicts) push = false;
+            }
+
+            if (push)
+            {
+                var pushResult = await PushAsync();
+                if (pushResult)
+                    //Active.SetStatus("Sync finished successfull", Active.AppState.Idle);
+                    _windowService.ShowNotification("Success", "Sync finished successfully", NotificationType.Success);
+                _ = RefreshAsync();
+            }
+        }
+
+        public async Task WaitUntilFreeAsync()
+        {
+            while (IsLoading) await Task.Delay(100);
+        }
+
+        public async Task<MergeResult?> PullAsync()
+        {
+            if (CurrentRepo == null) return null;
+
+            var pullState = _active.AddState("Pulling from " + CurrentRepo.Head.RemoteName, AppState.Loading);
+            await WaitUntilFreeAsync();
+            IsLoading = true;
+
+            //foreach(var terminal in MainDock.Terminals)
+            //{
+            //    terminal.CloseConnection();
+            //}
+
+            var signature = await GetSignatureAsync();
+
+            var result = await Task.Run(() =>
+            {
+                try
+                {
+                    // Credential information to fetch
+                    var options = new PullOptions
+                    {
+                        FetchOptions = new FetchOptions
+                        {
+                            CredentialsProvider = (url, usernameFromUrl, types) =>
+                                GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        }
+                    };
+
+                    var mergeResult = Commands.Pull(CurrentRepo, signature, options);
+
+                    return mergeResult;
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    return null;
+                }
+            });
+
+            IsLoading = false;
+            _active.RemoveState(pullState);
+
+            if (result != null)
+            {
+                _logger.Log($"Pull Status: {result.Status}", ConsoleColor.White, true);
+                PublishMergeResult(result);
+            }
+
+            return result;
+        }
+
+        public void PublishMergeResult(MergeResult result)
+        {
+            switch (result.Status)
+            {
+                case MergeStatus.Conflicts:
+                    _windowService.ShowNotification("Git Warning",
+                        "There are merge conflicts. Resolve them before committing.", NotificationType.Warning);
+                    _dockService.Show(this);
+                    break;
+
+                case MergeStatus.UpToDate:
+                    _windowService.ShowNotification("Git info", "Repository up to date", NotificationType.Information);
+                    break;
+
+                case MergeStatus.FastForward:
+                    _windowService.ShowNotification("Git Info", "Pulled changes fast forward",
+                        NotificationType.Success);
+                    break;
+            }
+        }
+
+        public async Task<bool> PushAsync()
+        {
+            if (CurrentRepo == null) return false;
+
+            if (!CurrentRepo.Head.IsTracking)
+            {
+                var success = await PublishBranchDialogAsync();
+                if (!success) return false;
+            }
+
+            var pullState = _active.AddState("Pushing to " + CurrentRepo.Head.RemoteName, AppState.Loading);
+            await WaitUntilFreeAsync();
+            IsLoading = true;
+
+            var result = await Task.Run(() =>
+            {
+                try
+                {
+                    var pushOptions = new PushOptions
+                    {
+                        CredentialsProvider = (url, usernameFromUrl, types) =>
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result
+                    };
+                    //PUSH                 
+                    CurrentRepo.Network.Push(CurrentRepo.Head, pushOptions);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    return false;
+                }
+            });
+
+            _active.RemoveState(pullState);
+            IsLoading = false;
+
+            if (result)
+            {
+                //Global.Factory.ShowDockable(MainDock.Output);
+                //MainDock.Output.WriteLine("Pushed successfully to " + CurrentRepo.Head.CanonicalName + "!", Brushes.Green);
+            }
+
+            return result;
+        }
+
+        public async Task FetchAsync()
+        {
+            if (CurrentRepo == null) return;
+
+
+            await WaitUntilFreeAsync();
+            IsLoading = true;
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    var logMessage = "";
+                    var options = new FetchOptions
+                    {
+                        CredentialsProvider = (url, usernameFromUrl, types) =>
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result
+                    };
+
+                    foreach (var remote in CurrentRepo.Network.Remotes)
+                    {
+                        var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
+                        Commands.Fetch(CurrentRepo, remote.Name, refSpecs, options, logMessage);
+                    }
+
+                    PullCommits = CurrentRepo?.Head.TrackingDetails.BehindBy ?? 0;
+                    PushCommits = CurrentRepo?.Head.TrackingDetails.AheadBy ?? 0;
+                }
+                catch (Exception e)
+                {
+                    if (_settingsService.GetSettingValue<bool>("SourceControl_AutoFetchEnable"))
+                    {
+                        ContainerLocator.Container.Resolve<ILogger>()
+                            ?.Error(e.Message + "\nAutomatic fetching disabled!", e);
+                        _settingsService.SetSettingValue("SourceControl_AutoFetchEnable", false);
+                    }
+                    else
+                    {
+                        ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    }
+                }
+            });
+
+            IsLoading = false;
+        }
+
+        #endregion
+
+        #region Stage & Discard
+
+        public void StageAll()
+        {
+            if (CurrentRepo == null) return;
+            Commands.Stage(CurrentRepo, "*");
+            _ = RefreshAsync();
+        }
+
+        public void UnStageAll()
+        {
+            if (CurrentRepo == null) return;
+            Commands.Unstage(CurrentRepo, "*");
+            _ = RefreshAsync();
+        }
+
+        public void Stage(string? path)
+        {
+            if (CurrentRepo == null) return;
+            Commands.Stage(CurrentRepo, path);
+
+            _ = RefreshAsync();
+        }
+
+        public void UnStage(string? path)
+        {
+            if (CurrentRepo == null) return;
+            Commands.Unstage(CurrentRepo, path);
+
+            _ = RefreshAsync();
+        }
+
+        public async Task DiscardAsync(string path)
+        {
+            var options = new CheckoutOptions { CheckoutModifiers = CheckoutModifiers.Force };
+            CurrentRepo.CheckoutPaths(CurrentRepo.Head.FriendlyName, new[] { path }, options);
+
+            if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
+
+            if (CurrentRepo == null || CurrentRepo.Info.WorkingDirectory == null) return;
+            var entry = Changes
+                .FirstOrDefault(x => Path.Combine(CurrentRepo.Info.WorkingDirectory, x.Status.FilePath) == path);
+            if (entry != null && entry.Status.State == FileStatus.NewInWorkdir)
+            {
+                var result = await _windowService.ShowYesNoCancelAsync("Warning",
+                    $"Are you sure you want to delete {Path.GetFileName(path)}?", MessageBoxIcon.Warning);
+                
+                if (result is MessageBoxStatus.Yes)
+                    try
+                    {
+                        File.Delete(path);
+                        if (ProjectService.ActiveProject?.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                                path)) is IProjectFile file)
+                            file.TopFolder?.Remove(file);
+                    }
+                    catch (Exception e)
+                    {
+                        ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    }
+            }
+
+            await RefreshAsync();
+        }
+
+        public async Task DiscardAllAsync(ResetMode mode)
+        {
+            if (CurrentRepo == null) return;
+            try
+            {
+                await WaitUntilFreeAsync();
+                CurrentRepo.Reset(mode);
+
+                if (mode == ResetMode.Hard)
+                {
+                    var deleteFiles = new List<string>();
+                    foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
+                        if (item.State == FileStatus.NewInWorkdir)
+                        {
+                            var path = Path.Combine(CurrentRepo.Info.WorkingDirectory, item.FilePath);
+                            deleteFiles.Add(path);
+                        }
+
+                    if (deleteFiles.Any())
+                    {
+                        var result = await _windowService.ShowYesNoCancelAsync("Warning",
+                            $"Do you want to delete {deleteFiles.Count} untracked files forever?", MessageBoxIcon.Warning);
+                        
+                        if (result is MessageBoxStatus.Yes)
+                            foreach (var f in deleteFiles)
+                            {
+                                var projFile = ProjectService.Search(f);
+                                if (projFile != null) await ProjectService.DeleteAsync(projFile);
+                                else File.Delete(f);
+                            }
+                    }
+                }
+
+                _ = RefreshAsync();
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+        }
+
+        #endregion
+
+        #region Open & Compare
+
+        public async Task<IFile?> OpenFileAsync(string path)
+        {
+            if (CurrentRepo?.Info.WorkingDirectory == null) return null;
+            
+            if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
+
+            if (!(ProjectService.ActiveProject?.Search(path) is IFile file))
+                file = new ExternalFile(path);
+
+            await _dockService.OpenFileAsync(file);
+            return file;
+        }
+
+        public async Task OpenHeadFileAsync(string path)
+        {
+            if (CurrentRepo == null) return;
+
+            var commitContent = "";
+            var blob = CurrentRepo.Head.Tip[path].Target as Blob;
+            using (var content = new StreamReader(blob.GetContentStream(), Encoding.UTF8))
+            {
+                commitContent = await content.ReadToEndAsync();
+            }
+
+            var file = new ExternalFile(path);
+            
+            var evm = await _dockService.OpenFileAsync(file);
+
+            if (evm is IEditor editor)
+            {
+                editor.Title += " (HEAD)";
+                editor.IsReadOnly = true;
+                editor.CurrentDocument.Text = commitContent;
+            }
+        }
+
+        public void CompareAndSwitch(string path)
+        {
+            Compare(path, true);
+        }
+
+        public void Compare(string path, bool switchTab)
+        {
+            _ = CompareChangesAsync(path, "Diff: ", 10000, switchTab);
+        }
+
+        public void ViewChanges(string path)
+        {
+            _ = CompareChangesAsync(path, "Changes: ");
+        }
+
+        public async Task CompareChangesAsync(string path, string titlePrefix, int contextLines = 3,
+            bool switchTab = true)
+        {
+            if (CurrentRepo == null) return;
+            await WaitUntilFreeAsync();
+            try
+            {
+                var fullPath = Path.IsPathRooted(path)
+                    ? path
+                    : Path.Combine(CurrentRepo.Info.WorkingDirectory, path.Replace('/', Path.DirectorySeparatorChar));
+                var patch = CurrentRepo.Diff.Compare<Patch>(new List<string> { path }, false,
+                    new ExplicitPathsOptions(),
+                    new CompareOptions { ContextLines = contextLines });
+
+                CompareFileViewModel vm;
+
+                vm = new CompareFileViewModel(fullPath, patch)
+                {
+                    Title = titlePrefix + Path.GetFileName(path),
+                    Id = titlePrefix + fullPath
+                };
+                _dockService.Show(vm, DockShowLocation.Document);
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            }
+        }
+
+        #endregion
+
+        #region Merge
+
+        public async Task MergeAcceptIncomingAsync(string path)
+        {
+            await MergeAllAsync(path, MergeMode.KeepIncoming);
+        }
+
+        public async Task MergeAcceptCurrentAsync(string path)
+        {
+            await MergeAllAsync(path, MergeMode.KeepCurrent);
+        }
+
+        public async Task MergeAllAsync(string path, MergeMode mode)
+        {
+            var file = await OpenFileAsync(path);
+            if (file == null) return;
+
+            var evm = await _dockService.OpenFileAsync(file);
+            if (evm is IEditor editor)
+            {
+                var merges = MergeService.GetMerges(editor.CurrentDocument);
+                merges.Reverse(); //Reverse to avoid mistakes with wrong index
+                foreach (var merge in merges) MergeService.Merge(editor.CurrentDocument, merge, mode);
+            }
+        }
+
+        #endregion
+
+        #region Credentials & Identity
+
+        public async Task<Credentials> GetCredentialsAsync(string url, string usernameFromUrl,
+            SupportedCredentialTypes types) //TODO Error handling
+        {
+            if (types.HasFlag(SupportedCredentialTypes.UsernamePassword))
+            {
+                var ub = new Uri(url);
+
+                var executable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "git.exe" : "git";
+
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = executable,
+                        Arguments = "credential fill",
+                        UseShellExecute = false,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    }
+                };
+
+                process.Start();
+
+                // For stdin to work \n 
+                // We need to send empty line at the end
+                process.StandardInput.NewLine = "\n";
+                await process.StandardInput.WriteLineAsync($"protocol={ub.Scheme}");
+                await process.StandardInput.WriteLineAsync($"host={ub.Host}");
+                await process.StandardInput.WriteLineAsync($"path={ub.AbsolutePath}");
+                await process.StandardInput.WriteLineAsync();
+
+                // Get user/pass from stdout
+                string username = null;
+                string password = null;
+                string line;
+
+                var autoCredentialTimeout =
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Timeout.Infinite : 1000;
+
+                //Try to get credentials with timeout of 100ms on linux / 
+                var helper = new StreamReaderHelper(process.StandardOutput);
+                while ((line = helper.ReadLine(autoCredentialTimeout)) != null)
+                {
+                    var details = line.Split('=');
+                    if (details[0] == "username")
+                        username = details[1];
+                    else if (details[0] == "password") password = details[1];
+                }
+
+                process.Kill();
+
+                if (username == null || password == null) return new DefaultCredentials();
+
+                process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = executable,
+                        Arguments = "credential approve",
+                        UseShellExecute = false,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    }
+                };
+                process.Start();
+                await process.StandardInput.WriteLineAsync($"protocol={ub.Scheme}");
+                await process.StandardInput.WriteLineAsync($"host={ub.Host}");
+                await process.StandardInput.WriteLineAsync($"path={ub.AbsolutePath}");
+                await process.StandardInput.WriteLineAsync($"username={username}");
+                await process.StandardInput.WriteLineAsync($"password={password}");
+                await process.StandardInput.WriteLineAsync();
+
+                return new UsernamePasswordCredentials
+                {
+                    Username = username,
+                    Password = password
+                };
+            }
+
+            return new DefaultCredentials();
+        }
+
+        public async Task<Signature> GetSignatureAsync()
+        {
+            if (CurrentRepo == null) return null;
+
+            var author = CurrentRepo.Config.BuildSignature(DateTimeOffset.Now);
+
+            if (author == null)
+            {
+                var identity = await SetUserIdentityAsync(true);
+
+                author = new Signature(identity, DateTime.Now);
+            }
+
+            return author;
+        }
+
+        public async Task<Identity?> GetIdentiyManualAsync()
+        {
+            if (CurrentRepo == null) return null;
+            
+            var author = CurrentRepo.Config.BuildSignature(DateTimeOffset.Now);
+
+            var name = await _windowService.ShowInputAsync("Info", "Please enter a name to sign your changes",
+                MessageBoxIcon.Info, author?.Name, _dockService.GetWindowOwner(this));
+            if (name == null) return null;
+
+            var email = await _windowService.ShowInputAsync("Info",
+                "Please enter a valid email adress to sign your changes", MessageBoxIcon.Info, author?.Email,
+                _dockService.GetWindowOwner(this));
+            if (email == null) return null;
+            
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+            {
+                _logger.Error("Username and/or email can't be empty", null, false, true);
+                return null;
+            }
+
+            return new Identity(name, email);
+        }
+
+        public async Task<Identity?> SetUserIdentityAsync(bool dialog)
+        {
+            if (CurrentRepo == null) return null;
+            
+            var identity = await GetIdentiyManualAsync();
+
+            if (identity == null) return null;
+
+            var result = dialog ? await _windowService.ShowYesNoAsync("Info",
+                "Do you want to save this information in your global git configuration so that you do not have to enter them again next time?",
+                MessageBoxIcon.Info, _dockService.GetWindowOwner(this)) : MessageBoxStatus.Yes;
+            
+            if (result is MessageBoxStatus.Yes)
+            {
+                if (!CurrentRepo.Config.HasConfig(ConfigurationLevel.Global))
+                {
+                    try
+                    {
+                        var globalConfig =
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                                ".gitconfig");
+                        File.WriteAllText(globalConfig,
+                            $"[user]\n\tname = {identity.Name}\n\temail = {identity.Email}\n", Encoding.UTF8);
+                    }
+                    catch (Exception e)
+                    {
+                        ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    }
+                }
+                else
+                {
+                    CurrentRepo.Config.Set("user.name", identity.Name, ConfigurationLevel.Global);
+                    CurrentRepo.Config.Set("user.email", identity.Email, ConfigurationLevel.Global);
+                }
+            }
+
+            return identity;
+        }
+
+        #endregion
+    }
+}

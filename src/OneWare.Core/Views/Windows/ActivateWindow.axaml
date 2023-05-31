@@ -7,6 +7,7 @@
                         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                         xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                         mc:Ignorable="d"
                         x:Class="OneWare.Core.Views.Windows.ActivateWindow"
                         Width="400" SizeToContent="Height"
@@ -25,7 +26,7 @@
                 <TextBlock Text="Activate OneWare.Core Pro IDE"/>
                 <StackPanel Orientation="Horizontal" Spacing="2">
                     <TextBlock Text="You can obtain a license at " />
-                    <controls:HyperLink Label="shop.vhdplus.com" Url="https://shop.vhdplus.com/product-category/license/" HorizontalAlignment="Left" />
+                    <views:HyperLink Label="shop.vhdplus.com" Url="https://shop.vhdplus.com/product-category/license/" HorizontalAlignment="Left" />
                 </StackPanel>
                 
             </StackPanel>

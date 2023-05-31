@@ -8,6 +8,7 @@
                         xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
                         xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
                         x:Class="OneWare.Core.Views.Windows.InfoWindow"
                         Width="400" Height="400" Padding="4"
@@ -31,7 +32,7 @@
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <TextBlock Text="Home Page: " />
-            <controls:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
+            <views:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
         </StackPanel>
 
         <StackPanel Margin="4" Classes="WindowButtons" DockPanel.Dock="Bottom" HorizontalAlignment="Right">

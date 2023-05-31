@@ -20,23 +20,33 @@ internal class LanguageManager : ILanguageManager
         private readonly Dictionary<Type, ILanguageService> _singleInstanceServers = new();
         private readonly Dictionary<Type, Dictionary<string,ILanguageService>> _workspaceServers = new();
 
-        private readonly Dictionary<string, IHighlightingDefinition> _highlightingDefinitions = new();
+        private readonly Dictionary<string, string> _highlightingDefinitions = new();
 
         public void RegisterHighlighting(string path, params string[] supportedFileTypes)
         {
-            using var s = new StreamReader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
-            using var reader = new XmlTextReader(s);
-            var hl = HighlightingLoader.Load(reader, HighlightingManager.Instance);
             foreach (var fileType in supportedFileTypes)
             {
-                _highlightingDefinitions[fileType] = hl;
+                _highlightingDefinitions[fileType] = path;
             }
         }
 
         public IHighlightingDefinition? GetHighlighting(string fileExtension)
         {
-            _highlightingDefinitions.TryGetValue(fileExtension, out var highlightingDefinition);
-            return highlightingDefinition;
+            _highlightingDefinitions.TryGetValue(fileExtension, out var path);
+
+            if (path == null) return null;
+
+            try
+            {
+                using var s = new StreamReader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+                using var reader = new XmlTextReader(s);
+                return HighlightingLoader.Load(reader, HighlightingManager.Instance);
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                return null;
+            }
         }
         
         public void RegisterService(Type type, bool workspaceDependent, params string[] supportedFileTypes)

@@ -33,8 +33,6 @@ namespace OneWare.Core.Services
         private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
         private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
         public Dictionary<IFile,IExtendedDocument> OpenFiles { get; } = new();
-
-        private readonly Dictionary<string, int> _terminalNameCounter = new();
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private IExtendedDocument? _currentDocument;
@@ -82,7 +80,7 @@ namespace OneWare.Core.Services
             LayoutRegistrations[location].Add(typeof(T));
         }
 
-        public async Task<IDockable> OpenFileAsync(IFile pf)
+        public async Task<IExtendedDocument> OpenFileAsync(IFile pf)
         {
             if (OpenFiles.ContainsKey(pf))
             {
