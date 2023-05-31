@@ -11,6 +11,7 @@ using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
+using ImTools;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -133,11 +134,11 @@ namespace OneWare.Core.Services
             return true;
         }
 
-        public Window GetWindowOwner(IDockable dockable)
+        public Window GetWindowOwner(IDockable? dockable)
         {
-            while (dockable.Owner != null)
+            while (dockable != null)
             {
-                if (dockable is IRootDock {Window: {Host: Window win}}) return win;
+                if (dockable is IRootDock { Window.Host: Window host }) return host;
                 dockable = dockable.Owner;
             }
             return ContainerLocator.Container.Resolve<MainWindow>();
@@ -234,15 +235,8 @@ namespace OneWare.Core.Services
             if (SearchView(dockable) is { } result)
             {
                 SetActiveDockable(result);
-                if (dockable.Owner is IRootDock { Window: { Host: Window win } })
-                {
-                    async void Action()
-                    {
-                        await Task.Delay(50);
-                        win.Activate();
-                    }
-                    Dispatcher.UIThread.Post(Action);
-                }
+                var ownerWindow = GetWindowOwner(dockable);
+                Dispatcher.UIThread.Post(ownerWindow.Activate);
                 return;
             }
             
