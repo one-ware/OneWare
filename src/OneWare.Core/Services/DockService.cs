@@ -85,11 +85,7 @@ namespace OneWare.Core.Services
         {
             if (OpenFiles.ContainsKey(pf))
             {
-                SetActiveDockable(OpenFiles[pf]);
-                Dispatcher.UIThread.Post(() =>
-                {
-                    GetWindowOwner(OpenFiles[pf]).Activate();
-                });
+                Show(OpenFiles[pf]);
 
                 return OpenFiles[pf];
             }
@@ -238,7 +234,15 @@ namespace OneWare.Core.Services
             if (SearchView(dockable) is { } result)
             {
                 SetActiveDockable(result);
-                if(dockable.Owner is IRootDock { Window: { Host: Window win } }) win.Activate();
+                if (dockable.Owner is IRootDock { Window: { Host: Window win } })
+                {
+                    async void Action()
+                    {
+                        await Task.Delay(50);
+                        win.Activate();
+                    }
+                    Dispatcher.UIThread.Post(Action);
+                }
                 return;
             }
             
