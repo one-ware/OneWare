@@ -26,7 +26,6 @@ namespace OneWare.Shared.LanguageService
         public LanguageClient? Client { get; private set; }
         public bool IsActivated { get; protected set; }
         public string Name { get; }
-        public string[] SupportedFileExtensions { get; }
         public string? Workspace { get; }
         public bool IsLanguageServiceReady { get; private set; }
         private Process? Process { get; set; }
@@ -35,11 +34,10 @@ namespace OneWare.Shared.LanguageService
         
         public Language? TextMateLanguage { get; protected set; }
         
-        public LanguageServiceBase(string name, string[] supportedFileExtensions, string? workspace = null)
+        public LanguageServiceBase(string name, string? workspace = null)
         {
             Name = name;
             Workspace = workspace;
-            SupportedFileExtensions = supportedFileExtensions;
         }
 
         public abstract Task ActivateAsync();
@@ -334,29 +332,30 @@ namespace OneWare.Shared.LanguageService
             });
         }
 
+        private int _version = 0;
         /// <summary>
         ///     Refresh contents of already opened document
         /// </summary>
         public virtual void RefreshTextDocument(IFile file, Container<TextDocumentContentChangeEvent> changes)
         {
-            //file.Version++;
+            _version++;
 
             Client?.DidChangeTextDocument(new DidChangeTextDocumentParams
             {
                 TextDocument =
-                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath, },//Version = file.Version },
+                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath, Version = _version},
                 ContentChanges = changes
             });
         }
         
         public virtual void RefreshTextDocument(IFile file, string newText)
         {
-            //file.Version++;
+            _version++;
 
             Client?.DidChangeTextDocument(new DidChangeTextDocumentParams
             {
                 TextDocument =
-                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath },//, Version = file.Version },
+                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath , Version = _version},
                 ContentChanges = new Container<TextDocumentContentChangeEvent>(new TextDocumentContentChangeEvent()
                 {
                     Text = newText
@@ -891,7 +890,9 @@ namespace OneWare.Shared.LanguageService
         {
             Dispatcher.UIThread.Post(() =>
             {
-                var file = ContainerLocator.Container.Resolve<IProjectService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
+                var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles
+                    .FirstOrDefault(x => x.Key.FullPath.EqualPaths(pdp.Uri.GetFileSystemPath())).Key;
+                file ??= ContainerLocator.Container.Resolve<IProjectService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
                 file ??= ContainerLocator.Container.Resolve<IProjectService>().GetTemporaryFile(pdp.Uri.GetFileSystemPath());
                 ContainerLocator.Container.Resolve<IErrorService>().RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
                 //file.Diagnostics = pdp.Diagnostics;

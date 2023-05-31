@@ -32,7 +32,7 @@ namespace OneWare.ErrorList.ViewModels
             set => SetProperty(ref _errorListFilterMode, value);
         }
 
-        private bool _showExternalErrors;
+        private bool _showExternalErrors = true;
         public bool ShowExternalErrors
         {
             get => _showExternalErrors;
@@ -86,7 +86,7 @@ namespace OneWare.ErrorList.ViewModels
             set
             {
                 SetProperty(ref _errorEnabled, value);
-                ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(null));
+                ErrorRefresh?.Invoke(this, null);
                 Filter();
             }
         }
@@ -99,7 +99,7 @@ namespace OneWare.ErrorList.ViewModels
             set
             {
                 SetProperty(ref _warningEnabled, value);
-                ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(null));
+                ErrorRefresh?.Invoke(this, null);
                 Filter();
             }
         }
@@ -112,7 +112,7 @@ namespace OneWare.ErrorList.ViewModels
             set
             {
                 SetProperty(ref _hintEnabled, value);
-                ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(null));
+                ErrorRefresh?.Invoke(this, null);
                 Filter();
             }
         }
@@ -128,7 +128,7 @@ namespace OneWare.ErrorList.ViewModels
             set => SetProperty(ref _selectedItem, value);
         }
         
-        public event EventHandler<ErrorRefreshArgs>? ErrorRefresh;
+        public event EventHandler<object?>? ErrorRefresh;
 
         public ErrorListViewModel(IDockService dockService, ISettingsService settingsService, IProjectService projectExplorerViewModel)
         {
@@ -225,21 +225,21 @@ namespace OneWare.ErrorList.ViewModels
         public void Clear(IProjectRoot project)
         {
             ListEx.RemoveMany(_items, _items.Where(x => x.File is IProjectFile pf && pf.Root == project));
-            ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(project));
+            ErrorRefresh?.Invoke(this, project);
             RefreshCountToggle();
         }
 
         public void Clear(IProjectRoot project, string source)
         {
             ListEx.RemoveMany(_items, _items.Where(x => x.File is IProjectFile pf && pf.Root == project && x.Source == source));
-            ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(project));
+            ErrorRefresh?.Invoke(this, project);
             RefreshCountToggle();
         }
 
         public void Clear(IFile file)
         {
             ListEx.RemoveMany(_items, _items.Where(x => x.File == file));
-            ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(file));
+            ErrorRefresh?.Invoke(this, file);
             RefreshCountToggle();
         }
 
@@ -247,7 +247,7 @@ namespace OneWare.ErrorList.ViewModels
         {
             ListEx.RemoveMany(_items, _items.Where(x => x.Source == source));
             
-            ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(null));
+            ErrorRefresh?.Invoke(this, null);
             RefreshCountToggle();
         }
         
@@ -273,7 +273,7 @@ namespace OneWare.ErrorList.ViewModels
                 Add(e);
             }
             
-            ErrorRefresh?.Invoke(this, new ErrorRefreshArgs(entry));
+            ErrorRefresh?.Invoke(this, entry);
             RefreshCountToggle();
         }
 

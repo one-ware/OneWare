@@ -118,7 +118,7 @@
         </Border>
 
         <DataGrid Padding="2, 0, 2, 2" BorderThickness="0"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent" ItemsSource="{Binding Collection}"
                   RowBackground="Transparent" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>

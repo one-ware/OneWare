@@ -40,6 +40,7 @@ namespace OneWare.Core.Views.DockViews
     public partial class EditView : UserControl
     {
         private readonly ISettingsService _settingsService;
+        private readonly IErrorService _errorService;
 
         private ExtendedTextEditor CodeBox =>
             this.ViewModel?.Editor ?? throw new NullReferenceException(nameof(CodeBox));
@@ -61,6 +62,8 @@ namespace OneWare.Core.Views.DockViews
         public EditView()
         {
             _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
+            _errorService = ContainerLocator.Container.Resolve<IErrorService>();
+            
             InitializeComponent();
 
             var exposedMarkdown = Exposed.From(HoverTextBox);
@@ -171,6 +174,8 @@ namespace OneWare.Core.Views.DockViews
 
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedBeforeCaretUpdate, RoutingStrategies.Tunnel);
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedAfterCaretUpdate, RoutingStrategies.Bubble, true);
+
+            _errorService.ErrorRefresh += SetErrors;
         }
 
         protected void DetachEvents()
@@ -189,6 +194,8 @@ namespace OneWare.Core.Views.DockViews
 
             if (CodeBox.SearchPanel != null)
                 CodeBox.SearchPanel.OnSearch -= Search_Updated;
+            
+            _errorService.ErrorRefresh -= SetErrors;
         }
 
         private void Search_Updated(object? sender, IEnumerable<SearchResult> results)
@@ -234,23 +241,23 @@ namespace OneWare.Core.Views.DockViews
             CodeBox?.TextArea.ContextMenu?.Close();
         }
 
-        /*protected void SetErrors(object? sender, EntryEventArgs e)
-        {
-            if (e.Entry == CurrentFile || CurrentFile.IsValid() && e.Entry == CurrentFile.Root || e.Entry == null)
-            {
-                var errorsForFile = ContainerLocator.Container.Resolve<ErrorListViewModel>().GetErrorsForFile(CurrentFile);
-                CodeBox.MarkerService.SetDiagnostics(errorsForFile);
+         protected void SetErrors(object? sender, object? e)
+         {
+             if (e == CurrentFile)
+             {
+                 var errorsForFile = ContainerLocator.Container.Resolve<ErrorListViewModel>().GetErrorsForFile(CurrentFile);
+                 CodeBox.MarkerService.SetDiagnostics(errorsForFile);
 
-                UpdateScrollInfo();
-                CodeBox?.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
-            }
-        }*/
+                 UpdateScrollInfo();
+                 CodeBox?.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+             }
+         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             //EditorWrapper.Content = null;
             DetachEvents();
-            TypeAssistance?.Close();
+            //TypeAssistance?.Close();
             base.OnDetachedFromVisualTree(e);
         }
 

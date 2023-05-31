@@ -18,6 +18,7 @@ public interface IWindowService
     public Task ShowDialogAsync(Window window, Window? owner = null);
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
     public Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
+    public Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
     public Task<MessageBoxStatus> ShowProceedWarningAsync(string message, Window? owner = null);
     public void ShowNotification(string title, string message);
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null);

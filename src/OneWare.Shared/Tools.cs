@@ -318,9 +318,9 @@ namespace OneWare.Shared
         
         #nullable enable
 
-        public static async Task<string?> SelectFolderAsync(Window owner, string title, string startDir)
+        public static async Task<string?> SelectFolderAsync(Window owner, string title, string? startDir)
         {
-            var startUpLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
+            var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
             {
                 Title = title,
@@ -332,11 +332,11 @@ namespace OneWare.Shared
             return result[0].TryGetLocalPath();
         }
         
-        public static async Task<IEnumerable<string>> SelectFoldersAsync(Window owner, string title, string startDir)
+        public static async Task<IEnumerable<string>> SelectFoldersAsync(Window owner, string title, string? startDir)
         {
             var folders = new List<string>();
             
-            var startUpLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
+            var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
             {
                 Title = title,
@@ -355,9 +355,9 @@ namespace OneWare.Shared
             return folders;
         }
         
-        public static async Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string startDir, string defaultExtension, params FilePickerFileType[] filters)
+        public static async Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir, string defaultExtension, params FilePickerFileType[] filters)
         {
-            var startUpLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
+            var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
                 Title = title,
@@ -370,9 +370,9 @@ namespace OneWare.Shared
             return result.TryGetLocalPath();
         }
         
-        public static async Task<string?> SelectFileAsync(TopLevel owner, string title, string startDir, params FilePickerFileType[]? filters)
+        public static async Task<string?> SelectFileAsync(TopLevel owner, string title, string? startDir, params FilePickerFileType[]? filters)
         {
-            var startUpLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
+            var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = title,
@@ -385,10 +385,10 @@ namespace OneWare.Shared
             return result[0].TryGetLocalPath();
         }
         
-        public static async Task<List<string>> SelectFilesAsync(TopLevel owner, string title, string startDir, params FilePickerFileType[] filters)
+        public static async Task<List<string>> SelectFilesAsync(TopLevel owner, string title, string? startDir, params FilePickerFileType[] filters)
         {
             var files = new List<string>();
-            var startUpLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
+            var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = title,
@@ -408,10 +408,5 @@ namespace OneWare.Shared
             return files;
         }
         #endregion
-
-        public static object FindContainer(ItemContainerGenerator inputBoxItemContainerGenerator, object objcc)
-        {
-            return null;
-        }
     }
 }

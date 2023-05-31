@@ -9,7 +9,7 @@ namespace OneWare.Shared.LanguageService
         private readonly string _arguments;
         private readonly string _langSrvPath;
 
-        public GenericLanguageService(string name, string executablePath, string arguments, string? workspace, params string[] supportedFiles) : base (name, supportedFiles, workspace)
+        public GenericLanguageService(string name, string executablePath, string arguments, string? workspace) : base (name, workspace)
         {
             _langSrvPath = executablePath;
             _arguments = arguments;

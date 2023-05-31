@@ -80,23 +80,17 @@ namespace OneWare.Core.Services
             LayoutRegistrations.TryAdd(location, new List<Type>());
             LayoutRegistrations[location].Add(typeof(T));
         }
-        
-        public override void CloseDockable(IDockable dockable)
-        {
-            if (dockable.Owner is MainDocumentDockViewModel mdv && mdv.VisibleDockables?.Count == 1 && dockable is not WelcomeScreenViewModel)
-            {
-                mdv.VisibleDockables.Add(_welcomeScreenViewModel);
-                SetActiveDockable(_welcomeScreenViewModel);
-            }
-
-            base.CloseDockable(dockable);
-        }
 
         public async Task<IDockable> OpenFileAsync(IFile pf)
         {
             if (OpenFiles.ContainsKey(pf))
             {
                 SetActiveDockable(OpenFiles[pf]);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    GetWindowOwner(OpenFiles[pf]).Activate();
+                });
+
                 return OpenFiles[pf];
             }
 
@@ -133,10 +127,13 @@ namespace OneWare.Core.Services
             if (OpenFiles.ContainsKey(pf))
             {
                 var vm = OpenFiles[pf];
-                if (vm.IsDirty && vm is EditViewModel evm)
+                if (vm is EditViewModel evm)
                 {
-                    if (!await evm.TryCloseAsync()) return false;
+                    if (vm.IsDirty && !await evm.TryCloseAsync()) return false;
+                    evm.TypeAssistance?.Close();
+                   
                 }
+                CloseDockable(vm);
                 OpenFiles.Remove(pf);
             }
 

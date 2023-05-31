@@ -224,6 +224,17 @@ namespace OneWare.Core.ViewModels.DockViews
         
         #region LoadAndSave
 
+        public override bool OnClose()
+        {
+            if (IsDirty)
+            {
+                _ = _dockService.CloseFileAsync(CurrentFile);
+                return false;
+            }
+            TypeAssistance?.Close();
+            return true;
+        }
+        
         public async Task<bool> TryCloseAsync()
         {
             if (!IsDirty) return true;

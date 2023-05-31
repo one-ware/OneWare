@@ -14,7 +14,7 @@ namespace OneWare.Cpp
         public TypeAssistanceCpp(IEditor editor, LanguageServiceCpp ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
-            FoldingStrategy = new CppFoldingStrategy(); //new LspFoldingStrategy(ls, editor.CurrentFile);
+            FoldingStrategy = new FoldingStrategyCpp(); //new LspFoldingStrategy(ls, editor.CurrentFile);
         }
 
         public override async Task<string?> GetHoverInfoAsync(int offset)

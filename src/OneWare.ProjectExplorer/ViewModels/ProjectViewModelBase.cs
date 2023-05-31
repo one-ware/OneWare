@@ -1,14 +1,10 @@
 ﻿using System.Collections.ObjectModel;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
 using Dock.Model.Mvvm.Controls;
 using OneWare.ProjectExplorer.Models;
-using Prism.Ioc;
 using OneWare.Shared;
-using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
@@ -106,11 +102,11 @@ public abstract class ProjectViewModelBase : Tool
     {
         foreach (var i in Items)
         {
-            if (System.IO.Path.GetFullPath(path).Equals(System.IO.Path.GetFullPath(i.Header),
+            if (Path.GetFullPath(path).Equals(Path.GetFullPath(i.Header),
                     StringComparison.OrdinalIgnoreCase) //Search for name equality
-                || System.IO.Path.GetFullPath(path).Equals(System.IO.Path.GetFullPath(i.RelativePath),
+                || Path.GetFullPath(path).Equals(Path.GetFullPath(i.RelativePath),
                     StringComparison.OrdinalIgnoreCase) //Search for relative path equality
-                || System.IO.Path.GetFullPath(path).Equals(System.IO.Path.GetFullPath(i.FullPath),
+                || Path.GetFullPath(path).Equals(Path.GetFullPath(i.FullPath),
                     StringComparison.OrdinalIgnoreCase)) //Search for full path equality
                 return i;
             if (recursive && i is ProjectFolder folder)

@@ -14,6 +14,6 @@ public class VhdlModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),false);
+        containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
     }
 }

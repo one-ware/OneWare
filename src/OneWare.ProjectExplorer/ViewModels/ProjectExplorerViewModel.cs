@@ -41,8 +41,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
 
     public async Task OpenFileDialogAsync()
     {
-        var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this), "Select File",
-            _paths.ProjectsDirectory);
+        var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this), "Select File", null);
 
         if (file != null)
         {

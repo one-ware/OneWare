@@ -12,7 +12,7 @@ namespace OneWare.Vhdl
 {
     public class LanguageServiceVhdl : LanguageServiceBase, ILanguageService
     {
-        public LanguageServiceVhdl() : base ("VHDL LS", new []{".vhd", ".vhdl"})
+        public LanguageServiceVhdl(string workspace) : base ("VHDL LS", workspace)
         {
             // Global.Options.WhenAnyValue(x => x.VhdlLspActivated).Subscribe(x =>
             // {

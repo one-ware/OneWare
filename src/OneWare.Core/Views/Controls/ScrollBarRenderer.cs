@@ -10,9 +10,8 @@ namespace OneWare.Core.Views.Controls
 {
     public class ScrollBarRenderer : Control
     {
-        public static readonly StyledProperty<Dictionary<IBrush, int[]>> ScrollInfoProperty =
-            AvaloniaProperty
-                .Register<ScrollBarRenderer, Dictionary<IBrush, int[]> >(nameof(ScrollInfo));
+        public static readonly StyledProperty<Dictionary<IBrush, int[]>?> ScrollInfoProperty =
+            AvaloniaProperty.Register<ScrollBarRenderer, Dictionary<IBrush, int[]>?>(nameof(ScrollInfo));
 
         public static readonly StyledProperty<TextEditor> CodeBoxProperty =
             AvaloniaProperty.Register<ScrollBarRenderer, TextEditor>(nameof(CodeBox));
@@ -27,7 +26,7 @@ namespace OneWare.Core.Views.Controls
             });
         }
 
-        public Dictionary<IBrush, int[]>  ScrollInfo
+        public Dictionary<IBrush, int[]>?  ScrollInfo
         {
             get => GetValue(ScrollInfoProperty);
             set => SetValue(ScrollInfoProperty, value);
@@ -50,6 +49,10 @@ namespace OneWare.Core.Views.Controls
             
             var docHeight = CodeBox.TextArea.TextView.DocumentHeight;
 
+            var fakeLineCount = CodeBox.Document.LineCount + Bounds.Height / CodeBox.FontSize;
+            var scrollBarLineHeight = Bounds.Height / CodeBox.Document.LineCount;
+            scrollBarLineHeight = scrollBarLineHeight >= 3 ? scrollBarLineHeight : 3;
+            
             if (ScrollInfo != null)
                 foreach (var scrollInfo in ScrollInfo)
                 {
@@ -70,10 +73,9 @@ namespace OneWare.Core.Views.Controls
                         }
                         else
                         {
-                            var height = Bounds.Height / CodeBox.Document.LineCount;
                             context.FillRectangle(brush,
-                                new Rect(0, Bounds.Height * (line / (double)CodeBox.Document.LineCount), Bounds.Width,
-                                    height >= 3 ? height : 3));
+                                new Rect(0, Bounds.Height * (line / (double)fakeLineCount), Bounds.Width,
+                                    scrollBarLineHeight));
                         }
                     }
                 }
