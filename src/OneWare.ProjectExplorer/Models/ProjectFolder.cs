@@ -10,7 +10,7 @@ namespace OneWare.ProjectExplorer.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string path, IProjectFolder? top) : base(path, top)
+    public ProjectFolder(string header, IProjectFolder topFolder) : base(header, topFolder)
     {
         this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
         {

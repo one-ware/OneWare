@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using System.Runtime.Serialization;
+using Avalonia.Threading;
 using Prism.Ioc;
 using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
@@ -8,23 +9,16 @@ namespace OneWare.ProjectExplorer.Models;
 
 public class ProjectRoot : ProjectFolder, IProjectRoot
 {
-    public string RootFolderPath { get; }
-    
-    public string? ProjectFileName { get; }
-    
+    public string RootFolderPath { get; init; }
+
     public List<IProjectFile> Files { get; } = new();
 
     public override string FullPath => RootFolderPath;
 
-    public ProjectRoot(string folderPath, string? projectFileName = null) : base(Path.GetFileName(folderPath), null)
+    public ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath), null)
     {
-        RootFolderPath = folderPath;
-        ProjectFileName = projectFileName;
-    }
-    
-    public ProjectRoot(string projectFilePath) : this(Path.GetDirectoryName(projectFilePath) ?? projectFilePath, Path.GetFileName(projectFilePath))
-    {
-       
+        RootFolderPath = rootFolderPath;
+        TopFolder = this;
     }
 
     internal void RegisterEntry(IProjectEntry entry)

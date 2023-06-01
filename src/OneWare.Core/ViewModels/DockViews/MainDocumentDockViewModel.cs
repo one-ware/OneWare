@@ -6,19 +6,11 @@ namespace OneWare.Core.ViewModels.DockViews;
 
 public class MainDocumentDockViewModel : DocumentDock
 {
-    private readonly ObservableCollection<IDockable> _visibleDockables;
-    
     public MainDocumentDockViewModel(WelcomeScreenViewModel welcomeScreenViewModel)
     {
         Id = "CentralDocumentDock";
         IsCollapsable = false;
-
-        _visibleDockables = new ObservableCollection<IDockable>()
-        {
-            //welcomeScreenViewModel
-        };
         
-        VisibleDockables = _visibleDockables;
         //ActiveDockable = welcomeScreenViewModel;
         // _visibleDockables.CollectionChanged += (sender, args) =>
         // {

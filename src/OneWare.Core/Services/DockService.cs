@@ -321,6 +321,7 @@ namespace OneWare.Core.Services
             
             using var stream = File.OpenWrite(Path.Combine(_paths.LayoutDirectory, Layout.Id + ".json"));
             stream.SetLength(0);
+            
             Serializer.Save(stream, Layout);
         }
         

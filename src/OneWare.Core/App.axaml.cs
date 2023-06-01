@@ -214,11 +214,12 @@ namespace OneWare.Core
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
                 //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
 
-                var dummy = new ProjectRoot(@"C:\Users\Hendrik\OneWareStudio\Projects\Test", null);
+                var dummy = new ProjectRoot(@"C:\Users\Hendrik\OneWareStudio\Projects\Test");
                 dummy.AddFile("Test.vhd");
                 
                 Container.Resolve<IProjectService>().Items.Add(dummy);
-
+                Container.Resolve<IProjectService>().ActiveProject = dummy;
+                
                 _ = FinishedLoadingAsync();
             }
         }

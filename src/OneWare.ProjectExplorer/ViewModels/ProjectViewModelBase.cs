@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 using Dock.Model.Mvvm.Controls;
 using OneWare.ProjectExplorer.Models;
 using OneWare.Shared;
@@ -13,13 +14,14 @@ public abstract class ProjectViewModelBase : Tool
     public bool EnableDragDrop = true;
 
     private string _searchString = "";
+    
     public string SearchString
     {
         get => _searchString;
         set => SetProperty(ref _searchString, value);
     }
     
-    public ObservableCollection<IProjectEntry> Items { get; } = new();
+    public ObservableCollection<IProjectEntry> Items { get; init; } = new();
 
     public ObservableCollection<IProjectEntry> SelectedItems { get; } = new();
     public IProjectEntry? SelectedItem => SelectedItems.Count > 0 ? SelectedItems[^1] : null;

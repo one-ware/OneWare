@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF
 	ProjectSection(SolutionItems) = preProject
 		build\Base.props = build\Base.props
 		build\OneWare.Module.props = build\OneWare.Module.props
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{B99724E4-1AA2-46D9-B982-6A3B381C5258}"

@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Reactive;
+using System.Runtime.Serialization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,27 +17,23 @@ namespace OneWare.ProjectExplorer.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
-    public ObservableCollection<IProjectEntry> Items { get; } = new();
+    public ObservableCollection<IProjectEntry> Items { get; init; } = new();
     public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
-    public IProjectFolder? TopFolder { get; set; }
+    
+    public IProjectFolder TopFolder { get; set; }
     
     private IImage? _icon;
-
     public IImage? Icon
     {
         get => _icon;
         set => SetProperty(ref _icon, value);
     }
     
-    private string _header = "...";
+    private string _header;
     public string Header
     {
         get => _header;
-        set
-        {
-            SetProperty(ref _header, value);
-            OnPropertyChanged(nameof(Type));
-        }
+        set => SetProperty(ref _header, value);
     }
 
     private bool _excludeCompilation;
@@ -106,12 +103,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public RelayCommand<string> RequestRename { get; }
 
-    protected ProjectEntry(string fileName, IProjectFolder? top)
+    protected ProjectEntry(string header, IProjectFolder topFolder)
     {
-        Header = fileName;
-        TopFolder = top;
+        _header = header;
+        TopFolder = topFolder;
         
-        Icon = SharedConverters.FileExtensionIconConverter.Convert(fileName, typeof(IImage), null, CultureInfo.CurrentCulture) as IImage;
+        Icon = SharedConverters.FileExtensionIconConverter.Convert(header, typeof(IImage), null, CultureInfo.CurrentCulture) as IImage;
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
     

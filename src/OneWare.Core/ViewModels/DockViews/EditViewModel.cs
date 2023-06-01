@@ -34,7 +34,6 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public TextDocument CurrentDocument => Editor.Document;
         
-        [DataMember]
         public IFile CurrentFile { get; init; }
         
         public IRelayCommand Undo { get; }

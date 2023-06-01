@@ -1,10 +1,12 @@
-﻿using OneWare.Shared;
+﻿using System.Runtime.Serialization;
+using OneWare.Shared;
 
 namespace OneWare.ProjectExplorer.Models;
 
-public class ProjectFile : ProjectEntry, IProjectFile, IFile
+[DataContract]
+public class ProjectFile : ProjectEntry, IProjectFile
 {
-    public ProjectFile(string path, ProjectFolder topFolder) : base(path, topFolder)
+    public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
     {
         
     }

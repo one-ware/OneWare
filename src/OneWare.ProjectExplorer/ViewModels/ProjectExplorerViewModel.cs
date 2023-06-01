@@ -1,4 +1,5 @@
-﻿using OneWare.ProjectExplorer.Models;
+﻿using System.Runtime.Serialization;
+using OneWare.ProjectExplorer.Models;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
@@ -15,11 +16,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
     private readonly ISettingsService _settingsService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
-    private readonly string _lastProjectDataPath;
 
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
 
     private IProjectRoot? _activeProject;
+    
     public IProjectRoot? ActiveProject
     {
         get => _activeProject;
@@ -33,8 +34,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         _dockService = dockService;
         _windowService = windowService;
         _settingsService = settingsService;
-        _lastProjectDataPath = Path.Combine(paths.AppDataDirectory, "lastProjectData.xml");
-        
+
         Id = "ProjectFiles";
         Title = "Project Explorer";
     }
@@ -163,8 +163,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
                 root.DisposeFileWatcher();
                 foreach (var item in root.Items.ToList())
                     await DeleteAsync(item);
-                    
-                if(root.ProjectFileName != null) File.Delete(Path.Combine(root.RootFolderPath, root.ProjectFileName));
             }
             else if (entry is ProjectFolder folder)
                 Directory.Delete(folder.FullPath, true);

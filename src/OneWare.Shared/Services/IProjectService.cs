@@ -1,9 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Dock.Model.Core;
 
 namespace OneWare.Shared.Services;
 
-public interface IProjectService : IDockable
+public interface IProjectService : IDockable, INotifyPropertyChanged
 {
     public ObservableCollection<IProjectEntry> Items { get; }
     public ObservableCollection<IProjectEntry> SelectedItems { get; }

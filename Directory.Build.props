@@ -1,8 +1,8 @@
 <Project>
     <PropertyGroup>
         <AvaloniaVersion>11.0.0-preview8</AvaloniaVersion>
-        <DockVersion>11.0.0-preview8.1</DockVersion>
         <InteractionsVersion>11.0.0-preview8</InteractionsVersion>
-        <PrismVersion>8.1.97.4-preview.11.5</PrismVersion>
+        <DockVersion>11.0.0-preview8.2</DockVersion>
+        <PrismVersion>8.1.97.11-preview.11.8</PrismVersion>
     </PropertyGroup>
 </Project>

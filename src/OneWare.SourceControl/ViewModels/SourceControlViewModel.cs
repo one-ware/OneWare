@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using LibGit2Sharp;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -148,7 +149,12 @@ namespace OneWare.SourceControl.ViewModels
             DeleteRemoteDialogAsyncCommand = new AsyncRelayCommand(DeleteRemoteDialogAsync);
             SetUserIdentityAsyncCommand = new AsyncRelayCommand<bool>(SetUserIdentityAsync);
 
-            settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay").Subscribe(SetupTimer);
+            settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay")
+                .Subscribe(SetupTimer);
+
+            projectService
+                .WhenValueChanged(x => x.ActiveProject)
+                .Subscribe(RefreshAsyncCommand.Execute);
         }
 
         public void InitializeRepository()
