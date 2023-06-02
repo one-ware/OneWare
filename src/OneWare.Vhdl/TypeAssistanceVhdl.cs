@@ -50,14 +50,14 @@ namespace OneWare.Vhdl
 
             var pos = CodeBox.Document.GetLocation(offset);
 
-            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile).OrderBy(x => x.Type)
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
                 .FirstOrDefault(error => pos.Line >= error.StartLine && pos.Column >= error.StartColumn && pos.Line < error.EndLine || pos.Line == error.EndLine && pos.Column <= error.EndColumn);
 
             var info = "";
             
             if(error != null) info += error.Description + "\n";
             
-            var hover = await Service.RequestHoverAsync(CurrentFile,
+            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
                 new Position(pos.Line - 1, pos.Column - 1));
             if (hover != null && !IsClosed)
             {

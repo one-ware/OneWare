@@ -50,7 +50,7 @@ namespace OneWare.Shared.LanguageService
         {
             if (document == null) throw new ArgumentNullException(nameof(document));
 
-            var formattingContainer = await _languageService.RequestFormattingAsync(_file);
+            var formattingContainer = await _languageService.RequestFormattingAsync(_file.FullPath);
             if(formattingContainer is not null) 
                 ApplyContainer(document, formattingContainer);
         }
@@ -58,7 +58,7 @@ namespace OneWare.Shared.LanguageService
         public async Task IndentLineAsync(TextDocument document, DocumentLine line)
         {
             var lineNr = line.LineNumber;
-            var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file,
+            var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file.FullPath,
                 new Range
                 {
                     Start = new Position { Line = lineNr - 1, Character = 0 },
@@ -79,7 +79,7 @@ namespace OneWare.Shared.LanguageService
                 if (endLine > document.LineCount) return;
                 var eline = document.GetLineByNumber(endLine);
 
-                var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file,
+                var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file.FullPath,
                     new Range
                     {
                         Start = new Position { Line = beginLine - 1, Character = 0 },

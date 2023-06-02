@@ -19,7 +19,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
-    public class EditViewModel : Document, IDisposable, IExtendedDocument, IEditor
+    public class EditViewModel : Document, IExtendedDocument, IEditor
     {
         private readonly ILogger _logger;
         private readonly IDockService _dockService;
@@ -27,14 +27,16 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly IWindowService _windowService;
         private readonly BackupService _backupService;
         
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        [DataMember]
+        public string Path { get; init; }
+        
+        public IFile CurrentFile { get; }
+        
         public ExtendedTextEditor Editor { get; } = new();
 
         public ITypeAssistance? TypeAssistance { get; private set; }
 
         public TextDocument CurrentDocument => Editor.Document;
-        
-        public IFile CurrentFile { get; init; }
         
         public IRelayCommand Undo { get; }
 
@@ -64,24 +66,25 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public event EventHandler? FileSaved;
 
-        public EditViewModel(IFile currentFile, ILogger logger, ISettingsService settingsService, IDockService dockService, ILanguageManager languageManager, IWindowService windowService, BackupService backupService)
+        public EditViewModel(string path, ILogger logger, ISettingsService settingsService, IDockService dockService, ILanguageManager languageManager, IWindowService windowService, IProjectService projectService, BackupService backupService)
         {
+            Path = path;
+            CurrentFile = projectService.Search(path) as IFile ?? new ExternalFile(path);
             _logger = logger;
             _settingsService = settingsService;
             _dockService = dockService;
             _windowService = windowService;
             _backupService = backupService;
             
-            logger.Log("Initializing " + currentFile.FullPath + "", ConsoleColor.DarkGray);
+            logger.Log("Initializing " + path + "", ConsoleColor.DarkGray);
             
-            Id = currentFile.FullPath;
-            Title = currentFile is ExternalFile ? $"[{currentFile.Header}]" : currentFile.Header;
-            CurrentFile = currentFile;
-            
-            var service = languageManager.GetLanguageService(currentFile);
+            Id = path;
+            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
+
+            var service = languageManager.GetLanguageService(CurrentFile);
 
             //Syntax Highlighting
-            Editor.SyntaxHighlighting = languageManager.GetHighlighting(currentFile.Extension);
+            Editor.SyntaxHighlighting = languageManager.GetHighlighting(CurrentFile.Extension);
             /*//Syntax Highlighting
             var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
             var registryOptions = new RegistryOptions(syntaxTheme);
@@ -107,7 +110,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (TypeAssistance != null)
                 {
                     Observable.FromEventPattern(
-                            h => TypeAssistance.AssistanceActivated += h, 
+                            h => TypeAssistance.AssistanceActivated += h,
                             h => TypeAssistance.AssistanceActivated -= h)
                         .Subscribe(x =>
                         {
@@ -116,17 +119,15 @@ namespace OneWare.Core.ViewModels.DockViews
                                 Editor.SetFolding(true);
                                 UpdateFolding();
                             }
-                        })
-                        .DisposeWith(_disposables);
+                        });
 
                     Observable.FromEventPattern(
-                            h => TypeAssistance.AssistanceDeactivated += h, 
+                            h => TypeAssistance.AssistanceDeactivated += h,
                             h => TypeAssistance.AssistanceDeactivated -= h)
                         .Subscribe(x =>
                         {
                             Editor.SetFolding(false);
-                        })
-                        .DisposeWith(_disposables);
+                        });
                 }
                 if (TypeAssistance?.CanAddBreakPoints ?? false)
                 {
@@ -134,31 +135,29 @@ namespace OneWare.Core.ViewModels.DockViews
                 }
                 if(service is { IsActivated: false }) _ = service.ActivateAsync();
             }
-                
+
             settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
             {
                 x = x && (TypeAssistance?.Service.IsLanguageServiceReady ?? false);
                 Editor.SetFolding(x);
-                if(x) UpdateFolding();
-            }).DisposeWith(_disposables);
-            
+                if (x) UpdateFolding();
+            });
+
             Observable.FromEventPattern(
-                    h => Editor.Document.TextChanged  += h, 
-                    h => Editor.Document.TextChanged  -= h)
+                    h => Editor.Document.TextChanged += h,
+                    h => Editor.Document.TextChanged -= h)
                 .Subscribe(x =>
                 {
                     IsDirty = true;
-                })
-                .DisposeWith(_disposables);
-            
+                });
+
             Observable.FromEventPattern(
-                    h => Editor.Document.LineCountChanged  += h, 
-                    h => Editor.Document.LineCountChanged  -= h)
+                    h => Editor.Document.LineCountChanged += h,
+                    h => Editor.Document.LineCountChanged -= h)
                 .Subscribe(x =>
                 {
                     UpdateFolding();
-                })
-                .DisposeWith(_disposables);
+                });
 
             Undo = new RelayCommand(() => Editor.Undo());
             Redo = new RelayCommand(() => Editor.Redo());
@@ -387,11 +386,6 @@ namespace OneWare.Core.ViewModels.DockViews
         public void Uncomment()
         {
             TypeAssistance?.Uncomment();
-        }
-
-        public void Dispose()
-        {
-            _disposables.Dispose();
         }
     }
 }

@@ -31,7 +31,7 @@ namespace OneWare.Cpp
 
             var location = CodeBox.Document.GetLocation(offset);
 
-            var hover = await Service.RequestHoverAsync(CurrentFile,
+            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (hover != null && !IsClosed)
                 if (hover.Contents.HasMarkupContent)

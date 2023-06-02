@@ -30,7 +30,6 @@
         <PackageReference Include="Avalonia.Themes.Simple" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
-        <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Xaml.Interactions" Version="$(InteractionsVersion)" />
         <PackageReference Include="Dock.Avalonia" Version="$(DockVersion)" />
         <PackageReference Include="Dock.Model.Mvvm" Version="$(DockVersion)" />

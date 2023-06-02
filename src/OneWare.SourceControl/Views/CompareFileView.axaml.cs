@@ -37,7 +37,7 @@ namespace OneWare.SourceControl.Views
 
             DiffEditor.TextArea.TextView.ScrollOffsetChanged += (o, i) =>
             {
-                // HeadEditor.ScrollViewer.Offset = DiffEditor.ScrollViewer.Offset;
+                HeadEditor.ScrollViewer.Offset = DiffEditor.ScrollViewer.Offset;
                 // var canScrollH = DiffEditor.ScrollViewer.Ca .GetValue(ScrollViewer.CanHorizontallyScrollProperty);
                 // if (canScrollH) HeadEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
                 // else HeadEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
@@ -45,7 +45,7 @@ namespace OneWare.SourceControl.Views
 
             HeadEditor.TextArea.TextView.ScrollOffsetChanged += (o, i) =>
             {
-                // DiffEditor.ScrollViewer.Offset = HeadEditor.ScrollViewer.Offset;
+                DiffEditor.ScrollViewer.Offset = HeadEditor.ScrollViewer.Offset;
                 // var canScrollH = HeadEditor.ScrollViewer.GetValue(ScrollViewer.CanHorizontallyScrollProperty);
                 // if (canScrollH) DiffEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
                 // else DiffEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;

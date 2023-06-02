@@ -44,7 +44,7 @@ namespace OneWare.Shared.LanguageService
         {
             var l = new List<NewFolding>();
             if (!_languageService.IsLanguageServiceReady) return l;
-            var f = await _languageService.RequestFoldingsAsync(_projectfile);
+            var f = await _languageService.RequestFoldingsAsync(_projectfile.FullPath);
             if (f is not null)
                 foreach (var folding in f)
                 {

@@ -275,39 +275,39 @@ namespace OneWare.Shared.LanguageService
             Client?.DidChangeConfiguration(new DidChangeConfigurationParams());
         }
 
-        public void DidOpenTextDocument(IFile file, string text)
+        public void DidOpenTextDocument(string fullPath, string text)
         {
             Client?.DidOpenTextDocument(new DidOpenTextDocumentParams
             {
                 TextDocument = new TextDocumentItem
                 {
                     Text = text,
-                    Uri = file.FullPath,
-                    LanguageId = file.Extension,
-                    //Version = file.Version
+                    Uri = fullPath,
+                    LanguageId = Path.GetExtension(fullPath),
+                    Version = _version
                 }
             });
         }
 
-        public void DidSaveTextDocument(IFile file, string text)
+        public void DidSaveTextDocument(string fullPath, string text)
         {
             Client?.DidSaveTextDocument(new DidSaveTextDocumentParams
             {
                 TextDocument = new TextDocumentIdentifier
                 {
-                    Uri = file.FullPath
+                    Uri = fullPath
                 },
                 Text = text
             });
         }
 
-        public void DidCloseTextDocument(IFile file)
+        public void DidCloseTextDocument(string fullPath)
         {
             Client?.DidCloseTextDocument(new DidCloseTextDocumentParams
             {
                 TextDocument = new TextDocumentIdentifier
                 {
-                    Uri = file.FullPath
+                    Uri = fullPath
                 }
             });
         }
@@ -333,26 +333,26 @@ namespace OneWare.Shared.LanguageService
         /// <summary>
         ///     Refresh contents of already opened document
         /// </summary>
-        public virtual void RefreshTextDocument(IFile file, Container<TextDocumentContentChangeEvent> changes)
+        public virtual void RefreshTextDocument(string fullPath, Container<TextDocumentContentChangeEvent> changes)
         {
             _version++;
 
             Client?.DidChangeTextDocument(new DidChangeTextDocumentParams
             {
                 TextDocument =
-                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath, Version = _version},
+                    new OptionalVersionedTextDocumentIdentifier { Uri = fullPath, Version = _version},
                 ContentChanges = changes
             });
         }
         
-        public virtual void RefreshTextDocument(IFile file, string newText)
+        public virtual void RefreshTextDocument(string fullPath, string newText)
         {
             _version++;
 
             Client?.DidChangeTextDocument(new DidChangeTextDocumentParams
             {
                 TextDocument =
-                    new OptionalVersionedTextDocumentIdentifier { Uri = file.FullPath , Version = _version},
+                    new OptionalVersionedTextDocumentIdentifier { Uri = fullPath , Version = _version},
                 ContentChanges = new Container<TextDocumentContentChangeEvent>(new TextDocumentContentChangeEvent()
                 {
                     Text = newText
@@ -366,7 +366,7 @@ namespace OneWare.Shared.LanguageService
             await Client.ExecuteCommand(cmd);
         }
 
-        public virtual async Task<CompletionList?> RequestCompletionAsync(IFile file, Position pos, string triggerChar,
+        public virtual async Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, string triggerChar,
             CompletionTriggerKind triggerKind)
         {
             var cts = new CancellationTokenSource();
@@ -378,7 +378,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Context = new CompletionContext
                     {
@@ -415,7 +415,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(IFile file,
+        public async Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(string fullPath,
             Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ImplementationProvider == null) return null;
@@ -425,7 +425,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -438,7 +438,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(IFile file,
+        public async Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(string fullPath,
             Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.TypeDefinitionProvider == null) return null;
@@ -448,7 +448,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -461,7 +461,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public virtual async Task<IEnumerable<LocationOrLocationLink>?> RequestDefinitionAsync(IFile file, Position pos)
+        public virtual async Task<IEnumerable<LocationOrLocationLink>?> RequestDefinitionAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DefinitionProvider == null) return null;
             try
@@ -470,7 +470,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -483,7 +483,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(IFile file, Position pos)
+        public async Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DeclarationProvider == null) return null;
             try
@@ -492,7 +492,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -505,7 +505,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(IFile file, Range range)
+        public async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range)
         {
             if (Client == null || Client.ServerSettings.Capabilities.CodeActionProvider == null) return null;
             try
@@ -514,7 +514,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Range = range,
                     // Context = new CodeActionContext
@@ -532,7 +532,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<WorkspaceEdit?> RequestRenameAsync(IFile file, Position pos, string newName)
+        public async Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName)
         {
             if (Client == null || Client.ServerSettings.Capabilities.RenameProvider == null) return null;
             try
@@ -541,7 +541,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos,
                     NewName = newName
@@ -556,7 +556,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<RangeOrPlaceholderRange?> PrepareRenameAsync(IFile file, Position pos)
+        public async Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.RenameProvider == null) return null;
             try
@@ -565,7 +565,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -579,7 +579,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public virtual async Task<SignatureHelp?> RequestSignatureHelpAsync(IFile file, Position pos)
+        public virtual async Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos)
         {
             if (Client?.ServerSettings.Capabilities.SignatureHelpProvider == null) return null;
             try
@@ -588,7 +588,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -602,7 +602,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<Container<FoldingRange>?> RequestFoldingsAsync(IFile file)
+        public async Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.FoldingRangeProvider == null) return null;
             try
@@ -611,7 +611,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     }
                 });
                 return foldings;
@@ -624,7 +624,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public virtual async Task<Hover?> RequestHoverAsync(IFile file, Position pos)
+        public virtual async Task<Hover?> RequestHoverAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.HoverProvider == null) return null;
             try
@@ -634,7 +634,7 @@ namespace OneWare.Shared.LanguageService
                     Position = pos,
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     }
                 });
 
@@ -648,7 +648,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<Container<ColorInformation>?> RequestDocumentColorAsync(IFile file)
+        public async Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ColorProvider == null) return null;
             try
@@ -657,7 +657,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     }
                 });
 
@@ -671,7 +671,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(IFile file, Position pos)
+        public async Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentHighlightProvider == null) return null;
             try
@@ -680,7 +680,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -715,7 +715,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<LocationContainer?> RequestReferencesAsync(IFile file, Position pos)
+        public async Task<LocationContainer?> RequestReferencesAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ReferencesProvider == null) return null;
             try
@@ -724,7 +724,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     },
                     Position = pos
                 });
@@ -739,7 +739,7 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public async Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(IFile file)
+        public async Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentSymbolProvider == null) return null;
             try
@@ -748,7 +748,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = file.FullPath
+                        Uri = fullPath
                     }
                 });
 
@@ -762,28 +762,28 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public virtual async Task<TextEditContainer?> RequestFormattingAsync(IFile file)
+        public virtual async Task<TextEditContainer?> RequestFormattingAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentFormattingProvider == null) return null;
             var formatting = await Client.RequestDocumentFormatting(new DocumentFormattingParams
             {
                 TextDocument = new TextDocumentIdentifier
                 {
-                    Uri = file.FullPath
+                    Uri = fullPath
                 }
             });
 
             return formatting;
         }
 
-        public virtual async Task<TextEditContainer?> RequestRangeFormattingAsync(IFile file, Range range)
+        public virtual async Task<TextEditContainer?> RequestRangeFormattingAsync(string fullPath, Range range)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentFormattingProvider == null) return null;
             var formatting = await Client.RequestDocumentRangeFormatting(new DocumentRangeFormattingParams
             {
                 TextDocument = new TextDocumentIdentifier
                 {
-                    Uri = file.FullPath
+                    Uri = fullPath
                 },
                 Range = range
             });

@@ -5,13 +5,12 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
-using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
-namespace OneWare.Demo;
+namespace OneWare.Demo.Desktop;
 
 internal abstract class Program
 {

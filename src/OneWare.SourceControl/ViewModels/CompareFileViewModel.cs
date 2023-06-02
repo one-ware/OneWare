@@ -63,7 +63,7 @@ namespace OneWare.SourceControl.ViewModels
         public CompareFileViewModel(string path, SourceControlViewModel sourceControlViewModel)
         {
             Path = path;
-            PatchFile = sourceControlViewModel.GetPatch(path, 3);
+            PatchFile = sourceControlViewModel.GetPatch(path, 10000);
         }
 
         public override bool OnClose()

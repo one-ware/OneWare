@@ -54,7 +54,7 @@ namespace OneWare.Shared.LanguageService
 
             var location = CodeBox.Document.GetLocation(offset);
 
-            var hover = await Service.RequestHoverAsync(Editor.CurrentFile,
+            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (hover != null && !IsClosed)
             {
@@ -77,7 +77,7 @@ namespace OneWare.Shared.LanguageService
             var error = GetErrorAtLocation(location);
             if (error != null)
             {
-                var codeactions = await Service.RequestCodeActionAsync(Editor.CurrentFile,
+                var codeactions = await Service.RequestCodeActionAsync(Editor.CurrentFile.FullPath,
                     new Range
                     {
                         Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
@@ -116,7 +116,7 @@ namespace OneWare.Shared.LanguageService
             }
 
             //Refactorings
-            var prepareRefactor = await Service.PrepareRenameAsync(Editor.CurrentFile, pos);
+            var prepareRefactor = await Service.PrepareRenameAsync(Editor.CurrentFile.FullPath, pos);
             if (prepareRefactor != null)
                 menuItems.Add(new MenuItemViewModel
                 {
@@ -126,7 +126,7 @@ namespace OneWare.Shared.LanguageService
                     Icon = Application.Current?.FindResource("VsImageLib.Rename16X") as IImage
                 });
 
-            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile,
+            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (definition != null && !IsClosed)
                 foreach (var i in definition)
@@ -144,7 +144,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var declaration = await Service.RequestDeclarationAsync(Editor.CurrentFile,
+            var declaration = await Service.RequestDeclarationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (declaration != null && !IsClosed)
                 foreach (var i in declaration)
@@ -162,7 +162,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var implementation = await Service.RequestImplementationAsync(Editor.CurrentFile,
+            var implementation = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (implementation != null && !IsClosed)
                 foreach (var i in implementation)
@@ -180,7 +180,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var typeDefinition = await Service.RequestImplementationAsync(Editor.CurrentFile,
+            var typeDefinition = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (typeDefinition != null && !IsClosed)
                 foreach (var i in typeDefinition)
@@ -239,7 +239,7 @@ namespace OneWare.Shared.LanguageService
 
             if (range.IsRange && range.Range != null)
             {
-                var workspaceEdit = await Service.RequestRenameAsync(Editor.CurrentFile, range.Range.Start, newName);
+                var workspaceEdit = await Service.RequestRenameAsync(Editor.CurrentFile.FullPath, range.Range.Start, newName);
                 if (workspaceEdit != null && !IsClosed)
                     await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
                         { Edit = workspaceEdit, Label = "Rename" });
@@ -255,7 +255,7 @@ namespace OneWare.Shared.LanguageService
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return null;
             var location = CodeBox.Document.GetLocation(offset);
 
-            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile,
+            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (definition != null && !IsClosed)
                 if (definition.FirstOrDefault() is { } loc)
@@ -397,7 +397,7 @@ namespace OneWare.Shared.LanguageService
 
         public virtual async Task<List<(string, SymbolKind)>?> RetrieveSymbolsAsync()
         {
-            var symbolInfo = await Service.RequestSymbolsAsync(Editor.CurrentFile);
+            var symbolInfo = await Service.RequestSymbolsAsync(Editor.CurrentFile.FullPath);
 
             if (symbolInfo is null) return null;
             
@@ -429,7 +429,7 @@ namespace OneWare.Shared.LanguageService
 
         public virtual async Task ShowOverloadProviderAsync()
         {
-            var signatureHelp = await Service.RequestSignatureHelpAsync(Editor.CurrentFile,
+            var signatureHelp = await Service.RequestSignatureHelpAsync(Editor.CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
             if (signatureHelp != null && !IsClosed)
             {
@@ -449,7 +449,7 @@ namespace OneWare.Shared.LanguageService
         {
             var t = triggerChar.Length > 0 ? triggerChar[0] : ';';
 
-            var completion = await Service.RequestCompletionAsync(Editor.CurrentFile,
+            var completion = await Service.RequestCompletionAsync(Editor.CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerChar,
                 triggerKind);
             var custom = await GetCustomCompletionItemsAsync();
@@ -650,7 +650,7 @@ namespace OneWare.Shared.LanguageService
         {
             if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind.Full)
             {
-                Service.RefreshTextDocument(Editor.CurrentFile, CodeBox.Text);
+                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, CodeBox.Text);
             }
             _ = UpdateSymbolsAsync();
         }
@@ -670,7 +670,7 @@ namespace OneWare.Shared.LanguageService
             if (IsClosed) return;
 
             base.OnServerActivated();
-            Service.DidOpenTextDocument(Editor.CurrentFile, Editor.CurrentDocument.Text);
+            Service.DidOpenTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
 
             _ = UpdateSymbolsAsync();
         }
@@ -690,7 +690,7 @@ namespace OneWare.Shared.LanguageService
             {
                 var c = ConvertChanges(e);
                 var changes = new Container<TextDocumentContentChangeEvent>(c);
-                Service.RefreshTextDocument(Editor.CurrentFile, changes);
+                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, changes);
             }
 
             _lastEditTime = DateTime.Now.TimeOfDay;
@@ -698,7 +698,7 @@ namespace OneWare.Shared.LanguageService
 
         private void FileSaved(object? sender, EventArgs e)
         {
-            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(Editor.CurrentFile, Editor.CurrentDocument.Text);
+            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
         }
 
         public override void Close()
@@ -713,7 +713,7 @@ namespace OneWare.Shared.LanguageService
             }
 
             base.Close();
-            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(Editor.CurrentFile);
+            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(Editor.CurrentFile.FullPath);
         }
 
         #endregion

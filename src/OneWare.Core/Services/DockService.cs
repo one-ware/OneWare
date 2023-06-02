@@ -193,11 +193,6 @@ namespace OneWare.Core.Services
             return null;
         }
 
-        public override IDocumentDock CreateDocumentDock()
-        {
-            return new CustomDocumentDock();
-        }
-
         private IEnumerable<T> SearchView<T>(IDockable? layout = null)
         {
             layout ??= Layout;
@@ -326,6 +321,8 @@ namespace OneWare.Core.Services
             
             using var stream = File.OpenWrite(Path.Combine(_paths.LayoutDirectory, Layout.Id + ".json"));
             stream.SetLength(0);
+
+            Layout.FocusedDockable = null;
             
             Serializer.Save(stream, Layout);
         }

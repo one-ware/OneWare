@@ -16,7 +16,6 @@
         <PackageReference Include="Dock.Avalonia" Version="$(DockVersion)" />
         <PackageReference Include="Dock.Model.Mvvm" Version="$(DockVersion)" />
         <PackageReference Include="Avalonia.Xaml.Interactions" Version="$(InteractionsVersion)" />
-        <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Mono.Posix" Version="7.1.0-final.1.21458.1" />
     </ItemGroup>
 </Project>

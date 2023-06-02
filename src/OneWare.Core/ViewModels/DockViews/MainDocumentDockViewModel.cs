@@ -1,6 +1,8 @@
-﻿namespace OneWare.Core.ViewModels.DockViews;
+﻿using Dock.Model.Mvvm.Controls;
 
-public class MainDocumentDockViewModel : CustomDocumentDock
+namespace OneWare.Core.ViewModels.DockViews;
+
+public class MainDocumentDockViewModel : DocumentDock
 {
     public MainDocumentDockViewModel(WelcomeScreenViewModel welcomeScreenViewModel)
     {
