@@ -1,20 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\Base.props" />
-    <Import Project="..\..\build\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
-
     <ItemGroup>
         <PackageReference Include="DiffPlex" Version="1.7.1" />
         <PackageReference Include="LibGit2Sharp" Version="0.27.0-preview-0182" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\SourceControlMainWindowBottomRightExtension.axaml.cs">
-        <DependentUpon>ProjectExplorerMainWindowToolBarExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
     </ItemGroup>
 </Project>

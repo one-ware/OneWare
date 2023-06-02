@@ -7,11 +7,11 @@
         xmlns:coreConverters="clr-namespace:OneWare.Core.Converters">
 
     <Styles.Resources>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{StaticResource ThemeAccentColor}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Color="{StaticResource ThemeAccentColor2}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Color="{StaticResource ThemeAccentColor3}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Color="{DynamicResource ThemeAccentColor2}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Color="{DynamicResource ThemeAccentColor3}"/>
         <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{StaticResource ThemeAccentColor}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}"/>
     </Styles.Resources>
     
     <Design.PreviewWith>

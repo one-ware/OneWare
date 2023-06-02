@@ -85,7 +85,7 @@
 
     <shared:AdvancedWindow.BottomContent>
         <Border Padding="2" CornerRadius="{x:Static data:Global.WindowsCornerRadiusBottom}"
-                Background="{StaticResource ThemeAccentBrush}">
+                Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->
                 <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"

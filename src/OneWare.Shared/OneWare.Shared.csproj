@@ -1,15 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="..\..\build\Base.props" />
-    <Import Project="..\..\build\OneWare.Module.props" />
-    
-    <ItemGroup>
-      <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="OmniSharp.Extensions.LanguageClient" Version="0.19.7" />
-        <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
-    </ItemGroup>
-    
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\AvaloniaEdit.props" />
+    <Import Project="..\..\build\props\OmniSharp.Extensions.Language.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Dock.Avalonia.props" />
+    <Import Project="..\..\build\props\Prism.Avalonia.props" />
+    <Import Project="..\..\build\props\Avalonia.Xaml.Interactions.props" />
 </Project>

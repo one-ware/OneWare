@@ -108,7 +108,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         _header = header;
         TopFolder = topFolder;
         
-        Icon = SharedConverters.FileExtensionIconConverter.Convert(header, typeof(IImage), null, CultureInfo.CurrentCulture) as IImage;
+        var observable = SharedConverters.FileExtensionIconConverterObservable.Convert(header, typeof(IImage), null, CultureInfo.CurrentCulture) as IObservable<object?>;
+        observable?.Subscribe(x =>
+        {
+            Icon = x as IImage;
+        });
+        
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
     

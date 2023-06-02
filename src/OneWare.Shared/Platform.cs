@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Mono.Unix.Native;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
@@ -285,35 +284,35 @@ namespace OneWare.Shared
                 }
         }
 
-        private static int Kill(int pid, Signum sig)
-        {
-            if (sig == Signum.Sigint) return Syscall.kill(pid, Mono.Unix.Native.Signum.SIGINT);
-            //TODO add more if needed
-            return 0;
-        }
-
-        public static int SendSignal(int pid, Signum sig)
-        {
-            switch (PlatformIdentifier)
-            {
-                case PlatformId.Unix:
-                case PlatformId.MacOsx:
-                    return Kill(pid, sig);
-
-                case PlatformId.Win32Nt:
-                    switch (sig)
-                    {
-                        case Signum.Sigint:
-                            return SendCtrlC(pid);
-
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+        // private static int Kill(int pid, Signum sig)
+        // {
+        //     if (sig == Signum.Sigint) return Syscall.kill(pid, Mono.Unix.Native.Signum.SIGINT);
+        //     //TODO add more if needed
+        //     return 0;
+        // }
+        //
+        // public static int SendSignal(int pid, Signum sig)
+        // {
+        //     switch (PlatformIdentifier)
+        //     {
+        //         case PlatformId.Unix:
+        //         case PlatformId.MacOsx:
+        //             return Kill(pid, sig);
+        //
+        //         case PlatformId.Win32Nt:
+        //             switch (sig)
+        //             {
+        //                 case Signum.Sigint:
+        //                     return SendCtrlC(pid);
+        //
+        //                 default:
+        //                     throw new NotImplementedException();
+        //             }
+        //
+        //         default:
+        //             throw new NotImplementedException();
+        //     }
+        // }
 
         public static bool AttachConsole(int pid)
         {

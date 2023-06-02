@@ -1,5 +1,7 @@
+using System;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
@@ -12,6 +14,6 @@ public class SplashWindowViewModel : ViewModelBase
 
     public SplashWindowViewModel(IPaths paths)
     {
-        SplashScreen = SharedConverters.PathToBitmapConverter.Convert(paths.SplashScreenPath, typeof(IBitmap), null, null) as IImage;
+        SplashScreen = new Bitmap(AssetLoader.Open(new Uri(paths.SplashScreenPath)));
     }
 }

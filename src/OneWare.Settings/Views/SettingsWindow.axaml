@@ -6,7 +6,6 @@
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
                        xmlns:models="clr-namespace:OneWare.Settings.Models"
-                       xmlns:cp="clr-namespace:ThemeEditor.Controls.ColorPicker;assembly=ThemeEditor.Controls.ColorPicker"
                        Width="550" Height="400"
                        mc:Ignorable="d"
                        x:Class="OneWare.Settings.Views.SettingsWindow"

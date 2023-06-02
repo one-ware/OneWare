@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -44,14 +46,11 @@ namespace OneWare.Settings.ViewModels
             if (Application.Current == null) throw new NullReferenceException(nameof(Application.Current));
             
             if (iconKey == null) return;
-            Application.Current.Styles.CollectionChanged += (o, i) =>
-            {
-                Application.Current.Styles.TryGetResource(iconKey, ThemeVariant.Default, out var icon);
-                Icon = icon as IImage;
-            };
 
-            Application.Current.Styles.TryGetResource(iconKey, ThemeVariant.Default, out var ico);
-            Icon = ico as IImage;
+            Application.Current.GetResourceObservable(iconKey).Subscribe(x =>
+            {
+                Icon = x as IImage;
+            });
         }
     }
 }

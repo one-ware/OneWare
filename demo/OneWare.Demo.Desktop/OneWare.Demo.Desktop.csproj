@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\Base.props" />
+    <Import Project="..\..\build\props\Base.props" />
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <OutputType>Exe</OutputType>

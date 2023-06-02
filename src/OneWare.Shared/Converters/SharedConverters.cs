@@ -11,6 +11,7 @@ public static class SharedConverters
     public static readonly IValueConverter ComparisonConverter = new ComparisonConverter();
     public static readonly IValueConverter EnumToStringConverter = new EnumToStringConverter();
     public static readonly IValueConverter FileExtensionIconConverter = new FileExtensionIconConverter();
+    public static readonly IValueConverter FileExtensionIconConverterObservable = new FileExtensionIconConverterObservable();
     public static readonly IValueConverter FileOpacityConverter = new FileOpacityConverter();
     public static readonly IValueConverter NoComparisonConverter = new NoComparisonConverter();
     public static readonly IValueConverter ObjectNotTypeConverter = new ObjectNotTypeConverter();

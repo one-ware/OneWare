@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\Base.props" />
-    <Import Project="..\..\build\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
