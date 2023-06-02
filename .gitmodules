@@ -4,3 +4,6 @@
 [submodule "src/AvalonStudio.TerminalEmulator"]
 	path = src/AvalonStudio.TerminalEmulator
 	url = https://github.com/HendrikMennen/AvalonStudio.TerminalEmulator
+[submodule "src/Dock"]
+	path = src/Dock
+	url = https://github.com/HendrikMennen/Dock

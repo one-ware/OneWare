@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <PackageReference Include="Dock.Avalonia" Version="11.0.0-preview8.2" />
-        <PackageReference Include="Dock.Model.Mvvm" Version="11.0.0-preview8.2" />
+        <ProjectReference Include="..\Dock\src\Dock.Avalonia\Dock.Avalonia.csproj" />
+        <ProjectReference Include="..\Dock\src\Dock.Model.Mvvm\Dock.Model.Mvvm.csproj" />
     </ItemGroup>
 </Project>

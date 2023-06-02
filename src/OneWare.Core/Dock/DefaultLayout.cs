@@ -25,6 +25,9 @@ namespace OneWare.Core.Dock
         public static IRootDock GetDefaultLayout(DockService dockService)
         {
             var documentDock = ContainerLocator.Container.Resolve<MainDocumentDockViewModel>();
+            documentDock.ActiveDockable = null;
+            documentDock.FocusedDockable = null;
+            documentDock.VisibleDockables?.Clear();
             dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
             dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
 
