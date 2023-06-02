@@ -13,10 +13,12 @@ using OneWare.Shared.Services;
 
 namespace OneWare.Core.Views.Windows;
 
-public class AdvancedHostWindow : HostWindow, IStyleable
+public class AdvancedHostWindow : HostWindow
 {
     private bool _cancelClose = true;
     private IDockService _dockService;
+
+    protected override Type StyleKeyOverride => typeof(HostWindow);
 
     public AdvancedHostWindow(IDockService dockService)
     {

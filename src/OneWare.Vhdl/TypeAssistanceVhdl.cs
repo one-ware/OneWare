@@ -37,7 +37,7 @@ namespace OneWare.Vhdl
 
         public override void TypeAssistance(TextInputEventArgs e)
         {
-            if (e.Text.Contains(';') && Service.IsLanguageServiceReady)
+            if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {
                 var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
                 Format(line, line);

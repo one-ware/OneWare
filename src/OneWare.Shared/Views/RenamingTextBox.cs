@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace OneWare.Shared.Views;
 
-public class RenamingTextBox : TextBox, IStyleable
+public class RenamingTextBox : TextBox
 {
     public static readonly StyledProperty<string> InitialTextProperty =
         AvaloniaProperty.Register<RenamingTextBox, string >(nameof(InitialText));
@@ -18,7 +18,7 @@ public class RenamingTextBox : TextBox, IStyleable
     public static readonly StyledProperty<RelayCommand<string>> RequestRenameProperty =
         AvaloniaProperty.Register<RenamingTextBox, RelayCommand<string>>(nameof(InitialText));
 
-    Type IStyleable.StyleKey => typeof(TextBox);
+    protected override Type StyleKeyOverride => typeof(TextBox);
     
     public string InitialText
     {

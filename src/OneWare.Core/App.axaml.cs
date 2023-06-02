@@ -167,32 +167,11 @@ namespace OneWare.Core
 
             if (arguments.GetLength(0) > 1)
             {
-                Global.SaveLastProjects = false;
-
                 var fileName = arguments[1];
                 //Check file exists
                 if (File.Exists(fileName))
                 {
-                    if (string.Equals(Path.GetExtension(fileName), ".vhdpproj",
-                        StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        var r = await Container.Resolve<IProjectService>().LoadProjectAsync(fileName);
-
-                        if (r is null) return;
-                        
-                        //Try open main file
-                        if (r.Search(r.Header + ".vhdp") is ProjectFile mainFile)
-                            _ = Container.Resolve<IDockService>().OpenFileAsync(mainFile);
-                        else
-                            //Open any file
-                            foreach (var file in r.Items)
-                                if (file is ProjectFile pf)
-                                {
-                                    _ = Container.Resolve<IDockService>().OpenFileAsync(pf);
-                                    break;
-                                }
-                    }
-                    else if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
+                    if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                     {
                         var file = Container.Resolve<IProjectService>().GetTemporaryFile(fileName);
                         _ = Container.Resolve<IDockService>().OpenFileAsync(file);
@@ -253,7 +232,7 @@ namespace OneWare.Core
                 Container.Resolve<ILogger>().Error(e.Message, e);
             }
         }
-
+        
         public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);

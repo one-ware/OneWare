@@ -4,9 +4,9 @@ using AvaloniaEdit.Folding;
 
 namespace OneWare.Shared.EditorExtensions;
 
-public class ExtendedTextEditor : TextEditor, IStyleable
+public class ExtendedTextEditor : TextEditor
 {
-    Type IStyleable.StyleKey => typeof(TextEditor);
+    protected override Type StyleKeyOverride => typeof(TextEditor);
     
     public BracketHighlightRenderer BracketRenderer { get; }
     public LineHighlightRenderer LineRenderer { get; }

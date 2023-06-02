@@ -382,7 +382,7 @@ namespace OneWare.Shared
                 }
             };
 
-            process.ErrorDataReceived += (o, i) => { ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data); };
+            process.ErrorDataReceived += (o, i) => { ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "NULL ERROR"); };
             process.OutputDataReceived += (o, i) =>
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Log("CTRL+C: " +  i.Data);
@@ -403,7 +403,7 @@ namespace OneWare.Shared
 
         public static string NormalizePath(this string path)
         {
-            var result = path?.Replace("\\\\", "\\").ToPlatformPath();
+            var result = path.Replace("\\\\", "\\").ToPlatformPath();
 
             if (!string.IsNullOrEmpty(result))
             {

@@ -16,7 +16,7 @@ namespace OneWare.Core.ViewModels.Controls
             ButtonAction?.Invoke();
         }
 
-        public CustomNotificationViewModel(string? title, string? message, string buttonText, Action buttonAction, IImage icon, NotificationType type = NotificationType.Information, TimeSpan? expiration = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration, onClick, onClose)
+        public CustomNotificationViewModel(string? title, string? message, string buttonText, Action buttonAction, IImage? icon, NotificationType type = NotificationType.Information, TimeSpan? expiration = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration, onClick, onClose)
         {
             ButtonText = buttonText;
             ButtonAction = buttonAction;

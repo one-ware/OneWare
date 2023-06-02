@@ -45,8 +45,10 @@ namespace OneWare.Shared
         {
             try
             {
-                if (Path.HasExtension(path)) path = Path.GetDirectoryName(path);
+                if (Path.HasExtension(path)) path = Path.GetDirectoryName(path) ?? "";
                 else path = Path.GetFullPath(path);
+                
+                if(string.IsNullOrEmpty(path)) return;
 
                 Process.Start(new ProcessStartInfo
                 {
@@ -232,12 +234,13 @@ namespace OneWare.Shared
             return GetFullPath(fileName) != null;
         }
 
-        public static string GetFullPath(string fileName)
+        public static string? GetFullPath(string fileName)
         {
             if (File.Exists(fileName))
                 return Path.GetFullPath(fileName);
 
             var values = Environment.GetEnvironmentVariable("PATH");
+            if (values == null) return fileName;
             foreach (var path in values.Split(Path.PathSeparator))
             {
                 var fullPath = Path.Combine(path, fileName);
@@ -255,11 +258,11 @@ namespace OneWare.Shared
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
                 socket.Bind(DefaultLoopbackEndpoint);
-                return ((IPEndPoint)socket.LocalEndPoint).Port;
+                return ((IPEndPoint)socket!.LocalEndPoint!).Port;
             }
         }
 
-        public static string FirstFileInPath(string path, string extension)
+        public static string? FirstFileInPath(string path, string extension)
         {
             try
             {

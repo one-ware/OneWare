@@ -74,7 +74,7 @@
 
     <SolidColorBrush x:Key="SelectionBrush">#606e6e6e</SolidColorBrush>
     <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
-
+    
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
             <Color x:Key="ThemeBackgroundColor">#FFF5F5F5</Color>
@@ -152,7 +152,7 @@
             <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{StaticResource ThemeAccentColor}" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
             <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />

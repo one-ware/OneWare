@@ -101,7 +101,7 @@ namespace OneWare.Core.Services
                     Id = pf.FullPath,
                     Title = pf.Header
                 },*/
-                _ => ContainerLocator.Current.Resolve<EditViewModel>((typeof(IFile), pf))
+                _ => ContainerLocator.Current.Resolve<EditViewModel>((typeof(string), pf.FullPath))
             };
             
             await viewModel.LoadAsync();

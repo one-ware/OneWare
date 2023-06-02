@@ -11,7 +11,7 @@
         <Setter Property="ExtendClientAreaToDecorationsHint" Value="True"/>
         <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30"/>
         <Setter Property="Padding" Value="{TemplateBinding Padding}"/>
-        <Setter Property="CornerRadius" Value="{x:Static data:Global.WindowsCornerRadius}"/>
+        <Setter Property="CornerRadius" Value="{x:Static shared:Shared.WindowsCornerRadius}"/>
         <Setter Property="TransparencyLevelHint" Value="Transparent"/>
         <Setter Property="UseLayoutRounding" Value="False"/>
         <Setter Property="Template">
@@ -19,7 +19,7 @@
                 <Panel>
                     <Border Name="PART_TransparencyFallback"
                             IsHitTestVisible="False" />
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="{x:Static data:Global.WindowsOnlyBorder}"
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="{x:Static shared:Shared.WindowsOnlyBorder}"
                             IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
                     <Panel Margin="{TemplateBinding WindowDecorationMargin}"
                            Background="Transparent" />
@@ -29,7 +29,7 @@
                         </VisualLayerManager.ChromeOverlayLayer>
                         <Panel Margin="{TemplateBinding OffScreenMargin}">
                             <Panel Margin="{TemplateBinding WindowDecorationMargin}">
-                                <Panel Margin="{x:Static data:Global.WindowsOnlyBorder}">
+                                <Panel Margin="{x:Static shared:Shared.WindowsOnlyBorder}">
                                     <Grid RowDefinitions="Auto,*, Auto">
                                         <Border IsVisible="{TemplateBinding IsExtendedIntoWindowDecorations, Converter={x:Static BoolConverters.Not}}" 
                                                 Height="{Binding #TitleBarContent.Bounds.Height}" Background="Transparent" Width="1"/>

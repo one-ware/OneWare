@@ -99,8 +99,8 @@ namespace OneWare.Cpp
 
     public class CustomCppInitialisationOptions
     {
-        public Container<string> FallbackFlags { get; set; }
+        public Container<string>? FallbackFlags { get; set; }
 
-        public string CompilationDatabasePath { get; set; }
+        public string? CompilationDatabasePath { get; set; }
     }
 }

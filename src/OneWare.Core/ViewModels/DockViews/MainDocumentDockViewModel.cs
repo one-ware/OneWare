@@ -1,4 +1,6 @@
-﻿using Dock.Model.Mvvm.Controls;
+﻿using System.Collections.ObjectModel;
+using Dock.Model.Core;
+using Dock.Model.Mvvm.Controls;
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -8,14 +10,7 @@ public class MainDocumentDockViewModel : DocumentDock
     {
         Id = "CentralDocumentDock";
         IsCollapsable = false;
-        
-        //ActiveDockable = welcomeScreenViewModel;
-        // _visibleDockables.CollectionChanged += (sender, args) =>
-        // {
-        //     if (_visibleDockables.Count == 0)
-        //     {
-        //         _visibleDockables.Add();
-        //     }
-        // };
+
+        VisibleDockables = new ObservableCollection<IDockable>();
     }
 }
