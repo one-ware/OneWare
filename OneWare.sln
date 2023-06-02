@@ -5,9 +5,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Shared", "src\OneWare.Shared\OneWare.Shared.csproj", "{94FD4E60-346F-4B14-AB6D-A1B78DD39501}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF-2990-4B2C-907F-12739A839A3C}"
-	ProjectSection(SolutionItems) = preProject
-		Directory.Build.props = Directory.Build.props
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{B99724E4-1AA2-46D9-B982-6A3B381C5258}"
 EndProject
@@ -67,6 +64,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
 		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
 		build\props\RestSharp.props = build\props\RestSharp.props
+		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Avalonia", "src\Dock\src\Dock.Avalonia\Dock.Avalonia.csproj", "{8361F459-0F6F-422B-8E98-D8E105990C33}"
