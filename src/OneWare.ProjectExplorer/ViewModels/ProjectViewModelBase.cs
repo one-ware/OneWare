@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Runtime.Serialization;
 using Dock.Model.Mvvm.Controls;
 using OneWare.ProjectExplorer.Models;
 using OneWare.Shared;

@@ -4,14 +4,11 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
-using Avalonia.Controls.Generators;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using OneWare.Shared.ViewModels;
-using OneWare.Shared.Views;
 
 namespace OneWare.Shared
 {
@@ -276,15 +273,7 @@ namespace OneWare.Shared
                 return null;
             }
         }
-
-        public static string GetQsfProperty(string qsf, string propertyName)
-        {
-            var pattern = @"(?<=set_global_assignment -name " + propertyName + " ).*";
-            var match = Regex.Match(qsf, pattern, RegexOptions.IgnoreCase);
-            return match.Success ? match.Value.Trim() : null;
-        }
-
-
+        
         #region LinuxPermissionMadness
 
         public static void CreateFile(string path)

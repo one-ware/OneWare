@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.SerialMonitor.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.Output;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;

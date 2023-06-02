@@ -1,9 +1,4 @@
-﻿using System.Reactive.Disposables;
-using Avalonia;
-using Avalonia.Controls;
-
-using OneWare.Settings.Models;
-using OneWare.Settings.ViewModels;
+﻿using Avalonia;
 using OneWare.Shared;
 
 namespace OneWare.Settings.Views

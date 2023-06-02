@@ -1,15 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
-
-using OneWare.ProjectExplorer.Models;
-using OneWare.Shared;
-using OneWare.Shared.Services;
 using OneWare.Shared.Views;
 
 namespace OneWare.ProjectExplorer.Views;

@@ -1,45 +1,79 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-        <Style Selector="ScrollBar:vertical">
-                <Setter Property="Cursor" Value="Arrow" />
-                <Setter Property="Template">
-                        <ControlTemplate>
-                                <Border Background="Transparent"
-                                        UseLayoutRounding="False">
-                                        <Grid RowDefinitions="*">
-                                                <Track 
-                                                        Minimum="{TemplateBinding Minimum}"
-                                                        Maximum="{TemplateBinding Maximum}"
-                                                        Value="{TemplateBinding Value, Mode=TwoWay}"
-                                                        ViewportSize="{TemplateBinding ViewportSize}"
-                                                        Orientation="{TemplateBinding Orientation}"
-                                                        IsDirectionReversed="True">
-                                                        <Thumb Name="thumb" />
-                                                </Track>
-                                        </Grid>
-                                </Border>
-                        </ControlTemplate>
-                </Setter>
-        </Style>
-        <Style Selector="ScrollBar:horizontal">
-                <Setter Property="Cursor" Value="Arrow" />
-                <Setter Property="Template">
-                        <ControlTemplate>
-                                <Border Background="Transparent"
-                                        UseLayoutRounding="False">
-                                        <Grid RowDefinitions="*">
-                                                <Track 
-                                                        Minimum="{TemplateBinding Minimum}"
-                                                        Maximum="{TemplateBinding Maximum}"
-                                                        Value="{TemplateBinding Value, Mode=TwoWay}"
-                                                        ViewportSize="{TemplateBinding ViewportSize}"
-                                                        Orientation="{TemplateBinding Orientation}"
-                                                        IsDirectionReversed="False">
-                                                        <Thumb Name="thumb" />
-                                                </Track>
-                                        </Grid>
-                                </Border>
-                        </ControlTemplate>
-                </Setter>
-        </Style>
+
+    <Style Selector="ScrollViewer">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*,Auto"
+                      RowDefinitions="*,Auto">
+                    <ScrollContentPresenter Name="PART_ContentPresenter"
+                                            Padding="{TemplateBinding Padding}"
+                                            HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                            VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+                                            HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                            VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                            Background="{TemplateBinding Background}"
+                                            ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+                        <ScrollContentPresenter.GestureRecognizers>
+                            <ScrollGestureRecognizer
+                                CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}" />
+                        </ScrollContentPresenter.GestureRecognizers>
+                    </ScrollContentPresenter>
+                    <ScrollBar Name="PART_HorizontalScrollBar"
+                               Grid.Row="1"
+                               Orientation="Horizontal" />
+                    <ScrollBar Name="PART_VerticalScrollBar"
+                               Grid.Column="1"
+                               Orientation="Vertical" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent"
+                        UseLayoutRounding="False">
+                    <Grid RowDefinitions="*">
+                        <Track
+                            Minimum="{TemplateBinding Minimum}"
+                            Maximum="{TemplateBinding Maximum}"
+                            Value="{TemplateBinding Value, Mode=TwoWay}"
+                            ViewportSize="{TemplateBinding ViewportSize}"
+                            Orientation="{TemplateBinding Orientation}"
+                            IsDirectionReversed="True">
+                            <Thumb Name="thumb" />
+                        </Track>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ScrollBar:horizontal">
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent"
+                        UseLayoutRounding="False">
+                    <Grid RowDefinitions="*">
+                        <Track
+                            Minimum="{TemplateBinding Minimum}"
+                            Maximum="{TemplateBinding Maximum}"
+                            Value="{TemplateBinding Value, Mode=TwoWay}"
+                            ViewportSize="{TemplateBinding ViewportSize}"
+                            Orientation="{TemplateBinding Orientation}"
+                            IsDirectionReversed="False">
+                            <Thumb Name="thumb" />
+                        </Track>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
 </Styles>

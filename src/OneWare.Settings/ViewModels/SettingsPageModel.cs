@@ -1,9 +1,7 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Settings.Models;
 

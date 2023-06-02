@@ -1,14 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Reactive;
-using System.Runtime.Serialization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData.Binding;
 using Prism.Ioc;
-
-using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Services;

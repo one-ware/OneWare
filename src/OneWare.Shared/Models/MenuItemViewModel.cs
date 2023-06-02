@@ -1,7 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using Avalonia.Input;
-using Avalonia.Media;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Models

@@ -2,8 +2,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using Avalonia.Media;
-using OneWare.Shared.Enums;
 
 namespace OneWare.Shared.Converters
 {

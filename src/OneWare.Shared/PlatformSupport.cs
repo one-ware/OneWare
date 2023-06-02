@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 
 namespace OneWare.Shared
 {
@@ -56,7 +54,7 @@ namespace OneWare.Shared
         }
         
         public static int ExecuteShellCommand(string commandName, string args, Action<object, DataReceivedEventArgs>
-                outputReceivedCallback, Action<object, DataReceivedEventArgs> errorReceivedCallback = null,
+                outputReceivedCallback, Action<object, DataReceivedEventArgs>? errorReceivedCallback = null,
             bool resolveExecutable = true,
             string workingDirectory = "", bool executeInShell = true, bool includeSystemPaths = true,
             params string[] extraPaths)
@@ -132,9 +130,7 @@ namespace OneWare.Shared
         /// <summary>
         ///     Attempts to locate the full path to a script
         /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string ResolveFullExecutablePath(string fileName, bool returnNullOnFailure = true,
+        public static string? ResolveFullExecutablePath(string fileName, bool returnNullOnFailure = true,
             params string[] extraPaths)
         {
             if (File.Exists(fileName))
@@ -143,7 +139,7 @@ namespace OneWare.Shared
             if (ExecutorType == ShellExecutorType.Windows)
             {
                 var values = new List<string>(extraPaths);
-                values.AddRange(new List<string>(Environment.GetEnvironmentVariable("PATH").Split(';')));
+                values.AddRange(new List<string>(Environment.GetEnvironmentVariable("PATH")!.Split(';')));
 
                 foreach (var path in values)
                 {

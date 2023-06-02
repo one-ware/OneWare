@@ -1,4 +1,3 @@
-using Avalonia.Styling;
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
 

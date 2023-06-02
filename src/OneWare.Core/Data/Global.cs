@@ -1,7 +1,5 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 

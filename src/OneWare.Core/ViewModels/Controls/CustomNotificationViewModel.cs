@@ -1,5 +1,4 @@
-﻿using System;
-using Avalonia.Controls.Notifications;
+﻿using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 
 namespace OneWare.Core.ViewModels.Controls

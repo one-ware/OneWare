@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-
-using OneWare.Core.Extensions;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;

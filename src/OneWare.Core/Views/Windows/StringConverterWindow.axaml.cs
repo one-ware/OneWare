@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using OneWare.Core.Services;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Shared;
 

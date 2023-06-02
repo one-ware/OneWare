@@ -1,7 +1,5 @@
-﻿using System.Runtime.Serialization;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using Prism.Ioc;
-using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 

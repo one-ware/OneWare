@@ -1,7 +1,4 @@
-using System.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
-
-using OneWare.Shared;
 
 namespace OneWare.Settings;
 

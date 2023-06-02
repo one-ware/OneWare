@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Prism.Ioc;
 using RestSharp;
 using OneWare.Shared.Services;

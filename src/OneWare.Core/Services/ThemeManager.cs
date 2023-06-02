@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avalonia;
-using Avalonia.Markup.Xaml;
-using Avalonia.Markup.Xaml.Styling;
+﻿using Avalonia;
 using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.LanguageService;
-using Prism.Ioc;
 using OneWare.Shared.Services;
 
 namespace OneWare.Core.Services

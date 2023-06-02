@@ -1,5 +1,4 @@
-﻿using OneWare.Shared.LanguageService;
-using OneWare.Shared.Services;
+﻿using OneWare.Shared.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 

@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Reactive;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia;
@@ -10,7 +9,6 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
-using DynamicData;
 using DynamicData.Binding;
 using LibGit2Sharp;
 using OneWare.Shared;
@@ -18,11 +16,9 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using OneWare.Shared.Views;
 using OneWare.SourceControl.Models;
 using Prism.Ioc;
 using ReactiveUI;
-using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace OneWare.SourceControl.ViewModels
 {

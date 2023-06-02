@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
-using OneWare.Shared.Extensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using Prism.Ioc;

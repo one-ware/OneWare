@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData.Binding;
-using Prism.Ioc;
 using OneWare.Output.ViewModels;
 using OneWare.Shared.Services;
 

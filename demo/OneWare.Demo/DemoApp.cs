@@ -1,7 +1,4 @@
-using System;
 using Avalonia.Markup.Xaml.Styling;
-using Avalonia.Styling;
-using Avalonia.Themes.Simple;
 using OneWare.Core;
 using OneWare.Core.Services;
 using OneWare.Cpp;

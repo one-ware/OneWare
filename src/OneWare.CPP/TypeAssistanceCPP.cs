@@ -1,8 +1,6 @@
-﻿using AvaloniaEdit.CodeCompletion;
-using AvaloniaEdit.Indentation.CSharp;
+﻿using AvaloniaEdit.Indentation.CSharp;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
-using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 
 namespace OneWare.Cpp
