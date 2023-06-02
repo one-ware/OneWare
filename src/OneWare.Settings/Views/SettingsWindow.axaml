@@ -6,6 +6,7 @@
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
                        xmlns:models="clr-namespace:OneWare.Settings.Models"
+                       xmlns:cp="clr-namespace:ThemeEditor.Controls.ColorPicker;assembly=ThemeEditor.Controls.ColorPicker"
                        Width="550" Height="400"
                        mc:Ignorable="d"
                        x:Class="OneWare.Settings.Views.SettingsWindow"
@@ -138,6 +139,22 @@
                                             <TextBlock Text="{Binding Setting.Title}"
                                                        ToolTip.Tip="{Binding Setting.Description}" />
                                             <TextBox Text="{Binding Setting.Value, Mode=TwoWay}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                    <DataTemplate DataType="models:SettingModelColorPicker">
+                                        <StackPanel Orientation="Vertical">
+                                            <TextBlock Text="{Binding Setting.Title}"
+                                                       ToolTip.Tip="{Binding Setting.Description}" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Test"></TextBlock>
+                                                <Button Content="Click me">
+                                                    <Button.Flyout>
+                                                        <Flyout>
+                                                            <ColorPicker/>
+                                                        </Flyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate DataType="models:SettingModelPath">

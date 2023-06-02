@@ -12,6 +12,7 @@
         <PackageReference Include="Prism.DryIoc.Avalonia" Version="8.1.97.4-preview.11.5" />
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="ThemeEditor.Controls.ColorPicker" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Dock.Avalonia" Version="$(DockVersion)" />
         <PackageReference Include="Dock.Model.Mvvm" Version="$(DockVersion)" />
         <PackageReference Include="Avalonia.Xaml.Interactions" Version="$(InteractionsVersion)" />

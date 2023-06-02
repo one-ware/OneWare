@@ -21,7 +21,7 @@
     <ItemGroup>
         <PackageReference Include="DeviceId" Version="6.2.0" />
         <PackageReference Include="ExposedObject" Version="2.1.0" />
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.0-a10" />
+        <PackageReference Include="Markdown.Avalonia" Version="11.0.0-c1" />
         <PackageReference Include="OmniSharp.Extensions.LanguageClient" Version="0.19.7" />
         <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
         <PackageReference Include="Prism.Avalonia" Version="8.1.97.4-preview.11.5" />

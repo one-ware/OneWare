@@ -73,7 +73,7 @@ namespace OneWare.Core.Services
                 }
             );
         }
-        
+
         public void RegisterLayoutExtension<T>(DockShowLocation location)
         {
             LayoutRegistrations.TryAdd(location, new List<Type>());
@@ -192,7 +192,12 @@ namespace OneWare.Core.Services
 
             return null;
         }
-        
+
+        public override IDocumentDock CreateDocumentDock()
+        {
+            return new CustomDocumentDock();
+        }
+
         private IEnumerable<T> SearchView<T>(IDockable? layout = null)
         {
             layout ??= Layout;

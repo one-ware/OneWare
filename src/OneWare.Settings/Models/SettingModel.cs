@@ -44,6 +44,13 @@ namespace OneWare.Settings.Models
         }
     }
 
+    public class SettingModelColorPicker : SettingModel
+    {
+        public SettingModelColorPicker(TitledSetting setting) : base(setting)
+        {
+        }
+    }
+    
     public class SettingModelTextBox : SettingModel
     {
         public SettingModelTextBox(TitledSetting setting) : base(setting)

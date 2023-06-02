@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Dock.Model.Mvvm.Controls;
 using DryIoc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using OneWare.Core.Views.DockViews;
 using Prism.DryIoc;
 using Prism.Ioc;
 
@@ -32,7 +36,7 @@ public class ListContractResolver : DefaultContractResolver
         }
         
         var contract = base.ResolveContract(type);
-        
+
         if (contract is JsonObjectContract co)
         {
             if (ContainerLocator.Container.GetContainer().IsRegistered(type))

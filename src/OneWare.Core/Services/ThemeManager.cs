@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.LanguageService;
@@ -82,6 +83,8 @@ namespace OneWare.Core.Services
 
             _settingsService.RegisterTitledCombo("General","Appearance", "General_SelectedTheme", "Theme", "Sets the color scheme for the Application", 
                 "Dark", Themes.Select(x => x.Name).ToArray());
+            
+            _settingsService.RegisterTitled("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FFFFFF"));
         }
 
         public void Initialize(Application application)

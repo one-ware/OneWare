@@ -1,10 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using Dock.Model.Core;
-using Dock.Model.Mvvm.Controls;
+﻿namespace OneWare.Core.ViewModels.DockViews;
 
-namespace OneWare.Core.ViewModels.DockViews;
-
-public class MainDocumentDockViewModel : DocumentDock
+public class MainDocumentDockViewModel : CustomDocumentDock
 {
     public MainDocumentDockViewModel(WelcomeScreenViewModel welcomeScreenViewModel)
     {
@@ -20,6 +16,4 @@ public class MainDocumentDockViewModel : DocumentDock
         //     }
         // };
     }
-    
-    
 }

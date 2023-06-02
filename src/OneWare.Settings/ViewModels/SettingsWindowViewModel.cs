@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
@@ -78,6 +79,9 @@ namespace OneWare.Settings.ViewModels
                                 case float:
                                 case double:
                                     subCategoryModel.SettingModels.Add(new SettingModelTextBox(setting));
+                                    break;
+                                case Color:
+                                    subCategoryModel.SettingModels.Add(new SettingModelColorPicker(setting));
                                     break;
                             }
                         }

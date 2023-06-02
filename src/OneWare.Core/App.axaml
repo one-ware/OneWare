@@ -12,7 +12,6 @@
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml" />
-        
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml"/>
     </Application.Styles>
     
@@ -25,5 +24,5 @@
                             Click="Preferences_Click" />
         </NativeMenu>
     </NativeMenu.Menu>
-
+    
 </Application>
