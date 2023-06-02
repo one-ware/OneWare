@@ -321,7 +321,16 @@ namespace OneWare.Core.Services
             
             Serializer.Save(stream, Layout);
         }
-        
+
+        public void InitializeDocuments()
+        {
+            var extendedDocs = SearchView<IWaitForContent>();
+            foreach (var extendedDocument in extendedDocs)
+            {
+                extendedDocument.OnContentLoaded();
+            }
+        }
+
         #endregion
     }
 }

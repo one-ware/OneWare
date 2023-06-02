@@ -189,7 +189,8 @@ namespace OneWare.Core
                 
                 Container.Resolve<IProjectService>().Items.Add(dummy);
                 Container.Resolve<IProjectService>().ActiveProject = dummy;
-                
+
+                Container.Resolve<IDockService>().InitializeDocuments();
                 _ = FinishedLoadingAsync();
             }
         }

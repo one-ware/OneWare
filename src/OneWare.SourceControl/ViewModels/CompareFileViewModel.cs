@@ -4,13 +4,16 @@ using Avalonia.Media;
 using DiffPlex;
 using Dock.Model.Mvvm.Controls;
 using LibGit2Sharp;
+using OneWare.Shared;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.Models;
 
 namespace OneWare.SourceControl.ViewModels
 {
-    public class CompareFileViewModel : Document
+    public class CompareFileViewModel : Document, IWaitForContent
     {
+        private readonly SourceControlViewModel _sourceControlViewModel;
+        
         private List<DiffSectionViewModel> _chunks = new();
 
         private Dictionary<IBrush, int[]> _scrollInfoLeft = new();
@@ -63,7 +66,18 @@ namespace OneWare.SourceControl.ViewModels
         public CompareFileViewModel(string path, SourceControlViewModel sourceControlViewModel)
         {
             Path = path;
+            _sourceControlViewModel = sourceControlViewModel;
             PatchFile = sourceControlViewModel.GetPatch(path, 10000);
+        }
+
+        public void OnContentLoaded()
+        {
+            async void WaitUntilFree()
+            {
+                await _sourceControlViewModel.WaitUntilFreeAsync();
+                PatchFile = _sourceControlViewModel.GetPatch(Path, 10000);
+            }
+            WaitUntilFree();
         }
 
         public override bool OnClose()

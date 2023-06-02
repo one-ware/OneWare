@@ -14,18 +14,19 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
-    public class EditViewModel : Document, IExtendedDocument, IEditor
+    public class EditViewModel : Document, IExtendedDocument, IEditor, IWaitForContent
     {
         private readonly ILogger _logger;
         private readonly IDockService _dockService;
         private readonly ISettingsService _settingsService;
         private readonly IWindowService _windowService;
+        private readonly IProjectService _projectService;
         private readonly BackupService _backupService;
         
         [DataMember]
         public string Path { get; init; }
         
-        public IFile CurrentFile { get; }
+        public IFile CurrentFile { get; private set; }
         
         public ExtendedTextEditor Editor { get; } = new();
 
@@ -69,6 +70,7 @@ namespace OneWare.Core.ViewModels.DockViews
             _settingsService = settingsService;
             _dockService = dockService;
             _windowService = windowService;
+            _projectService = projectService;
             _backupService = backupService;
             
             logger.Log("Initializing " + path + "", ConsoleColor.DarkGray);
@@ -156,6 +158,15 @@ namespace OneWare.Core.ViewModels.DockViews
 
             Undo = new RelayCommand(() => Editor.Undo());
             Redo = new RelayCommand(() => Editor.Redo());
+        }
+
+        public void OnContentLoaded()
+        {
+            if (CurrentFile is ExternalFile && _projectService.Search(Path) is IFile file)
+            {
+                CurrentFile = file;
+                _ = LoadAsync();
+            }
         }
 
         private void UpdateFolding()

@@ -27,4 +27,6 @@ public interface IDockService : INotifyPropertyChanged
     public void LoadLayout(string name, bool reset = false);
 
     public void SaveLayout();
+
+    public void InitializeDocuments();
 }
