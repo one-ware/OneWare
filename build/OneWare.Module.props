@@ -8,8 +8,8 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Prism.Avalonia" Version="8.1.97.4-preview.11.5" />
-        <PackageReference Include="Prism.DryIoc.Avalonia" Version="8.1.97.4-preview.11.5" />
+        <PackageReference Include="Prism.Avalonia" Version="$(PrismVersion)" />
+        <PackageReference Include="Prism.DryIoc.Avalonia" Version="$(PrismVersion)" />
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="ThemeEditor.Controls.ColorPicker" Version="$(AvaloniaVersion)" />

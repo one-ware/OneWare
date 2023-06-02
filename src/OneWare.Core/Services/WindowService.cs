@@ -182,14 +182,8 @@ public class WindowService : IWindowService
 
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)
     {
-        var model = new CustomNotificationViewModel
-        {
-            Title = title,
-            Message = message,
-            ButtonText = buttonText, Image = icon
-        };
-        model.OnButtonClick = buttonAction;
-        
+        var model = new CustomNotificationViewModel(title, message, buttonText, buttonAction, icon);
+
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(model);
     }
 }

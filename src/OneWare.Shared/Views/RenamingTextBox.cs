@@ -47,7 +47,7 @@ public class RenamingTextBox : TextBox, IStyleable
         if (length < 1) SelectionEnd = Text.Length;
         else SelectionEnd = length;
 
-        Dispatcher.UIThread.Post(Focus);
+        Dispatcher.UIThread.Post(() => Focus());
     }
 
     protected override void OnLostFocus(RoutedEventArgs e)

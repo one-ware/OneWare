@@ -137,7 +137,7 @@ namespace OneWare.Core.Views.Windows
 
                         cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
                     }
-                    else if (mi.Icon is Image { Source: IBitmap btm })
+                    else if (mi.Icon is Image { Source: Bitmap btm })
                     {
                         nmi.Icon = btm;
                     }

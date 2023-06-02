@@ -6,10 +6,10 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Generators;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using SkiaSharp;
 using OneWare.Shared.ViewModels;
 using OneWare.Shared.Views;
 
@@ -187,7 +187,7 @@ namespace OneWare.Shared
 
         public static bool IsFontInstalled(string fontName)
         {
-            return SKFontManager.Default.FontFamilies.Contains(fontName);
+            return FontManager.Current.SystemFonts.Contains(fontName);
         }
 
         public static bool IsValidDirectory(string path)

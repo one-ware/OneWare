@@ -7,7 +7,7 @@ using Avalonia.Styling;
 
 namespace OneWare.Shared
 {
-    public class AdvancedWindow : Window, IStyleable
+    public class AdvancedWindow : Window
     {
         public static readonly StyledProperty<bool> ShowTitleProperty =
             AvaloniaProperty.Register<AdvancedWindow, bool>(nameof(ShowTitleProperty), true);
@@ -23,8 +23,8 @@ namespace OneWare.Shared
         
         public static readonly StyledProperty<HorizontalAlignment> HorizontalAlignmentTitleProperty =
             AvaloniaProperty.Register<AdvancedWindow, HorizontalAlignment>(nameof(HorizontalAlignmentTitle), HorizontalAlignment.Left);
-        
-        Type IStyleable.StyleKey => typeof(AdvancedWindow);
+
+        protected override Type StyleKeyOverride => typeof(AdvancedWindow);
 
         public bool ShowTitle
         {
@@ -63,13 +63,16 @@ namespace OneWare.Shared
                 HorizontalAlignmentTitle = HorizontalAlignment.Center;
             }
         }
-        
-        protected override void HandleWindowStateChanged(WindowState state)
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
-            base.HandleWindowStateChanged(state);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            base.OnPropertyChanged(change);
+            if (change.Property == WindowStateProperty)
             {
-                ExtendClientAreaTitleBarHeightHint = state is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
+                }
             }
         }
     }

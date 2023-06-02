@@ -37,7 +37,7 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using OneWare.Terminal;
+//using OneWare.Terminal;
 using MessageBoxWindow = OneWare.Shared.Views.MessageBoxWindow;
 
 namespace OneWare.Core
@@ -153,7 +153,7 @@ namespace OneWare.Core
         {
             moduleCatalog.AddModule<SearchListModule>();
             moduleCatalog.AddModule<ErrorListModule>();
-            moduleCatalog.AddModule<TerminalModule>();
+            //moduleCatalog.AddModule<TerminalModule>();
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
             moduleCatalog.AddModule<SerialMonitorModule>();
