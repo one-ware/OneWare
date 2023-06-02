@@ -59,12 +59,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\OneWare.Module.props = build\props\OneWare.Module.props
 		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
 		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
-		build\props\Dock.Avalonia.Props = build\props\Dock.Avalonia.Props
 		build\props\Avalonia.Xaml.Interactions.props = build\props\Avalonia.Xaml.Interactions.props
 		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
 		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
 		build\props\RestSharp.props = build\props\RestSharp.props
 		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
+		build\props\Dock.Avalonia.props = build\props\Dock.Avalonia.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Avalonia", "src\Dock\src\Dock.Avalonia\Dock.Avalonia.csproj", "{8361F459-0F6F-422B-8E98-D8E105990C33}"
