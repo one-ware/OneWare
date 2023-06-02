@@ -4,14 +4,11 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
-using Avalonia.Controls.Generators;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using SkiaSharp;
-using OneWare.Shared.ViewModels;
-using OneWare.Shared.Views;
 
 namespace OneWare.Shared
 {
@@ -45,8 +42,10 @@ namespace OneWare.Shared
         {
             try
             {
-                if (Path.HasExtension(path)) path = Path.GetDirectoryName(path);
+                if (Path.HasExtension(path)) path = Path.GetDirectoryName(path) ?? "";
                 else path = Path.GetFullPath(path);
+                
+                if(string.IsNullOrEmpty(path)) return;
 
                 Process.Start(new ProcessStartInfo
                 {
@@ -187,7 +186,7 @@ namespace OneWare.Shared
 
         public static bool IsFontInstalled(string fontName)
         {
-            return SKFontManager.Default.FontFamilies.Contains(fontName);
+            return FontManager.Current.SystemFonts.Contains(fontName);
         }
 
         public static bool IsValidDirectory(string path)
@@ -232,12 +231,13 @@ namespace OneWare.Shared
             return GetFullPath(fileName) != null;
         }
 
-        public static string GetFullPath(string fileName)
+        public static string? GetFullPath(string fileName)
         {
             if (File.Exists(fileName))
                 return Path.GetFullPath(fileName);
 
             var values = Environment.GetEnvironmentVariable("PATH");
+            if (values == null) return fileName;
             foreach (var path in values.Split(Path.PathSeparator))
             {
                 var fullPath = Path.Combine(path, fileName);
@@ -255,11 +255,11 @@ namespace OneWare.Shared
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
                 socket.Bind(DefaultLoopbackEndpoint);
-                return ((IPEndPoint)socket.LocalEndPoint).Port;
+                return ((IPEndPoint)socket!.LocalEndPoint!).Port;
             }
         }
 
-        public static string FirstFileInPath(string path, string extension)
+        public static string? FirstFileInPath(string path, string extension)
         {
             try
             {
@@ -273,15 +273,7 @@ namespace OneWare.Shared
                 return null;
             }
         }
-
-        public static string GetQsfProperty(string qsf, string propertyName)
-        {
-            var pattern = @"(?<=set_global_assignment -name " + propertyName + " ).*";
-            var match = Regex.Match(qsf, pattern, RegexOptions.IgnoreCase);
-            return match.Success ? match.Value.Trim() : null;
-        }
-
-
+        
         #region LinuxPermissionMadness
 
         public static void CreateFile(string path)

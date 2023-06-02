@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic

@@ -1,6 +1,4 @@
-﻿using System.Reactive.Disposables;
-using Avalonia.Controls;
-using Avalonia.Input;
+﻿using Avalonia.Input;
 using Avalonia.Interactivity;
 using OneWare.SerialMonitor.ViewModels;
 using OneWare.Output.Views;

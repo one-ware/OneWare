@@ -1,9 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-
-#nullable disable
 
 namespace OneWare.Shared
 {
@@ -33,24 +29,6 @@ namespace OneWare.Shared
             }
         }
 
-        public static ShellExecuteResult ExecuteShellCommand(string commandName, string args)
-        {
-            var outputBuilder = new StringBuilder();
-            var errorBuilder = new StringBuilder();
-
-            var exitCode = ExecuteShellCommand(commandName, args,
-                (s, e) => { outputBuilder.AppendLine(e.Data); },
-                (s, e) => { errorBuilder = new StringBuilder(); },
-                false);
-
-            return new ShellExecuteResult
-            {
-                ExitCode = exitCode,
-                Output = outputBuilder.ToString().Trim(),
-                ErrorOutput = errorBuilder.ToString().Trim()
-            };
-        }
-
         public static void LaunchShell(string workingDirectory, params string[] paths)
         {
             var startInfo = new ProcessStartInfo
@@ -74,88 +52,9 @@ namespace OneWare.Shared
 
             Process.Start(startInfo);
         }
-
-        public static Process LaunchShellCommand(string commandName, string args, Action<object, DataReceivedEventArgs>
-                outputReceivedCallback, Action<object, DataReceivedEventArgs> errorReceivedCallback = null,
-            bool resolveExecutable = true,
-            string workingDirectory = "", bool executeInShell = true, bool includeSystemPaths = true,
-            params string[] extraPaths)
-        {
-            var shellProc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                }
-            };
-
-            if (!includeSystemPaths) shellProc.StartInfo.Environment["PATH"] = "";
-
-
-            foreach (var extraPath in extraPaths)
-                if (extraPath != null)
-                    shellProc.StartInfo.Environment["PATH"] += $"{Path.PathSeparator}{extraPath}";
-
-            if (executeInShell)
-            {
-                if (ExecutorType == ShellExecutorType.Windows)
-                {
-                    shellProc.StartInfo.FileName = ResolveFullExecutablePath("cmd.exe");
-                    shellProc.StartInfo.Arguments =
-                        $"/C {(resolveExecutable ? ResolveFullExecutablePath(commandName, true, extraPaths) : commandName)} {args}";
-                    shellProc.StartInfo.CreateNoWindow = true;
-                }
-                else //Unix
-                {
-                    shellProc.StartInfo.FileName = "sh";
-                    shellProc.StartInfo.Arguments =
-                        $"-c \"{(resolveExecutable ? ResolveFullExecutablePath(commandName) : commandName)} {args}\"";
-                    shellProc.StartInfo.CreateNoWindow = true;
-                }
-            }
-            else
-            {
-                shellProc.StartInfo.FileName = resolveExecutable
-                    ? ResolveFullExecutablePath(commandName, true, extraPaths)
-                    : commandName;
-                shellProc.StartInfo.Arguments = args;
-                shellProc.StartInfo.CreateNoWindow = true;
-            }
-
-            shellProc.OutputDataReceived += (s, a) => outputReceivedCallback(s, a);
-
-            if (errorReceivedCallback != null) shellProc.ErrorDataReceived += (s, a) => errorReceivedCallback(s, a);
-
-            shellProc.EnableRaisingEvents = true;
-            new ProcessManager(shellProc);
-
-            try
-            {
-                shellProc.Start();
-
-                shellProc.BeginOutputReadLine();
-                shellProc.BeginErrorReadLine();
-            }
-            catch
-            {
-            }
-
-            return shellProc;
-        }
-
-        public static string[] GetSystemPaths()
-        {
-            var result = ExecuteShellCommand("/bin/bash", "-l -c 'echo $PATH'");
-
-            return result.Output.Split(':');
-        }
-
-
+        
         public static int ExecuteShellCommand(string commandName, string args, Action<object, DataReceivedEventArgs>
-                outputReceivedCallback, Action<object, DataReceivedEventArgs> errorReceivedCallback = null,
+                outputReceivedCallback, Action<object, DataReceivedEventArgs>? errorReceivedCallback = null,
             bool resolveExecutable = true,
             string workingDirectory = "", bool executeInShell = true, bool includeSystemPaths = true,
             params string[] extraPaths)
@@ -231,9 +130,7 @@ namespace OneWare.Shared
         /// <summary>
         ///     Attempts to locate the full path to a script
         /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string ResolveFullExecutablePath(string fileName, bool returnNullOnFailure = true,
+        public static string? ResolveFullExecutablePath(string fileName, bool returnNullOnFailure = true,
             params string[] extraPaths)
         {
             if (File.Exists(fileName))
@@ -242,7 +139,7 @@ namespace OneWare.Shared
             if (ExecutorType == ShellExecutorType.Windows)
             {
                 var values = new List<string>(extraPaths);
-                values.AddRange(new List<string>(Environment.GetEnvironmentVariable("PATH").Split(';')));
+                values.AddRange(new List<string>(Environment.GetEnvironmentVariable("PATH")!.Split(';')));
 
                 foreach (var path in values)
                 {
@@ -264,56 +161,5 @@ namespace OneWare.Shared
 
             return returnNullOnFailure ? null : fileName;
         }
-
-        public class ProcessManager
-        {
-            private Process _process;
-
-            public ProcessManager(Process process)
-            {
-                _process = process;
-
-                if (Application.Current != null &&
-                    Application.Current.ApplicationLifetime is ClassicDesktopStyleApplicationLifetime lifetime)
-                {
-                    lifetime.Exit += Current_OnExit;
-
-                    _process.Exited += _process_Exited;
-                }
-            }
-
-            private void Current_OnExit(object? sender, EventArgs e)
-            {
-                try
-                {
-                    if (_process != null)
-                        if (!_process.HasExited)
-                            _process.Kill();
-                }
-                catch
-                {
-                }
-            }
-
-            private void _process_Exited(object? sender, EventArgs e)
-            {
-                if (Application.Current != null &&
-                    Application.Current.ApplicationLifetime is ClassicDesktopStyleApplicationLifetime lifetime)
-                {
-                    _process.Exited -= _process_Exited;
-
-                    lifetime.Exit -= Current_OnExit;
-                }
-
-                _process = null;
-            }
-        }
-    }
-
-    public struct ShellExecuteResult
-    {
-        public int ExitCode { get; set; }
-        public string Output { get; set; }
-        public string ErrorOutput { get; set; }
     }
 }

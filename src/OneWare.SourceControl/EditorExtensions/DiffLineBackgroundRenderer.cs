@@ -24,7 +24,7 @@ namespace OneWare.SourceControl.EditorExtensions
         {
             if (Application.Current == null) throw new NullReferenceException(nameof(Application.Current));
 
-            var textureBrush = Application.Current.FindResource("ThemeForegroundBrush") as SolidColorBrush;
+            var textureBrush = Application.Current.FindResource( Application.Current.RequestedThemeVariant, "ThemeForegroundBrush") as SolidColorBrush;
             if (textureBrush == null) throw new NullReferenceException("ThemeForegroundBrush not defined");
             
             _texturePen =

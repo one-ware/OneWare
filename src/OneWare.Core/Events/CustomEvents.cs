@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OneWare.Core.Events
+﻿namespace OneWare.Core.Events
 {
     public class TextEventArgs : EventArgs
     {

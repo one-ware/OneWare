@@ -8,7 +8,7 @@
         private readonly AutoResetEvent _getInput, _gotInput;
         private readonly Thread _inputThread;
         private readonly StreamReader _outputReader;
-        private string _input;
+        private string? _input;
 
         public StreamReaderHelper(StreamReader output)
         {
@@ -33,7 +33,7 @@
         }
 
         // omit the parameter to read a line without a timeout
-        public string ReadLine(int timeOutMillisecs = Timeout.Infinite)
+        public string? ReadLine(int timeOutMillisecs = Timeout.Infinite)
         {
             _getInput.Set();
             var success = _gotInput.WaitOne(timeOutMillisecs);

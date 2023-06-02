@@ -47,7 +47,8 @@ namespace OneWare.Shared.Views
             
             var docHeight = CodeBox.TextArea.TextView.DocumentHeight;
 
-            var fakeLineCount = CodeBox.Document.LineCount + Bounds.Height / CodeBox.FontSize;
+            var fakeLineCount = CodeBox.Document.LineCount;
+            if (CodeBox.Options.AllowScrollBelowDocument) fakeLineCount += (int)(Bounds.Height / CodeBox.FontSize);
             var scrollBarLineHeight = Bounds.Height / CodeBox.Document.LineCount;
             scrollBarLineHeight = scrollBarLineHeight >= 3 ? scrollBarLineHeight : 3;
             

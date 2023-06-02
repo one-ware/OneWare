@@ -2,15 +2,11 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using Avalonia.Media;
-using OneWare.Shared.Enums;
 
 namespace OneWare.Shared.Converters
 {
     public class FileExtensionIconConverter : IValueConverter
     {
-        public static FileExtensionIconConverter Instance = new();
-        
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string s && Application.Current != null)

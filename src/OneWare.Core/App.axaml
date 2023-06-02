@@ -6,10 +6,18 @@
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
-
+    
     <Application.Styles>
-        <StyleInclude Source="avares://Avalonia.Themes.Simple/Controls/SimpleControls.xaml"/>
-        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
+        <SimpleTheme>
+            <SimpleTheme.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://OneWare.Core/Styles/Accents/Base.axaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </SimpleTheme.Resources>
+        </SimpleTheme>
+        <DockSimpleTheme/>
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml" />
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml"/>

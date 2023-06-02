@@ -1,8 +1,6 @@
 ﻿using System.Reactive.Linq;
 using System.Text.Json;
-using DynamicData;
 using DynamicData.Binding;
-using OneWare.Shared;
 using OneWare.Shared.Services;
 
 namespace OneWare.Settings;

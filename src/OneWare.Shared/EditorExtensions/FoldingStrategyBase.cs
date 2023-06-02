@@ -51,7 +51,7 @@ namespace OneWare.Shared.EditorExtensions
                 var startOffsets = new Stack<int>();
                 var foldingValues = new Stack<FoldingEntry>();
                 var lastNewLineOffset = 0;
-                var lastNewLineOffset2 = 0;
+
                 DocumentLine lastNewLine;
                 var cstring = "";
 
@@ -111,7 +111,7 @@ namespace OneWare.Shared.EditorExtensions
                             // don't fold if opening and closing brace are on the same line
                             if (startOffset < lastNewLineOffset && startFolding == folding)
                             {
-                                if (docLine.Offset > 0 && prevLineCheck && lineCheck)
+                                if (docLine.Offset > 0 && prevLineCheck && lineCheck && prevLine != null)
                                     newFoldings.Add(new NewFolding(prevLine.EndOffset, i + 1));
                                 else if (i + 1 > startOffset + 1) //END > START
                                     newFoldings.Add(new NewFolding(startOffset + 1, i + 1));
@@ -119,7 +119,6 @@ namespace OneWare.Shared.EditorExtensions
                         }
                         else if (c == '\n' || c == '\r')
                         {
-                            lastNewLineOffset2 = lastNewLineOffset;
                             lastNewLineOffset = i + 1;
                             lastNewLine = document.GetLineByOffset(i);
                         }

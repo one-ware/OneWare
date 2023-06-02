@@ -1,4 +1,3 @@
-using System.Linq;
 using Avalonia.Input;
 using AvaloniaEdit;
 

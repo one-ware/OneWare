@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using Mono.Unix.Native;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
@@ -285,35 +283,35 @@ namespace OneWare.Shared
                 }
         }
 
-        private static int Kill(int pid, Signum sig)
-        {
-            if (sig == Signum.Sigint) return Syscall.kill(pid, Mono.Unix.Native.Signum.SIGINT);
-            //TODO add more if needed
-            return 0;
-        }
-
-        public static int SendSignal(int pid, Signum sig)
-        {
-            switch (PlatformIdentifier)
-            {
-                case PlatformId.Unix:
-                case PlatformId.MacOsx:
-                    return Kill(pid, sig);
-
-                case PlatformId.Win32Nt:
-                    switch (sig)
-                    {
-                        case Signum.Sigint:
-                            return SendCtrlC(pid);
-
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+        // private static int Kill(int pid, Signum sig)
+        // {
+        //     if (sig == Signum.Sigint) return Syscall.kill(pid, Mono.Unix.Native.Signum.SIGINT);
+        //     //TODO add more if needed
+        //     return 0;
+        // }
+        //
+        // public static int SendSignal(int pid, Signum sig)
+        // {
+        //     switch (PlatformIdentifier)
+        //     {
+        //         case PlatformId.Unix:
+        //         case PlatformId.MacOsx:
+        //             return Kill(pid, sig);
+        //
+        //         case PlatformId.Win32Nt:
+        //             switch (sig)
+        //             {
+        //                 case Signum.Sigint:
+        //                     return SendCtrlC(pid);
+        //
+        //                 default:
+        //                     throw new NotImplementedException();
+        //             }
+        //
+        //         default:
+        //             throw new NotImplementedException();
+        //     }
+        // }
 
         public static bool AttachConsole(int pid)
         {
@@ -383,7 +381,7 @@ namespace OneWare.Shared
                 }
             };
 
-            process.ErrorDataReceived += (o, i) => { ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data); };
+            process.ErrorDataReceived += (o, i) => { ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "NULL ERROR"); };
             process.OutputDataReceived += (o, i) =>
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Log("CTRL+C: " +  i.Data);
@@ -404,7 +402,7 @@ namespace OneWare.Shared
 
         public static string NormalizePath(this string path)
         {
-            var result = path?.Replace("\\\\", "\\").ToPlatformPath();
+            var result = path.Replace("\\\\", "\\").ToPlatformPath();
 
             if (!string.IsNullOrEmpty(result))
             {

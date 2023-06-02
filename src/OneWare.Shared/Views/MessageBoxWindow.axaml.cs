@@ -24,20 +24,20 @@ namespace OneWare.Shared.Views
             {
                 case MessageBoxIcon.Info:
                     var infoIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                        "avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png", typeof(IBitmap), null, null);
+                        "avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png", typeof(Bitmap), null, null);
                     if(infoIcon != null) Icon = new WindowIcon(infoIcon);
                     CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusInformation16X");
                     break;
 
                 case MessageBoxIcon.Error:
                     var errorIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                        "avares://OneWare.Core/Assets/Images/Icons/Error_Icon.png", typeof(IBitmap), null, null);
+                        "avares://OneWare.Core/Assets/Images/Icons/Error_Icon.png", typeof(Bitmap), null, null);
                     if(errorIcon != null) Icon = new WindowIcon(errorIcon);
                     CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusCriticalError16X");
                     break;
                 default:
                     var warningIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                        "avares://OneWare.Core/Assets/Images/Icons/Warning_Icon.png", typeof(IBitmap), null, null);
+                        "avares://OneWare.Core/Assets/Images/Icons/Warning_Icon.png", typeof(Bitmap), null, null);
                     if(warningIcon != null) Icon = new WindowIcon(warningIcon);
                     CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusWarning16X");
                     break;

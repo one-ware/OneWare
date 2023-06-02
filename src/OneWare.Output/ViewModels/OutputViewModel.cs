@@ -1,5 +1,3 @@
-using OneWare.Shared;
-
 namespace OneWare.Output.ViewModels;
 
 public class OutputViewModel : OutputBaseViewModel, IOutputService

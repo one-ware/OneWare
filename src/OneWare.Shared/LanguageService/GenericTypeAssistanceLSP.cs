@@ -1,6 +1,4 @@
-﻿using AvaloniaEdit;
-
-namespace OneWare.Shared.LanguageService
+﻿namespace OneWare.Shared.LanguageService
 {
     internal class GenericTypeAssistanceLsp : TypeAssistanceLsp, ITypeAssistance
     {

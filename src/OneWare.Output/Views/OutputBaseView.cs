@@ -1,7 +1,5 @@
-﻿using System.Reactive.Disposables;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Logging;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;

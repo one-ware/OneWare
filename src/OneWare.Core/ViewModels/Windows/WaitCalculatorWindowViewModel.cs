@@ -1,5 +1,4 @@
-﻿using System;
-using Prism.Ioc;
+﻿using Prism.Ioc;
 
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;

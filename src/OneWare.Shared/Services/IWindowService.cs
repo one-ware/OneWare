@@ -2,10 +2,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
-using DynamicData.Binding;
 using OneWare.Shared.Models;
 using OneWare.Shared.ViewModels;
-using OneWare.Shared.Enums;
 
 namespace OneWare.Shared.Services;
 

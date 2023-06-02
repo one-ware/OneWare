@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\Base.props" />
-    
-    <PropertyGroup>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <Nullable>enable</Nullable>
-        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    </PropertyGroup>
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Avalonia.props" />
+    <Import Project="..\..\build\props\Avalonia.Diagnostics.props" />
+    <Import Project="..\..\build\props\Markdown.Avalonia.props" />
+    <Import Project="..\..\build\props\OmniSharp.Extensions.Language.props" />
+    <Import Project="..\..\build\props\RestSharp.props" />
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\*" />
@@ -21,23 +19,9 @@
     <ItemGroup>
         <PackageReference Include="DeviceId" Version="6.2.0" />
         <PackageReference Include="ExposedObject" Version="2.1.0" />
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.0-c1" />
-        <PackageReference Include="OmniSharp.Extensions.LanguageClient" Version="0.19.7" />
-        <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
-        <PackageReference Include="Prism.Avalonia" Version="8.1.97.4-preview.11.5" />
-        <PackageReference Include="Prism.DryIoc.Avalonia" Version="8.1.97.4-preview.11.5" />
-        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Themes.Simple" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
-        <PackageReference Include="Avalonia.Xaml.Interactions" Version="$(InteractionsVersion)" />
-        <PackageReference Include="Dock.Avalonia" Version="$(DockVersion)" />
-        <PackageReference Include="Dock.Model.Mvvm" Version="$(DockVersion)" />
-        <PackageReference Include="RestSharp" Version="110.2.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj" />
         <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj" />
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
@@ -45,7 +29,6 @@
         <ProjectReference Include="..\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-        <ProjectReference Include="..\OneWare.Terminal\OneWare.Terminal.csproj" />
     </ItemGroup>
 
     <ItemGroup>

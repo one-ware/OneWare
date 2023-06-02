@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using DeviceId;
+﻿using DeviceId;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 

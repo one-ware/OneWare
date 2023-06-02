@@ -1,5 +1,4 @@
 ﻿using Avalonia.Data.Converters;
-using OneWare.Shared.Converters;
 
 namespace OneWare.SourceControl.Converters;
 

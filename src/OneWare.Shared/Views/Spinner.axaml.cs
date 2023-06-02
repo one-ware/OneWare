@@ -7,8 +7,8 @@ namespace OneWare.Shared.Views
 {
     public partial class Spinner : UserControl
     {
-        public static readonly StyledProperty<IImage> CustomIconProperty =
-            AvaloniaProperty.Register<Spinner, IImage>(nameof(CustomIcon));
+        public static readonly StyledProperty<IImage?> CustomIconProperty =
+            AvaloniaProperty.Register<Spinner, IImage?>(nameof(CustomIcon));
 
         public static readonly StyledProperty<bool> IsIntermediateProperty =
             AvaloniaProperty.Register<Spinner, bool>(nameof(IsIntermediate), true);
@@ -37,7 +37,7 @@ namespace OneWare.Shared.Views
             set => SetValue(IsAnimationRunningProperty, value);
         }
 
-        public IImage CustomIcon
+        public IImage? CustomIcon
         {
             get => GetValue(CustomIconProperty);
             set => SetValue(CustomIconProperty, value);
@@ -46,7 +46,7 @@ namespace OneWare.Shared.Views
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-            CustomIcon ??= this.FindResource("Spinner") as DrawingImage;
+            CustomIcon ??= this.FindResource( Application.Current?.RequestedThemeVariant, "Spinner") as DrawingImage;
         }
         
 

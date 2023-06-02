@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace OneWare.Shared;
+﻿namespace OneWare.Shared;
 
 public class ExternalFile : IFile
 {

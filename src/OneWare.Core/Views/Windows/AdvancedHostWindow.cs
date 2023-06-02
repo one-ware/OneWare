@@ -1,9 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
@@ -13,10 +9,12 @@ using OneWare.Shared.Services;
 
 namespace OneWare.Core.Views.Windows;
 
-public class AdvancedHostWindow : HostWindow, IStyleable
+public class AdvancedHostWindow : HostWindow
 {
     private bool _cancelClose = true;
     private IDockService _dockService;
+
+    protected override Type StyleKeyOverride => typeof(HostWindow);
 
     public AdvancedHostWindow(IDockService dockService)
     {

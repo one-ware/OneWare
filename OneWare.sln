@@ -5,11 +5,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Shared", "src\OneWare.Shared\OneWare.Shared.csproj", "{94FD4E60-346F-4B14-AB6D-A1B78DD39501}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF-2990-4B2C-907F-12739A839A3C}"
-	ProjectSection(SolutionItems) = preProject
-		build\Base.props = build\Base.props
-		build\OneWare.Module.props = build\OneWare.Module.props
-		Directory.Build.props = Directory.Build.props
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{B99724E4-1AA2-46D9-B982-6A3B381C5258}"
 EndProject
@@ -54,6 +49,29 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Demo.Browser", "demo\OneWare.Demo.Browser\OneWare.Demo.Browser.csproj", "{4BB8F95D-711C-4BA2-8E7D-A8E2AF37DD2E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Demo.Desktop", "demo\OneWare.Demo.Desktop\OneWare.Demo.Desktop.csproj", "{420AB56D-4886-490A-BF50-F0ABBB92AD51}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267-21D3-4965-B340-0CEB0138CBE5}"
+	ProjectSection(SolutionItems) = preProject
+		build\props\Avalonia.Desktop.props = build\props\Avalonia.Desktop.props
+		build\props\Avalonia.Diagnostics.props = build\props\Avalonia.Diagnostics.props
+		build\props\Avalonia.props = build\props\Avalonia.props
+		build\props\Base.props = build\props\Base.props
+		build\props\OneWare.Module.props = build\props\OneWare.Module.props
+		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
+		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
+		build\props\Dock.Avalonia.Props = build\props\Dock.Avalonia.Props
+		build\props\Avalonia.Xaml.Interactions.props = build\props\Avalonia.Xaml.Interactions.props
+		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
+		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
+		build\props\RestSharp.props = build\props\RestSharp.props
+		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Avalonia", "src\Dock\src\Dock.Avalonia\Dock.Avalonia.csproj", "{8361F459-0F6F-422B-8E98-D8E105990C33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Model.Mvvm", "src\Dock\src\Dock.Model.Mvvm\Dock.Model.Mvvm.csproj", "{858D1B8D-7AD5-4B6F-B436-61EACBCCF449}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Model", "src\Dock\src\Dock.Model\Dock.Model.csproj", "{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -137,6 +155,18 @@ Global
 		{420AB56D-4886-490A-BF50-F0ABBB92AD51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{420AB56D-4886-490A-BF50-F0ABBB92AD51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{420AB56D-4886-490A-BF50-F0ABBB92AD51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8361F459-0F6F-422B-8E98-D8E105990C33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8361F459-0F6F-422B-8E98-D8E105990C33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8361F459-0F6F-422B-8E98-D8E105990C33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8361F459-0F6F-422B-8E98-D8E105990C33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{858D1B8D-7AD5-4B6F-B436-61EACBCCF449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{858D1B8D-7AD5-4B6F-B436-61EACBCCF449}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{858D1B8D-7AD5-4B6F-B436-61EACBCCF449}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{858D1B8D-7AD5-4B6F-B436-61EACBCCF449}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{192886D3-6203-4AD9-9A44-E071A6AF3059} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
@@ -155,5 +185,9 @@ Global
 		{179D85B4-9E7B-4E1A-B4FE-0B26B8A7E686} = {DB8BEF56-1C1D-4B6E-9A1C-6BABCD87EEEA}
 		{A6F70032-6074-4624-B96B-E2B0A68CA18F} = {DB8BEF56-1C1D-4B6E-9A1C-6BABCD87EEEA}
 		{EB5E9D9F-E3E7-4E19-83BF-41EDE282B6B7} = {0761690C-7DA0-4554-9F6B-211088412DCD}
+		{26CFC267-21D3-4965-B340-0CEB0138CBE5} = {3782EFDF-2990-4B2C-907F-12739A839A3C}
+		{8361F459-0F6F-422B-8E98-D8E105990C33} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
+		{858D1B8D-7AD5-4B6F-B436-61EACBCCF449} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
+		{50C6CC6A-073B-4F72-B8EA-BB28C3ECE61A} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
 	EndGlobalSection
 EndGlobal

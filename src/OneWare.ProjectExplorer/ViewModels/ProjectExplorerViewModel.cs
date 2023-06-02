@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using OneWare.ProjectExplorer.Models;
+﻿using OneWare.ProjectExplorer.Models;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;

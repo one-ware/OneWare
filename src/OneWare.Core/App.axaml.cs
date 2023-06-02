@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using Avalonia.Styling;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -26,7 +18,6 @@ using OneWare.ProjectExplorer;
 using OneWare.ProjectExplorer.Models;
 using OneWare.SearchList;
 using OneWare.SerialMonitor;
-using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using Prism.DryIoc;
@@ -37,7 +28,7 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using OneWare.Terminal;
+//using OneWare.Terminal;
 using MessageBoxWindow = OneWare.Shared.Views.MessageBoxWindow;
 
 namespace OneWare.Core
@@ -153,7 +144,7 @@ namespace OneWare.Core
         {
             moduleCatalog.AddModule<SearchListModule>();
             moduleCatalog.AddModule<ErrorListModule>();
-            moduleCatalog.AddModule<TerminalModule>();
+            //moduleCatalog.AddModule<TerminalModule>();
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
             moduleCatalog.AddModule<SerialMonitorModule>();
@@ -167,32 +158,11 @@ namespace OneWare.Core
 
             if (arguments.GetLength(0) > 1)
             {
-                Global.SaveLastProjects = false;
-
                 var fileName = arguments[1];
                 //Check file exists
                 if (File.Exists(fileName))
                 {
-                    if (string.Equals(Path.GetExtension(fileName), ".vhdpproj",
-                        StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        var r = await Container.Resolve<IProjectService>().LoadProjectAsync(fileName);
-
-                        if (r is null) return;
-                        
-                        //Try open main file
-                        if (r.Search(r.Header + ".vhdp") is ProjectFile mainFile)
-                            _ = Container.Resolve<IDockService>().OpenFileAsync(mainFile);
-                        else
-                            //Open any file
-                            foreach (var file in r.Items)
-                                if (file is ProjectFile pf)
-                                {
-                                    _ = Container.Resolve<IDockService>().OpenFileAsync(pf);
-                                    break;
-                                }
-                    }
-                    else if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
+                    if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                     {
                         var file = Container.Resolve<IProjectService>().GetTemporaryFile(fileName);
                         _ = Container.Resolve<IDockService>().OpenFileAsync(file);
@@ -253,7 +223,7 @@ namespace OneWare.Core
                 Container.Resolve<ILogger>().Error(e.Message, e);
             }
         }
-
+        
         public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);

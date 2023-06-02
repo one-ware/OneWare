@@ -1,8 +1,4 @@
-﻿using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-
-using OneWare.Shared.ViewModels;
+﻿using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 

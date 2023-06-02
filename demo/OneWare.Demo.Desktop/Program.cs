@@ -23,7 +23,7 @@ internal abstract class Program
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
         DemoApp.SettingsService.Load(DemoApp.Paths.SettingsPath);
 
-        var app = AppBuilder.Configure<DemoApp>().UsePlatformDetect()
+        var app = AppBuilder.Configure<DesktopDemoApp>().UsePlatformDetect()
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true

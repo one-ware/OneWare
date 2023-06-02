@@ -1,3 +1,4 @@
+using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
 using OneWare.Core.Services;
 using OneWare.Cpp;
@@ -30,8 +31,13 @@ public class DemoApp : App
 
     public override void Initialize()
     {
-        new ThemeManager(SettingsService, "avares://OneWare.Demo/Theme.axaml").Initialize(this);
+        var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
+        
+        this.Styles.Add(new StyleInclude(new Uri("avares://OneWare.Demo"))
+        {
+            Source = new Uri("avares://OneWare.Demo/Styles/Theme.axaml")
+        });
     }
 
     protected override IModuleCatalog CreateModuleCatalog()

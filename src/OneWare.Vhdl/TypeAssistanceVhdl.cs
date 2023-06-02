@@ -1,11 +1,4 @@
-﻿using System.Reactive.Disposables;
-using System.Xml;
-using Avalonia.Input;
-using Avalonia.Media;
-using AvaloniaEdit;
-using AvaloniaEdit.CodeCompletion;
-using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.Highlighting.Xshd;
+﻿using Avalonia.Input;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
@@ -37,7 +30,7 @@ namespace OneWare.Vhdl
 
         public override void TypeAssistance(TextInputEventArgs e)
         {
-            if (e.Text.Contains(';') && Service.IsLanguageServiceReady)
+            if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {
                 var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
                 Format(line, line);

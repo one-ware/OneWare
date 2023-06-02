@@ -1,4 +1,5 @@
-﻿using OneWare.SourceControl.EditorExtensions;
+﻿using Avalonia.Styling;
+using OneWare.SourceControl.EditorExtensions;
 
 namespace OneWare.SourceControl.Models
 {
@@ -12,44 +13,36 @@ namespace OneWare.SourceControl.Models
 
     public class DiffLineModel
     {
-        public string Text { get; set; }
-        public DiffContext Style { get; set; }
-        public string LineNumber { get; set; }
-        public string PrefixForStyle { get; set; }
-        public List<LineDifferenceOffset> LineDiffs { get; set; } = new();
+        public string Text { get; }
+        public DiffContext Style { get; }
+        public string LineNumber { get; }
+        public string PrefixForStyle { get; }
+        public List<LineDifferenceOffset> LineDiffs { get; } = new();
+
+        public DiffLineModel(string text, DiffContext style, string lineNumber, string prefixForStyle)
+        {
+            Text = text;
+            Style = style;
+            LineNumber = lineNumber;
+            PrefixForStyle = prefixForStyle;
+        }
 
         public static DiffLineModel CreateBlank()
         {
-            return new DiffLineModel { Style = DiffContext.Blank, Text = "", PrefixForStyle = "", LineNumber = "" };
+            return new DiffLineModel("", DiffContext.Blank, "", "");
         }
 
         public static DiffLineModel Create(string lineNumber, string s)
         {
-            var viewModel = new DiffLineModel();
-            viewModel.LineNumber = lineNumber;
-
             if (s.StartsWith("+"))
             {
-                viewModel.Style = DiffContext.Added;
-                viewModel.PrefixForStyle = "+";
-                viewModel.Text = s.Substring(1);
+                return new DiffLineModel(s[1..], DiffContext.Added, lineNumber, "+");
             }
-            else if (s.StartsWith("-"))
+            if (s.StartsWith("-"))
             {
-                viewModel.Style = DiffContext.Deleted;
-                viewModel.PrefixForStyle = "-";
-                viewModel.Text = s.Substring(1);
+                return new DiffLineModel(s[1..], DiffContext.Deleted, lineNumber, "-");
             }
-            else
-            {
-                viewModel.Style = DiffContext.Context;
-                viewModel.PrefixForStyle = "";
-                viewModel.Text = s.Length > 1 ? s.Substring(1) : s;
-            }
-
-            if (string.IsNullOrEmpty(viewModel.Text)) viewModel.Text = "";
-
-            return viewModel;
+            return new DiffLineModel(s.Length > 1 ? s.Substring(1) : s, DiffContext.Context, lineNumber, "");
         }
 
         public override string ToString()

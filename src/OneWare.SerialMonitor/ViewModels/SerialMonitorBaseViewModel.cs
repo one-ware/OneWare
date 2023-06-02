@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData.Binding;
-using Prism.Ioc;
 using OneWare.Output.ViewModels;
 using OneWare.Shared.Services;
 
@@ -217,7 +216,7 @@ namespace OneWare.SerialMonitor.ViewModels
                 if (SelectedLineEncoding == "ASCII")
                 {
                     var existing = _currentPort?.ReadExisting();
-                    Write(existing);
+                    if(existing != null) Write(existing);
                 }
                 else
                 {
@@ -249,7 +248,7 @@ namespace OneWare.SerialMonitor.ViewModels
         {
             try
             {
-                Write(_currentPort?.ReadExisting());
+                Write(_currentPort?.ReadExisting() ?? "");
             }
             catch (Exception e)
             {

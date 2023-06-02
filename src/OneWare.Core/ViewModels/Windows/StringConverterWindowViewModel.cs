@@ -1,5 +1,4 @@
-﻿using System;
-using AvaloniaEdit.Document;
+﻿using AvaloniaEdit.Document;
 
 using OneWare.Shared.ViewModels;
 

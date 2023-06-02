@@ -15,7 +15,7 @@ namespace OneWare.Vhdl.Indentation
     {
         private Block _block; // block is the current block
         private bool _blockComment;
-        private Stack<Block> _blocks; // blocks contains all blocks outside of the current
+        private Stack<Block> _blocks = new(); // blocks contains all blocks outside of the current
         private bool _escape;
         private bool _inChar;
 
@@ -26,8 +26,8 @@ namespace OneWare.Vhdl.Indentation
         private bool _lineComment;
         private bool _verbatim;
 
-        private StringBuilder _wordBuilder;
-
+        private StringBuilder _wordBuilder = new();
+        
         public void Reformat(IDocumentAccessor doc, IndentationSettings set)
         {
             Init();

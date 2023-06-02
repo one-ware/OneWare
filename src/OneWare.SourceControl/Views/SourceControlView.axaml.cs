@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using DynamicData;
 using LibGit2Sharp;
 using OneWare.SourceControl.Models;
 using OneWare.SourceControl.ViewModels;
@@ -8,34 +9,28 @@ namespace OneWare.SourceControl.Views
 {
     public partial class SourceControlView : UserControl
     {
-        private readonly ListBox _changeListBox, _stagedChangeListBox, _mergeChangeListBox;
-
         public SourceControlView()
         {
             InitializeComponent();
-
-            _changeListBox = this.Find<ListBox>("ChangeListBox");
-            _stagedChangeListBox = this.Find<ListBox>("StagedChangeListBox");
-            _mergeChangeListBox = this.Find<ListBox>("MergeChangeListBox");
-
-            _changeListBox.DoubleTapped += OnChangeDoubleTap;
-            _stagedChangeListBox.DoubleTapped += OnStagedChangeDoubleTap;
-            _mergeChangeListBox.DoubleTapped += OnMergeChangeDoubleTap;
+            
+            ChangeListBox.DoubleTapped += OnChangeDoubleTap;
+            StagedChangeListBox.DoubleTapped += OnStagedChangeDoubleTap;
+            MergeChangeListBox.DoubleTapped += OnMergeChangeDoubleTap;
         }
 
         public void OnChangeDoubleTap(object? sender, RoutedEventArgs e)
         {
-            if (_changeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+            if (ChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
         }
 
         public void OnStagedChangeDoubleTap(object? sender, RoutedEventArgs e)
         {
-            if (_stagedChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+            if (StagedChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
         }
 
         public void OnMergeChangeDoubleTap(object? sender, RoutedEventArgs e)
         {
-            if (_mergeChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+            if (MergeChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
         }
 
         public async Task AutoOpenAsync(SourceControlModel scm)

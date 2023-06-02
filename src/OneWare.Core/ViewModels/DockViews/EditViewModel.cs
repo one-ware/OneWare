@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;

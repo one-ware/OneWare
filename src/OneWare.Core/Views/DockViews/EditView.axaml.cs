@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -22,7 +18,6 @@ using CommunityToolkit.Mvvm.Input;
 using ExposedObject;
 using OneWare.Core.Data;
 using OneWare.Core.Models;
-using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using Prism.Ioc;
 using OneWare.Core.Extensions;
@@ -746,19 +741,20 @@ namespace OneWare.Core.Views.DockViews
 
         private void TextEditor_TextArea_TextEntering(object? sender, TextInputEventArgs e)
         {
-            if (e.Text == null) return;
-
+            if (e.Text is not { } input) return;
+            
+            //TODO 
             if (CodeBox.CaretOffset > 1 && CodeBox.CaretOffset <= CodeBox.Text.Length)
                 if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
                 {
                     if (e.Text[0] == '(')
                     {
-                        e.Text += ')';
+                        input += ')';
                         _caretDiff = -1;
                     }
                     else if (e.Text[0] == '{')
                     {
-                        e.Text += '}';
+                        input += '}';
                         _caretDiff = -1;
                     }
                     else if (e.Text[0] == ')' && CodeBox.CaretOffset > 1 &&
@@ -775,7 +771,7 @@ namespace OneWare.Core.Views.DockViews
 
                         if (br > 0)
                         {
-                            e.Text = "";
+                            input = "";
                             _caretDiff = 1;
                             return; //Dont continue without text           
                         }
@@ -783,7 +779,7 @@ namespace OneWare.Core.Views.DockViews
                     else if (e.Text[0] == '}' && CodeBox.CaretOffset > 1 &&
                              CodeBox.Text[CodeBox.CaretOffset - 1] == '{')
                     {
-                        e.Text = "";
+                        input = "";
                         _caretDiff = 1;
                         return; //Dont continue without text
                     }

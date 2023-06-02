@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Reflection;
-using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -28,12 +27,8 @@ namespace OneWare.Shared.Converters
                 var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
                 uri = new Uri($"avares://{assemblyName}{rawUri}");
             }
-
-            var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-            if (assets == null) return null;
-            var asset = assets.Open(uri);
-
-            return new Bitmap(asset);
+            
+            return new Bitmap(AssetLoader.Open(uri));
 
         }
 

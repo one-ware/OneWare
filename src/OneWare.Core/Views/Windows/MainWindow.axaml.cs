@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -137,7 +135,7 @@ namespace OneWare.Core.Views.Windows
 
                         cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
                     }
-                    else if (mi.Icon is Image { Source: IBitmap btm })
+                    else if (mi.Icon is Image { Source: Bitmap btm })
                     {
                         nmi.Icon = btm;
                     }

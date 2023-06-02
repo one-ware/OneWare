@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Styling;
 using DynamicData.Binding;
 
 
@@ -12,7 +11,7 @@ namespace OneWare.Shared.Views
     /// <summary>
     ///     Interaction logic for SearchBox.xaml
     /// </summary>
-    public partial class SearchBox : UserControl, IStyleable
+    public partial class SearchBox : UserControl
     {
         public static readonly StyledProperty<bool> SearchButtonVisibleProperty =
             AvaloniaProperty.Register<SearchBox, bool>(nameof(Label), true, false, BindingMode.TwoWay);
@@ -58,9 +57,7 @@ namespace OneWare.Shared.Views
             set => SetValue(SearchButtonVisibleProperty, value);
         }
 
-        Type IStyleable.StyleKey => typeof(SearchBox);
-
-
+        protected override Type StyleKeyOverride => typeof(SearchBox);
 
         private void SearchTextBoxFocus(object? sender, GotFocusEventArgs e)
         {

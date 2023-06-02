@@ -1,30 +1,25 @@
-﻿using System;
-using Avalonia.Controls.Notifications;
+﻿using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 
 namespace OneWare.Core.ViewModels.Controls
 {
-    public class CustomNotificationViewModel : INotification
+    public class CustomNotificationViewModel : Notification
     {
-        public NotificationType Type { get; set; } = NotificationType.Information;
-        public TimeSpan Expiration { get; set; } = new(2000);
-        public Action? OnClick { get; set; }
-        public Action? OnClose { get; set; }
-        public Action? OnButtonClick { get; set; }
-        public void NotClientImplementable()
-        {
-            
-        }
-
-        public string? Title { get; set; }
+        public Action? ButtonAction { get; set; }
         public string? ButtonText { get; set; }
-        public string? Message { get; set; }
         public IBrush Background { get; set; } = Brushes.DodgerBlue;
-        public IImage? Image { get; set; }
+        public IImage? Icon { get; set; }
 
         public void ExecuteButton()
         {
-            OnButtonClick?.Invoke();
+            ButtonAction?.Invoke();
+        }
+
+        public CustomNotificationViewModel(string? title, string? message, string buttonText, Action buttonAction, IImage? icon, NotificationType type = NotificationType.Information, TimeSpan? expiration = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration, onClick, onClose)
+        {
+            ButtonText = buttonText;
+            ButtonAction = buttonAction;
+            Icon = icon;
         }
     }
 }

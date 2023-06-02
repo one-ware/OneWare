@@ -5,7 +5,6 @@ using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
@@ -14,7 +13,7 @@ using AvaloniaEdit.Rendering;
 
 namespace OneWare.Shared.EditorExtensions
 {
-    public class TextInputWindow : Popup, IStyleable
+    public class TextInputWindow : Popup
     {
         private readonly Window _parentWindow;
 
@@ -59,7 +58,7 @@ namespace OneWare.Shared.EditorExtensions
         public Vector AdditionalOffset { get; set; } = Vector.Zero;
         public VisualYPosition VisualPosition { get; set; } = VisualYPosition.LineBottom;
 
-        Type IStyleable.StyleKey => typeof(Popup);
+        protected override Type StyleKeyOverride => typeof(Popup);
 
         protected virtual void OnClosed()
         {

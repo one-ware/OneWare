@@ -1,9 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using DynamicData.Binding;
+﻿using DynamicData.Binding;
 using Prism.Ioc;
 
 using OneWare.Shared;
-using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectExplorer.Models;

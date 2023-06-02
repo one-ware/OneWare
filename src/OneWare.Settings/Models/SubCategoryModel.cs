@@ -1,6 +1,6 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Styling;
 
 namespace OneWare.Settings.Models;
 
@@ -17,19 +17,13 @@ public class SubCategoryModel
         IconKey = iconKey;
 
         if (Application.Current == null) throw new NullReferenceException("Application.Current is null");
-            
-        if (iconKey != null)
+
+        if (iconKey == null) return;
+        
+        Application.Current.GetResourceObservable(iconKey).Subscribe(x =>
         {
-            Application.Current.Styles.TryGetResource(iconKey, ThemeVariant.Default, out var ico);
-            Icon = ico as IImage;
-        }
-            
-        Application.Current.Styles.CollectionChanged += (o, i) =>
-        {
-            if (iconKey == null) return;
-            Application.Current.Styles.TryGetResource(iconKey, ThemeVariant.Default, out var ico);
-            Icon = ico as IImage;
-        };
+            Icon = x as IImage;
+        });
     }
 
     public string? IconKey { get; }

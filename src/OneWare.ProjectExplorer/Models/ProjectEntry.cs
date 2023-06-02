@@ -1,14 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Reactive;
-using System.Runtime.Serialization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData.Binding;
 using Prism.Ioc;
-
-using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
@@ -108,7 +103,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         _header = header;
         TopFolder = topFolder;
         
-        Icon = SharedConverters.FileExtensionIconConverter.Convert(header, typeof(IImage), null, CultureInfo.CurrentCulture) as IImage;
+        var observable = SharedConverters.FileExtensionIconConverterObservable.Convert(header, typeof(IImage), null, CultureInfo.CurrentCulture) as IObservable<object?>;
+        observable?.Subscribe(x =>
+        {
+            Icon = x as IImage;
+        });
+        
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
     
