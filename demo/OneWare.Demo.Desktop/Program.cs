@@ -24,6 +24,7 @@ internal abstract class Program
         DemoApp.SettingsService.Load(DemoApp.Paths.SettingsPath);
 
         var app = AppBuilder.Configure<DesktopDemoApp>().UsePlatformDetect()
+            .WithInterFont()
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true
@@ -33,10 +34,6 @@ internal abstract class Program
                 CompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? (Environment.OSVersion.Version.Build >= 22000 ? 8 : 0)
                     : 0,
-            })
-            .With(new FontManagerOptions
-            {
-                DefaultFamilyName = "avares://OneWare.Core/Assets/Fonts#Noto Sans"
             })
             .LogToTrace();
 

@@ -5,10 +5,5 @@ namespace OneWare.Demo.Browser;
 
 public class WebDemoApp : DemoApp
 {
-    protected override IModuleCatalog CreateModuleCatalog()
-    {
-        return new AggregateModuleCatalog();
-    }
-
-    public override string GetDefaultLayoutName => "Web";
+    protected override string GetDefaultLayoutName => "Web";
 }

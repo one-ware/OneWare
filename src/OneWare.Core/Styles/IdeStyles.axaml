@@ -23,10 +23,6 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
 
-    <Style Selector=":is(Window)">
-        <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
-    </Style>
-
     <Style Selector="Button">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />

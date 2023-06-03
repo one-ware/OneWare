@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
@@ -223,8 +225,11 @@ namespace OneWare.Core.Services
             if (SearchView(dockable) is { } result)
             {
                 SetActiveDockable(result);
-                var ownerWindow = GetWindowOwner(dockable);
-                Dispatcher.UIThread.Post(ownerWindow.Activate);
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+                {
+                    var ownerWindow = GetWindowOwner(dockable);
+                    Dispatcher.UIThread.Post(ownerWindow.Activate);
+                }
                 return;
             }
             
@@ -239,7 +244,8 @@ namespace OneWare.Core.Services
                     wC.OnContentLoaded();
                 }
             }
-            else
+            
+            else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
                 Dispatcher.UIThread.Post(() =>
                 {

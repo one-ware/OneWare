@@ -39,14 +39,6 @@ public class DemoApp : App
         });
     }
 
-    protected override IModuleCatalog CreateModuleCatalog()
-    {
-        return new DirectoryModuleCatalog()
-        {
-            ModulePath = Paths.ModulesPath
-        };
-    }
-
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);

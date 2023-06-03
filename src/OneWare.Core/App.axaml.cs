@@ -160,7 +160,7 @@ namespace OneWare.Core
             base.ConfigureModuleCatalog(moduleCatalog);
         }
 
-        public virtual string GetDefaultLayoutName => "Default";
+        protected virtual string GetDefaultLayoutName => "Default";
         
         public override void OnFrameworkInitializationCompleted()
         {
@@ -175,8 +175,6 @@ namespace OneWare.Core
             
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
             {
-                if (x == null) return;
-                
                 if (Tools.IsFontInstalled(x))
                 {
                     Resources["EditorFont"] = new FontFamily(x);
@@ -186,7 +184,6 @@ namespace OneWare.Core
                 if (findFont && resourceFont is FontFamily fFamily)
                 { 
                     Resources["EditorFont"] = this.FindResource(x);
-                    return;
                 }
             });
             
@@ -195,31 +192,23 @@ namespace OneWare.Core
                 Resources["EditorFontSize"] = x;
             });
 
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
-            {
-                async void Start()
-                {
-                    var splash = new SplashWindow()
-                    {
-                        DataContext = Container.Resolve<SplashWindowViewModel>()
-                    };
-                    splash.Show();
-                    
-                    await LoadContentAsync();
-
-                    await Task.Delay(1000);
-                    
-                    splash?.Close();
-                }
-                
-                Start();
-            }
-
+            _ = LoadContentAsync();
+            
             base.OnFrameworkInitializationCompleted();
         }
                 
         private async Task LoadContentAsync()
         {
+            Window? splashWindow = null; 
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                splashWindow = new SplashWindow()
+                {
+                    DataContext = Container.Resolve<SplashWindowViewModel>()
+                };
+                splashWindow.Show();
+            }
+            
             var arguments = Environment.GetCommandLineArgs();
 
             if (arguments.GetLength(0) > 1)
@@ -259,6 +248,9 @@ namespace OneWare.Core
                 Container.Resolve<IDockService>().InitializeDocuments();
                 _ = FinishedLoadingAsync();
             }
+            
+            await Task.Delay(1000);
+            splashWindow?.Close();
         }
 
         private async Task FinishedLoadingAsync()
