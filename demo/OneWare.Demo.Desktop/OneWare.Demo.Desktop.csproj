@@ -11,9 +11,6 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <OutputPath>bin/$(Configuration)</OutputPath>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <IsPackable>false</IsPackable>
         <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <ApplicationIcon>..\OneWare.Demo\Assets\icon.ico</ApplicationIcon>
         <RuntimeIdentifiers>win-x64;osx-x64;osx-arm64;linux-x64</RuntimeIdentifiers>
@@ -21,6 +18,10 @@
         <Nullable>enable</Nullable>
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishAot>false</PublishAot>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
 
     <ItemGroup>

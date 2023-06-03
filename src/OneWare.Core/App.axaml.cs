@@ -144,7 +144,6 @@ namespace OneWare.Core
         {
             moduleCatalog.AddModule<SearchListModule>();
             moduleCatalog.AddModule<ErrorListModule>();
-            //moduleCatalog.AddModule<TerminalModule>();
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
             moduleCatalog.AddModule<SerialMonitorModule>();
@@ -152,6 +151,66 @@ namespace OneWare.Core
             base.ConfigureModuleCatalog(moduleCatalog);
         }
 
+                public override void OnFrameworkInitializationCompleted()
+        {
+            Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
+            
+            TypeAssistanceIconStore.Instance.Load();
+            
+            Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+            Container.Resolve<BackupService>().LoadAutoSaveFile();
+            Container.Resolve<IDockService>().LoadLayout("Default");
+            Container.Resolve<BackupService>().Init();
+            
+            Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
+            {
+                if (x == null) return;
+                
+                if (Tools.IsFontInstalled(x))
+                {
+                    Resources["EditorFont"] = new FontFamily(x);
+                    return;
+                }
+                var findFont = this.TryFindResource(x, out var resourceFont);
+                if (findFont && resourceFont is FontFamily fFamily)
+                { 
+                    Resources["EditorFont"] = this.FindResource(x);
+                    return;
+                }
+            });
+            
+            Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
+            {
+                Resources["EditorFontSize"] = x;
+            });
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                async void Start()
+                {
+                    var splash = new SplashWindow()
+                    {
+                        DataContext = Container.Resolve<SplashWindowViewModel>()
+                    };
+                    splash.Show();
+                    
+                    await LoadContentAsync();
+
+                    await Task.Delay(1000);
+                    
+                    splash?.Close();
+                }
+                
+                Start();
+            }
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
+            {
+                throw new NotImplementedException();
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+                
         private async Task LoadContentAsync()
         {
             var arguments = Environment.GetCommandLineArgs();
@@ -223,66 +282,6 @@ namespace OneWare.Core
             {
                 Container.Resolve<ILogger>().Error(e.Message, e);
             }
-        }
-        
-        public override void OnFrameworkInitializationCompleted()
-        {
-            Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
-            
-            TypeAssistanceIconStore.Instance.Load();
-            
-            Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
-            Container.Resolve<BackupService>().LoadAutoSaveFile();
-            Container.Resolve<IDockService>().LoadLayout("Default");
-            Container.Resolve<BackupService>().Init();
-            
-            Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
-            {
-                if (x == null) return;
-                
-                if (Tools.IsFontInstalled(x))
-                {
-                    Resources["EditorFont"] = new FontFamily(x);
-                    return;
-                }
-                var findFont = this.TryFindResource(x, out var resourceFont);
-                if (findFont && resourceFont is FontFamily fFamily)
-                { 
-                    Resources["EditorFont"] = this.FindResource(x);
-                    return;
-                }
-            });
-            
-            Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
-            {
-                Resources["EditorFontSize"] = x;
-            });
-
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
-            {
-                async void Start()
-                {
-                    var splash = new SplashWindow()
-                    {
-                        DataContext = Container.Resolve<SplashWindowViewModel>()
-                    };
-                    splash.Show();
-                    
-                    await LoadContentAsync();
-
-                    await Task.Delay(1000);
-                    
-                    splash?.Close();
-                }
-                
-                Start();
-            }
-            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
-            {
-                throw new NotImplementedException();
-            }
-
-            base.OnFrameworkInitializationCompleted();
         }
 
         private async Task TryShutDownAsync(object? sender, CancelEventArgs e)

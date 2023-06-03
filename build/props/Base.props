@@ -7,13 +7,4 @@
         <Description>The FPGA Programming Revolution</Description>
         <Copyright>Copyright © Protop Solutions UG 2020-2023</Copyright>
     </PropertyGroup>
-    <PropertyGroup>
-        <LangVersion>latest</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup>
-        <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-        <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
 </Project>
