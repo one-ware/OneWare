@@ -68,6 +68,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.Controls.DataGrid.props = build\props\Avalonia.Controls.DataGrid.props
 		build\props\Avalonia.Controls.ColorPicker.props = build\props\Avalonia.Controls.ColorPicker.props
 		build\props\Avalonia.Themes.Simple.props = build\props\Avalonia.Themes.Simple.props
+		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dock.Avalonia", "src\Dock\src\Dock.Avalonia\Dock.Avalonia.csproj", "{8361F459-0F6F-422B-8E98-D8E105990C33}"

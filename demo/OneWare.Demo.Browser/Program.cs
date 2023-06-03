@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
+using Avalonia.ReactiveUI;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -14,6 +15,7 @@ internal partial class Program
         {
             
         })
+        .WithInterFont()
         .StartBrowserAppAsync("out");
 
     public static AppBuilder BuildAvaloniaApp()
