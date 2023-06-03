@@ -11,10 +11,6 @@ namespace OneWare.Demo.Browser;
 internal partial class Program
 {
     private static async Task Main(string[] args) => await BuildAvaloniaApp()
-        .With(new BrowserPlatformOptions
-        {
-            
-        })
         .WithInterFont()
         .StartBrowserAppAsync("out");
 
