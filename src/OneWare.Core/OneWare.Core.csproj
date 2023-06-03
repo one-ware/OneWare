@@ -2,6 +2,7 @@
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
     <Import Project="..\..\build\props\Avalonia.props" />
+    <Import Project="..\..\build\props\Avalonia.Themes.Simple.props" />
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props" />
     <Import Project="..\..\build\props\Markdown.Avalonia.props" />
     <Import Project="..\..\build\props\OmniSharp.Extensions.Language.props" />
@@ -36,7 +37,7 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
+    
 </Project>
 
 

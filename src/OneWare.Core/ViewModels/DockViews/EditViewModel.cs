@@ -18,34 +18,44 @@ namespace OneWare.Core.ViewModels.DockViews
     {
         private readonly ILogger _logger;
         private readonly IDockService _dockService;
+        private readonly ILanguageManager _languageManager;
         private readonly ISettingsService _settingsService;
         private readonly IWindowService _windowService;
         private readonly IProjectService _projectService;
         private readonly BackupService _backupService;
-        
-        [DataMember]
-        public string Path { get; init; }
-        
-        public IFile CurrentFile { get; private set; }
-        
+
+        [DataMember] public string FullPath { get; init; }
+
+        public IFile? CurrentFile { get; private set; }
+
         public ExtendedTextEditor Editor { get; } = new();
 
         public ITypeAssistance? TypeAssistance { get; private set; }
 
         public TextDocument CurrentDocument => Editor.Document;
-        
+
         public IRelayCommand Undo { get; }
 
         public IRelayCommand Redo { get; }
 
+        private bool _isLoading = true;
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
         private bool _isReadOnly;
+
         public bool IsReadOnly
         {
             get => _isReadOnly;
             set => SetProperty(ref _isReadOnly, value);
         }
-        
+
         private bool _isDirty;
+
         public bool IsDirty
         {
             get => _isDirty;
@@ -62,26 +72,47 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public event EventHandler? FileSaved;
 
-        public EditViewModel(string path, ILogger logger, ISettingsService settingsService, IDockService dockService, ILanguageManager languageManager, IWindowService windowService, IProjectService projectService, BackupService backupService)
+        public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
+            IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
+            IProjectService projectService, BackupService backupService)
         {
-            Path = path;
-            CurrentFile = projectService.Search(path) as IFile ?? new ExternalFile(path);
+            FullPath = fullPath;
             _logger = logger;
             _settingsService = settingsService;
             _dockService = dockService;
             _windowService = windowService;
             _projectService = projectService;
+            _languageManager = languageManager;
             _backupService = backupService;
-            
-            logger.Log("Initializing " + path + "", ConsoleColor.DarkGray);
-            
-            Id = path;
-            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
 
-            var service = languageManager.GetLanguageService(CurrentFile);
+            Id = fullPath;
+            Title = $"Loading {Path.GetFileName(fullPath)}";
+
+            logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+            
+            Undo = new RelayCommand(() => Editor.Undo());
+            Redo = new RelayCommand(() => Editor.Redo());
+        }
+
+        public void OnContentLoaded()
+        {
+            CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+
+            async void OnLoaded()
+            {
+                await LoadAsync();
+                InitLanguageService();
+            }
+            OnLoaded();
+        }
+
+        private void InitLanguageService()
+        {
+            var service = _languageManager.GetLanguageService(CurrentFile);
 
             //Syntax Highlighting
-            Editor.SyntaxHighlighting = languageManager.GetHighlighting(CurrentFile.Extension);
+            Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
+            
             /*//Syntax Highlighting
             var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
             var registryOptions = new RegistryOptions(syntaxTheme);
@@ -99,7 +130,7 @@ namespace OneWare.Core.ViewModels.DockViews
                         });
                 textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(lang.Id));
             }*/
-            
+
             if (service != null)
             {
                 TypeAssistance = service.GetTypeAssistance(this);
@@ -111,7 +142,7 @@ namespace OneWare.Core.ViewModels.DockViews
                             h => TypeAssistance.AssistanceActivated -= h)
                         .Subscribe(x =>
                         {
-                            if (settingsService.GetSettingValue<bool>("Editor_UseFolding"))
+                            if (_settingsService.GetSettingValue<bool>("Editor_UseFolding"))
                             {
                                 Editor.SetFolding(true);
                                 UpdateFolding();
@@ -121,19 +152,18 @@ namespace OneWare.Core.ViewModels.DockViews
                     Observable.FromEventPattern(
                             h => TypeAssistance.AssistanceDeactivated += h,
                             h => TypeAssistance.AssistanceDeactivated -= h)
-                        .Subscribe(x =>
-                        {
-                            Editor.SetFolding(false);
-                        });
+                        .Subscribe(x => { Editor.SetFolding(false); });
                 }
+
                 if (TypeAssistance?.CanAddBreakPoints ?? false)
                 {
                     // TODO Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, currentFile, Global.Breakpoints));
                 }
-                if(service is { IsActivated: false }) _ = service.ActivateAsync();
+
+                if (service is { IsActivated: false }) _ = service.ActivateAsync();
             }
 
-            settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
+            _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
             {
                 x = x && (TypeAssistance?.Service.IsLanguageServiceReady ?? false);
                 Editor.SetFolding(x);
@@ -143,30 +173,12 @@ namespace OneWare.Core.ViewModels.DockViews
             Observable.FromEventPattern(
                     h => Editor.Document.TextChanged += h,
                     h => Editor.Document.TextChanged -= h)
-                .Subscribe(x =>
-                {
-                    IsDirty = true;
-                });
+                .Subscribe(x => { IsDirty = true; });
 
             Observable.FromEventPattern(
                     h => Editor.Document.LineCountChanged += h,
                     h => Editor.Document.LineCountChanged -= h)
-                .Subscribe(x =>
-                {
-                    UpdateFolding();
-                });
-
-            Undo = new RelayCommand(() => Editor.Undo());
-            Redo = new RelayCommand(() => Editor.Redo());
-        }
-
-        public void OnContentLoaded()
-        {
-            if (CurrentFile is ExternalFile && _projectService.Search(Path) is IFile file)
-            {
-                CurrentFile = file;
-                _ = LoadAsync();
-            }
+                .Subscribe(x => { UpdateFolding(); });
         }
 
         private void UpdateFolding()
@@ -186,9 +198,10 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (Editor is { IsInitialized: true }) return true;
                 await Task.Delay(100);
             }
+
             return false;
         }
-        
+
         public void JumpToLine(int lineNumber, bool select = true)
         {
             _ = JumpToLineAsync(lineNumber, select);
@@ -196,7 +209,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         private async Task JumpToLineAsync(int lineNumber, bool select = true)
         {
-            if(!await WaitForEditorReadyAsync()) return;
+            if (!await WaitForEditorReadyAsync()) return;
             await Task.Delay(100);
             if (lineNumber <= CurrentDocument.LineCount)
             {
@@ -214,7 +227,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         private async Task SelectAsync(int offset, int length)
         {
-            if(!await WaitForEditorReadyAsync()) return;
+            if (!await WaitForEditorReadyAsync()) return;
             await Task.Delay(100);
             if (offset + length <= Editor.Text.Length)
             {
@@ -225,7 +238,7 @@ namespace OneWare.Core.ViewModels.DockViews
         }
 
         #endregion
-        
+
         #region LoadAndSave
 
         public override bool OnClose()
@@ -241,17 +254,18 @@ namespace OneWare.Core.ViewModels.DockViews
             }
 
             TypeAssistance?.Close();
-            if(CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
+            if (CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
             return true;
         }
-        
+
         public async Task<bool> TryCloseAsync()
         {
             if (!IsDirty) return true;
 
             var result = await _windowService.ShowYesNoCancelAsync("Warning",
-                "Do you want to save changes to the file " + CurrentFile.Header + "?", MessageBoxIcon.Warning, _dockService.GetWindowOwner(this));
-            
+                "Do you want to save changes to the file " + CurrentFile.Header + "?", MessageBoxIcon.Warning,
+                _dockService.GetWindowOwner(this));
+
             if (result == MessageBoxStatus.Yes)
             {
                 if (await SaveAsync()) return true;
@@ -272,14 +286,15 @@ namespace OneWare.Core.ViewModels.DockViews
         public async Task<bool> SaveAsync()
         {
             if (IsReadOnly) return true;
-            
+
             var success = await SaveFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
-            
+
             if (success)
             {
                 CurrentFile.LastSaveTime = DateTime.Now;
 
-                ContainerLocator.Container.Resolve<ILogger>()?.Log("Saved " + CurrentFile.Header + "!", ConsoleColor.Green);
+                ContainerLocator.Container.Resolve<ILogger>()
+                    ?.Log("Saved " + CurrentFile.Header + "!", ConsoleColor.Green);
                 IsDirty = false;
 
                 //if (MainDock.OpenComparisons.ContainsKey(CurrentFile.FullPath))
@@ -291,20 +306,21 @@ namespace OneWare.Core.ViewModels.DockViews
                 CurrentFile.LoadingFailed = false;
                 return true;
             }
+
             return false;
         }
 
         public virtual async Task<bool> LoadAsync()
         {
             var result = await LoadFileAsync();
-            
+
             if (CurrentFile.Extension is not (null or "" or ".py"))
                 CurrentDocument.Text = result.Item2.Replace("\t", "    ");
-            
+
             else CurrentDocument.Text = result.Item2;
 
             CurrentDocument.UndoStack.ClearAll();
-            
+
             CurrentFile.LastSaveTime = result.lastModified;
 
             if (!result.Item1)
@@ -354,7 +370,8 @@ namespace OneWare.Core.ViewModels.DockViews
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error("Failed loading file " + CurrentFile.FullPath + "! " + e, e);
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        ?.Error("Failed loading file " + CurrentFile.FullPath + "! " + e, e);
                     return (false, "", DateTime.MinValue);
                 }
             });
@@ -374,11 +391,12 @@ namespace OneWare.Core.ViewModels.DockViews
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
                 return false;
             }
+
             return true;
         }
 
         #endregion
-        
+
         public void AutoFormat()
         {
             TypeAssistance?.Format();
@@ -388,7 +406,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             TypeAssistance?.Comment();
         }
-        
+
         public void Uncomment()
         {
             TypeAssistance?.Uncomment();

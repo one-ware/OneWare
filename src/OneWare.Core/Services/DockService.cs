@@ -98,12 +98,8 @@ namespace OneWare.Core.Services
                 },*/
                 _ => ContainerLocator.Current.Resolve<EditViewModel>((typeof(string), pf.FullPath))
             };
-            
-            await viewModel.LoadAsync();
 
-            _mainDocumentDockViewModel.VisibleDockables?.Add(viewModel);
-            InitActiveDockable(viewModel, _mainDocumentDockViewModel);
-            SetActiveDockable(viewModel);
+            Show(viewModel, DockShowLocation.Document);
             
             if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false) 
                 _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
@@ -150,7 +146,6 @@ namespace OneWare.Core.Services
             foreach (var doc in docs)
             {
                 OpenFiles.TryAdd(doc.CurrentFile, doc);
-                _ = doc.LoadAsync();
             }
 
             ContextLocator = new Dictionary<string, Func<object?>>();
@@ -238,6 +233,11 @@ namespace OneWare.Core.Services
                 _mainDocumentDockViewModel.VisibleDockables?.Add(dockable);
                 InitActiveDockable(dockable, _mainDocumentDockViewModel);
                 SetActiveDockable(dockable);
+
+                if (dockable is IWaitForContent wC)
+                {
+                    wC.OnContentLoaded();
+                }
             }
             else
             {
