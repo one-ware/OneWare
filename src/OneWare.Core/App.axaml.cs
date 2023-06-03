@@ -121,8 +121,7 @@ namespace OneWare.Core
                     DataContext = Container.Resolve<InfoWindowViewModel>()
                 }))
             });
-            var mainWindow = Container.Resolve<MainWindow>();
-
+            
             //AvaloniaEdit Hyperlink support
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
             {
@@ -130,9 +129,18 @@ namespace OneWare.Core
                 Tools.OpenHyperLink(link);
             });
 
-            mainWindow.Closing += (o, i) => _ = TryShutDownAsync(o, i);
+            if (ApplicationLifetime is ISingleViewApplicationLifetime)
+            {
+                return new TextBlock() { Text = "Work in Progress!" };
+            }
+            else
+            {
+                var mainWindow = Container.Resolve<MainWindow>();
+            
+                mainWindow.Closing += (o, i) => _ = TryShutDownAsync(o, i);
 
-            return mainWindow;
+                return mainWindow;
+            }
         }
 
         protected override IModuleCatalog CreateModuleCatalog()

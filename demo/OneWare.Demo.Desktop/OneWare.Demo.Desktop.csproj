@@ -25,6 +25,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Terminal\OneWare.Terminal.csproj" />
         <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
