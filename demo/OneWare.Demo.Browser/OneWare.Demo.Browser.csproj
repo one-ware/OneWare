@@ -31,8 +31,4 @@
     <ItemGroup>
       <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.0-rc1.1" />
-    </ItemGroup>
 </Project>
