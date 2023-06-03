@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using OneWare.Output;
 using Prism.Ioc;
@@ -40,12 +42,12 @@ public class Logger : ILogger
     {
         var appRun = DateTime.Now - AppStart;
 #if DEBUG
-        Console.ForegroundColor = ConsoleColor.Magenta;
+        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = ConsoleColor.Magenta;
         Console.Write(@"[" + string.Format("{0:D2}:{1:D2}:{2:D2}", (int)appRun.TotalHours,
             (int)appRun.TotalMinutes, appRun.Seconds) + @"] ");
-        Console.ForegroundColor = color;
+        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = color;
         Console.WriteLine(message);
-        Console.ForegroundColor = ConsoleColor.White;
+        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = ConsoleColor.White;
 #endif
         if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {

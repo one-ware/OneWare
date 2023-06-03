@@ -17,7 +17,6 @@ using OneWare.Output;
 using OneWare.ProjectExplorer;
 using OneWare.ProjectExplorer.Models;
 using OneWare.SearchList;
-using OneWare.SerialMonitor;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using Prism.DryIoc;
@@ -63,6 +62,7 @@ namespace OneWare.Core
 
             //Windows
             containerRegistry.RegisterSingleton<MainWindow>();
+            containerRegistry.RegisterSingleton<MainView>();
         }
 
         protected override AvaloniaObject CreateShell()
@@ -129,9 +129,11 @@ namespace OneWare.Core
                 Tools.OpenHyperLink(link);
             });
 
-            if (ApplicationLifetime is ISingleViewApplicationLifetime)
+            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
             {
-                return new TextBlock() { Text = "Work in Progress!" };
+                var mainView = Container.Resolve<MainView>();
+                mainView.DataContext = DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();
+                return mainView;
             }
             else
             {
@@ -154,12 +156,13 @@ namespace OneWare.Core
             moduleCatalog.AddModule<ErrorListModule>();
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
-            moduleCatalog.AddModule<SerialMonitorModule>();
 
             base.ConfigureModuleCatalog(moduleCatalog);
         }
 
-                public override void OnFrameworkInitializationCompleted()
+        public virtual string GetDefaultLayoutName => "Default";
+        
+        public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
             
@@ -167,7 +170,7 @@ namespace OneWare.Core
             
             Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
             Container.Resolve<BackupService>().LoadAutoSaveFile();
-            Container.Resolve<IDockService>().LoadLayout("Default");
+            Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
             Container.Resolve<BackupService>().Init();
             
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
@@ -210,10 +213,6 @@ namespace OneWare.Core
                 }
                 
                 Start();
-            }
-            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
-            {
-                throw new NotImplementedException();
             }
 
             base.OnFrameworkInitializationCompleted();

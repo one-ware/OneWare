@@ -15,5 +15,5 @@ internal partial class Program
         .StartBrowserAppAsync("out");
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<DemoApp>();
+        => AppBuilder.Configure<WebDemoApp>();
 }

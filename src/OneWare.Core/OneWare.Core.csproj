@@ -27,7 +27,6 @@
         <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj" />
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
-        <ProjectReference Include="..\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>

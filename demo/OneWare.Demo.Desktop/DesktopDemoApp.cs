@@ -1,4 +1,5 @@
-﻿using OneWare.SourceControl;
+﻿using OneWare.SerialMonitor;
+using OneWare.SourceControl;
 using OneWare.Terminal;
 using Prism.Modularity;
 
@@ -11,5 +12,6 @@ public class DesktopDemoApp : DemoApp
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<TerminalModule>();
         moduleCatalog.AddModule<SourceControlModule>();
+        moduleCatalog.AddModule<SerialMonitorModule>();
     }
 }

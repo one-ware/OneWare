@@ -3,7 +3,7 @@ using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic
 {
-    class AggregateModuleCatalog : IModuleCatalog
+    public class AggregateModuleCatalog : IModuleCatalog
     {
         private List<IModuleCatalog> _catalogs = new List<IModuleCatalog>();
 
