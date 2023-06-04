@@ -116,7 +116,7 @@ namespace OneWare.Core.Services
             var closedFiles =
                 _backups.Where(x => !_dockService.OpenFiles.Any(b => b.Key.FullPath.EqualPaths(x.RealPath)));
 
-            foreach (var closedFile in closedFiles)
+            foreach (var closedFile in closedFiles.ToList())
             {
                 RemoveBackup(closedFile);
             }

@@ -53,7 +53,7 @@ public class DemoApp : App
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
-        //moduleCatalog.AddModule<VhdlModule>();
+        moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<CppModule>();
     }
 }
