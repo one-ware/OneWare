@@ -7,3 +7,6 @@
 [submodule "src/Dock"]
 	path = src/Dock
 	url = https://github.com/HendrikMennen/Dock
+[submodule "src/Markdown.Avalonia"]
+	path = src/Markdown.Avalonia
+	url = https://github.com/IhateTrains/Markdown.Avalonia
