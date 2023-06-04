@@ -147,7 +147,7 @@ namespace OneWare.Core.Services
             var docs = SearchView<IExtendedDocument>(layout);
             foreach (var doc in docs)
             {
-                OpenFiles.TryAdd(doc.CurrentFile, doc);
+                //OpenFiles.TryAdd(doc.CurrentFile, doc);
             }
 
             ContextLocator = new Dictionary<string, Func<object?>>();

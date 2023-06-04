@@ -2,6 +2,7 @@
 using Prism.Ioc;
 
 using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectExplorer.Models;
@@ -164,5 +165,17 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
 
         return null;
+    }
+
+    public override IEnumerable<MenuItemViewModel> ContextMenu
+    {
+        get
+        {
+            yield return new MenuItemViewModel()
+            {
+                Header = "Open",
+                //Command = new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this))
+            };
+        }
     }
 }

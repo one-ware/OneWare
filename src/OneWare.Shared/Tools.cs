@@ -1,9 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Net.Mime;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -296,7 +299,7 @@ namespace OneWare.Shared
 
         public static void ChmodFile(string path)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) ExecBash("chmod 777 " + path);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Application.Current?.ApplicationLifetime is not ISingleViewApplicationLifetime) ExecBash("chmod 777 " + path);
         }
 
         public static void ChmodFolder(string path)

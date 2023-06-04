@@ -136,9 +136,10 @@ namespace OneWare.Shared
                     return PlatformId.Win32Nt;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     return PlatformId.Unix;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return PlatformId.MacOsx;
-
-                throw new Exception("Unknow platform");
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) 
+                    return PlatformId.MacOsx;
+                
+                return PlatformId.Unix;
             }
         }
 

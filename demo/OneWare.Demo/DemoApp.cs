@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
+using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Cpp;
 using OneWare.Settings;
@@ -18,6 +20,15 @@ public class DemoApp : App
         "avares://OneWare.Demo/Assets/Startup.jpg");
 
     private static readonly ILogger Logger = new Logger(Paths);
+
+    static DemoApp()
+    {
+        SettingsService.Register("LastVersion", Global.VersionCode);
+        SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
+        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog", "Use Managed File Dialog",
+            "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+        SettingsService.Load(Paths.SettingsPath);
+    }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
@@ -42,7 +53,7 @@ public class DemoApp : App
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
-        moduleCatalog.AddModule<VhdlModule>();
+        //moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<CppModule>();
     }
 }

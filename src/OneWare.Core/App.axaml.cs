@@ -211,7 +211,7 @@ namespace OneWare.Core
             
             var arguments = Environment.GetCommandLineArgs();
 
-            if (arguments.GetLength(0) > 1)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime && arguments.GetLength(0) > 1)
             {
                 var fileName = arguments[1];
                 //Check file exists
@@ -239,8 +239,10 @@ namespace OneWare.Core
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
                 //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
 
-                var dummy = new ProjectRoot(@"C:\Users\Hendrik\OneWareStudio\Projects\Test");
-                dummy.AddFile("Test.vhd");
+                var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
+                Directory.CreateDirectory(testProj);
+                var dummy = new ProjectRoot(testProj);
+                dummy.AddFile("Test.vhd", true);
                 
                 Container.Resolve<IProjectService>().Items.Add(dummy);
                 Container.Resolve<IProjectService>().ActiveProject = dummy;
@@ -272,10 +274,10 @@ namespace OneWare.Core
                         }, App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 }
 
-                await Task.Factory.StartNew(() =>
-                {
+                //await Task.Factory.StartNew(() =>
+                //{
                     //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
-                }, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
+                //}, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
             }
             catch (Exception e)
             {

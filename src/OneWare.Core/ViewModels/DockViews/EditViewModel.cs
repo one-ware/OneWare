@@ -1,14 +1,20 @@
-﻿using System.Reactive.Linq;
+﻿using System.Collections;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
+using DynamicData.Binding;
 using OneWare.Core.Services;
+using OneWare.ErrorList.ViewModels;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
+using OneWare.Shared.Enums;
 using OneWare.Shared.LanguageService;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
@@ -20,6 +26,7 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly IDockService _dockService;
         private readonly ILanguageManager _languageManager;
         private readonly ISettingsService _settingsService;
+        private readonly IErrorService _errorService;
         private readonly IWindowService _windowService;
         private readonly IProjectService _projectService;
         private readonly BackupService _backupService;
@@ -63,18 +70,28 @@ namespace OneWare.Core.ViewModels.DockViews
         }
 
         private Dictionary<IBrush, int[]> _scrollInfo = new();
-
+        
         public Dictionary<IBrush, int[]> ScrollInfo
         {
             get => _scrollInfo;
             set => SetProperty(ref _scrollInfo, value);
         }
 
+        private IEnumerable<ErrorListItemModel>? _diagnostics;
+        public IEnumerable<ErrorListItemModel>? Diagnostics
+        {
+            get => _diagnostics;
+            set => SetProperty(ref _diagnostics, value);
+        }
+
         public event EventHandler? FileSaved;
+        
+        static IBrush _errorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
+        static IBrush _warningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectService projectService, BackupService backupService)
+            IProjectService projectService, IErrorService errorService, BackupService backupService)
         {
             FullPath = fullPath;
             _logger = logger;
@@ -83,6 +100,7 @@ namespace OneWare.Core.ViewModels.DockViews
             _windowService = windowService;
             _projectService = projectService;
             _languageManager = languageManager;
+            _errorService = errorService;
             _backupService = backupService;
 
             Id = fullPath;
@@ -92,12 +110,41 @@ namespace OneWare.Core.ViewModels.DockViews
             
             Undo = new RelayCommand(() => Editor.Undo());
             Redo = new RelayCommand(() => Editor.Redo());
+
+            this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
+            {
+                Dictionary<IBrush, int[]> scrollInfo = new();
+                
+                var errorLines = _diagnostics != null ? _diagnostics
+                    .Where(b => b.Type is ErrorType.Error)
+                    .Select(c => c.StartLine)
+                    .Distinct().ToArray() : Array.Empty<int>();
+
+                var warningLines = _diagnostics != null ? _diagnostics
+                    .Where(b => b.Type is ErrorType.Warning)
+                    .Select(c => c.StartLine)
+                    .Distinct().ToArray() : Array.Empty<int>();;
+
+                scrollInfo.Add(_errorBrush, errorLines);
+                scrollInfo.Add(_warningBrush, warningLines);
+
+                ScrollInfo = scrollInfo;
+                Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+            });
         }
 
         public void OnContentLoaded()
         {
             CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
+            Title = CurrentFile.Header;
+            
+            _errorService.ErrorRefresh += (sender, o) =>
+            {
+                if(o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+            };
+            Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+            
             async void OnLoaded()
             {
                 await LoadAsync();
@@ -245,12 +292,12 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             if (IsDirty)
             {
-                _ = _dockService.CloseFileAsync(CurrentFile);
+                if(CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
                 return false;
             }
             else
             {
-                _dockService.OpenFiles.Remove(CurrentFile);
+                if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
             }
 
             TypeAssistance?.Close();
@@ -263,7 +310,7 @@ namespace OneWare.Core.ViewModels.DockViews
             if (!IsDirty) return true;
 
             var result = await _windowService.ShowYesNoCancelAsync("Warning",
-                "Do you want to save changes to the file " + CurrentFile.Header + "?", MessageBoxIcon.Warning,
+                "Do you want to save changes to the file " + CurrentFile?.Header + "?", MessageBoxIcon.Warning,
                 _dockService.GetWindowOwner(this));
 
             if (result == MessageBoxStatus.Yes)

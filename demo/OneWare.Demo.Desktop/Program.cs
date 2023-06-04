@@ -17,12 +17,6 @@ internal abstract class Program
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
-        DemoApp.SettingsService.Register("LastVersion", Global.VersionCode);
-        DemoApp.SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        DemoApp.SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog", "Use Managed File Dialog",
-            "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-        DemoApp.SettingsService.Load(DemoApp.Paths.SettingsPath);
-
         var app = AppBuilder.Configure<DesktopDemoApp>().UsePlatformDetect()
             .WithInterFont()
             .With(new X11PlatformOptions

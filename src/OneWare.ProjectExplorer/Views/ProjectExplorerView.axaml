@@ -43,6 +43,13 @@
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                   SelectedItems="{Binding SelectedItems, Mode=TwoWay}"
                   DragDrop.AllowDrop="True" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem" x:DataType="models:ProjectEntry">
+                    <Setter Property="ContextMenu">
+                        <ContextMenu Classes="BindMenu" ItemsSource="{Binding ContextMenu}"/>
+                    </Setter>
+                </Style>
+            </TreeView.Styles>
             <TreeView.DataTemplates>
                 <TreeDataTemplate DataType="models:ProjectEntry" ItemsSource="{Binding Items}" >
                     <DockPanel>

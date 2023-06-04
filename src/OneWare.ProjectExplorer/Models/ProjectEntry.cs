@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectExplorer.Models;
@@ -111,6 +112,8 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
+
+    public abstract IEnumerable<MenuItemViewModel> ContextMenu { get; }
     
     public bool IsValid()
     {

@@ -42,18 +42,10 @@ namespace OneWare.Core.Views.DockViews
 
         private ITypeAssistance? TypeAssistance => this.ViewModel?.TypeAssistance;
 
-        private IFile CurrentFile =>
-            this.ViewModel?.CurrentFile ?? throw new NullReferenceException(nameof(CurrentFile));
-
-
         private IEnumerable<int> _lastSearchResultLines = new List<int>();
         public EditViewModel? ViewModel { get; set; }
         public ObjectValueModel? VaribleViewDataConext { get; private set; }
-
-
-        static IBrush _errorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
-        static IBrush _warningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
-
+        
         public EditView()
         {
             _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
@@ -87,11 +79,6 @@ namespace OneWare.Core.Views.DockViews
 
             //Attach Events
             AttachEvents();
-
-            CodeBox.MarkerService.SetDiagnostics(ContainerLocator.Container.Resolve<ErrorListViewModel>()
-                .GetErrorsForFile(CurrentFile));
-
-            UpdateScrollInfo();
 
             try
             {
@@ -169,8 +156,6 @@ namespace OneWare.Core.Views.DockViews
 
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedBeforeCaretUpdate, RoutingStrategies.Tunnel);
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedAfterCaretUpdate, RoutingStrategies.Bubble, true);
-
-            _errorService.ErrorRefresh += SetErrors;
         }
 
         protected void DetachEvents()
@@ -189,8 +174,6 @@ namespace OneWare.Core.Views.DockViews
 
             if (CodeBox.SearchPanel != null)
                 CodeBox.SearchPanel.OnSearch -= Search_Updated;
-            
-            _errorService.ErrorRefresh -= SetErrors;
         }
 
         private void Search_Updated(object? sender, IEnumerable<SearchResult> results)
@@ -199,7 +182,16 @@ namespace OneWare.Core.Views.DockViews
             {
                 _lastSearchResultLines =
                     results.Select(x => CodeBox.Document.GetLineByOffset(x.StartOffset).LineNumber);
-                UpdateScrollInfo();
+
+                if (CodeBox.WordRenderer.Result != null)
+                {
+                    ViewModel.ScrollInfo.Add(_wordResultScrollBrush, CodeBox.WordRenderer.Result.WordOffset
+                        .Select(x => CodeBox.Document.GetLineByOffset(x).LineNumber)
+                        .Distinct()
+                        .ToArray());
+                }
+
+                ViewModel.ScrollInfo.Add(_searchResultScrollBrush, _lastSearchResultLines.ToArray());
             }
             catch (Exception e)
             {
@@ -226,8 +218,6 @@ namespace OneWare.Core.Views.DockViews
         {
             CodeBox.WordRenderer.SetHighlight(null); //Reset wordhighlight
             CodeBox.BracketRenderer.SetHighlight(null);
-
-            UpdateScrollInfo();
         }
 
         public void ScrollOffsetChanged(object? sender, EventArgs e)
@@ -235,18 +225,6 @@ namespace OneWare.Core.Views.DockViews
             HoverBox.Close();
             CodeBox?.TextArea.ContextMenu?.Close();
         }
-
-         protected void SetErrors(object? sender, object? e)
-         {
-             if (e == CurrentFile)
-             {
-                 var errorsForFile = ContainerLocator.Container.Resolve<ErrorListViewModel>().GetErrorsForFile(CurrentFile);
-                 CodeBox.MarkerService.SetDiagnostics(errorsForFile);
-
-                 UpdateScrollInfo();
-                 CodeBox?.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
-             }
-         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
@@ -331,7 +309,6 @@ namespace OneWare.Core.Views.DockViews
                     }
 
                 //CodeBox.WordRenderer.SetHighlight(VhdpHelpers.SearchSelectedWord(CodeBox.Document, CodeBox.CaretOffset)); TODO
-                UpdateScrollInfo();
             }
             else if (e.GetCurrentPoint(null).Properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
             {
@@ -438,13 +415,15 @@ namespace OneWare.Core.Views.DockViews
 
         private ErrorListItemModel? GetErrorAtMousePos(PointerEventArgs e)
         {
+            if (ViewModel?.CurrentFile == null) return null;
+            
             var pos = CodeBox.GetPositionFromPoint(e.GetPosition(CodeBox)); //gets position of mouse
             if (pos.HasValue)
             {
                 var offset = CodeBox.Document.GetOffset(pos.Value.Location);
                 var location = CodeBox.Document.GetLocation(offset);
                 foreach (var error in ContainerLocator.Container.Resolve<ErrorListViewModel>()
-                             .GetErrorsForFile(CurrentFile))
+                             .GetErrorsForFile(ViewModel.CurrentFile))
                     if (location.Line >= error.StartLine && location.Line <= error.EndLine &&
                         location.Column >= error.StartColumn && location.Column <= error.EndColumn)
                         return error;
@@ -660,44 +639,6 @@ namespace OneWare.Core.Views.DockViews
 
         private readonly IBrush _wordResultScrollBrush = (IBrush)new BrushConverter().ConvertFrom("#502859af")!;
         private readonly IBrush _searchResultScrollBrush = (IBrush)new BrushConverter().ConvertFrom("#50af7e28")!;
-
-        /// <summary>
-        ///     Shows erros in scrollbar
-        /// </summary>
-        public void UpdateScrollInfo()
-        {
-            if (ViewModel == null) return;
-
-            Dictionary<IBrush, int[]> scrollInfo = new();
-
-            var errors = ContainerLocator.Container.Resolve<ErrorListViewModel>().GetErrorsForFile(CurrentFile)
-                .ToList();
-
-            var errorLines = errors
-                .Where(x => x.Type is ErrorType.Error)
-                .Select(x => x.StartLine)
-                .Distinct().ToArray();
-
-            var warningLines = errors
-                .Where(x => x.Type is ErrorType.Warning)
-                .Select(x => x.StartLine)
-                .Distinct().ToArray();
-
-            scrollInfo.Add(_errorBrush, errorLines);
-            scrollInfo.Add(_warningBrush, warningLines);
-
-            if (CodeBox.WordRenderer.Result != null)
-            {
-                scrollInfo.Add(_wordResultScrollBrush, CodeBox.WordRenderer.Result.WordOffset
-                    .Select(x => CodeBox.Document.GetLineByOffset(x).LineNumber)
-                    .Distinct()
-                    .ToArray());
-            }
-
-            scrollInfo.Add(_searchResultScrollBrush, _lastSearchResultLines.ToArray());
-
-            ViewModel.ScrollInfo = scrollInfo;
-        }
 
         /// <summary>
         /// Fills in Data for the Completion Window

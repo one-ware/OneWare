@@ -7,7 +7,7 @@ namespace OneWare.Shared;
 
 public interface IExtendedDocument : IDocument
 {
-    public IFile CurrentFile { get; }
+    public IFile? CurrentFile { get; }
     public IRelayCommand Undo { get; }
     public IRelayCommand Redo { get; }
     
