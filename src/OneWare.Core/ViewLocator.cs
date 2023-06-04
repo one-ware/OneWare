@@ -17,7 +17,7 @@ namespace OneWare.Core
             var type = Type.GetType(name);
             if (type != null && !name.EndsWith("model", StringComparison.OrdinalIgnoreCase))
             {
-                var instance =  ContainerLocator.Current.Resolve(type);;
+                var instance =  ContainerLocator.Current.Resolve(type);
 
                 if (instance != null)
                     return (Control)instance;

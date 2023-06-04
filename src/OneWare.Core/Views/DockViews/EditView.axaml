@@ -83,9 +83,7 @@
                             <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
                             
                             <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                                <Style.Setters>
-                                    <Setter Property="SyntaxHighlighting" Value="{Binding Editor.SyntaxHighlighting, Mode=OneWay}"/>
-                                </Style.Setters>
+                                <Setter Property="SyntaxHighlighting" Value="{Binding Editor.SyntaxHighlighting, Mode=OneWay}"/>
                             </Style>
                         </md:MarkdownScrollViewer.Styles>
                     </md:MarkdownScrollViewer>
