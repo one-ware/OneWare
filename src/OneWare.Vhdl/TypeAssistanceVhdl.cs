@@ -23,7 +23,7 @@ namespace OneWare.Vhdl
         {
             var items = new List<CompletionData>();
 
-            items.Add(new CompletionData("Test", "test", "t", null, 0, 0));
+            items.Add(new CompletionData("Test", "test", "t", null, 0, CodeBox.CaretOffset));
             
             return Task.FromResult(items);
         }

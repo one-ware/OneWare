@@ -34,7 +34,7 @@ namespace OneWare.Vhdl
             if (IsActivated) return;
             IsActivated = true;
 
-            var vhdlPath = @"C:\Users\Hendrik\VHDPlus\Packages\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\bin\vhdl_ls.exe";
+            var vhdlPath = "/Users/hendrikmennen/VHDPlus/Packages/rusthdl/release/bin/vhdl_ls";
 
             // if (!Tools.Exists(Global.Options.VhdlLspPath))
             // {

@@ -224,7 +224,7 @@ namespace OneWare.Core.Services
             //Check if dockable already exists
             if (SearchView(dockable) is { } result)
             {
-                SetActiveDockable(result);
+                Dispatcher.UIThread.Post(() => SetActiveDockable(result));
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
                 {
                     var ownerWindow = GetWindowOwner(dockable);

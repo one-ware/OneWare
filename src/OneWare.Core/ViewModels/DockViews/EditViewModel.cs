@@ -164,7 +164,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
             //Syntax Highlighting
             Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
-            
+
             /*//Syntax Highlighting
             var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
             var registryOptions = new RegistryOptions(syntaxTheme);
@@ -380,9 +380,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 CurrentFile.LoadingFailed = true;
 
                 OnFileLoaded(false);
-
-                //Todo output error
-                ContainerLocator.Container.Resolve<ILogger>()?.Error("Failed loading " + CurrentFile.Header + "!");
+                
                 return false;
             }
             else
@@ -423,7 +421,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 catch (Exception e)
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error("Failed loading file " + CurrentFile.FullPath + "! " + e, e);
+                        ?.Error($"Failed loading file {CurrentFile.FullPath}", e);
                     return (false, "", DateTime.MinValue);
                 }
             });
