@@ -13,7 +13,7 @@
         <WasmBuildNative>true</WasmBuildNative>
         <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0</EmccFlags>
     </PropertyGroup>
-
+    
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <RunAOTCompilation>true</RunAOTCompilation>
         <PublishTrimmed>true</PublishTrimmed>
@@ -23,7 +23,7 @@
         <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
         <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <WasmExtraFilesToDeploy Include="AppBundle\**" />
     </ItemGroup>

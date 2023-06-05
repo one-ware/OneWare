@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
