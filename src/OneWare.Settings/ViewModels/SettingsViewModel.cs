@@ -3,10 +3,11 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Settings.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Settings.ViewModels
 {
-    public class SettingsViewModel : ObservableObject
+    public class SettingsViewModel : FlexibleWindowViewModelBase
     {
         public List<SettingsPageModel> SettingPages { get; } = new();
 
@@ -42,6 +43,9 @@ namespace OneWare.Settings.ViewModels
 
         public SettingsViewModel(ISettingsService settingsService, IPaths paths)
         {
+            Id = "Settings";
+            Title = "Settings";
+            
             _settingsService = settingsService;
             _paths = paths;
 

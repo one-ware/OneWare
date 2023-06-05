@@ -3,9 +3,9 @@ using OneWare.Shared;
 
 namespace OneWare.Core.Views.Windows
 {
-    public partial class InfoWindow : FlexibleWindow
+    public partial class AboutView : FlexibleWindow
     {
-        public InfoWindow()
+        public AboutView()
         {
             InitializeComponent();
         }

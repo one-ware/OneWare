@@ -52,11 +52,13 @@ namespace OneWare.Core
             //ViewModels - Windows
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
             containerRegistry.RegisterSingleton<SettingsViewModel>();
-
+            containerRegistry.RegisterSingleton<AboutViewModel>();
+            
             //ViewModels - Dock
             containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
             containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
             
+            //ViewModels Documents
             containerRegistry.Register<EditViewModel>();
 
             //Windows
@@ -112,12 +114,12 @@ namespace OneWare.Core
                 Header = "Help",
                 Priority = 1000
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("-"), new MenuItemModel("About")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("About")
             {
                 Header = $"About {paths.AppName}",
-                Command = new RelayCommand(() => windowService.Show(new InfoWindow()
+                Command = new RelayCommand(() => windowService.Show(new AboutView()
                 {
-                    DataContext = Container.Resolve<InfoWindowViewModel>()
+                    DataContext = Container.Resolve<AboutViewModel>()
                 }))
             });
             
@@ -325,7 +327,7 @@ namespace OneWare.Core
         
         private void About_Click(object? sender, EventArgs e)
         {
-            Container.Resolve<IWindowService>().Show(Container.Resolve<InfoWindow>());
+            Container.Resolve<IWindowService>().Show(Container.Resolve<AboutView>());
         }
 
         private void Preferences_Click(object? sender, EventArgs e)

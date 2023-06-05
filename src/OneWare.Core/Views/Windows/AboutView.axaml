@@ -10,15 +10,15 @@
                         xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                         xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
-                        x:Class="OneWare.Core.Views.Windows.InfoWindow"
-                        Width="400" Height="400" Padding="4"
+                        x:Class="OneWare.Core.Views.Windows.AboutView"
+                        PrefWidth="400" PrefHeight="400" Padding="4"
                         Title="About OneWare.Core"
                         Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
                         CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
                         WindowStartupLocation="CenterScreen"
                         Background="{DynamicResource ThemeBackgroundBrushOp}"
                         TransparencyLevelHint="AcrylicBlur"
-                        x:DataType="windows1:InfoWindowViewModel">
+                        x:DataType="windows1:AboutViewModel">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="70" Width="70" />
@@ -32,11 +32,6 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <TextBlock Text="Home Page: " />
             <views:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
-        </StackPanel>
-
-        <StackPanel Margin="4" Classes="WindowButtons" DockPanel.Dock="Bottom" HorizontalAlignment="Right">
-            <Button Command="{Binding Close}" CommandParameter="{Binding $parent[Window]}" 
-                    HorizontalAlignment="Right" Content="Close" />
         </StackPanel>
         
         <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" />

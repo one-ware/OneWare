@@ -6,7 +6,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    public class InfoWindowViewModel : FlexibleWindowViewModelBase
+    public class AboutViewModel : FlexibleWindowViewModelBase
     {
         private readonly IPaths _paths;
 
@@ -22,8 +22,10 @@ namespace OneWare.Core.ViewModels.Windows
         public string License => $"{_paths.AppName} Preview\n" +
                                  $"© {DateTime.Now.Year} Protop Solutions UG\n";
 
-        public InfoWindowViewModel(IPaths paths)
+        public AboutViewModel(IPaths paths)
         {
+            Title = $"About {paths.AppName}";
+            Id = "AboutWindow";
             _paths = paths;
         }
     }

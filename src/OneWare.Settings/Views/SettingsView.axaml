@@ -5,12 +5,14 @@
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
                        xmlns:models="clr-namespace:OneWare.Settings.Models"
-                       Width="550" Height="400"
+                       PrefWidth="550" PrefHeight="400"
                        mc:Ignorable="d"
                        x:Class="OneWare.Settings.Views.SettingsView"
                        CustomIcon="{DynamicResource Material.SettingsOutline}"
                        Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                        Title="Settings" Name="SettingsWindowView"
+                       Background="{DynamicResource ThemeBackgroundBrushOp}"
+                       TransparencyLevelHint="AcrylicBlur"
                        x:CompileBindings="True" x:DataType="viewModels:SettingsViewModel"
                        WindowStartupLocation="CenterOwner">
 

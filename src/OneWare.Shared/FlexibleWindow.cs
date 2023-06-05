@@ -5,12 +5,22 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Dock.Model.Core;
+using Dock.Model.Mvvm.Controls;
+using OneWare.Shared.Enums;
+using OneWare.Shared.Services;
+using Prism.Ioc;
 using static System.Double;
 
 namespace OneWare.Shared
 {
     public class FlexibleWindow : UserControl
     {
+        public static readonly StyledProperty<double> PrefWidthProperty =
+            AvaloniaProperty.Register<FlexibleWindow, double>(nameof(PrefWidth), double.NaN);
+        
+        public static readonly StyledProperty<double> PrefHeightProperty =
+            AvaloniaProperty.Register<FlexibleWindow, double>(nameof(PrefHeight), double.NaN);
+        
         public static readonly StyledProperty<bool> ShowTitleProperty =
             AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ShowTitleProperty), true);
         
@@ -38,6 +48,18 @@ namespace OneWare.Shared
         public static readonly StyledProperty<IReadOnlyList<WindowTransparencyLevel>> TransparencyLevelHintProperty =
             AvaloniaProperty.Register<FlexibleWindow, IReadOnlyList<WindowTransparencyLevel>>(nameof(TransparencyLevelHint), Array.Empty<WindowTransparencyLevel>());
 
+        public double PrefWidth
+        {
+            get => GetValue(PrefWidthProperty);
+            set => SetValue(PrefWidthProperty, value);
+        }
+        
+        public double PrefHeight
+        {
+            get => GetValue(PrefHeightProperty);
+            set => SetValue(PrefHeightProperty, value);
+        }
+        
         public bool ShowTitle
         {
             get => GetValue(ShowTitleProperty);
@@ -79,7 +101,7 @@ namespace OneWare.Shared
             get => GetValue(TitleProperty);
             set => SetValue(TitleProperty, value);
         }
-        
+
         public SizeToContent SizeToContent
         {
             get => GetValue(SizeToContentProperty);
@@ -109,18 +131,13 @@ namespace OneWare.Shared
             {
                 Host = CreateHost();
                 Host.Show(owner);
-                
-                Observable.FromEventPattern<TemplateAppliedEventArgs>(h => Host.TemplateApplied += h, h => Host.TemplateApplied -= h)
-                    .Take(1)
-                    .Subscribe((x) =>
-                    {
-                        Height = NaN;
-                        Width = NaN;
-                    });
             }
             else
             {
-                
+                if (DataContext is not Document doc)
+                    throw new Exception("ViewModel for FlexibleWindow must be Document");
+
+                ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
             }
         }
 
@@ -159,12 +176,12 @@ namespace OneWare.Shared
             host.Bind(Window.SizeToContentProperty, this.GetObservable(SizeToContentProperty));
             
             host.Bind(TopLevel.TransparencyLevelHintProperty, this.GetObservable(TransparencyLevelHintProperty));
+            host.Bind(BackgroundProperty, this.GetObservable(BackgroundProperty));
 
-            host.Height = Height;
-            host.Width = Width;
+            host.Height = PrefHeight;
+            host.Width = PrefWidth;
 
             host.ExtendClientAreaToDecorationsHint = true;
-            host.SizeToContent = SizeToContent.WidthAndHeight;
 
             host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             host.Closed += (sender, args) => Closed?.Invoke(sender, args);
