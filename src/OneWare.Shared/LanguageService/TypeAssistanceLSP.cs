@@ -35,18 +35,141 @@ namespace OneWare.Shared.LanguageService
         private TimeSpan _lastRefreshTime = DateTime.Now.TimeOfDay;
 
         private ICompletionData? _lastSelectedCompletionItem;
-
-        private readonly TimeSpan _timerTimeSpan = new(200);
         private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
         public virtual string LineCommentSequence => "//";
         public LanguageServiceBase Service { get; }
-
-        protected virtual TimeSpan RefreshTime => TimeSpan.FromMilliseconds(200);
+        
+        private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(200);
+        protected virtual TimeSpan RefreshTime => TimeSpan.FromMilliseconds(500);
         
         public TypeAssistanceLsp(IEditor evm, LanguageServiceBase langService) : base(evm)
         {
             Service = langService;
         }
+
+        #region Initialisation
+
+        public override void Initialize(CompletionWindow completion)
+        {
+            base.Initialize(completion);
+            
+            completion.CompletionList.SelectionChanged += (o, i) =>
+            {
+                _lastSelectedCompletionItem = completion.CompletionList.SelectedItem;
+                _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
+            };
+
+            _dispatcherTimer?.Stop();
+            _dispatcherTimer = new DispatcherTimer
+            {
+                Interval = _timerTimeSpan
+            };
+
+            _dispatcherTimer.Tick += Timer_Tick;
+
+            if (CodeBox.SyntaxHighlighting != null)
+                CustomHighlightManager = new CustomHighlightManager(CodeBox.SyntaxHighlighting);
+
+            Service.LanguageServiceActivated += Server_Activated;
+            Service.LanguageServiceDeactivated += Server_Deactivated;
+
+            if (Service.IsLanguageServiceReady) OnServerActivated();
+
+            CodeBox.Document.Changed -= DocumentChanged;
+            CodeBox.Document.Changed += DocumentChanged;
+            Editor.FileSaved -= FileSaved;
+            Editor.FileSaved += FileSaved;
+
+            _dispatcherTimer.Start();
+        }
+
+        protected virtual void Timer_Tick(object? sender, EventArgs e)
+        {
+            if (_lastEditTime > _lastRefreshTime && _lastEditTime <= DateTime.Now.TimeOfDay - RefreshTime)
+            {
+                _lastRefreshTime = DateTime.Now.TimeOfDay;
+                CodeUpdated();
+            }
+
+            if (_lastCompletionItemChangedTime > _lastCompletionItemResolveTime &&
+                _lastCompletionItemChangedTime <= DateTime.Now.TimeOfDay - RefreshTime)
+            {
+                _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
+                _ = ResolveCompletionAsync();
+            }
+        }
+
+        public virtual void CodeUpdated()
+        {
+            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind.Full)
+            {
+                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, CodeBox.Text);
+            }
+            _ = UpdateSymbolsAsync();
+        }
+
+        private void Server_Activated(object? sender, EventArgs e)
+        {
+            OnServerActivated();
+        }
+
+        private void Server_Deactivated(object? sender, EventArgs e)
+        {
+            OnServerDeactivated();
+        }
+
+        protected override void OnServerActivated()
+        {
+            if (IsClosed) return;
+
+            base.OnServerActivated();
+            Service.DidOpenTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
+
+            _ = UpdateSymbolsAsync();
+        }
+
+        protected override void OnServerDeactivated()
+        {
+            if (IsClosed) return;
+            base.OnServerDeactivated();
+        }
+
+        protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
+        {
+            if (IsClosed || !Service.IsLanguageServiceReady) return;
+
+            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind
+                    .Incremental or TextDocumentSyncKind.None)
+            {
+                var c = ConvertChanges(e);
+                var changes = new Container<TextDocumentContentChangeEvent>(c);
+                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, changes);
+            }
+
+            _lastEditTime = DateTime.Now.TimeOfDay;
+        }
+
+        private void FileSaved(object? sender, EventArgs e)
+        {
+            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
+        }
+
+        public override void Close()
+        {
+            CodeBox.Document.Changed -= DocumentChanged;
+            Editor.FileSaved -= FileSaved;
+            Service.LanguageServiceActivated -= Server_Activated;
+            if (_dispatcherTimer != null)
+            {
+                _dispatcherTimer.Tick -= Timer_Tick;
+                _dispatcherTimer.Stop();
+            }
+
+            base.Close();
+            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(Editor.CurrentFile.FullPath);
+        }
+
+        #endregion
 
         public virtual async Task<string?> GetHoverInfoAsync(int offset)
         {
@@ -593,129 +716,5 @@ namespace OneWare.Shared.LanguageService
                     return error;
             return null;
         }
-
-        #region Initialisation
-
-        public override void Initialize(CompletionWindow completion)
-        {
-            base.Initialize(completion);
-            
-            completion.CompletionList.SelectionChanged += (o, i) =>
-            {
-                _lastSelectedCompletionItem = completion.CompletionList.SelectedItem;
-                _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
-            };
-
-            _dispatcherTimer?.Stop();
-            _dispatcherTimer = new DispatcherTimer
-            {
-                Interval = _timerTimeSpan
-            };
-
-            _dispatcherTimer.Tick += Timer_Tick;
-
-            if (CodeBox.SyntaxHighlighting != null)
-                CustomHighlightManager = new CustomHighlightManager(CodeBox.SyntaxHighlighting);
-
-            Service.LanguageServiceActivated += Server_Activated;
-            Service.LanguageServiceDeactivated += Server_Deactivated;
-
-            if (Service.IsLanguageServiceReady) OnServerActivated();
-
-            CodeBox.Document.Changed -= DocumentChanged;
-            CodeBox.Document.Changed += DocumentChanged;
-            Editor.FileSaved -= FileSaved;
-            Editor.FileSaved += FileSaved;
-
-            _dispatcherTimer.Start();
-        }
-
-        protected virtual void Timer_Tick(object? sender, EventArgs e)
-        {
-            if (_lastEditTime > _lastRefreshTime && _lastEditTime <= DateTime.Now.TimeOfDay - RefreshTime)
-            {
-                _lastRefreshTime = DateTime.Now.TimeOfDay;
-                CodeUpdated();
-            }
-
-            if (_lastCompletionItemChangedTime > _lastCompletionItemResolveTime &&
-                _lastCompletionItemChangedTime <= DateTime.Now.TimeOfDay - RefreshTime)
-            {
-                _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
-                _ = ResolveCompletionAsync();
-            }
-        }
-
-        public virtual void CodeUpdated()
-        {
-            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind.Full)
-            {
-                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, CodeBox.Text);
-            }
-            _ = UpdateSymbolsAsync();
-        }
-
-        private void Server_Activated(object? sender, EventArgs e)
-        {
-            OnServerActivated();
-        }
-
-        private void Server_Deactivated(object? sender, EventArgs e)
-        {
-            OnServerDeactivated();
-        }
-
-        protected override void OnServerActivated()
-        {
-            if (IsClosed) return;
-
-            base.OnServerActivated();
-            Service.DidOpenTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
-
-            _ = UpdateSymbolsAsync();
-        }
-
-        protected override void OnServerDeactivated()
-        {
-            if (IsClosed) return;
-            base.OnServerDeactivated();
-        }
-
-        protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
-        {
-            if (IsClosed || !Service.IsLanguageServiceReady) return;
-
-            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind
-                    .Incremental or TextDocumentSyncKind.None)
-            {
-                var c = ConvertChanges(e);
-                var changes = new Container<TextDocumentContentChangeEvent>(c);
-                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, changes);
-            }
-
-            _lastEditTime = DateTime.Now.TimeOfDay;
-        }
-
-        private void FileSaved(object? sender, EventArgs e)
-        {
-            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
-        }
-
-        public override void Close()
-        {
-            CodeBox.Document.Changed -= DocumentChanged;
-            Editor.FileSaved -= FileSaved;
-            Service.LanguageServiceActivated -= Server_Activated;
-            if (_dispatcherTimer != null)
-            {
-                _dispatcherTimer.Tick -= Timer_Tick;
-                _dispatcherTimer.Stop();
-            }
-
-            base.Close();
-            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(Editor.CurrentFile.FullPath);
-        }
-
-        #endregion
     }
 }

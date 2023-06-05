@@ -34,13 +34,13 @@ namespace OneWare.Vhdl
             if (IsActivated) return;
             IsActivated = true;
 
-            var vhdlPath = "/Users/hendrikmennen/VHDPlus/Packages/rusthdl/release/bin/vhdl_ls";
+            var vhdlPath = @"C:\Users\Hendrik\VHDPlus\Packages\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\bin\vhdl_ls.exe";
 
-            // if (!Tools.Exists(Global.Options.VhdlLspPath))
-            // {
-            //     ContainerLocator.Container.Resolve<ILogger>()?.Error("VHDL language server not found!", null, false);
-            //     return;
-            // }
+            if (!Tools.Exists(vhdlPath))
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error($"VHDL language server not found! {vhdlPath}");
+                return;
+            }
 
             var processStartInfo = new ProcessStartInfo
             {
