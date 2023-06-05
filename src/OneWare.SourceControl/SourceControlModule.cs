@@ -34,11 +34,11 @@ public class SourceControlModule : IModule
         var dockService = containerProvider.Resolve<IDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SourceControl")
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<SourceControlViewModel>())),
-            Icon = Application.Current?.FindResource("VsImageLib.Team16X") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Team16X") ,
         });
         
         if (containerProvider.Resolve<SourceControlViewModel>() is not { } vm) return;

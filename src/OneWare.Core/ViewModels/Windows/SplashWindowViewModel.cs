@@ -6,7 +6,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 
-public class SplashWindowViewModel : ViewModelBase
+public class SplashWindowViewModel
 {
     public IImage? SplashScreen { get; }
 

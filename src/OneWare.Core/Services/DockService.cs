@@ -63,7 +63,7 @@ namespace OneWare.Core.Services
             _mainDocumentDockViewModel = mainDocumentDockViewModel;
 
             windowService.RegisterMenuItem("MainWindow_MainMenu/View", 
-                new MenuItemViewModel()
+                new MenuItemModel("ResetLayout")
                 {
                     Header = "Reset Layout",
                     Command = new RelayCommand(ResetLayout),

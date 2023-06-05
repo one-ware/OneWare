@@ -1,11 +1,12 @@
-﻿using Prism.Ioc;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Prism.Ioc;
 
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    public class WaitCalculatorWindowViewModel : ViewModelBase
+    public class WaitCalculatorWindowViewModel : ObservableObject
     {
         private string _frequency = "";
         private int _frequencyUnit = 2;

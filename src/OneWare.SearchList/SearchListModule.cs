@@ -30,11 +30,11 @@ public class SearchListModule : IModule
     {
         containerProvider.Resolve<ISettingsService>().Register("SearchList_FilterMode", 0);
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
-            Icon = Application.Current?.FindResource("BoxIcons.RegularCode") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") ,
         });
     }
 }

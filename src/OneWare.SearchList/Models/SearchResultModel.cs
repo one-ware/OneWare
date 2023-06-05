@@ -1,9 +1,10 @@
-﻿using OneWare.Shared;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Shared;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.SearchList.Models
 {
-    public class SearchResultModel : ViewModelBase
+    public class SearchResultModel : ObservableObject
     {
         public SearchResultModel(string description, string descriptionL, string descriptionM, string descriptionR,
             string search, IProjectRoot? project, IFile? file = null, int line = 0, int startOffset = 0,

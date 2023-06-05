@@ -4,16 +4,13 @@ using OneWare.Shared;
 
 namespace OneWare.Core.Views.Windows
 {
-    public partial class LoginWindow : AdvancedWindow
+    public partial class LoginWindow : FlexibleWindow
     {
         public LoginWindow()
         {
             DataContext = new LoginWindowViewModel();
 
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
 

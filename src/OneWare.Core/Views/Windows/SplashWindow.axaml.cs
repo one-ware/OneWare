@@ -8,9 +8,6 @@ namespace OneWare.Core.Views.Windows
         public SplashWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
     }
 }

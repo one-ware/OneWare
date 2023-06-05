@@ -40,31 +40,31 @@ public class ProjectExplorerModule : IModule
             DataContext = vm,
         });
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel()
+        _windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("File")
         {
             Priority = -10,
             Header = "File"
         });
         
         _windowService.RegisterMenuItem("MainWindow_MainMenu/File", 
-            new MenuItemViewModel()
+            new MenuItemModel("New File")
             {
                 Header = "New File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
-                Icon = Application.Current?.FindResource("VsImageLib.NewFileCollection16X") as IImage
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X")
             },
-            new MenuItemViewModel()
+            new MenuItemModel("Open File")
             {
                 Header = "Open File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
-                Icon = Application.Current?.FindResource("VsImageLib.NewFileCollection16X") as IImage
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X") 
             });
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Project Explorer")
         {
             Header = "Project Explorer",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IProjectService>())),
-            Icon = Application.Current?.FindResource("BoxIcons.RegularCode") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") ,
         });
     }
 }

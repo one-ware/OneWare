@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 
 namespace OneWare.Shared.ViewModels
@@ -29,7 +30,7 @@ namespace OneWare.Shared.ViewModels
         Error
     }
 
-    public class MessageBoxViewModel : ViewModelBase
+    public class MessageBoxViewModel : FlexibleWindowViewModelBase
     {
         private string? _input;
         public string? Input
@@ -110,19 +111,19 @@ namespace OneWare.Shared.ViewModels
         public void No(Window window)
         {
             BoxStatus = MessageBoxStatus.No;
-            Close(window);
+            window.Close();
         }
 
         public void Yes(Window window)
         {
             BoxStatus = MessageBoxStatus.Yes;
-            Close(window);
+            window.Close();
         }
 
         public void Cancel(Window window)
         {
             BoxStatus = MessageBoxStatus.Canceled;
-            Close(window);
+            window.Close();
         }
         
         public async Task SelectPathAsync(Window window)

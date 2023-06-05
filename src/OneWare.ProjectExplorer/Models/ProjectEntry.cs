@@ -107,7 +107,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
 
-    public abstract IEnumerable<MenuItemViewModel> ContextMenu { get; }
+    public abstract IEnumerable<MenuItemModel> ContextMenu { get; }
     
     public bool IsValid()
     {

@@ -18,7 +18,6 @@ using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using OneWare.SourceControl.Models;
 using Prism.Ioc;
-using ReactiveUI;
 
 namespace OneWare.SourceControl.ViewModels
 {
@@ -111,7 +110,7 @@ namespace OneWare.SourceControl.ViewModels
         public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
         public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
 
-        public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
+        public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
         
         public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
             IDockService dockService, IWindowService windowService, IProjectService projectService)
@@ -288,15 +287,15 @@ namespace OneWare.SourceControl.ViewModels
                         {
                             //if (branch.IsRemote) continue;
 
-                            var menuItem = new MenuItemViewModel
+                            var menuItem = new MenuItemModel("BranchName")
                             {
                                 Header = branch.FriendlyName,
-                                Command = ReactiveCommand.Create<Branch>(ChangeBranch),
+                                Command = new RelayCommand<Branch>(ChangeBranch),
                                 CommandParameter = branch
                             };
                             if (branch.IsCurrentRepositoryHead)
                             {
-                                menuItem.Icon = Application.Current!.FindResource("PicolIcons.Accept") as IImage;
+                                menuItem.ImageIconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept") ;
                                 menuItem.IsEnabled = false;
                             }
                             
@@ -306,11 +305,11 @@ namespace OneWare.SourceControl.ViewModels
                         //if (AvailableBranchesMenu.Count > 0)
                         //        AvailableBranchesMenu.Add(new Separator());
 
-                        AvailableBranchesMenu.Add(new MenuItemViewModel
+                        AvailableBranchesMenu.Add(new MenuItemModel("NewBranch")
                         {
                             Header = "New Branch...",
-                            Icon = Application.Current!.FindResource("BoxIcons.RegularGitBranch") as IImage,
-                            Command = ReactiveCommand.Create(CreateBranchDialogAsync)
+                            ImageIconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch") ,
+                            Command = new AsyncRelayCommand(CreateBranchDialogAsync)
                         });
 
                         foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
@@ -380,9 +379,9 @@ namespace OneWare.SourceControl.ViewModels
 
         #region Branches & Remotes
 
-        public void ChangeBranch(Branch branch)
+        public void ChangeBranch(Branch? branch)
         {
-            if (CurrentRepo == null) return;
+            if (CurrentRepo == null || branch == null) return;
 
             try
             {

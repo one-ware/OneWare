@@ -38,7 +38,7 @@ namespace OneWare.Shared.LanguageService
         /// <summary>
         ///     Request Quick Menu
         /// </summary>
-        Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset);
+        Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset);
 
         Task<string?> GetHoverInfoAsync(int offset);
 
@@ -47,6 +47,6 @@ namespace OneWare.Shared.LanguageService
         /// <summary>
         ///     Request Quick Options
         /// </summary>
-        List<MenuItemViewModel>? GetTypeAssistanceQuickOptions();
+        List<MenuItemModel>? GetTypeAssistanceQuickOptions();
     }
 }

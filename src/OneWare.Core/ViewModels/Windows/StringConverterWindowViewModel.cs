@@ -1,10 +1,10 @@
 ﻿using AvaloniaEdit.Document;
-
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    public class StringConverterWindowViewModel : ViewModelBase
+    public class StringConverterWindowViewModel : ObservableObject
     {
         private TextDocument _resultText = new("");
         private TextDocument _sourceText = new("");

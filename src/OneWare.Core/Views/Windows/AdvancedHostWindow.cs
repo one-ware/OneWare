@@ -5,6 +5,7 @@ using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.ViewModels.DockViews;
+using OneWare.Shared;
 using OneWare.Shared.Services;
 
 namespace OneWare.Core.Views.Windows;
@@ -18,10 +19,6 @@ public class AdvancedHostWindow : HostWindow
 
     public AdvancedHostWindow(IDockService dockService)
     {
-#if DEBUG
-        this.AttachDevTools();
-#endif
-
         _dockService = dockService;
     }
 
@@ -34,9 +31,8 @@ public class AdvancedHostWindow : HostWindow
                 var docs = _dockService.OpenFiles
                     .Where(x => tool.VisibleDockables != null && tool.VisibleDockables.Contains(x.Value)).ToArray();
 
-                var unsaved = docs.Where(x => x.Value is EditViewModel { IsDirty: true })
+                var unsaved = docs.Where(x => x.Value is { IsDirty: true })
                     .Select(x => x.Value)
-                    .Cast<EditViewModel>()
                     .ToList();
 
                 if (unsaved.Any() && _cancelClose)
@@ -52,9 +48,9 @@ public class AdvancedHostWindow : HostWindow
             }
     }
 
-    private async Task TrySafeFilesAsync(List<EditViewModel> unsavedFiles)
+    private async Task TrySafeFilesAsync(List<IExtendedDocument> unsavedFiles)
     {
-        var close = await App.HandleUnsavedFilesAsync(unsavedFiles, this);
+        var close = await Tools.HandleUnsavedFilesAsync(unsavedFiles, this);
         if (close)
         {
             _cancelClose = false;

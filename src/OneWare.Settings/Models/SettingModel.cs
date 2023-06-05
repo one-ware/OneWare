@@ -90,11 +90,11 @@ namespace OneWare.Settings.Models
 
         public override async Task SelectPathAsync()
         {
-            var path = await Tools.SelectFileAsync(SettingsWindow.LastInstance, $"Select {Setting.Title}",
-                ContainerLocator.Container.Resolve<IPaths>().DocumentsDirectory, _filters?.ToArray());
+            //var path = await Tools.SelectFileAsync(SettingsView.LastInstance, $"Select {Setting.Title}",
+            //    ContainerLocator.Container.Resolve<IPaths>().DocumentsDirectory, _filters?.ToArray());
 
-            if (path == null) return;
-            Setting.Value = path;
+            //if (path == null) return;
+            //Setting.Value = path;
         }
     }
 

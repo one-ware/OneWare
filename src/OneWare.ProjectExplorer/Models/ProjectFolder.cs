@@ -167,11 +167,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         return null;
     }
 
-    public override IEnumerable<MenuItemViewModel> ContextMenu
+    public override IEnumerable<MenuItemModel> ContextMenu
     {
         get
         {
-            yield return new MenuItemViewModel()
+            yield return new MenuItemModel("Open")
             {
                 Header = "Open",
                 //Command = new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this))

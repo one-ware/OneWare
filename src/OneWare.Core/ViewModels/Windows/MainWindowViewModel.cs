@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
@@ -12,7 +13,7 @@ using ObservableExtensions = System.ObservableExtensions;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ObservableObject
     {
         public IDockService DockService { get; }
         public IActive Active { get; }
@@ -22,7 +23,7 @@ namespace OneWare.Core.ViewModels.Windows
 
         private readonly ISettingsService _settingsService;
 
-        public ObservableCollection<MenuItemViewModel> TypeAssistanceQuickOptions { get; } = new();
+        public ObservableCollection<IMenuItem> TypeAssistanceQuickOptions { get; } = new();
         
         private string _title;
 
@@ -41,7 +42,7 @@ namespace OneWare.Core.ViewModels.Windows
         
         public ObservableCollection<Control> RoundToolBarExtension { get; }
         public ObservableCollection<Control> BottomRightExtension { get; }
-        public ObservableCollection<MenuItemViewModel> MainMenu { get; }
+        public ObservableCollection<IMenuItem> MainMenu { get; }
         
 
         public MainWindowViewModel(IPaths paths, IActive active, IWindowService windowService, IDockService dockService,
@@ -92,8 +93,8 @@ namespace OneWare.Core.ViewModels.Windows
 
         public void OpenSettings()
         {
-            var settings = ContainerLocator.Container.Resolve<SettingsWindow>();
-            settings.DataContext = ContainerLocator.Container.Resolve<SettingsWindowViewModel>();
+            var settings = ContainerLocator.Container.Resolve<SettingsView>();
+            settings.DataContext = ContainerLocator.Container.Resolve<SettingsViewModel>();
             WindowService.Show(settings);
         }
         

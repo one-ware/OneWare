@@ -31,11 +31,11 @@ public class TerminalModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Terminal")
         {
             Header = "Terminal",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<TerminalViewModel>())),
-            Icon = Application.Current?.FindResource("BoxIcons.RegularCode") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode"),
         });
     }
 }

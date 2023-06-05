@@ -27,8 +27,7 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-//using OneWare.Terminal;
-using MessageBoxWindow = OneWare.Shared.Views.MessageBoxWindow;
+//using OneWare.Terminal
 
 namespace OneWare.Core
 {
@@ -52,7 +51,7 @@ namespace OneWare.Core
 
             //ViewModels - Windows
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
-            containerRegistry.RegisterSingleton<SettingsWindowViewModel>();
+            containerRegistry.RegisterSingleton<SettingsViewModel>();
 
             //ViewModels - Dock
             containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
@@ -108,12 +107,12 @@ namespace OneWare.Core
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel()
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Help")
             {
                 Header = "Help",
                 Priority = 1000
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel()
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("-"), new MenuItemModel("About")
             {
                 Header = $"About {paths.AppName}",
                 Command = new RelayCommand(() => windowService.Show(new InfoWindow()
@@ -269,8 +268,7 @@ namespace OneWare.Core
                     Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
                         $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog", () =>
                         {
-                            var clw = new ChangelogWindow();
-                            clw.Show();
+                            Container.Resolve<IWindowService>().Show(new ChangelogWindow());
                         }, App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 }
 
@@ -289,60 +287,16 @@ namespace OneWare.Core
         {
             e.Cancel = true;
 
-            var unsavedFiles = new List<EditViewModel>();
+            var unsavedFiles = new List<IExtendedDocument>();
 
             foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
-                if (tab.Value is EditViewModel {IsDirty: true} evm) unsavedFiles.Add(evm);
+                if (tab.Value is {IsDirty: true} evm) unsavedFiles.Add(evm);
 
-            var mainWin = this.MainWindow as Window;
+            var mainWin = MainWindow as Window;
             if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-            var shutdownReady = await HandleUnsavedFilesAsync(unsavedFiles, mainWin);
+            var shutdownReady = await Tools.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
             
             if (shutdownReady) await ShutdownAsync();
-        }
-
-        /// <summary>
-        ///     Asks to save all files and returns true if ready to close or false if operation was canceled
-        /// </summary>
-        public static async Task<bool> HandleUnsavedFilesAsync(List<EditViewModel> unsavedFiles, Window dialogOwner)
-        {
-            if (unsavedFiles.Count > 0)
-            {
-                var msg = new MessageBoxWindow("Warning", "Keep unsaved changes?");
-
-                await msg.ShowDialog(dialogOwner);
-
-                if (msg.BoxStatus == MessageBoxStatus.Yes)
-                {
-                    for (var i = 0; i < unsavedFiles.Count; i++)
-                        if (await unsavedFiles[i].SaveAsync())
-                        {
-                            unsavedFiles.RemoveAt(i);
-                            i--;
-                        }
-
-                    if (unsavedFiles.Count == 0) return true;
-
-                    var message = "Critical error saving some files: \n";
-                    foreach (var file in unsavedFiles) message += file.Title + ", ";
-                    message = message.Remove(message.Length - 2);
-                    var mssg = new MessageBoxWindow("Error", message + "\nQuit anyways?", MessageBoxMode.NoCancel);
-                    await mssg.ShowDialog(dialogOwner);
-
-                    if (mssg.BoxStatus == MessageBoxStatus.Yes) return true;
-                }
-                else if (msg.BoxStatus == MessageBoxStatus.No)
-                {
-                    //Quit and discard changes
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         private async Task ShutdownAsync()
@@ -376,7 +330,7 @@ namespace OneWare.Core
 
         private void Preferences_Click(object? sender, EventArgs e)
         {
-            Container.Resolve<IWindowService>().Show(Container.Resolve<SettingsWindow>());
+            Container.Resolve<IWindowService>().Show(Container.Resolve<SettingsView>());
         }
     }
 }

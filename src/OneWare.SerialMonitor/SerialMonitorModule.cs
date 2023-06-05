@@ -31,11 +31,11 @@ public class SerialMonitorModule : IModule
         
         dockService.RegisterLayoutExtension<ISerialMonitorService>(DockShowLocation.Bottom);
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SerialMonitor")
         {
             Header = "Serial Monitor",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<ISerialMonitorService>())),
-            Icon = Application.Current?.FindResource("BoxIcons.RegularCode") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") ,
         });
     }
 }

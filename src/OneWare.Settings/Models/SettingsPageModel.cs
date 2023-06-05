@@ -3,9 +3,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Settings.Models;
 
-namespace OneWare.Settings.ViewModels
+namespace OneWare.Settings.Models
 {
     public class SettingsPageModel : ObservableObject
     {

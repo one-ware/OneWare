@@ -1,4 +1,6 @@
 ﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Shared;
 using Prism.Ioc;
 using RestSharp;
 using OneWare.Shared.Services;
@@ -6,7 +8,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    internal class LoginWindowViewModel : ViewModelBase
+    internal class LoginWindowViewModel : FlexibleWindowViewModelBase
     {
         public string? Email { get; set; }
         public string? Password { get; set; }

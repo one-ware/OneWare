@@ -1,10 +1,11 @@
-﻿using DeviceId;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using DeviceId;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    internal class ActivateWindowViewModel : ViewModelBase
+    internal class ActivateWindowViewModel : ObservableObject
     {
         private ILogger _logger;
         private IPaths _paths;

@@ -57,6 +57,10 @@ namespace OneWare.Shared
 
         public AdvancedWindow()
         {
+#if DEBUG
+            this.AttachDevTools();
+#endif
+            
             if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 HorizontalAlignmentTitle = HorizontalAlignment.Center;

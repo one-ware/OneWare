@@ -6,7 +6,7 @@ using OneWare.Shared.Services;
 
 namespace OneWare.Settings.ViewModels
 {
-    public class SettingsWindowViewModel : ObservableObject
+    public class SettingsViewModel : ObservableObject
     {
         public List<SettingsPageModel> SettingPages { get; } = new();
 
@@ -40,7 +40,7 @@ namespace OneWare.Settings.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IPaths _paths;
 
-        public SettingsWindowViewModel(ISettingsService settingsService, IPaths paths)
+        public SettingsViewModel(ISettingsService settingsService, IPaths paths)
         {
             _settingsService = settingsService;
             _paths = paths;

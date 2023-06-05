@@ -189,9 +189,9 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public virtual async Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
+        public virtual async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
         {
-            var menuItems = new List<MenuItemViewModel>();
+            var menuItems = new List<MenuItemModel>();
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
             var location = CodeBox.Document.GetLocation(offset);
             var pos = CodeBox.Document.GetPositionFromOffset(offset);
@@ -209,18 +209,18 @@ namespace OneWare.Shared.LanguageService
 
                 if (codeactions is not null && !IsClosed)
                 {
-                    var quickfixes = new List<MenuItemViewModel>();
+                    var quickfixes = new List<IMenuItem>();
                     foreach (var ca in codeactions)
                     {
                         if (ca.IsCodeAction && ca.CodeAction != null)
                         {
-                            if(ca.CodeAction.Command != null) quickfixes.Add(new MenuItemViewModel
+                            if(ca.CodeAction.Command != null) quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new RelayCommand<Command>(ExecuteCommand),
                                 CommandParameter = ca.CodeAction.Command
                             });
-                            else if(ca.CodeAction.Edit != null) quickfixes.Add(new MenuItemViewModel
+                            else if(ca.CodeAction.Edit != null) quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
@@ -230,7 +230,7 @@ namespace OneWare.Shared.LanguageService
                     }
 
                     if (quickfixes.Count > 0)
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("Quick fix")
                         {
                             Header = "Quick fix...",
                             Items = quickfixes
@@ -241,12 +241,12 @@ namespace OneWare.Shared.LanguageService
             //Refactorings
             var prepareRefactor = await Service.PrepareRenameAsync(Editor.CurrentFile.FullPath, pos);
             if (prepareRefactor != null)
-                menuItems.Add(new MenuItemViewModel
+                menuItems.Add(new MenuItemModel("Rename")
                 {
                     Header = "Rename...",
                     Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
                     CommandParameter = prepareRefactor,
-                    Icon = Application.Current?.FindResource("VsImageLib.Rename16X") as IImage
+                    ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X") 
                 });
 
             var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
@@ -254,14 +254,14 @@ namespace OneWare.Shared.LanguageService
             if (definition != null && !IsClosed)
                 foreach (var i in definition)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDefinition")
                         {
                             Header = "Go to Definition",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDefinition")
                         {
                             Header = "Go to Definition",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -272,14 +272,14 @@ namespace OneWare.Shared.LanguageService
             if (declaration != null && !IsClosed)
                 foreach (var i in declaration)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDeclaration")
                         {
                             Header = "Go to Declaration",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDeclaration")
                         {
                             Header = "Go to Declaration",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -290,14 +290,14 @@ namespace OneWare.Shared.LanguageService
             if (implementation != null && !IsClosed)
                 foreach (var i in implementation)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToImplementation")
                         {
                             Header = "Go to Implementation",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToImplementation")
                         {
                             Header = "Go to Implentation",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -308,14 +308,14 @@ namespace OneWare.Shared.LanguageService
             if (typeDefinition != null && !IsClosed)
                 foreach (var i in typeDefinition)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDefinition")
                         {
                             Header = "Go to Type Definition",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemViewModel
+                        menuItems.Add(new MenuItemModel("GoToDefinition")
                         {
                             Header = "Go to Type Definition",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -609,15 +609,15 @@ namespace OneWare.Shared.LanguageService
             return Task.FromResult(new List<CompletionData>());
         }
 
-        public virtual List<MenuItemViewModel>? GetTypeAssistanceQuickOptions()
+        public virtual List<MenuItemModel>? GetTypeAssistanceQuickOptions()
         {
-            return new List<MenuItemViewModel>
+            return new List<MenuItemModel>
             {
-                new()
+                new("RestartLs")
                 {
                     Header = "Restart Language Server",
                     Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                    Icon = Application.Current?.FindResource("VsImageLib.RefreshGrey16X") as IImage
+                    ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.RefreshGrey16X") 
                 }
             };
         }

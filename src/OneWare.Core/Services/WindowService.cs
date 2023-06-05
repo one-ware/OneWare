@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.Views.Windows;
+using OneWare.Shared;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -15,7 +16,7 @@ namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
-    private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
+    private readonly Dictionary<string, ObservableCollection<IMenuItem>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<Control>> _uiExtensions = new();
     
     public void RegisterUiExtension(string key, Control control)
@@ -30,24 +31,24 @@ public class WindowService : IWindowService
         return _uiExtensions[key];
     }
 
-    public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems)
+    public void RegisterMenuItem(string key, params IMenuItem[] menuItems)
     {
         var parts = key.Split('/');
-        _menuItems.TryAdd(parts[0], new ObservableCollection<MenuItemViewModel>());
-        IList<MenuItemViewModel> activeCollection = _menuItems[parts[0]];
+        _menuItems.TryAdd(parts[0], new ObservableCollection<IMenuItem>());
+        IList<IMenuItem> activeCollection = _menuItems[parts[0]];
         
         if(parts.Length > 1)
             foreach (var part in parts.Skip(1))
             {
-                if (activeCollection.FirstOrDefault(x => x.Header == part) is { } mi)
+                if (activeCollection.FirstOrDefault(x => x.Part == part) is MenuItemModel mi)
                 {
-                    activeCollection = mi.Items ?? new ObservableCollection<MenuItemViewModel>();
+                    activeCollection = mi.Items ?? new ObservableCollection<IMenuItem>();
                     mi.Items = activeCollection;
                 }
                 else
                 {
-                    var newItems = new ObservableCollection<MenuItemViewModel>();
-                    var newPart = new MenuItemViewModel()
+                    var newItems = new ObservableCollection<IMenuItem>();
+                    var newPart = new MenuItemModel(part)
                     {
                         Header = part,
                         Items = newItems
@@ -73,7 +74,7 @@ public class WindowService : IWindowService
         {
             var insert = false;
             
-            if (activeCollection.FirstOrDefault(x => x.Header == a.Header) is {} duplicate)
+            if (activeCollection.FirstOrDefault(x => x.Part == a.Part) is {} duplicate)
             {
                 activeCollection.Remove(duplicate);
             }
@@ -91,13 +92,13 @@ public class WindowService : IWindowService
         }
     }
 
-    public ObservableCollection<MenuItemViewModel> GetMenuItems(string key)
+    public ObservableCollection<IMenuItem> GetMenuItems(string key)
     {
-        _menuItems.TryAdd(key, new ObservableCollection<MenuItemViewModel>());
+        _menuItems.TryAdd(key, new ObservableCollection<IMenuItem>());
         return _menuItems[key];
     }
 
-    public void Show(Window window, Window? owner = null)
+    public void Show(FlexibleWindow window, Window? owner = null)
     {
         Dispatcher.UIThread.Post(() =>
         {
@@ -106,12 +107,12 @@ public class WindowService : IWindowService
         });
     }
 
-    public Task ShowDialogAsync(Window window, Window? owner)
+    public Task ShowDialogAsync(FlexibleWindow window, Window? owner)
     {
         return Dispatcher.UIThread.InvokeAsync(() =>
         {
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
-            return window.ShowDialog(owner);
+            return window.ShowDialogAsync(owner);
         });
     }
     

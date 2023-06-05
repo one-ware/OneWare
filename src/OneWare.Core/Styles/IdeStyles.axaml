@@ -129,7 +129,7 @@
         <Setter Property="Padding" Value="5 0" />
     </Style>
 
-    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemViewModel">
+    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -139,14 +139,18 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <Image Source="{Binding ImageIcon}" />
                 </Template>
             </Setter.Value>
         </Setter>
     </Style>
+    
+    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemModel">
+        
+    </Style>
 
     <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
-           x:DataType="sharedModels:MenuItemViewModel">
+           x:DataType="sharedModels:MenuItemModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -155,15 +159,9 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <Image Source="{Binding ImageIcon}" />
                 </Template>
             </Setter.Value>
         </Setter>
-    </Style>
-
-    <Style Selector="MenuItem > Separator">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
-        <Setter Property="Margin" Value="29,1,0,1" />
-        <Setter Property="Height" Value="1" />
     </Style>
 </Styles>

@@ -9,7 +9,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Views
 {
-    public partial class MessageBoxWindow : AdvancedWindow
+    public partial class MessageBoxWindow : FlexibleWindow
     {
         public MessageBoxWindow()
         {
@@ -51,7 +51,7 @@ namespace OneWare.Shared.Views
                     if (i.Key == Key.Enter && DataContext is MessageBoxViewModel mb)
                     {
                         mb.BoxStatus = MessageBoxStatus.Yes;
-                        Close();
+                        Close(); 
                     }
                 };
 

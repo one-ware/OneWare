@@ -1,11 +1,12 @@
 ﻿using System.Runtime.InteropServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Data;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {
-    public class InfoWindowViewModel : ViewModelBase
+    public class InfoWindowViewModel : FlexibleWindowViewModelBase
     {
         private readonly IPaths _paths;
 

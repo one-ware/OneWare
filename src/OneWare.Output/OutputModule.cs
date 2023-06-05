@@ -36,11 +36,11 @@ public class OutputModule : IModule
 
         _settingsService.Register("Output_Autoscroll", true);
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel()
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Output")
         {
             Header = "Output",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
-            Icon = Application.Current?.FindResource("BoxIcons.RegularCode") as IImage,
+            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") as System.IObservable<IImage>,
         });
     }
 }

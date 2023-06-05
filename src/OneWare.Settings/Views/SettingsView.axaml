@@ -1,22 +1,20 @@
-﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                       xmlns:avconverters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
                        xmlns:models="clr-namespace:OneWare.Settings.Models"
                        Width="550" Height="400"
                        mc:Ignorable="d"
-                       x:Class="OneWare.Settings.Views.SettingsWindow"
+                       x:Class="OneWare.Settings.Views.SettingsView"
                        CustomIcon="{DynamicResource Material.SettingsOutline}"
                        Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                        Title="Settings" Name="SettingsWindowView"
-                       x:CompileBindings="True" x:DataType="viewModels:SettingsWindowViewModel"
-                       ExtendClientAreaToDecorationsHint="True"
+                       x:CompileBindings="True" x:DataType="viewModels:SettingsViewModel"
                        WindowStartupLocation="CenterOwner">
 
-    <shared:AdvancedWindow.Styles>
+    <shared:FlexibleWindow.Styles>
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -33,7 +31,7 @@
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-    </shared:AdvancedWindow.Styles>
+    </shared:FlexibleWindow.Styles>
     
     <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
         <Grid>
@@ -53,7 +51,7 @@
                           ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"
                           SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
                     <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="viewModels:SettingsPageModel"
+                        <TreeDataTemplate DataType="models:SettingsPageModel"
                                           ItemsSource="{Binding SubCategoryModels}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -207,4 +205,4 @@
         </Grid>
     </Border>
 
-</shared:AdvancedWindow>
+</shared:FlexibleWindow>

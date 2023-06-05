@@ -23,10 +23,6 @@ namespace OneWare.Core.Views.Windows
         public MainWindow()
         {
             InitializeComponent();
-            
-#if DEBUG
-            this.AttachDevTools();
-#endif
 
             NotificationManager = new WindowNotificationManager(this)
             {
@@ -116,14 +112,14 @@ namespace OneWare.Core.Views.Windows
         private void ConvertMenuToNativeMenu(IEnumerable<object> m, NativeMenu nm)
         {
             foreach (var item in m)
-                if (item is MenuItemViewModel mi)
+                if (item is MenuItemModel mi)
                 {
                     var nmi = new NativeMenuItem(mi.Header as string ?? "")
                     {
                         Gesture = mi.Hotkey
                     };
 
-                    if (mi.Icon is CheckBox cb)
+                    if (false) //TODO
                     {
                         nmi.ToggleType = NativeMenuItemToggleType.CheckBox;
                         var obsvr = Observer.Create<bool?>(
@@ -133,11 +129,11 @@ namespace OneWare.Core.Views.Windows
 
                         nmi.IsChecked = true;
 
-                        cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
+                        //cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
                     }
-                    else if (mi.Icon is Image { Source: Bitmap btm })
+                    else if (mi.ImageIcon is IObservable<Bitmap> btm)
                     {
-                        nmi.Icon = btm;
+                        nmi.Bind(NativeMenuItem.IconProperty, btm);
                     }
 
                     nmi.Bind(NativeMenuItem.CommandProperty, mi.WhenValueChanged(x => x.Command));

@@ -1,10 +1,12 @@
 ﻿using System.Windows.Input;
 using Avalonia.Input;
+using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Models
 {
-    public class MenuItemViewModel : ViewModelBase
+    public class MenuItemModel : ObservableObject, IMenuItem
     {
         public int Priority { get; set; }
         
@@ -36,11 +38,21 @@ namespace OneWare.Shared.Models
             set => SetProperty(ref _header, value);
         }
 
-        private object? _icon;
-        public object? Icon
+        private IImage? _imageIcon;
+        public IImage? ImageIcon
         {
-            get => _icon;
-            set => SetProperty(ref _icon, value);
+            get => _imageIcon;
+            set => SetProperty(ref _imageIcon, value);
+        }
+
+        private IDisposable? _subscription;
+        public IObservable<object?>? ImageIconObservable
+        {
+            set
+            {
+                _subscription?.Dispose();
+                _subscription = value?.Subscribe(x => ImageIcon = x as IImage);
+            }
         }
 
         private KeyGesture? _hotkey;
@@ -50,11 +62,18 @@ namespace OneWare.Shared.Models
             set => SetProperty(ref _hotkey, value);
         }
         
-        private IList<MenuItemViewModel>? _items;
-        public IList<MenuItemViewModel>? Items
+        private IList<IMenuItem>? _items;
+        public IList<IMenuItem>? Items
         {
             get => _items;
             set => SetProperty(ref _items, value);
+        }
+        
+        public string Part { get; }
+
+        public MenuItemModel(string part)
+        {
+            Part = part;
         }
     }
 }

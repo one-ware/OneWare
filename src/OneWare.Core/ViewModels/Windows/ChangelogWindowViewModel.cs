@@ -1,8 +1,10 @@
-﻿using OneWare.Shared.ViewModels;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Shared;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 
-public class ChangelogWindowViewModel : ViewModelBase
+public class ChangelogWindowViewModel : FlexibleWindowViewModelBase
 {
     private bool _isLoading = false;
     

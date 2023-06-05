@@ -1,4 +1,4 @@
-﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,7 +15,6 @@
                         Title="String converter"
                         Icon="avares://OneWare.Core/Assets/Images/Icons/StringConv_White.png"
                         CustomIcon="{DynamicResource StringConverterIcon}"
-                        ExtendClientAreaToDecorationsHint="True"
                         WindowStartupLocation="CenterOwner" x:DataType="windows1:StringConverterWindowViewModel">
 
     <!--
@@ -108,4 +107,4 @@
 
         </Grid>
     </Grid>
-</shared:AdvancedWindow>
+</shared:FlexibleWindow>
