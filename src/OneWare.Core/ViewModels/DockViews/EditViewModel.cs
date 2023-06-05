@@ -149,6 +149,8 @@ namespace OneWare.Core.ViewModels.DockViews
                 if(o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
             };
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+
+            _dockService.OpenFiles.TryAdd(CurrentFile, this);
             
             async void OnLoaded()
             {

@@ -106,7 +106,7 @@ namespace OneWare.Core.Services
             if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false) 
                 _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
 
-            OpenFiles.Add(pf, viewModel);
+            OpenFiles.TryAdd(pf, viewModel);
             return viewModel;
         }
 
@@ -143,12 +143,6 @@ namespace OneWare.Core.Services
         public override void InitLayout(IDockable layout)
         {
             OpenFiles.Clear();
-            
-            var docs = SearchView<IExtendedDocument>(layout);
-            foreach (var doc in docs)
-            {
-                //OpenFiles.TryAdd(doc.CurrentFile, doc);
-            }
 
             ContextLocator = new Dictionary<string, Func<object?>>();
             HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
