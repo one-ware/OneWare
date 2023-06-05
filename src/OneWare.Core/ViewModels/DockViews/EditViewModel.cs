@@ -33,8 +33,13 @@ namespace OneWare.Core.ViewModels.DockViews
 
         [DataMember] public string FullPath { get; init; }
 
-        public IFile? CurrentFile { get; private set; }
-
+        private IFile? _currentFile;
+        public IFile? CurrentFile
+        {
+            get => _currentFile;
+            set => SetProperty(ref _currentFile, value);
+        }
+        
         public ExtendedTextEditor Editor { get; } = new();
 
         public ITypeAssistance? TypeAssistance { get; private set; }
@@ -137,7 +142,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
-            Title = CurrentFile.Header;
+            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
             
             _errorService.ErrorRefresh += (sender, o) =>
             {

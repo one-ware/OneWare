@@ -19,27 +19,28 @@ namespace OneWare.Shared.Views
         public MessageBoxWindow(string title, string message, MessageBoxMode mode = MessageBoxMode.AllButtons, MessageBoxIcon defaultIcon = MessageBoxIcon.Warning) : this()
         {
             DataContext = new MessageBoxViewModel(title, message, mode);
-            
+
+            if (Application.Current is null) throw new NullReferenceException(nameof(Application.Current));
             switch (defaultIcon) //Warning is default icon defined in xaml
             {
                 case MessageBoxIcon.Info:
                     var infoIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
                         "avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png", typeof(Bitmap), null, null);
                     if(infoIcon != null) Icon = new WindowIcon(infoIcon);
-                    CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusInformation16X");
+                    CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,"VsImageLib.StatusInformation16X");
                     break;
 
                 case MessageBoxIcon.Error:
                     var errorIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
                         "avares://OneWare.Core/Assets/Images/Icons/Error_Icon.png", typeof(Bitmap), null, null);
                     if(errorIcon != null) Icon = new WindowIcon(errorIcon);
-                    CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusCriticalError16X");
+                    CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,"VsImageLib.StatusCriticalError16X");
                     break;
                 default:
                     var warningIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
                         "avares://OneWare.Core/Assets/Images/Icons/Warning_Icon.png", typeof(Bitmap), null, null);
                     if(warningIcon != null) Icon = new WindowIcon(warningIcon);
-                    CustomIcon = (IImage?)Application.Current!.FindResource("VsImageLib.StatusWarning16X");
+                    CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,"VsImageLib.StatusWarning16X");
                     break;
             }
 

@@ -10,25 +10,28 @@ namespace OneWare.Shared.Converters
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string s && Application.Current != null)
-                return s switch
+            {
+                if (!s.StartsWith(".")) s = Path.GetExtension(s);
+                return s.ToLower() switch
                 {
-                    ".ghdp" => Application.Current.FindResource("GhdpFileIcon"),
-                    ".cpp" => Application.Current.FindResource("VsImageLib.Cpp16X"),
-                    ".c" => Application.Current.FindResource("VsImageLib.C16X"),
-                    ".h" => Application.Current.FindResource("VsImageLib.HeaderFile16X"),
-                    ".hpp" => Application.Current.FindResource("VsImageLib.HeaderFile16X"),
-                    ".cs" => Application.Current.FindResource("VsImageLib.Cs16X"),
-                    ".vhdp" => Application.Current.FindResource("VhdpFileIcon"),
-                    ".vhd" => Application.Current.FindResource("VhdlFileIcon"),
-                    ".vhdl" => Application.Current.FindResource("VhdlFileIcon"),
-                    ".v" => Application.Current.FindResource("VerilogFileIcon"),
-                    ".sv" => Application.Current.FindResource("SystemVerilogFileIcon"),
-                    ".py" => Application.Current.FindResource("FontAwesome.PythonBrands"),
-                    ".qsys" => Application.Current.FindResource("QsysFileIcon"),
-                    ".ino" => Application.Current.FindResource("SimpleIcons.Arduino"),
-                    ".vcd" => Application.Current.FindResource("Material.Pulse"),
-                    _ => Application.Current.FindResource("VsImageLib.File16X")
+                    ".ghdp" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "GhdpFileIcon"),
+                    ".cpp" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.Cpp16X"),
+                    ".c" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.C16X"),
+                    ".h" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.HeaderFile16X"),
+                    ".hpp" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.HeaderFile16X"),
+                    ".cs" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.Cs16X"),
+                    ".vhdp" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VhdpFileIcon"),
+                    ".vhd" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VhdlFileIcon"),
+                    ".vhdl" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VhdlFileIcon"),
+                    ".v" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VerilogFileIcon"),
+                    ".sv" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "SystemVerilogFileIcon"),
+                    ".py" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "FontAwesome.PythonBrands"),
+                    ".qsys" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "QsysFileIcon"),
+                    ".ino" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "SimpleIcons.Arduino"),
+                    ".vcd" => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "Material.Pulse"),
+                    _ => Application.Current.FindResource(Application.Current.RequestedThemeVariant, "VsImageLib.File16X")
                 };
+            }
             return null;
         }
 

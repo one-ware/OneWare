@@ -144,7 +144,7 @@ namespace OneWare.Core.Services
                     }
                     catch (Exception e)
                     {
-                        ContainerLocator.Container.Resolve<ILogger>()?.Error("Backup failed for " + doc.Value.Title, e);
+                        ContainerLocator.Container.Resolve<ILogger>()?.Error($"Backup failed for {doc.Value.Title}:\n{e.Message}", e);
                     }
             }
 

@@ -6,7 +6,7 @@
              xmlns:models="clr-namespace:OneWare.ProjectExplorer.Models"
              xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="30"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerMainWindowToolBarExtension" x:DataType="viewModels:ProjectExplorerViewModel">
     
     <ComboBox Width="150" IsEnabled="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Idle}}"

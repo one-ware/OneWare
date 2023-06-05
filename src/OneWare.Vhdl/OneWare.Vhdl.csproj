@@ -9,8 +9,6 @@
 
     <ItemGroup>
       <None Remove="Assets\vhdl.xshd" />
-      <Content Include="Assets\vhdl.xshd">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+      <AvaloniaResource Include="Assets\vhdl.xshd" />
     </ItemGroup>
 </Project>

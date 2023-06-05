@@ -2,6 +2,7 @@
 
 public class ExternalFile : IFile
 {
+    public string Extension => Path.GetExtension(FullPath);
     public string FullPath { get; set; }
     public string Header => Path.GetFileName(FullPath);
     public bool LoadingFailed { get; set; }

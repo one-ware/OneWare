@@ -10,8 +10,6 @@ public interface IPaths
     public string LayoutDirectory { get; }
     public string PackagesDirectory { get; }
     public string LibrariesDirectory { get; }
-    public string CustomFpgaDirectory { get; }
-    public string OfficialFpgaDirectory { get; }
     public string SettingsPath { get; }
     public string DocumentsDirectory { get; }
     public string CrashReportsDirectory { get; }

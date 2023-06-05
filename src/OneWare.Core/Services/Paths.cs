@@ -20,7 +20,6 @@ public class Paths : IPaths
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string LibrariesDirectory => Path.Combine(DocumentsDirectory, "Libraries");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
-    public string OfficialFpgaDirectory => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "xml", "fpga");
     public string CustomFpgaDirectory => Path.Combine(DocumentsDirectory, "CustomFPGAs");
     public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
     

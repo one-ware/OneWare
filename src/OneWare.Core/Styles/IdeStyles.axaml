@@ -129,10 +129,6 @@
         <Setter Property="Padding" Value="5 0" />
     </Style>
 
-    <Style Selector="Border.RoundToolBar TextBlock">
-        <Setter Property="Height" Value="18" />
-    </Style>
-
     <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />

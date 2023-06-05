@@ -1,4 +1,5 @@
 ﻿using System.Xml;
+using Avalonia.Platform;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using OneWare.Shared;
@@ -30,16 +31,16 @@ internal class LanguageManager : ILanguageManager
             _highlightingDefinitions.TryGetValue(fileExtension, out var path);
 
             if (path == null) return null;
-
+            
             try
             {
-                using var s = new StreamReader(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+                using var s = new StreamReader(AssetLoader.Open(new Uri(path)));
                 using var reader = new XmlTextReader(s);
                 return HighlightingLoader.Load(reader, HighlightingManager.Instance);
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>().Error($"{e.Message}\n{path}", e);
                 return null;
             }
         }

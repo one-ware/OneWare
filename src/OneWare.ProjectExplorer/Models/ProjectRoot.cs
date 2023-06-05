@@ -1,6 +1,11 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Prism.Ioc;
 using OneWare.Shared;
+using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectExplorer.Models;
@@ -17,6 +22,8 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
+        
+        Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
     }
 
     internal void RegisterEntry(IProjectEntry entry)

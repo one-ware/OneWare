@@ -64,11 +64,10 @@
                 <ContentControl Content="{Binding}">
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="shared:IEditor">
-                            <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding CurrentFile.FullPath}">
+                            <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
                                 <Image
-                                    IsVisible="{Binding CurrentFile, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
                                     Height="17" Width="17"
-                                    Source="{Binding CurrentFile.Extension, Converter={x:Static sharedConverters:SharedConverters.FileExtensionIconConverter}}"
+                                    Source="{Binding FullPath, Converter={x:Static sharedConverters:SharedConverters.FileExtensionIconConverter}}"
                                     VerticalAlignment="Center" />
                                 <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center"/>
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />

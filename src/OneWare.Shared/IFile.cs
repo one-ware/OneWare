@@ -2,6 +2,6 @@
 
 public interface IFile : IHasPath
 {
-    public string Extension => Path.GetExtension(FullPath);
+    public string Extension { get; }
     public DateTime LastSaveTime { get; set; }
 }

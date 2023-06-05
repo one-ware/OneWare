@@ -9,12 +9,7 @@
     <Import Project="..\..\build\props\RestSharp.props" />
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\*" />
-        <AvaloniaResource Include="Assets\Fonts\*" />
-        <AvaloniaResource Include="Assets\Images\*" />
-        <AvaloniaResource Include="Assets\Images\Icons\*" />
-        <AvaloniaResource Include="Assets\Images\Icons\CodeCompletion\*" />
-        <AvaloniaResource Include="Assets\Dock\*" />
+        <AvaloniaResource Include="Assets\**\*.*" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,12 +24,6 @@
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="Assets\**\*.*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
     </ItemGroup>
     
 </Project>
