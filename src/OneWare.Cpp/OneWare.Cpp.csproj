@@ -6,4 +6,9 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\CPP-Mode.xshd" />
+      <AvaloniaResource Include="Assets\CPP-Mode.xshd" />
+    </ItemGroup>
 </Project>
