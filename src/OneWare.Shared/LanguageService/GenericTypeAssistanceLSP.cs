@@ -1,6 +1,6 @@
 ﻿namespace OneWare.Shared.LanguageService
 {
-    internal class GenericTypeAssistanceLsp : TypeAssistanceLsp, ITypeAssistance
+    internal class GenericTypeAssistanceLsp : TypeAssistanceLsp
     {
         public GenericTypeAssistanceLsp(IEditor editor, GenericLanguageService languageService) : base(editor, languageService)
         {

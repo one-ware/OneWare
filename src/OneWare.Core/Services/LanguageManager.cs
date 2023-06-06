@@ -63,6 +63,7 @@ internal class LanguageManager : ILanguageManager
             if (_workspaceServerTypes.TryGetValue(file.Extension, out var type2))
             {
                 var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ?? "";
+                
                 if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
                 if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not
                     ILanguageService newInstance)

@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Net.WebSockets;
+using Nerdbank.Streams;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
@@ -10,64 +12,21 @@ using IFile = OneWare.Shared.IFile;
 
 namespace OneWare.Vhdl
 {
-    public class LanguageServiceVhdl : LanguageServiceBase, ILanguageService
+    public class LanguageServiceVhdl : LanguageService
     {
-        public LanguageServiceVhdl(string workspace) : base ("VHDL LS", workspace)
+        public LanguageServiceVhdl(string workspace) : base ("VHDL LS", new Uri(""), workspace)
         {
-            // Global.Options.WhenAnyValue(x => x.VhdlLspActivated).Subscribe(x =>
-            // {
-            //     //Check if file is open
-            //     var anyFile = MainDock.OpenDocuments.Any(
-            //         keyValuePair => SupportedFileTypes.Contains(keyValuePair.Key.Type) && Path.GetFullPath(keyValuePair.Key.FullPath).StartsWith(Path.GetFullPath(workSpace)));
-            //     if (anyFile && x && !IsActivated) _ = ActivateAsync();
-            //     else if (!x && IsActivated) _ = DeactivateAsync();
-            // });
-            //TextMateLanguage = new Language()
+            
         }
         
-        public ITypeAssistance GetTypeAssistance(IEditor editor)
+        public LanguageServiceVhdl(string workspace, string executablePath) : base ("VHDL LS", executablePath, null, workspace)
+        {
+            
+        }
+        
+        public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
             return new TypeAssistanceVhdl(editor, this);
-        }
-
-        public override async Task ActivateAsync()
-        {
-            if (IsActivated) return;
-            IsActivated = true;
-
-            var vhdlPath = @"C:\Users\Hendrik\VHDPlus\Packages\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\bin\vhdl_ls.exe";
-
-            if (!Tools.Exists(vhdlPath))
-            {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error($"VHDL language server not found! {vhdlPath}");
-                return;
-            }
-
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = vhdlPath,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                UseShellExecute = false
-            };
-
-            var process = new Process
-            {
-                StartInfo = processStartInfo
-            };
-
-            try
-            {
-                process.Start();
-
-                await InitAsync(process);
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            }
         }
 
         public override IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)

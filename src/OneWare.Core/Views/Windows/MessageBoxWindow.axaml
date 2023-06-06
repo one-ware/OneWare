@@ -5,7 +5,8 @@
                         mc:Ignorable="d"
                         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                         xmlns:viewModels="clr-namespace:OneWare.Shared.ViewModels"
-                        x:Class="OneWare.Shared.Views.MessageBoxWindow"
+                        xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        x:Class="OneWare.Core.Views.Windows.MessageBoxWindow"
                         SizeToContent="Height"
                         MinHeight="100"
                         PrefWidth="350"
@@ -13,7 +14,7 @@
                         Foreground="{DynamicResource ThemeForegroundBrush}"
                         WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
                         TransparencyLevelHint="AcrylicBlur"
-                        Name="MessageWindow" x:CompileBindings="True" x:DataType="viewModels:MessageBoxViewModel"
+                        Name="MessageWindow" x:CompileBindings="True" x:DataType="windows:MessageBoxViewModel"
                         WindowStartupLocation="CenterOwner">
 
     <DockPanel Margin="4" LastChildFill="False">

@@ -3,16 +3,20 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
+using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Shared;
+using OneWare.Shared.Enums;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using OneWare.Shared.Views;
+using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 
 namespace OneWare.Core.Services;
 
@@ -189,5 +193,32 @@ public class WindowService : IWindowService
         var model = new CustomNotificationViewModel(title, message, buttonText, buttonAction, icon);
 
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(model);
+    }
+
+    public Window CreateHost(FlexibleWindow flexible)
+    {
+        var host = new AdvancedWindow();
+            
+        host.Bind(AdvancedWindow.ShowTitleProperty, flexible.GetObservable(FlexibleWindow.ShowTitleProperty));
+        host.Bind(AdvancedWindow.CustomIconProperty, flexible.GetObservable(FlexibleWindow.CustomIconProperty));
+        host.Bind(AdvancedWindow.TitleBarContentProperty, flexible.GetObservable(FlexibleWindow.TitleBarContentProperty));
+        host.Bind(AdvancedWindow.BottomContentProperty, flexible.GetObservable(FlexibleWindow.BottomContentProperty));
+            
+        host.Bind(Window.WindowStartupLocationProperty, flexible.GetObservable(FlexibleWindow.WindowStartupLocationProperty));
+        host.Bind(Window.IconProperty, flexible.GetObservable(FlexibleWindow.IconProperty));
+        host.Bind(Window.TitleProperty, flexible.GetObservable(FlexibleWindow.TitleProperty));
+        host.Bind(Window.SizeToContentProperty, flexible.GetObservable(FlexibleWindow.SizeToContentProperty));
+            
+        host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
+        host.Bind(TemplatedControl.BackgroundProperty, flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty));
+
+        host.Height = flexible.PrefHeight;
+        host.Width = flexible.PrefWidth;
+
+        host.ExtendClientAreaToDecorationsHint = true;
+        
+        host.Content = flexible;
+
+        return host;
     }
 }

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 
-namespace OneWare.Shared
+namespace OneWare.Core.Views.Windows
 {
     public class AdvancedWindow : Window
     {

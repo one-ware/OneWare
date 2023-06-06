@@ -27,7 +27,6 @@ namespace OneWare.Shared.LanguageService
         public string Name { get; }
         public string? Workspace { get; }
         public bool IsLanguageServiceReady { get; private set; }
-        private Process? Process { get; set; }
         public event EventHandler? LanguageServiceActivated;
         public event EventHandler? LanguageServiceDeactivated;
 
@@ -39,7 +38,7 @@ namespace OneWare.Shared.LanguageService
 
         public abstract Task ActivateAsync();
 
-        public async Task DeactivateAsync()
+        public virtual async Task DeactivateAsync()
         {
             IsActivated = false;
             await Dispatcher.UIThread.InvokeAsync(async () =>
@@ -48,14 +47,6 @@ namespace OneWare.Shared.LanguageService
                 try
                 {
                     Client.SendExit();
-
-                    if (Process != null)
-                    {
-                        var exited = await Task.Run(() => { return Process.WaitForExit(1000); });
-
-                        if (!exited && Process != null && Process.IsRunning()) Process.Kill();
-                        Process?.Dispose();
-                    }
 
                     await Task.Delay(100);
                     Client = null;
@@ -80,15 +71,13 @@ namespace OneWare.Shared.LanguageService
         /// <summary>
         ///     After Activate
         /// </summary>
-        protected async Task InitAsync(Process process, Action<LanguageClientOptions>? customOptions = null)
+        protected async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
         {
-            Process = process;
-
             Client = LanguageClient.PreInit(
                 options =>
                 {
                     options.WithClientInfo(new ClientInfo { Name = "OneWare.Core" });
-                    options.WithInput(process.StandardOutput.BaseStream).WithOutput(process.StandardInput.BaseStream);
+                    options.WithInput(input).WithOutput(output);
                     if (Workspace != null)
                     {
                         options.WithRootPath(Workspace);

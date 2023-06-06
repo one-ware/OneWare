@@ -1,15 +1,11 @@
-﻿using System.Reactive.Linq;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Primitives;
 using Avalonia.Media;
-using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using static System.Double;
 
 namespace OneWare.Shared
 {
@@ -127,13 +123,14 @@ namespace OneWare.Shared
         
         public event EventHandler? Closed;
         
-        public AdvancedWindow? Host { get; private set; }
+        public Window? Host { get; private set; }
         
         public void Show(Window? owner)
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                Host = CreateHost();
+                Host = ContainerLocator.Container.Resolve<IWindowService>().CreateHost(this);
+                Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
                 if (owner != null) Host.Show(owner);
                 else Host.Show();
             }
@@ -149,7 +146,8 @@ namespace OneWare.Shared
         public Task ShowDialogAsync(Window owner)
         {
             if (owner == null) throw new NullReferenceException("Owner is needed on Classic Desktop Environment");
-            Host = CreateHost();
+            Host = ContainerLocator.Container.Resolve<IWindowService>().CreateHost(this);
+            Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             return Host.ShowDialog(owner);
         }
 
@@ -157,35 +155,6 @@ namespace OneWare.Shared
         {
             Host?.Close();    
             Closed?.Invoke(this, EventArgs.Empty);
-        }
-        
-        private AdvancedWindow CreateHost()
-        {
-            var host = new AdvancedWindow();
-            
-            host.Bind(AdvancedWindow.ShowTitleProperty, this.GetObservable(ShowTitleProperty));
-            host.Bind(AdvancedWindow.CustomIconProperty, this.GetObservable(CustomIconProperty));
-            host.Bind(AdvancedWindow.TitleBarContentProperty, this.GetObservable(TitleBarContentProperty));
-            host.Bind(AdvancedWindow.BottomContentProperty, this.GetObservable(BottomContentProperty));
-            
-            host.Bind(Window.WindowStartupLocationProperty, this.GetObservable(WindowStartupLocationProperty));
-            host.Bind(Window.IconProperty, this.GetObservable(IconProperty));
-            host.Bind(Window.TitleProperty, this.GetObservable(TitleProperty));
-            host.Bind(Window.SizeToContentProperty, this.GetObservable(SizeToContentProperty));
-            
-            host.Bind(TopLevel.TransparencyLevelHintProperty, this.GetObservable(TransparencyLevelHintProperty));
-            host.Bind(BackgroundProperty, this.GetObservable(WindowBackgroundProperty));
-
-            host.Height = PrefHeight;
-            host.Width = PrefWidth;
-
-            host.ExtendClientAreaToDecorationsHint = true;
-
-            host.Opened += (sender, args) => Opened?.Invoke(sender, args);
-
-            host.Content = this;
-
-            return host;
         }
     }
 }

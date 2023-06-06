@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
 using OneWare.Core.Services;
+using OneWare.Core.ViewModels.Windows;
 using OneWare.ErrorList.ViewModels;
 using Prism.Ioc;
 using OneWare.Shared;
@@ -119,22 +120,28 @@ namespace OneWare.Core.ViewModels.DockViews
             this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
             {
                 Dictionary<IBrush, int[]> scrollInfo = new();
+
+                if (_diagnostics != null)
+                {
+                    Editor.MarkerService.SetDiagnostics(_diagnostics);
+                    
+                    var errorLines = _diagnostics
+                        .Where(b => b.Type is ErrorType.Error)
+                        .Select(c => c.StartLine)
+                        .Distinct().ToArray();
+
+                    var warningLines = _diagnostics
+                        .Where(b => b.Type is ErrorType.Warning)
+                        .Select(c => c.StartLine)
+                        .Distinct().ToArray();
+
+                    scrollInfo.Add(_errorBrush, errorLines);
+                    scrollInfo.Add(_warningBrush, warningLines);
+                }
                 
-                var errorLines = _diagnostics != null ? _diagnostics
-                    .Where(b => b.Type is ErrorType.Error)
-                    .Select(c => c.StartLine)
-                    .Distinct().ToArray() : Array.Empty<int>();
-
-                var warningLines = _diagnostics != null ? _diagnostics
-                    .Where(b => b.Type is ErrorType.Warning)
-                    .Select(c => c.StartLine)
-                    .Distinct().ToArray() : Array.Empty<int>();;
-
-                scrollInfo.Add(_errorBrush, errorLines);
-                scrollInfo.Add(_warningBrush, warningLines);
-
                 ScrollInfo = scrollInfo;
                 Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+                
             });
         }
 

@@ -1,4 +1,4 @@
-﻿<shared:AdvancedWindow xmlns="https://github.com/avaloniaui"
+﻿<windows:AdvancedWindow xmlns="https://github.com/avaloniaui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,10 +16,11 @@
                        WindowStartupLocation="CenterScreen"
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
-                       xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
                        xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"
                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-                       x:DataType="windows:MainWindowViewModel">
+                       xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
+                       xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
+                       x:DataType="viewmodels:MainWindowViewModel">
     
     <Window.DataTemplates>
         <DataTemplate DataType="controls1:CustomNotificationViewModel">
@@ -67,7 +68,7 @@
         <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding DockService.Layout}" UseLayoutRounding="False" />
     </Grid>
 
-    <shared:AdvancedWindow.TitleBarContent>
+    <windows:AdvancedWindow.TitleBarContent>
         <StackPanel Orientation="Horizontal" Spacing="5">
             <Image IsHitTestVisible="False" Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="20" Width="20"
                    IsVisible="{Binding $parent[Window].IsExtendedIntoWindowDecorations}" />
@@ -80,9 +81,9 @@
                 </Menu.Styles>
             </Menu>
         </StackPanel>
-    </shared:AdvancedWindow.TitleBarContent>
+    </windows:AdvancedWindow.TitleBarContent>
 
-    <shared:AdvancedWindow.BottomContent>
+    <windows:AdvancedWindow.BottomContent>
         <Border Padding="2" CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottom}"
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
@@ -161,7 +162,5 @@
                 </StackPanel>
             </DockPanel>
         </Border>
-    </shared:AdvancedWindow.BottomContent>
-
-
-</shared:AdvancedWindow>
+    </windows:AdvancedWindow.BottomContent>
+</windows:AdvancedWindow>

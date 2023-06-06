@@ -10,6 +10,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using Prism.Ioc;

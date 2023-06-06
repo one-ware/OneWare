@@ -76,7 +76,7 @@ namespace OneWare.Cpp
             {
                 process.Start();
                 process.BeginErrorReadLine();
-                await InitAsync(process, x =>
+                await InitAsync(process.StandardInput.BaseStream, process.StandardOutput.BaseStream, x =>
                 {
                     x.WithInitializationOptions(new CustomCppInitialisationOptions
                     {

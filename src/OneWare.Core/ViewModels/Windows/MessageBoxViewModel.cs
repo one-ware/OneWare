@@ -1,15 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using OneWare.Shared;
+using OneWare.Shared.Enums;
+using OneWare.Shared.ViewModels;
 
-
-namespace OneWare.Shared.ViewModels
+namespace OneWare.Core.ViewModels.Windows
 {
-    public enum MessageBoxStatus
-    {
-        Canceled,
-        Yes,
-        No
-    }
-
     public enum MessageBoxMode
     {
         AllButtons,
@@ -19,13 +14,6 @@ namespace OneWare.Shared.ViewModels
         PasswordInput,
         SelectFolder,
         SelectItem
-    }
-
-    public enum MessageBoxIcon
-    {
-        Info,
-        Warning,
-        Error
     }
 
     public class MessageBoxViewModel : FlexibleWindowViewModelBase

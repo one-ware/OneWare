@@ -4,10 +4,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using OneWare.Core.ViewModels.Windows;
+using OneWare.Shared;
 using OneWare.Shared.Converters;
+using OneWare.Shared.Enums;
 using OneWare.Shared.ViewModels;
 
-namespace OneWare.Shared.Views
+namespace OneWare.Core.Views.Windows
 {
     public partial class MessageBoxWindow : FlexibleWindow
     {

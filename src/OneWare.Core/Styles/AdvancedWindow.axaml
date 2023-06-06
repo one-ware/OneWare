@@ -1,11 +1,11 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:layout="clr-namespace:Avalonia.Layout;assembly=Avalonia.Base"
-        xmlns:data="clr-namespace:OneWare.Core.Data"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared">
+        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows">
 
-    <Style Selector="shared|AdvancedWindow">
+    <Style Selector="windows|AdvancedWindow">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
         <Setter Property="ExtendClientAreaToDecorationsHint" Value="True"/>
@@ -50,8 +50,8 @@
                                         <Image Source="{TemplateBinding CustomIcon}" Height="16" Width="16" VerticalAlignment="Center">
                                             <Image.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                                    <Binding Path="$parent[shared:AdvancedWindow].HorizontalAlignmentTitle" Converter="{x:Static converters:SharedConverters.ComparisonConverter}" ConverterParameter="{x:Static layout:HorizontalAlignment.Left}"/>
-                                                    <Binding Path="$parent[shared:AdvancedWindow].CustomIcon" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                                                    <Binding Path="$parent[windows:AdvancedWindow].HorizontalAlignmentTitle" Converter="{x:Static converters:SharedConverters.ComparisonConverter}" ConverterParameter="{x:Static layout:HorizontalAlignment.Left}"/>
+                                                    <Binding Path="$parent[windows:AdvancedWindow].CustomIcon" Converter="{x:Static ObjectConverters.IsNotNull}"/>
                                                 </MultiBinding>
                                             </Image.IsVisible>
                                         </Image>

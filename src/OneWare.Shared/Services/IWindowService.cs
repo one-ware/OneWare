@@ -2,8 +2,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Services;
 
@@ -24,4 +24,5 @@ public interface IWindowService
     public Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon, IEnumerable<object> options, object? defaultOption, Window? owner = null);
     public void ShowNotification(string title, string message, NotificationType type);
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null);
+    public Window CreateHost(FlexibleWindow flexible);
 }

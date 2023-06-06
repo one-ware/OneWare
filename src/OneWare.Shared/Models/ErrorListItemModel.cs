@@ -11,7 +11,6 @@ namespace OneWare.Shared.Models
         public ErrorType Type { get; init; }
         public string? Source { get; init; }
         public IFile File { get; init; }
-        
         public IProjectRoot? Root { get; }
         public int StartLine { get; init; }
         public int? StartColumn { get; init; }
