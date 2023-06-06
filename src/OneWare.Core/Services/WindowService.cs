@@ -111,15 +111,12 @@ public class WindowService : IWindowService
 
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner)
     {
-        return Dispatcher.UIThread.InvokeAsync(() =>
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                owner ??= ContainerLocator.Container.Resolve<MainWindow>();
-                return window.ShowDialogAsync(owner);
-            }
-            return ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
-        });
+            owner ??= ContainerLocator.Container.Resolve<MainWindow>();
+            return window.ShowDialogAsync(owner);
+        }
+        return ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
     }
     
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner)
@@ -136,9 +133,13 @@ public class WindowService : IWindowService
     
     public async Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus;
+        var r = await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
+            await ShowDialogAsync(msg, owner);
+            return msg.BoxStatus;
+        });
+        return r;
     }
 
     public async Task<MessageBoxStatus> ShowProceedWarningAsync(string message, Window? owner = null)

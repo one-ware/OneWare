@@ -15,7 +15,7 @@
     <Panel>
 
         <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, Auto,*, Auto"
-              ColumnDefinitions="*" IsHitTestVisible="{Binding #MainViewView.DialogControl, Converter={x:Static ObjectConverters.IsNull}}">
+              ColumnDefinitions="*">
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="5" Margin="3 0">
                 <Image IsHitTestVisible="False"
@@ -155,8 +155,10 @@
             </Border>
         </Grid>
         
-        <Panel Background="{DynamicResource HighlightBrush}" IsVisible="{Binding #MainViewView.DialogControl, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <ContentControl VerticalAlignment="Center" HorizontalAlignment="Center" Content="{Binding #MainViewView.DialogControl}"/>
+        <Panel Name="DialogControlPanel" Background="#11000000" IsVisible="False">
+            <Border Padding="4" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <ContentControl Name="DialogControl" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Border>
         </Panel>
         
     </Panel>

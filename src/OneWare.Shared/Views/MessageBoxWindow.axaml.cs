@@ -18,6 +18,7 @@ namespace OneWare.Shared.Views
 
         public MessageBoxWindow(string title, string message, MessageBoxMode mode = MessageBoxMode.AllButtons, MessageBoxIcon defaultIcon = MessageBoxIcon.Warning) : this()
         {
+            Title = title;
             DataContext = new MessageBoxViewModel(title, message, mode);
 
             if (Application.Current is null) throw new NullReferenceException(nameof(Application.Current));

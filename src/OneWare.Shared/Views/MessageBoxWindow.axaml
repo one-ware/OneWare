@@ -10,7 +10,6 @@
                         MinHeight="100"
                         PrefWidth="350"
                         Padding="4"
-                        Title="{Binding Title}"
                         Foreground="{DynamicResource ThemeForegroundBrush}"
                         WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
                         TransparencyLevelHint="AcrylicBlur"

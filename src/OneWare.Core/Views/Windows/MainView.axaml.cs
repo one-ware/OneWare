@@ -8,15 +8,6 @@ namespace OneWare.Core.Views.Windows;
 
 public partial class MainView : UserControl
 {
-    public static readonly StyledProperty<Control?> DialogControlProperty =
-        AvaloniaProperty.Register<MainView, Control?>(nameof(DialogControl));
-    
-    public Control? DialogControl
-    {
-        get => GetValue(DialogControlProperty);
-        set => SetValue(DialogControlProperty, value);
-    }
-    
     public MainView()
     {
         InitializeComponent();
@@ -24,8 +15,13 @@ public partial class MainView : UserControl
 
     public async Task ShowVirtualDialogAsync(FlexibleWindow window)
     {
-        DialogControl = window;
+        DialogControlPanel.IsVisible = true;
+        DialogControl.Content = window;
+        DialogControl.Width = window.PrefWidth;
+        DialogControl.Height = window.PrefHeight;
+        DialogControl.Background = window.WindowBackground;
         await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h).Take(1).GetAwaiter();
-        DialogControl = null;
+        DialogControl.Content = null;
+        DialogControlPanel.IsVisible = false;
     }
 }

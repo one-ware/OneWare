@@ -1,6 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using Avalonia.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
 
 
 namespace OneWare.Shared.ViewModels
@@ -54,7 +52,6 @@ namespace OneWare.Shared.ViewModels
         }
         
         public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
-        public string Title { get; }
         public string Message { get; }
         public bool ShowYes { get; } = true;
         public bool ShowNo { get; } = true;
@@ -63,13 +60,13 @@ namespace OneWare.Shared.ViewModels
         public bool ShowInput { get; }
         public bool ShowFolderButton { get; }
         public bool ShowSelection { get; }
-
         public string PasswordChar { get; } = "";
         
         public MessageBoxViewModel(string title, string message, MessageBoxMode mode)
         {
             Title = title;
             Message = message;
+            Id = "MessageBox...";
 
             //TODO USE FLAGS
 

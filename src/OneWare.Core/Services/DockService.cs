@@ -125,14 +125,14 @@ namespace OneWare.Core.Services
             return true;
         }
 
-        public Window GetWindowOwner(IDockable? dockable)
+        public Window? GetWindowOwner(IDockable? dockable)
         {
             while (dockable != null)
             {
                 if (dockable is IRootDock { Window.Host: Window host }) return host;
                 dockable = dockable.Owner;
             }
-            return ContainerLocator.Container.Resolve<MainWindow>();
+            return null;
         }
 
         public void ResetLayout()

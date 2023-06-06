@@ -22,7 +22,7 @@ public interface IDockService : INotifyPropertyChanged
 
     public Task<bool> CloseFileAsync(IFile pf);
 
-    public Window GetWindowOwner(IDockable dockable);
+    public Window? GetWindowOwner(IDockable dockable);
     
     public void LoadLayout(string name, bool reset = false);
 
