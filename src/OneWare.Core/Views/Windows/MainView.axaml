@@ -156,9 +156,7 @@
         </Grid>
         
         <Panel Name="DialogControlPanel" Background="#11000000" IsVisible="False">
-            <Border Padding="4" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <ContentControl Name="DialogControl" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-            </Border>
+            <ContentControl Padding="4" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Name="DialogControl" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </Panel>
         
     </Panel>
