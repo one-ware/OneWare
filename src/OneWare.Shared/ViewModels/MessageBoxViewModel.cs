@@ -108,27 +108,27 @@ namespace OneWare.Shared.ViewModels
             }
         }
 
-        public void No(Window window)
+        public void No(FlexibleWindow window)
         {
             BoxStatus = MessageBoxStatus.No;
             window.Close();
         }
 
-        public void Yes(Window window)
+        public void Yes(FlexibleWindow window)
         {
             BoxStatus = MessageBoxStatus.Yes;
             window.Close();
         }
 
-        public void Cancel(Window window)
+        public void Cancel(FlexibleWindow window)
         {
             BoxStatus = MessageBoxStatus.Canceled;
             window.Close();
         }
         
-        public async Task SelectPathAsync(Window window)
+        public async Task SelectPathAsync(FlexibleWindow window)
         {
-            var folder = await Tools.SelectFolderAsync(window, "Select Directory", Input);
+            var folder = await Tools.SelectFolderAsync(window.Host, "Select Directory", Input);
             
             Input = folder ?? "";
         }

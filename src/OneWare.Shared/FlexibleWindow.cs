@@ -45,6 +45,9 @@ namespace OneWare.Shared
         public static readonly StyledProperty<SizeToContent> SizeToContentProperty =
             AvaloniaProperty.Register<FlexibleWindow, SizeToContent>(nameof(SizeToContent));
         
+        public static readonly StyledProperty<IBrush?> WindowBackgroundProperty =
+            AvaloniaProperty.Register<FlexibleWindow, IBrush?>(nameof(WindowBackground));
+        
         public static readonly StyledProperty<IReadOnlyList<WindowTransparencyLevel>> TransparencyLevelHintProperty =
             AvaloniaProperty.Register<FlexibleWindow, IReadOnlyList<WindowTransparencyLevel>>(nameof(TransparencyLevelHint), Array.Empty<WindowTransparencyLevel>());
 
@@ -108,6 +111,12 @@ namespace OneWare.Shared
             set => SetValue(SizeToContentProperty, value);
         }
         
+        public IBrush? WindowBackground
+        {
+            get => GetValue(WindowBackgroundProperty);
+            set => SetValue(WindowBackgroundProperty, value);
+        }
+        
         public IReadOnlyList<WindowTransparencyLevel> TransparencyLevelHint
         {
             get => GetValue(TransparencyLevelHintProperty);
@@ -119,18 +128,14 @@ namespace OneWare.Shared
         public event EventHandler? Closed;
         
         public AdvancedWindow? Host { get; private set; }
-
-        public FlexibleWindow()
-        {
-            
-        }
-
-        public void Show(Window owner)
+        
+        public void Show(Window? owner)
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
                 Host = CreateHost();
-                Host.Show(owner);
+                if (owner != null) Host.Show(owner);
+                else Host.Show();
             }
             else
             {
@@ -143,22 +148,15 @@ namespace OneWare.Shared
 
         public Task ShowDialogAsync(Window owner)
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                Host = CreateHost();
-                return Host.ShowDialog(owner);
-            }
-            else
-            {
-                
-            }
-            
-            return Task.CompletedTask;
+            if (owner == null) throw new NullReferenceException("Owner is needed on Classic Desktop Environment");
+            Host = CreateHost();
+            return Host.ShowDialog(owner);
         }
 
         public void Close()
         {
             Host?.Close();    
+            Closed?.Invoke(this, EventArgs.Empty);
         }
         
         private AdvancedWindow CreateHost()
@@ -176,7 +174,7 @@ namespace OneWare.Shared
             host.Bind(Window.SizeToContentProperty, this.GetObservable(SizeToContentProperty));
             
             host.Bind(TopLevel.TransparencyLevelHintProperty, this.GetObservable(TransparencyLevelHintProperty));
-            host.Bind(BackgroundProperty, this.GetObservable(BackgroundProperty));
+            host.Bind(BackgroundProperty, this.GetObservable(WindowBackgroundProperty));
 
             host.Height = PrefHeight;
             host.Width = PrefWidth;
@@ -184,7 +182,6 @@ namespace OneWare.Shared
             host.ExtendClientAreaToDecorationsHint = true;
 
             host.Opened += (sender, args) => Opened?.Invoke(sender, args);
-            host.Closed += (sender, args) => Closed?.Invoke(sender, args);
 
             host.Content = this;
 

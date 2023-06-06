@@ -1,106 +1,118 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
-             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
-             xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-             xmlns:mvvm="http://prismlibrary.com/"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Core.Views.Windows.MainView"
-             mvvm:ViewModelLocator.AutoWireViewModel="False"
-             x:DataType="windows:MainWindowViewModel">
-     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, Auto,*, Auto" ColumnDefinitions="*">
+﻿<windows1:MainView xmlns="https://github.com/avaloniaui"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                   xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
+                   xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                   xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+                   xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                   xmlns:mvvm="http://prismlibrary.com/"
+                   xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
+                   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                   x:Class="OneWare.Core.Views.Windows.MainView"
+                   mvvm:ViewModelLocator.AutoWireViewModel="False" Name="MainViewView"
+                   x:DataType="windows:MainWindowViewModel">
+    <Panel>
 
-         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="5" Margin="3 0">
-             <Image IsHitTestVisible="False" Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="20" Width="20"
-                    IsVisible="True"/>
-            
-             <Menu Height="30" Name="MainMenu" Classes="BindMainMenu" ItemsSource="{Binding MainMenu}">
-                 <Menu.Styles>
-                     <Style Selector="Menu > MenuItem AccessText">
-                         <Setter Property="VerticalAlignment" Value="Center" />
-                     </Style>
-                 </Menu.Styles>
-             </Menu>
-         </StackPanel>
-         
-        <!--Icon Tray-->
-        <DockPanel Grid.Row="1" Margin="3 0"  Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
+        <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, Auto,*, Auto"
+              ColumnDefinitions="*" IsHitTestVisible="{Binding #MainViewView.DialogControl, Converter={x:Static ObjectConverters.IsNull}}">
 
-            <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal" HorizontalAlignment="Left">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="5" Margin="3 0">
+                <Image IsHitTestVisible="False"
+                       Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                       Height="20" Width="20"
+                       IsVisible="True" />
 
-                <Button ToolTip.Tip="Undo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Undo}">
-                    <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
-                </Button>
-                <Button ToolTip.Tip="Redo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Redo}">
-                    <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
-                </Button>
-                
-                <Border Classes="RoundToolBar" Margin="5 0 0 0"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <Menu Height="30" Name="MainMenu" Classes="BindMainMenu" ItemsSource="{Binding MainMenu}">
+                    <Menu.Styles>
+                        <Style Selector="Menu > MenuItem AccessText">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </Menu.Styles>
+                </Menu>
+            </StackPanel>
 
-                    <StackPanel Orientation="Horizontal">
-                        
-                        <ItemsControl ItemsSource="{Binding RoundToolBarExtension}">
+            <!--Icon Tray-->
+            <DockPanel Grid.Row="1" Margin="3 0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
+
+                <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal"
+                            HorizontalAlignment="Left">
+
+                    <Button ToolTip.Tip="Undo" x:CompileBindings="False"
+                            Command="{Binding DockService.CurrentDocument.Undo}">
+                        <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
+                    </Button>
+                    <Button ToolTip.Tip="Redo" x:CompileBindings="False"
+                            Command="{Binding DockService.CurrentDocument.Redo}">
+                        <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
+                    </Button>
+
+                    <Border Classes="RoundToolBar" Margin="5 0 0 0"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+
+                        <StackPanel Orientation="Horizontal">
+
+                            <ItemsControl ItemsSource="{Binding RoundToolBarExtension}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
+                    <Button ToolTip.Tip="Settings" Command="{Binding OpenSettings}">
+                        <Image Source="{DynamicResource Material.SettingsOutline}" />
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+
+            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}"
+                         UseLayoutRounding="False" />
+
+            <Border Grid.Row="3" Padding="2" CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottom}"
+                    Background="{DynamicResource ThemeAccentBrush}">
+                <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
+                    <!--Left elements-->
+                    <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
+                                   IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
+
+                    <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}"
+                               Foreground="White" />
+
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
+                                VerticalAlignment="Center" Margin="10 0">
+                        <StackPanel.Styles>
+                            <Style Selector=":is(Control)">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </StackPanel.Styles>
+
+
+                        <ItemsControl ItemsSource="{Binding BottomRightExtension}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
+                                    <StackPanel Orientation="Horizontal" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-            
-            <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
-                <Button ToolTip.Tip="Settings" Command="{Binding OpenSettings}">
-                    <Image Source="{DynamicResource Material.SettingsOutline}" />
-                </Button>
-            </StackPanel>
-        </DockPanel>
 
-        <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}" UseLayoutRounding="False" />
-        
-        <Border Grid.Row="3" Padding="2" CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottom}"
-                Background="{DynamicResource ThemeAccentBrush}">
-            <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
-                <!--Left elements-->
-                <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                  IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
+                        <Menu Classes="BindMenu">
+                            <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
+                                <MenuItem.Header>
+                                    <StackPanel Cursor="Hand">
+                                        <TextBlock x:CompileBindings="False"
+                                                   Text="{Binding DockService.CurrentDocument.Extension}"
+                                                   Foreground="White" />
+                                    </StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
+                        </Menu>
 
-                <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}" Foreground="White" />
-
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
-                            VerticalAlignment="Center" Margin="10 0">
-                    <StackPanel.Styles>
-                        <Style Selector=":is(Control)">
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                        </Style>
-                    </StackPanel.Styles>
-
-
-                    <ItemsControl ItemsSource="{Binding BottomRightExtension}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                    
-                    <Menu Classes="BindMenu">
-                        <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
-                            <MenuItem.Header>
-                                <StackPanel Cursor="Hand">
-                                    <TextBlock x:CompileBindings="False" Text="{Binding DockService.CurrentDocument.Extension}"
-                                               Foreground="White" />
-                                </StackPanel>
-                            </MenuItem.Header>
-                        </MenuItem>
-                    </Menu>
-                    
-                    <!--
+                        <!--
                     <Menu IsVisible="{Binding States.ActiveArduinoProject^}">
                         <MenuItem>
                             <MenuItem.Header>
@@ -123,23 +135,29 @@
                     </Menu>
                     -->
 
-                   
-                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
-                        <TextBlock Foreground="White"
-                                   Text="Col " />
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
-                        <TextBlock Foreground="White"
-                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}" />
+                            <TextBlock Foreground="White"
+                                       Text="Col " />
 
-                        <TextBlock Foreground="White" Margin="10 0 0 0"
-                                   Text="Ln " />
+                            <TextBlock Foreground="White"
+                                       Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}" />
 
-                        <TextBlock Foreground="White"
-                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}" />
+                            <TextBlock Foreground="White" Margin="10 0 0 0"
+                                       Text="Ln " />
+
+                            <TextBlock Foreground="White"
+                                       Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}" />
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-    </Grid>
-</UserControl>
+                </DockPanel>
+            </Border>
+        </Grid>
+        
+        <Panel Background="{DynamicResource HighlightBrush}" IsVisible="{Binding #MainViewView.DialogControl, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <ContentControl VerticalAlignment="Center" HorizontalAlignment="Center" Content="{Binding #MainViewView.DialogControl}"/>
+        </Panel>
+        
+    </Panel>
+</windows1:MainView>

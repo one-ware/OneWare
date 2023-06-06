@@ -7,6 +7,6 @@ public class FlexibleWindowViewModelBase : Document
 {
     public void Close(FlexibleWindow window)
     {
-        
+        window.Close();
     }
 }

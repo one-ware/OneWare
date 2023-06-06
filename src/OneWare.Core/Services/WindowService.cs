@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -102,7 +104,7 @@ public class WindowService : IWindowService
     {
         Dispatcher.UIThread.Post(() =>
         {
-            owner ??= ContainerLocator.Container.Resolve<MainWindow>();
+            owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime ? null : ContainerLocator.Container.Resolve<MainWindow>();
             window.Show(owner);
         });
     }
@@ -111,8 +113,12 @@ public class WindowService : IWindowService
     {
         return Dispatcher.UIThread.InvokeAsync(() =>
         {
-            owner ??= ContainerLocator.Container.Resolve<MainWindow>();
-            return window.ShowDialogAsync(owner);
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                owner ??= ContainerLocator.Container.Resolve<MainWindow>();
+                return window.ShowDialogAsync(owner);
+            }
+            return ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
         });
     }
     

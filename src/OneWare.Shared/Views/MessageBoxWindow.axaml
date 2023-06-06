@@ -8,10 +8,12 @@
                         x:Class="OneWare.Shared.Views.MessageBoxWindow"
                         SizeToContent="Height"
                         MinHeight="100"
-                        Width="350"
+                        PrefWidth="350"
                         Padding="4"
                         Title="{Binding Title}"
                         Foreground="{DynamicResource ThemeForegroundBrush}"
+                        WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
+                        TransparencyLevelHint="AcrylicBlur"
                         Name="MessageWindow" x:CompileBindings="True" x:DataType="viewModels:MessageBoxViewModel"
                         WindowStartupLocation="CenterOwner">
 
