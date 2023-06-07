@@ -91,7 +91,7 @@
                 <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
                                   IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
 
-                <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}" Foreground="White" />
+                <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0" Text="{Binding Active.ActiveProcess.StatusMessage}" Foreground="White" />
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
                             VerticalAlignment="Center" Margin="10 0">

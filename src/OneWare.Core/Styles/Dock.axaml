@@ -21,6 +21,14 @@
     <Style Selector="ToolTabStripItem:selected">
         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
+    
+    <Style Selector="ToolControl">
+        <Setter Property="HeaderTemplate">
+            <DataTemplate DataType="core:IDockable">
+                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+            </DataTemplate>
+        </Setter>
+    </Style>
 
     <Style Selector="DocumentTabStripItem">
         <Setter Property="MinHeight" Value="25" />
@@ -54,7 +62,7 @@
         <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="BorderThickness" Value="1 0 1 1" />
-        <Setter Property="Margin" Value="0" />
+        <Setter Property="Margin" Value="0 0 0 -1" />
         <Setter Property="Padding" Value="4 0" />
     </Style>
 

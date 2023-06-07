@@ -14,7 +14,7 @@ namespace OneWare.Vhdl
 {
     public class LanguageServiceVhdl : LanguageService
     {
-        public LanguageServiceVhdl(string workspace) : base ("VHDL LS", new Uri(""), workspace)
+        public LanguageServiceVhdl(string workspace) : base ("VHDL LS", "/Users/hendrikmennen/VHDPlus/Packages/rusthdl/release/bin/vhdl_ls", null, workspace)
         {
             
         }

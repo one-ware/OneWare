@@ -177,7 +177,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Margin="0, 0, 10, 0" Height="15"
                                    Source="{DynamicResource BoxIcons.RegularGitRepoForked}" />
-                            <TextBlock Text="Initialize Repository" />
+                            <TextBlock Text="Initialize Repository" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button.Content>
                 </Button>
@@ -191,7 +191,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Margin="0, 0, 10, 0" Height="15"
                                    Source="{DynamicResource FontAwesome.DownloadSolid}" />
-                            <TextBlock Text="Clone existing Repository" />
+                            <TextBlock Text="Clone existing Repository" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button.Content>
                 </Button>
