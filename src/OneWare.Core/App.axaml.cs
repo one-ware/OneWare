@@ -248,22 +248,74 @@ namespace OneWare.Core
                     var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
                     Directory.CreateDirectory(testProj);
                     var dummy = new ProjectRoot(testProj);
-                    dummy.AddFile("Hardware.vhd", true);
-                    var soft = dummy.AddFile("Software.cpp", true);
+                    var hard = dummy.AddFile("Hardware.vhd");
+                    var soft = dummy.AddFile("Software.cpp");
                     Container.Resolve<IProjectService>().Items.Add(dummy);
                     Container.Resolve<IProjectService>().ActiveProject = dummy;
 
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
-                    (editor as IEditor)!.CurrentDocument.Text = @"// Your First C++ Program
+                    (editor as IEditor)!.CurrentDocument.Text = @"
+// Your First C++ Program
 
 #include <iostream>
 
-int main() {
+int main() 
+{
     std::cout << 'Hello World!';
-                    return 0;
+    return 0;
+}
+";
+                    editor = await Container.Resolve<IDockService>().OpenFileAsync(hard);
+                    (editor as IEditor)!.CurrentDocument.Text = @"
+  
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.numeric_std.all; 
+
+      
+ENTITY VHDPlus IS
+PORT (
+  --#IOVoltagePins
+  CLK : IN STD_LOGIC;
+  
+  led: OUT STD_LOGIC := '0'
+
+);
+END VHDPlus;
+
+ARCHITECTURE BEHAVIORAL OF VHDPlus IS
+  
+BEGIN
+
+  --#SetIOVoltage
+  PROCESS (CLK)  
+    VARIABLE Thread3 : NATURAL range 0 to 6000004 := 0;
+  BEGIN
+  IF RISING_EDGE(CLK) THEN
+    CASE (Thread3) IS
+      WHEN 0 =>
+        led <= '0';
+        Thread3 := 1;
+      WHEN 1 to 3000001 =>
+        Thread3 := Thread3 + 1;
+      WHEN 3000002 =>
+        led <= '1';
+        Thread3 := 3000003;
+      WHEN 3000003 to 6000003 =>
+        IF (Thread3 < 6000003) THEN 
+          Thread3 := Thread3 + 1;
+        ELSE
+          Thread3 := 0;
+        END IF;
+      WHEN others => Thread3 := 0;
+    END CASE;
+  END IF;
+  END PROCESS;
+  
+END BEHAVIORAL;
+";
                 }
-                ";
-                }
+
 
                 Container.Resolve<IDockService>().InitializeDocuments();
                 _ = FinishedLoadingAsync();

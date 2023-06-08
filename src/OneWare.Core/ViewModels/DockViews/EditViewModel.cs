@@ -375,15 +375,8 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             var result = await LoadFileAsync();
 
-            if (CurrentFile.Extension is not (null or "" or ".py"))
-                CurrentDocument.Text = result.Item2.Replace("\t", "    ");
-
-            else CurrentDocument.Text = result.Item2;
-
             CurrentDocument.UndoStack.ClearAll();
-
-            CurrentFile.LastSaveTime = result.lastModified;
-
+            
             if (!result.Item1)
             {
                 CurrentFile.LoadingFailed = true;
@@ -394,6 +387,11 @@ namespace OneWare.Core.ViewModels.DockViews
             }
             else
             {
+                CurrentFile.LastSaveTime = result.lastModified;
+                if (CurrentFile.Extension is not (null or "" or ".py"))
+                    CurrentDocument.Text = result.Item2.Replace("\t", "    ");
+                else CurrentDocument.Text = result.Item2;
+                
                 CurrentFile.LoadingFailed = false;
                 OnFileLoaded(true);
                 return true;

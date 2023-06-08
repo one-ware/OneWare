@@ -380,7 +380,7 @@ namespace OneWare.Shared.LanguageService
             }
             catch (Exception e)
             {
-                if(e is TaskCanceledException) ContainerLocator.Container.Resolve<ILogger>()?.Log("Completion timed out!", ConsoleColor.Yellow);
+                if(e is TaskCanceledException) ContainerLocator.Container.Resolve<ILogger>()?.Warning("Completion timed out!");
                 else ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
 

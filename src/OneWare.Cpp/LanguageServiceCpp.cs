@@ -6,9 +6,8 @@ namespace OneWare.Cpp
 {
     public class LanguageServiceCpp : LanguageService
     {
-        //public LanguageServiceCpp() : base("CPP LS", new Uri("wss://oneware-cloud-ls-clangd-qtuhvc77rq-ew.a.run.app"),
-         //   null)
-        public LanguageServiceCpp() : base("CPP LS", @"C:\Users\Hendrik\VHDPlus\Packages\clangd\clangd_15.0.1\bin\clangd.exe", "--log=error", null)
+        public LanguageServiceCpp() : base("CPP LS", new Uri("wss://oneware-cloud-ls-clangd-qtuhvc77rq-ew.a.run.app"),
+            null)
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
             // {
