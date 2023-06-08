@@ -1,22 +1,20 @@
-﻿using System.Diagnostics;
-using OmniSharp.Extensions.LanguageServer.Client;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
-using OneWare.Shared.Services;
-using Prism.Ioc;
 
 namespace OneWare.Cpp
 {
-    public class LanguageServiceCpp : LanguageServiceBase, ILanguageService
+    public class LanguageServiceCpp : LanguageService
     {
-        public LanguageServiceCpp() : base("CPP LS")
+        //public LanguageServiceCpp() : base("CPP LS", new Uri("wss://oneware-cloud-ls-clangd-qtuhvc77rq-ew.a.run.app"),
+         //   null)
+        public LanguageServiceCpp() : base("CPP LS", @"C:\Users\Hendrik\VHDPlus\Packages\clangd\clangd_15.0.1\bin\clangd.exe", "--log=error", null)
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
             // {
             //     if (IsActivated) _ = RestartAsync();
             // });
-            //
+            //t
             // Global.Options.WhenAnyValue(x => x.CppLspActivated).Subscribe(x =>
             // {
             //     //Check if file is open
@@ -27,71 +25,14 @@ namespace OneWare.Cpp
             // });
         }
 
-        public ITypeAssistance GetTypeAssistance(IEditor editor)
+        public LanguageServiceCpp(string executablePath) : base ("CPP LS", executablePath, null, null)
+        {
+            
+        }
+        
+        public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
             return new TypeAssistanceCpp(editor, this);
-        }
-
-        public override async Task ActivateAsync()
-        {
-            if (IsActivated) return;
-            IsActivated = true;
-
-            var cppPath = @"C:\Users\Hendrik\VHDPlus\Packages\clangd\clangd_15.0.1\bin\clangd.exe";
-            
-            // var minGw = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            //     ? "H-x86_64-mingw32"
-            //     : "H-x86_64-pc-linux-gnu";
-            //
-            // if (!Tools.Exists(Global.Options.CppLspPath))
-            // {
-            //     ContainerLocator.Container.Resolve<ILogger>()?.Error("C++ language server not found!", null, false);
-            //     return;
-            // }
-            //
-            // var queryDriverPath =
-            //     $"{Path.Combine(Path.GetDirectoryName(Global.Options.QuartusPath) ?? "").ToLinuxPath()}/nios2eds/bin/gnu/{minGw}/bin/";
-            // var queryDriver = queryDriverPath + "nios2-elf*";
-            //
-            // var arguments = (Global.Options.CppLspNiosMode ? $"--query-driver={queryDriver}" : "") + " --log=error";
-
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = cppPath,
-                Arguments = "--log=error",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                CreateNoWindow = true,
-                UseShellExecute = false
-            };
-
-            var process = new Process
-            {
-                StartInfo = processStartInfo
-            };
-
-            process.ErrorDataReceived += (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Log("C++ LS: " + i.Data, ConsoleColor.Yellow);
-            try
-            {
-                process.Start();
-                process.BeginErrorReadLine();
-                await InitAsync(process.StandardInput.BaseStream, process.StandardOutput.BaseStream, x =>
-                {
-                    x.WithInitializationOptions(new CustomCppInitialisationOptions
-                    {
-                        FallbackFlags = new Container<string>
-                        (
-                            ""
-                        )
-                    });
-                });
-
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            }
         }
     }
 

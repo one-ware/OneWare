@@ -166,9 +166,12 @@ namespace OneWare.Core
         public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
-            
-            TypeAssistanceIconStore.Instance.Load();
-            
+
+            Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
+            {
+                TypeAssistanceIconStore.Instance.Load();
+            });
+
             Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
             Container.Resolve<BackupService>().LoadAutoSaveFile();
             Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
@@ -240,13 +243,27 @@ namespace OneWare.Core
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
                 //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
 
-                var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
-                Directory.CreateDirectory(testProj);
-                var dummy = new ProjectRoot(testProj);
-                dummy.AddFile("Test.vhd", true);
-                
-                Container.Resolve<IProjectService>().Items.Add(dummy);
-                Container.Resolve<IProjectService>().ActiveProject = dummy;
+                if (ApplicationLifetime is ISingleViewApplicationLifetime or IClassicDesktopStyleApplicationLifetime)
+                {
+                    var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
+                    Directory.CreateDirectory(testProj);
+                    var dummy = new ProjectRoot(testProj);
+                    dummy.AddFile("Hardware.vhd", true);
+                    var soft = dummy.AddFile("Software.cpp", true);
+                    Container.Resolve<IProjectService>().Items.Add(dummy);
+                    Container.Resolve<IProjectService>().ActiveProject = dummy;
+
+                    var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
+                    (editor as IEditor)!.CurrentDocument.Text = @"// Your First C++ Program
+
+#include <iostream>
+
+int main() {
+    std::cout << 'Hello World!';
+                    return 0;
+                }
+                ";
+                }
 
                 Container.Resolve<IDockService>().InitializeDocuments();
                 _ = FinishedLoadingAsync();

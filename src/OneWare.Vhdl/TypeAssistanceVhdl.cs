@@ -1,4 +1,5 @@
-﻿using Avalonia.Input;
+﻿using System.Text.RegularExpressions;
+using Avalonia.Input;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
@@ -11,6 +12,8 @@ namespace OneWare.Vhdl
 {
     internal class TypeAssistanceVhdl : TypeAssistanceLsp
     {
+        private readonly Regex _usedWordsRegex = new(@"\w{3,}");
+        
         public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
@@ -18,14 +21,32 @@ namespace OneWare.Vhdl
         }
         
         public override string LineCommentSequence => "--";
+        
 
-        public override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
+        public override async Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {
             var items = new List<CompletionData>();
 
-            items.Add(new CompletionData("Test", "test", "t", null, 0, CodeBox.CaretOffset));
+            var text = Editor.CurrentDocument.Text;
+            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text));
+
+            items.Add(new CompletionData("library IEEE;\nuse IEEE.std_logic_1164.all;\nuse IEEE.numeric_std.all; ",
+                "ieee", "IEEE Standard Packages",
+                TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Reference], 0, CodeBox.CaretOffset));
             
-            return Task.FromResult(items);
+            items.Add(new CompletionData(
+                "entity " + Path.GetFileNameWithoutExtension(Editor.CurrentFile.Header) +
+                " is\n    port(\n        [I/Os]$0\n    );\nend entity " +
+                Path.GetFileNameWithoutExtension(Editor.CurrentFile.Header) + ";", "entity", "Entity Declaration",
+                TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Class], 0, CodeBox.CaretOffset));
+            
+            foreach (var word in usedWords)
+            {
+                if(word.ToString() is { } s)
+                    items.Add(new CompletionData(s, s, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
+            }
+
+            return items;
         }
 
         public override void TypeAssistance(TextInputEventArgs e)
@@ -50,7 +71,7 @@ namespace OneWare.Vhdl
             
             if(error != null) info += error.Description + "\n";
             
-            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
+            var hover = await Service.RequestHoverAsync(Editor.FullPath,
                 new Position(pos.Line - 1, pos.Column - 1));
             if (hover != null && !IsClosed)
             {

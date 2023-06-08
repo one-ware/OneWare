@@ -7,6 +7,7 @@
              xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
              xmlns:models="clr-namespace:OneWare.ProjectExplorer.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -43,16 +44,16 @@
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                   SelectedItems="{Binding SelectedItems, Mode=TwoWay}"
                   DragDrop.AllowDrop="True" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
-            <TreeView.Styles>
-                <Style Selector="TreeViewItem" x:DataType="models:ProjectEntry">
-                    <Setter Property="ContextMenu">
-                        <ContextMenu Classes="BindMenu" ItemsSource="{Binding ContextMenu}"/>
-                    </Setter>
-                </Style>
-            </TreeView.Styles>
             <TreeView.DataTemplates>
                 <TreeDataTemplate DataType="models:ProjectEntry" ItemsSource="{Binding Items}" >
-                    <DockPanel>
+                    <DockPanel Background="Transparent">
+                        <Interaction.Behaviors>
+                            <behaviours:CommandOnDoubleTapBehaviour Command="{Binding DoubleTabCommand}"/>
+                        </Interaction.Behaviors>
+                        <DockPanel.ContextMenu>
+                            <ContextMenu Classes="BindMenu" ItemsSource="{Binding ContextMenu}"/>
+                        </DockPanel.ContextMenu>
+                        
                         <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
                             <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Width="16"
                                    Source="{Binding Icon}">
@@ -108,6 +109,7 @@
                         <views:RenamingTextBox ToolTip.Tip="{Binding Header}" VerticalAlignment="Center"
                                                   RequestRename="{Binding RequestRename}" IsEnabled="False"
                                                   Name="LabelBox" Text="{Binding Header}" Opacity="{Binding ExcludeCompilation, Converter={x:Static converters:SharedConverters.FileOpacityConverter}}"/>
+          
                     </DockPanel>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>

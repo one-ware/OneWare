@@ -9,6 +9,7 @@ using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
+using DynamicData.Binding;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -32,20 +33,10 @@ namespace OneWare.Core.Services
         public Dictionary<IFile,IExtendedDocument> OpenFiles { get; } = new();
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private IExtendedDocument? _currentDocument;
-        public IExtendedDocument? CurrentDocument
-        {
-            get => _currentDocument;
-            set
-            {
-                if (value == _currentDocument) return;
-                _currentDocument = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
-            }
-        }
+        private IDisposable? _lastSub = null;
         
-        private IRootDock? _layout;
-        public IRootDock? Layout
+        private RootDock? _layout;
+        public RootDock? Layout
         {
             get => _layout;
             set
@@ -53,8 +44,16 @@ namespace OneWare.Core.Services
                 if (value == _layout) return;
                 _layout = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Layout)));
+
+                _lastSub?.Dispose();
+                _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
+                });
             }
         }
+
+        public IExtendedDocument? CurrentDocument => Layout?.FocusedDockable as IExtendedDocument;
 
         public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel, MainDocumentDockViewModel mainDocumentDockViewModel)
         {
@@ -222,7 +221,7 @@ namespace OneWare.Core.Services
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
                 {
                     var ownerWindow = GetWindowOwner(dockable);
-                    Dispatcher.UIThread.Post(ownerWindow.Activate);
+                    if(ownerWindow != null) Dispatcher.UIThread.Post(ownerWindow.Activate);
                 }
                 return;
             }
@@ -274,7 +273,7 @@ namespace OneWare.Core.Services
 
         public void LoadLayout(string name, bool reset = false)
         {
-            IRootDock? layout = null;
+            RootDock? layout = null;
 
             if (!reset && layout == null) //Docking system load
             {

@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 
 namespace OneWare.Shared.Behaviours
 {
-    public class CommandOnEnterBehavior : CommandBasedBehavior
+    public class CommandOnDoubleTapBehaviour : CommandBasedBehavior
     {
         private CompositeDisposable? Disposables { get; set; }
 
@@ -17,12 +17,12 @@ namespace OneWare.Shared.Behaviours
             base.OnAttached();
 
             Disposables.Add(AssociatedObject.AddDisposableHandler(
-                InputElement.KeyDownEvent,
+                InputElement.DoubleTappedEvent,
                 (sender, e) =>
                 {
-                    if (e.Key == Key.Enter) e.Handled = ExecuteCommand();
+                    e.Handled = ExecuteCommand();
                 },
-                RoutingStrategies.Tunnel));
+                RoutingStrategies.Bubble, true));
         }
 
         protected override void OnDetaching()

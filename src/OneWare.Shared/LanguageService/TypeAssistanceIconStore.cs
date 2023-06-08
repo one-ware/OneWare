@@ -38,36 +38,36 @@ namespace OneWare.Shared.LanguageService
             
             Icons = new Dictionary<CompletionItemKind, IImage?>
             {
-                { CompletionItemKind.Class, Application.Current.FindResource("Class") as IImage },
-                { CompletionItemKind.Constant, Application.Current.FindResource("Constant") as IImage },
-                { CompletionItemKind.Constructor, Application.Current.FindResource("Method") as IImage },
-                { CompletionItemKind.Enum, Application.Current.FindResource("Enum") as IImage },
-                { CompletionItemKind.EnumMember, Application.Current.FindResource("EnumMember") as IImage },
-                { CompletionItemKind.Event, Application.Current.FindResource("Event") as IImage },
-                { CompletionItemKind.Field, Application.Current.FindResource("Field") as IImage },
-                { CompletionItemKind.Function, Application.Current.FindResource("Method") as IImage },
-                { CompletionItemKind.Interface, Application.Current.FindResource("Interface") as IImage },
-                { CompletionItemKind.Keyword, Application.Current.FindResource("Keyword") as IImage },
-                { CompletionItemKind.Method, Application.Current.FindResource("Method") as IImage },
-                { CompletionItemKind.Module, Application.Current.FindResource("Module") as IImage },
-                { CompletionItemKind.Operator, Application.Current.FindResource("Operator") as IImage },
-                { CompletionItemKind.Property, Application.Current.FindResource("Property") as IImage },
-                { CompletionItemKind.Snippet, Application.Current.FindResource("Snippet") as IImage },
-                { CompletionItemKind.Struct, Application.Current.FindResource("Class") as IImage },
-                { CompletionItemKind.Value, Application.Current.FindResource("ValueType") as IImage },
-                { CompletionItemKind.Variable, Application.Current.FindResource("Variable") as IImage },
-                { CompletionItemKind.Reference, Application.Current.FindResource("Reference") as IImage },
-                { CompletionItemKind.TypeParameter, Application.Current.FindResource("TypeParameter") as IImage }
+                { CompletionItemKind.Class, Application.Current.FindResource(Application.Current.RequestedThemeVariant, "Class") as IImage },
+                { CompletionItemKind.Constant, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Constant") as IImage },
+                { CompletionItemKind.Constructor, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Method") as IImage },
+                { CompletionItemKind.Enum, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Enum") as IImage },
+                { CompletionItemKind.EnumMember, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"EnumMember") as IImage },
+                { CompletionItemKind.Event, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Event") as IImage },
+                { CompletionItemKind.Field, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Field") as IImage },
+                { CompletionItemKind.Function, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Method") as IImage },
+                { CompletionItemKind.Interface, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Interface") as IImage },
+                { CompletionItemKind.Keyword, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Keyword") as IImage },
+                { CompletionItemKind.Method, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Method") as IImage },
+                { CompletionItemKind.Module, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Module") as IImage },
+                { CompletionItemKind.Operator, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Operator") as IImage },
+                { CompletionItemKind.Property, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Property") as IImage },
+                { CompletionItemKind.Snippet, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Snippet") as IImage },
+                { CompletionItemKind.Struct, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Class") as IImage },
+                { CompletionItemKind.Value, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"ValueType") as IImage },
+                { CompletionItemKind.Variable, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Variable") as IImage },
+                { CompletionItemKind.Reference, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Reference") as IImage },
+                { CompletionItemKind.TypeParameter, Application.Current.FindResource(Application.Current.RequestedThemeVariant,"TypeParameter") as IImage }
             };
 
             CustomIcons = new Dictionary<string, IImage?>
             {
-                { "Default", Application.Current.FindResource("BoxIcons.RegularCode") as IImage },
-                { "Signal", Application.Current.FindResource("PulseGreen") as IImage },
-                { "Wait", Application.Current.FindResource("Wait") as IImage },
-                { "Package", Application.Current.FindResource("Namespace") as IImage },
-                { "ConvertType", Application.Current.FindResource("ConvertType") as IImage },
-                { "Component", Application.Current.FindResource("Component") as IImage }
+                { "Default", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"BoxIcons.RegularCode") as IImage },
+                { "Signal", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"PulseGreen") as IImage },
+                { "Wait", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Wait") as IImage },
+                { "Package", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Namespace") as IImage },
+                { "ConvertType", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"ConvertType") as IImage },
+                { "Component", Application.Current.FindResource(Application.Current.RequestedThemeVariant,"Component") as IImage }
             };
         }
     }

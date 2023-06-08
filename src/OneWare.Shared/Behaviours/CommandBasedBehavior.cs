@@ -1,16 +1,18 @@
 ﻿using System.Windows.Input;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
+using CommunityToolkit.Mvvm.Input;
 
 namespace OneWare.Shared.Behaviours
 {
-    public class CommandBasedBehavior<T> : Behavior<T> where T : AvaloniaObject
+    public class CommandBasedBehavior : Behavior<Control>
     {
         /// <summary>
         ///     Defines the <see cref="Command" /> property.
         /// </summary>
-        public static readonly DirectProperty<CommandBasedBehavior<T>, ICommand?> CommandProperty =
-            AvaloniaProperty.RegisterDirect<CommandBasedBehavior<T>, ICommand?>(nameof(Command),
+        public static readonly DirectProperty<CommandBasedBehavior, ICommand?> CommandProperty =
+            AvaloniaProperty.RegisterDirect<CommandBasedBehavior, ICommand?>(nameof(Command),
                 commandBehavior => commandBehavior.Command,
                 (commandBehavior, command) => commandBehavior.Command = command, enableDataValidation: true);
 
@@ -18,7 +20,7 @@ namespace OneWare.Shared.Behaviours
         ///     Defines the <see cref="CommandParameter" /> property.
         /// </summary>
         public static readonly StyledProperty<object> CommandParameterProperty =
-            AvaloniaProperty.Register<CommandBasedBehavior<T>, object>(nameof(CommandParameter));
+            AvaloniaProperty.Register<CommandBasedBehavior, object>(nameof(CommandParameter));
 
         private ICommand? _command;
 

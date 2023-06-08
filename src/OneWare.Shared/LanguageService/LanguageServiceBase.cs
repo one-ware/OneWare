@@ -737,7 +737,7 @@ namespace OneWare.Shared.LanguageService
                 {
                     TextDocument = new TextDocumentIdentifier
                     {
-                        Uri = fullPath
+                        Uri = fullPath,
                     }
                 });
 

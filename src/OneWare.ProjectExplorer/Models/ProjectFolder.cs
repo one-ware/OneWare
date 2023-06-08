@@ -1,4 +1,7 @@
-﻿using DynamicData.Binding;
+﻿using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using Prism.Ioc;
 
 using OneWare.Shared;
@@ -171,10 +174,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         get
         {
-            yield return new MenuItemModel("Open")
+            yield return new MenuItemModel("OpenFileViewer")
             {
-                Header = "Open",
-                //Command = new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this))
+                Header = "Open in File Viewer",
+                Command = new RelayCommand(() => Tools.OpenExplorerPath(FullPath)),
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
             };
         }
     }

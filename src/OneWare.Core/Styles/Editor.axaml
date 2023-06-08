@@ -45,11 +45,15 @@
     </Style>
 
     <Style Selector="cc|CompletionList > ListBox">
-        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+    
+    <Style Selector="cc|CompletionList TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
     </Style>
 
     <Style Selector="cc|CompletionList > ListBox > ListBoxItem">

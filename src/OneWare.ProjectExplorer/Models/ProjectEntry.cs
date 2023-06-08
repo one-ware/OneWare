@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Windows.Input;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -119,4 +120,6 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         if (newName == null) return;
         _ = ContainerLocator.Container.Resolve<IProjectService>().RenameAsync(this, newName);
     }
+    
+    public ICommand? DoubleTabCommand { get; protected set; }
 }

@@ -591,9 +591,6 @@ namespace OneWare.Core.Views.DockViews
 
         private void Caret_PositionChanged(object? sender, EventArgs e)
         {
-            ContainerLocator.Current.Resolve<IDockService>().CurrentDocument = null;
-            ContainerLocator.Current.Resolve<IDockService>().CurrentDocument = ViewModel;
-
             if (true)
                 if (CodeBox.Text.Length - _lastLength == -1 && CodeBox.CaretOffset > -1 &&
                     CodeBox.CaretOffset < CodeBox.Text.Length)

@@ -5,6 +5,7 @@ using DynamicData.Binding;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
+using OneWare.Shared;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -18,11 +19,10 @@ namespace OneWare.Core.ViewModels.Windows
         public IDockService DockService { get; }
         public IActive Active { get; }
         public IWindowService WindowService { get; }
-        
         public IPaths Paths { get; }
 
         private readonly ISettingsService _settingsService;
-
+        
         public ObservableCollection<IMenuItem> TypeAssistanceQuickOptions { get; } = new();
         
         private string _title;
@@ -61,12 +61,15 @@ namespace OneWare.Core.ViewModels.Windows
 
             _title = paths.AppName;
             
-            ObservableExtensions.Subscribe(DockService.WhenValueChanged(x => x.CurrentDocument), x =>
+            DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
             {
                 if (x is EditViewModel evm)
                 {
                     CurrentEditor = evm;
-                    Title = $"{paths.AppName} IDE {evm.CurrentFile.Header}";
+                    Title = $"{paths.AppName} IDE {evm.CurrentFile?.Header}";
+                    
+                    TypeAssistanceQuickOptions.Clear();
+                    if(CurrentEditor.TypeAssistance != null) TypeAssistanceQuickOptions.AddRange(CurrentEditor.TypeAssistance.GetTypeAssistanceQuickOptions());
                 }
                 else
                 {
@@ -88,7 +91,7 @@ namespace OneWare.Core.ViewModels.Windows
                     _ = file.Value.SaveAsync();
                 }
             else
-                _ = DockService.CurrentDocument?.SaveAsync();
+                _ = (DockService.Layout?.FocusedDockable as IExtendedDocument)?.SaveAsync();
         }
 
         public void OpenSettings()

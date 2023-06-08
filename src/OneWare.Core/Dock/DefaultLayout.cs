@@ -19,7 +19,7 @@ namespace OneWare.Core.Dock
             return bottomToolsResolved == null ? factory.CreateList<IDockable>() : factory.CreateList(bottomToolsResolved.ToArray());
         }
         
-        public static IRootDock GetDefaultLayout(DockService dockService)
+        public static RootDock GetDefaultLayout(DockService dockService)
         {
             var documentDock = ContainerLocator.Container.Resolve<MainDocumentDockViewModel>();
             documentDock.ActiveDockable = null;
@@ -96,16 +96,16 @@ namespace OneWare.Core.Dock
                 )
             };
         
-            var root = dockService.CreateRootDock();
-        
-            root.Id = "Root";
-            root.Title = "Root";
-            root.IsCollapsable = false;
-        
-            root.VisibleDockables = dockService.CreateList<IDockable>(mainLayout);
-            root.ActiveDockable = mainLayout;
-            root.DefaultDockable = mainLayout;
-        
+            var root = new RootDock
+            {
+                Id = "Root",
+                Title = "Root",
+                IsCollapsable = false,
+                VisibleDockables = dockService.CreateList<IDockable>(mainLayout),
+                ActiveDockable = mainLayout,
+                DefaultDockable = mainLayout
+            };
+
             return root;
         }
     }

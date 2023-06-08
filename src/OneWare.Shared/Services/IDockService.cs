@@ -2,16 +2,17 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using Dock.Model.Mvvm.Controls;
 using OneWare.Shared.Enums;
 
 namespace OneWare.Shared.Services;
 
 public interface IDockService : INotifyPropertyChanged
 {
-    public IRootDock? Layout { get; }
+    public RootDock? Layout { get; }
     
-    public IExtendedDocument? CurrentDocument { get; set; }
-    
+    public IExtendedDocument? CurrentDocument { get; }
+
     public void RegisterLayoutExtension<T>(DockShowLocation location);
     
     public Dictionary<IFile, IExtendedDocument> OpenFiles { get; }

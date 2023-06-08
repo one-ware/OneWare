@@ -114,7 +114,7 @@
                         <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
                             <MenuItem.Header>
                                 <StackPanel Cursor="Hand">
-                                    <TextBlock x:CompileBindings="False" Text="{Binding DockService.CurrentDocument.Extension}"
+                                    <TextBlock Text="{Binding CurrentEditor.CurrentFile.Extension, FallbackValue={x:Null}}"
                                                Foreground="White" />
                                 </StackPanel>
                             </MenuItem.Header>

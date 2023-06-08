@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
 using System.Runtime.Serialization;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.VisualBasic;
@@ -23,6 +25,9 @@ public class ProjectFile : ProjectEntry, IProjectFile
         {
             Icon = x as IImage;
         });
+
+        DoubleTabCommand =
+            new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this));
     }
 
     public int Version { get; set; }
@@ -34,6 +39,12 @@ public class ProjectFile : ProjectEntry, IProjectFile
             {
                 Header = "Open",
                 Command = new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this))
+            };
+            yield return new MenuItemModel("OpenFileViewer")
+            {
+                Header = "Open in File Viewer",
+                Command = new RelayCommand(() => Tools.OpenExplorerPath(FullPath)),
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
             };
         }
     }

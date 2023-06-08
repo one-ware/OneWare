@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Net.WebSockets;
 using Nerdbank.Streams;
 using OneWare.Shared.Services;
@@ -35,11 +36,10 @@ namespace OneWare.Shared.LanguageService
             if (_webUrl != null)
             {
                 var websocket = new ClientWebSocket();
-                var websocketUri = new Uri("");
                 try
                 {
                     _cancellation = new CancellationTokenSource();
-                    await websocket.ConnectAsync(websocketUri, _cancellation.Token);
+                    await websocket.ConnectAsync(_webUrl, _cancellation.Token);
                     
                     await InitAsync(websocket.UsePipeReader().AsStream(), websocket.UsePipeWriter().AsStream());
                 }
@@ -72,11 +72,15 @@ namespace OneWare.Shared.LanguageService
                     StartInfo = processStartInfo
                 };
 
+                _process.ErrorDataReceived +=
+                    (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "");
+
                 try
                 {
                     _process.Start();
+                    _process.BeginErrorReadLine();
 
-                    await InitAsync(_process.StandardInput.BaseStream, _process.StandardOutput.BaseStream);
+                    await InitAsync(_process.StandardOutput.BaseStream, _process.StandardInput.BaseStream);
                 }
                 catch (Exception e)
                 {
