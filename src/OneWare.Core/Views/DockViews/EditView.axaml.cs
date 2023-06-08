@@ -512,6 +512,7 @@ namespace OneWare.Core.Views.DockViews
             if (offset <= 0 || word == _lastHoverWord && HoverBox.IsOpen) return;
 
             //HoverTextBox.Markdown = "";
+            HoverBoxContent.Content = null;
 
             if (word != null)
             {
@@ -548,8 +549,8 @@ namespace OneWare.Core.Views.DockViews
                 
                 if (HoverBoxContent.Content != null && !(CodeBox.TextArea.ContextMenu?.IsOpen ?? false))
                 {
-                    UpdatePopupPositionToCursor(HoverBox, e);
                     if (IsEffectivelyVisible) HoverBox.Open();
+                    UpdatePopupPositionToCursor(HoverBox, e);
 
                     e.Handled = true;
                 }
@@ -573,6 +574,7 @@ namespace OneWare.Core.Views.DockViews
             visualPosition -= CodeBox.TextArea.TextView.ScrollOffset;
             popup.VerticalOffset = visualPosition.Y;
             popup.HorizontalOffset = visualPosition.X;
+            popup.PlacementTarget = CodeBox.TextArea;
             popup.Placement = PlacementMode.AnchorAndGravity;
             popup.PlacementAnchor = PopupAnchor.TopLeft;
             popup.PlacementGravity = PopupGravity.BottomRight;

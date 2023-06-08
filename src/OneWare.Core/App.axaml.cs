@@ -52,6 +52,7 @@ namespace OneWare.Core
             //ViewModels - Windows
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
             containerRegistry.RegisterSingleton<SettingsViewModel>();
+            containerRegistry.RegisterSingleton<ChangelogViewModel>();
             containerRegistry.RegisterSingleton<AboutViewModel>();
             
             //ViewModels - Dock
@@ -113,6 +114,14 @@ namespace OneWare.Core
             {
                 Header = "Help",
                 Priority = 1000
+            });
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Changelog")
+            {
+                Header = $"Changelog",
+                Command = new RelayCommand(() => windowService.Show(new ChangelogView()
+                {
+                    DataContext = Container.Resolve<ChangelogViewModel>()
+                }))
             });
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("About")
             {
@@ -339,7 +348,7 @@ END BEHAVIORAL;
                     Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
                         $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog", () =>
                         {
-                            Container.Resolve<IWindowService>().Show(new ChangelogWindow());
+                            Container.Resolve<IWindowService>().Show(new ChangelogView());
                         }, App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 }
 

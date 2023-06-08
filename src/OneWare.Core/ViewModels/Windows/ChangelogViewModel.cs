@@ -4,7 +4,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 
-public class ChangelogWindowViewModel : FlexibleWindowViewModelBase
+public class ChangelogViewModel : FlexibleWindowViewModelBase
 {
     private bool _isLoading = false;
     
@@ -23,7 +23,7 @@ public class ChangelogWindowViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _changeLog, value);
     }
 
-    public ChangelogWindowViewModel()
+    public ChangelogViewModel()
     {
         _ = LoadAsync();
     }

@@ -4,12 +4,10 @@ using OneWare.Shared;
 
 namespace OneWare.Core.Views.Windows
 {
-    public partial class ChangelogWindow : FlexibleWindow
+    public partial class ChangelogView : FlexibleWindow
     {
-        public ChangelogWindow()
+        public ChangelogView()
         {
-            DataContext = new ChangelogWindowViewModel();
-
             InitializeComponent();
         }
     }

@@ -7,20 +7,15 @@
                         xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
                         mc:Ignorable="d"
-                        x:Class="OneWare.Core.Views.Windows.ChangelogWindow"
-                        Width="600" Height="500"
+                        x:Class="OneWare.Core.Views.Windows.ChangelogView"
+                        PrefWidth="600" PrefHeight="500"
                         Padding="4"
                         Title="Changelog"
                         Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
                         CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
                         WindowStartupLocation="CenterOwner" Name="ChangelogWindowView"
-                        x:DataType="windows1:ChangelogWindowViewModel">
+                        x:DataType="windows1:ChangelogViewModel">
     <DockPanel>
-        <StackPanel Margin="4" Classes="WindowButtons" HorizontalAlignment="Right" DockPanel.Dock="Bottom">
-            <Button Command="{Binding Close}" CommandParameter="{Binding #ChangelogWindowView}"
-                    HorizontalAlignment="Right" Content="Close" />
-        </StackPanel>
-        
         <Grid DockPanel.Dock="Top">
             <Border DockPanel.Dock="Top" Margin="4" Padding="4" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" >
                 <md:MarkdownScrollViewer Margin="4"  Markdown="{Binding ChangeLog}">
