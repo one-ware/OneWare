@@ -10,6 +10,7 @@
              xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
              xmlns:dockViews1="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:rendering="https://github.com/avaloniaui/avaloniaedit"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.DockViews.EditView" x:DataType="dockViews1:EditViewModel"
              Background="{DynamicResource ThemeControlLowBrush}" Name="EditViewView">
@@ -70,27 +71,15 @@
                 <Style Selector="avaloniaEdit|TextEditor">
                     <Setter Property="ShowLineNumbers" Value="True"/>
                     <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
-                    <Setter Property="VerticalScrollBarVisibility" Value="Visible"></Setter>
+                    <Setter Property="VerticalScrollBarVisibility" Value="Visible"/>
                 </Style>
             </ContentControl.Styles>
         </ContentControl>
 
-        <Popup x:Name="HoverBox" IsLightDismissEnabled="False">
-            <Border Padding="2" CornerRadius="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+        <Popup Name="HoverBox" IsLightDismissEnabled="False">
+            <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                     Background="{DynamicResource ThemeBackgroundBrush}">
-                <Grid>
-                    <md:MarkdownScrollViewer Classes="ToolTip" Name="HoverTextBox">
-                        <md:MarkdownScrollViewer.Styles>
-                            <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                            
-                            <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                                <Setter Property="SyntaxHighlighting" Value="{Binding Editor.SyntaxHighlighting, Mode=OneWay}"/>
-                            </Style>
-                        </md:MarkdownScrollViewer.Styles>
-                    </md:MarkdownScrollViewer>
-                    <controls:VariableControlView Name="VariableControl" DataContext="{Binding #EditViewView.VaribleViewDataConext}" />
-                </Grid>
-            </Border>
+            </ContentControl>
         </Popup>
     </Grid>
     

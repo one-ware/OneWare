@@ -94,7 +94,7 @@ namespace OneWare.Core
 
             settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding", "Use Folding in Editor", true);
             
-            settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable, "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes", true);
+            settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable, "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes", ApplicationLifetime is IClassicDesktopStyleApplicationLifetime);
             settingsService.RegisterTitledCombo("Editor", "Backups", BackupService.KeyBackupServiceInterval, "Auto backup interval (s)", 
                 "Interval the IDE uses to save files for backup", 30, 5, 10, 15, 30, 60, 120);
             
@@ -243,16 +243,16 @@ namespace OneWare.Core
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
                 //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
 
-                if (ApplicationLifetime is ISingleViewApplicationLifetime or IClassicDesktopStyleApplicationLifetime)
+                var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
+                Directory.CreateDirectory(testProj);
+                var dummy = new ProjectRoot(testProj);
+                var hard = dummy.AddFile("Hardware.vhd");
+                var soft = dummy.AddFile("Software.cpp");
+                Container.Resolve<IProjectService>().Items.Add(dummy);
+                Container.Resolve<IProjectService>().ActiveProject = dummy;
+                
+                if (ApplicationLifetime is ISingleViewApplicationLifetime)
                 {
-                    var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
-                    Directory.CreateDirectory(testProj);
-                    var dummy = new ProjectRoot(testProj);
-                    var hard = dummy.AddFile("Hardware.vhd");
-                    var soft = dummy.AddFile("Software.cpp");
-                    Container.Resolve<IProjectService>().Items.Add(dummy);
-                    Container.Resolve<IProjectService>().ActiveProject = dummy;
-
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
                     (editor as IEditor)!.CurrentDocument.Text = @"
 // Your First C++ Program
@@ -325,7 +325,7 @@ END BEHAVIORAL;
             splashWindow?.Close();
         }
 
-        private async Task FinishedLoadingAsync()
+        private Task FinishedLoadingAsync()
         {
             try
             {
@@ -352,6 +352,8 @@ END BEHAVIORAL;
             {
                 Container.Resolve<ILogger>().Error(e.Message, e);
             }
+
+            return Task.CompletedTask;
         }
 
         private async Task TryShutDownAsync(object? sender, CancelEventArgs e)
@@ -391,7 +393,7 @@ END BEHAVIORAL;
             //Save settings
             Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
 
-            Environment.Exit(0);
+            Environment.Exit(0); 
         }
         
         private void About_Click(object? sender, EventArgs e)

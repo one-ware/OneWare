@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Settings.Models;
+using OneWare.Shared;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
@@ -95,10 +96,9 @@ namespace OneWare.Settings.ViewModels
             SelectedPage = SettingPages.FirstOrDefault();
         }
         
-        public void Okay(Window window)
+        public void Okay(FlexibleWindow window)
         {
-            window.Close();
-            //Global.SaveSettings();
+            this.Close(window);
             _settingsService.Save(Path.Combine(_paths.AppDataDirectory, "settings.json"));
         }
 

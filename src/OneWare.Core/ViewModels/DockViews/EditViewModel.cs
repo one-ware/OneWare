@@ -348,7 +348,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             if (IsReadOnly) return true;
 
-            var success = await SaveFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
+            var success = await SaveFileAsync(FullPath, CurrentDocument.Text);
 
             if (success)
             {
@@ -409,13 +409,14 @@ namespace OneWare.Core.ViewModels.DockViews
         /// </summary>
         private Task<(bool, string, DateTime lastModified)> LoadFileAsync()
         {
-            if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
             return Task.Run(() =>
             {
+                if(!File.Exists(FullPath)) return (false, "", DateTime.MinValue); 
                 try
                 {
-                    var stream = new FileStream(CurrentFile.FullPath, FileMode.Open, FileAccess.Read,
+                    var stream = new FileStream(FullPath, FileMode.Open, FileAccess.Read,
                         FileShare.ReadWrite);
+                    
                     var text = "";
                     using (var reader = new StreamReader(stream))
                     {
@@ -423,13 +424,13 @@ namespace OneWare.Core.ViewModels.DockViews
                     }
 
                     stream.Close();
-                    return (true, text, File.GetLastWriteTime(CurrentFile.FullPath));
+                    return (true, text, File.GetLastWriteTime(FullPath));
                 }
                 catch (Exception e)
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error($"Failed loading file {CurrentFile.FullPath}", e);
-                    return (false, "", DateTime.MinValue);
+                        ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+                    return (false, "", DateTime.MinValue); 
                 }
             });
         }

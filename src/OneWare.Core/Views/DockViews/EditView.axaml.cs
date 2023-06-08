@@ -16,11 +16,13 @@ using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
 using ExposedObject;
+using Markdown.Avalonia;
 using OneWare.Core.Data;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
 using Prism.Ioc;
 using OneWare.Core.Extensions;
+using OneWare.Core.Views.Controls;
 using OneWare.ErrorList.ViewModels;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
@@ -53,9 +55,6 @@ namespace OneWare.Core.Views.DockViews
             
             InitializeComponent();
 
-            var exposedMarkdown = Exposed.From(HoverTextBox);
-            exposedMarkdown._viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-
             this.DataContextChanged += (_, _) =>
             {
                 if (DataContext is not EditViewModel evm) return;
@@ -70,7 +69,7 @@ namespace OneWare.Core.Views.DockViews
 
         private void WindowPointerPressed(object? sender, PointerPressedEventArgs i)
         {
-            if (!Equals(Tools.VisualUpwardSearch<Popup>(i.Source as Interactive), HoverBox)) HoverBox.Close();
+            //if (!Equals(Tools.VisualUpwardSearch<Popup>(i.Source as Interactive), HoverBox)) HoverBox.Close();
         }
 
         protected void Setup()
@@ -180,6 +179,8 @@ namespace OneWare.Core.Views.DockViews
         {
             try
             {
+                if (ViewModel == null) return;
+                
                 _lastSearchResultLines =
                     results.Select(x => CodeBox.Document.GetLineByOffset(x.StartOffset).LineNumber);
 
@@ -503,14 +504,14 @@ namespace OneWare.Core.Views.DockViews
         private async Task TextEditorMouseHoverAsync(object? sender, PointerEventArgs e)
         {
             if (!Equals(e.Source, CodeBox.TextArea.TextView)) return;
-
+            
             var offset = CodeBox.GetOffsetFromPointerPosition(e);
 
             var word = CodeBox.GetWordAtMousePos(e);
 
             if (offset <= 0 || word == _lastHoverWord && HoverBox.IsOpen) return;
 
-            HoverTextBox.Markdown = "";
+            //HoverTextBox.Markdown = "";
 
             if (word != null)
             {
@@ -526,28 +527,26 @@ namespace OneWare.Core.Views.DockViews
                         if (vm != null)
                         {
                             vm.IsExpanded = true;
-                            VaribleViewDataConext = new ObjectValueModel
+                            HoverBoxContent.Content = new VariableControlView()
                             {
-                                Children = new ObservableCollection<ObjectValueModel> { vm },
-                                DisplayName = name
+                                DataContext = new ObjectValueModel
+                                {
+                                    Children = new ObservableCollection<ObjectValueModel> {vm},
+                                    DisplayName = name
+                                }
                             };
-                            VariableControl.IsVisible = true;
-                            HoverTextBox.IsVisible = false;
                         }
                     }
                     else if (!string.IsNullOrWhiteSpace(info))
                     {
-                        HoverTextBox.Markdown = info;
-                        VariableControl.IsVisible = false;
-                        HoverTextBox.IsVisible = true;
+                        HoverBoxContent.Content = new MarkdownScrollViewer()
+                        {
+                            Markdown = info,
+                        };
                     }
                 }
-
-                if (string.IsNullOrEmpty(HoverTextBox.Markdown) && !VariableControl.IsVisible)
-                    if (GetErrorAtMousePos(e) is { } error)
-                        HoverTextBox.Markdown = error.Description.Split('\n')[0];
-                if ((!string.IsNullOrEmpty(HoverTextBox.Markdown) || VariableControl.IsVisible) &&
-                    !(CodeBox.TextArea.ContextMenu?.IsOpen ?? false) && !string.IsNullOrEmpty(HoverTextBox.Markdown))
+                
+                if (HoverBoxContent.Content != null && !(CodeBox.TextArea.ContextMenu?.IsOpen ?? false))
                 {
                     UpdatePopupPositionToCursor(HoverBox, e);
                     if (IsEffectivelyVisible) HoverBox.Open();
@@ -574,7 +573,6 @@ namespace OneWare.Core.Views.DockViews
             visualPosition -= CodeBox.TextArea.TextView.ScrollOffset;
             popup.VerticalOffset = visualPosition.Y;
             popup.HorizontalOffset = visualPosition.X;
-            popup.PlacementTarget = CodeBox.TextArea.TextView;
             popup.Placement = PlacementMode.AnchorAndGravity;
             popup.PlacementAnchor = PopupAnchor.TopLeft;
             popup.PlacementGravity = PopupGravity.BottomRight;

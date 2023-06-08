@@ -144,7 +144,7 @@
                 <DataGridTemplateColumn Width="4*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Description}" Text="{Binding Description}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}" Text="{Binding Description}"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -154,7 +154,7 @@
                 <DataGridTemplateColumn Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Source}" Text="{Binding Source}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0"  ToolTip.Tip="{Binding Source}" Text="{Binding Source}"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -164,7 +164,7 @@
                 <DataGridTemplateColumn CanUserResize="True" CanUserSort="True" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding Root.Header, FallbackValue={x:Null}}" Text="{Binding Root.Header, FallbackValue={x:Null}}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0"  ToolTip.Tip="{Binding Root.Header, FallbackValue={x:Null}}" Text="{Binding Root.Header, FallbackValue={x:Null}}"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -174,7 +174,7 @@
                 <DataGridTemplateColumn Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding File.Header}" Text="{Binding File.Header}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding File.Header}" Text="{Binding File.Header}"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -184,7 +184,7 @@
                 <DataGridTemplateColumn Width="Auto" CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock Padding="5 2" ToolTip.Tip="{Binding StartLine}" Text="{Binding StartLine}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0"  ToolTip.Tip="{Binding StartLine}" Text="{Binding StartLine}"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>

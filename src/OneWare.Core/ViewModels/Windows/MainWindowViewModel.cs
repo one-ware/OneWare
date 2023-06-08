@@ -66,7 +66,7 @@ namespace OneWare.Core.ViewModels.Windows
                 if (x is EditViewModel evm)
                 {
                     CurrentEditor = evm;
-                    Title = $"{paths.AppName} IDE {evm.CurrentFile?.Header}";
+                    Title = $"{paths.AppName} IDE - {evm.CurrentFile?.Header}";
                     
                     TypeAssistanceQuickOptions.Clear();
                     if(CurrentEditor.TypeAssistance != null) TypeAssistanceQuickOptions.AddRange(CurrentEditor.TypeAssistance.GetTypeAssistanceQuickOptions());
