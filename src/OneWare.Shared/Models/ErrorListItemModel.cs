@@ -1,12 +1,14 @@
 ﻿#nullable enable
 
-using AvaloniaEdit.Document;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared.Enums;
+using TextDocument = AvaloniaEdit.Document.TextDocument;
 
 namespace OneWare.Shared.Models
 {
     public class ErrorListItemModel : IEquatable<ErrorListItemModel>, IComparable<ErrorListItemModel>
     {
+        public Diagnostic? Diagnostic { get; set; }
         public string Description { get; init; }
         public ErrorType Type { get; init; }
         public string? Source { get; init; }
@@ -18,7 +20,7 @@ namespace OneWare.Shared.Models
         public int? EndColumn { get; init; }
         public string? Code { get; init; }
         
-        public ErrorListItemModel(string description, ErrorType type, IFile file, string? source, int startLine, int? startColumn = null, int? endLine = null, int? endColumn = null, string? code = null)
+        public ErrorListItemModel(string description, ErrorType type, IFile file, string? source, int startLine, int? startColumn = null, int? endLine = null, int? endColumn = null, string? code = null, Diagnostic? diagnostic = null)
         {
             Description = description;
             Type = type;
@@ -30,6 +32,7 @@ namespace OneWare.Shared.Models
             File = file;
             Code = code;
             Root = (file as IProjectFile)?.Root;
+            Diagnostic = diagnostic;
         }
 
         /// <summary>

@@ -177,7 +177,7 @@ namespace OneWare.Shared.LanguageService
 
             var location = CodeBox.Document.GetLocation(offset);
 
-            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
+            var hover = await Service.RequestHoverAsync(Editor.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (hover != null && !IsClosed)
             {
@@ -198,14 +198,14 @@ namespace OneWare.Shared.LanguageService
 
             //Quick Fixes
             var error = GetErrorAtLocation(location);
-            if (error != null)
+            if (error != null && error.Diagnostic != null)
             {
-                var codeactions = await Service.RequestCodeActionAsync(Editor.CurrentFile.FullPath,
+                var codeactions = await Service.RequestCodeActionAsync(Editor.FullPath,
                     new Range
                     {
                         Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
                         End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
-                    });
+                    }, error.Diagnostic);
 
                 if (codeactions is not null && !IsClosed)
                 {

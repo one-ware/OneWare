@@ -9,7 +9,7 @@ namespace OneWare.Cpp
 {
     public class LanguageServiceCpp : LanguageService
     {
-        public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("CPP LS", 
+        public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("CPP LS",
             Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", "clangd.exe"), "--log=error",
             null)
         {
@@ -35,12 +35,14 @@ namespace OneWare.Cpp
 
         public override async Task ActivateAsync()
         {
-            //await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-             //   "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
-             //   ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+            if (!File.Exists(ExecutablePath))
+                await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
+                    "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
+                    ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
             await base.ActivateAsync();
         }
     }
+
     public class CustomCppInitialisationOptions
     {
         public Container<string>? FallbackFlags { get; set; }

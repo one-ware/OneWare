@@ -494,7 +494,7 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range)
+        public async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range, Diagnostic diagnostic)
         {
             if (Client == null || Client.ServerSettings.Capabilities.CodeActionProvider == null) return null;
             try
@@ -506,10 +506,10 @@ namespace OneWare.Shared.LanguageService
                         Uri = fullPath
                     },
                     Range = range,
-                    // Context = new CodeActionContext
-                    // {
-                    //     Diagnostics = file.Diagnostics TODO
-                    // }
+                    Context = new CodeActionContext
+                    {
+                        Diagnostics = new Container<Diagnostic>(diagnostic)
+                    }
                 });
 
                 return ca;
@@ -899,10 +899,7 @@ namespace OneWare.Shared.LanguageService
                     };
 
                 yield return new ErrorListItemModel(p.Message, errorType, file, Name, p.Range.Start.Line+1,
-                    p.Range.Start.Character+1, p.Range.End.Line+1, p.Range.End.Character+1)
-                {
-                    Code = p.Code?.String ?? p.Code?.Long.ToString() ?? "",
-                };
+                    p.Range.Start.Character+1, p.Range.End.Line+1, p.Range.End.Character+1,  p.Code?.String ?? p.Code?.Long.ToString() ?? "", p);
             }
         }
     }
