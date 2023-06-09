@@ -542,7 +542,7 @@ namespace OneWare.Core.Views.DockViews
                     {
                         HoverBoxContent.Content = new MarkdownScrollViewer()
                         {
-                            Markdown = info,
+                            //Markdown = info,
                         };
                     }
                 }
