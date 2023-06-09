@@ -42,6 +42,8 @@ namespace OneWare.Core
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             //Services
+            containerRegistry.RegisterSingleton<IHttpService, HttpService>();
+            containerRegistry.RegisterSingleton<IPackageService, PackageService>();
             containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
             containerRegistry.RegisterSingleton<IActive, Active>();
             containerRegistry.RegisterSingleton<IDockService, DockService>();

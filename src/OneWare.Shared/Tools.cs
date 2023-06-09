@@ -344,7 +344,7 @@ namespace OneWare.Shared
 
         public static void ChmodFile(string path)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Application.Current?.ApplicationLifetime is not ISingleViewApplicationLifetime) ExecBash("chmod 777 " + path);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) ExecBash("chmod 777 " + path);
         }
 
         public static void ChmodFolder(string path)
