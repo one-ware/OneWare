@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO.Pipelines;
 using System.Net.WebSockets;
 using Nerdbank.Streams;
 using OneWare.Shared.Services;
@@ -11,54 +10,52 @@ namespace OneWare.Shared.LanguageService
     {
         private CancellationTokenSource? _cancellation;
         private Process? _process;
-        private readonly Uri? _webUrl;
-        private readonly string? _executablePath;
         private readonly string? _arguments;
+        protected readonly string ExecutablePath;
 
-        protected LanguageService(string name, Uri webUrl, string? workspace) : base (name, workspace)
+        protected LanguageService(string name, string executablePath, string? arguments, string? workspace) : base(name,
+            workspace)
         {
-            _webUrl = webUrl;
-        }
-
-        protected LanguageService(string name, string executablePath, string? arguments, string? workspace) : base (name, workspace)
-        {
-            _executablePath = executablePath;
+            ExecutablePath = executablePath;
             _arguments = arguments;
         }
 
         public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
-        
+
         public override async Task ActivateAsync()
         {
             if (IsActivated) return;
-            IsActivated = true;
-            
-            if (_webUrl != null)
+
+            if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))
             {
                 var websocket = new ClientWebSocket();
                 try
                 {
                     _cancellation = new CancellationTokenSource();
-                    await websocket.ConnectAsync(_webUrl, _cancellation.Token);
-                    
+                    await websocket.ConnectAsync(new Uri(ExecutablePath), _cancellation.Token);
+
                     await InitAsync(websocket.UsePipeReader().AsStream(), websocket.UsePipeWriter().AsStream());
+                    IsActivated = true;
+                    return;
                 }
                 catch (Exception e)
                 {
                     ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    return;
                 }
             }
-            else if(_executablePath != null)
+            else
             {
-                if (!Tools.Exists(_executablePath))
+                if (!Tools.Exists(ExecutablePath))
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error($"{Name} language server not found! {_executablePath}");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        ?.Error($"{Name} language server not found! {ExecutablePath}");
                     return;
                 }
 
                 var processStartInfo = new ProcessStartInfo
                 {
-                    FileName = _executablePath,
+                    FileName = ExecutablePath,
                     Arguments = _arguments ?? "",
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -81,6 +78,7 @@ namespace OneWare.Shared.LanguageService
                     _process.BeginErrorReadLine();
 
                     await InitAsync(_process.StandardOutput.BaseStream, _process.StandardInput.BaseStream);
+                    IsActivated = true;
                 }
                 catch (Exception e)
                 {

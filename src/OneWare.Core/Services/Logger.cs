@@ -44,12 +44,12 @@ public class Logger : ILogger
     {
         var appRun = DateTime.Now - AppStart;
 #if DEBUG
-        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = ConsoleColor.Magenta;
+        if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = ConsoleColor.Magenta;
         Console.Write(@"[" + string.Format("{0:D2}:{1:D2}:{2:D2}", (int)appRun.TotalHours,
             (int)appRun.TotalMinutes, appRun.Seconds) + @"] ");
-        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = color;
+        if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = color;
         Console.WriteLine(message);
-        if(Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime) Console.ForegroundColor = ConsoleColor.White;
+        if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = ConsoleColor.White;
 #endif
         if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {
