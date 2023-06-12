@@ -26,7 +26,7 @@ namespace OneWare.Shared
         {
             if (unsavedFiles.Count > 0)
             {
-                var status = await ContainerLocator.Container.Resolve<IWindowService>().ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning);
+                var status = await ContainerLocator.Container.Resolve<IWindowService>().ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning, dialogOwner);
                 
                 if (status == MessageBoxStatus.Yes)
                 {

@@ -54,6 +54,11 @@ public class AdvancedHostWindow : HostWindow
         if (close)
         {
             _cancelClose = false;
+            foreach (var file in unsavedFiles)
+            {
+                if(file.CurrentFile != null) _dockService.OpenFiles.Remove(file.CurrentFile);
+            }
+
             Dispatcher.UIThread.Post(Close);
         }
     }
