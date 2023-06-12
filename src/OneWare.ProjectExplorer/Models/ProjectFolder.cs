@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Prism.Ioc;
@@ -12,12 +13,30 @@ namespace OneWare.ProjectExplorer.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string header, IProjectFolder topFolder) : base(header, topFolder)
+    public ProjectFolder(string header, IProjectFolder? topFolder) : base(header, topFolder)
     {
-        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+        if (GetType() == typeof(ProjectFolder))
         {
-            
-        });
+            IDisposable? iconDisposable = null;
+            this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+            {
+                iconDisposable?.Dispose();
+                if (!x)
+                {
+                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X").Subscribe(y =>
+                    {
+                        Icon = y as IImage;
+                    });
+                }
+                else
+                {
+                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X").Subscribe(y =>
+                    {
+                        Icon = y as IImage;
+                    });
+                }
+            });
+        }
     }
     
     private void Insert(IProjectEntry entry)
@@ -168,18 +187,5 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
 
         return null;
-    }
-
-    public override IEnumerable<MenuItemModel> ContextMenu
-    {
-        get
-        {
-            yield return new MenuItemModel("OpenFileViewer")
-            {
-                Header = "Open in File Viewer",
-                Command = new RelayCommand(() => Tools.OpenExplorerPath(FullPath)),
-                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
-            };
-        }
     }
 }

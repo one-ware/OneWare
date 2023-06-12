@@ -234,7 +234,7 @@ namespace OneWare.Core.Services
 
                 if (dockable is IWaitForContent wC)
                 {
-                    wC.OnContentLoaded();
+                    wC.InitializeContent();
                 }
             }
             
@@ -326,7 +326,7 @@ namespace OneWare.Core.Services
             var extendedDocs = SearchView<IWaitForContent>();
             foreach (var extendedDocument in extendedDocs)
             {
-                extendedDocument.OnContentLoaded();
+                extendedDocument.InitializeContent();
             }
         }
 

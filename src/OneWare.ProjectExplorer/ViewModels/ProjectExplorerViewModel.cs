@@ -1,8 +1,12 @@
-﻿using OneWare.ProjectExplorer.Models;
+﻿using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.ProjectExplorer.Models;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
@@ -20,11 +24,23 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
 
     private IProjectRoot? _activeProject;
-    
+
+    private IEnumerable<IMenuItem>? _treeViewContextMenu;
+    public IEnumerable<IMenuItem>? TreeViewContextMenu
+    {
+        get => _treeViewContextMenu;
+        set => SetProperty(ref _treeViewContextMenu, value);
+    }
+
     public IProjectRoot? ActiveProject
     {
         get => _activeProject;
-        set => SetProperty(ref _activeProject, value);
+        set
+        {
+            if (_activeProject is not null) _activeProject.IsActive = false;
+            SetProperty(ref _activeProject, value);
+            if (_activeProject is not null) _activeProject.IsActive = true;
+        }
     }
 
     public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService)
@@ -35,10 +51,63 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         _windowService = windowService;
         _settingsService = settingsService;
 
-        Id = "ProjectFiles";
+        Id = "ProjectExplorer";
         Title = "Project Explorer";
     }
 
+    public void ConstructContextMenu()
+    {
+        var menuItems = new List<IMenuItem>();
+
+        if (SelectedItem is ProjectEntry entry)
+        {
+            if (entry is IProjectFile file)
+            {
+                menuItems.Add(new MenuItemModel("Open")
+                {
+                    Header = "Open",
+                    Command = new RelayCommand(() => _dockService.OpenFileAsync(file))
+                });
+            }
+            else if (entry is IProjectFolder folder)
+            {
+                menuItems.Add(new MenuItemModel("Add")
+                {
+                    Header = "Add",
+                    Items = new List<IMenuItem>()
+                    {
+                        new MenuItemModel("NewFolder")
+                        {
+                            Header = "New Folder",
+                            Command = new RelayCommand(() => folder.AddFolder("NewFolder", true)),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
+                        },
+                        new MenuItemModel("NewFile")
+                        {
+                            Header = "New File",
+                            Command = new RelayCommand(() => folder.AddFile("NewFile", true)),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
+                        }
+                    }
+                });
+            }
+            menuItems.Add(new MenuItemModel("Rename")
+            {
+                Header = "Rename",
+                Command = new RelayCommand(() => entry.RequestRename?.Invoke((x) => _ = RenameAsync(entry, x))),
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
+            });
+            menuItems.Add(new MenuItemModel("OpenFileViewer")
+            {
+                Header = "Open in File Viewer",
+                Command = new RelayCommand(() => Tools.OpenExplorerPath(entry.FullPath)),
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
+            });
+        }
+
+        TreeViewContextMenu = menuItems;
+    }
+    
     public async Task OpenFileDialogAsync()
     {
         var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this), "Select File", null);
@@ -311,7 +380,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
-        await ReloadAsync(entry, newName);
+        (entry as ProjectEntry)!.Header = newName;
+
+        await ReloadAsync(entry);
 
         //if (entry.HasRoot)
         //{
@@ -321,7 +392,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         return entry;
     }
     
-    public async Task<IProjectEntry> ReloadAsync(IProjectEntry entry, string? newName = null)
+    public async Task<IProjectEntry> ReloadAsync(IProjectEntry entry)
     {
         if (!entry.IsValid())
         {
@@ -351,13 +422,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
 
         if (entry is IProjectFile file)
         {
-            var addTab = _dockService.OpenFiles.ContainsKey(file);
-            var topFolder = entry.TopFolder;
-            var expanded = topFolder.IsExpanded;
-            entry.TopFolder.Remove(entry);
-            file = topFolder.AddFile(newName ?? file.Header);
-            topFolder.IsExpanded = expanded;
-            if (addTab) _ = _dockService.OpenFileAsync(file);
+            _dockService.OpenFiles.TryGetValue(file, out var evm);
+            if (evm is IEditor editor)
+            {
+                editor.FullPath = file.FullPath;
+            }
+            evm?.InitializeContent();
             return file;
         }
 

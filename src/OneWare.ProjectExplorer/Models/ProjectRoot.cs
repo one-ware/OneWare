@@ -18,6 +18,17 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
 
     public override string FullPath => RootFolderPath;
 
+    private bool _isActive;
+    public bool IsActive
+    {
+        get => _isActive;
+        set
+        {
+            SetProperty(ref _isActive, value);
+            FontWeight = value ? FontWeight.Bold : FontWeight.Regular;
+        }
+    }
+
     public ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath), null)
     {
         RootFolderPath = rootFolderPath;

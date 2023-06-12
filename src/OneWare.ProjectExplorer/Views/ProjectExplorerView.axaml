@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
              xmlns:models="clr-namespace:OneWare.ProjectExplorer.Models"
@@ -13,6 +12,7 @@
              Background="{DynamicResource ThemeControlLowBrush}"
              BorderBrush="{DynamicResource ThemeBorderLowBrush}"
              x:CompileBindings="True" x:DataType="viewModels:ProjectExplorerViewModel"
+             Name="ProjectExplorerViewView"
              Foreground="{DynamicResource ThemeForegroundColor}"
              BorderThickness="0">
 
@@ -44,21 +44,28 @@
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                   SelectedItems="{Binding SelectedItems, Mode=TwoWay}"
                   DragDrop.AllowDrop="True" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
+            <TreeView.ContextMenu>
+                <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
+                             ItemsSource="{Binding TreeViewContextMenu}">
+                </ContextMenu>
+            </TreeView.ContextMenu>
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem" x:DataType="models:ProjectEntry">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}"></Setter>
+                </Style>
+            </TreeView.Styles>
             <TreeView.DataTemplates>
-                <TreeDataTemplate DataType="models:ProjectEntry" ItemsSource="{Binding Items}" >
+                <TreeDataTemplate DataType="models:ProjectEntry" ItemsSource="{Binding Items}">
                     <DockPanel Background="Transparent">
                         <Interaction.Behaviors>
                             <behaviours:CommandOnDoubleTapBehaviour Command="{Binding DoubleTabCommand}"/>
                         </Interaction.Behaviors>
-                        <DockPanel.ContextMenu>
-                            <ContextMenu Classes="BindMenu" ItemsSource="{Binding ContextMenu}"/>
-                        </DockPanel.ContextMenu>
                         
                         <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
-                            <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Width="16"
+                            <Image Height="16" Width="16"
                                    Source="{Binding Icon}">
                             </Image>
-                            <Image Margin="1, 0, 0, 0" Height="17" Width="17"
+                            <Image Height="16" Width="16"
                                    Source="{DynamicResource VsImageLib.StatusCriticalErrorOverlayExp16X}"
                                    IsVisible="{Binding LoadingFailed}" />
                             <!--
@@ -106,10 +113,11 @@
                                        Foreground="{Binding GitChangeStatus, Converter={StaticResource ChangeStatusBrushConverter}}" />
                         </Grid>-->
 
-                        <views:RenamingTextBox ToolTip.Tip="{Binding Header}" VerticalAlignment="Center"
-                                                  RequestRename="{Binding RequestRename}" IsEnabled="False"
-                                                  Name="LabelBox" Text="{Binding Header}" Opacity="{Binding ExcludeCompilation, Converter={x:Static converters:SharedConverters.FileOpacityConverter}}"/>
-          
+                        <views:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}" VerticalAlignment="Center"
+                                                 IsEnabled="False" x:Name="RenamingTextBox"
+                                                 Text="{Binding Header, Mode=OneWay}" RenameAction="{Binding RequestRename}"
+                                                 Opacity="{Binding ExcludeCompilation, Converter={x:Static converters:SharedConverters.FileOpacityConverter}}">
+                        </views:RenamingTextBox>
                     </DockPanel>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>

@@ -5,7 +5,7 @@ using Dock.Model.Controls;
 
 namespace OneWare.Shared;
 
-public interface IExtendedDocument : IDocument
+public interface IExtendedDocument : IDocument, IWaitForContent
 {
     public IFile? CurrentFile { get; }
     public IRelayCommand Undo { get; }

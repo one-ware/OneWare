@@ -2,5 +2,5 @@
 
 public interface IWaitForContent
 {
-    public void OnContentLoaded(){}
+    public void InitializeContent(){}
 }

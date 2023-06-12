@@ -32,13 +32,24 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly IProjectService _projectService;
         private readonly BackupService _backupService;
 
-        [DataMember] public string FullPath { get; init; }
+        private string _fullPath;
+
+        [DataMember]
+        public string FullPath
+        {
+            get => _fullPath;
+            set
+            {
+                SetProperty(ref _fullPath, value);
+                Id = $"Editor: {value}";
+            }
+        }
 
         private IFile? _currentFile;
         public IFile? CurrentFile
         {
             get => _currentFile;
-            set => SetProperty(ref _currentFile, value);
+            private set => SetProperty(ref _currentFile, value);
         }
         
         public ExtendedTextEditor Editor { get; } = new();
@@ -52,11 +63,17 @@ namespace OneWare.Core.ViewModels.DockViews
         public IRelayCommand Redo { get; }
 
         private bool _isLoading = true;
-
         public bool IsLoading
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
+        }
+
+        private bool _loadingFailed;
+        public bool LoadingFailed
+        {
+            get => _loadingFailed;
+            set => SetProperty(ref _loadingFailed, value);
         }
 
         private bool _isReadOnly;
@@ -84,6 +101,7 @@ namespace OneWare.Core.ViewModels.DockViews
         }
 
         private IEnumerable<ErrorListItemModel>? _diagnostics;
+        
         public IEnumerable<ErrorListItemModel>? Diagnostics
         {
             get => _diagnostics;
@@ -99,7 +117,8 @@ namespace OneWare.Core.ViewModels.DockViews
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
             IProjectService projectService, IErrorService errorService, BackupService backupService)
         {
-            FullPath = fullPath;
+            _fullPath = fullPath;
+            
             _logger = logger;
             _settingsService = settingsService;
             _dockService = dockService;
@@ -108,8 +127,7 @@ namespace OneWare.Core.ViewModels.DockViews
             _languageManager = languageManager;
             _errorService = errorService;
             _backupService = backupService;
-
-            Id = fullPath;
+            
             Title = $"Loading {Path.GetFileName(fullPath)}";
 
             logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
@@ -141,16 +159,15 @@ namespace OneWare.Core.ViewModels.DockViews
                 
                 ScrollInfo = scrollInfo;
                 Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
-                
             });
         }
 
-        public void OnContentLoaded()
+        public void InitializeContent()
         {
-            CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+            CurrentFile = _projectService.Search(Id) as IFile ?? new ExternalFile(Id);
 
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
-            
+
             _errorService.ErrorRefresh += (sender, o) =>
             {
                 if(o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
@@ -314,9 +331,14 @@ namespace OneWare.Core.ViewModels.DockViews
                 if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
             }
 
+            Reset();
+            return true;
+        }
+
+        private void Reset()
+        {
             TypeAssistance?.Close();
             if (CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
-            return true;
         }
 
         public async Task<bool> TryCloseAsync()
@@ -348,7 +370,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             if (IsReadOnly) return true;
 
-            var success = await SaveFileAsync(FullPath, CurrentDocument.Text);
+            var success = await SaveFileAsync(CurrentFile!.FullPath, CurrentDocument.Text);
 
             if (success)
             {
@@ -403,36 +425,30 @@ namespace OneWare.Core.ViewModels.DockViews
             _ = _backupService.SearchForBackupAsync(CurrentFile);
             IsDirty = false;
         }
-
-        /// <summary>
-        ///     Loads file async
-        /// </summary>
-        private Task<(bool, string, DateTime lastModified)> LoadFileAsync()
+        
+        private async Task<(bool, string, DateTime lastModified)> LoadFileAsync()
         {
-            return Task.Run(() =>
+            if(!File.Exists(CurrentFile!.FullPath)) return (false, "", DateTime.MinValue); 
+            try
             {
-                if(!File.Exists(FullPath)) return (false, "", DateTime.MinValue); 
-                try
-                {
-                    var stream = new FileStream(FullPath, FileMode.Open, FileAccess.Read,
-                        FileShare.ReadWrite);
+                var stream = new FileStream(CurrentFile!.FullPath, FileMode.Open, FileAccess.Read,
+                    FileShare.ReadWrite);
                     
-                    var text = "";
-                    using (var reader = new StreamReader(stream))
-                    {
-                        text = reader.ReadToEnd();
-                    }
-
-                    stream.Close();
-                    return (true, text, File.GetLastWriteTime(FullPath));
-                }
-                catch (Exception e)
+                var text = "";
+                using (var reader = new StreamReader(stream))
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
-                    return (false, "", DateTime.MinValue); 
+                    text = await reader.ReadToEndAsync();
                 }
-            });
+
+                stream.Close();
+                return (true, text, File.GetLastWriteTime(CurrentFile!.FullPath));
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+                return (false, "", DateTime.MinValue); 
+            }
         }
 
         /// <summary>

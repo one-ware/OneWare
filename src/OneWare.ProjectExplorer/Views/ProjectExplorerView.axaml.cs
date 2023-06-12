@@ -23,19 +23,12 @@ public partial class ProjectExplorerView : UserControl
             }, RoutingStrategies.Bubble);
         });
 
-        /*// Global.Options.WhenValueChanged(x => x.Theme).Throttle(TimeSpan.FromMilliseconds(5)).Subscribe(x =>
-        // {
-        //     Dispatcher.UIThread.Post(() =>
-        //     {
-        //         if (ProjectTree.Items != null)
-        //             foreach (var i in ProjectTree.Items)
-        //                 ReloadRecursive(i as ProjectEntry);
-        //         ProjectTree.InvalidateVisual();
-        //     });
-        // });
-            
-        ProjectTree.AddHandler(DoubleTappedEvent, OnDoubleTapped, RoutingStrategies.Bubble);
-            
+        TreeViewContextMenu.Opening += (sender, args) =>
+        {
+            (DataContext as ProjectExplorerViewModel)?.ConstructContextMenu();
+        };
+
+        /*
         AddHandler(PointerPressedEvent, (o, i) =>
         {
             if (i.Handled) return;
@@ -67,33 +60,9 @@ public partial class ProjectExplorerView : UserControl
         AddHandler(PointerMovedEvent, Pointer_Moved);
         ProjectTree.AddHandler(PointerPressedEvent, Pointer_Pressed, RoutingStrategies.Tunnel, true);*/
     }
-        
-    /*private void OnDoubleTapped(object? sender, RoutedEventArgs e)
-    {
-        if (ProjectTree.SelectedItem is ProjectFile pf)
-        {
-            (DataContext as ProjectViewModelBase)?.OpenFileAsync(pf);
-        }
-        else if (ProjectTree.SelectedItem is ProjectFolder folder)
-        {
-            folder.IsExpanded = !folder.IsExpanded;
-        }
-    }
-        
-    private static void ReloadRecursive(ProjectEntry entry)
-    {
-        entry.RaisePropertyChanged("Type");
+    
+    /*
 
-        if (entry is ProjectFolder folder)
-            foreach (var i in folder.Items)
-                ReloadRecursive(i);
-    }
-        
-
-
-
-    #endregion
-        
     #region DragDrop
 
     private Point _startPoint;

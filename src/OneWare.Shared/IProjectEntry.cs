@@ -6,7 +6,7 @@ public interface IProjectEntry : IHasPath
 
     public IProjectRoot Root { get; }
     
-    public IProjectFolder TopFolder { get; set; }
+    public IProjectFolder? TopFolder { get; set; }
     
     public bool IsValid();
 }

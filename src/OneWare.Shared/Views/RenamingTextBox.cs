@@ -1,5 +1,7 @@
-﻿using Avalonia;
+﻿using System.Net.Mime;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -10,33 +12,30 @@ namespace OneWare.Shared.Views;
 
 public class RenamingTextBox : TextBox
 {
-    public static readonly StyledProperty<string> InitialTextProperty =
-        AvaloniaProperty.Register<RenamingTextBox, string >(nameof(InitialText));
-    
-    public static readonly StyledProperty<RelayCommand<string>> RequestRenameProperty =
-        AvaloniaProperty.Register<RenamingTextBox, RelayCommand<string>>(nameof(InitialText));
-
+    public static readonly StyledProperty<Action<Action<string>>?> RenameActionProperty =
+        AvaloniaProperty.Register<RenamingTextBox, Action<Action<string>>?>(nameof(RenameAction), null, false, BindingMode.OneWayToSource);
     protected override Type StyleKeyOverride => typeof(TextBox);
-    
-    public string InitialText
+
+    private Action<string>? _callback;
+    private string? _backupText;
+
+    public Action<Action<string>>? RenameAction
     {
-        get => GetValue(InitialTextProperty);
-        set
-        {
-            SetValue(InitialTextProperty, value);
-            SetValue(TextProperty, value);
-        }
+        get => GetValue(RenameActionProperty);
+        private set => SetValue(RenameActionProperty, value);
     }
 
-    public RelayCommand<string> RequestRename
+    public RenamingTextBox()
     {
-        get => GetValue(RequestRenameProperty);
-        set => SetValue(RequestRenameProperty, value);
+        RenameAction = StartRename;
     }
 
-    public void StartRename()
+    public void StartRename(Action<string> callback)
     {
+        _callback = callback;
         if (Text == null) return;
+
+        _backupText = Text;
 
         IsEnabled = true;
 
@@ -59,8 +58,9 @@ public class RenamingTextBox : TextBox
         if (e.Key is Key.Enter && Text != null)
         {
             e.Handled = true;
-            RequestRename?.Execute(Text);
+            var newText = Text;
             Reset();
+            _callback?.Invoke(newText);
         }
 
         if (e.Key is Key.Escape)
@@ -74,6 +74,6 @@ public class RenamingTextBox : TextBox
     {
         IsEnabled = false;
         ClearSelection();
-        Text = InitialText;
+        Text = _backupText;
     }
 }

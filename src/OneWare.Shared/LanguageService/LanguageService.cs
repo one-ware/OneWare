@@ -24,6 +24,7 @@ namespace OneWare.Shared.LanguageService
 
         public override async Task ActivateAsync()
         {
+            return;
             if (IsActivated) return;
 
             if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))

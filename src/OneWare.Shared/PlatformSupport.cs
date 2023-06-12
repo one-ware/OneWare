@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace OneWare.Shared
@@ -52,7 +53,7 @@ namespace OneWare.Shared
 
             Process.Start(startInfo);
         }
-        
+
         public static int ExecuteShellCommand(string commandName, string args, Action<object, DataReceivedEventArgs>
                 outputReceivedCallback, Action<object, DataReceivedEventArgs>? errorReceivedCallback = null,
             bool resolveExecutable = true,
@@ -60,15 +61,15 @@ namespace OneWare.Shared
             params string[] extraPaths)
         {
             using (var shellProc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                }
-            })
+                   {
+                       StartInfo = new ProcessStartInfo
+                       {
+                           RedirectStandardOutput = true,
+                           RedirectStandardError = true,
+                           UseShellExecute = false,
+                           WorkingDirectory = workingDirectory
+                       }
+                   })
 
             {
                 if (!includeSystemPaths) shellProc.StartInfo.Environment["PATH"] = "";
@@ -161,5 +162,68 @@ namespace OneWare.Shared
 
             return returnNullOnFailure ? null : fileName;
         }
+
+        #region BringWindowToFront WINDOWS
+
+        private const int Alt = 0xA4;
+        private const int Extendedkey = 0x1;
+        private const int Keyup = 0x2;
+        private const int ShowMaximized = 3;
+
+#pragma warning disable IDE1006
+
+        //WINDOWS
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        //LINUX
+        [DllImport("libX11.so.6")]
+        public static extern int XRaiseWindow(IntPtr display, IntPtr window);
+
+        [DllImport("libX11.so.6")]
+        public static extern IntPtr XOpenDisplay(IntPtr display);
+
+#pragma warning disable IDE1006
+
+        public static void ActivateWindow(Process process)
+        {
+            ActivateWindow(process.MainWindowHandle, process.Handle);
+        }
+
+        public static void ActivateWindow(IntPtr mainWindowHandle, IntPtr displayHandle)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Guard: check if window already has focus.
+                if (mainWindowHandle == GetForegroundWindow()) return;
+
+                // Show window maximized.
+                ShowWindow(mainWindowHandle, 1);
+
+                // Simulate an "ALT" key press.
+                keybd_event(Alt, 0x45, Extendedkey | 0, 0);
+
+                // Simulate an "ALT" key release.
+                keybd_event(Alt, 0x45, Extendedkey | Keyup, 0);
+
+                // Show window in forground.
+                SetForegroundWindow(mainWindowHandle);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                XRaiseWindow(XOpenDisplay(IntPtr.Zero), mainWindowHandle);
+            }
+        }
+
+        #endregion
     }
 }

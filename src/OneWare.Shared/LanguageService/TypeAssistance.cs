@@ -17,10 +17,10 @@ namespace OneWare.Shared.LanguageService
     {
         public virtual bool CanAddBreakPoints => false;
         
-        public TextEditor CodeBox { get; }
-
         public IEditor Editor { get; }
-
+        public TextEditor CodeBox => Editor.Editor;
+        public IFile CurrentFile => Editor.CurrentFile ?? throw new NullReferenceException(nameof(Editor.CurrentFile));
+        
         public IIndentationStrategy? IndentationStrategy { get; protected set; }
 
         public CustomHighlightManager? CustomHighlightManager { get; protected set; }
@@ -42,7 +42,6 @@ namespace OneWare.Shared.LanguageService
         public TypeAssistance(IEditor editor)
         {
             Editor = editor;
-            CodeBox = editor.Editor;
         }
         
         protected virtual void OnServerActivated()

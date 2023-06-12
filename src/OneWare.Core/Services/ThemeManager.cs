@@ -29,7 +29,7 @@ namespace OneWare.Core.Services
             _settingsService.RegisterTitledCombo("General","Appearance", "General_SelectedTheme", "Theme", "Sets the color scheme for the Application", 
                Themes[0].Key, Themes.Select(x => x.Key).ToArray());
             
-            _settingsService.RegisterTitled("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FFFFFF"));
+            //_settingsService.RegisterTitled("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FFFFFF"));
             
             _settingsService.Load(paths.SettingsPath);
             

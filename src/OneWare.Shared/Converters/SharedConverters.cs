@@ -7,7 +7,6 @@ public static class SharedConverters
     public static readonly IValueConverter BoolToOpacityConverter = new BoolToOpacityConverter();
     public static readonly IValueConverter
         BoolToScrollBarVisibilityConverter = new BoolToScrollBarVisibilityConverter();
-
     public static readonly IValueConverter ComparisonConverter = new ComparisonConverter();
     public static readonly IValueConverter EnumToStringConverter = new EnumToStringConverter();
     public static readonly IValueConverter FileExtensionIconConverter = new FileExtensionIconConverter();

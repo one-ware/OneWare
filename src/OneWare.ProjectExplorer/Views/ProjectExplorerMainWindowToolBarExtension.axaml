@@ -15,8 +15,8 @@
               SelectedItem="{Binding ActiveProject}">
         <ComboBox.ItemTemplate>
             <DataTemplate DataType="models:ProjectRoot">
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="5 0">
-                    <Image Height="17" Width="17"
+                <StackPanel Orientation="Horizontal" Height="20" Spacing="8" Margin="5 0">
+                    <Image Height="16" Width="16" VerticalAlignment="Center"
                            Source="{Binding Icon}" />
                     <TextBlock VerticalAlignment="Center" Text="{Binding Header}" />
                 </StackPanel>

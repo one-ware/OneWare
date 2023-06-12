@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared;
+using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
@@ -8,7 +9,7 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
 {
     private bool _isLoading = false;
     
-    private readonly string _changelogUrl = "https://raw.githubusercontent.com/VHDPlus/vhdplus-website/master/docs/ide/changelog.md";
+    private string _changelogUrl;
 
     public bool IsLoading
     {
@@ -23,8 +24,11 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _changeLog, value);
     }
 
-    public ChangelogViewModel()
+    public ChangelogViewModel(IPaths paths)
     {
+        Title = "Changelog";
+        Id = "Changelog";
+        _changelogUrl = paths.ChangelogUrl;
         _ = LoadAsync();
     }
 

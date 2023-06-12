@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,7 +19,14 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     public ObservableCollection<IProjectEntry> Items { get; init; } = new();
     public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
     
-    public IProjectFolder TopFolder { get; set; }
+    public IProjectFolder? TopFolder { get; set; }
+
+    private FontWeight _fontWeight = FontWeight.Regular;
+    public FontWeight FontWeight
+    {
+        get => _fontWeight;
+        set => SetProperty(ref _fontWeight, value);
+    }
     
     private IImage? _icon;
     public IImage? Icon
@@ -30,7 +39,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     public string Header
     {
         get => _header;
-        set => SetProperty(ref _header, value);
+        set
+        {
+            SetProperty(ref _header, value);
+            OnPropertyChanged(nameof(FullPath));
+            OnPropertyChanged(nameof(RelativePath));
+        }
     }
 
     private bool _excludeCompilation;
@@ -97,29 +111,29 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
             throw new NullReferenceException(nameof(Root));
         }
     }
+    
+    public ICommand? DoubleTabCommand { get; protected set; }
+    public Action<Action<string>>? RequestRename { get; set; }
 
-    public RelayCommand<string> RequestRename { get; }
-
-    protected ProjectEntry(string header, IProjectFolder topFolder)
+    protected ProjectEntry(string header, IProjectFolder? topFolder)
     {
         _header = header;
         TopFolder = topFolder;
-
-        RequestRename = new RelayCommand<string>(Rename,(x) => LoadingFailed);
     }
-
-    public abstract IEnumerable<MenuItemModel> ContextMenu { get; }
+    
+    public virtual IEnumerable<MenuItemModel> GetContextMenu(IProjectService projectService)
+    {
+        yield return new MenuItemModel("OpenFileViewer")
+        {
+            Header = "Open in File Viewer",
+            Command = new RelayCommand(() => Tools.OpenExplorerPath(FullPath)),
+            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
+            Priority = 1000
+        };
+    }
     
     public bool IsValid()
     {
         return true;
     }
-    
-    public void Rename(string? newName)
-    {
-        if (newName == null) return;
-        _ = ContainerLocator.Container.Resolve<IProjectService>().RenameAsync(this, newName);
-    }
-    
-    public ICommand? DoubleTabCommand { get; protected set; }
 }

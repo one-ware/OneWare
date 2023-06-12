@@ -71,7 +71,7 @@ namespace OneWare.Vhdl
             
             if(error != null) info += error.Description + "\n";
             
-            var hover = await Service.RequestHoverAsync(Editor.FullPath,
+            var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
                 new Position(pos.Line - 1, pos.Column - 1));
             if (hover != null && !IsClosed)
             {

@@ -10,10 +10,10 @@ public interface IPaths
     public string TempDirectory { get; }
     public string LayoutDirectory { get; }
     public string PackagesDirectory { get; }
-    public string LibrariesDirectory { get; }
     public string SettingsPath { get; }
     public string DocumentsDirectory { get; }
     public string CrashReportsDirectory { get; }
     public string ProjectsDirectory { get; }
     public string ModulesPath { get; }
+    public string ChangelogUrl { get; }
 }

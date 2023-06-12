@@ -70,7 +70,7 @@ namespace OneWare.SourceControl.ViewModels
             PatchFile = sourceControlViewModel.GetPatch(path, 10000);
         }
 
-        public void OnContentLoaded()
+        public void InitializeContent()
         {
             async void WaitUntilFree()
             {

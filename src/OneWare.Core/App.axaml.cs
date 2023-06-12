@@ -247,7 +247,6 @@ namespace OneWare.Core
             {
                 var key = Container.Resolve<IActive>().AddState("Loading last projects...", AppState.Loading);
                 //await DockService.ProjectFiles.LoadLastProjectDataAsync();
-                Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
 
                 //Global.MainWindowViewModel.RefreshArduinoQuickMenu();
                 //_ = Global.MainWindowViewModel.RefreshHardwareAsync();
@@ -262,6 +261,10 @@ namespace OneWare.Core
                 Container.Resolve<IProjectService>().Items.Add(dummy);
                 Container.Resolve<IProjectService>().ActiveProject = dummy;
                 
+                Container.Resolve<IDockService>().InitializeDocuments();
+                Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
+
+
                 if (ApplicationLifetime is ISingleViewApplicationLifetime)
                 {
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
@@ -327,8 +330,6 @@ END BEHAVIORAL;
 ";
                 }
 
-
-                Container.Resolve<IDockService>().InitializeDocuments();
                 _ = FinishedLoadingAsync();
             }
             

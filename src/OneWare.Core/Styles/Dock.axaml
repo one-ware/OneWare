@@ -8,8 +8,8 @@
 
     <Styles.Resources>
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Color="{DynamicResource ThemeAccentColor2}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Color="{DynamicResource ThemeAccentColor3}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8"  Color="{DynamicResource ThemeAccentColor}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6" Color="{DynamicResource ThemeAccentColor}"/>
         <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
         <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}"/>
     </Styles.Resources>
@@ -75,7 +75,7 @@
                             <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
                                 <Image
                                     Height="17" Width="17"
-                                    Source="{Binding FullPath, Converter={x:Static sharedConverters:SharedConverters.FileExtensionIconConverter}}"
+                                    Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" />
                                 <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center"/>
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />

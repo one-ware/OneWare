@@ -103,7 +103,7 @@ namespace OneWare.Shared.LanguageService
         {
             if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind.Full)
             {
-                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, CodeBox.Text);
+                Service.RefreshTextDocument(CurrentFile.FullPath, CodeBox.Text);
             }
             _ = UpdateSymbolsAsync();
         }
@@ -177,7 +177,7 @@ namespace OneWare.Shared.LanguageService
 
             var location = CodeBox.Document.GetLocation(offset);
 
-            var hover = await Service.RequestHoverAsync(Editor.FullPath,
+            var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (hover != null && !IsClosed)
             {
@@ -200,7 +200,7 @@ namespace OneWare.Shared.LanguageService
             var error = GetErrorAtLocation(location);
             if (error != null && error.Diagnostic != null)
             {
-                var codeactions = await Service.RequestCodeActionAsync(Editor.FullPath,
+                var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
                     new Range
                     {
                         Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
