@@ -542,15 +542,15 @@ namespace OneWare.Core.Views.DockViews
                     {
                         HoverBoxContent.Content = new MarkdownScrollViewer()
                         {
-                            //Markdown = info,
+                            Markdown = info,
                         };
                     }
                 }
                 
                 if (HoverBoxContent.Content != null && !(CodeBox.TextArea.ContextMenu?.IsOpen ?? false))
                 {
-                    if (IsEffectivelyVisible) HoverBox.Open();
                     UpdatePopupPositionToCursor(HoverBox, e);
+                    if (IsEffectivelyVisible) HoverBox.Open();
 
                     e.Handled = true;
                 }

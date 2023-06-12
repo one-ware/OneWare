@@ -3,14 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
-             xmlns:controls="clr-namespace:OneWare.Core.Views.Controls;assembly=OneWare.Core"
-             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
-             xmlns:dockViews="clr-namespace:OneWare.Core.Views.DockViews"
-             xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
-             xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
              xmlns:dockViews1="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
-             xmlns:rendering="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.DockViews.EditView" x:DataType="dockViews1:EditViewModel"
              Background="{DynamicResource ThemeControlLowBrush}" Name="EditViewView">
@@ -77,9 +72,19 @@
         </ContentControl>
 
         <Popup Name="HoverBox" IsLightDismissEnabled="False">
+            <Grid>
             <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                    Background="{DynamicResource ThemeBackgroundBrush}">
+                            Background="{DynamicResource ThemeBackgroundBrush}">
+                <ContentControl.Styles>
+                    <Style Selector="avaloniaEdit|TextEditor">
+                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                        <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
+                        <Setter Property="SyntaxHighlighting" Value="{Binding Editor.SyntaxHighlighting}"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </ContentControl.Styles>
             </ContentControl>
+            </Grid>
         </Popup>
     </Grid>
     

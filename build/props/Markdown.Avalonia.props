@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.0-d1"/>
+        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
+        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
+        <!--<PackageReference Include="Markdown.Avalonia" Version="11.0.0-d1"/>-->
     </ItemGroup>
 </Project>
