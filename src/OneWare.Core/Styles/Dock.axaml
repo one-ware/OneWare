@@ -3,6 +3,7 @@
         xmlns:idc="using:Dock.Avalonia.Controls"
         xmlns:core="using:Dock.Model.Core"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+        xmlns:sharedViews="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
         xmlns:sharedConverters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
         xmlns:coreConverters="clr-namespace:OneWare.Core.Converters">
 
@@ -73,10 +74,11 @@
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="shared:IEditor">
                             <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
+                                <sharedViews:Spinner IsVisible="{Binding IsLoading}" Height="17" Width="17"/> 
                                 <Image
                                     Height="17" Width="17"
                                     Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
-                                    VerticalAlignment="Center" />
+                                    VerticalAlignment="Center" IsVisible="{Binding !IsLoading}"/>
                                 <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center"/>
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
                             </StackPanel>

@@ -164,7 +164,14 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public void InitializeContent()
         {
-            CurrentFile = _projectService.Search(Id) as IFile ?? new ExternalFile(Id);
+            if (string.IsNullOrWhiteSpace(FullPath))
+            {
+                IsLoading = false;
+                LoadingFailed = true;
+                return;
+            }
+            
+            CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
 
@@ -398,6 +405,8 @@ namespace OneWare.Core.ViewModels.DockViews
             var result = await LoadFileAsync();
 
             CurrentDocument.UndoStack.ClearAll();
+
+            IsLoading = false;
             
             if (!result.Item1)
             {

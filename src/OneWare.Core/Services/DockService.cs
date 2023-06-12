@@ -298,6 +298,7 @@ namespace OneWare.Core.Services
                 {
                     _ => DefaultLayout.GetDefaultLayout(this)
                 };
+                OpenFiles.Clear();
             }
 
             layout.Id = name;

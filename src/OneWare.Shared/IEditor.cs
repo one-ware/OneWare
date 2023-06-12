@@ -7,6 +7,7 @@ namespace OneWare.Shared;
 public interface IEditor : IExtendedDocument
 {
     public string FullPath { get; set; }
+    public bool IsLoading { get; }
     public bool IsReadOnly { get; set; }
     public ExtendedTextEditor Editor { get; }
     public TextDocument CurrentDocument { get; }
