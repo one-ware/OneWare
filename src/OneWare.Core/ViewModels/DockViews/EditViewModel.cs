@@ -244,8 +244,10 @@ namespace OneWare.Core.ViewModels.DockViews
                 {
                     // TODO Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, currentFile, Global.Breakpoints));
                 }
-
+                
                 if (service is { IsActivated: false }) _ = service.ActivateAsync();
+                
+                TypeAssistance?.Open();
             }
 
             _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>

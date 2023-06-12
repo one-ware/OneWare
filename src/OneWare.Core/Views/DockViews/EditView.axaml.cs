@@ -87,7 +87,7 @@ namespace OneWare.Core.Views.DockViews
                     AdditionalOffset = new Vector(0, 3),
                     MaxHeight = 225
                 };
-                TypeAssistance?.Initialize(completion);
+                TypeAssistance?.Attach(completion);
             }
             catch (Exception e)
             {
@@ -229,9 +229,8 @@ namespace OneWare.Core.Views.DockViews
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            //EditorWrapper.Content = null;
             DetachEvents();
-            //TypeAssistance?.Close();
+            TypeAssistance?.Detach();
             base.OnDetachedFromVisualTree(e);
         }
 

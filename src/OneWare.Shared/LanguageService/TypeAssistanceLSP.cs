@@ -49,9 +49,27 @@ namespace OneWare.Shared.LanguageService
 
         #region Initialisation
 
-        public override void Initialize(CompletionWindow completion)
+        public override void Open()
         {
-            base.Initialize(completion);
+            base.Open();
+            if (CodeBox.SyntaxHighlighting != null)
+                CustomHighlightManager = new CustomHighlightManager(CodeBox.SyntaxHighlighting);
+
+            Service.LanguageServiceActivated += Server_Activated;
+            Service.LanguageServiceDeactivated += Server_Deactivated;
+
+            if (Service.IsLanguageServiceReady) OnServerActivated();
+
+            CodeBox.Document.Changed -= DocumentChanged;
+            CodeBox.Document.Changed += DocumentChanged;
+            Editor.FileSaved -= FileSaved;
+            Editor.FileSaved += FileSaved;
+
+        }
+        
+        public override void Attach(CompletionWindow completion)
+        {
+            base.Attach(completion);
             
             completion.CompletionList.SelectionChanged += (o, i) =>
             {
@@ -66,21 +84,13 @@ namespace OneWare.Shared.LanguageService
             };
 
             _dispatcherTimer.Tick += Timer_Tick;
-
-            if (CodeBox.SyntaxHighlighting != null)
-                CustomHighlightManager = new CustomHighlightManager(CodeBox.SyntaxHighlighting);
-
-            Service.LanguageServiceActivated += Server_Activated;
-            Service.LanguageServiceDeactivated += Server_Deactivated;
-
-            if (Service.IsLanguageServiceReady) OnServerActivated();
-
-            CodeBox.Document.Changed -= DocumentChanged;
-            CodeBox.Document.Changed += DocumentChanged;
-            Editor.FileSaved -= FileSaved;
-            Editor.FileSaved += FileSaved;
-
             _dispatcherTimer.Start();
+        }
+
+        public override void Detach()
+        {
+            _dispatcherTimer?.Stop();
+            base.Detach();
         }
 
         protected virtual void Timer_Tick(object? sender, EventArgs e)
@@ -120,7 +130,7 @@ namespace OneWare.Shared.LanguageService
 
         protected override void OnServerActivated()
         {
-            if (IsClosed) return;
+            if (!IsOpen) return;
 
             base.OnServerActivated();
             Service.DidOpenTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
@@ -130,13 +140,13 @@ namespace OneWare.Shared.LanguageService
 
         protected override void OnServerDeactivated()
         {
-            if (IsClosed) return;
+            if (!IsOpen) return;
             base.OnServerDeactivated();
         }
 
         protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
         {
-            if (IsClosed || !Service.IsLanguageServiceReady) return;
+            if (!IsOpen || !Service.IsLanguageServiceReady) return;
 
             if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind
                     .Incremental or TextDocumentSyncKind.None)
@@ -179,7 +189,7 @@ namespace OneWare.Shared.LanguageService
 
             var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (hover != null && !IsClosed)
+            if (hover != null && IsOpen)
             {
                 if (hover.Contents.HasMarkedStrings)
                     return hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
@@ -207,7 +217,7 @@ namespace OneWare.Shared.LanguageService
                         End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
                     }, error.Diagnostic);
 
-                if (codeactions is not null && !IsClosed)
+                if (codeactions is not null && IsOpen)
                 {
                     var quickfixes = new List<IMenuItem>();
                     foreach (var ca in codeactions)
@@ -251,7 +261,7 @@ namespace OneWare.Shared.LanguageService
 
             var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (definition != null && !IsClosed)
+            if (definition != null && IsOpen)
                 foreach (var i in definition)
                     if (i.IsLocation)
                         menuItems.Add(new MenuItemModel("GoToDefinition")
@@ -269,7 +279,7 @@ namespace OneWare.Shared.LanguageService
                         });
             var declaration = await Service.RequestDeclarationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (declaration != null && !IsClosed)
+            if (declaration != null && IsOpen)
                 foreach (var i in declaration)
                     if (i.IsLocation)
                         menuItems.Add(new MenuItemModel("GoToDeclaration")
@@ -287,7 +297,7 @@ namespace OneWare.Shared.LanguageService
                         });
             var implementation = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (implementation != null && !IsClosed)
+            if (implementation != null && IsOpen)
                 foreach (var i in implementation)
                     if (i.IsLocation)
                         menuItems.Add(new MenuItemModel("GoToImplementation")
@@ -305,7 +315,7 @@ namespace OneWare.Shared.LanguageService
                         });
             var typeDefinition = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (typeDefinition != null && !IsClosed)
+            if (typeDefinition != null && IsOpen)
                 foreach (var i in typeDefinition)
                     if (i.IsLocation)
                         menuItems.Add(new MenuItemModel("GoToDefinition")
@@ -363,7 +373,7 @@ namespace OneWare.Shared.LanguageService
             if (range.IsRange && range.Range != null)
             {
                 var workspaceEdit = await Service.RequestRenameAsync(Editor.CurrentFile.FullPath, range.Range.Start, newName);
-                if (workspaceEdit != null && !IsClosed)
+                if (workspaceEdit != null && IsOpen)
                     await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
                         { Edit = workspaceEdit, Label = "Rename" });
             }
@@ -380,7 +390,7 @@ namespace OneWare.Shared.LanguageService
 
             var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (definition != null && !IsClosed)
+            if (definition != null && IsOpen)
                 if (definition.FirstOrDefault() is { } loc)
                 {
                     if (loc.IsLocation && loc.Location != null) return () => _ = GoToLocationAsync(loc.Location);
@@ -525,7 +535,7 @@ namespace OneWare.Shared.LanguageService
             if (symbolInfo is null) return null;
             
             var highlights = new List<(string, SymbolKind)>();
-            if (!IsClosed)
+            if (IsOpen)
                 foreach (var c in symbolInfo)
                     if (c.IsDocumentSymbol && c.DocumentSymbol != null)
                         //ContainerLocator.Container.Resolve<ILogger>()?.Log("DocumentSymbol not supported! TypeAssistanceLSP RetrieveSymbols()", ConsoleColor.Red);
@@ -554,7 +564,7 @@ namespace OneWare.Shared.LanguageService
         {
             var signatureHelp = await Service.RequestSignatureHelpAsync(Editor.CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
-            if (signatureHelp != null && !IsClosed)
+            if (signatureHelp != null && IsOpen)
             {
                 OverloadInsight = new OverloadInsightWindow(CodeBox);
 
@@ -577,7 +587,7 @@ namespace OneWare.Shared.LanguageService
                 triggerKind);
             var custom = await GetCustomCompletionItemsAsync();
 
-            if ((completion is not null || custom.Count > 0) && !IsClosed && Completion != null)
+            if ((completion is not null || custom.Count > 0) && IsOpen && Completion != null)
             {
                 Completion.EndOffset = CodeBox.CaretOffset;
                 Completion.StartOffset = CodeBox.CaretOffset;
@@ -625,7 +635,7 @@ namespace OneWare.Shared.LanguageService
         public virtual void ExecuteCommand(Command? cmd)
         {
             if(cmd == null) return;
-            if (Service.IsLanguageServiceReady && !IsClosed) _ = Service.ExecuteCommandAsync(cmd);
+            if (Service.IsLanguageServiceReady && IsOpen) _ = Service.ExecuteCommandAsync(cmd);
         }
 
         public virtual async Task ResolveCompletionAsync()
@@ -635,7 +645,7 @@ namespace OneWare.Shared.LanguageService
                 _lastSelectedCompletionItem is CompletionData completionLsp && completionLsp.CompletionItemLsp != null)
             {
                 var resolvedCi = await Service.ResolveCompletionItemAsync(completionLsp.CompletionItemLsp);
-                if (resolvedCi != null && !IsClosed && Completion.IsOpen)
+                if (resolvedCi != null && IsOpen && Completion.IsOpen)
                 {
                     var cc = ConvertCompletionItem(resolvedCi, _completionOffset);
                     var cindex = Completion.CompletionList.CompletionData.IndexOf(completionLsp);

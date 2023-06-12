@@ -73,7 +73,7 @@ namespace OneWare.Vhdl
             
             var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
                 new Position(pos.Line - 1, pos.Column - 1));
-            if (hover != null && !IsClosed)
+            if (hover != null)
             {
                 if (hover.Contents.HasMarkedStrings)
                     info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?

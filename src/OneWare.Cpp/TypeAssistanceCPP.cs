@@ -31,7 +31,7 @@ namespace OneWare.Cpp
 
             var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
-            if (hover != null && !IsClosed)
+            if (hover != null)
                 if (hover.Contents.HasMarkupContent)
                     return "```cpp\n" + hover.Contents.MarkupContent?.Value.Replace("→", "->") + "\n```";
             return null;

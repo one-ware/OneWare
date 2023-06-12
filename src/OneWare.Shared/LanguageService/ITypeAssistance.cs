@@ -12,21 +12,12 @@ namespace OneWare.Shared.LanguageService
         IFoldingStrategy? FoldingStrategy { get; }
         event EventHandler AssistanceActivated;
         event EventHandler AssistanceDeactivated;
-
-        void Initialize(CompletionWindow completion);
-
+        void Open();
         void Close();
-
+        void Attach(CompletionWindow completion);
+        void Detach();
         void Format();
-
-        /// <summary>
-        ///     Comment selection or current caret
-        /// </summary>
         void Comment();
-
-        /// <summary>
-        ///     Uncomment selection or current caret
-        /// </summary>
         void Uncomment();
 
         void Format(int startLine, int endLine);

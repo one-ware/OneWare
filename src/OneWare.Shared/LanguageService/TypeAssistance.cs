@@ -32,9 +32,9 @@ namespace OneWare.Shared.LanguageService
         public TextInputWindow? TextInput { get; set; }
 
         public IFoldingStrategy? FoldingStrategy { get; set; }
-
-        //Is true if if editview is not visible
-        protected bool IsClosed { get; private set; }
+        
+        protected bool IsOpen { get; private set; }
+        protected bool IsAttached { get; private set; }
 
         public event EventHandler? AssistanceActivated;
         public event EventHandler? AssistanceDeactivated;
@@ -54,15 +54,26 @@ namespace OneWare.Shared.LanguageService
             AssistanceDeactivated?.Invoke(this, EventArgs.Empty);
         }
 
-        public virtual void Initialize(CompletionWindow completionWindow)
+        public virtual void Open()
         {
-            IsClosed = false;
-            Completion = completionWindow;
+            IsOpen = true;
         }
 
         public virtual void Close()
         {
-            IsClosed = true;
+            IsOpen = false;
+        }
+        
+        public virtual void Attach(CompletionWindow completionWindow)
+        {
+            Completion = completionWindow;
+            IsAttached = true;
+        }
+
+        public virtual void Detach()
+        {
+            Completion = null;
+            IsAttached = false;
         }
 
         public virtual Task TextEnteredAsync(TextInputEventArgs e)
