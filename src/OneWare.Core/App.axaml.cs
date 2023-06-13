@@ -84,7 +84,7 @@ namespace OneWare.Core
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font", 
                 "Editor Font Family", 
                 "JetBrains Mono NL", 
-                "JetBrains Mono NL", "Consolas", "Fira Code");
+                "JetBrains Mono NL", "IntelOne Mono", "Consolas", "Fira Code");
             
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontSize", "Font Size",
                 "Editor Font Size", 15, Enumerable.Range(10, 30).ToArray());

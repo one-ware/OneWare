@@ -26,13 +26,6 @@
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\Windows\MessageBoxWindow.axaml.cs">
-        <DependentUpon>MessageBoxWindow.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
     
 </Project>
 

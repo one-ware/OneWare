@@ -9,6 +9,7 @@
     <SolidColorBrush x:Key="GreenAccent" Opacity="1" Color="#57ad68" />
     <SolidColorBrush x:Key="DebuggerBreakLine" Opacity="0.3" Color="#c23f2f" />
     
+    <FontFamily x:Key="IntelOne Mono">avares://OneWare.Core/Assets/Fonts#IntelOne Mono</FontFamily>
     <FontFamily x:Key="Fira Code">avares://OneWare.Core/Assets/Fonts#Fira Code</FontFamily>
     <FontFamily x:Key="JetBrains Mono NL">avares://OneWare.Core/Assets/Fonts#JetBrains Mono NL</FontFamily>
 
