@@ -3,22 +3,104 @@
         xmlns:data="clr-namespace:OneWare.Core.Data"
         xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type CaptionButtons}"
+                      TargetType="CaptionButtons">
+            <Setter Property="MaxHeight" Value="30" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <StackPanel VerticalAlignment="Stretch"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.FontSize="10">
+                        <Button x:Name="PART_FullScreenButton"
+                                IsVisible="False"
+                                Theme="{StaticResource SimpleCaptionButton}">
+                            <Viewbox Width="11"
+                                     Margin="2">
+                                <Path Name="FullScreenButtonPath"
+                                      Data="M2048 2048v-819h-205v469l-1493 -1493h469v-205h-819v819h205v-469l1493 1493h-469v205h819z"
+                                      Fill="{DynamicResource ThemeForegroundBrush}"
+                                      Stretch="UniformToFill" />
+                            </Viewbox>
+                        </Button>
+                        <Button x:Name="PART_MinimizeButton"
+                                Theme="{StaticResource SimpleCaptionButton}"
+                                AutomationProperties.Name="Minimize">
+                            <Viewbox Width="11"
+                                     Margin="2">
+                                <Path Data="M2048 1229v-205h-2048v205h2048z"
+                                      Fill="{DynamicResource ThemeForegroundBrush}"
+                                      Stretch="UniformToFill" />
+                            </Viewbox>
+                        </Button>
+                        <Button x:Name="PART_RestoreButton"
+                                Theme="{StaticResource SimpleCaptionButton}"
+                                AutomationProperties.Name="Maximize">
+                            <Viewbox Width="11"
+                                     Margin="2">
+                                <Viewbox.RenderTransform>
+                                    <RotateTransform Angle="-90" />
+                                </Viewbox.RenderTransform>
+                                <Path Name="RestoreButtonPath"
+                                      Data="M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z"
+                                      Fill="{DynamicResource ThemeForegroundBrush}"
+                                      Stretch="UniformToFill" />
+                            </Viewbox>
+                        </Button>
+                        <Button x:Name="PART_CloseButton"
+                                Background="#ffe81123"
+                                BorderBrush="#fff1707a"
+                                Theme="{StaticResource SimpleCaptionButton}"
+                                AutomationProperties.Name="Close">
+                            <Viewbox Width="11"
+                                     Margin="2">
+                                <Path
+                                    Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z"
+                                    Fill="{DynamicResource ThemeForegroundBrush}"
+                                    Stretch="UniformToFill" />
+                            </Viewbox>
+                        </Button>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:maximized /template/ Path#RestoreButtonPath">
+                <Setter Property="Data"
+                        Value="M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z" />
+            </Style>
+            <Style Selector="^:fullscreen /template/ Path#FullScreenButtonPath">
+                <Setter Property="IsVisible" Value="True" />
+                <Setter Property="Data"
+                        Value="M205 1024h819v-819h-205v469l-674 -674l-145 145l674 674h-469v205zM1374 1229h469v-205h-819v819h205v-469l674 674l145 -145z" />
+            </Style>
+            <Style Selector="^:fullscreen /template/ Button#PART_RestoreButton">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector="^:fullscreen /template/ Button#PART_MinimizeButton">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector="^ /template/ Button#PART_RestoreButton:disabled">
+                <Setter Property="Opacity" Value="0.2" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
     
     <Style Selector="idc|HostWindow">
-        <Setter Property="ExtendClientAreaToDecorationsHint" Value="True"/>
-        <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30"/>
-        <Setter Property="Padding" Value="{TemplateBinding Padding}"/>
-        <Setter Property="TransparencyLevelHint" Value="Transparent"/>
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+        <Setter Property="ExtendClientAreaToDecorationsHint" Value="True" />
+        <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30" />
+        <Setter Property="Padding" Value="{TemplateBinding Padding}" />
+        <Setter Property="TransparencyLevelHint" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="BorderThickness" Value="1"></Setter>
-        <Setter Property="BorderBrush" Value="Red"></Setter>
-        <Setter Property="CornerRadius" Value="{x:Static shared:Shared.WindowsCornerRadius}"/>
+        <Setter Property="CornerRadius" Value="{x:Static shared:Shared.WindowsCornerRadius}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
                     <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1"
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1"
                             IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
                     <Panel Background="Transparent" Margin="{TemplateBinding WindowDecorationMargin}" />
                     <VisualLayerManager>

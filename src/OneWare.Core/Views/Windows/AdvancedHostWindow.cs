@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -19,6 +20,9 @@ public class AdvancedHostWindow : HostWindow
 
     public AdvancedHostWindow(IDockService dockService)
     {
+#if DEBUG
+        this.AttachDevTools();
+#endif
         _dockService = dockService;
     }
 
