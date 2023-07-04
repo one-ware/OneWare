@@ -6,4 +6,5 @@ public interface IProjectRoot : IProjectFolder
     public string RootFolderPath { get; }
     public DateTime LastSaveTime { get; set; }
     public bool IsActive { get; set; }
+    public void Cleanup();
 }

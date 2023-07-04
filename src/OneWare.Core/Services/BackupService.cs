@@ -135,8 +135,8 @@ namespace OneWare.Core.Services
                         if (backup == null)
                         {
                             backup = new BackupFile(doc.Key.FullPath, Path.Combine(_backupFolder,
-                                ProjectExplorerHelpers.CheckNameFile(Path.Combine(_backupFolder,
-                                    Path.GetFileName(doc.Key.FullPath)))), DateTime.Now);
+                                Path.Combine(_backupFolder,
+                                    Path.GetFileName(doc.Key.FullPath)).CheckNameFile()), DateTime.Now);
                             _backups.Add(backup);
                         }
 

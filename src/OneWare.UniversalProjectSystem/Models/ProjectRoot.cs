@@ -1,14 +1,12 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 
-namespace OneWare.ProjectExplorer.Models;
+namespace OneWare.UniversalProjectSystem.Models;
 
 public class ProjectRoot : ProjectFolder, IProjectRoot
 {
@@ -35,6 +33,16 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
         TopFolder = this;
         
         Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
+    }
+    
+    public void Cleanup()
+    {
+        if (_fileWatcher != null)
+        {
+            _fileWatcher.EnableRaisingEvents = false;
+            _fileWatcher?.Dispose();
+            _fileWatcher = null;
+        }
     }
 
     internal void RegisterEntry(IProjectEntry entry)
@@ -89,16 +97,6 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(RelativePath + ": " + e.Message, e);
             }
-        }
-    }
-
-    public void DisposeFileWatcher()
-    {
-        if (_fileWatcher != null)
-        {
-            _fileWatcher.EnableRaisingEvents = false;
-            _fileWatcher?.Dispose();
-            _fileWatcher = null;
         }
     }
 

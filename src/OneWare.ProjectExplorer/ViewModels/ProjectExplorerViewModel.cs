@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.ProjectExplorer.Models;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -59,7 +58,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
     {
         var menuItems = new List<IMenuItem>();
 
-        if (SelectedItem is ProjectEntry entry)
+        if (SelectedItem is IProjectEntry entry)
         {
             if (entry is IProjectFile file)
             {
@@ -153,7 +152,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         var roots = entries.Where(x => x.Root != null)
             .Select(x => x.Root)
             .Distinct()
-            .Cast<ProjectRoot>()
             .ToList();
             
         foreach (var entry in entries) await RemoveAsync(entry);
@@ -163,18 +161,18 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         //await Task.WhenAll(roots.Select(x => ProjectManager.SaveAsync(x)));
     }
 
-    private async Task RemoveAsync(ProjectEntry entry)
+    private async Task RemoveAsync(IProjectEntry entry)
     {
-        if (entry is ProjectRoot proj)
+        if (entry is IProjectRoot proj)
         {
-            var openFiles = _dockService.OpenFiles.Where(x => x.Key is ProjectFile pf && pf.Root == proj).ToList();
+            var openFiles = _dockService.OpenFiles.Where(x => x.Key is IProjectFile pf && pf.Root == proj).ToList();
 
             foreach (var tab in openFiles)
             {
                 if(!await _dockService.CloseFileAsync(tab.Key)) return;
             }
             
-            proj.DisposeFileWatcher();
+            proj.Cleanup();
 
             var activeProj = proj == ActiveProject;
                 
@@ -186,7 +184,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
             }
 
             if(activeProj)
-                ActiveProject = Items.Count > 0 ? Items[0] as ProjectRoot : null;
+                ActiveProject = Items.Count > 0 ? Items[0] as IProjectRoot : null;
             
             return;
         }
@@ -201,9 +199,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         var message = "Are you sure you want to delete this file permanently?";
         if (entries.Length == 1)
         {
-            if (entries[0] is ProjectRoot)
+            if (entries[0] is IProjectRoot)
                 message = "Are you sure you want to delete this project permanently? This will also delete all included files and folders";
-            else if (entries[0] is ProjectFolder)
+            else if (entries[0] is IProjectFolder)
                 message = "Are you sure you want to delete this folder permanently?";
         }
         else
@@ -227,13 +225,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
     {
         try
         {
-            if (entry is ProjectRoot root)
+            if (entry is IProjectRoot root)
             {
-                root.DisposeFileWatcher();
+                root.Cleanup();
                 foreach (var item in root.Items.ToList())
                     await DeleteAsync(item);
             }
-            else if (entry is ProjectFolder folder)
+            else if (entry is IProjectFolder folder)
                 Directory.Delete(folder.FullPath, true);
             else
                 File.Delete(entry.FullPath);
@@ -248,9 +246,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
             
     }
 
-    public async Task ImportFolderDialogAsync(ProjectFolder? destination = null)
+    public async Task ImportFolderDialogAsync(IProjectFolder? destination = null)
     {
-        destination ??= ActiveProject as ProjectFolder;
+        destination ??= ActiveProject;
 
         if (destination == null)
         {
@@ -362,17 +360,16 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
 
         try
         {
-            if (entry is ProjectFile file)
+            if (entry is IProjectFile file)
             {
                 if (File.Exists(newPath)) throw new Exception($"File {newPath} does already exist!");
                 File.Move(oldPath, newPath);
                 file.LastSaveTime = DateTime.Now;
             }
-            else if (entry is ProjectFolder folder)
+            else if (entry is IProjectFolder folder)
             {
                 if (Directory.Exists(newPath)) throw new Exception($"Folder {newPath} does already exist!");
                 Directory.Move(oldPath, newPath);
-                folder.LastSaveTime = DateTime.Now;
             }
         }
         catch (Exception e)
@@ -380,7 +377,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
-        (entry as ProjectEntry)!.Header = newName;
+        (entry as IProjectEntry)!.Header = newName;
 
         await ReloadAsync(entry);
 
@@ -400,7 +397,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
             return entry;
         }
 
-        if (entry is ProjectRoot)
+        if (entry is IProjectRoot)
         {
             await RemoveAsync(entry);
             var proj = await LoadProjectAsync(entry.FullPath);

@@ -1,15 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using OneWare.Shared;
+using OneWare.Shared.Extensions;
+using OneWare.Shared.Services;
 using Prism.Ioc;
 
-using OneWare.Shared;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-
-namespace OneWare.ProjectExplorer.Models;
+namespace OneWare.UniversalProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
@@ -100,7 +98,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         if (createNew)
         {
-            fullPath = ProjectExplorerHelpers.CheckNameFile(fullPath);
+            fullPath = fullPath.CheckNameFile();
             path = Path.GetFileName(fullPath);
         }
             
@@ -149,7 +147,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         var fullPath = Path.Combine(FullPath, path);
         if (createNew)
         {
-            fullPath = ProjectExplorerHelpers.CheckNameDirectory(fullPath);
+            fullPath = fullPath.CheckNameDirectory();
             path = Path.GetFileName(fullPath);
         }
             

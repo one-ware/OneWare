@@ -1,19 +1,13 @@
 ﻿using System.Globalization;
-using System.Runtime.Serialization;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using Microsoft.VisualBasic;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
-using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using Prism.Commands;
 using Prism.Ioc;
 
-namespace OneWare.ProjectExplorer.Models;
+namespace OneWare.UniversalProjectSystem.Models;
 
 public class ProjectFile : ProjectEntry, IProjectFile
 {

@@ -1,22 +1,20 @@
 ﻿using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Prism.Ioc;
 using OneWare.Shared;
-using OneWare.Shared.Converters;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
-namespace OneWare.ProjectExplorer.Models;
+namespace OneWare.UniversalProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
     public ObservableCollection<IProjectEntry> Items { get; init; } = new();
+    
     public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
     
     public IProjectFolder? TopFolder { get; set; }
@@ -27,7 +25,9 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get => _fontWeight;
         set => SetProperty(ref _fontWeight, value);
     }
-    
+
+    public float TextOpacity { get; } = 1f;
+
     private IImage? _icon;
     public IImage? Icon
     {

@@ -4,9 +4,6 @@ namespace OneWare.Shared;
 
 public interface IProjectFolder : IProjectEntry
 {
-    public ObservableCollection<IProjectEntry> Items { get; }
-    
-    public bool IsExpanded { get; set; }
 
     public void Remove(IProjectEntry entry);
 

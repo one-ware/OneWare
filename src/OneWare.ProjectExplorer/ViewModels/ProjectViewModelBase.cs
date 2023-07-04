@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using Dock.Model.Mvvm.Controls;
-using OneWare.ProjectExplorer.Models;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
@@ -27,7 +26,7 @@ public abstract class ProjectViewModelBase : Tool
 
     public ObservableCollection<IProjectEntry> SearchResult { get; } = new();
 
-    public void Insert(ProjectEntry entry)
+    public void Insert(IProjectEntry entry)
     {
         if (Items.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
@@ -77,7 +76,7 @@ public abstract class ProjectViewModelBase : Tool
 
     public void ExpandToRoot(IProjectEntry entry)
     {
-        if (entry.TopFolder == null || entry is ProjectRoot) return;
+        if (entry.TopFolder == null || entry is IProjectRoot) return;
         entry.TopFolder.IsExpanded = true;
         ExpandToRoot(entry.TopFolder);
     }
@@ -89,7 +88,7 @@ public abstract class ProjectViewModelBase : Tool
             if (path.IndexOf(i.RelativePath, StringComparison.OrdinalIgnoreCase) >= 0 &&
                 path.Length == i.RelativePath.Length) return i;
 
-            if (i is ProjectFolder folder)
+            if (i is IProjectFolder folder)
             {
                 var pe = folder.Search(path);
                 if (pe != null) return pe;
@@ -110,7 +109,7 @@ public abstract class ProjectViewModelBase : Tool
                 || Path.GetFullPath(path).Equals(Path.GetFullPath(i.FullPath),
                     StringComparison.OrdinalIgnoreCase)) //Search for full path equality
                 return i;
-            if (recursive && i is ProjectFolder folder)
+            if (recursive && i is IProjectFolder folder)
             {
                 var pe = folder.Search(path);
                 if (pe != null) return pe;
@@ -126,7 +125,7 @@ public abstract class ProjectViewModelBase : Tool
         foreach (var entry in Items)
         {
             if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is ProjectFolder folder) DeepSearchName(folder, name, results);
+            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
         }
 
         return results;
@@ -138,13 +137,13 @@ public abstract class ProjectViewModelBase : Tool
         foreach (var entry in folderItems)
         {
             if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is ProjectFolder folder) DeepSearchName(folder, name, results);
+            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
         }
     }
 
     public void CollapseAll(IEnumerable<IProjectEntry> list)
     {
-        foreach (var f in list.Where(x => x is ProjectFolder).Cast<ProjectFolder>())
+        foreach (var f in list.Where(x => x is IProjectFolder).Cast<IProjectFolder>())
         {
             f.IsExpanded = false;
             CollapseAll(f.Items);

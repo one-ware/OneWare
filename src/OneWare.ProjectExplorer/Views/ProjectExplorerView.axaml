@@ -4,9 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
-             xmlns:models="clr-namespace:OneWare.ProjectExplorer.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
+             xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -50,12 +50,12 @@
                 </ContextMenu>
             </TreeView.ContextMenu>
             <TreeView.Styles>
-                <Style Selector="TreeViewItem" x:DataType="models:ProjectEntry">
+                <Style Selector="TreeViewItem" x:DataType="shared:IProjectEntry">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded}"></Setter>
                 </Style>
             </TreeView.Styles>
             <TreeView.DataTemplates>
-                <TreeDataTemplate DataType="models:ProjectEntry" ItemsSource="{Binding Items}">
+                <TreeDataTemplate DataType="shared:IProjectEntry" ItemsSource="{Binding Items}">
                     <DockPanel Background="Transparent">
                         <Interaction.Behaviors>
                             <behaviours:CommandOnDoubleTapBehaviour Command="{Binding DoubleTabCommand}"/>
@@ -116,7 +116,7 @@
                         <views:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}" VerticalAlignment="Center"
                                                  IsEnabled="False" x:Name="RenamingTextBox"
                                                  Text="{Binding Header, Mode=OneWay}" RenameAction="{Binding RequestRename}"
-                                                 Opacity="{Binding ExcludeCompilation, Converter={x:Static converters:SharedConverters.FileOpacityConverter}}">
+                                                 Opacity="{Binding TextOpacity}">
                         </views:RenamingTextBox>
                     </DockPanel>
                 </TreeDataTemplate>

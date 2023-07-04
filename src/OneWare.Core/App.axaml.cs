@@ -15,7 +15,6 @@ using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
-using OneWare.ProjectExplorer.Models;
 using OneWare.SearchList;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
@@ -27,6 +26,8 @@ using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
+using OneWare.UniversalProjectSystem.Models;
+
 //using OneWare.Terminal
 
 namespace OneWare.Core
