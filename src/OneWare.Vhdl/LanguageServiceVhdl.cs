@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Avalonia;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
@@ -25,7 +26,7 @@ namespace OneWare.Vhdl
         
         public override async Task ActivateAsync()
         {
-            if(!File.Exists(ExecutablePath))
+            if(!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm)
                 await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
                 "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.64.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);

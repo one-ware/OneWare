@@ -54,6 +54,5 @@ public class DemoApp : App
     {
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<VhdlModule>();
-        moduleCatalog.AddModule<CppModule>();
     }
 }
