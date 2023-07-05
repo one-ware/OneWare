@@ -21,7 +21,7 @@ namespace OneWare.ErrorList.ViewModels
     {
         private readonly IDockService _dockService;
         private readonly ISettingsService _settingsService;
-        private readonly IProjectService _projectExplorerViewModel;
+        private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
 
         public List<string> ErrorListVisibleSources = new List<string>();
         
@@ -130,11 +130,11 @@ namespace OneWare.ErrorList.ViewModels
         
         public event EventHandler<object?>? ErrorRefresh;
 
-        public ErrorListViewModel(IDockService dockService, ISettingsService settingsService, IProjectService projectExplorerViewModel)
+        public ErrorListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerExplorerViewModel)
         {
             _dockService = dockService;
             _settingsService = settingsService;
-            _projectExplorerViewModel = projectExplorerViewModel;
+            _projectExplorerExplorerViewModel = projectExplorerExplorerViewModel;
             
             Id = "ErrorList";
             Title = "Code Errors";
@@ -164,7 +164,7 @@ namespace OneWare.ErrorList.ViewModels
                 case ErrorListFilterMode.All:
                     return true;
                 case ErrorListFilterMode.CurrentProject:
-                    if (error.File is IProjectFile pf && _projectExplorerViewModel.ActiveProject == pf.Root) return true;
+                    if (error.File is IProjectFile pf && _projectExplorerExplorerViewModel.ActiveProject == pf.Root) return true;
                     break;
                 case ErrorListFilterMode.CurrentFile:
                     if ((_dockService.CurrentDocument as IEditor)?.CurrentFile == error.File) return true;

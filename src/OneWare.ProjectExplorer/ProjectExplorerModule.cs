@@ -25,15 +25,15 @@ public class ProjectExplorerModule : IModule
     
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        containerRegistry.RegisterManySingleton<ProjectExplorerViewModel>(typeof(IProjectService),
+        containerRegistry.RegisterManySingleton<ProjectExplorerViewModel>(typeof(IProjectExplorerService),
             typeof(ProjectExplorerViewModel));
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        if (containerProvider.Resolve<IProjectService>() is not ProjectExplorerViewModel vm) return;
+        if (containerProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
         
-        _dockService.RegisterLayoutExtension<IProjectService>(DockShowLocation.Left);
+        _dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);
 
         _windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new ProjectExplorerMainWindowToolBarExtension()
         {
@@ -63,7 +63,7 @@ public class ProjectExplorerModule : IModule
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Project Explorer")
         {
             Header = "Project Explorer",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IProjectService>())),
+            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
             ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") ,
         });
     }

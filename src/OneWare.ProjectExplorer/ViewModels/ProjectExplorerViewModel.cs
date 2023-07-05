@@ -11,7 +11,7 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
-public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
+public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerService
 {
     public IActive Active { get; }
 
@@ -271,7 +271,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectService
         //await destination.Root.ResolveAsync();
     }
 
-    private static void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude)
+    public void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude)
     {
         var entries = Directory.GetFileSystemEntries(source);
         foreach (var entry in entries)

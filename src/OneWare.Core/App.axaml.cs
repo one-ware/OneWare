@@ -13,8 +13,11 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
+using OneWare.FolderProjectSystem.Models;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
+using OneWare.ProjectSystem.Models;
+using OneWare.ProjectSystem.Services;
 using OneWare.SearchList;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
@@ -25,8 +28,6 @@ using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
-using OneWare.UniversalProjectSystem.Models;
 
 //using OneWare.Terminal
 
@@ -45,6 +46,7 @@ namespace OneWare.Core
             //Services
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
             containerRegistry.RegisterSingleton<IPackageService, PackageService>();
+            containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
             containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
             containerRegistry.RegisterSingleton<IActive, Active>();
             containerRegistry.RegisterSingleton<IDockService, DockService>();
@@ -235,7 +237,7 @@ namespace OneWare.Core
                 {
                     if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                     {
-                        var file = Container.Resolve<IProjectService>().GetTemporaryFile(fileName);
+                        var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
                         _ = Container.Resolve<IDockService>().OpenFileAsync(file);
                     }
                     else
@@ -256,11 +258,11 @@ namespace OneWare.Core
 
                 var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
                 Directory.CreateDirectory(testProj);
-                var dummy = new ProjectRoot(testProj);
+                var dummy = new FolderProjectRoot(testProj);
                 var hard = dummy.AddFile("Hardware.vhd");
                 var soft = dummy.AddFile("Software.cpp");
-                Container.Resolve<IProjectService>().Items.Add(dummy);
-                Container.Resolve<IProjectService>().ActiveProject = dummy;
+                Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
+                Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
                 
                 Container.Resolve<IDockService>().InitializeDocuments();
                 Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");

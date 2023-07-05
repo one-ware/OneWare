@@ -7,7 +7,7 @@ using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
-namespace OneWare.UniversalProjectSystem.Models;
+namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFile : ProjectEntry, IProjectFile
 {

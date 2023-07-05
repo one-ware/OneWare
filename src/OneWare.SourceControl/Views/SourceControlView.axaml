@@ -170,7 +170,7 @@
                            Text="The currently active project doesn't have a git repository. You can initialize the currently active project as a new git repository"
                            TextWrapping="Wrap" />
                 <Button
-                    IsEnabled="{Binding ProjectService.ActiveProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsEnabled="{Binding ProjectExplorerService.ActiveProject, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
                     Command="{Binding InitializeRepository}">
                     <Button.Content>

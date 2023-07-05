@@ -4,7 +4,7 @@ using Dock.Model.Core;
 
 namespace OneWare.Shared.Services;
 
-public interface IProjectService : IDockable, INotifyPropertyChanged
+public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 {
     public ObservableCollection<IProjectEntry> Items { get; }
     public ObservableCollection<IProjectEntry> SelectedItems { get; }
@@ -16,4 +16,6 @@ public interface IProjectService : IDockable, INotifyPropertyChanged
     public Task HandleFileChangeAsync(string path);
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectEntry entry);
+    public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
+    public void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude);
 }

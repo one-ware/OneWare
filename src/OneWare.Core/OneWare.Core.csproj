@@ -20,12 +20,14 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj" />
+        <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
         <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj" />
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
+        <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-        <ProjectReference Include="..\OneWare.UniversalProjectSystem\OneWare.UniversalProjectSystem.csproj" />
+        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
     
 </Project>

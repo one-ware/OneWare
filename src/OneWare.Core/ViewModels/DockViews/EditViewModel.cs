@@ -29,7 +29,7 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly ISettingsService _settingsService;
         private readonly IErrorService _errorService;
         private readonly IWindowService _windowService;
-        private readonly IProjectService _projectService;
+        private readonly IProjectExplorerService _projectExplorerService;
         private readonly BackupService _backupService;
 
         private string _fullPath;
@@ -115,7 +115,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectService projectService, IErrorService errorService, BackupService backupService)
+            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService)
         {
             _fullPath = fullPath;
             
@@ -123,7 +123,7 @@ namespace OneWare.Core.ViewModels.DockViews
             _settingsService = settingsService;
             _dockService = dockService;
             _windowService = windowService;
-            _projectService = projectService;
+            _projectExplorerService = projectExplorerService;
             _languageManager = languageManager;
             _errorService = errorService;
             _backupService = backupService;
@@ -171,7 +171,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 return;
             }
             
-            CurrentFile = _projectService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+            CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
 

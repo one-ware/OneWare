@@ -1,4 +1,6 @@
-﻿using Avalonia.Media;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using OneWare.Shared;
@@ -6,9 +8,9 @@ using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
-namespace OneWare.UniversalProjectSystem.Models;
+namespace OneWare.ProjectSystem.Models;
 
-public class ProjectRoot : ProjectFolder, IProjectRoot
+public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
     public string RootFolderPath { get; init; }
 
@@ -27,12 +29,16 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
         }
     }
 
-    public ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath), null)
+    protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath), null)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
-        
-        Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
+
+        var observable = Application.Current?.GetResourceObservable("Namespace");
+        observable?.Subscribe(x =>
+        {
+            Icon = x as IImage;
+        });
     }
     
     public void Cleanup()
@@ -55,21 +61,6 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
         if (entry is ProjectFile file) Files.Remove(file);
     }
     
-    public virtual async Task<bool> SaveProjectAsync()
-    {
-        
-        // var result = await ProjectManager.SaveAsync(this);
-        // LastSaveTime = DateTime.Now;
-        //     
-        // ContainerLocator.Container.Resolve<ILogger>()?.Log("Project " + Header + " saved!", ConsoleColor.Green);
-        //     
-        // await Task.Delay(10);
-        //
-        // //TODO_ = MainDock.SourceControl.RefreshAsync();
-        // return result;
-        return false;
-    }
-
     #region FileSystemWatcher
 
     private FileSystemWatcher? _fileWatcher;
@@ -110,7 +101,7 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
         {
             if (_watcherHandle.Contains(e.Name)) return;
             _watcherHandle.Add(e.Name);
-            await ContainerLocator.Container.Resolve<IProjectService>(e.FullPath).HandleFileChangeAsync(e.FullPath);
+            await ContainerLocator.Container.Resolve<IProjectExplorerService>(e.FullPath).HandleFileChangeAsync(e.FullPath);
             _watcherHandle.Remove(e.Name);
         }, DispatcherPriority.Background);
     }
@@ -157,7 +148,7 @@ public class ProjectRoot : ProjectFolder, IProjectRoot
                 if (entry.LoadingFailed)
                 {
                     _watcherHandle.Add(e.Name);
-                    await ContainerLocator.Container.Resolve<IProjectService>(e.FullPath).HandleFileChangeAsync(e.FullPath);
+                    await ContainerLocator.Container.Resolve<IProjectExplorerService>(e.FullPath).HandleFileChangeAsync(e.FullPath);
                     _watcherHandle.Remove(e.Name);
                 }
             }

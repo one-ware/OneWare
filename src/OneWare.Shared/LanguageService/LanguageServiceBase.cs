@@ -878,8 +878,8 @@ namespace OneWare.Shared.LanguageService
             {
                 var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles
                     .FirstOrDefault(x => x.Key.FullPath.EqualPaths(pdp.Uri.GetFileSystemPath())).Key;
-                file ??= ContainerLocator.Container.Resolve<IProjectService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
-                file ??= ContainerLocator.Container.Resolve<IProjectService>().GetTemporaryFile(pdp.Uri.GetFileSystemPath());
+                file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
+                file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(pdp.Uri.GetFileSystemPath());
                 ContainerLocator.Container.Resolve<IErrorService>().RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
                 //file.Diagnostics = pdp.Diagnostics;
             }, DispatcherPriority.Background);

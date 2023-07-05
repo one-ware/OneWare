@@ -7,7 +7,7 @@ using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
-namespace OneWare.UniversalProjectSystem.Models;
+namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {

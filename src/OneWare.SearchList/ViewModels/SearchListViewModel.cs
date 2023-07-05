@@ -14,7 +14,7 @@ namespace OneWare.SearchList.ViewModels
     {
         private IDockService _dockService;
         private ISettingsService _settingsService;
-        private IProjectService _projectService;
+        private IProjectExplorerService _projectExplorerService;
         
         private CancellationTokenSource? _lastCancellationToken;
         
@@ -64,11 +64,11 @@ namespace OneWare.SearchList.ViewModels
             set => SetProperty(ref _searchListFilterMode, value);
         }
 
-        public SearchListViewModel(IDockService dockService, ISettingsService settingsService, IProjectService projectService)
+        public SearchListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerService)
         {
             _dockService = dockService;
             _settingsService = settingsService;
-            _projectService = projectService;
+            _projectExplorerService = projectExplorerService;
 
             settingsService.Bind("SearchList_FilterMode", this.WhenValueChanged(x => x.SearchListFilterMode))
                 .Subscribe(x => SearchListFilterMode = x);
@@ -100,11 +100,11 @@ namespace OneWare.SearchList.ViewModels
             switch (SearchListFilterMode)
             {
                 case 0:
-                    await SearchFolderRecursiveAsync(_projectService.Items, searchText,
+                    await SearchFolderRecursiveAsync(_projectExplorerService.Items, searchText,
                         _lastCancellationToken.Token);
                     break;
-                case 1 when _projectService.ActiveProject != null:
-                    await SearchFolderRecursiveAsync(_projectService.ActiveProject.Items, searchText,
+                case 1 when _projectExplorerService.ActiveProject != null:
+                    await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Items, searchText,
                         _lastCancellationToken.Token);
                     break;
                 case 2 when _dockService.CurrentDocument is IEditor editor:

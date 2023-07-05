@@ -9,7 +9,7 @@ using OneWare.Shared;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
-namespace OneWare.UniversalProjectSystem.Models;
+namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
@@ -121,7 +121,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         TopFolder = topFolder;
     }
     
-    public virtual IEnumerable<MenuItemModel> GetContextMenu(IProjectService projectService)
+    public virtual IEnumerable<MenuItemModel> GetContextMenu(IProjectExplorerService projectExplorerService)
     {
         yield return new MenuItemModel("OpenFileViewer")
         {

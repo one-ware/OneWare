@@ -28,7 +28,7 @@ namespace OneWare.SourceControl.ViewModels
         private readonly IActive _active;
         private readonly IDockService _dockService;
         private readonly IWindowService _windowService;
-        public IProjectService ProjectService { get; }
+        public IProjectExplorerService ProjectExplorerService { get; }
 
         private bool _dllNotFound;
         private readonly object _lock = new();
@@ -113,14 +113,14 @@ namespace OneWare.SourceControl.ViewModels
         public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
         
         public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
-            IDockService dockService, IWindowService windowService, IProjectService projectService)
+            IDockService dockService, IWindowService windowService, IProjectExplorerService projectExplorerService)
         {
             _logger = logger;
             _settingsService = settingsService;
             _active = active;
             _dockService = dockService;
             _windowService = windowService;
-            ProjectService = projectService;
+            ProjectExplorerService = projectExplorerService;
 
             Id = "SourceControl";
             Title = "Source Control";
@@ -147,20 +147,20 @@ namespace OneWare.SourceControl.ViewModels
             settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay")
                 .Subscribe(SetupTimer);
 
-            projectService
+            projectExplorerService
                 .WhenValueChanged(x => x.ActiveProject)
                 .Subscribe(RefreshAsyncCommand.Execute);
         }
 
         public void InitializeRepository()
         {
-            if (ProjectService.ActiveProject == null) return;
+            if (ProjectExplorerService.ActiveProject == null) return;
 
             lock (_lock)
             {
                 try
                 {
-                    Repository.Init(ProjectService.ActiveProject.RootFolderPath);
+                    Repository.Init(ProjectExplorerService.ActiveProject.RootFolderPath);
                     _ = RefreshAsync();
                 }
                 catch (Exception e)
@@ -242,7 +242,7 @@ namespace OneWare.SourceControl.ViewModels
         {
             if (_dllNotFound) return;
 
-            if (ProjectService.ActiveProject == null) return;
+            if (ProjectExplorerService.ActiveProject == null) return;
 
             await WaitUntilFreeAsync();
 
@@ -252,8 +252,8 @@ namespace OneWare.SourceControl.ViewModels
 
                 try
                 {
-                    WorkingPath = Repository.Discover(ProjectService.ActiveProject.RootFolderPath) ??
-                                  ProjectService.ActiveProject.RootFolderPath;
+                    WorkingPath = Repository.Discover(ProjectExplorerService.ActiveProject.RootFolderPath) ??
+                                  ProjectExplorerService.ActiveProject.RootFolderPath;
 
                     // //Reset
                     // foreach (var change in Changes)
@@ -315,7 +315,7 @@ namespace OneWare.SourceControl.ViewModels
                         foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
                         {
                             var smodel = new SourceControlModel(this, item,
-                                ProjectService.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                                ProjectExplorerService.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
                                         item.FilePath))
                                     as IProjectFile);
 
@@ -369,10 +369,10 @@ namespace OneWare.SourceControl.ViewModels
 
         public void ViewInProjectExplorer(IProjectEntry entry)
         {
-            _dockService.Show(ProjectService);
-            ProjectService.ExpandToRoot(entry);
-            ProjectService.SelectedItems.Clear();
-            ProjectService.SelectedItems.Add(entry);
+            _dockService.Show(ProjectExplorerService);
+            ProjectExplorerService.ExpandToRoot(entry);
+            ProjectExplorerService.SelectedItems.Clear();
+            ProjectExplorerService.SelectedItems.Add(entry);
         }
 
         #endregion
@@ -915,7 +915,7 @@ namespace OneWare.SourceControl.ViewModels
                     try
                     {
                         File.Delete(path);
-                        if (ProjectService.ActiveProject?.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                        if (ProjectExplorerService.ActiveProject?.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
                                 path)) is IProjectFile file)
                             file.TopFolder?.Remove(file);
                     }
@@ -954,8 +954,8 @@ namespace OneWare.SourceControl.ViewModels
                         if (result is MessageBoxStatus.Yes)
                             foreach (var f in deleteFiles)
                             {
-                                var projFile = ProjectService.Search(f);
-                                if (projFile != null) await ProjectService.DeleteAsync(projFile);
+                                var projFile = ProjectExplorerService.Search(f);
+                                if (projFile != null) await ProjectExplorerService.DeleteAsync(projFile);
                                 else File.Delete(f);
                             }
                     }
@@ -979,7 +979,7 @@ namespace OneWare.SourceControl.ViewModels
             
             if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
 
-            if (!(ProjectService.ActiveProject?.Search(path) is IFile file))
+            if (!(ProjectExplorerService.ActiveProject?.Search(path) is IFile file))
                 file = new ExternalFile(path);
 
             await _dockService.OpenFileAsync(file);

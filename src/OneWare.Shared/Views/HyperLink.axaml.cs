@@ -45,7 +45,7 @@ namespace OneWare.Shared.Views
         {
             if (File.Exists(Url))
             {
-                var file = ContainerLocator.Container.Resolve<IProjectService>().GetTemporaryFile(Url);
+                var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(Url);
                 _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
             }
             else

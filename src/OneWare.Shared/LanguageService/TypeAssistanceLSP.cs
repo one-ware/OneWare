@@ -405,8 +405,8 @@ namespace OneWare.Shared.LanguageService
             if (location == null) return;
             
             var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-            var entry = ContainerLocator.Container.Resolve<IProjectService>().Search(path) as IFile;
-            entry ??= ContainerLocator.Container.Resolve<IProjectService>().GetTemporaryFile(path);
+            var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(path) as IFile;
+            entry ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
             
             if (entry is IProjectFile file)
             {

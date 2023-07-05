@@ -1,7 +1,7 @@
 ﻿using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.UniversalProjectSystem;
+namespace OneWare.UniversalFpgaProjectSystem;
 
 public class UniversalProjectSystemModule : IModule
 {
