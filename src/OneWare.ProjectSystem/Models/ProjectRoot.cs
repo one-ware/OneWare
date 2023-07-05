@@ -33,12 +33,6 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
-
-        var observable = Application.Current?.GetResourceObservable("Namespace");
-        observable?.Subscribe(x =>
-        {
-            Icon = x as IImage;
-        });
     }
     
     public void Cleanup()

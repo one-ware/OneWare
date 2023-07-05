@@ -13,6 +13,7 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
+using OneWare.FolderProjectSystem;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
@@ -171,6 +172,7 @@ namespace OneWare.Core
             moduleCatalog.AddModule<ErrorListModule>();
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
+            moduleCatalog.AddModule<FolderProjectSystemModule>();
 
             base.ConfigureModuleCatalog(moduleCatalog);
         }
