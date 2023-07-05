@@ -131,7 +131,7 @@ namespace OneWare.Core.Services
                 if (dockable is IRootDock { Window.Host: Window host }) return host;
                 dockable = dockable.Owner;
             }
-            return null;
+            return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime ? ContainerLocator.Container.Resolve<MainWindow>() : null;
         }
 
         public void ResetLayout()

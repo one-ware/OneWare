@@ -79,7 +79,7 @@
                 
                 <Border Classes="RoundToolBar">
                     <ComboBox BorderThickness="0"
-                        ItemsSource="{Binding ErrorListVisibleSource}"
+                        ItemsSource="{Binding ErrorListVisibleSources}"
                         SelectedItem="{Binding ErrorListVisibleSource}"
                         Width="140">
                         <ComboBox.ItemTemplate>

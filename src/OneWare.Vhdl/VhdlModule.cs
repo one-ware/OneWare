@@ -13,6 +13,7 @@ public class VhdlModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
+        containerProvider.Resolve<IErrorService>().RegisterErrorSource("VHDL LS");
         containerProvider.Resolve<ILanguageManager>().RegisterHighlighting("avares://OneWare.Vhdl/Assets/vhdl.xshd", ".vhd", ".vhdl");
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
     }

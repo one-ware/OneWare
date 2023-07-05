@@ -124,6 +124,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Changelog")
             {
                 Header = $"Changelog",
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
                 Command = new RelayCommand(() => windowService.Show(new ChangelogView()
                 {
                     DataContext = Container.Resolve<ChangelogViewModel>()

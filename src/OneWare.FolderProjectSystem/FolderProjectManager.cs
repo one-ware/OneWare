@@ -15,11 +15,11 @@ public class FolderProjectManager : IProjectManager
         _logger = logger;
     }
     
-    public IProjectRoot? LoadProject(string path)
+    public Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         if (!Directory.Exists(path))
         {
-            return null;
+            return Task.FromResult<IProjectRoot?>(null);
         }
         
         var root = new FolderProjectRoot(path);
@@ -31,11 +31,11 @@ public class FolderProjectManager : IProjectManager
         {
             _logger.Error(e.Message, e);
         }
-        return root;
+        return Task.FromResult<IProjectRoot?>(root);
     }
 
-    public bool SaveProject(IProjectRoot root)
+    public Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return true;
+        return Task.FromResult(true);
     }
 }

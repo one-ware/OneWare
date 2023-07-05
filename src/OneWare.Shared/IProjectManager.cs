@@ -2,7 +2,7 @@
 
 public interface IProjectManager
 {
-    public IProjectRoot? LoadProject(string path);
+    public Task<IProjectRoot?> LoadProjectAsync(string path);
 
-    public bool SaveProject(IProjectRoot root);
+    public Task<bool> SaveProjectAsync(IProjectRoot root);
 }

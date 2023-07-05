@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Collections;
 using Dock.Model.Mvvm.Controls;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -23,7 +24,7 @@ namespace OneWare.ErrorList.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
 
-        public List<string> ErrorListVisibleSources = new List<string>();
+        public ObservableCollection<string> ErrorListVisibleSources { get; } = new(){"All Sources"};
         
         private ErrorListFilterMode _errorListFilterMode;
         public ErrorListFilterMode ErrorListFilterMode
@@ -39,7 +40,7 @@ namespace OneWare.ErrorList.ViewModels
             set => SetProperty(ref _showExternalErrors, value);
         }
 
-        private string? _errorListVisibleSource;
+        private string? _errorListVisibleSource = "All Sources";
         public string? ErrorListVisibleSource
         {
             get => _errorListVisibleSource;
@@ -148,6 +149,11 @@ namespace OneWare.ErrorList.ViewModels
                 .Subscribe(x => ErrorListFilterMode = x);
         }
 
+        public void RegisterErrorSource(string source)
+        {
+            ErrorListVisibleSources.Add(source);
+        }
+        
         private bool Filter(object arg)
         {
             if (arg is not ErrorListItemModel error) return false;
@@ -188,7 +194,7 @@ namespace OneWare.ErrorList.ViewModels
 
         private bool FilterErrorSource(ErrorListItemModel error)
         {
-            return ErrorListVisibleSource == null || ErrorListVisibleSource == error.Source;
+            return ErrorListVisibleSource is "All Sources" || ErrorListVisibleSource == error.Source;
         }
 
         private bool FilterSearchString(ErrorListItemModel error)

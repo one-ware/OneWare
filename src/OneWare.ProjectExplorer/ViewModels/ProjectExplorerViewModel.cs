@@ -19,6 +19,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly ISettingsService _settingsService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
+    private readonly IProjectManagerService _projectManagerService;
 
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
 
@@ -42,13 +43,14 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
 
-    public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService)
+    public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, IProjectManagerService projectManagerService)
     {
         Active = active;
         _paths = paths;
         _dockService = dockService;
         _windowService = windowService;
         _settingsService = settingsService;
+        _projectManagerService = projectManagerService;
 
         Id = "ProjectExplorer";
         Title = "Project Explorer";
@@ -129,22 +131,39 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         TemporaryFiles.Remove(file.FullPath);
     }
 
-    public async Task<IProjectRoot?> LoadProjectAsync(string path)
+    public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
     {
-        // path = Path.GetFullPath(path); //FORMAT
-        //
-        // var project = await ProjectManager.LoadAsync(path);
-        //
-        // if (project == null) return null;
-        //
-        // project.IsExpanded = true;
-        //
-        // Insert(project);
-        // ActiveProject = project;
-        //
-        // project.SetupFileWatcher();
-        // return project;
-        return null;
+        var folderPath = await Tools.SelectFolderAsync(_dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Folder Path",
+            _paths.ProjectsDirectory);
+
+        if (folderPath == null) return null;
+
+        return await LoadProjectAsync(folderPath, manager);
+    }
+    
+    public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager)
+    {
+        var filePath = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Project File",
+            _paths.ProjectsDirectory);
+
+        if (filePath == null) return null;
+
+        return await LoadProjectAsync(filePath, manager);
+    }
+
+    public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager)
+    {
+        var project = await manager.LoadProjectAsync(path);
+        
+        if (project == null) return null;
+        
+        project.IsExpanded = true;
+        
+        Insert(project);
+        ActiveProject = project;
+        
+        //project.SetupFileWatcher();
+        return project;
     }
 
     private async Task RemoveAsync(params IProjectEntry[] entries)
@@ -400,7 +419,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (entry is IProjectRoot)
         {
             await RemoveAsync(entry);
-            var proj = await LoadProjectAsync(entry.FullPath);
+            var proj = await _projectManagerService.GetManager(entry.GetType()).LoadProjectAsync(entry.FullPath);
             if (proj == null)
             {
                 entry.LoadingFailed = true;
