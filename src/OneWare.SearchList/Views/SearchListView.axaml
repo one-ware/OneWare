@@ -46,33 +46,36 @@
     </UserControl.Styles>
 
 
-    <Grid RowDefinitions="26,*">
+    <Grid RowDefinitions="30,*">
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
-                <ComboBox
-                    SelectedIndex="{Binding SearchListFilterMode}"
-                    Width="140">
-                    <ComboBoxItem>All open projects</ComboBoxItem>
-                    <ComboBoxItem>Current project</ComboBoxItem>
-                    <ComboBoxItem>Current file</ComboBoxItem>
-                </ComboBox>
+                <Border Classes="RoundToolBar">
+                    <ComboBox
+                        SelectedIndex="{Binding SearchListFilterMode}"
+                        Width="140" BorderThickness="0">
+                        <ComboBoxItem>All open projects</ComboBoxItem>
+                        <ComboBoxItem>Current project</ComboBoxItem>
+                        <ComboBoxItem>Current file</ComboBoxItem>
+                    </ComboBox>
+                </Border>
+
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
 
-                <ToggleButton Background="Transparent" IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
+                <ToggleButton CornerRadius="3" Height="24" Background="Transparent" IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
                     <Image Source="{DynamicResource VsImageLib.CaseSensitive16X}" />
                 </ToggleButton>
-                <ToggleButton Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding WholeWord}"
+                <ToggleButton CornerRadius="3" Height="24" Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding WholeWord}"
                               ToolTip.Tip="Match whole words">
                     <Image Source="{DynamicResource VsCodeLight.Whole-Word}" />
                 </ToggleButton>
-                <ToggleButton Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding UseRegex}"
+                <ToggleButton CornerRadius="3" Height="24" Margin="2, 0, 0, 0" Background="Transparent" IsChecked="{Binding UseRegex}"
                               ToolTip.Tip="Use Regex">
                     <Image Source="{DynamicResource VsCodeLight.Regex}" />
                 </ToggleButton>
 
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <Border DockPanel.Dock="Left" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <Border DockPanel.Dock="Left" Classes="RoundToolBar">
                     <views:SearchBox SearchText="{Binding LastSearchString}" Name="Search" BorderThickness="0"
                                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                         HorizontalAlignment="Stretch" />

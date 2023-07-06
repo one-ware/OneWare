@@ -29,8 +29,8 @@ namespace OneWare.Settings.Models
             private set => SetProperty(ref _icon, value);
         }
         
-        private ObservableCollection<SubCategoryModel> _subCategoryModels = new();
-        public ObservableCollection<SubCategoryModel> SubCategoryModels
+        private ObservableCollection<SettingsSubCategoryModel> _subCategoryModels = new();
+        public ObservableCollection<SettingsSubCategoryModel> SubCategoryModels
         {
             get => _subCategoryModels;
             set => SetProperty(ref _subCategoryModels, value);

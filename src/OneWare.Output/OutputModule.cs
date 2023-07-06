@@ -40,7 +40,7 @@ public class OutputModule : IModule
         {
             Header = "Output",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") as System.IObservable<IImage>,
+            ImageIconObservable = Application.Current?.GetResourceObservable("Material.Console"),
         });
     }
 }

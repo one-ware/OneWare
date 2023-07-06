@@ -30,7 +30,7 @@ namespace OneWare.Settings.ViewModels
             set
             {
                 SelectedPage = value as SettingsPageModel;
-                if (SelectedPage != null && value is SubCategoryModel sub)
+                if (SelectedPage != null && value is SettingsSubCategoryModel sub)
                 {
                     SelectedPage = SettingPages.FirstOrDefault(x => x.SubCategoryModels.Contains(sub));
                 }
@@ -59,7 +59,7 @@ namespace OneWare.Settings.ViewModels
 
                 foreach (var subCategory in category.Value.SettingSubCategories.OrderBy(x => x.Value.Priority))
                 {
-                    var subCategoryModel = new SubCategoryModel(subCategory.Key, subCategory.Value.IconKey);
+                    var subCategoryModel = new SettingsSubCategoryModel(subCategory.Key, subCategory.Value.IconKey);
                     
                     foreach (var setting in subCategory.Value.Settings)
                     {

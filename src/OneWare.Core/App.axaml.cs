@@ -416,12 +416,18 @@ END BEHAVIORAL;
         
         private void About_Click(object? sender, EventArgs e)
         {
-            Container.Resolve<IWindowService>().Show(Container.Resolve<AboutView>());
+            Container.Resolve<IWindowService>().Show(new AboutView()
+            {
+                DataContext = Container.Resolve<AboutViewModel>()
+            });
         }
 
         private void Preferences_Click(object? sender, EventArgs e)
         {
-            Container.Resolve<IWindowService>().Show(Container.Resolve<SettingsView>());
+            Container.Resolve<IWindowService>().Show(new SettingsView()
+            {
+                DataContext = Container.Resolve<SettingsViewModel>()
+            });
         }
     }
 }

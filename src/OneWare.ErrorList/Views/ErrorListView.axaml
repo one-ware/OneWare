@@ -59,11 +59,7 @@
     </UserControl.Styles>
 
 
-    <Grid >
-        <Grid.RowDefinitions>
-            <RowDefinition Height="26" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="30,*">
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
@@ -91,7 +87,7 @@
                 </Border>
                 
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding ErrorEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding ErrorEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
                         <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
@@ -99,7 +95,7 @@
                     </StackPanel>
                 </ToggleButton>
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding WarningEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding WarningEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
                         <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
@@ -107,7 +103,7 @@
                     </StackPanel>
                 </ToggleButton>
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding HintEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="22">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding HintEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
                         <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"

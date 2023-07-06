@@ -96,9 +96,10 @@ namespace OneWare.Core.ViewModels.Windows
 
         public void OpenSettings()
         {
-            var settings = ContainerLocator.Container.Resolve<SettingsView>();
-            settings.DataContext = ContainerLocator.Container.Resolve<SettingsViewModel>();
-            WindowService.Show(settings);
+            WindowService.Show(new SettingsView()
+            {
+                DataContext = ContainerLocator.Container.Resolve<SettingsViewModel>()
+            });
         }
         
         #endregion

@@ -1,4 +1,5 @@
 ﻿using OneWare.Cpp;
+using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.SourceControl;
 using OneWare.Terminal;
@@ -19,6 +20,7 @@ public class DesktopDemoApp : DemoApp
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
+        moduleCatalog.AddModule<PackageManagerModule>();
         moduleCatalog.AddModule<TerminalModule>();
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();

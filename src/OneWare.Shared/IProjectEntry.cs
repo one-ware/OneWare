@@ -16,7 +16,9 @@ public interface IProjectEntry : IHasPath
     
     public bool IsExpanded { get; set; }
     
-    public FontWeight FontWeight { get; }
+    public IBrush Background { get; set; }
+    
+    public FontWeight FontWeight { get; set; }
     
     public float TextOpacity { get; }
 

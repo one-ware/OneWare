@@ -44,9 +44,13 @@ namespace OneWare.ErrorList.ViewModels
         public string? ErrorListVisibleSource
         {
             get => _errorListVisibleSource;
-            set => SetProperty(ref _errorListVisibleSource, value);
+            set
+            {
+                SetProperty(ref _errorListVisibleSource, value);
+                Filter();
+            }
         }
-        
+
         private int _errorCount;
         public string ErrorCountVisible
         {
@@ -137,8 +141,8 @@ namespace OneWare.ErrorList.ViewModels
             _settingsService = settingsService;
             _projectExplorerExplorerViewModel = projectExplorerExplorerViewModel;
             
-            Id = "ErrorList";
-            Title = "Code Errors";
+            Id = "Problems";
+            Title = "Problems";
                 
             Collection = new DataGridCollectionView(_items, false, true)
             {

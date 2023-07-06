@@ -1,7 +1,11 @@
-﻿using OneWare.ErrorList.ViewModels;
+﻿using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.ErrorList.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.ErrorList;
@@ -36,5 +40,12 @@ public class ErrorListModule : IModule
         _settingsService.Register(KeyErrorListFilterMode, 0);
         _settingsService.Register(KeyErrorListShowExternalErrors, true);
         _settingsService.Register(KeyErrorListVisibleSource, 0);
+        
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Problems")
+        {
+            Header = "Problems",
+            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IErrorService>())),
+            ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.ErrorOutline") ,
+        });
     }
 }

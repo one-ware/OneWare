@@ -1,0 +1,72 @@
+﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                       xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                       xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
+                       xmlns:models="clr-namespace:OneWare.PackageManager.Models"
+                       xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                       xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
+                       xmlns:mvvm="http://prismlibrary.com/"
+                       PrefWidth="750" PrefHeight="500"
+                       mc:Ignorable="d"
+                       x:Class="OneWare.PackageManager.Views.PackageManagerView"
+                       CustomIcon="{DynamicResource PackageManager}"
+                       Title="Plugins" Name="PackageManagerViewView"
+                       WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
+                       TransparencyLevelHint="AcrylicBlur"
+                       mvvm:ViewModelLocator.AutoWireViewModel="False"
+                       x:CompileBindings="True" x:DataType="viewModels:PackageManagerViewModel"
+                       WindowStartupLocation="CenterOwner">
+
+    <shared:FlexibleWindow.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10"></Setter>
+        </Style>
+    </shared:FlexibleWindow.Styles>
+    
+    <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <Grid RowDefinitions="*,Auto" ColumnDefinitions="180,*">
+
+            <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
+                    CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottomLeft}"
+                    Background="{DynamicResource ThemeControlLowBrush}">
+                <ListBox Padding="3" BorderThickness="0" Background="Transparent"
+                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
+                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+                    <ListBox.DataTemplates>
+                        <DataTemplate DataType="models:PackageCategoryModel">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="10">
+                                <Image IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                       VerticalAlignment="Center" Width="18" Source="{Binding IconObservable^, FallbackValue={x:Null}}" />
+                                <TextBlock FontSize="13" Text="{Binding Header}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.DataTemplates>
+                </ListBox>
+            </Border>
+
+            <ItemsControl Name="SettingsList" 
+                     Grid.Row="0" Grid.Column="1" ItemsSource="{Binding SelectedCategory.Packages, FallbackValue={x:Null}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.DataTemplates>
+                    <DataTemplate DataType="models:PackageModel">
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding Title}"/>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding Description}"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
+            
+        </Grid>
+    </Border>
+
+</shared:FlexibleWindow>

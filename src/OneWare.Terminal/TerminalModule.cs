@@ -35,7 +35,7 @@ public class TerminalModule : IModule
         {
             Header = "Terminal",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<TerminalViewModel>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode"),
+            ImageIconObservable = Application.Current?.GetResourceObservable("Material.Console"),
         });
     }
 }

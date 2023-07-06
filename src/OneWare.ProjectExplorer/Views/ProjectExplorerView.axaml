@@ -38,7 +38,7 @@
         </Grid.ColumnDefinitions>
         <Border Grid.ColumnSpan="2" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="0 1 0 1">
             <views:SearchBox Background="{DynamicResource ThemeBackgroundBrush}" SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
-                                VerticalContentAlignment="Center" x:Name="SearchBox" Height="22" />
+                                VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
         <TreeView AutoScrollToSelectedItem="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
@@ -52,6 +52,7 @@
             <TreeView.Styles>
                 <Style Selector="TreeViewItem" x:DataType="shared:IProjectEntry">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded}"></Setter>
+                    <Setter Property="Background" Value="{Binding Background}"></Setter>
                 </Style>
             </TreeView.Styles>
             <TreeView.DataTemplates>

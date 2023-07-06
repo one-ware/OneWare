@@ -46,25 +46,27 @@ public class ProjectExplorerModule : IModule
             Header = "File"
         });
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/File", 
-            new MenuItemModel("New File")
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
+            new MenuItemModel("File")
             {
-                Header = "New File",
-                Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
-                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X")
-            },
-            new MenuItemModel("Open File")
-            {
-                Header = "Open File",
+                Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
                 ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X") 
+            });
+        
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
+            new MenuItemModel("File")
+            {
+                Header = "File",
+                Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
+                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X")
             });
         
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Project Explorer")
         {
             Header = "Project Explorer",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCode") ,
+            ImageIconObservable = Application.Current?.GetResourceObservable("Material.FormatListBulletedType") ,
         });
     }
 }

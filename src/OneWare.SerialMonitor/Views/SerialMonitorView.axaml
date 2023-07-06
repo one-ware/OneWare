@@ -10,7 +10,7 @@
              x:Class="OneWare.SerialMonitor.Views.SerialMonitorView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:SerialMonitorBaseViewModel">
     
-    <Grid RowDefinitions="*, 27">
+    <Grid RowDefinitions="*, 30">
         <avaloniaEdit:TextEditor Name="Output"
                                  DockPanel.Dock="Left"
                                  HorizontalScrollBarVisibility="Auto"
@@ -26,7 +26,7 @@
                                  FontFamily="{DynamicResource EditorFont}"
                                  Padding="5" />
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0"
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
             
             <DockPanel >
@@ -35,12 +35,16 @@
                     <CheckBox IsChecked="{Binding AutoScroll}" />
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Line Ending" />
-                    <ComboBox ItemsSource="{Binding AvailableLineEndings}"
-                              SelectedItem="{Binding SelectedLineEnding}"/>
+                    <Border Classes="RoundToolBar">
+                        <ComboBox ItemsSource="{Binding AvailableLineEndings}" BorderThickness="0"
+                                  SelectedItem="{Binding SelectedLineEnding}"/>
+                    </Border>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Encoding" />
-                    <ComboBox ItemsSource="{Binding AvailableEncodings}"  
-                              SelectedItem="{Binding SelectedLineEncoding}"/>
+                    <Border Classes="RoundToolBar">
+                        <ComboBox ItemsSource="{Binding AvailableEncodings}" BorderThickness="0"
+                                SelectedItem="{Binding SelectedLineEncoding}"/>
+                    </Border>
                     <Border Classes="SplitterBorder" />
                 </StackPanel>
 
@@ -51,14 +55,18 @@
                     </Button>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
-                    <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
-                              SelectedItem="{Binding SelectedBaudRate}"/>
+                    <Border Classes="RoundToolBar">
+                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}" BorderThickness="0"
+                                SelectedItem="{Binding SelectedBaudRate}"/>
+                    </Border>
                     <Border Classes="SplitterBorder" />
 
                     <TextBlock Text="Serial Port:" />
-                    <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                              ItemsSource="{Binding SerialPorts}"
-                              SelectedItem="{Binding SelectedSerialPort}" />
+                    <Border Classes="RoundToolBar">
+                        <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
+                                ItemsSource="{Binding SerialPorts}" BorderThickness="0"
+                                SelectedItem="{Binding SelectedSerialPort}" />
+                    </Border>
                     <Button IsEnabled="{Binding AllowConnecting}"
                             Command="{Binding RefreshSerialPorts}"
                             ToolTip.Tip="Refresh serial ports">
@@ -74,7 +82,7 @@
                     <Border Classes="SplitterBorder" />
                     <Menu DockPanel.Dock="Right">
                         <Menu.Items>
-                            <MenuItem Width="22" Height="22">
+                            <MenuItem Width="24" Height="24">
                                 <MenuItem.Header>
                                     <Image Source="{DynamicResource BoxIcons.RegularMenu}" Width="14" />
                                 </MenuItem.Header>
@@ -104,7 +112,7 @@
                     </Menu>
                 </StackPanel>
                 
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="22"
+                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="24" Padding="3"
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <i:Interaction.Behaviors>
                         <behaviours:CommandOnEnterBehavior Command="{Binding SendText}"

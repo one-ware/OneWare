@@ -30,15 +30,7 @@
     </shared:FlexibleWindow.Styles>
     
     <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="180" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
 
             <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
                     CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottomLeft}"
@@ -55,7 +47,7 @@
                                 <TextBlock FontSize="13" Text="{Binding Header}" />
                             </StackPanel>
                         </TreeDataTemplate>
-                        <DataTemplate DataType="models:SubCategoryModel">
+                        <DataTemplate DataType="models:SettingsSubCategoryModel">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
                                        VerticalAlignment="Center" Width="18" Source="{Binding Icon}" />
@@ -96,7 +88,7 @@
                     </Style>
                 </ListBox.Styles>
                 <ListBox.DataTemplates>
-                    <DataTemplate DataType="models:SubCategoryModel">
+                    <DataTemplate DataType="models:SettingsSubCategoryModel">
                         <DockPanel HorizontalAlignment="Stretch">
                             <DockPanel DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -133,7 +125,7 @@
                                                       SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
                                         </StackPanel>
                                     </DataTemplate>
-                                    <DataTemplate DataType="models:SubCategoryModel">
+                                    <DataTemplate DataType="models:SettingsSubCategoryModel">
                                         <DockPanel HorizontalAlignment="Stretch">
                                             <Border Classes="FirstInvisible"
                                                     Background="{DynamicResource ThemeBorderLowBrush}" Height="1"

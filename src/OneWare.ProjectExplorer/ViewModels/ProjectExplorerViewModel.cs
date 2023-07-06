@@ -60,7 +60,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var menuItems = new List<IMenuItem>();
 
-        if (SelectedItem is IProjectEntry entry)
+        if (SelectedItem is { } entry)
         {
             if (entry is IProjectFile file)
             {
@@ -92,7 +92,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     }
                 });
             }
-            menuItems.Add(new MenuItemModel("Rename")
+            if(entry is not IProjectRoot) menuItems.Add(new MenuItemModel("Rename")
             {
                 Header = "Rename",
                 Command = new RelayCommand(() => entry.RequestRename?.Invoke((x) => _ = RenameAsync(entry, x))),

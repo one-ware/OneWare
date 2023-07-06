@@ -4,13 +4,13 @@ using Avalonia.Media;
 
 namespace OneWare.Settings.Models;
 
-public class SubCategoryModel
+public class SettingsSubCategoryModel
 {
     public IImage? Icon { get; set; }
 
     public List<SettingModel> SettingModels { get; } = new();
 
-    public SubCategoryModel(string label, string? iconKey = null, string? toolTip = null)
+    public SettingsSubCategoryModel(string label, string? iconKey = null, string? toolTip = null)
     {
         Header = label;
         SidebarHeader = label.Split(" ")[0];

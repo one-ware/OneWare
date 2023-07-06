@@ -19,6 +19,13 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     
     public IProjectFolder? TopFolder { get; set; }
 
+    private IBrush _background = Brushes.Transparent;
+    public IBrush Background
+    {
+        get => _background;
+        set => SetProperty(ref _background, value);
+    }
+    
     private FontWeight _fontWeight = FontWeight.Regular;
     public FontWeight FontWeight
     {

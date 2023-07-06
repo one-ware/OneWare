@@ -1,4 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
@@ -61,6 +65,10 @@ public abstract class ProjectViewModelBase : Tool
     {
         SelectedItems.Clear();
         ResetSearch();
+        foreach (var s in SearchResult)
+        {
+            s.Background = Brushes.Transparent;
+        }
         SearchResult.Clear();
         if (SearchString.Length < 3) return;
 
@@ -70,6 +78,7 @@ public abstract class ProjectViewModelBase : Tool
 
         foreach (var r in SearchResult)
         {
+            r.Background = Application.Current?.FindResource(ThemeVariant.Dark,"HighlightBrush") as IBrush ?? Brushes.Transparent;
             ExpandToRoot(r);
         }
     }

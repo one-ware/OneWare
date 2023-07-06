@@ -16,7 +16,7 @@ namespace OneWare.Settings.Views
             TreeView.WhenValueChanged(x => x.SelectedItem)
                 .Throttle(TimeSpan.FromMilliseconds(50)).Subscribe(x =>
             {
-                if (x is SubCategoryModel)
+                if (x is SettingsSubCategoryModel)
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
