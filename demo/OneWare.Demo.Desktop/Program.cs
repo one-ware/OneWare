@@ -25,7 +25,7 @@ internal abstract class Program
             })
             .With(new Win32PlatformOptions
             {
-                CompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                WinUICompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? (Environment.OSVersion.Version.Build >= 22000 ? 8 : 0)
                     : 0,
             })

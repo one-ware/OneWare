@@ -73,7 +73,7 @@ public class PackageManagerViewModel : ObservableObject
 
         RegisterPackage(PackageCategories.Last(),
             new PackageModel("Max1000 Support", "Support for MAX1000 Development Board", "The MAX1000 FPGA Development Board is the most inexpensive way to start with FPGAs and OneWare Studio",
-                await _httpService.DownloadImageAsync("https://vhdplus.com/assets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png"), new List<LinkModel>
+                await _httpService.DownloadImageAsync("https://vhdplus.com/fassets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png"), new List<LinkModel>
                 {
                     new("Docs","https://vhdplus.com/docs/components/max1000/"),
                     new("Get this Product!", "https://shop.vhdplus.com/product/max1000/")
@@ -82,7 +82,7 @@ public class PackageManagerViewModel : ObservableObject
         
         RegisterPackage(PackageCategories.Last(),
             new PackageModel("VHDPlus WiFi Extension", "Support for VHDPlus WiFi Extension Board", "The WiFi Extensions make it easy to use your FPGA as an IoT controller. You have to take a cheap ESP-01 and plug it in the connector. Then you can use the FPGA as a programmer and USB interface for the ESP8266 together with the onboard buttons. And when you only have one CRUVI connector left, you can just plug a second extension like the SCD40 CRUVI module on top of the extension.",
-                await _httpService.DownloadImageAsync("https://vhdplus.com/assets/images/Wifi_Top-8e711729300fc78fb5ed8e74b75c8914.png"), new List<LinkModel>
+                await _httpService.DownloadImageAsync("https://vhdplus.com/fassets/images/Wifi_Top-8e711729300fc78fb5ed8e74b75c8914.png"), new List<LinkModel>
                 {
                     new("Docs","https://vhdplus.com/docs/components/wifi/"),
                     new("Get this Product!", "https://shop.vhdplus.com/product/vhdplus-wifi-extension/")
