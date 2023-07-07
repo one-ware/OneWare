@@ -1,73 +1,11 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
-    <Style Selector="TabControl">
-        <Setter Property="FontSize" Value="13" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border
-                    Margin="{TemplateBinding Margin}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    Background="{TemplateBinding Background}"
-                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                    VerticalAlignment="{TemplateBinding VerticalAlignment}">
-                    <Grid>
-                        <Grid.RowDefinitions>Auto,*</Grid.RowDefinitions>
-                        <ContentPresenter
-                            Grid.Row="1"
-                            Margin="{TemplateBinding Margin}"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            BorderThickness="1"
-                            VerticalAlignment="Stretch"
-                            Name="PART_SelectedContentHost"
-                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                            Content="{TemplateBinding SelectedContent}"
-                            ContentTemplate="{TemplateBinding SelectedContentTemplate}" />
-
-                        <ItemsControl
-                            Name="PART_ItemsPresenter"
-                            ItemsSource="{TemplateBinding ItemsSource}"
-                            ItemsPanel="{TemplateBinding ItemsPanel}"
-                            ItemTemplate="{TemplateBinding ItemTemplate}" />
-                    </Grid>
-                </Border>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-
-    <Style Selector="TabItem">
-        <Setter Property="FontSize" Value="13" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Padding" Value="3, 1, 3, 3" />
-        <Setter Property="BorderThickness" Value="1, 1, 1, 0" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Margin" Value="0, 0, 0, -1" />
-    </Style>
-
-    <Style Selector="TabItem:disabled">
-        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
-    </Style>
-    <Style Selector="TabItem:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-    </Style>
-    <Style Selector="TabItem:selected">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-    </Style>
-    <Style Selector="TabItem:selected:focus">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-    </Style>
-    <Style Selector="TabItem:selected:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-    </Style>
-    <Style Selector="TabItem:selected:focus:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-    </Style>
-
+        <Style Selector="TabItem /template/ ContentPresenter">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+        </Style>
+        
+        <Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+        </Style>
 </Styles>

@@ -8,7 +8,8 @@
                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                        xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
                        xmlns:mvvm="http://prismlibrary.com/"
-                       PrefWidth="750" PrefHeight="500"
+                       xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+                       PrefWidth="1050" PrefHeight="600"
                        mc:Ignorable="d"
                        x:Class="OneWare.PackageManager.Views.PackageManagerView"
                        CustomIcon="{DynamicResource PackageManager}"
@@ -29,7 +30,7 @@
     </shared:FlexibleWindow.Styles>
     
     <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-        <Grid RowDefinitions="*,Auto" ColumnDefinitions="180,*">
+        <Grid RowDefinitions="*,Auto" ColumnDefinitions="180,*, *">
 
             <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
                     CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottomLeft}"
@@ -49,23 +50,68 @@
                 </ListBox>
             </Border>
 
-            <ItemsControl Name="SettingsList" 
-                     Grid.Row="0" Grid.Column="1" ItemsSource="{Binding SelectedCategory.Packages, FallbackValue={x:Null}}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.DataTemplates>
-                    <DataTemplate DataType="models:PackageModel">
-                        <DockPanel HorizontalAlignment="Stretch">
-                            <TextBlock DockPanel.Dock="Left" Text="{Binding Title}"/>
-                            <TextBlock DockPanel.Dock="Left" Text="{Binding Description}"/>
-                        </DockPanel>
-                    </DataTemplate>
-                </ItemsControl.DataTemplates>
-            </ItemsControl>
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical">
+                <Border Padding="3">
+                    <Border Classes="RoundToolBar">
+                        <views:SearchBox SearchButtonVisible="False"/>
+                    </Border>
+                </Border>
+                <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" BorderThickness="0"
+                         ItemsSource="{Binding SelectedCategory.Packages, FallbackValue={x:Null}}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.DataTemplates>
+                        <DataTemplate DataType="models:PackageModel">
+                            <DockPanel>
+                                <Image DockPanel.Dock="Left" Source="{Binding Image}" Height="75" Width="75"/>
+                                <Grid DockPanel.Dock="Right" RowDefinitions="25, 30" Margin="10, 10, 0, 10" ColumnDefinitions="*, 80">
+                                    <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold" Text="{Binding Title}"/>
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ShortDescription}" TextWrapping="Wrap"/>
+                                    <Button Grid.Column="1" Grid.Row="0" Classes="RoundButton" Width="80" Content="Install" />
+                                </Grid> 
+                            </DockPanel> 
+                        </DataTemplate>
+                    </ListBox.DataTemplates>
+                </ListBox>
+            </StackPanel>
             
+            <Border Grid.Row="0" Grid.Column="2" Padding="15" BorderThickness="1, 0, 0, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <ContentPresenter Content="{Binding #PluginList.SelectedItem}">
+                    <ContentPresenter.DataTemplates>
+                        <DataTemplate x:DataType="models:PackageModel">
+                            <StackPanel Orientation="Vertical" Spacing="10">
+                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
+                                <ItemsControl ItemsSource="{Binding Links}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical" Spacing="5"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.DataTemplates>
+                                        <DataTemplate x:DataType="models:LinkModel">
+                                            <views:HyperLink Url="{Binding Url}" Label="{Binding Label}" HorizontalAlignment="Left"/>
+                                        </DataTemplate>
+                                    </ItemsControl.DataTemplates>
+                                </ItemsControl>
+                                <TabControl>
+                                    <TabItem Header="Information">
+                                        <StackPanel Orientation="Vertical" Spacing="10">
+                                            <Image Source="{Binding Image}" HorizontalAlignment="Left"/>
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </TabItem>
+                                    <TabItem Header="License">
+                                        <TextBlock Text="License"/>
+                                    </TabItem>
+                                </TabControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                </ContentPresenter>
+            </Border>
         </Grid>
     </Border>
 

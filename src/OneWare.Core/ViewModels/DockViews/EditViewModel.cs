@@ -193,6 +193,8 @@ namespace OneWare.Core.ViewModels.DockViews
 
         private void InitLanguageService()
         {
+            if(CurrentFile == null) return;
+            
             var service = _languageManager.GetLanguageService(CurrentFile);
 
             //Syntax Highlighting
@@ -404,6 +406,8 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public virtual async Task<bool> LoadAsync()
         {
+            if (CurrentFile == null) return false;
+            
             var result = await LoadFileAsync();
 
             CurrentDocument.UndoStack.ClearAll();
@@ -433,6 +437,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         private void OnFileLoaded(bool status)
         {
+            if (CurrentFile == null) return;
             _ = _backupService.SearchForBackupAsync(CurrentFile);
             IsDirty = false;
         }

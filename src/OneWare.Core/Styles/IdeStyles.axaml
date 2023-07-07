@@ -84,14 +84,14 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
 
-    <Style Selector="StackPanel.WindowButtons > Button">
+    <Style Selector="StackPanel.WindowButtons > Button, Button.RoundButton">
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="5" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="Height" Value="25" />
         <Setter Property="MinWidth" Value="60" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
     </Style>
 
     <Style Selector="StackPanel.WindowButtons">
