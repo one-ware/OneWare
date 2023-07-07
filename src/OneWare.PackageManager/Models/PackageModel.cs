@@ -13,9 +13,9 @@ public class PackageModel : ObservableObject
     
     public List<LinkModel> Links { get; }
     
-    public IImage Image { get; }
+    public IImage? Image { get; }
     
-    public PackageModel(string title, string shortDescription, string description, IImage image, List<LinkModel> links)
+    public PackageModel(string title, string shortDescription, string description, IImage? image, List<LinkModel> links)
     {
         Title = title;
         ShortDescription = shortDescription;

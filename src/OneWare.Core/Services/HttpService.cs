@@ -1,4 +1,5 @@
-﻿using OneWare.Core.Extensions;
+﻿using Avalonia.Media.Imaging;
+using OneWare.Core.Extensions;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 using SharpCompress.Common;
@@ -25,7 +26,7 @@ public class HttpService : IHttpService
     {
         try
         {
-            using var client = HttpClient;
+            var client = HttpClient;
             if(timeout != default)
                 client.Timeout = timeout;
             
@@ -38,7 +39,27 @@ public class HttpService : IHttpService
             return false;
         }
     }
-    
+
+    public async Task<Bitmap?> DownloadImageAsync(string url, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var client = HttpClient;
+            if(timeout != default)
+                client.Timeout = timeout;
+        
+            using var download = await client.GetAsync(
+                "https://vhdplus.com/assets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png", cancellationToken);
+            
+            return new Bitmap(await download.Content.ReadAsStreamAsync(cancellationToken));
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+        return null;
+    }
+
     public async Task<bool> DownloadFileAsync(string url, string location, IProgress<float>? progress, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         try
