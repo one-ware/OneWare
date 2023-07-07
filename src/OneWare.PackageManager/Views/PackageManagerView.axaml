@@ -36,7 +36,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="5" Margin="5" HorizontalAlignment="Left">
                     <TextBlock Text="Installed"/>
                     <CheckBox IsChecked="{Binding ShowInstalled}"/>
-                    <Border Height="20" Classes="SplitterBorder"></Border>
+                    <Border Height="20" Classes="SplitterBorder" Width="1"></Border>
                     <TextBlock Text="Available"/>
                     <CheckBox IsChecked="{Binding ShowAvailable}"/>
                 </StackPanel>

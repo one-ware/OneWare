@@ -185,8 +185,10 @@ namespace OneWare.Core.ViewModels.DockViews
             
             async void OnLoaded()
             {
-                await LoadAsync();
-                InitLanguageService();
+                var result = await LoadAsync();
+                //Syntax Highlighting
+                Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
+                if(result) InitLanguageService();
             }
             OnLoaded();
         }
@@ -196,9 +198,6 @@ namespace OneWare.Core.ViewModels.DockViews
             if(CurrentFile == null) return;
             
             var service = _languageManager.GetLanguageService(CurrentFile);
-
-            //Syntax Highlighting
-            Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
 
             /*//Syntax Highlighting
             var syntaxTheme = _settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
@@ -437,7 +436,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         private void OnFileLoaded(bool status)
         {
-            if (CurrentFile == null) return;
+            if (CurrentFile == null || !status) return;
             _ = _backupService.SearchForBackupAsync(CurrentFile);
             IsDirty = false;
         }
