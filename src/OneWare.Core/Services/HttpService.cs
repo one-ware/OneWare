@@ -49,7 +49,7 @@ public class HttpService : IHttpService
                 client.Timeout = timeout;
         
             using var download = await client.GetAsync(
-                "https://vhdplus.com/assets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png", cancellationToken);
+                url, cancellationToken);
             
             return new Bitmap(await download.Content.ReadAsStreamAsync(cancellationToken));
         }
