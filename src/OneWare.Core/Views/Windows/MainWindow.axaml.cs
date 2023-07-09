@@ -95,7 +95,7 @@ namespace OneWare.Core.Views.Windows
         private void RefreshNativeMenu()
         {
             if (DataContext is not MainWindowViewModel vm) return;
-            _nativeMenu = new NativeMenu();
+            _nativeMenu ??= new NativeMenu();
             _nativeMenu.Items.Clear();
             ConvertMenuToNativeMenu(vm.MainMenu, _nativeMenu);
             NativeMenu.SetMenu(this, _nativeMenu);
