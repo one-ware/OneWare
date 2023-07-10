@@ -144,7 +144,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
                 if (_diagnostics != null)
                 {
-                    Editor.MarkerService.SetDiagnostics(_diagnostics);
+                    Editor.ModificationService.SetDiagnostics(_diagnostics);
                     
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)
@@ -200,7 +200,7 @@ namespace OneWare.Core.ViewModels.DockViews
                         textMateInstallation.SetTheme(x);
                     });
                 }
-                Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
+                //Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
                 
                 if(result) InitLanguageService();
             }

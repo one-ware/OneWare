@@ -52,8 +52,6 @@ namespace OneWare.Shared.LanguageService
         public override void Open()
         {
             base.Open();
-            if (CodeBox.SyntaxHighlighting != null)
-                CustomHighlightManager = new CustomHighlightManager(CodeBox.SyntaxHighlighting);
 
             Service.LanguageServiceActivated += Server_Activated;
             Service.LanguageServiceDeactivated += Server_Deactivated;
@@ -517,12 +515,12 @@ namespace OneWare.Shared.LanguageService
                 }
                 else
                 {
-                    CustomHighlightManager?.ClearHighlights();
+                    //CustomHighlightManager?.ClearHighlights();
                 }
             }
             else
             {
-                CustomHighlightManager?.ClearHighlights();
+                //CustomHighlightManager?.ClearHighlights();
             }
 
             CodeBox.TextArea.TextView.Redraw();
@@ -557,7 +555,7 @@ namespace OneWare.Shared.LanguageService
                 .Select(x => x.Item1)
                 .ToArray();
 
-            CustomHighlightManager?.SetHightlights(highlights, color);
+            //CustomHighlightManager?.SetHightlights(highlights, color);
         }
 
         public virtual async Task ShowOverloadProviderAsync()

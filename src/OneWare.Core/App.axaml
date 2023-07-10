@@ -20,6 +20,7 @@
         <DockSimpleTheme/>
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml" />
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml"/>
     </Application.Styles>
     

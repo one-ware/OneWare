@@ -134,19 +134,10 @@
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate DataType="models:SettingModelColorPicker">
-                                        <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
                                             <TextBlock Text="{Binding Setting.Title}"
                                                        ToolTip.Tip="{Binding Setting.Description}" />
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="Test"></TextBlock>
-                                                <Button Content="Click me">
-                                                    <Button.Flyout>
-                                                        <Flyout>
-                                                            <ColorPicker/>
-                                                        </Flyout>
-                                                    </Button.Flyout>
-                                                </Button>
-                                            </StackPanel>
+                                            <ColorPicker Color="{Binding Setting.Value}" Height="24"/>
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate DataType="models:SettingModelPath">

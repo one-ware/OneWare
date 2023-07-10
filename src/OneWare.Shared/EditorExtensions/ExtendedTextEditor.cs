@@ -1,5 +1,6 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
+using DynamicData;
 
 namespace OneWare.Shared.EditorExtensions;
 
@@ -12,6 +13,8 @@ public class ExtendedTextEditor : TextEditor
     //public MergeService MergeService { get; }
     public WordHighlightRenderer WordRenderer { get; }
     public TextMarkerService MarkerService { get; }
+    
+    public TextModificationService ModificationService { get; }
     private ElementGenerator ElementGenerator { get; }
     public FoldingManager? FoldingManager { get; private set; }
     
@@ -29,6 +32,7 @@ public class ExtendedTextEditor : TextEditor
         //MergeService = new MergeService(this, ElementGenerator);
         WordRenderer = new WordHighlightRenderer(TextArea.TextView);
         MarkerService = new TextMarkerService(Document);
+        ModificationService = new TextModificationService(TextArea.TextView);
         
         TextArea.TextView.BackgroundRenderers.Add(BracketRenderer);
         TextArea.TextView.BackgroundRenderers.Add(LineRenderer);
@@ -36,6 +40,7 @@ public class ExtendedTextEditor : TextEditor
         TextArea.TextView.BackgroundRenderers.Add(WordRenderer);
         TextArea.TextView.BackgroundRenderers.Add(MarkerService);
 
+        TextArea.TextView.LineTransformers.Add(ModificationService);
         TextArea.TextView.ElementGenerators.Add(ElementGenerator);
     }
     

@@ -23,8 +23,6 @@ namespace OneWare.Shared.LanguageService
         
         public IIndentationStrategy? IndentationStrategy { get; protected set; }
 
-        public CustomHighlightManager? CustomHighlightManager { get; protected set; }
-
         public CompletionWindow? Completion { get; set; }
 
         public OverloadInsightWindow? OverloadInsight { get; set; }
