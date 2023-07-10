@@ -8,7 +8,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Assets\vhdl.xshd" />
       <AvaloniaResource Include="Assets\vhdl.xshd" />
+      <AvaloniaResource Include="Assets\vhdl.tmLanguage.json" />
     </ItemGroup>
 </Project>

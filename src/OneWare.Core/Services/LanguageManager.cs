@@ -5,6 +5,7 @@ using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Data;
+using OneWare.Core.Extensions.TextMate;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
@@ -24,8 +25,8 @@ internal class LanguageManager : ILanguageManager
         private readonly Dictionary<Type, Dictionary<string,ILanguageService>> _workspaceServers = new();
 
         private readonly Dictionary<string, string> _highlightingDefinitions = new();
-        private readonly CustomTextMateRegistryOptions _registryOptions = new();
-        public IRegistryOptions RegistryOptions => _registryOptions;
+        private readonly CustomTextMateRegistryOptions _textMateRegistryOptions = new();
+        public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
         public IObservable<IRawTheme> CurrentEditorTheme { get; }
 
         public LanguageManager(ISettingsService settingsService)
@@ -35,9 +36,13 @@ internal class LanguageManager : ILanguageManager
                     ? "Editor_SyntaxTheme_Dark"
                     : "Editor_SyntaxTheme_Light")
                 .SelectMany(settingsService.GetSettingObservable<ThemeName>)
-                .Select(b => _registryOptions.LoadTheme(b));
+                .Select(b => _textMateRegistryOptions.LoadTheme(b));
         }
-        
+
+        public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions)
+        {
+            _textMateRegistryOptions.RegisterLanguage(id, grammarPath, extensions);
+        }
         public void RegisterHighlighting(string path, params string[] supportedFileTypes)
         {
             foreach (var fileType in supportedFileTypes)
@@ -67,8 +72,8 @@ internal class LanguageManager : ILanguageManager
 
         public string? GetTextMateScopeByExtension(string fileExtension)
         {
-            var lang = _registryOptions.GetLanguageByExtension(fileExtension);
-            return lang == null ? null : _registryOptions.GetScopeByLanguageId(lang.Id);
+            var lang = _textMateRegistryOptions.GetLanguageByExtension(fileExtension);
+            return lang == null ? null : _textMateRegistryOptions.GetScopeByLanguageId(lang.Id);
         }
         
         public void RegisterService(Type type, bool workspaceDependent, params string[] supportedFileTypes)
