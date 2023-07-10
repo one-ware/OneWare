@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.TextMate;
@@ -188,8 +189,19 @@ namespace OneWare.Core.ViewModels.DockViews
             async void OnLoaded()
             {
                 var result = await LoadAsync();
-                //Syntax Highlighting
+                
+                var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
+                if (scope != null)
+                {
+                    var textMateInstallation = Editor.InstallTextMate(_languageManager.RegistryOptions);
+                    textMateInstallation.SetGrammar(scope);
+                    _languageManager.CurrentEditorTheme.Subscribe(x =>
+                    {
+                        textMateInstallation.SetTheme(x);
+                    });
+                }
                 Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
+                
                 if(result) InitLanguageService();
             }
             OnLoaded();
@@ -200,24 +212,6 @@ namespace OneWare.Core.ViewModels.DockViews
             if(CurrentFile == null) return;
             
             var service = _languageManager.GetLanguageService(CurrentFile);
-
-            //Syntax Highlighting
-            var syntaxTheme = ThemeName.Dark;//_settingsService.GetSettingValue<ThemeName>("Editor_SyntaxTheme");
-            var registryOptions = new RegistryOptions(syntaxTheme);
-            var lang = registryOptions.GetLanguageByExtension(CurrentFile.Extension);
-            if (lang != null)
-            {
-                var textMateInstallation = Editor.InstallTextMate(registryOptions);
-
-                // _settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme")
-                //     .Subscribe(
-                //         x =>
-                //         {
-                //             if(x != syntaxTheme) textMateInstallation.SetTheme(registryOptions.LoadTheme(x));
-                //             syntaxTheme = x;
-                //         });
-                textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(lang.Id));
-            }
 
             if (service != null)
             {

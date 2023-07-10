@@ -118,32 +118,16 @@
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate DataType="models:SettingModelComboBox">
-                                        <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Vertical" Margin="0 2 0 0">
                                             <TextBlock Text="{Binding Setting.Title}"
                                                        ToolTip.Tip="{Binding Setting.Description}" />
                                             <ComboBox ItemsSource="{Binding Setting.Options}"
                                                       SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
                                         </StackPanel>
                                     </DataTemplate>
-                                    <DataTemplate DataType="models:SettingsSubCategoryModel">
-                                        <DockPanel HorizontalAlignment="Stretch">
-                                            <Border Classes="FirstInvisible"
-                                                    Background="{DynamicResource ThemeBorderLowBrush}" Height="1"
-                                                    DockPanel.Dock="Top"
-                                                    HorizontalAlignment="Stretch" Margin="0, 15, 0, 10">
-                                            </Border>
-                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,2,0,2"
-                                                        Spacing="4">
-                                                <Image
-                                                    IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                    Source="{Binding Icon}" Width="14" />
-                                                <TextBlock Text="{Binding SidebarHeader}" FontWeight="Bold" />
-                                            </StackPanel>
-                                        </DockPanel>
-
-                                    </DataTemplate>
+                                    
                                     <DataTemplate DataType="models:SettingModelTextBox">
-                                        <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Vertical" Margin="0 2 0 0">
                                             <TextBlock Text="{Binding Setting.Title}"
                                                        ToolTip.Tip="{Binding Setting.Description}" />
                                             <TextBox Text="{Binding Setting.Value, Mode=TwoWay}" />
@@ -166,7 +150,7 @@
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate DataType="models:SettingModelPath">
-                                        <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Vertical" Margin="0 2 0 0">
                                             <TextBlock Text="{Binding Setting.Title}"
                                                        ToolTip.Tip="{Binding Setting.Description}" />
                                             <Grid>

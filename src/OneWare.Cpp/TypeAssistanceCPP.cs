@@ -1,6 +1,8 @@
-﻿using AvaloniaEdit.Indentation.CSharp;
+﻿using AvaloniaEdit.CodeCompletion;
+using AvaloniaEdit.Indentation.CSharp;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
+using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 
 namespace OneWare.Cpp
@@ -35,6 +37,24 @@ namespace OneWare.Cpp
                 if (hover.Contents.HasMarkupContent)
                     return "```cpp\n" + hover.Contents.MarkupContent?.Value.Replace("→", "->") + "\n```";
             return null;
+        }
+        
+        public override ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+        {
+            var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
+                ? instanceIcon
+                : TypeAssistanceIconStore.Instance.CustomIcons["Default"];
+
+            var newlabel = comp.Label.Length > 0 ? comp.Label.Remove(0, 1) : "";
+            newlabel = newlabel.Split("(")[0].Split("<")[0];
+
+            Action afterComplete = () => { _ = ShowOverloadProviderAsync(); };
+            
+            if (comp.InsertTextFormat == InsertTextFormat.PlainText)
+                return new CompletionData(comp?.InsertText ?? "", newlabel, comp?.Documentation?.String, icon, 0,
+                    comp, offset, afterComplete);
+            return new CompletionData(comp?.InsertText ?? "", newlabel, comp?.Documentation?.String, icon, 0,
+                comp, offset, afterComplete);
         }
     }
 }

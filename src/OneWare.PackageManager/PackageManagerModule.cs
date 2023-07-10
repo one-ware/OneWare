@@ -26,9 +26,9 @@ public class PackageManagerModule : IModule
             Header = "Extras",
             Priority = 900
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Plugins")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Extensions")
         {
-            Header = "Plugins",
+            Header = "Extensions",
             Command = new RelayCommand(() => windowService.Show(new PackageManagerView()
             {
                 DataContext = containerProvider.Resolve<PackageManagerViewModel>()

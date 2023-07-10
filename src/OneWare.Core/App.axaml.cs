@@ -29,6 +29,7 @@ using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using TextMateSharp.Grammars;
 
 //using OneWare.Terminal
 
@@ -93,8 +94,11 @@ namespace OneWare.Core
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontSize", "Font Size",
                 "Editor Font Size", 15, Enumerable.Range(10, 30).ToArray());
 
-            // settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme", "Editor Theme", 
-            //     "Setts the theme for Syntax Highlighting", ThemeName.DarkPlus, Enum.GetValues<ThemeName>());
+            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Dark", "Editor Theme Dark", 
+                 "Setts the theme for Syntax Highlighting in Dark Mode", ThemeName.DarkPlus, Enum.GetValues<ThemeName>());
+            
+            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Light", "Editor Theme Light", 
+                "Setts the theme for Syntax Highlighting in Light Mode", ThemeName.LightPlus, Enum.GetValues<ThemeName>());
 
             settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoFormatting", "Use Auto Formatting", "Use Auto Formatting in Editor", true);
             settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoBracket", "Use Auto Bracket", "Use Auto Bracket in Editor", true);

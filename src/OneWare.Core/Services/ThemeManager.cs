@@ -23,13 +23,12 @@ namespace OneWare.Core.Services
             {
                 new ThemeVariant("Dark", null),
                 new ThemeVariant("Light", null),
-                new ThemeVariant("SuperDark", null),
             };
 
             _settingsService.RegisterTitledCombo("General","Appearance", "General_SelectedTheme", "Theme", "Sets the color scheme for the Application", 
                Themes[0].Key, Themes.Select(x => x.Key).ToArray());
             
-            //_settingsService.RegisterTitled("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FFFFFF"));
+            _settingsService.RegisterTitled("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FFFFFF"));
             
             _settingsService.Load(paths.SettingsPath);
             

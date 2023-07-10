@@ -1,11 +1,18 @@
-﻿using System.Xml;
+﻿using System.Reactive.Linq;
+using System.Xml;
 using Avalonia.Platform;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
+using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Core.Data;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using Prism.Ioc;
+using TextMateSharp.Grammars;
+using TextMateSharp.Internal.Types;
+using TextMateSharp.Registry;
+using TextMateSharp.Themes;
 
 namespace OneWare.Core.Services;
 
@@ -17,7 +24,20 @@ internal class LanguageManager : ILanguageManager
         private readonly Dictionary<Type, Dictionary<string,ILanguageService>> _workspaceServers = new();
 
         private readonly Dictionary<string, string> _highlightingDefinitions = new();
+        private readonly CustomTextMateRegistryOptions _registryOptions = new();
+        public IRegistryOptions RegistryOptions => _registryOptions;
+        public IObservable<IRawTheme> CurrentEditorTheme { get; }
 
+        public LanguageManager(ISettingsService settingsService)
+        {
+            CurrentEditorTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
+                .Select(x => x == "Dark"
+                    ? "Editor_SyntaxTheme_Dark"
+                    : "Editor_SyntaxTheme_Light")
+                .SelectMany(settingsService.GetSettingObservable<ThemeName>)
+                .Select(b => _registryOptions.LoadTheme(b));
+        }
+        
         public void RegisterHighlighting(string path, params string[] supportedFileTypes)
         {
             foreach (var fileType in supportedFileTypes)
@@ -43,6 +63,12 @@ internal class LanguageManager : ILanguageManager
                 ContainerLocator.Container.Resolve<ILogger>().Error($"{e.Message}\n{path}", e);
                 return null;
             }
+        }
+
+        public string? GetTextMateScopeByExtension(string fileExtension)
+        {
+            var lang = _registryOptions.GetLanguageByExtension(fileExtension);
+            return lang == null ? null : _registryOptions.GetScopeByLanguageId(lang.Id);
         }
         
         public void RegisterService(Type type, bool workspaceDependent, params string[] supportedFileTypes)
