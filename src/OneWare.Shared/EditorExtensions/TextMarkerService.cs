@@ -11,13 +11,11 @@ namespace OneWare.Shared.EditorExtensions
     {
         private TextDocument _document;
         private TextSegmentCollection<DiagnosticTextMarker> _diagnosticMarkers;
-        private TextSegmentCollection<TextMarker> _underlineMarkers;
 
         public TextMarkerService(TextDocument document)
         {
             _document = document;
             _diagnosticMarkers = new TextSegmentCollection<DiagnosticTextMarker>(document);
-            _underlineMarkers = new TextSegmentCollection<TextMarker>(document);
         }
 
         public KnownLayer Layer => KnownLayer.Background;
@@ -34,21 +32,6 @@ namespace OneWare.Shared.EditorExtensions
 
             var start = Math.Min(viewStart, viewEnd);
             var end = Math.Max(viewStart, viewEnd);
-
-            if (_underlineMarkers is {Count: > 0})
-                foreach (var marker in _underlineMarkers.FindOverlappingSegments(start, end - start))
-                    if (marker.Length > 0)
-                        if (marker.EndOffset < textView.Document.TextLength)
-                            foreach (var r in BackgroundGeometryBuilder.GetRectsForSegment(textView, marker))
-                            {
-                                var startPoint = r.BottomLeft.WithY(r.BottomLeft.Y-3);
-                                var endPoint = r.BottomRight.WithY(r.BottomLeft.Y-3);
-
-                                var usedPen = new Pen(marker.Brush);
-
-                                drawingContext.DrawLine(usedPen, startPoint, endPoint);
-                                break;
-                            }
 
             if (_diagnosticMarkers is {Count: > 0})
                 foreach (var marker in _diagnosticMarkers.FindOverlappingSegments(start, end - start))
@@ -86,8 +69,6 @@ namespace OneWare.Shared.EditorExtensions
         {
             _diagnosticMarkers.Clear();
             _diagnosticMarkers.Disconnect(_document);
-            _underlineMarkers.Clear();
-            _underlineMarkers.Disconnect(_document);
         }
 
         private static IEnumerable<Point> CreatePoints(Point start, Point end, double offset, int count)
@@ -105,47 +86,7 @@ namespace OneWare.Shared.EditorExtensions
 
             foreach (var m in toRemove) _diagnosticMarkers.Remove(m);
         }
-
-        public void SetUnderlined(IEnumerable<TextMarker> underlinedSegments)
-        {
-            foreach (var m in underlinedSegments)
-                if (m.StartOffset >= 0 && m.StartOffset < _document.TextLength && m.EndOffset >= 0 &&
-                    m.EndOffset < _document.TextLength)
-                    _underlineMarkers.Add(m);
-        }
-
-        /// <summary>
-        ///     Marks underlined words
-        /// </summary>
-        /// <param name="underlinedSegments"></param>
-        /// <returns>If changed</returns>
-        public bool SetUnderlined(params TextMarker[] underlinedSegments)
-        {
-            var equal = true;
-
-            if (underlinedSegments.Length != _underlineMarkers.Count)
-                equal = false;
-            else
-                for (var i = 0; i < underlinedSegments.Length; i++)
-                    if (underlinedSegments[i].StartOffset != _underlineMarkers.ElementAt(i).StartOffset
-                        || underlinedSegments[i].EndOffset != _underlineMarkers.ElementAt(i).EndOffset
-                        || underlinedSegments[i].Brush != _underlineMarkers.ElementAt(i).Brush)
-                    {
-                        equal = false;
-                        break;
-                    }
-
-            if (equal) return false;
-
-            _underlineMarkers.Clear();
-            foreach (var m in underlinedSegments)
-                if (m.StartOffset >= 0 && m.StartOffset < _document.TextLength && m.EndOffset >= 0 &&
-                    m.EndOffset < _document.TextLength)
-                    _underlineMarkers.Add(m);
-
-            return true;
-        }
-
+        
         public void SetDiagnostics(IEnumerable<ErrorListItemModel> diagnostics)
         {
             _diagnosticMarkers.Clear();
