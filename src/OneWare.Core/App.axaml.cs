@@ -268,8 +268,10 @@ namespace OneWare.Core
                 var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
                 Directory.CreateDirectory(testProj);
                 var dummy = new FolderProjectRoot(testProj);
-                var hard = dummy.AddFile("Hardware.vhd");
-                var soft = dummy.AddFile("Software.cpp");
+                var hard = dummy.AddFile("VhdlTest.vhd");
+                var hard2 = dummy.AddFile("VerilogTest.v");
+
+                var soft = dummy.AddFile("CppTest.cpp");
                 Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
                 Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
                 
@@ -339,6 +341,16 @@ BEGIN
   END PROCESS;
   
 END BEHAVIORAL;
+";
+                    
+                    editor = await Container.Resolve<IDockService>().OpenFileAsync(hard2);
+                    (editor as IEditor)!.CurrentDocument.Text = @"
+module HELLO_WORLD(); // module doesn't have input or outputs
+  initial begin
+    $display('Hello World');
+    $finish; // stop the simulator
+  end
+endmodule
 ";
                 }
 
