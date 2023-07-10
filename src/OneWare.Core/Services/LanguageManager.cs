@@ -31,11 +31,13 @@ internal class LanguageManager : ILanguageManager
 
         public LanguageManager(ISettingsService settingsService)
         {
-            CurrentEditorTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
+            var t = settingsService.GetSettingObservable<string>("General_SelectedTheme");
+            CurrentEditorTheme = t
                 .Select(x => x == "Dark"
                     ? "Editor_SyntaxTheme_Dark"
                     : "Editor_SyntaxTheme_Light")
                 .SelectMany(settingsService.GetSettingObservable<ThemeName>)
+                //.TakeUntil(t)
                 .Select(b => _textMateRegistryOptions.LoadTheme(b));
         }
 
