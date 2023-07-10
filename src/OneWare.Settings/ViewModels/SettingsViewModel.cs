@@ -3,6 +3,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Settings.Models;
 using OneWare.Shared;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
@@ -41,14 +42,16 @@ namespace OneWare.Settings.ViewModels
 
         private readonly ISettingsService _settingsService;
         private readonly IPaths _paths;
+        private readonly IWindowService _windowService;
 
-        public SettingsViewModel(ISettingsService settingsService, IPaths paths)
+        public SettingsViewModel(ISettingsService settingsService, IPaths paths, IWindowService windowService)
         {
             Id = "Settings";
             Title = "Settings";
             
             _settingsService = settingsService;
             _paths = paths;
+            _windowService = windowService;
 
             var s = settingsService as SettingsService;
             if (s == null) return;
@@ -102,9 +105,13 @@ namespace OneWare.Settings.ViewModels
             _settingsService.Save(Path.Combine(_paths.AppDataDirectory, "settings.json"));
         }
 
-        public void Reset()
+        public async Task ResetDialogAsync()
         {
-            _settingsService.Reset();
+            var result = await _windowService.ShowYesNoCancelAsync("Warning",
+                "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning);
+            
+            if(result == MessageBoxStatus.Yes)
+                _settingsService.Reset();
         }
     }
 }

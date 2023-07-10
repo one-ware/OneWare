@@ -187,7 +187,7 @@
             </ListBox>
 
             <StackPanel Margin="8" Classes="WindowButtons" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
-                <Button Command="{Binding Reset}"
+                <Button Command="{Binding ResetDialogAsync}"
                         CommandParameter="{Binding #SettingsWindowView}" Name="ResetButton">
                     Reset
                 </Button>
