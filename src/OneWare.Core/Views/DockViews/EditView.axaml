@@ -79,7 +79,6 @@
                     <Style Selector="avaloniaEdit|TextEditor">
                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                         <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
-                        <Setter Property="SyntaxHighlighting" Value="{Binding Editor.SyntaxHighlighting}"/>
                         <Setter Property="Background" Value="Transparent"/>
                     </Style>
                 </ContentControl.Styles>
