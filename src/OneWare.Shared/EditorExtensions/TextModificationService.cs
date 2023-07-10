@@ -2,6 +2,7 @@
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using ImTools;
+using Microsoft.CodeAnalysis.CSharp;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 
@@ -9,70 +10,72 @@ namespace OneWare.Shared.EditorExtensions;
 
 public class TextModificationService : DocumentColorizingTransformer
 {
-    private readonly TextSegmentCollection<TextModificationSegment> _modificationSegments;
+    private readonly Dictionary<string, TextSegmentCollection<TextModificationSegment>> _modificationSegments;
 
     private readonly TextView _textView;
     
     public TextModificationService(TextView textView)
     {
         _textView = textView;
-        _modificationSegments = new TextSegmentCollection<TextModificationSegment>(textView.Document);
+        _modificationSegments = new Dictionary<string, TextSegmentCollection<TextModificationSegment>>();
     }
 
-    public void SetDiagnostics(IEnumerable<ErrorListItemModel>? diagnostics)
+    public void ClearModification(string key)
     {
+        if(!_modificationSegments.ContainsKey(key)) return;
+        
         var copy = new TextModificationSegment[_modificationSegments.Count];
-        _modificationSegments.CopyTo(copy,0);
+        
+        _modificationSegments[key].CopyTo(copy,0);
         foreach(var s in copy)
         {
-            _modificationSegments.Remove(s);
+            _modificationSegments[key].Remove(s);
             _textView.Redraw(s);
-        }
-
-        if (diagnostics == null) return;
-        foreach (var diag in diagnostics)
-        {
-            IBrush markerColor = diag.Type switch
-            {
-                ErrorType.Error => Brushes.Red,
-                ErrorType.Warning => Brushes.DarkGray,
-                _ => Brushes.DarkGray
-            };
-
-            var offset = diag.GetOffset(_textView.Document);
-
-            var sOff = offset.startOffset;
-            var eOff = offset.endOffset;
-            var overlap = _modificationSegments.FindOverlappingSegments(sOff, eOff);
-            if (overlap.Any())
-            {
-                var f = overlap.First();
-                if (sOff >= f.StartOffset)
-                {
-                    if(eOff <= f.EndOffset) return; //Completely overlapped
-                    if (eOff > f.EndOffset + 1) sOff = f.EndOffset + 1;
-                }
-                if (sOff < f.StartOffset)
-                {
-                    if (eOff > f.EndOffset - 1) eOff = f.EndOffset - 1;
-                }
-            }
-
-            _modificationSegments.Add(new TextModificationSegment(sOff, eOff){Brush = markerColor});
-            _textView.Redraw(sOff, eOff-sOff);
         }
     }
     
+    public void SetModification(string key, params TextModificationSegment[] segments)
+    {
+        ClearModification(key);
+        
+        _modificationSegments.TryAdd(key, new TextSegmentCollection<TextModificationSegment>(_textView.Document));
+        var m = _modificationSegments[key];
+        
+        foreach (var s in segments)
+        {
+            var overlap = m.FindOverlappingSegments(s.StartOffset, s.Length);
+            if (overlap.Any())
+            {
+                var f = overlap.First();
+                if (s.StartOffset >= f.StartOffset)
+                {
+                    if(s.StartOffset <= f.EndOffset) continue; //Completely overlapped
+                    if (s.EndOffset > f.EndOffset + 1) s.StartOffset = f.EndOffset + 1;
+                }
+                if (s.StartOffset < f.StartOffset)
+                {
+                    if (s.EndOffset > f.EndOffset - 1) s.EndOffset = f.EndOffset - 1;
+                }
+            }
+
+            m.Add(s);
+            _textView.Redraw(s.StartOffset, s.Length);
+        }
+    }
+
     protected override void ColorizeLine(DocumentLine line)
     {
         if (!line.IsDeleted)
         {
-            var overlaps = _modificationSegments.FindOverlappingSegments(line.Offset, line.Length);
-
-            foreach (var overlap in overlaps)
+            foreach (var m in _modificationSegments)
             {
-                if (overlap.EndOffset > line.EndOffset) overlap.EndOffset = line.EndOffset;
-                ChangeLinePart(overlap.StartOffset, overlap.EndOffset, (x) => ApplyChanges(x, overlap.Brush, overlap.Decorations));
+                var overlaps = m.Value.FindOverlappingSegments(line.Offset, line.Length);
+
+                foreach (var overlap in overlaps)
+                {
+                    if (overlap.EndOffset > line.EndOffset) overlap.EndOffset = line.EndOffset;
+                    ChangeLinePart(overlap.StartOffset, overlap.EndOffset, (x) => ApplyChanges(x, overlap.Brush, overlap.Decorations));
+                }
             }
         }
     }

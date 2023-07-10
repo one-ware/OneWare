@@ -99,6 +99,8 @@ namespace OneWare.Core
             
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Light", "Editor Theme Light", 
                 "Setts the theme for Syntax Highlighting in Light Mode", ThemeName.LightPlus, Enum.GetValues<ThemeName>());
+            
+            //settingsService.RegisterTitled("Editor", "Appearance", "Editor_ErrorMarking_Mode", "Error Marking mode"); dfdf 
 
             settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoFormatting", "Use Auto Formatting", "Use Auto Formatting in Editor", true);
             settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoBracket", "Use Auto Bracket", "Use Auto Bracket in Editor", true);

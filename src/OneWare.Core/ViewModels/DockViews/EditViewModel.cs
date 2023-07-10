@@ -144,7 +144,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
                 if (_diagnostics != null)
                 {
-                    Editor.ModificationService.SetDiagnostics(_diagnostics);
+                    Editor.MarkerService.SetDiagnostics(_diagnostics);
                     
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)

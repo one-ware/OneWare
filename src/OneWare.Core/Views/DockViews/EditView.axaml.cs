@@ -47,12 +47,12 @@ namespace OneWare.Core.Views.DockViews
         private IEnumerable<int> _lastSearchResultLines = new List<int>();
         public EditViewModel? ViewModel { get; set; }
         public ObjectValueModel? VaribleViewDataConext { get; private set; }
-        
+
         public EditView()
         {
             _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
             _errorService = ContainerLocator.Container.Resolve<IErrorService>();
-            
+
             InitializeComponent();
 
             this.DataContextChanged += (_, _) =>
@@ -64,12 +64,6 @@ namespace OneWare.Core.Views.DockViews
                     .Take(1)
                     .Subscribe((x) => Setup());
             };
-        }
-
-
-        private void WindowPointerPressed(object? sender, PointerPressedEventArgs i)
-        {
-            //if (!Equals(Tools.VisualUpwardSearch<Popup>(i.Source as Interactive), HoverBox)) HoverBox.Close();
         }
 
         protected void Setup()
@@ -106,10 +100,6 @@ namespace OneWare.Core.Views.DockViews
             //     .Subscribe(UpdateDebuggerLine)
             //     .DisposeWith(disposableRegistration);
 
-            if (this.GetVisualRoot() is Window window)
-                window
-                    .AddHandler(PointerPressedEvent, WindowPointerPressed, RoutingStrategies.Tunnel);
-
             this.AddHandler(KeyDownEvent, (o, e) =>
             {
                 if (e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl) return;
@@ -122,10 +112,15 @@ namespace OneWare.Core.Views.DockViews
                 if (e.Key is Key.LeftCtrl or Key.RightCtrl)
                 {
                     CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
-                    var changed = CodeBox.MarkerService.SetUnderlined();
-                    if (changed) CodeBox.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+                    CodeBox.ModificationService.ClearModification("Control_Underline");
                 }
             }, RoutingStrategies.Bubble, true);
+
+            this.LostFocus += (o, i) =>
+            {
+                CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
+                CodeBox.ModificationService.ClearModification("Control_Underline");
+            };
 
             //Zoom in ctrl + wheel
             CodeBox.AddHandler(PointerWheelChangedEvent, (o, i) =>
@@ -490,10 +485,9 @@ namespace OneWare.Core.Views.DockViews
 
             if (_controlAction != null && _lastControlWordBounds.HasValue)
             {
-                var changed = CodeBox.MarkerService.SetUnderlined(new TextMarkerService.TextMarker(
+                CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationService.TextModificationSegment(
                     _lastControlWordBounds.Value.Start.Value,
-                    _lastControlWordBounds.Value.End.Value) { Brush = Foreground });
-                if (changed) CodeBox.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+                    _lastControlWordBounds.Value.End.Value) { Decorations = TextDecorationCollection.Parse("Underline") });
             }
         }
 

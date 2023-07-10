@@ -120,7 +120,7 @@ namespace OneWare.Shared.EditorExtensions
                     var f = overlap.First();
                     if (sOff >= f.StartOffset)
                     {
-                        if(eOff <= f.EndOffset) return; //Completely overlapped
+                        if(eOff <= f.EndOffset) continue; //Completely overlapped
                         if (eOff > f.EndOffset + 1) sOff = f.EndOffset + 1;
                     }
                     if (sOff < f.StartOffset)
