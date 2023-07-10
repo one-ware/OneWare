@@ -24,7 +24,7 @@ public class TextModificationService : DocumentColorizingTransformer
     {
         if(!_modificationSegments.ContainsKey(key)) return;
         
-        var copy = new TextModificationSegment[_modificationSegments.Count];
+        var copy = new TextModificationSegment[_modificationSegments[key].Count];
         
         _modificationSegments[key].CopyTo(copy,0);
         foreach(var s in copy)

@@ -113,6 +113,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public event EventHandler? FileSaved;
         
+        static IBrush _errorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
         static IBrush _errorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
         static IBrush _warningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
 
@@ -145,6 +146,14 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (_diagnostics != null)
                 {
                     Editor.MarkerService.SetDiagnostics(_diagnostics);
+                    Editor.ModificationService.SetModification("Errors", _diagnostics.Where(x => x.Type == ErrorType.Error).Select(b =>
+                    {
+                        var off = b.GetOffset(Editor.Document);
+                        return new TextModificationService.TextModificationSegment(off.startOffset, off.endOffset)
+                        {
+                            Brush = _errorBrushText
+                        };
+                    }).ToArray());
                     
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)
