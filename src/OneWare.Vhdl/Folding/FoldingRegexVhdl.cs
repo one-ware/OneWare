@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace OneWare.Vhdl.Folding;
 
-public class FoldingRegexVhdl
+public static class FoldingRegexVhdl
 {
     private const string FoldingStartPattern = @"(?x)
 		# From the start of the line make sure we are not going into a comment ...
@@ -47,7 +47,7 @@ public class FoldingRegexVhdl
 		)
 	";
 
-    public static Regex FoldingStart = new(FoldingStartPattern, RegexOptions.Multiline);
+    public static readonly Regex FoldingStart = new(FoldingStartPattern, RegexOptions.Multiline);
 
-    public static Regex FoldingEnd = new(FoldingEndPattern, RegexOptions.Multiline);
+    public static readonly Regex FoldingEnd = new(FoldingEndPattern, RegexOptions.Multiline);
 }
