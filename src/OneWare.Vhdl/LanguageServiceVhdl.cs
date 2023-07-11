@@ -26,10 +26,20 @@ namespace OneWare.Vhdl
         
         public override async Task ActivateAsync()
         {
-            if(!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.64.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
-               ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
+                        "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.64.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    
+                }
+            }
+                
             await base.ActivateAsync();
         }
 
