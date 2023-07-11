@@ -49,8 +49,8 @@ public class RegexFoldingStrategy : IFoldingStrategy
 		)
 	";
 
-	private static readonly Regex FoldingStart = new(FoldingStartPattern);
-	private static readonly Regex FoldingEnd = new(FoldingEndPattern);
+	private static readonly Regex FoldingStart = new(FoldingStartPattern, RegexOptions.Multiline);
+	private static readonly Regex FoldingEnd = new(FoldingEndPattern, RegexOptions.Multiline);
 
     public void UpdateFoldings(FoldingManager manager, TextDocument document)
     {
@@ -63,11 +63,11 @@ public class RegexFoldingStrategy : IFoldingStrategy
         var start = FoldingStart.Match(document.Text);
         var end = FoldingEnd.Match(document.Text, start.Index);
         
-        Console.WriteLine(start.Success);
-        Console.WriteLine(end.Success);
+        Console.WriteLine(start.Index);
+        Console.WriteLine(end.Index);
 
         firstErrorOffset = -1;
         
-        return new NewFolding[] { };
+        return new NewFolding[] { new NewFolding(start.Index + start.Length, end.Index + end.Length)};
     }
 }
