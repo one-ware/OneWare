@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
@@ -35,7 +36,7 @@ namespace OneWare.Cpp
 
         public override async Task ActivateAsync()
         {
-            if (!File.Exists(ExecutablePath))
+            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
                     "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
                     ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);

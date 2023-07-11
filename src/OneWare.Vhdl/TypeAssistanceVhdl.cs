@@ -17,7 +17,7 @@ namespace OneWare.Vhdl
         public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
-            FoldingStrategy = new FoldingStrategyVhdl();
+            FoldingStrategy = new RegexFoldingStrategy();
         }
         
         public override string LineCommentSequence => "--";

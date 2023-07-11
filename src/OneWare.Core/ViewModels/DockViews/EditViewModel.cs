@@ -228,22 +228,24 @@ namespace OneWare.Core.ViewModels.DockViews
 
                 if (TypeAssistance != null)
                 {
+                    if (_settingsService.GetSettingValue<bool>("Editor_UseFolding"))
+                    {
+                        Editor.SetFolding(true);
+                        UpdateFolding();
+                    }
+                    
                     Observable.FromEventPattern(
                             h => TypeAssistance.AssistanceActivated += h,
                             h => TypeAssistance.AssistanceActivated -= h)
                         .Subscribe(x =>
                         {
-                            if (_settingsService.GetSettingValue<bool>("Editor_UseFolding"))
-                            {
-                                Editor.SetFolding(true);
-                                UpdateFolding();
-                            }
+                            
                         });
 
                     Observable.FromEventPattern(
                             h => TypeAssistance.AssistanceDeactivated += h,
                             h => TypeAssistance.AssistanceDeactivated -= h)
-                        .Subscribe(x => { Editor.SetFolding(false); });
+                        .Subscribe(x => {  });
                 }
 
                 if (TypeAssistance?.CanAddBreakPoints ?? false)
@@ -258,7 +260,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
             _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
             {
-                x = x && (TypeAssistance?.Service.IsLanguageServiceReady ?? false);
+                //x = x && (TypeAssistance?.Service.IsLanguageServiceReady ?? false);
                 Editor.SetFolding(x);
                 if (x) UpdateFolding();
             });

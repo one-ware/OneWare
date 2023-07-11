@@ -23,7 +23,7 @@ namespace OneWare.Shared.EditorExtensions
 	/// <summary>
 	/// Allows producing foldings from a document based on braces.
 	/// </summary>
-	public class BraceFoldingStrategy : XmlFoldingStrategy, IFoldingStrategy
+	public class  BraceFoldingStrategy : XmlFoldingStrategy, IFoldingStrategy
 	{
 		
 	}
