@@ -533,10 +533,11 @@ namespace OneWare.Core.Views.DockViews
                     }
                     else if (!string.IsNullOrWhiteSpace(info))
                     {
-                        HoverBoxContent.Content = new MarkdownScrollViewer()
+                        var markdown = new MarkdownScrollViewer()
                         {
                             Markdown = info,
                         };
+                        HoverBoxContent.Content = markdown;
                     }
                 }
                 

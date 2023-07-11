@@ -1,4 +1,5 @@
 ﻿using Avalonia.Platform;
+using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars.Reader;
 using TextMateSharp.Internal.Types;
@@ -7,7 +8,7 @@ using TextMateSharp.Themes;
 
 namespace OneWare.Core.Extensions.TextMate;
 
-public class CustomTextMateRegistryOptions : IRegistryOptions
+public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 {
     private List<TextMateLanguage> _availableLanguages = new();
 

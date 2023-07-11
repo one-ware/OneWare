@@ -279,7 +279,7 @@ namespace OneWare.Core
                 Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
 
 
-                if (ApplicationLifetime is ISingleViewApplicationLifetime)
+                if (ApplicationLifetime is not ISingleViewApplicationLifetime)
                 {
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
                     (editor as IEditor)!.CurrentDocument.Text = @"

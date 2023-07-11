@@ -4,6 +4,7 @@ using Avalonia.Platform;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Markdown.Avalonia.SyntaxHigh;
 using OneWare.Core.Data;
 using OneWare.Core.Extensions.TextMate;
 using OneWare.Shared;
@@ -17,7 +18,7 @@ using TextMateSharp.Themes;
 
 namespace OneWare.Core.Services;
 
-internal class LanguageManager : ILanguageManager
+internal class LanguageManager : ObservableObject, ILanguageManager
 {
         private readonly Dictionary<string, Type> _singleInstanceServerTypes = new();
         private readonly Dictionary<string, Type> _workspaceServerTypes = new();
@@ -27,18 +28,38 @@ internal class LanguageManager : ILanguageManager
         private readonly Dictionary<string, string> _highlightingDefinitions = new();
         private readonly CustomTextMateRegistryOptions _textMateRegistryOptions = new();
         public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
-        public IObservable<IRawTheme> CurrentEditorTheme { get; }
+
+        private IRawTheme _currentEditorTheme;
+        public IRawTheme CurrentEditorTheme
+        {
+            get => _currentEditorTheme;
+            set => SetProperty(ref _currentEditorTheme, value);
+        }
 
         public LanguageManager(ISettingsService settingsService)
         {
-            var t = settingsService.GetSettingObservable<string>("General_SelectedTheme");
-            CurrentEditorTheme = t
+            var darkTheme = settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme_Dark");
+            var lightTheme = settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme_Light");
+
+            CurrentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
+            
+            IDisposable? sub = null;
+            var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
                 .Select(x => x == "Dark"
                     ? "Editor_SyntaxTheme_Dark"
                     : "Editor_SyntaxTheme_Light")
-                .SelectMany(settingsService.GetSettingObservable<ThemeName>)
-                //.TakeUntil(t)
-                .Select(b => _textMateRegistryOptions.LoadTheme(b));
+                .Subscribe(x =>
+                {
+                    sub?.Dispose();
+                    sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
+                    {
+                        CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
+                        SyntaxSetup.CurrentEditorTheme = CurrentEditorTheme;
+                    });
+                });
+
+            //Hoverbox hack
+            SyntaxSetup.RegistryOptions = _textMateRegistryOptions;
         }
 
         public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions)

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using AvaloniaEdit.Highlighting;
 using OneWare.Shared.LanguageService;
 using TextMateSharp.Grammars;
@@ -7,9 +8,9 @@ using TextMateSharp.Themes;
 
 namespace OneWare.Shared.Services;
 
-public interface ILanguageManager
+public interface ILanguageManager : INotifyPropertyChanged
 {
-    public IObservable<IRawTheme> CurrentEditorTheme { get; }
+    public IRawTheme CurrentEditorTheme { get; }
     public IRegistryOptions RegistryOptions { get; }
     public void RegisterHighlighting(string path, params string[] supportedFileTypes);
     public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions);

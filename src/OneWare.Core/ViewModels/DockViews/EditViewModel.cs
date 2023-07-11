@@ -204,7 +204,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 {
                     var textMateInstallation = Editor.InstallTextMate(_languageManager.RegistryOptions);
                     textMateInstallation.SetGrammar(scope);
-                    _languageManager.CurrentEditorTheme.Subscribe(x =>
+                    _languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
                     {
                         textMateInstallation.SetTheme(x);
                     });

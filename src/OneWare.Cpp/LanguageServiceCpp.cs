@@ -11,7 +11,7 @@ namespace OneWare.Cpp
     public class LanguageServiceCpp : LanguageService
     {
         public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("CPP LS",
-            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", "clangd.exe"), "--log=error",
+            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd{Platform.ExecutableExtension}"), "--log=error",
             null)
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
@@ -36,10 +36,21 @@ namespace OneWare.Cpp
 
         public override async Task ActivateAsync()
         {
-            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                    "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
+            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
+                        "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
+                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                { 
+                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
+                    "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip",
                     ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                }
+            }
             await base.ActivateAsync();
         }
     }
