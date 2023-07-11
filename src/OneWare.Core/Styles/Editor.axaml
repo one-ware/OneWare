@@ -78,12 +78,6 @@
                         <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                                
-                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                                    <Style.Setters>
-                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
-                                    </Style.Setters>
-                                </Style>
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
                     </Border>
