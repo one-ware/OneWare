@@ -5,6 +5,7 @@ using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
+using OneWare.Vhdl.Folding;
 using OneWare.Vhdl.Indentation;
 using Prism.Ioc;
 
@@ -17,7 +18,7 @@ namespace OneWare.Vhdl
         public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
-            FoldingStrategy = new RegexFoldingStrategy();
+            FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVhdl.FoldingStart, FoldingRegexVhdl.FoldingEnd);
         }
         
         public override string LineCommentSequence => "--";

@@ -6,51 +6,14 @@ namespace OneWare.Shared.EditorExtensions;
 
 public class RegexFoldingStrategy : IFoldingStrategy
 {
-	private const string FoldingStartPattern = @"(?x)
-		# From the start of the line make sure we are not going into a comment ...
-		^(
-			([^-]-?(?!-))*?
-				(
-				# Check for keyword ... is
-				 (\b(?i:architecture|case|entity|function|package|procedure)\b(.+?)(?i:\bis)\b)
+	private readonly Regex FoldingStart;
+	private readonly Regex FoldingEnd;
 
-				# Check for if statements
-				|(\b(?i:if)\b(.+?)(?i:generate|then)\b)
-
-				# Check for and while statements
-				|(\b(?i:for|while)(.+?)(?i:loop|generate)\b)
-
-				# Check for keywords that do not require an is after it
-				|(\b(?i:component|process|record)\b[^;]*?$)
-
-				# From the beginning of the line, check for instantiation maps
-				|(^\s*\b(?i:port|generic)\b(?i:\s+map\b)?\s*\()
-			)
-		)
-	";
-
-	private const string FoldingEndPattern = @"(?x)
-		# From the start of the line ...
-		^(
-			(
-				(
-					# Make sure we are not going into a comment ...
-					([^-]-?(?!-))*?
-						(
-							# The word end to the end of the line
-			 				(?i:\bend\b).*$\n?
-						)
-					)
-				)
-
-				# ... a close paren followed by an optional semicolon as the only thing on the line
-			    |(\s*?\)\s*?;?\s*?$\n?
-			)
-		)
-	";
-
-	private static readonly Regex FoldingStart = new(FoldingStartPattern, RegexOptions.Multiline);
-	private static readonly Regex FoldingEnd = new(FoldingEndPattern, RegexOptions.Multiline);
+	public RegexFoldingStrategy(Regex foldingStart, Regex foldingEnd)
+	{
+		FoldingStart = foldingStart;
+		FoldingEnd = foldingEnd;
+	}
 
     public void UpdateFoldings(FoldingManager manager, TextDocument document)
     {
@@ -60,14 +23,27 @@ public class RegexFoldingStrategy : IFoldingStrategy
 
     public IEnumerable<NewFolding> CreateNewFoldings(TextDocument document, out int firstErrorOffset)
     {
-        var start = FoldingStart.Match(document.Text);
-        var end = FoldingEnd.Match(document.Text, start.Index);
-        
-        Console.WriteLine(start.Index);
-        Console.WriteLine(end.Index);
+	    firstErrorOffset = -1;
+	    var newFoldings = new List<NewFolding>();
 
-        firstErrorOffset = -1;
-        
-        return new NewFolding[] { new NewFolding(start.Index + start.Length, end.Index + end.Length)};
+	    var startOffsets = new Stack<int>();
+	    foreach (var line in document.Lines)
+        {
+	        var lineText = document.GetText(line.Offset, line.Length);
+	        var start = FoldingStart.Match(lineText);
+	        var end = FoldingEnd.Match(lineText);
+
+	        if (start.Success && !end.Success)
+	        {
+		        startOffsets.Push(line.Offset + start.Index + start.Length);
+	        }
+
+	        if (end.Success && !start.Success && startOffsets.Any())
+	        {
+		        newFoldings.Add(new NewFolding(startOffsets.Pop(), line.Offset + end.Index));
+	        }
+        }
+
+        return newFoldings.OrderBy(x => x.StartOffset);
     }
 }
