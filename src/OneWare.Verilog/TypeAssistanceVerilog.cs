@@ -43,7 +43,7 @@ namespace OneWare.Verilog
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {
                 var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
-                Format(line, line);
+                AutoIndent(line, line);
             }
         }
     }

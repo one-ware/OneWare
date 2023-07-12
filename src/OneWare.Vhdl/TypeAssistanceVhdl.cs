@@ -6,6 +6,7 @@ using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Vhdl.Folding;
+using OneWare.Vhdl.Format;
 using OneWare.Vhdl.Indentation;
 using Prism.Ioc;
 
@@ -18,6 +19,7 @@ namespace OneWare.Vhdl
         public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
+            FormattingStrategy = new VhdlFormatter();
             FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVhdl.FoldingStart, FoldingRegexVhdl.FoldingEnd);
         }
         
@@ -55,7 +57,7 @@ namespace OneWare.Vhdl
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {
                 var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
-                Format(line, line);
+                AutoIndent(line, line);
             }
         }
     }

@@ -385,11 +385,11 @@ namespace OneWare.Core.Views.DockViews
                             (startLine, endLine) = (endLine, startLine);
                         }
                         contextMenuList.Add(new Separator());
-                        contextMenuList.Add(new MenuItemModel("FormatSelection")
+                        contextMenuList.Add(new MenuItemModel("IndentSelection")
                         {
-                            Header = "Format Selection",
+                            Header = "Auto-Indent Selection",
                             ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCode") ,
-                            Command = new RelayCommand(() => TypeAssistance.Format(startLine, endLine))
+                            Command = new RelayCommand(() => TypeAssistance.AutoIndent(startLine, endLine))
                         });
                     }
                        
@@ -660,7 +660,7 @@ namespace OneWare.Core.Views.DockViews
                 var startLineNumber = CodeBox.Document.GetLineByOffset(startOffset).LineNumber;
                 var endLineNumber = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
                 if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
-                    TypeAssistance?.Format(startLineNumber, endLineNumber);
+                    TypeAssistance?.AutoIndent(startLineNumber, endLineNumber);
             }
 
             #endregion
@@ -724,13 +724,13 @@ namespace OneWare.Core.Views.DockViews
         public void AutoFormat()
         {
             if (!CodeBox.IsReadOnly)
-                TypeAssistance?.Format();
+                TypeAssistance?.AutoIndent();
         }
 
         public async Task AutoFormatDelayAsync()
         {
             await Task.Delay(50);
-            TypeAssistance?.Format();
+            TypeAssistance?.AutoIndent();
         }
 
         #endregion

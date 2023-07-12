@@ -488,7 +488,12 @@ namespace OneWare.Core.ViewModels.DockViews
 
         #endregion
 
-        public void AutoFormat()
+        public void AutoIndent()
+        {
+            TypeAssistance?.AutoIndent();
+        }
+        
+        public void Format()
         {
             TypeAssistance?.Format();
         }
