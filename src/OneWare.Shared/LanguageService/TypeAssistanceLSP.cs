@@ -656,12 +656,12 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public bool CharBeforeNormalCompletion(char c)
+        protected virtual bool CharBeforeNormalCompletion(char c)
         {
             return char.IsWhiteSpace(c) || c is ';' or '#' or '(' or ':' or '+' or '-' or '=' or '*' or '/' or '&' or ',';
         }
 
-        public bool CharAtNormalCompletion(char c)
+        protected virtual bool CharAtNormalCompletion(char c)
         {
             return char.IsLetterOrDigit(c) || c is '_';
         }

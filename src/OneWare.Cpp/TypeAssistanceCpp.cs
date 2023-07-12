@@ -70,5 +70,10 @@ namespace OneWare.Cpp
             return new CompletionData(comp.InsertText ?? "", newLabel, description, icon, 0,
                 comp, offset, AfterComplete);
         }
+
+        protected override bool CharAtNormalCompletion(char c)
+        {
+            return char.IsLetterOrDigit(c) || c is '_' || c is ':';
+        }
     }
 }
