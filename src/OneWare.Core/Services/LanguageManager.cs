@@ -38,10 +38,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
         public LanguageManager(ISettingsService settingsService)
         {
-            var darkTheme = settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme_Dark");
-            var lightTheme = settingsService.GetSettingObservable<ThemeName>("Editor_SyntaxTheme_Light");
-
-            CurrentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
+            _currentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
             
             IDisposable? sub = null;
             var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
