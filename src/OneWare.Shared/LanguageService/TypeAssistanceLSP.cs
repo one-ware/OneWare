@@ -700,21 +700,22 @@ namespace OneWare.Shared.LanguageService
             foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, _completionOffset);
         }
 
-        public virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+        protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
         {
             var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
                 ? instanceIcon
                 : TypeAssistanceIconStore.Instance.CustomIcons["Default"];
 
-            Action afterComplete = () => { _ = ShowOverloadProviderAsync(); };
+            void AfterComplete()
+            {
+                _ = ShowOverloadProviderAsync();
+            }
+
+            var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
+            description = description?.Replace("\n", "\n\n");
             
-            var descr = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
-            
-            if (comp.InsertTextFormat == InsertTextFormat.PlainText)
-                return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", descr, icon,
-                    0, comp, offset, afterComplete);
-            return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", descr, icon, 0,
-                comp, offset, afterComplete);
+            return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", description, icon, 0,
+                comp, offset, AfterComplete);
         }
 
         public ErrorListItemModel? GetErrorAtLocation(TextLocation location)

@@ -14,8 +14,6 @@
                        x:Class="OneWare.PackageManager.Views.PackageManagerView"
                        CustomIcon="{DynamicResource PackageManager}"
                        Title="Extensions" Name="PackageManagerViewView"
-                       WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
-                       TransparencyLevelHint="AcrylicBlur"
                        mvvm:ViewModelLocator.AutoWireViewModel="False"
                        x:CompileBindings="True" x:DataType="viewModels:PackageManagerViewModel"
                        WindowStartupLocation="CenterOwner">

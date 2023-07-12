@@ -14,6 +14,7 @@
                        ExtendClientAreaToDecorationsHint="True"
                        Title="{Binding Title}"
                        WindowStartupLocation="CenterScreen"
+                       Background="{DynamicResource ThemeBackgroundBrush}"
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                        xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"

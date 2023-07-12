@@ -12,7 +12,6 @@
         <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30"/>
         <Setter Property="Padding" Value="{TemplateBinding Padding}"/>
         <Setter Property="CornerRadius" Value="{x:Static shared:Shared.WindowsCornerRadius}"/>
-        <Setter Property="TransparencyLevelHint" Value="Transparent"/>
         <Setter Property="UseLayoutRounding" Value="False"/>
         <Setter Property="Template">
             <ControlTemplate>
@@ -65,6 +64,11 @@
                 </Panel>
             </ControlTemplate>
         </Setter>
+    </Style>
+    
+    <Style Selector="windows|AdvancedWindow.PlatformWindows">
+        <Setter Property="TransparencyLevelHint" Value="AcrylicBlur"/>
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrushOp}"/>
     </Style>
 
 </Styles>

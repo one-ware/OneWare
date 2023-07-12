@@ -4,6 +4,8 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
+using OneWare.Shared.Services;
+using Prism.Ioc;
 
 namespace OneWare.Cpp
 {
@@ -27,6 +29,15 @@ namespace OneWare.Cpp
             //     if (!string.IsNullOrEmpty(val)) return "%object:" + word + "%" + val;
             // }
 
+            var pos = CodeBox.Document.GetLocation(offset);
+            
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
+                .FirstOrDefault(error => pos.Line >= error.StartLine && pos.Column >= error.StartColumn && pos.Line < error.EndLine || pos.Line == error.EndLine && pos.Column <= error.EndColumn);
+
+            var info = "";
+            
+            if(error != null) info += error.Description + "\n";
+            
             if (!Service.IsLanguageServiceReady) return null;
 
             var location = CodeBox.Document.GetLocation(offset);
@@ -35,26 +46,29 @@ namespace OneWare.Cpp
                 new Position(location.Line - 1, location.Column - 1));
             if (hover != null)
                 if (hover.Contents.HasMarkupContent)
-                    return "```cpp\n" + hover.Contents.MarkupContent?.Value.Replace("→", "->") + "\n```";
-            return null;
+                    info += "```cpp\n" + hover.Contents.MarkupContent?.Value.Replace("→", "->") + "\n```";
+            return string.IsNullOrWhiteSpace(info) ? null : info;;
         }
-        
-        public override ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+
+        protected override ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
         {
             var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
                 ? instanceIcon
                 : TypeAssistanceIconStore.Instance.CustomIcons["Default"];
 
-            var newlabel = comp.Label.Length > 0 ? comp.Label.Remove(0, 1) : "";
-            newlabel = newlabel.Split("(")[0].Split("<")[0];
+            var newLabel = comp.Label.Length > 0 ? comp.Label.Remove(0, 1) : "";
+            newLabel = newLabel.Split("(")[0].Split("<")[0];
 
-            Action afterComplete = () => { _ = ShowOverloadProviderAsync(); };
-            
-            if (comp.InsertTextFormat == InsertTextFormat.PlainText)
-                return new CompletionData(comp?.InsertText ?? "", newlabel, comp?.Documentation?.String, icon, 0,
-                    comp, offset, afterComplete);
-            return new CompletionData(comp?.InsertText ?? "", newlabel, comp?.Documentation?.String, icon, 0,
-                comp, offset, afterComplete);
+            void AfterComplete()
+            {
+                _ = ShowOverloadProviderAsync();
+            }
+
+            var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
+
+            description = description?.Replace("\n", "\n\n");
+            return new CompletionData(comp.InsertText ?? "", newLabel, description, icon, 0,
+                comp, offset, AfterComplete);
         }
     }
 }

@@ -13,8 +13,6 @@
                        CustomIcon="{DynamicResource Material.SettingsOutline}"
                        Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                        Title="Settings" Name="SettingsWindowView"
-                       WindowBackground="{DynamicResource ThemeBackgroundBrushOp}"
-                       TransparencyLevelHint="AcrylicBlur"
                        x:CompileBindings="True" x:DataType="viewModels:SettingsViewModel"
                        WindowStartupLocation="CenterOwner">
 
