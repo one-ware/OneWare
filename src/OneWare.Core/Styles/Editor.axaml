@@ -145,11 +145,7 @@
                                                  Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                                    <Style.Setters>
-                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
-                                    </Style.Setters>
-                                </Style>
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor"/>
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
 
@@ -157,11 +153,7 @@
                                                  Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                                    <Style.Setters>
-                                        <Setter Property="SyntaxHighlighting" Value="{Binding $parent[cc:CompletionWindowBase].TextEditor.SyntaxHighlighting, Mode=OneWay}"/>
-                                    </Style.Setters>
-                                </Style>
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor"/>
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
                     </Grid>
@@ -171,6 +163,8 @@
     </Style>
     
     <Style Selector="editorEx|TextInputControl">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}"/>
+        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -179,6 +173,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
 
 </Styles>
