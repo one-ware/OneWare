@@ -48,7 +48,7 @@
                             ViewportSize="{TemplateBinding ViewportSize}"
                             Orientation="{TemplateBinding Orientation}"
                             IsDirectionReversed="True">
-                            <Thumb Name="thumb" />
+                            <Thumb Name="thumb"/>
                         </Track>
                     </Grid>
                 </Border>
@@ -74,6 +74,17 @@
                     </Grid>
                 </Border>
             </ControlTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="ScrollBar /template/ Thumb#thumb">
+        <Setter Property="Opacity" Value="0.6" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" />
+                </ControlTemplate>
+            </Setter.Value>
         </Setter>
     </Style>
 </Styles>

@@ -95,13 +95,8 @@ namespace OneWare.Core.ViewModels.DockViews
             set => SetProperty(ref _isDirty, value);
         }
 
-        private Dictionary<IBrush, int[]> _scrollInfo = new();
+        public ScrollInfoContext ScrollInfo { get; } = new();
         
-        public Dictionary<IBrush, int[]> ScrollInfo
-        {
-            get => _scrollInfo;
-            set => SetProperty(ref _scrollInfo, value);
-        }
 
         private IEnumerable<ErrorListItemModel>? _diagnostics;
         
@@ -141,7 +136,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
             this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
             {
-                Dictionary<IBrush, int[]> scrollInfo = new();
+                List<ScrollInfoLine> scrollInfo = new();
 
                 if (_diagnostics != null)
                 {
@@ -158,18 +153,18 @@ namespace OneWare.Core.ViewModels.DockViews
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)
                         .Select(c => c.StartLine)
-                        .Distinct().ToArray();
+                        .Distinct();
 
                     var warningLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Warning)
                         .Select(c => c.StartLine)
-                        .Distinct().ToArray();
+                        .Distinct();
 
-                    scrollInfo.Add(_errorBrush, errorLines);
-                    scrollInfo.Add(_warningBrush, warningLines);
+                    scrollInfo.AddRange(warningLines.Select(l => new ScrollInfoLine(l, _warningBrush)));
+                    scrollInfo.AddRange(errorLines.Select(l => new ScrollInfoLine(l, _errorBrush)));
                 }
                 
-                ScrollInfo = scrollInfo;
+                ScrollInfo.Refresh("ErrorContext", scrollInfo.ToArray());
                 Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
             });
         }

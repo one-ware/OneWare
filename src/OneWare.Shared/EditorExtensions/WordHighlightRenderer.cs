@@ -84,6 +84,11 @@ namespace OneWare.Shared.EditorExtensions
                 //}
             }
         }
+        
+        public static WordSearchResult SearchSelectedWord(IDocument doc, int caretOffset)
+        {
+            return new WordSearchResult(new List<int>(), new List<int>());
+        }
     }
 
     public class WordSearchResult

@@ -179,15 +179,12 @@ namespace OneWare.Core.Views.DockViews
                 _lastSearchResultLines =
                     results.Select(x => CodeBox.Document.GetLineByOffset(x.StartOffset).LineNumber);
 
-                if (CodeBox.WordRenderer.Result != null)
-                {
-                    ViewModel.ScrollInfo.Add(_wordResultScrollBrush, CodeBox.WordRenderer.Result.WordOffset
-                        .Select(x => CodeBox.Document.GetLineByOffset(x).LineNumber)
-                        .Distinct()
-                        .ToArray());
-                }
-
-                ViewModel.ScrollInfo.Add(_searchResultScrollBrush, _lastSearchResultLines.ToArray());
+                ViewModel.ScrollInfo.Refresh("searchResult",_lastSearchResultLines
+                    .Distinct()
+                    .Select(x => new ScrollInfoLine(x, _searchResultScrollBrush))
+                    .ToArray());
+                
+                CodeBox.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
             }
             catch (Exception e)
             {
@@ -213,6 +210,7 @@ namespace OneWare.Core.Views.DockViews
         public void Text_Changed(object? sender, EventArgs e)
         {
             CodeBox.WordRenderer.SetHighlight(null); //Reset wordhighlight
+            ViewModel?.ScrollInfo.Refresh("wordRenderer");
             CodeBox.BracketRenderer.SetHighlight(null);
         }
 

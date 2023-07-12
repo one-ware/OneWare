@@ -3,13 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using OneWare.Shared.EditorExtensions;
 
 namespace OneWare.Shared.Views
 {
     public class ScrollBarRenderer : Control
     {
-        public static readonly StyledProperty<Dictionary<IBrush, int[]>?> ScrollInfoProperty =
-            AvaloniaProperty.Register<ScrollBarRenderer, Dictionary<IBrush, int[]>?>(nameof(ScrollInfo));
+        public static readonly StyledProperty<ScrollInfoContext?> ScrollInfoProperty =
+            AvaloniaProperty.Register<ScrollBarRenderer, ScrollInfoContext?>(nameof(ScrollInfo));
 
         public static readonly StyledProperty<TextEditor> CodeBoxProperty =
             AvaloniaProperty.Register<ScrollBarRenderer, TextEditor>(nameof(CodeBox));
@@ -20,11 +21,18 @@ namespace OneWare.Shared.Views
 
             this.GetObservable(ScrollInfoProperty).Subscribe(x =>
             {
+                if (x != null)
+                {
+                    x.Changed += (o, i) =>
+                    {
+                        Redraw();
+                    };
+                }
                 Redraw();
             });
         }
 
-        public Dictionary<IBrush, int[]>?  ScrollInfo
+        public ScrollInfoContext?  ScrollInfo
         {
             get => GetValue(ScrollInfoProperty);
             set => SetValue(ScrollInfoProperty, value);
@@ -53,29 +61,23 @@ namespace OneWare.Shared.Views
             scrollBarLineHeight = scrollBarLineHeight >= 3 ? scrollBarLineHeight : 3;
             
             if (ScrollInfo != null)
-                foreach (var scrollInfo in ScrollInfo)
+                foreach (var scrollInfo in ScrollInfo.InfoLines)
                 {
-                    var brush = scrollInfo.Key;
-                    var lines = scrollInfo.Value;
-
-                    foreach (var line in lines)
+                    if (docHeight < Bounds.Height)
                     {
-                        if (docHeight < Bounds.Height)
-                        {
-                            var vT = CodeBox.TextArea.TextView.GetVisualLine(line);
+                        var vT = CodeBox.TextArea.TextView.GetVisualLine(scrollInfo.Line);
 
-                            if (vT != null)
-                            {
-                                context.FillRectangle(brush,
-                                    new Rect(0, vT.VisualTop, Bounds.Width,vT.Height));
-                            }
-                        }
-                        else
+                        if (vT != null)
                         {
-                            context.FillRectangle(brush,
-                                new Rect(0, Bounds.Height * (line / (double)fakeLineCount), Bounds.Width,
-                                    scrollBarLineHeight));
+                            context.FillRectangle(scrollInfo.Brush,
+                                new Rect(0, vT.VisualTop, Bounds.Width,vT.Height));
                         }
+                    }
+                    else
+                    {
+                        context.FillRectangle(scrollInfo.Brush,
+                            new Rect(0, Bounds.Height * (scrollInfo.Line / (double)fakeLineCount), Bounds.Width,
+                                scrollBarLineHeight));
                     }
                 }
         }
