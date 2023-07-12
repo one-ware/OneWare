@@ -13,6 +13,6 @@ public class VerilogModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("source.verilog", "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v");
+        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog", "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v");
     }
 }

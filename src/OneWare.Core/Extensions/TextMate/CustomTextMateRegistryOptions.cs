@@ -26,7 +26,7 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
     
     public IRawGrammar GetGrammar(string scopeName)
     {
-        var g = _availableLanguages.FirstOrDefault(x => x.Id == scopeName);
+        var g = _availableLanguages.FirstOrDefault(x => x.Id == scopeName.Split('.').Last());
         
         if (g == null) return _defaultRegistryOptions.GetGrammar(scopeName);
         using var s = new StreamReader(AssetLoader.Open(new Uri(g.GrammarPath)));
@@ -54,7 +54,8 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
     public string GetScopeByLanguageId(string languageId)
     {
         var r = _availableLanguages.FirstOrDefault(x => x.Id == languageId);
-        return r?.Id ?? _defaultRegistryOptions.GetScopeByLanguageId(languageId);
+        if (r != null) return $"source.{r.Id}";
+        return _defaultRegistryOptions.GetScopeByLanguageId(languageId);
     }
     
     public IRawTheme GetDefaultTheme()
