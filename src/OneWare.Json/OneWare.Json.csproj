@@ -2,15 +2,8 @@
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
-    <Import Project="..\..\build\props\JavaScriptEngineSwitcher.props" />
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AvaloniaResource Include="Assets\vhdl.tmLanguage.json" />
-      <None Remove="Assets\formatter.js" />
-      <AvaloniaResource Include="Assets\formatter.js" />
     </ItemGroup>
 </Project>

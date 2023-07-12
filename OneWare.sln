@@ -69,6 +69,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.Controls.ColorPicker.props = build\props\Avalonia.Controls.ColorPicker.props
 		build\props\Avalonia.Themes.Simple.props = build\props\Avalonia.Themes.Simple.props
 		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
+		build\props\JavaScriptEngineSwitcher.props = build\props\JavaScriptEngineSwitcher.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorTextBlock.Avalonia", "src\Markdown.Avalonia\ColorTextBlock.Avalonia\ColorTextBlock.Avalonia.csproj", "{0B2AD173-5342-46AB-B766-E6899216A9AB}"
@@ -90,6 +91,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaEdit.TextMate", "src\AvaloniaEdit\src\AvaloniaEdit.TextMate\AvaloniaEdit.TextMate.csproj", "{DEDDA74C-893B-4F22-BCC4-9B09FA6A52B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Verilog", "src\OneWare.Verilog\OneWare.Verilog.csproj", "{7F1D14E3-E699-4F3D-829F-BB6B466AC90E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Json", "src\OneWare.Json\OneWare.Json.csproj", "{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -209,6 +212,10 @@ Global
 		{7F1D14E3-E699-4F3D-829F-BB6B466AC90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F1D14E3-E699-4F3D-829F-BB6B466AC90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F1D14E3-E699-4F3D-829F-BB6B466AC90E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{192886D3-6203-4AD9-9A44-E071A6AF3059} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
@@ -238,5 +245,6 @@ Global
 		{93B1E8F2-97DB-4088-A3E2-6D75AB05AEAC} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{DEDDA74C-893B-4F22-BCC4-9B09FA6A52B6} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
 		{7F1D14E3-E699-4F3D-829F-BB6B466AC90E} = {DB8BEF56-1C1D-4B6E-9A1C-6BABCD87EEEA}
+		{A9B595DA-79CE-4F88-8F73-131FDA3CA0F8} = {DB8BEF56-1C1D-4B6E-9A1C-6BABCD87EEEA}
 	EndGlobalSection
 EndGlobal

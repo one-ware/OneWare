@@ -181,20 +181,29 @@ namespace OneWare.Shared.LanguageService
 
         public virtual async Task<string?> GetHoverInfoAsync(int offset)
         {
-            if (!Service.IsLanguageServiceReady || !SettingsService.GetSettingValue<bool>("TypeAssistance_EnableHover")) return null;
+            if (!Service.IsLanguageServiceReady) return null;
 
-            var location = CodeBox.Document.GetLocation(offset);
+            var pos = CodeBox.Document.GetLocation(offset);
 
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
+                .FirstOrDefault(error => pos.Line >= error.StartLine 
+                                         && pos.Line <= error.EndLine 
+                                         && pos.Column >= error.StartColumn
+                                         && pos.Column <= error.EndColumn);
+            var info = "";
+            
+            if(error != null) info += error.Description + "\n";
+            
             var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
-                new Position(location.Line - 1, location.Column - 1));
-            if (hover != null && IsOpen)
+                new Position(pos.Line - 1, pos.Column - 1));
+            if (hover != null)
             {
                 if (hover.Contents.HasMarkedStrings)
-                    return hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-                if (hover.Contents.HasMarkupContent) return hover.Contents.MarkupContent?.Value;
+                    info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
+                if (hover.Contents.HasMarkupContent) info += hover.Contents.MarkupContent?.Value;
             }
 
-            return null;
+            return string.IsNullOrWhiteSpace(info) ? null : info;
         }
 
         public virtual async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
@@ -437,8 +446,12 @@ namespace OneWare.Shared.LanguageService
 
                 if (t == '(' || b == '(' ||
                     t == ',') //Function Parameter / Overload insight
-                    if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy)
+                    if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") &&
+                        !_completionBusy)
+                    {
+                        Completion?.Close();
                         await ShowOverloadProviderAsync();
+                    }
 
                 if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy &&
                     (CharBeforeNormalCompletion(b) && CharAtNormalCompletion(t) || //Normal completion
@@ -656,12 +669,12 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public bool CharBeforeNormalCompletion(char c)
+        protected virtual bool CharBeforeNormalCompletion(char c)
         {
             return char.IsWhiteSpace(c) || c is ';' or '#' or '(' or ':' or '+' or '-' or '=' or '*' or '/' or '&' or ',';
         }
 
-        public bool CharAtNormalCompletion(char c)
+        protected virtual bool CharAtNormalCompletion(char c)
         {
             return char.IsLetterOrDigit(c) || c is '_';
         }
@@ -700,21 +713,22 @@ namespace OneWare.Shared.LanguageService
             foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, _completionOffset);
         }
 
-        public virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+        protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
         {
             var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
                 ? instanceIcon
                 : TypeAssistanceIconStore.Instance.CustomIcons["Default"];
 
-            Action afterComplete = () => { _ = ShowOverloadProviderAsync(); };
+            void AfterComplete()
+            {
+                _ = ShowOverloadProviderAsync();
+            }
+
+            var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
+            description = description?.Replace("\n", "\n\n");
             
-            var descr = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
-            
-            if (comp.InsertTextFormat == InsertTextFormat.PlainText)
-                return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", descr, icon,
-                    0, comp, offset, afterComplete);
-            return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", descr, icon, 0,
-                comp, offset, afterComplete);
+            return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", description, icon, 0,
+                comp, offset, AfterComplete);
         }
 
         public ErrorListItemModel? GetErrorAtLocation(TextLocation location)

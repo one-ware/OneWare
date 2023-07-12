@@ -50,6 +50,12 @@ namespace OneWare.Cpp
                     "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip",
                     ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
                 }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                { 
+                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
+                        "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-linux-16.0.2.zip",
+                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                }
             }
             await base.ActivateAsync();
         }

@@ -209,8 +209,8 @@ public class WindowService : IWindowService
         host.Bind(Window.TitleProperty, flexible.GetObservable(FlexibleWindow.TitleProperty));
         host.Bind(Window.SizeToContentProperty, flexible.GetObservable(FlexibleWindow.SizeToContentProperty));
             
-        host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
-        host.Bind(TemplatedControl.BackgroundProperty, flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty));
+        //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
+        //host.Bind(TemplatedControl.BackgroundProperty, flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty));
 
         host.Height = flexible.PrefHeight;
         host.Width = flexible.PrefWidth;

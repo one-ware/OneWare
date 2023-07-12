@@ -1,8 +1,10 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using DynamicData;
 
 namespace OneWare.Core.Views.Windows
 {
@@ -64,6 +66,15 @@ namespace OneWare.Core.Views.Windows
             if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 HorizontalAlignmentTitle = HorizontalAlignment.Center;
+                Classes.Add("PlatformOSX");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Classes.Add("PlatformWindows");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Classes.Add("PlatformLinux");
             }
         }
 

@@ -5,43 +5,29 @@ using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
-using OneWare.Vhdl.Folding;
-using OneWare.Vhdl.Format;
-using OneWare.Vhdl.Indentation;
+using OneWare.Verilog.Folding;
 using Prism.Ioc;
 
-namespace OneWare.Vhdl
+namespace OneWare.Verilog
 {
-    internal class TypeAssistanceVhdl : TypeAssistanceLsp
+    internal class TypeAssistanceVerilog : TypeAssistanceLsp
     {
         private readonly Regex _usedWordsRegex = new(@"\w{3,}");
         
-        public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
+        public TypeAssistanceVerilog(IEditor editor, LanguageServiceVerilog ls) : base(editor, ls)
         {
-            CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
-            FormattingStrategy = new VhdlFormatter();
-            FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVhdl.FoldingStart, FoldingRegexVhdl.FoldingEnd);
+            CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFile);
+            FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
         }
         
         public override string LineCommentSequence => "--";
         
-
         public override async Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {
             var items = new List<CompletionData>();
 
             var text = Editor.CurrentDocument.Text;
             var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text));
-
-            items.Add(new CompletionData("library IEEE;\nuse IEEE.std_logic_1164.all;\nuse IEEE.numeric_std.all; ",
-                "ieee", "IEEE Standard Packages",
-                TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Reference], 0, CodeBox.CaretOffset));
-            
-            items.Add(new CompletionData(
-                "entity " + Path.GetFileNameWithoutExtension(Editor.CurrentFile.Header) +
-                " is\n    port(\n        [I/Os]$0\n    );\nend entity " +
-                Path.GetFileNameWithoutExtension(Editor.CurrentFile.Header) + ";", "entity", "Entity Declaration",
-                TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Class], 0, CodeBox.CaretOffset));
             
             foreach (var word in usedWords)
             {

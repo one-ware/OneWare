@@ -22,6 +22,8 @@ namespace OneWare.Shared.LanguageService
         public IFile CurrentFile => Editor.CurrentFile ?? throw new NullReferenceException(nameof(Editor.CurrentFile));
         
         public IIndentationStrategy? IndentationStrategy { get; protected set; }
+        
+        public IFormattingStrategy? FormattingStrategy { get; protected set; }
 
         public CompletionWindow? Completion { get; set; }
 
@@ -83,16 +85,22 @@ namespace OneWare.Shared.LanguageService
         {
         }
 
-        public virtual void Format()
+        public virtual void AutoIndent()
         {
-            if (CodeBox.Document != null) Format(1, CodeBox.Document.LineCount);
+            if (CodeBox.Document != null) AutoIndent(1, CodeBox.Document.LineCount);
         }
 
-        public virtual void Format(int startLine, int endLine)
+        public virtual void AutoIndent(int startLine, int endLine)
         {
             CodeBox.Document?.BeginUpdate();
             IndentationStrategy?.IndentLines(CodeBox.Document, startLine, endLine);
             CodeBox.Document?.EndUpdate();
+        }
+
+        public virtual void Format()
+        {
+            if(FormattingStrategy != null) FormattingStrategy.Format(CodeBox.Document);
+            else IndentationStrategy?.IndentLines(CodeBox.Document, 1, CodeBox.Document.LineCount);
         }
 
         protected virtual IEnumerable<TextDocumentContentChangeEvent> ConvertChanges(DocumentChangeEventArgs e)

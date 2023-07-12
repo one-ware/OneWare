@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
@@ -127,6 +128,11 @@ namespace OneWare.Core
                 Header = "Help",
                 Priority = 1000
             });
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Code")
+            {
+                Header = "Code",
+                Priority = 100
+            });
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Changelog")
             {
                 Header = $"Changelog",
@@ -144,6 +150,13 @@ namespace OneWare.Core
                     DataContext = Container.Resolve<AboutViewModel>()
                 }))
             });
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Format")
+            {
+                Header = $"Format",
+                ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
+                Command = new RelayCommand(() => Container.Resolve<MainWindowViewModel>().CurrentEditor?.Format()),
+                Hotkey = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
+            });
             
             //AvaloniaEdit Hyperlink support
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
@@ -155,7 +168,7 @@ namespace OneWare.Core
             if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
             {
                 var mainView = Container.Resolve<MainView>();
-                mainView.DataContext = DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();
+                mainView.DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();
                 return mainView;
             }
             else

@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Avalonia;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
@@ -8,23 +7,19 @@ using OneWare.Shared.Services;
 using Prism.Ioc;
 using IFile = OneWare.Shared.IFile;
 
-namespace OneWare.Vhdl
+namespace OneWare.Verilog
 {
-    public class LanguageServiceVhdl : LanguageService
+    public class LanguageServiceVerilog : LanguageService
     {
-        public LanguageServiceVhdl(string workspace, IPaths paths) : base ("VHDL LS", 
-            RuntimeInformation.ProcessArchitecture == Architecture.Wasm ? "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app"
-            : (
-                RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? Path.Combine(paths.PackagesDirectory, "vhdl_ls-x86_64-unknown-linux-musl", "bin", "vhdl_ls")
-                    : Path.Combine(paths.PackagesDirectory, "vhdl_ls-x86_64-pc-windows-msvc", "bin", "vhdl_ls.exe")
-                ), null, workspace)
+        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("VHDL LS", 
+            Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls" + Platform.ExecutableExtension), null, workspace)
         {
             
         }
 
         public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
-            return new TypeAssistanceVhdl(editor, this);
+            return new TypeAssistanceVerilog(editor, this);
         }
         
         public override async Task ActivateAsync()
@@ -34,23 +29,19 @@ namespace OneWare.Vhdl
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.64.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
-                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip",
+                        "https://github.com/chipsalliance/verible/releases/download/v0.0-3365-g76cc3fad/verible-v0.0-3365-g76cc3fad-win64.zip",
                         ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip",
+                        "https://github.com/chipsalliance/verible/releases/download/v0.0-3365-g76cc3fad/verible-v0.0-3365-g76cc3fad-linux-static-x86_64.tar.gz",
                         ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
                 }
-                
-                Tools.ChmodFolder(ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    
+                }
             }
                 
             await base.ActivateAsync();
