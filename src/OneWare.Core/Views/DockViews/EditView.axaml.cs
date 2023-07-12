@@ -671,20 +671,19 @@ namespace OneWare.Core.Views.DockViews
 
         private void TextEditor_TextArea_TextEntering(object? sender, TextInputEventArgs e)
         {
-            if (e.Text is not { } input) return;
+            if (e.Text is null) return;
             
-            //TODO 
             if (CodeBox.CaretOffset > 1 && CodeBox.CaretOffset <= CodeBox.Text.Length)
                 if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
                 {
                     if (e.Text[0] == '(')
                     {
-                        input += ')';
+                        e.Text += ')';
                         _caretDiff = -1;
                     }
                     else if (e.Text[0] == '{')
                     {
-                        input += '}';
+                        e.Text += '}';
                         _caretDiff = -1;
                     }
                     else if (e.Text[0] == ')' && CodeBox.CaretOffset > 1 &&
@@ -701,7 +700,7 @@ namespace OneWare.Core.Views.DockViews
 
                         if (br > 0)
                         {
-                            input = "";
+                            e.Text = "";
                             _caretDiff = 1;
                             return; //Dont continue without text           
                         }
@@ -709,7 +708,7 @@ namespace OneWare.Core.Views.DockViews
                     else if (e.Text[0] == '}' && CodeBox.CaretOffset > 1 &&
                              CodeBox.Text[CodeBox.CaretOffset - 1] == '{')
                     {
-                        input = "";
+                        e.Text = "";
                         _caretDiff = 1;
                         return; //Dont continue without text
                     }

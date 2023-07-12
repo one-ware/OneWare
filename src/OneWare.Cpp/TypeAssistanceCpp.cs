@@ -18,37 +18,34 @@ namespace OneWare.Cpp
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
             FoldingStrategy = new FoldingStrategyCpp(); //new LspFoldingStrategy(ls, editor.CurrentFile);
         }
-
+        
         public override async Task<string?> GetHoverInfoAsync(int offset)
         {
-            // if (MainDock.Debugger.IsDebugging && !MainDock.Debugger.Running)
-            // {
-            //     var word = CodeBox.GetWordAtOffset(offset);
-            //     var result = MainDock.Debugger.EvaluateExpression(word);
-            //     var val = result?.GetValue("value");
-            //     if (!string.IsNullOrEmpty(val)) return "%object:" + word + "%" + val;
-            // }
+            if (!Service.IsLanguageServiceReady) return null;
 
             var pos = CodeBox.Document.GetLocation(offset);
-            
-            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
-                .FirstOrDefault(error => pos.Line >= error.StartLine && pos.Column >= error.StartColumn && pos.Line < error.EndLine || pos.Line == error.EndLine && pos.Column <= error.EndColumn);
 
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
+                .FirstOrDefault(error => pos.Line >= error.StartLine 
+                                         && pos.Line <= error.EndLine 
+                                         && pos.Column >= error.StartColumn
+                                         && pos.Column <= error.EndColumn);
             var info = "";
             
             if(error != null) info += error.Description + "\n";
             
-            if (!Service.IsLanguageServiceReady) return null;
-
-            var location = CodeBox.Document.GetLocation(offset);
-
-            var hover = await Service.RequestHoverAsync(Editor.CurrentFile.FullPath,
-                new Position(location.Line - 1, location.Column - 1));
+            var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
+                new Position(pos.Line - 1, pos.Column - 1));
             if (hover != null)
-                if (hover.Contents.HasMarkupContent)
-                    info += "```cpp\n" + hover.Contents.MarkupContent?.Value.Replace("→", "->") + "\n```";
-            return string.IsNullOrWhiteSpace(info) ? null : info;;
+            {
+                if (hover.Contents.HasMarkedStrings)
+                    info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
+                if (hover.Contents.HasMarkupContent) info += $"```cpp\n{hover.Contents.MarkupContent?.Value}\n```";
+            }
+
+            return string.IsNullOrWhiteSpace(info) ? null : info;
         }
+
 
         protected override ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
         {

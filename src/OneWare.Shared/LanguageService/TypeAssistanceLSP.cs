@@ -181,20 +181,29 @@ namespace OneWare.Shared.LanguageService
 
         public virtual async Task<string?> GetHoverInfoAsync(int offset)
         {
-            if (!Service.IsLanguageServiceReady || !SettingsService.GetSettingValue<bool>("TypeAssistance_EnableHover")) return null;
+            if (!Service.IsLanguageServiceReady) return null;
 
-            var location = CodeBox.Document.GetLocation(offset);
+            var pos = CodeBox.Document.GetLocation(offset);
 
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
+                .FirstOrDefault(error => pos.Line >= error.StartLine 
+                                         && pos.Line <= error.EndLine 
+                                         && pos.Column >= error.StartColumn
+                                         && pos.Column <= error.EndColumn);
+            var info = "";
+            
+            if(error != null) info += error.Description + "\n";
+            
             var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
-                new Position(location.Line - 1, location.Column - 1));
-            if (hover != null && IsOpen)
+                new Position(pos.Line - 1, pos.Column - 1));
+            if (hover != null)
             {
                 if (hover.Contents.HasMarkedStrings)
-                    return hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-                if (hover.Contents.HasMarkupContent) return hover.Contents.MarkupContent?.Value;
+                    info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
+                if (hover.Contents.HasMarkupContent) info += hover.Contents.MarkupContent?.Value;
             }
 
-            return null;
+            return string.IsNullOrWhiteSpace(info) ? null : info;
         }
 
         public virtual async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
@@ -437,8 +446,12 @@ namespace OneWare.Shared.LanguageService
 
                 if (t == '(' || b == '(' ||
                     t == ',') //Function Parameter / Overload insight
-                    if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy)
+                    if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") &&
+                        !_completionBusy)
+                    {
+                        Completion?.Close();
                         await ShowOverloadProviderAsync();
+                    }
 
                 if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy &&
                     (CharBeforeNormalCompletion(b) && CharAtNormalCompletion(t) || //Normal completion
