@@ -63,7 +63,7 @@
     
     <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
         <Setter Property="IsVisible" Value="True" />
-        <Setter Property="Fill" Value="{DynamicResource ThemeAccentColor4}" />
+        <Setter Property="Fill" Value="{DynamicResource ThemeAccentBrush4}" />
     </Style>
     
     <Style Selector="DataGridRow:selected">

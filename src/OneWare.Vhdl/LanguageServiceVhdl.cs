@@ -12,7 +12,7 @@ namespace OneWare.Vhdl
 {
     public class LanguageServiceVhdl : LanguageService
     {
-        public LanguageServiceVhdl(string workspace, IPaths paths) : base ("VHDL LS", 
+        public LanguageServiceVhdl(string workspace, IPaths paths) : base ("RustHDL", 
             RuntimeInformation.ProcessArchitecture == Architecture.Wasm ? "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app"
             : (
                 RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? Path.Combine(paths.PackagesDirectory, "vhdl_ls-x86_64-unknown-linux-musl", "bin", "vhdl_ls")

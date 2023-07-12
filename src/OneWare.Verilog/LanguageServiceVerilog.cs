@@ -11,8 +11,9 @@ namespace OneWare.Verilog
 {
     public class LanguageServiceVerilog : LanguageService
     {
-        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("VHDL LS", 
-            Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls" + Platform.ExecutableExtension), null, workspace)
+        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", 
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls" + Platform.ExecutableExtension) :
+            Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls"), null, workspace)
         {
             
         }

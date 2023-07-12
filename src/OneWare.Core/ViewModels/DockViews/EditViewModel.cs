@@ -141,14 +141,15 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (_diagnostics != null)
                 {
                     Editor.MarkerService.SetDiagnostics(_diagnostics);
-                    Editor.ModificationService.SetModification("Errors", _diagnostics.Where(x => x.Type == ErrorType.Error).Select(b =>
-                    {
-                        var off = b.GetOffset(Editor.Document);
-                        return new TextModificationService.TextModificationSegment(off.startOffset, off.endOffset)
-                        {
-                            Brush = _errorBrushText
-                        };
-                    }).ToArray());
+                    
+                    // Editor.ModificationService.SetModification("Errors", _diagnostics.Where(x => x.Type == ErrorType.Error).Select(b =>
+                    // {
+                    //     var off = b.GetOffset(Editor.Document);
+                    //     return new TextModificationService.TextModificationSegment(off.startOffset, off.endOffset)
+                    //     {
+                    //         Brush = _errorBrushText
+                    //     };
+                    // }).ToArray());
                     
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)

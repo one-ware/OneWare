@@ -30,14 +30,22 @@ namespace OneWare.ErrorList.ViewModels
         public ErrorListFilterMode ErrorListFilterMode
         {
             get => _errorListFilterMode;
-            set => SetProperty(ref _errorListFilterMode, value);
+            set
+            {
+                SetProperty(ref _errorListFilterMode, value);
+                Filter();
+            }
         }
 
         private bool _showExternalErrors = true;
         public bool ShowExternalErrors
         {
             get => _showExternalErrors;
-            set => SetProperty(ref _showExternalErrors, value);
+            set
+            {
+                SetProperty(ref _showExternalErrors, value);
+                Filter();
+            }
         }
 
         private string? _errorListVisibleSource = "All Sources";
