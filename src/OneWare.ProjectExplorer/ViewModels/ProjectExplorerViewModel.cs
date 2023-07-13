@@ -59,7 +59,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
         Id = "ProjectExplorer";
-        Title = "Explorer";
+        Title = "Project Explorer";
     }
 
     public void ConstructContextMenu()

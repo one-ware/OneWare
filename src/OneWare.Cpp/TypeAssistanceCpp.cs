@@ -1,6 +1,7 @@
 ﻿using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Indentation.CSharp;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OneWare.Cpp.Folding;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
@@ -16,7 +17,7 @@ namespace OneWare.Cpp
         public TypeAssistanceCpp(IEditor editor, LanguageServiceCpp ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
-            FoldingStrategy = new FoldingStrategyCpp(); //new LspFoldingStrategy(ls, editor.CurrentFile);
+            FoldingStrategy = new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart, FoldingRegexCpp.FoldingEnd); //new LspFoldingStrategy(ls, editor.CurrentFile);
             LineCommentSequence = "//";
         }
         

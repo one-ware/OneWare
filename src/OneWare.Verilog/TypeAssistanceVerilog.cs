@@ -17,7 +17,7 @@ namespace OneWare.Verilog
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFile);
             FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
 
-            LineCommentSequence = "--";
+            LineCommentSequence = "//";
         }
 
         public override async Task<List<CompletionData>> GetCustomCompletionItemsAsync()
