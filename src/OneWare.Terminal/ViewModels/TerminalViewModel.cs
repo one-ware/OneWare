@@ -5,17 +5,17 @@ using Avalonia.Threading;
 using AvalonStudio.Terminals;
 using AvalonStudio.Terminals.Unix;
 using AvalonStudio.Terminals.Win32;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared;
 using OneWare.Shared.Services;
+using Prism.Common;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
 namespace OneWare.Terminal.ViewModels
 {
-    public class TerminalViewModel : ExtendedTool
+    public class TerminalViewModel : ObservableObject
     {
-        public const string IconKey = "Material.Console";
-        
         private static readonly IPsuedoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? new Win32PsuedoTerminalProvider()
             : new UnixPsuedoTerminalProvider();
@@ -55,16 +55,10 @@ namespace OneWare.Terminal.ViewModels
 
         public event EventHandler? TerminalReady;
         
-        public TerminalViewModel(ISettingsService settingsService) : base(IconKey)
+        public TerminalViewModel(string workingDir, string? startArguments = null)
         {
-            Title = "Terminal";
-            Id = "Terminal";
-            
-            WorkingDir = "C:/";
-            StartArguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'" : null; ;
-            
-            settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
-                .Subscribe(x => Dispatcher.UIThread.Post(Redraw));
+            WorkingDir = workingDir;
+            StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'" : null);
         }
 
         public void Redraw()
@@ -143,11 +137,9 @@ namespace OneWare.Terminal.ViewModels
         //    base.OnOpen();
         //}
 
-        public override bool OnClose()
+        public void Close()
         {
             CloseConnection();
-            
-            return base.OnClose();
         }
 
         // public static void ExecScriptInTerminal(string scriptPath, bool elevated, string title)

@@ -1,0 +1,36 @@
+<UserControl x:Class="OneWare.TerminalManager.Views.TerminalManagerView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.TerminalManager.ViewModels"
+             xmlns:models="clr-namespace:OneWare.TerminalManager.Models"
+             Name="TerminalManagerViewView"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200" x:DataType="viewModels:TerminalManagerViewModel">
+    
+    <Grid>
+        <TabControl Padding="0" ItemsSource="{Binding Terminals}" SelectedItem="{Binding SelectedTerminalTab}">
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Title}"/>
+                        <Button Command="{Binding Close}">
+                            <Image Height="10" Width="10" Source="{DynamicResource Material.WindowClose}"/>
+                        </Button>
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate x:DataType="models:TerminalTabModel">
+                    <ContentControl Content="{Binding Terminal}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </Grid>
+
+</UserControl>

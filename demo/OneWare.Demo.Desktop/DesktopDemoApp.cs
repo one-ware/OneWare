@@ -2,7 +2,7 @@
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.SourceControl;
-using OneWare.Terminal;
+using OneWare.TerminalManager;
 using Prism.Modularity;
 
 namespace OneWare.Demo.Desktop;
@@ -21,7 +21,7 @@ public class DesktopDemoApp : DemoApp
     {
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<PackageManagerModule>();
-        moduleCatalog.AddModule<TerminalModule>();
+        moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();

@@ -29,7 +29,7 @@
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj" />
         <ProjectReference Include="..\..\src\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
         <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Terminal\OneWare.Terminal.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
         <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
     

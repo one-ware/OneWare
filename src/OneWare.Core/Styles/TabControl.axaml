@@ -1,11 +1,41 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-        <Style Selector="TabItem /template/ ContentPresenter">
+        
+        <Design.PreviewWith>
+                <TabControl>
+                        <TabItem Header="Test (1)">
+                                <TextBlock Text="Tab 1"/>
+                        </TabItem>
+                        <TabItem Header="Test2">
+                                <TextBlock Text="Tab 2"/>
+                        </TabItem>
+                        <TabItem Header="Test3">
+                                <TextBlock Text="Tab 3"/>
+                        </TabItem>
+                </TabControl>
+        </Design.PreviewWith>
+        
+        <Style Selector="TabControl">
+                <Setter Property="Margin" Value="0"></Setter>
+                <Setter Property="Padding" Value="0"></Setter>
+                <Setter Property="BorderThickness" Value="0"></Setter>
+        </Style>
+        
+        <Style Selector="TabItem">
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+                <Setter Property="Padding" Value="8 4"/>
+        </Style>
+        
+        <Style Selector="TabItem /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="0 4 0 4"></Setter>
                 <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
         </Style>
         
         <Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0 0 0 4"/>
+                <Setter Property="Margin" Value="0 4 0 0"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}"/>
         </Style>
 </Styles>
