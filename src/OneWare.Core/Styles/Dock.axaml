@@ -62,9 +62,9 @@
     <Style Selector="ToolTabStripItem:selected">
         <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="BorderThickness" Value="1 0 1 1" />
-        <Setter Property="Margin" Value="0 0 0 -1" />
-        <Setter Property="Padding" Value="4 0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="4 1 4 0" />
     </Style>
 
     <Style Selector="DocumentControl">
@@ -97,9 +97,9 @@
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
             <DataTemplate DataType="shared:IExtendedTool">
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                    <Image Source="{Binding Icon}" Height="12" Width="12"/>
-                    <TextBlock Text="{Binding Title}" Padding="2" />
+                <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image VerticalAlignment="Center" Source="{Binding Icon}" Height="12" Width="12"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
                 </StackPanel>
             </DataTemplate>
         </Setter>

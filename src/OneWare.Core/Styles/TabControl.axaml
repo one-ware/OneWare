@@ -28,14 +28,14 @@
         
         <Style Selector="TabItem /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Margin" Value="0 4 0 4"></Setter>
+                <Setter Property="Margin" Value="0 2 0 2"/>
                 <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
         </Style>
         
         <Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="BorderThickness" Value="0 0 0 4"/>
-                <Setter Property="Margin" Value="0 4 0 0"/>
+                <Setter Property="BorderThickness" Value="0 0 0 2"/>
+                <Setter Property="Margin" Value="0 2 0 0"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}"/>
         </Style>
 </Styles>

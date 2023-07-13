@@ -13,8 +13,8 @@
     <TextBox ScrollViewer.VerticalScrollBarVisibility="Visible" DockPanel.Dock="Left" Background="Transparent" VerticalAlignment="Stretch" Margin="0" HorizontalAlignment="Stretch" BorderThickness="0" Name="Output" Text="{Binding ConsoleString}" IsReadOnly="True" CaretIndex="{Binding CaretIndex}"/>
     -->
         <DockPanel>
-            <Border DockPanel.Dock="Top" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <DockPanel Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Top">
+            <Border Height="30" DockPanel.Dock="Top" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Background="{DynamicResource ThemeBackgroundBrush}">
+                <DockPanel VerticalAlignment="Center">
                     <Border Height="20" Margin="0,0,3,0" DockPanel.Dock="Right"
                             VerticalAlignment="Center">
                         <!--
@@ -22,13 +22,13 @@
                             IsVisible="{Binding IsLoading}"
                             Foreground="{DynamicResource DarkBlue}" />-->
                     </Border>
-                    <Border Height="26" Padding="5,0, 3,0" DockPanel.Dock="Left" VerticalAlignment="Bottom">
+                    <Border Padding="5,0, 3,0" DockPanel.Dock="Left" VerticalAlignment="Bottom">
                         <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="AutoScroll" VerticalAlignment="Center" />
                             <CheckBox Margin="5, 0, 1, 0" IsChecked="{Binding AutoScroll}" />
-                            <Border Classes="SplitterBorder" Margin="5,0,0,0" Height="15" />
+                            <Border Classes="SplitterBorder" Margin="5,0,0,0" Height="20" />
                             <Button Command="{Binding Clear}" Margin="0" ToolTip.Tip="Clear output">
-                                <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" />
+                                <Image Height="18" Source="{DynamicResource VsImageLib.ClearWindowContent16X}" />
                             </Button>
                         </StackPanel>
                     </Border>

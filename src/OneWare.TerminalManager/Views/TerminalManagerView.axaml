@@ -20,7 +20,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding Title}"/>
                         <Button Command="{Binding Close}">
-                            <Image Height="10" Width="10" Source="{DynamicResource Material.WindowClose}"/>
+                            <Image Height="8" Width="8" Source="{DynamicResource Material.WindowClose}"/>
                         </Button>
                     </StackPanel>
                 </DataTemplate>
