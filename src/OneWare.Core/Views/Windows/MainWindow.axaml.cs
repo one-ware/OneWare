@@ -33,8 +33,7 @@ namespace OneWare.Core.Views.Windows
 
             this.WhenValueChanged(x => x.DataContext).Subscribe(x =>
             {
-                var vm = DataContext as MainWindowViewModel;
-                if (vm == null) return;
+                if (DataContext is not MainWindowViewModel vm) return;
                 
                 // this.AddHandler(PointerPressedEvent, (o, i) =>
                 // {

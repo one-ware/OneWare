@@ -5,17 +5,17 @@ namespace OneWare.ProjectSystem.Services;
 
 public class ProjectManagerService : IProjectManagerService
 {
-    private readonly Dictionary<Type, IProjectManager> _projectManagers = new();
+    private readonly Dictionary<string, IProjectManager> _projectManagers = new();
 
-    public void RegisterProjectManager(Type type, IProjectManager manager)
+    public void RegisterProjectManager(string id, IProjectManager manager)
     {
-        _projectManagers.Add(type, manager);
+        _projectManagers.Add(id, manager);
     }
     
-    public IProjectManager GetManager(Type type)
+    public IProjectManager? GetManager(string id)
     {
-        _projectManagers.TryGetValue(type, out var manager);
-        if (manager == null) throw new NullReferenceException($"Project Type {type} not registered!");
+        _projectManagers.TryGetValue(id, out var manager);
+        //if (manager == null) throw new NullReferenceException($"Project Type {id} not registered!");
         return manager;
     }
 }

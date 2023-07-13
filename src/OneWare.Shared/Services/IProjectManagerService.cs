@@ -2,7 +2,7 @@
 
 public interface IProjectManagerService
 {
-    public void RegisterProjectManager(Type type, IProjectManager manager);
+    public void RegisterProjectManager(string id, IProjectManager manager);
 
-    public IProjectManager GetManager(Type type);
+    public IProjectManager? GetManager(string id);
 }

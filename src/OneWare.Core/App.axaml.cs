@@ -250,7 +250,6 @@ namespace OneWare.Core
             }
             
             var arguments = Environment.GetCommandLineArgs();
-
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime && arguments.GetLength(0) > 1)
             {
                 var fileName = arguments[1];
@@ -264,36 +263,32 @@ namespace OneWare.Core
                     }
                     else
                     {
-                        ContainerLocator.Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
+                        Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
                     }
                 }
             }
             else
             {
-                var key = Container.Resolve<IActive>().AddState("Loading last projects...", AppState.Loading);
-                //await DockService.ProjectFiles.LoadLastProjectDataAsync();
-
-                //Global.MainWindowViewModel.RefreshArduinoQuickMenu();
-                //_ = Global.MainWindowViewModel.RefreshHardwareAsync();
-                //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
-                //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
-
-                var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
-                Directory.CreateDirectory(testProj);
-                var dummy = new FolderProjectRoot(testProj);
-                var hard = dummy.AddFile("VhdlTest.vhd");
-                var hard2 = dummy.AddFile("VerilogTest.v");
-
-                var soft = dummy.AddFile("CppTest.cpp");
-                Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
-                Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
-                
-                Container.Resolve<IDockService>().InitializeDocuments();
-                Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
-
-
-                if (ApplicationLifetime is not ISingleViewApplicationLifetime)
+                if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
                 {
+                    var key = Container.Resolve<IActive>().AddState("Loading last projects...", AppState.Loading);
+                    await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+                    Container.Resolve<IDockService>().InitializeDocuments();
+                    Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
+                }
+                else if (ApplicationLifetime is ISingleViewApplicationLifetime)
+                {
+                    var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
+                    Directory.CreateDirectory(testProj);
+                    var dummy = new FolderProjectRoot(testProj);
+                    var hard = dummy.AddFile("VhdlTest.vhd");
+                    var hard2 = dummy.AddFile("VerilogTest.v");
+                    var soft = dummy.AddFile("CppTest.cpp");
+                    Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
+                    Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
+                
+                    Container.Resolve<IDockService>().InitializeDocuments();
+                    
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
                     (editor as IEditor)!.CurrentDocument.Text = @"
 // Your First C++ Program
@@ -366,6 +361,11 @@ module HELLO_WORLD(); // module doesn't have input or outputs
 endmodule
 ";
                 }
+                
+                //Global.MainWindowViewModel.RefreshArduinoQuickMenu();
+                //_ = Global.MainWindowViewModel.RefreshHardwareAsync();
+                //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
+                //_ = Global.ArduinoBoardManagerViewModel.RefreshAsync();
 
                 _ = FinishedLoadingAsync();
             }

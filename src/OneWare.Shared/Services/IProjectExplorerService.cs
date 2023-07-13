@@ -19,4 +19,6 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public void ExpandToRoot(IProjectEntry entry);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
     public void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude);
+    public Task SaveLastProjectsFileAsync();
+    public Task OpenLastProjectsFileAsync();
 }

@@ -12,10 +12,10 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
-    public string RootFolderPath { get; init; }
-
+    public abstract string ProjectPath { get; }
+    public abstract string ProjectTypeId { get; }
+    public string RootFolderPath { get; }
     public List<IProjectFile> Files { get; } = new();
-
     public override string FullPath => RootFolderPath;
 
     private bool _isActive;
@@ -86,6 +86,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     }
 
     private readonly List<string> _watcherHandle = new();
+    private IProjectRoot _projectRootImplementation;
 
     private void OnExtFileChanged(object source, FileSystemEventArgs e)
     {

@@ -8,6 +8,7 @@ using OneWare.Core.Services;
 using OneWare.Cpp;
 using OneWare.Settings;
 using OneWare.Shared.Services;
+using OneWare.Toml;
 using OneWare.Verilog;
 using OneWare.Vhdl;
 using Prism.Ioc;
@@ -58,5 +59,6 @@ public class DemoApp : App
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
+        moduleCatalog.AddModule<TomlModule>();
     }
 }

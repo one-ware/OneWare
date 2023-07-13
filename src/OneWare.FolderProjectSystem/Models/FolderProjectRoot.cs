@@ -8,6 +8,10 @@ namespace OneWare.FolderProjectSystem.Models;
 
 public class FolderProjectRoot : ProjectRoot
 {
+    public const string ProjectType = "Folder";
+    public override string ProjectPath => RootFolderPath;
+    public override string ProjectTypeId => ProjectType;
+
     public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath)
     {
         IDisposable? iconDisposable = null;
@@ -30,4 +34,5 @@ public class FolderProjectRoot : ProjectRoot
             }
         });
     }
+
 }

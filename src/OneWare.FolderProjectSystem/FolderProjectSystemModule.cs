@@ -22,7 +22,7 @@ public class FolderProjectSystemModule : IModule
         
         containerProvider
             .Resolve<IProjectManagerService>()
-            .RegisterProjectManager(typeof(FolderProjectRoot), manager);
+            .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemModel("Folder")

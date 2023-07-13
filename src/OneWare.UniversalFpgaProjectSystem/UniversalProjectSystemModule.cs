@@ -22,7 +22,7 @@ public class UniversalProjectSystemModule : IModule
         
         containerProvider
             .Resolve<IProjectManagerService>()
-            .RegisterProjectManager(typeof(UniversalFpgaProjectRoot), manager);
+            .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemModel("FpgaProject")

@@ -8,8 +8,11 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class UniversalFpgaProjectRoot : ProjectRoot
 {
+    public const string ProjectType = "UniversalFPGAProject";
+    public override string ProjectPath => ProjectFilePath;
+    public override string ProjectTypeId => ProjectType;
     public string ProjectFilePath { get; }
-    
+
     public UniversalFpgaProjectRoot(string projectFilePath) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;

@@ -8,13 +8,13 @@ public class FolderProjectManager : IProjectManager
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ILogger _logger;
-    
+
     public FolderProjectManager(IProjectExplorerService projectExplorerService, ILogger logger)
     {
         _projectExplorerService = projectExplorerService;
         _logger = logger;
     }
-    
+
     public Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         if (!Directory.Exists(path))

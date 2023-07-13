@@ -1,5 +1,7 @@
-﻿using Avalonia;
+﻿using System.Text.Json;
+using Avalonia;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using OneWare.Shared;
@@ -20,6 +22,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
     private readonly IProjectManagerService _projectManagerService;
+
+    private readonly string _lastProjectsFile;
 
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
 
@@ -51,6 +55,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _windowService = windowService;
         _settingsService = settingsService;
         _projectManagerService = projectManagerService;
+        
+        _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
         Id = "ProjectExplorer";
         Title = "Project Explorer";
@@ -138,7 +144,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (folderPath == null) return null;
 
-        return await LoadProjectAsync(folderPath, manager);
+        var result = await LoadProjectAsync(folderPath, manager);
+        
+        _ = SaveLastProjectsFileAsync();
+
+        return result;
     }
     
     public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager)
@@ -148,7 +158,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (filePath == null) return null;
 
-        return await LoadProjectAsync(filePath, manager);
+        var result = await LoadProjectAsync(filePath, manager);
+        
+        _ = SaveLastProjectsFileAsync();
+
+        return result;
     }
 
     public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager)
@@ -163,6 +177,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         ActiveProject = project;
         
         //project.SetupFileWatcher();
+        
         return project;
     }
 
@@ -311,7 +326,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
         }
     }
-    
+
     public async Task ImportFileDialogAsync(IProjectFolder? destination = null)
     {
         destination ??= ActiveProject;
@@ -416,10 +431,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return entry;
         }
 
-        if (entry is IProjectRoot)
+        if (entry is IProjectRoot root)
         {
             await RemoveAsync(entry);
-            var proj = await _projectManagerService.GetManager(entry.GetType()).LoadProjectAsync(entry.FullPath);
+            var manager = _projectManagerService.GetManager(root.ProjectTypeId);
+
+            if (manager == null)
+            {
+                entry.LoadingFailed = true;
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .Error($"Cannot reload {entry.Header}. Manager not found!");
+                return entry;
+            }
+            var proj = await manager.LoadProjectAsync(entry.FullPath);
             if (proj == null)
             {
                 entry.LoadingFailed = true;
@@ -489,6 +513,63 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(ex.Message, ex);
+        }
+    }
+    
+    public async Task SaveLastProjectsFileAsync()
+    {
+        try
+        {
+            var roots = Items.Where(x => x is IProjectRoot).Cast<IProjectRoot>();
+            var serialization = roots.Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath)).ToArray();
+            await using var stream = File.OpenWrite(_lastProjectsFile);
+            await JsonSerializer.SerializeAsync(stream, serialization);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+    }
+
+    public async Task OpenLastProjectsFileAsync()
+    {
+        if (!File.Exists(_lastProjectsFile)) return;
+        try
+        {
+            await using var stream = File.OpenRead(_lastProjectsFile);
+            var lastProjects = await JsonSerializer.DeserializeAsync<ProjectSerialization[]>(stream);
+
+            if (lastProjects == null) return;
+            var loadProjectTasks = new List<Task>();
+
+            foreach (var l in lastProjects)
+            {
+                var manager = _projectManagerService.GetManager(l.ProjectType);
+                if (manager != null)
+                {
+                    loadProjectTasks.Add(LoadProjectAsync(l.Path, manager));
+                }
+                else ContainerLocator.Container.Resolve<ILogger>()?
+                    .Warning($"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
+            }
+
+            await Task.WhenAll(loadProjectTasks);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+    }
+
+    private class ProjectSerialization
+    {
+        public string ProjectType { get; set; }
+        public string Path { get; set; }
+
+        public ProjectSerialization(string projectType, string path)
+        {
+            ProjectType = projectType;
+            Path = path;
         }
     }
 }
