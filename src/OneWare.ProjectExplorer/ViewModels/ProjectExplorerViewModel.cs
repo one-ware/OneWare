@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -15,6 +16,7 @@ namespace OneWare.ProjectExplorer.ViewModels;
 
 public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerService
 {
+    public const string IconKey = "EvaIcons.FolderOutline";
     public IActive Active { get; }
 
     private readonly IPaths _paths;
@@ -48,6 +50,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     }
 
     public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, IProjectManagerService projectManagerService)
+    : base(IconKey)
     {
         Active = active;
         _paths = paths;
@@ -59,7 +62,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
         Id = "ProjectExplorer";
-        Title = "Project Explorer";
+        Title = "Explorer";
     }
 
     public void ConstructContextMenu()

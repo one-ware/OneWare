@@ -3,11 +3,12 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using Dock.Model.Mvvm.Controls;
+using OneWare.Shared;
 
 
 namespace OneWare.Output.ViewModels
 {
-    public abstract class OutputBaseViewModel : Tool
+    public abstract class OutputBaseViewModel : ExtendedTool
     {
         private const int Maxoutputlength = 50000;
 
@@ -53,6 +54,11 @@ namespace OneWare.Output.ViewModels
             set => SetProperty(ref _autoScroll, value);
         }
 
+        public OutputBaseViewModel(string iconKey) : base(iconKey)
+        {
+                
+        }
+        
         public void WriteLine(string text, IBrush? textColor = null)
         {
             Write(text + "\n", textColor);

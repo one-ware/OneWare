@@ -93,4 +93,15 @@
             </DataTemplate>
         </Setter>
     </Style>
+    
+    <Style Selector="ToolControl">
+        <Setter Property="HeaderTemplate">
+            <DataTemplate DataType="shared:IExtendedTool">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                    <Image Source="{Binding Icon}" Height="12" Width="12"/>
+                    <TextBlock Text="{Binding Title}" Padding="2" />
+                </StackPanel>
+            </DataTemplate>
+        </Setter>
+    </Style>
 </Styles>

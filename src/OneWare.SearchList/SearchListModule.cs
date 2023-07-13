@@ -34,7 +34,7 @@ public class SearchListModule : IModule
         {
             Header = "Search",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Search16XMd") ,
+            ImageIconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey)
         });
     }
 }

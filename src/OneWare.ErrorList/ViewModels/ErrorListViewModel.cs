@@ -18,8 +18,10 @@ namespace OneWare.ErrorList.ViewModels
         CurrentFile,
     }
     
-    public class ErrorListViewModel : Tool, IErrorService
+    public class ErrorListViewModel : ExtendedTool, IErrorService
     {
+        public const string IconKey = "MaterialDesign.ErrorOutline";
+        
         private readonly IDockService _dockService;
         private readonly ISettingsService _settingsService;
         private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
@@ -143,7 +145,8 @@ namespace OneWare.ErrorList.ViewModels
         
         public event EventHandler<object?>? ErrorRefresh;
 
-        public ErrorListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerExplorerViewModel)
+        public ErrorListViewModel(IDockService dockService, ISettingsService settingsService,
+            IProjectExplorerService projectExplorerExplorerViewModel) : base(IconKey)
         {
             _dockService = dockService;
             _settingsService = settingsService;

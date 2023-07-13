@@ -159,6 +159,16 @@ namespace OneWare.Core.Services
             {
                 RemoveBackup(backup);
             }
+
+            try
+            {
+                Directory.Delete(_backupFolder, true);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+            }
+            
             SaveAutoSaveFile();
         }
 

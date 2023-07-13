@@ -38,7 +38,7 @@ public class SourceControlModule : IModule
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<SourceControlViewModel>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Team16X") ,
+            ImageIconObservable = Application.Current?.GetResourceObservable(SourceControlViewModel.IconKey) ,
         });
         
         if (containerProvider.Resolve<SourceControlViewModel>() is not { } vm) return;

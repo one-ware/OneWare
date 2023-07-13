@@ -10,8 +10,10 @@ using OneWare.Shared.Services;
 
 namespace OneWare.SearchList.ViewModels
 {
-    public class SearchListViewModel : Tool
+    public class SearchListViewModel : ExtendedTool
     {
+        public const string IconKey = "VsImageLib.Search16XMd";
+        
         private IDockService _dockService;
         private ISettingsService _settingsService;
         private IProjectExplorerService _projectExplorerService;
@@ -64,7 +66,7 @@ namespace OneWare.SearchList.ViewModels
             set => SetProperty(ref _searchListFilterMode, value);
         }
 
-        public SearchListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerService)
+        public SearchListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerService) : base(IconKey)
         {
             _dockService = dockService;
             _settingsService = settingsService;

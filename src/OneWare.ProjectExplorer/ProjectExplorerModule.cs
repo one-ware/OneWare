@@ -66,7 +66,7 @@ public class ProjectExplorerModule : IModule
         {
             Header = "Project Explorer",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable("Material.FormatListBulletedType") ,
+            ImageIconObservable = Application.Current?.GetResourceObservable(ProjectExplorerViewModel.IconKey),
         });
     }
 }

@@ -11,7 +11,7 @@ using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
-public abstract class ProjectViewModelBase : Tool
+public abstract class ProjectViewModelBase : ExtendedTool
 {
     public bool EnableDragDrop = true;
 
@@ -30,6 +30,11 @@ public abstract class ProjectViewModelBase : Tool
 
     public ObservableCollection<IProjectEntry> SearchResult { get; } = new();
 
+    protected ProjectViewModelBase(string iconKey) : base(iconKey)
+    {
+        
+    }
+    
     public void Insert(IProjectEntry entry)
     {
         if (Items.Any(x => x.FullPath.EqualPaths(entry.FullPath)))

@@ -102,7 +102,7 @@ namespace OneWare.Settings.ViewModels
         public void Okay(FlexibleWindow window)
         {
             this.Close(window);
-            _settingsService.Save(Path.Combine(_paths.AppDataDirectory, "settings.json"));
+            _settingsService.Save(_paths.SettingsPath);
         }
 
         public async Task ResetDialogAsync()

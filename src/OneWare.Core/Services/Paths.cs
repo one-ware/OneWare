@@ -13,7 +13,7 @@ public class Paths : IPaths
         Path.Combine(Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.ApplicationData), AppFolderName);
     public string TempDirectory => Path.GetTempPath();
     public string LayoutDirectory => Path.Combine(AppDataDirectory, "Layouts");
-    public string SettingsPath => Path.Combine(AppDataDirectory, "settings.json");
+    public string SettingsPath => Path.Combine(AppDataDirectory, "Settings.json");
     public string DocumentsDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
     public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");

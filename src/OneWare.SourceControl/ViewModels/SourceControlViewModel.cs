@@ -21,8 +21,10 @@ using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels
 {
-    public class SourceControlViewModel : Tool
+    public class SourceControlViewModel : ExtendedTool
     {
+        public const string IconKey = "VsImageLib.Team16X";
+        
         private readonly ILogger _logger;
         private readonly ISettingsService _settingsService;
         private readonly IActive _active;
@@ -113,7 +115,7 @@ namespace OneWare.SourceControl.ViewModels
         public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
         
         public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
-            IDockService dockService, IWindowService windowService, IProjectExplorerService projectExplorerService)
+            IDockService dockService, IWindowService windowService, IProjectExplorerService projectExplorerService) : base(IconKey)
         {
             _logger = logger;
             _settingsService = settingsService;
@@ -123,7 +125,7 @@ namespace OneWare.SourceControl.ViewModels
             ProjectExplorerService = projectExplorerService;
 
             Id = "SourceControl";
-            Title = "Source Control";
+            Title = "Git";
 
             RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
             CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);

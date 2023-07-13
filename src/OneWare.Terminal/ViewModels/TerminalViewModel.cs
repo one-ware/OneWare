@@ -14,8 +14,10 @@ using VtNetCore.VirtualTerminal;
 
 namespace OneWare.Terminal.ViewModels
 {
-    public class TerminalViewModel : Tool
+    public class TerminalViewModel : ExtendedTool
     {
+        public const string IconKey = "Material.Console";
+        
         private static readonly IPsuedoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? new Win32PsuedoTerminalProvider()
             : new UnixPsuedoTerminalProvider();
@@ -55,7 +57,7 @@ namespace OneWare.Terminal.ViewModels
 
         public event EventHandler? TerminalReady;
         
-        public TerminalViewModel(ISettingsService settingsService) //If created manually
+        public TerminalViewModel(ISettingsService settingsService) : base(IconKey)
         {
             Title = "Terminal";
             Id = "Terminal";

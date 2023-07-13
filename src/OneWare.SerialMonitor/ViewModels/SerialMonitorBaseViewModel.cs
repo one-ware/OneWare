@@ -108,7 +108,7 @@ namespace OneWare.SerialMonitor.ViewModels
             }
         }
 
-        public SerialMonitorBaseViewModel(ISettingsService settingsService)
+        public SerialMonitorBaseViewModel(ISettingsService settingsService, string iconKey) : base(iconKey)
         {
             BaudOptions = new ObservableCollection<int>
             {
