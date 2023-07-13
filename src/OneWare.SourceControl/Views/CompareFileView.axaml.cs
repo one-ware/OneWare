@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using AvaloniaEdit;
+using AvaloniaEdit.TextMate;
 using DynamicData.Binding;
 using OneWare.Shared.Services;
 using OneWare.SourceControl.EditorExtensions;
@@ -150,11 +151,20 @@ namespace OneWare.SourceControl.Views
             }
             
             var language = Path.GetExtension(vm.Path);
-            
-            if (language != null && ContainerLocator.Container.Resolve<ILanguageManager>().GetHighlighting(language) is {} highlighting)
+
+            var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
+            if (languageManager.GetTextMateScopeByExtension(language) is {} scope)
             {
-                DiffEditor.SyntaxHighlighting = highlighting;
-                HeadEditor.SyntaxHighlighting = highlighting;
+                var textMateDiff = DiffEditor.InstallTextMate(languageManager.RegistryOptions);
+                textMateDiff.SetGrammar(scope);
+                var textMateHead = HeadEditor.InstallTextMate(languageManager.RegistryOptions);
+                textMateHead.SetGrammar(scope);
+                
+                languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
+                {
+                    textMateDiff.SetTheme(x);
+                    textMateHead.SetTheme(x);
+                });
             }
         }
     }

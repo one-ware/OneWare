@@ -69,7 +69,8 @@ namespace OneWare.Core.ViewModels.Windows
                     Title = $"{paths.AppName} IDE - {evm.CurrentFile?.Header}";
                     
                     TypeAssistanceQuickOptions.Clear();
-                    if(CurrentEditor.TypeAssistance != null) TypeAssistanceQuickOptions.AddRange(CurrentEditor.TypeAssistance.GetTypeAssistanceQuickOptions());
+                    var quickOptions = CurrentEditor.TypeAssistance?.GetTypeAssistanceQuickOptions();
+                    if(quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
                 }
                 else
                 {

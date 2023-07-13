@@ -1,9 +1,10 @@
-﻿using Prism.Ioc;
+﻿using OneWare.Shared.Services;
+using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Json;
 
-public class OneWareJsonModule : IModule
+public class JsonModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
@@ -12,6 +13,6 @@ public class OneWareJsonModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        
+        containerProvider.Resolve<ILanguageManager>().RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
     }
 }

@@ -21,10 +21,8 @@ namespace OneWare.Vhdl
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
             FormattingStrategy = new VhdlFormatter();
             FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVhdl.FoldingStart, FoldingRegexVhdl.FoldingEnd);
+            LineCommentSequence = "--";
         }
-        
-        public override string LineCommentSequence => "--";
-        
 
         public override async Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {

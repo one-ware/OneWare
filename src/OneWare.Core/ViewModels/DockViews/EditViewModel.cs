@@ -191,7 +191,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
             _dockService.OpenFiles.TryAdd(CurrentFile, this);
             
-            async void OnLoaded()
+            async void OnInitialized()
             {
                 var result = await LoadAsync();
                 
@@ -205,71 +205,59 @@ namespace OneWare.Core.ViewModels.DockViews
                         textMateInstallation.SetTheme(x);
                     });
                 }
-                //Editor.SyntaxHighlighting = _languageManager.GetHighlighting(CurrentFile.Extension);
                 
-                if(result) InitLanguageService();
+                Observable.FromEventPattern(
+                        h => Editor.Document.TextChanged += h,
+                        h => Editor.Document.TextChanged -= h)
+                    .Subscribe(x => { IsDirty = true; });
+                
+                if(result) InitTypeAssistance();
             }
-            OnLoaded();
+            OnInitialized();
         }
 
-        private void InitLanguageService()
+        private void InitTypeAssistance()
         {
             if(CurrentFile == null) return;
             
-            var service = _languageManager.GetLanguageService(CurrentFile);
+            TypeAssistance = _languageManager.GetTypeAssistance(this);
 
-            if (service != null)
+            if (TypeAssistance != null)
             {
-                TypeAssistance = service.GetTypeAssistance(this);
-
-                if (TypeAssistance != null)
+                if (TypeAssistance.FoldingStrategy != null)
                 {
-                    if (_settingsService.GetSettingValue<bool>("Editor_UseFolding"))
+                    _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
                     {
-                        Editor.SetFolding(true);
-                        UpdateFolding();
-                    }
+                        Editor.SetFolding(x);
+                        if (x) UpdateFolding();
+                    });
                     
                     Observable.FromEventPattern(
-                            h => TypeAssistance.AssistanceActivated += h,
-                            h => TypeAssistance.AssistanceActivated -= h)
-                        .Subscribe(x =>
-                        {
-                            
-                        });
-
-                    Observable.FromEventPattern(
-                            h => TypeAssistance.AssistanceDeactivated += h,
-                            h => TypeAssistance.AssistanceDeactivated -= h)
-                        .Subscribe(x => {  });
+                            h => Editor.Document.LineCountChanged += h,
+                            h => Editor.Document.LineCountChanged -= h)
+                        .Subscribe(x => { UpdateFolding(); });
                 }
-
-                if (TypeAssistance?.CanAddBreakPoints ?? false)
+                
+                // Observable.FromEventPattern(
+                //         h => TypeAssistance.AssistanceActivated += h,
+                //         h => TypeAssistance.AssistanceActivated -= h)
+                //     .Subscribe(x =>
+                //     {
+                //         
+                //     });
+                //
+                // Observable.FromEventPattern(
+                //         h => TypeAssistance.AssistanceDeactivated += h,
+                //         h => TypeAssistance.AssistanceDeactivated -= h)
+                //     .Subscribe(x => {  });
+                    
+                if (TypeAssistance.CanAddBreakPoints)
                 {
                     // TODO Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, currentFile, Global.Breakpoints));
                 }
                 
-                if (service is { IsActivated: false }) _ = service.ActivateAsync();
-                
-                TypeAssistance?.Open();
+                TypeAssistance.Open();
             }
-
-            _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
-            {
-                //x = x && (TypeAssistance?.Service.IsLanguageServiceReady ?? false);
-                Editor.SetFolding(x);
-                if (x) UpdateFolding();
-            });
-
-            Observable.FromEventPattern(
-                    h => Editor.Document.TextChanged += h,
-                    h => Editor.Document.TextChanged -= h)
-                .Subscribe(x => { IsDirty = true; });
-
-            Observable.FromEventPattern(
-                    h => Editor.Document.LineCountChanged += h,
-                    h => Editor.Document.LineCountChanged -= h)
-                .Subscribe(x => { UpdateFolding(); });
         }
 
         private void UpdateFolding()

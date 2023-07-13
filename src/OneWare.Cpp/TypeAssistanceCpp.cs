@@ -17,6 +17,7 @@ namespace OneWare.Cpp
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
             FoldingStrategy = new FoldingStrategyCpp(); //new LspFoldingStrategy(ls, editor.CurrentFile);
+            LineCommentSequence = "//";
         }
         
         public override async Task<string?> GetHoverInfoAsync(int offset)

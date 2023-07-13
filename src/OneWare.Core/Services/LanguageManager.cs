@@ -1,18 +1,12 @@
 ﻿using System.Reactive.Linq;
-using System.Xml;
-using Avalonia.Platform;
-using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.Highlighting.Xshd;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
-using OneWare.Core.Data;
 using OneWare.Core.Extensions.TextMate;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 using TextMateSharp.Grammars;
-using TextMateSharp.Internal.Types;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 
@@ -24,8 +18,9 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         private readonly Dictionary<string, Type> _workspaceServerTypes = new();
         private readonly Dictionary<Type, ILanguageService> _singleInstanceServers = new();
         private readonly Dictionary<Type, Dictionary<string,ILanguageService>> _workspaceServers = new();
-
-        private readonly Dictionary<string, string> _highlightingDefinitions = new();
+        
+        private readonly Dictionary<string, Type> _standAloneTypeAssistance = new();
+        
         private readonly CustomTextMateRegistryOptions _textMateRegistryOptions = new();
         public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
 
@@ -33,7 +28,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         public IRawTheme CurrentEditorTheme
         {
             get => _currentEditorTheme;
-            set => SetProperty(ref _currentEditorTheme, value);
+            private set => SetProperty(ref _currentEditorTheme, value);
         }
 
         public LanguageManager(ISettingsService settingsService)
@@ -63,32 +58,6 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         {
             _textMateRegistryOptions.RegisterLanguage(id, grammarPath, extensions);
         }
-        public void RegisterHighlighting(string path, params string[] supportedFileTypes)
-        {
-            foreach (var fileType in supportedFileTypes)
-            {
-                _highlightingDefinitions[fileType] = path;
-            }
-        }
-
-        public IHighlightingDefinition? GetHighlighting(string fileExtension)
-        {
-            _highlightingDefinitions.TryGetValue(fileExtension, out var path);
-
-            if (path == null) return null;
-            
-            try
-            {
-                using var s = new StreamReader(AssetLoader.Open(new Uri(path)));
-                using var reader = new XmlTextReader(s);
-                return HighlightingLoader.Load(reader, HighlightingManager.Instance);
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>().Error($"{e.Message}\n{path}", e);
-                return null;
-            }
-        }
 
         public string? GetTextMateScopeByExtension(string fileExtension)
         {
@@ -106,6 +75,14 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                     _workspaceServerTypes[s] = type;
                     _workspaceServers.TryAdd(type, new Dictionary<string, ILanguageService>());
                 }
+            }
+        }
+
+        public void RegisterStandaloneTypeAssistance(Type type, params string[] supportedFileTypes)
+        {
+            foreach (var s in supportedFileTypes)
+            {
+                _standAloneTypeAssistance[s] = type;
             }
         }
 
@@ -135,6 +112,22 @@ internal class LanguageManager : ObservableObject, ILanguageManager
             }
 
             return null;
+        }
+
+        public ITypeAssistance? GetTypeAssistance(IEditor editor)
+        {
+            if (editor.CurrentFile == null) throw new NullReferenceException(nameof(editor.CurrentFile));
+            var service = GetLanguageService(editor.CurrentFile);
+
+            if (service == null)
+            {
+                if (!_standAloneTypeAssistance.TryGetValue(editor.CurrentFile.Extension, out var type)) return null;
+                if (ContainerLocator.Container.Resolve(type, (typeof(IEditor), editor)) is not ITypeAssistance newInstance)
+                    throw new TypeLoadException(nameof(type) + " is not " + nameof(ITypeAssistance));
+                return newInstance;
+            };
+            _ = service.ActivateAsync();
+            return service.GetTypeAssistance(editor);
         }
 
         public void AddProject(IProjectRoot project)

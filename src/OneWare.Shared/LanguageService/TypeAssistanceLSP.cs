@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
@@ -23,7 +22,7 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OneWare.Shared.LanguageService
 {
-    public abstract class TypeAssistanceLsp : TypeAssistance, ITypeAssistance
+    public abstract class TypeAssistanceLsp : TypeAssistance
     {
         private bool _completionBusy;
         private int _completionOffset;
@@ -36,7 +35,6 @@ namespace OneWare.Shared.LanguageService
 
         private ICompletionData? _lastSelectedCompletionItem;
         private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
-        public virtual string LineCommentSequence => "//";
         public LanguageServiceBase Service { get; }
         
         private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(200);
@@ -56,7 +54,7 @@ namespace OneWare.Shared.LanguageService
             Service.LanguageServiceActivated += Server_Activated;
             Service.LanguageServiceDeactivated += Server_Deactivated;
 
-            if (Service.IsLanguageServiceReady) OnServerActivated();
+            if (Service.IsLanguageServiceReady) Server_Activated(this, EventArgs.Empty);
 
             CodeBox.Document.Changed -= DocumentChanged;
             CodeBox.Document.Changed += DocumentChanged;
@@ -69,7 +67,7 @@ namespace OneWare.Shared.LanguageService
         {
             base.Attach(completion);
             
-            completion.CompletionList.SelectionChanged += (o, i) =>
+            completion.CompletionList.SelectionChanged += (_, _) =>
             {
                 _lastSelectedCompletionItem = completion.CompletionList.SelectedItem;
                 _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
@@ -118,28 +116,28 @@ namespace OneWare.Shared.LanguageService
 
         private void Server_Activated(object? sender, EventArgs e)
         {
-            OnServerActivated();
+            OnAssistanceActivated();
         }
 
         private void Server_Deactivated(object? sender, EventArgs e)
         {
-            OnServerDeactivated();
+            OnAssistanceDeactivated();
         }
-
-        protected override void OnServerActivated()
+        
+        protected override void OnAssistanceActivated()
         {
             if (!IsOpen) return;
 
-            base.OnServerActivated();
-            Service.DidOpenTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
+            base.OnAssistanceActivated();
+            Service.DidOpenTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
 
             _ = UpdateSymbolsAsync();
         }
 
-        protected override void OnServerDeactivated()
+        protected override void OnAssistanceDeactivated()
         {
             if (!IsOpen) return;
-            base.OnServerDeactivated();
+            base.OnAssistanceDeactivated();
         }
 
         protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
@@ -151,7 +149,7 @@ namespace OneWare.Shared.LanguageService
             {
                 var c = ConvertChanges(e);
                 var changes = new Container<TextDocumentContentChangeEvent>(c);
-                Service.RefreshTextDocument(Editor.CurrentFile.FullPath, changes);
+                Service.RefreshTextDocument(CurrentFile.FullPath, changes);
             }
 
             _lastEditTime = DateTime.Now.TimeOfDay;
@@ -159,7 +157,7 @@ namespace OneWare.Shared.LanguageService
 
         private void FileSaved(object? sender, EventArgs e)
         {
-            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(Editor.CurrentFile.FullPath, Editor.CurrentDocument.Text);
+            if (Service.IsLanguageServiceReady) Service.DidSaveTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
         }
 
         public override void Close()
@@ -174,18 +172,18 @@ namespace OneWare.Shared.LanguageService
             }
 
             base.Close();
-            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(Editor.CurrentFile.FullPath);
+            if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(CurrentFile.FullPath);
         }
 
         #endregion
 
-        public virtual async Task<string?> GetHoverInfoAsync(int offset)
+        public override async Task<string?> GetHoverInfoAsync(int offset)
         {
             if (!Service.IsLanguageServiceReady) return null;
 
             var pos = CodeBox.Document.GetLocation(offset);
 
-            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile).OrderBy(x => x.Type)
+            var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile).OrderBy(x => x.Type)
                 .FirstOrDefault(error => pos.Line >= error.StartLine 
                                          && pos.Line <= error.EndLine 
                                          && pos.Column >= error.StartColumn
@@ -206,7 +204,7 @@ namespace OneWare.Shared.LanguageService
             return string.IsNullOrWhiteSpace(info) ? null : info;
         }
 
-        public virtual async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
+        public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
         {
             var menuItems = new List<MenuItemModel>();
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
@@ -256,7 +254,7 @@ namespace OneWare.Shared.LanguageService
             }
 
             //Refactorings
-            var prepareRefactor = await Service.PrepareRenameAsync(Editor.CurrentFile.FullPath, pos);
+            var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
             if (prepareRefactor != null)
                 menuItems.Add(new MenuItemModel("Rename")
                 {
@@ -266,7 +264,7 @@ namespace OneWare.Shared.LanguageService
                     ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X") 
                 });
 
-            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
+            var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (definition != null && IsOpen)
                 foreach (var i in definition)
@@ -284,7 +282,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var declaration = await Service.RequestDeclarationAsync(Editor.CurrentFile.FullPath,
+            var declaration = await Service.RequestDeclarationAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (declaration != null && IsOpen)
                 foreach (var i in declaration)
@@ -302,7 +300,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var implementation = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
+            var implementation = await Service.RequestImplementationAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (implementation != null && IsOpen)
                 foreach (var i in implementation)
@@ -320,7 +318,7 @@ namespace OneWare.Shared.LanguageService
                             Command = new RelayCommand<LocationLink>(GoToLocation),
                             CommandParameter = i.Location
                         });
-            var typeDefinition = await Service.RequestImplementationAsync(Editor.CurrentFile.FullPath,
+            var typeDefinition = await Service.RequestImplementationAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (typeDefinition != null && IsOpen)
                 foreach (var i in typeDefinition)
@@ -379,7 +377,7 @@ namespace OneWare.Shared.LanguageService
 
             if (range.IsRange && range.Range != null)
             {
-                var workspaceEdit = await Service.RequestRenameAsync(Editor.CurrentFile.FullPath, range.Range.Start, newName);
+                var workspaceEdit = await Service.RequestRenameAsync(CurrentFile.FullPath, range.Range.Start, newName);
                 if (workspaceEdit != null && IsOpen)
                     await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
                         { Edit = workspaceEdit, Label = "Rename" });
@@ -390,12 +388,12 @@ namespace OneWare.Shared.LanguageService
             }
         }
         
-        public virtual async Task<Action?> GetActionOnControlWordAsync(int offset)
+        public override async Task<Action?> GetActionOnControlWordAsync(int offset)
         {
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return null;
             var location = CodeBox.Document.GetLocation(offset);
 
-            var definition = await Service.RequestDefinitionAsync(Editor.CurrentFile.FullPath,
+            var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
                 new Position(location.Line - 1, location.Column - 1));
             if (definition != null && IsOpen)
                 if (definition.FirstOrDefault() is { } loc)
@@ -541,7 +539,7 @@ namespace OneWare.Shared.LanguageService
 
         public virtual async Task<List<(string, SymbolKind)>?> RetrieveSymbolsAsync()
         {
-            var symbolInfo = await Service.RequestSymbolsAsync(Editor.CurrentFile.FullPath);
+            var symbolInfo = await Service.RequestSymbolsAsync(CurrentFile.FullPath);
 
             if (symbolInfo is null) return null;
             
@@ -557,7 +555,7 @@ namespace OneWare.Shared.LanguageService
             return highlights;
         }
 
-        public virtual void SetCustomColor(SymbolKind kind, IEnumerable<(string, SymbolKind)> symbols)
+        protected virtual void SetCustomColor(SymbolKind kind, IEnumerable<(string, SymbolKind)> symbols)
         {
             var color = CodeBox.SyntaxHighlighting.GetNamedColor(kind.ToString());
 
@@ -571,9 +569,9 @@ namespace OneWare.Shared.LanguageService
             //CustomHighlightManager?.SetHightlights(highlights, color);
         }
 
-        public virtual async Task ShowOverloadProviderAsync()
+        protected virtual async Task ShowOverloadProviderAsync()
         {
-            var signatureHelp = await Service.RequestSignatureHelpAsync(Editor.CurrentFile.FullPath,
+            var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
             if (signatureHelp != null && IsOpen)
             {
@@ -589,11 +587,11 @@ namespace OneWare.Shared.LanguageService
             }
         }
 
-        public virtual async Task ShowCompletionAsync(string triggerChar, CompletionTriggerKind triggerKind)
+        protected virtual async Task ShowCompletionAsync(string triggerChar, CompletionTriggerKind triggerKind)
         {
-            var t = triggerChar.Length > 0 ? triggerChar[0] : ';';
+            //var t = triggerChar.Length > 0 ? triggerChar[0] : ';';
 
-            var completion = await Service.RequestCompletionAsync(Editor.CurrentFile.FullPath,
+            var completion = await Service.RequestCompletionAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerChar,
                 triggerKind);
             var custom = await GetCustomCompletionItemsAsync();
@@ -630,7 +628,7 @@ namespace OneWare.Shared.LanguageService
             return Task.FromResult(new List<CompletionData>());
         }
 
-        public virtual List<MenuItemModel>? GetTypeAssistanceQuickOptions()
+        public override IEnumerable<MenuItemModel> GetTypeAssistanceQuickOptions()
         {
             return new List<MenuItemModel>
             {
@@ -727,16 +725,58 @@ namespace OneWare.Shared.LanguageService
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
             description = description?.Replace("\n", "\n\n");
             
-            return new CompletionData(comp.InsertText ?? "", comp.Label ?? "", description, icon, 0,
+            return new CompletionData(comp.InsertText ?? "", comp.Label, description, icon, 0,
                 comp, offset, AfterComplete);
         }
 
         public ErrorListItemModel? GetErrorAtLocation(TextLocation location)
         {
-            foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile))
+            foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
                 if (location.Line >= error.StartLine && location.Column >= error.StartColumn && (location.Line < error.EndLine || location.Line == error.EndLine && location.Column <= error.EndColumn))
                     return error;
             return null;
+        }
+        
+        protected IEnumerable<TextDocumentContentChangeEvent> ConvertChanges(DocumentChangeEventArgs e)
+        {
+            var l = new List<TextDocumentContentChangeEvent>();
+            var map = e.OffsetChangeMap;
+
+            //Console.WriteLine("??" + map.Count + " " + e.Offset + " " + e.InsertedText);
+
+            if (map.Count <= 1)
+            {
+                var m = e;
+                var location = CodeBox.Document.GetLocation(m.Offset);
+                //calculate newlines
+                var newlines = e.RemovedText.Text.Count(x => x == '\n');
+                var lastIndexNewLine = e.RemovedText.Text.LastIndexOf('\n');
+                var lengthAfterLastNewLine = lastIndexNewLine >= 0
+                    ? e.RemovedText.TextLength - lastIndexNewLine
+                    : location.Column + e.RemovedText.TextLength;
+
+                var endlocation = new TextLocation(location.Line + newlines, lengthAfterLastNewLine);
+
+                var docChange = new TextDocumentContentChangeEvent
+                {
+                    Range = new Range
+                    {
+                        Start = new Position(location.Line - 1, location.Column - 1),
+                        End = new Position(endlocation.Line - 1, endlocation.Column - 1)
+                    },
+                    Text = e.InsertedText.Text,
+                    RangeLength = m.RemovalLength
+                };
+
+                l.Add(docChange);
+                //Console.WriteLine("c Start: " + docChange.Range.Start.Line + " " + docChange.Range.Start.Character + " End: " + docChange.Range.End.Line + " " + docChange.Range.End.Character + " T: " + e.InsertedText.Text + " " + e.InsertedText.Text.Length);
+            }
+            else
+            {
+                throw new NotSupportedException("Multiple offsets???");
+            }
+
+            return l;
         }
     }
 }

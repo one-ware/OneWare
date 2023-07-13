@@ -7,8 +7,7 @@ namespace OneWare.Shared.LanguageService
     public interface ITypeAssistance
     {
         bool CanAddBreakPoints { get; }
-        string LineCommentSequence { get; }
-        LanguageServiceBase Service { get; }
+        string? LineCommentSequence { get; }
         IFoldingStrategy? FoldingStrategy { get; }
         event EventHandler AssistanceActivated;
         event EventHandler AssistanceDeactivated;
@@ -26,6 +25,6 @@ namespace OneWare.Shared.LanguageService
         Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset);
         Task<string?> GetHoverInfoAsync(int offset);
         Task<Action?> GetActionOnControlWordAsync(int offset);
-        List<MenuItemModel>? GetTypeAssistanceQuickOptions();
+        IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions();
     }
 }
