@@ -63,7 +63,7 @@ namespace OneWare.Shared.Views
             if (ScrollInfo != null)
                 foreach (var scrollInfo in ScrollInfo.InfoLines)
                 {
-                    if (docHeight < Bounds.Height)
+                    if (docHeight * 2 < Bounds.Height)
                     {
                         var vT = CodeBox.TextArea.TextView.GetVisualLine(scrollInfo.Line);
 
