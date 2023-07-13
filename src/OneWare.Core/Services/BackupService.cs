@@ -2,14 +2,11 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.DockViews;
-using OneWare.Core.ViewModels.Windows;
-using OneWare.ProjectExplorer;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Services
 {

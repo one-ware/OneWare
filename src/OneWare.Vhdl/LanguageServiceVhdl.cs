@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Avalonia;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.LanguageService;

@@ -18,7 +18,6 @@ using OneWare.FolderProjectSystem;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
-using OneWare.ProjectSystem.Models;
 using OneWare.ProjectSystem.Services;
 using OneWare.SearchList;
 using OneWare.Settings.ViewModels;

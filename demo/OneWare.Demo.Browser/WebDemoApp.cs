@@ -1,7 +1,4 @@
-﻿using OneWare.Core.ModuleLogic;
-using Prism.Modularity;
-
-namespace OneWare.Demo.Browser;
+﻿namespace OneWare.Demo.Browser;
 
 public class WebDemoApp : DemoApp
 {

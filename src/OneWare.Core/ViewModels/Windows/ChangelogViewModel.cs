@@ -1,6 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared;
-using OneWare.Shared.Services;
+﻿using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;

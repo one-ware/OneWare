@@ -1,11 +1,9 @@
-﻿using System.Net.Mime;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.Input;
 
 
 namespace OneWare.Shared.Views;

@@ -2,7 +2,6 @@
 using Avalonia.Input;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Models
 {

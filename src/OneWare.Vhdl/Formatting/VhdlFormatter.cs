@@ -1,16 +1,12 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Avalonia;
 using Avalonia.Platform;
 using AvaloniaEdit.Document;
-using AvaloniaEdit.Utils;
 using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.Jint;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
-namespace OneWare.Vhdl.Format;
+namespace OneWare.Vhdl.Formatting;
 
 public class VhdlFormatter : IFormattingStrategy
 {

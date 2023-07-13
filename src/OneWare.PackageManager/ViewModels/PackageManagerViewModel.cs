@@ -1,10 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
 using OneWare.PackageManager.Models;
 using OneWare.Shared.Services;
 

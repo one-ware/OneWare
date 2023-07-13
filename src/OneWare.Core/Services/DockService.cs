@@ -48,12 +48,13 @@ namespace OneWare.Core.Services
                 _lastSub?.Dispose();
                 _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
                 {
+                    if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
                 });
             }
         }
-
-        public IExtendedDocument? CurrentDocument => Layout?.FocusedDockable as IExtendedDocument;
+        
+        public IExtendedDocument? CurrentDocument { get; set; }
 
         public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel, MainDocumentDockViewModel mainDocumentDockViewModel)
         {

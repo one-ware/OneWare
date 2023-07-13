@@ -8,7 +8,6 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Enums;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Views.Windows
 {

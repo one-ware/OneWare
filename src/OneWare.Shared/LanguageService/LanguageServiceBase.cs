@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client;

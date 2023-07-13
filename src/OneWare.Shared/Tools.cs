@@ -1,18 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Mime;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Shared

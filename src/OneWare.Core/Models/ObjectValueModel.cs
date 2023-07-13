@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Models
 {

@@ -3,7 +3,6 @@ using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars.Reader;
 using TextMateSharp.Internal.Types;
-using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 
 namespace OneWare.Core.Extensions.TextMate;

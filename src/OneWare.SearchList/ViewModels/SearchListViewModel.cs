@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Dock.Model.Controls;
-using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
 using OneWare.SearchList.Models;
 using OneWare.Shared;

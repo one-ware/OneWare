@@ -1,10 +1,6 @@
 ﻿using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using ImTools;
-using Microsoft.CodeAnalysis.CSharp;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
 
 namespace OneWare.Shared.EditorExtensions;
 

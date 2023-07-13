@@ -1,5 +1,4 @@
-﻿using Avalonia;
-using OneWare.Shared;
+﻿using OneWare.Shared;
 
 namespace OneWare.Core.Views.Windows
 {

@@ -1,5 +1,4 @@
-﻿using Dock.Model.Controls;
-using Dock.Model.Core;
+﻿using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;

@@ -1,5 +1,4 @@
-﻿using Avalonia;
-using OneWare.Core.ViewModels.Windows;
+﻿using OneWare.Core.ViewModels.Windows;
 using OneWare.Shared;
 
 namespace OneWare.Core.Views.Windows

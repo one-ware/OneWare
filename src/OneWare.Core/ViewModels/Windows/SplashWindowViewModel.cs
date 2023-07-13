@@ -2,7 +2,6 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 

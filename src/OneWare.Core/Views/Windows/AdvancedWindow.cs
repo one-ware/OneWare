@@ -1,10 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
-using DynamicData;
 
 namespace OneWare.Core.Views.Windows
 {

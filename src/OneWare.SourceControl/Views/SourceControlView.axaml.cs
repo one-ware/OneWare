@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
-using DynamicData;
 using LibGit2Sharp;
 using OneWare.SourceControl.Models;
 using OneWare.SourceControl.ViewModels;

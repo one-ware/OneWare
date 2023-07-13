@@ -1,5 +1,4 @@
 ﻿using AvaloniaEdit.Document;
-using Dock.Model.Core;
 using OneWare.Shared.EditorExtensions;
 
 namespace OneWare.Shared;

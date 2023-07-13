@@ -4,11 +4,9 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
-using OneWare.Shared.Services;
 using OneWare.Vhdl.Folding;
-using OneWare.Vhdl.Format;
+using OneWare.Vhdl.Formatting;
 using OneWare.Vhdl.Indentation;
-using Prism.Ioc;
 
 namespace OneWare.Vhdl
 {

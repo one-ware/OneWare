@@ -2,7 +2,6 @@
 using Prism.Ioc;
 
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

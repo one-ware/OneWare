@@ -1,7 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Collections;
-using Dock.Model.Mvvm.Controls;
-using DynamicData;
 using DynamicData.Binding;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -159,9 +157,11 @@ namespace OneWare.ErrorList.ViewModels
             {
                 Filter = Filter
             };
-
+            
             _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
                 .Subscribe(x => ErrorListFilterMode = x);
+
+            _dockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
         }
 
         public void RegisterErrorSource(string source)

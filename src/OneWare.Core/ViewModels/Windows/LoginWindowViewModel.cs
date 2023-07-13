@@ -1,6 +1,4 @@
 ﻿using Avalonia.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared;
 using Prism.Ioc;
 using RestSharp;
 using OneWare.Shared.Services;

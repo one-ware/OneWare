@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Avalonia.Media;
-using Avalonia.Styling;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.TextMate;
@@ -10,8 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
 using OneWare.Core.Services;
-using OneWare.Core.ViewModels.Windows;
-using OneWare.ErrorList.ViewModels;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
@@ -19,8 +15,6 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
-using TextMateSharp.Grammars;
 
 namespace OneWare.Core.ViewModels.DockViews
 {

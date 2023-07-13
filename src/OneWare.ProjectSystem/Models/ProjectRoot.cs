@@ -1,10 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+﻿using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Shared;
-using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 

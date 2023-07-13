@@ -1,5 +1,4 @@
 ﻿using System.Reactive.Linq;
-using Avalonia;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Settings.Models;

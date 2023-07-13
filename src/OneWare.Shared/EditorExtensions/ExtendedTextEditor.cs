@@ -1,6 +1,5 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
-using DynamicData;
 
 namespace OneWare.Shared.EditorExtensions;
 

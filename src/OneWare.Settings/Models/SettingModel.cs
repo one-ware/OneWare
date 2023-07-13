@@ -2,10 +2,6 @@
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
-using OneWare.Settings.Views;
-using Prism.Ioc;
-using OneWare.Shared;
-using OneWare.Shared.Services;
 
 namespace OneWare.Settings.Models
 {

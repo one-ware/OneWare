@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
-using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
@@ -14,8 +13,6 @@ using OneWare.Shared.Enums;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
-using OneWare.Shared.Views;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 
 namespace OneWare.Core.Services;

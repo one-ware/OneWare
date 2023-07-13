@@ -1,5 +1,4 @@
-﻿using Avalonia.Styling;
-using OneWare.SourceControl.EditorExtensions;
+﻿using OneWare.SourceControl.EditorExtensions;
 
 namespace OneWare.SourceControl.Models
 {

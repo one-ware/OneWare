@@ -1,5 +1,4 @@
-﻿using Avalonia;
-using OneWare.Core.ViewModels.Windows;
+﻿using OneWare.Core.ViewModels.Windows;
 using Prism.Ioc;
 using OneWare.Shared;
 

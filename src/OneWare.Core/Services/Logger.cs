@@ -1,15 +1,11 @@
 using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
-using OneWare.Core.ViewModels.Windows;
 using OneWare.Output;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Services;
 

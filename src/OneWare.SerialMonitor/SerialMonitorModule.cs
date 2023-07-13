@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.SerialMonitor.ViewModels;
 using Prism.Ioc;

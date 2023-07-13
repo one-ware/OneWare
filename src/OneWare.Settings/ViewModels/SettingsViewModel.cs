@@ -1,6 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Media;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Media;
 using OneWare.Settings.Models;
 using OneWare.Shared;
 using OneWare.Shared.Enums;

@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace OneWare.Shared;
+﻿namespace OneWare.Shared;
 
 public interface IProjectFolder : IProjectEntry
 {

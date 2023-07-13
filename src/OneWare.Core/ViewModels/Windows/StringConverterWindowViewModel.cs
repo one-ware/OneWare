@@ -1,6 +1,5 @@
 ﻿using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

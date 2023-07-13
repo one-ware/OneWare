@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Dock.Model.Mvvm.Controls;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;

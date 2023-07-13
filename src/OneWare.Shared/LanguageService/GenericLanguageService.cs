@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using OneWare.Shared.Services;
-using Prism.Ioc;
-
-namespace OneWare.Shared.LanguageService
+﻿namespace OneWare.Shared.LanguageService
 {
     public class GenericLanguageService : LanguageService
     {

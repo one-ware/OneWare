@@ -4,8 +4,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
-using Avalonia.Media;
-using OneWare.Core.Data;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using Prism.Ioc;

@@ -1,8 +1,5 @@
 using System.ComponentModel;
-using AvaloniaEdit.Highlighting;
 using OneWare.Shared.LanguageService;
-using TextMateSharp.Grammars;
-using TextMateSharp.Internal.Types;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 

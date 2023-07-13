@@ -4,9 +4,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.LanguageService;
-using OneWare.Shared.Services;
 using OneWare.Verilog.Folding;
-using Prism.Ioc;
 
 namespace OneWare.Verilog
 {

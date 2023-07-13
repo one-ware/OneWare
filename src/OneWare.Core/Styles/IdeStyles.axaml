@@ -148,10 +148,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
-    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemModel">
-        
-    </Style>
 
     <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
            x:DataType="sharedModels:MenuItemModel">
@@ -160,6 +156,7 @@
         <Setter Property="ItemsSource" Value="{Binding Items}" />
         <Setter Property="Command" Value="{Binding Command}" />
         <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+        <Setter Property="HotKey" Value="{Binding Hotkey}"/>
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>

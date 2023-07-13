@@ -1,8 +1,6 @@
 ﻿using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
-using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using OneWare.Shared;
@@ -10,7 +8,6 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 

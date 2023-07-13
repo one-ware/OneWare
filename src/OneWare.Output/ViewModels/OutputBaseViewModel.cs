@@ -2,7 +2,6 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
-using Dock.Model.Mvvm.Controls;
 using OneWare.Shared;
 
 

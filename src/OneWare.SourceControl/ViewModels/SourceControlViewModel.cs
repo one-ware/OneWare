@@ -8,14 +8,12 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
 using LibGit2Sharp;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 using OneWare.SourceControl.Models;
 using Prism.Ioc;
 
@@ -23,7 +21,7 @@ namespace OneWare.SourceControl.ViewModels
 {
     public class SourceControlViewModel : ExtendedTool
     {
-        public const string IconKey = "VsImageLib.Team16X";
+        public const string IconKey = "BoxIcons.RegularGitBranch";
         
         private readonly ILogger _logger;
         private readonly ISettingsService _settingsService;
@@ -125,7 +123,7 @@ namespace OneWare.SourceControl.ViewModels
             ProjectExplorerService = projectExplorerService;
 
             Id = "SourceControl";
-            Title = "Git";
+            Title = "Source Control";
 
             RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
             CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);

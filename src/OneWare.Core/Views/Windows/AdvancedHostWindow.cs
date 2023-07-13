@@ -1,11 +1,9 @@
-using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
-using OneWare.Core.ViewModels.DockViews;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 

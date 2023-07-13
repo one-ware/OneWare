@@ -5,8 +5,6 @@ using Avalonia.Threading;
 using AvalonStudio.Terminals;
 using AvalonStudio.Terminals.Unix;
 using AvalonStudio.Terminals.Win32;
-using Dock.Model.Mvvm.Controls;
-
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using VtNetCore.Avalonia;
