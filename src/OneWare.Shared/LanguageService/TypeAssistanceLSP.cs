@@ -405,23 +405,20 @@ namespace OneWare.Shared.LanguageService
             return null;
         }
 
-        public virtual async Task GoToLocationAsync(Location? location)
+        protected virtual async Task GoToLocationAsync(Location? location)
         {
             if (location == null) return;
             
             var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-            var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(path) as IFile;
-            entry ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(path) as IFile;
+            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
             
-            if (entry is IProjectFile file)
+            var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            if (dockable is IEditor evm)
             {
-                var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
-                if (dockable is IEditor evm)
-                {
-                    var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
-                    var eOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.End) - 1;
-                    if (sOff >= 0 && eOff >= 0 && eOff > sOff) evm.Select(sOff, eOff - sOff);
-                }
+                var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
+                var eOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.End) - 1;
+                if (sOff >= 0 && eOff >= 0 && eOff > sOff) evm.Select(sOff, eOff - sOff);
             }
         }
 

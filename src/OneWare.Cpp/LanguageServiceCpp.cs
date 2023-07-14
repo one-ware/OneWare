@@ -10,7 +10,8 @@ namespace OneWare.Cpp
     public class LanguageServiceCpp : LanguageService
     {
         public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("Clang",
-            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd{Platform.ExecutableExtension}"), "--log=error",
+            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd{Platform.ExecutableExtension}"), 
+            "--log=error",
             null)
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>

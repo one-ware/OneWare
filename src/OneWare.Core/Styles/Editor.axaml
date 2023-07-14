@@ -72,7 +72,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Padding="1" CornerRadius="1" BorderThickness="1"
+                    <Border Padding="1" CornerRadius="1" BorderThickness="1" 
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                             Background="{DynamicResource ThemeBackgroundBrush}">
                         <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
