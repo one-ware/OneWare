@@ -14,7 +14,8 @@ public class TerminalManagerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.Console";
 
-    private IProjectExplorerService _projectExplorerService;
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IDockService _dockService;
     
     public ObservableCollection<TerminalTabModel> Terminals { get; } = new();
 
@@ -25,26 +26,41 @@ public class TerminalManagerViewModel : ExtendedTool
         set => SetProperty(ref _selectedTerminalTab, value);
     }
     
-    public TerminalManagerViewModel(ISettingsService settingsService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
         
         Title = "Terminal";
         Id = "Terminal";
         
-        settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
-            .Subscribe(x => Dispatcher.UIThread.Post(() =>
-            {
-                foreach (var t in Terminals)
-                {
-                    t.Terminal.Redraw();
-                } 
-            }));
+        // settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
+        //     .Subscribe(x => Dispatcher.UIThread.Post(() =>
+        //     {
+        //         foreach (var t in Terminals)
+        //         {
+        //             t.Terminal.Redraw();
+        //         } 
+        //     }));
+        
+        NewTerminal();
     }
-    
+
+    public override void OnSelected()
+    {
+        base.OnSelected();
+        if(!Terminals.Any()) NewTerminal();
+    }
+
     public void CloseTab(TerminalTabModel tab)
     {
         Terminals.Remove(tab);
+
+        if (!Terminals.Any())
+        {
+            _dockService.CloseDockable(this);
+            return;
+        }
         
         //Update Titles temporary
         for (var i = 0; i < Terminals.Count; i++)

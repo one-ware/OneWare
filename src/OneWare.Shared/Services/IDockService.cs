@@ -17,6 +17,8 @@ public interface IDockService : INotifyPropertyChanged
     public Dictionary<IFile, IExtendedDocument> OpenFiles { get; }
     
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window);
+
+    public void CloseDockable(IDockable dockable);
     
     public Task<IExtendedDocument> OpenFileAsync(IFile pf);
 
