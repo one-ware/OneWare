@@ -10,6 +10,37 @@
     
     <Grid>
         <TabControl Padding="0" ItemsSource="{Binding Terminals}" SelectedItem="{Binding SelectedTerminalTab}">
+            <TabControl.Styles>
+                <Style Selector="TabControl">
+                    <Setter Property="Template">
+                        <ControlTemplate>
+                            <Border Padding="{TemplateBinding Padding}"
+                                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                                        <ItemsPresenter Name="PART_ItemsPresenter"
+                                                        ItemsPanel="{TemplateBinding ItemsPanel}" />
+                                        <Button Command="{Binding NewTerminal}" Margin="5 0 5 1" Height="18" Width="18" CornerRadius="2">
+                                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8"/>
+                                        </Button>
+                                    </StackPanel>
+                                    <ContentPresenter DockPanel.Dock="Bottom" Name="PART_SelectedContentHost"
+                                                      Margin="{TemplateBinding Padding}"
+                                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                      Content="{TemplateBinding SelectedContent}"
+                                                      ContentTemplate="{TemplateBinding SelectedContentTemplate}" />
+                                </DockPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter>
+                </Style>
+            </TabControl.Styles>
             <TabControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal"/>

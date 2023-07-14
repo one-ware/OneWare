@@ -1,6 +1,14 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <DrawingImage x:Key="BoxIcons.RegularPlus">
+        <GeometryDrawing  Brush="{StaticResource IconColor}" Geometry="M16,6.857 L9.143,6.857 L9.143,-2.093E-007 L6.857,-2.093E-007 L6.857,6.857 L9.809E-009,6.857 L9.809E-009,9.143 L6.857,9.143 L6.857,16 L9.143,16 L9.143,9.143 L16,9.143 z"   />
+    </DrawingImage>
+    
+    <DrawingImage x:Key="BoxIcons.RegularPlusCircle">
+        <GeometryDrawing Brush="{StaticResource IconColor}" Geometry="M8.8,4 L7.2,4 L7.2,7.2 L4,7.2 L4,8.8 L7.2,8.8 L7.2,12 L8.8,12 L8.8,8.8 L12,8.8 L12,7.2 L8.8,7.2 z M8,-1.465E-007 C3.589,-1.465E-007 -3.433E-009,3.589 -3.433E-009,8 C-3.433E-009,12.41 3.589,16 8,16 C12.41,16 16,12.41 16,8 C16,3.589 12.41,-1.465E-007 8,-1.465E-007 z M8,14.4 C4.471,14.4 1.6,11.53 1.6,8 C1.6,4.471 4.471,1.6 8,1.6 C11.53,1.6 14.4,4.471 14.4,8 C14.4,11.53 11.53,14.4 8,14.4 z"   />
+    </DrawingImage>
+    
     <DrawingImage x:Key="VSCodeLight.run">
         <GeometryDrawing Brush="{StaticResource IconColor}" Geometry="M4 2V14.4805L12.9146 8.24024L4 2ZM11.1809 8.24024L4.995 12.5684V3.91209L11.1809 8.24024Z"   />
     </DrawingImage>

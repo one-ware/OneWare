@@ -13,6 +13,8 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.Console";
+
+    private IProjectExplorerService _projectExplorerService;
     
     public ObservableCollection<TerminalTabModel> Terminals { get; } = new();
 
@@ -23,8 +25,10 @@ public class TerminalManagerViewModel : ExtendedTool
         set => SetProperty(ref _selectedTerminalTab, value);
     }
     
-    public TerminalManagerViewModel(ISettingsService settingsService) : base(IconKey)
+    public TerminalManagerViewModel(ISettingsService settingsService, IProjectExplorerService projectExplorerService) : base(IconKey)
     {
+        _projectExplorerService = projectExplorerService;
+        
         Title = "Terminal";
         Id = "Terminal";
         
@@ -38,12 +42,16 @@ public class TerminalManagerViewModel : ExtendedTool
             }));
         
         Terminals.Add(new TerminalTabModel("Local", new TerminalViewModel("C:/"), this));
-        Terminals.Add(new TerminalTabModel("Local (2)", new TerminalViewModel("C:/"), this));
-        Terminals.Add(new TerminalTabModel("Local (3)", new TerminalViewModel("C:/"), this));
     }
     
     public void CloseTab(TerminalTabModel? tab)
     {
         if(tab != null) Terminals.Remove(tab);
+    }
+
+    public void NewTerminal()
+    {
+        Terminals.Add(new TerminalTabModel($"Local {Terminals.Count}", new TerminalViewModel(_projectExplorerService.ActiveProject?.ProjectPath ?? "C:/"), this));
+        SelectedTerminalTab = Terminals.Last();
     }
 }
