@@ -79,6 +79,8 @@ namespace OneWare.Core
             //Register IDE Settings
             var settingsService = Container.Resolve<ISettingsService>();
             var paths = Container.Resolve<IPaths>();
+
+            Name = paths.AppName;
             
             //General
             settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");

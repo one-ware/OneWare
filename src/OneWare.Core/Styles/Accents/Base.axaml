@@ -9,13 +9,13 @@
     <SolidColorBrush x:Key="GreenAccent" Opacity="1" Color="#57ad68" />
     <SolidColorBrush x:Key="DebuggerBreakLine" Opacity="0.3" Color="#c23f2f" />
     
+    <FontFamily x:Key="Noto Sans">avares://OneWare.Core/Assets/Fonts#Noto Sans</FontFamily>
     <FontFamily x:Key="IntelOne Mono">avares://OneWare.Core/Assets/Fonts#IntelOne Mono</FontFamily>
     <FontFamily x:Key="Fira Code">avares://OneWare.Core/Assets/Fonts#Fira Code</FontFamily>
     <FontFamily x:Key="JetBrains Mono NL">avares://OneWare.Core/Assets/Fonts#JetBrains Mono NL</FontFamily>
 
     <FontFamily x:Key="EditorFont">avares://OneWare.Core/Assets/Fonts#JetBrains Mono NL</FontFamily>
-
-    <FontFamily x:Key="ContentControlThemeFontFamily">fonts:Inter#Inter, $Default</FontFamily>
+    <FontFamily x:Key="ContentControlThemeFontFamily">avares://OneWare.Core/Assets/Fonts#Noto Sans</FontFamily>
 
     <Color x:Key="ThemeAccentColor">#FF007ab8</Color>
     <Color x:Key="ThemeForegroundLowColor">#FFb2b2b2</Color>

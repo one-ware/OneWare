@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
+using Avalonia.Media;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using Prism.Ioc;
@@ -16,7 +17,6 @@ internal abstract class Program
     private static AppBuilder BuildAvaloniaApp()
     {
         var app = AppBuilder.Configure<DesktopDemoApp>().UsePlatformDetect()
-            .WithInterFont()
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true
@@ -26,6 +26,11 @@ internal abstract class Program
                 WinUICompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? (Environment.OSVersion.Version.Build >= 22000 ? 8 : 0)
                     : 0,
+            })
+            //.WithInterFont()
+            .With(new FontManagerOptions
+            {
+                DefaultFamilyName = "avares://OneWare.Core/Assets/Fonts#Noto Sans"
             })
             .LogToTrace();
 
