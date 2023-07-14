@@ -75,11 +75,10 @@ namespace OneWare.SerialMonitor.ViewModels
             get => _selectedSerialPort;
             set
             {
-                this.SetProperty(ref _selectedSerialPort, value);
+                if(!SetProperty(ref _selectedSerialPort, value)) return;
 
-                if (value == null) return;
-                
                 _currentPort?.Dispose();
+                
                 _currentPort = string.IsNullOrWhiteSpace(value)
                     ? null
                     : new SerialPort(value, SelectedBaudRate, Parity.None, 8, StopBits.One);
@@ -134,6 +133,7 @@ namespace OneWare.SerialMonitor.ViewModels
         public void RefreshSerialPorts()
         {
             var selectedPort = _currentPort?.PortName ?? null;
+            SelectedSerialPort = null;
             SerialPorts.Clear();
             SerialPorts.AddRange(SerialPort.GetPortNames());
             SelectedSerialPort = selectedPort;
