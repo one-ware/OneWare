@@ -15,7 +15,7 @@ namespace OneWare.Core
             var name = data?.GetType()?.AssemblyQualifiedName?.Replace("ViewModel", "View");
             if (name == null) return new TextBlock { Text = "Invalid Data Type" };
             var type = Type.GetType(name);
-            if (type != null && !name.EndsWith("model", StringComparison.OrdinalIgnoreCase))
+            if (type != null && !name.Split(",")[0].EndsWith("model", StringComparison.OrdinalIgnoreCase))
             {
                 var instance =  ContainerLocator.Current.Resolve(type);
 
@@ -29,7 +29,7 @@ namespace OneWare.Core
 
         public bool Match(object? data)
         {
-            return data is ObservableObject || data is IDockable;
+            return data is ObservableObject or IDockable;
         }
     }
 }

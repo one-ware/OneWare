@@ -1,11 +1,18 @@
-﻿using OneWare.Terminal.ViewModels;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.ViewModels;
 
 namespace OneWare.TerminalManager.Models;
 
-public class TerminalTabModel
+public class TerminalTabModel : ObservableObject
 {
-    public string Title { get; }
+    private string _title;
+
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
+    }
     
     public TerminalViewModel Terminal { get; }
     
@@ -13,7 +20,7 @@ public class TerminalTabModel
 
     public TerminalTabModel(string title, TerminalViewModel terminal, TerminalManagerViewModel owner)
     {
-        Title = title;
+        _title = title;
         Terminal = terminal;
         Owner = owner;
     }

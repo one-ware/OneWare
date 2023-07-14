@@ -40,18 +40,23 @@ public class TerminalManagerViewModel : ExtendedTool
                     t.Terminal.Redraw();
                 } 
             }));
-        
-        Terminals.Add(new TerminalTabModel("Local", new TerminalViewModel("C:/"), this));
     }
     
-    public void CloseTab(TerminalTabModel? tab)
+    public void CloseTab(TerminalTabModel tab)
     {
-        if(tab != null) Terminals.Remove(tab);
+        Terminals.Remove(tab);
+        
+        //Update Titles temporary
+        for (var i = 0; i < Terminals.Count; i++)
+        {
+            if (i == 0) Terminals[i].Title = "Local";
+            else Terminals[i].Title = $"Local ({i})";
+        }
     }
 
     public void NewTerminal()
     {
-        Terminals.Add(new TerminalTabModel($"Local {Terminals.Count}", new TerminalViewModel(_projectExplorerService.ActiveProject?.ProjectPath ?? "C:/"), this));
+        Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(_projectExplorerService.ActiveProject?.ProjectPath ?? "C:/"), this));
         SelectedTerminalTab = Terminals.Last();
     }
 }
