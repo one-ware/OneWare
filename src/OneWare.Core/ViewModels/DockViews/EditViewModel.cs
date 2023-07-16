@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
@@ -162,10 +163,19 @@ namespace OneWare.Core.ViewModels.DockViews
                 ScrollInfo.Refresh("ErrorContext", scrollInfo.ToArray());
                 Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
             });
+            
+            _errorService.ErrorRefresh += (sender, o) =>
+            {
+                if(CurrentFile != null && o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+            };
         }
 
+        private CompositeDisposable _composite = new();
         public void InitializeContent()
         {
+            _composite.Dispose();
+            _composite = new CompositeDisposable();
+            
             if (string.IsNullOrWhiteSpace(FullPath))
             {
                 IsLoading = false;
@@ -176,11 +186,7 @@ namespace OneWare.Core.ViewModels.DockViews
             CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
-
-            _errorService.ErrorRefresh += (sender, o) =>
-            {
-                if(o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
-            };
+            
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
 
             _dockService.OpenFiles.TryAdd(CurrentFile, this);
@@ -192,18 +198,25 @@ namespace OneWare.Core.ViewModels.DockViews
                 var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
                 if (scope != null)
                 {
-                    var textMateInstallation = Editor.InstallTextMate(_languageManager.RegistryOptions);
-                    textMateInstallation.SetGrammar(scope);
+                    if(Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
+                    Editor.TextMateInstallation?.SetGrammar(scope);
                     _languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
                     {
-                        textMateInstallation.SetTheme(x);
-                    });
+                        Editor.TextMateInstallation?.SetTheme(x);
+                    }).DisposeWith(_composite);
+                }
+                else
+                {
+                    if (Editor.TextMateInstallation != null)
+                    {
+                        Editor.RemoveTextmate();
+                    }
                 }
                 
                 Observable.FromEventPattern(
                         h => Editor.Document.TextChanged += h,
                         h => Editor.Document.TextChanged -= h)
-                    .Subscribe(x => { IsDirty = true; });
+                    .Subscribe(x => { IsDirty = true; }).DisposeWith(_composite);
                 
                 if(result) InitTypeAssistance();
             }
@@ -224,12 +237,12 @@ namespace OneWare.Core.ViewModels.DockViews
                     {
                         Editor.SetFolding(x);
                         if (x) UpdateFolding();
-                    });
+                    }).DisposeWith(_composite);
                     
                     Observable.FromEventPattern(
                             h => Editor.Document.LineCountChanged += h,
                             h => Editor.Document.LineCountChanged -= h)
-                        .Subscribe(x => { UpdateFolding(); });
+                        .Subscribe(x => { UpdateFolding(); }).DisposeWith(_composite);
                 }
                 
                 // Observable.FromEventPattern(

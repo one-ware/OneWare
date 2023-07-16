@@ -1,5 +1,7 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
+using AvaloniaEdit.TextMate;
+using TextMateSharp.Registry;
 
 namespace OneWare.Shared.EditorExtensions;
 
@@ -7,6 +9,7 @@ public class ExtendedTextEditor : TextEditor
 {
     protected override Type StyleKeyOverride => typeof(TextEditor);
     
+    public TextMate.Installation? TextMateInstallation { get; private set; }
     public BracketHighlightRenderer BracketRenderer { get; }
     public LineHighlightRenderer LineRenderer { get; }
     //public MergeService MergeService { get; }
@@ -42,7 +45,17 @@ public class ExtendedTextEditor : TextEditor
         TextArea.TextView.LineTransformers.Add(ModificationService);
         TextArea.TextView.ElementGenerators.Add(ElementGenerator);
     }
-    
+
+    public void InitTextmate(IRegistryOptions options)
+    {
+        TextMateInstallation = this.InstallTextMate(options);
+    }
+
+    public void RemoveTextmate()
+    {
+        TextMateInstallation?.Dispose();
+        TextMateInstallation = null;
+    }
     public void SetFolding(bool active)
     {
         if (active)

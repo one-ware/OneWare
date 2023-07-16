@@ -5,21 +5,21 @@ using Avalonia.Xaml.Interactivity;
 
 namespace OneWare.Shared.Behaviours
 {
-    public class CommandBasedBehavior : Behavior<Control>
+    public class CommandBasedBehaviour : Behavior<Control>
     {
         /// <summary>
         ///     Defines the <see cref="Command" /> property.
         /// </summary>
-        public static readonly DirectProperty<CommandBasedBehavior, ICommand?> CommandProperty =
-            AvaloniaProperty.RegisterDirect<CommandBasedBehavior, ICommand?>(nameof(Command),
+        public static readonly DirectProperty<CommandBasedBehaviour, ICommand?> CommandProperty =
+            AvaloniaProperty.RegisterDirect<CommandBasedBehaviour, ICommand?>(nameof(Command),
                 commandBehavior => commandBehavior.Command,
                 (commandBehavior, command) => commandBehavior.Command = command, enableDataValidation: true);
 
         /// <summary>
         ///     Defines the <see cref="CommandParameter" /> property.
         /// </summary>
-        public static readonly StyledProperty<object> CommandParameterProperty =
-            AvaloniaProperty.Register<CommandBasedBehavior, object>(nameof(CommandParameter));
+        public static readonly StyledProperty<object?> CommandParameterProperty =
+            AvaloniaProperty.Register<CommandBasedBehaviour, object?>(nameof(CommandParameter));
 
         private ICommand? _command;
 
@@ -35,7 +35,7 @@ namespace OneWare.Shared.Behaviours
         /// <summary>
         ///     Gets or sets a parameter to be passed to the <see cref="Command" />.
         /// </summary>
-        public object CommandParameter
+        public object? CommandParameter
         {
             get => GetValue(CommandParameterProperty);
             set => SetValue(CommandParameterProperty, value);

@@ -22,7 +22,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         set => SetProperty(ref _searchString, value);
     }
     
-    public ObservableCollection<IProjectEntry> Items { get; init; } = new();
+    public ObservableCollection<IProjectEntry> Items { get; } = new();
 
     public ObservableCollection<IProjectEntry> SelectedItems { get; } = new();
     public IProjectEntry? SelectedItem => SelectedItems.Count > 0 ? SelectedItems[^1] : null;

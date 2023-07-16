@@ -6,7 +6,6 @@ using Avalonia.Xaml.Interactions.DragAndDrop;
 using OneWare.ProjectExplorer.ViewModels;
 using OneWare.Shared;
 using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Behaviours;
@@ -18,7 +17,6 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         if (targetContext is not ProjectExplorerViewModel vm
             || treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
         {
-            
             return false;
         }
 
@@ -26,28 +24,14 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
 
         if (targetParent == null) return false;
         
+        //Import files or folders from outside
         if (sourceContext is not T sourceNode)
         {
-            //Import Files from Explorer
             if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
             {
                 if (bExecute)
                 {
-                    foreach (var f in files)
-                    {
-                        var path = f.TryGetLocalPath();
-                        if (path == null) continue;
-                        
-                        var attr = File.GetAttributes(path);
-
-                        if (attr.HasFlag(FileAttributes.Directory))
-                        {
-                            var folder = targetParent.AddFolder(Path.GetFileName(path));
-                            vm.ImportFolderRecursive(f.Path.LocalPath, folder);
-                        }
-                        else
-                            vm.ImportFile(f.Path.LocalPath, targetParent);
-                    }
+                    vm.ImportStorageItems(targetParent, files.ToArray());
                 }
                 return true;
             }
@@ -77,8 +61,22 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 {
                     if (bExecute)
                     {
-                        //var clone = new NodeViewModel() { Title = sourceNode.Title + "_copy" };
-                        //InsertItem(targetNodes, clone, targetIndex + 1);
+                        try
+                        {
+                            switch (sourceNode)
+                            {
+                                case IProjectFile:
+                                    Tools.CopyFile(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
+                                    break;
+                                case IProjectFolder:
+                                    Tools.CopyDirectory(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
+                                    break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ContainerLocator.Container.Resolve<ILogger>().Error(ex.Message, ex);
+                        }
                     }
 
                     return true;
@@ -87,29 +85,21 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 {
                     if (bExecute)
                     {
-                        if (sourceNodes == targetNodes)
+                        try
                         {
-                            //MoveItem(sourceNodes, sourceIndex, targetIndex);
-                        }
-                        else
-                        {
-                            try
+                            switch (sourceNode)
                             {
-                                sourceParent.Remove(sourceNode);
-                                if (sourceNode is IProjectFile)
-                                {
+                                case IProjectFile:
                                     File.Move(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
-                                    targetParent.AddFile(sourceNode.Header);
-                                }
-                                else if (sourceNode is IProjectFolder)
-                                {
-                                    
-                                }
+                                    break;
+                                case IProjectFolder:
+                                    Directory.Move(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
+                                    break;
                             }
-                            catch (Exception ex)
-                            {
-                                ContainerLocator.Container.Resolve<ILogger>().Error(ex.Message, ex);
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ContainerLocator.Container.Resolve<ILogger>().Error(ex.Message, ex);
                         }
                     }
 
@@ -119,17 +109,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 {
                     if (bExecute)
                     {
-                        if (sourceNodes == targetNodes)
-                        {
-                            //SwapItem(sourceNodes, sourceIndex, targetIndex);
-                        }
-                        else
-                        {
-                            //sourceNode.Parent = targetParent;
-                            //targetNode.Parent = sourceParent;
-
-                            //SwapItem(sourceNodes, targetNodes, sourceIndex, targetIndex);
-                        }
+                        
                     }
 
                     return true;

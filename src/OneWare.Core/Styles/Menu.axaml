@@ -1,10 +1,12 @@
-﻿<Styles xmlns="https://github.com/avaloniaui">
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
             <Menu Height="30" Width="100">
                 <MenuItem Header="File">
-                    <MenuItem Header="Test" />
+                    <MenuItem Header="Test" InputGesture="STRG + X" />
                     <MenuItem Header="Test" />
                     <Separator/>
                     <MenuItem Header="Test" />
@@ -47,6 +49,39 @@
     
     <Style Selector="Menu > MenuItem AccessText">
       <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    
+    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="models:MenuItemModel">
+        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+        <Setter Property="Header" Value="{Binding Header}" />
+        <Setter Property="ItemsSource" Value="{Binding Items}" />
+        <Setter Property="Command" Value="{Binding Command}" />
+        <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+        <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="Icon">
+            <Setter.Value>
+                <Template>
+                    <Image Source="{Binding ImageIcon}" />
+                </Template>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
+           x:DataType="models:MenuItemModel">
+        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+        <Setter Property="Header" Value="{Binding Header}" />
+        <Setter Property="ItemsSource" Value="{Binding Items}" />
+        <Setter Property="Command" Value="{Binding Command}" />
+        <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+        <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="Icon">
+            <Setter.Value>
+                <Template>
+                    <Image Source="{Binding ImageIcon}" />
+                </Template>
+            </Setter.Value>
+        </Setter>
     </Style>
     
 </Styles>

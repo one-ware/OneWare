@@ -1,10 +1,12 @@
 ﻿using System.Reactive.Disposables;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OneWare.Shared.Behaviours
 {
-    public class CommandOnDoubleTapBehaviour : CommandBasedBehaviour
+    public class CommandOnCopyBehaviour : CommandBasedBehaviour
     {
         private CompositeDisposable? Disposables { get; set; }
 
@@ -14,14 +16,20 @@ namespace OneWare.Shared.Behaviours
             Disposables = new CompositeDisposable();
 
             base.OnAttached();
-
+            
+            var keymap = Application.Current!.PlatformSettings!.HotkeyConfiguration;
+            
             Disposables.Add(AssociatedObject.AddDisposableHandler(
-                InputElement.DoubleTappedEvent,
+                InputElement.KeyDownEvent,
                 (sender, e) =>
                 {
-                    e.Handled = ExecuteCommand();
+                    if (keymap.Copy.Any(g => g.Matches(e)))
+                    {
+                        CommandParameter = TopLevel.GetTopLevel(AssociatedObject);
+                        e.Handled = ExecuteCommand();
+                    }
                 },
-                RoutingStrategies.Bubble, true));
+                RoutingStrategies.Tunnel));
         }
 
         protected override void OnDetaching()

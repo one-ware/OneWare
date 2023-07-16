@@ -54,11 +54,11 @@ namespace OneWare.Shared.Models
             }
         }
 
-        private KeyGesture? _hotkey;
-        public KeyGesture? Hotkey
+        private KeyGesture? _inputGesture;
+        public KeyGesture? InputGesture
         {
-            get => _hotkey;
-            set => SetProperty(ref _hotkey, value);
+            get => _inputGesture;
+            set => SetProperty(ref _inputGesture, value);
         }
         
         private IList<IMenuItem>? _items;

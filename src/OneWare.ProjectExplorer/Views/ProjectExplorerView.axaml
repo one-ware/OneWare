@@ -17,37 +17,18 @@
              Foreground="{DynamicResource ThemeForegroundColor}"
              BorderThickness="0">
 
+    <UserControl.Resources>
+        <behaviours1:ProjectExplorerViewDropHandler x:Key="ProjectExplorerViewDropHandler" />
+    </UserControl.Resources>
+    
     <UserControl.Styles>
-
+        
         <Style Selector="TextBox">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="TextWrapping" Value="NoWrap" />
-        </Style>
-
-        <Style Selector="TreeView.NodesDragAndDrop">
-            <Style.Resources>
-                <behaviours1:ProjectExplorerViewDropHandler x:Key="NodesTreeViewDropHandler" />
-            </Style.Resources>
-            <Setter Property="Interaction.Behaviors">
-                <BehaviorCollectionTemplate>
-                    <BehaviorCollection>
-                        <ContextDropBehavior Handler="{StaticResource NodesTreeViewDropHandler}" />
-                    </BehaviorCollection>
-                </BehaviorCollectionTemplate>
-            </Setter>
-        </Style>
-        
-        <Style Selector="TreeView.NodesDragAndDrop TreeViewItem">
-            <Setter Property="Interaction.Behaviors">
-                <BehaviorCollectionTemplate>
-                    <BehaviorCollection>
-                        <ContextDragBehavior />
-                    </BehaviorCollection>
-                </BehaviorCollectionTemplate>
-            </Setter>
         </Style>
         
     </UserControl.Styles>
@@ -64,9 +45,14 @@
             <views:SearchBox Background="{DynamicResource ThemeBackgroundBrush}" SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
-        <TreeView AutoScrollToSelectedItem="True" Classes="NodesDragAndDrop"
+        <TreeView AutoScrollToSelectedItem="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                   SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
+            <Interaction.Behaviors>
+                <ContextDropBehavior  Handler="{StaticResource ProjectExplorerViewDropHandler}" />
+                <behaviours:CommandOnPasteBehaviour Command="{Binding PasteAsync}"/>
+                <behaviours:CommandOnCopyBehaviour Command="{Binding CopyAsync}"/>
+            </Interaction.Behaviors>
             <TreeView.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
                              ItemsSource="{Binding TreeViewContextMenu}">
@@ -76,6 +62,13 @@
                 <Style Selector="TreeViewItem" x:DataType="shared:IProjectEntry">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded}"></Setter>
                     <Setter Property="Background" Value="{Binding Background}"></Setter>
+                    <Setter Property="Interaction.Behaviors">
+                        <BehaviorCollectionTemplate>
+                            <BehaviorCollection>
+                                <behaviours1:FileDragBehaviour />
+                            </BehaviorCollection>
+                        </BehaviorCollectionTemplate>
+                    </Setter>
                 </Style>
             </TreeView.Styles>
             <TreeView.DataTemplates>

@@ -1,10 +1,12 @@
 ﻿using System.Reactive.Disposables;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OneWare.Shared.Behaviours
 {
-    public class CommandOnEnterBehavior : CommandBasedBehavior
+    public class CommandOnPasteBehaviour : CommandBasedBehaviour
     {
         private CompositeDisposable? Disposables { get; set; }
 
@@ -14,12 +16,18 @@ namespace OneWare.Shared.Behaviours
             Disposables = new CompositeDisposable();
 
             base.OnAttached();
-
+            
+            var keymap = Application.Current!.PlatformSettings!.HotkeyConfiguration;
+            
             Disposables.Add(AssociatedObject.AddDisposableHandler(
                 InputElement.KeyDownEvent,
                 (sender, e) =>
                 {
-                    if (e.Key == Key.Enter) e.Handled = ExecuteCommand();
+                    if (keymap.Paste.Any(g => g.Matches(e)))
+                    {
+                        CommandParameter = TopLevel.GetTopLevel(AssociatedObject);
+                        e.Handled = ExecuteCommand();
+                    }
                 },
                 RoutingStrategies.Tunnel));
         }

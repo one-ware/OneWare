@@ -31,8 +31,6 @@ using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using TextMateSharp.Grammars;
 
-//using OneWare.Terminal
-
 namespace OneWare.Core
 {
     public class App : PrismApplication
@@ -156,7 +154,7 @@ namespace OneWare.Core
                 Header = $"Format",
                 ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
                 Command = new RelayCommand(() => Container.Resolve<MainWindowViewModel>().CurrentEditor?.Format()),
-                Hotkey = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
+                InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
             });
             
             //AvaloniaEdit Hyperlink support

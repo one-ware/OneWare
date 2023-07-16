@@ -136,37 +136,5 @@
         <Setter Property="Width" Value="NaN" />
         <Setter Property="Padding" Value="5 0" />
     </Style>
-
-    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="sharedModels:MenuItemModel">
-        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
-        <Setter Property="Header" Value="{Binding Header}" />
-        <Setter Property="ItemsSource" Value="{Binding Items}" />
-        <Setter Property="Command" Value="{Binding Command}" />
-        <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
-        <Setter Property="HotKey" Value="{Binding Hotkey}"></Setter>
-        <Setter Property="Icon">
-            <Setter.Value>
-                <Template>
-                    <Image Source="{Binding ImageIcon}" />
-                </Template>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
-           x:DataType="sharedModels:MenuItemModel">
-        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
-        <Setter Property="Header" Value="{Binding Header}" />
-        <Setter Property="ItemsSource" Value="{Binding Items}" />
-        <Setter Property="Command" Value="{Binding Command}" />
-        <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
-        <Setter Property="HotKey" Value="{Binding Hotkey}"/>
-        <Setter Property="Icon">
-            <Setter.Value>
-                <Template>
-                    <Image Source="{Binding ImageIcon}" />
-                </Template>
-            </Setter.Value>
-        </Setter>
-    </Style>
+    
 </Styles>

@@ -1,8 +1,11 @@
 ﻿using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.ProjectExplorer.Services;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
@@ -22,7 +25,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
     private readonly IProjectManagerService _projectManagerService;
-
+    private readonly IFileWatchService _fileWatchService;
+    
     private readonly string _lastProjectsFile;
 
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
@@ -47,7 +51,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
 
-    public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, IProjectManagerService projectManagerService)
+    public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, 
+        IProjectManagerService projectManagerService, IFileWatchService fileWatchService)
     : base(IconKey)
     {
         Active = active;
@@ -56,6 +61,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _windowService = windowService;
         _settingsService = settingsService;
         _projectManagerService = projectManagerService;
+        _fileWatchService = fileWatchService;
         
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
@@ -63,7 +69,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         Title = "Project Explorer";
     }
 
-    public void ConstructContextMenu()
+    public void ConstructContextMenu(TopLevel topLevel)
     {
         var menuItems = new List<IMenuItem>();
 
@@ -87,30 +93,62 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         new MenuItemModel("NewFolder")
                         {
                             Header = "New Folder",
-                            Command = new RelayCommand(() => folder.AddFolder("NewFolder", true)),
+                            Command = new RelayCommand(() => _ = CreateFolderDialogAsync(folder)),
                             ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
                         },
                         new MenuItemModel("NewFile")
                         {
                             Header = "New File",
-                            Command = new RelayCommand(() => folder.AddFile("NewFile", true)),
+                            Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
                             ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
                         }
                     }
                 });
             }
-            if(entry is not IProjectRoot) menuItems.Add(new MenuItemModel("Delete")
+
+            if (entry is not IProjectRoot)
             {
-                Header = "Delete",
-                Command = new RelayCommand(() => _ = DeleteDialogAsync(entry)),
-                ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
-            });
-            if(entry is not IProjectRoot) menuItems.Add(new MenuItemModel("Rename")
-            {
-                Header = "Rename",
-                Command = new RelayCommand(() => entry.RequestRename?.Invoke((x) => _ = RenameAsync(entry, x))),
-                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
-            });
+                menuItems.Add(new MenuItemModel("Edit")
+                {
+                    Header = "Edit",
+                    Items = new List<IMenuItem>()
+                    {
+                        // new MenuItemModel("Cut")
+                        // {
+                        //     Header = "Cut",
+                        //     Command = new RelayCommand(() => _ = CutAsync(entry)),
+                        //     ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
+                        // },
+                        new MenuItemModel("Copy")
+                        {
+                            Header = "Copy",
+                            Command = new RelayCommand(() => _ = CopyAsync(topLevel)),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCopy"),
+                            InputGesture = new KeyGesture(Key.C, KeyModifiers.Control),
+                        },
+                        new MenuItemModel("Paste")
+                        {
+                            Header = "Paste",
+                            Command = new RelayCommand(() => _ = PasteAsync(topLevel)),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularPaste"),
+                            InputGesture = new KeyGesture(Key.V, KeyModifiers.Control),
+                        },
+                        new MenuItemModel("Delete")
+                        {
+                            Header = "Delete",
+                            Command = new RelayCommand(() => _ = DeleteDialogAsync(entry)),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
+                        },
+                        new MenuItemModel("Rename")
+                        {
+                            Header = "Rename",
+                            Command = new RelayCommand(() => entry.RequestRename?.Invoke((x) => _ = RenameAsync(entry, x))),
+                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
+                        }
+                    }
+                });
+            }
+            
             menuItems.Add(new MenuItemModel("OpenFileViewer")
             {
                 Header = "Open in File Viewer",
@@ -183,11 +221,40 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         Insert(project);
         ActiveProject = project;
         
-        //project.SetupFileWatcher();
-        
+        _fileWatchService.Register(project);
+
         return project;
     }
 
+    #region Create
+
+    public async Task CreateFileDialogAsync(IProjectFolder parent)
+    {
+        var newFile = await _windowService.ShowInputAsync("Create File", "Enter a name for the new file!", MessageBoxIcon.Info,
+            "NewFile.txt", _dockService.GetWindowOwner(this));
+
+        if (!string.IsNullOrWhiteSpace(newFile))
+        {
+            parent.IsExpanded = true;
+            parent.AddFile(newFile, true);
+        }
+    }
+
+    public async Task CreateFolderDialogAsync(IProjectFolder parent)
+    {
+        var newFolder = await _windowService.ShowInputAsync("Create Folder", "Enter a name for the new folder!", MessageBoxIcon.Info,
+            "NewFolder", _dockService.GetWindowOwner(this));
+
+        if (!string.IsNullOrWhiteSpace(newFolder))
+        {
+            parent.IsExpanded = true;
+            parent.AddFolder(newFolder, true);
+        }
+    }
+    
+    #endregion
+    
+    #region Remove and Delete
     private async Task RemoveAsync(params IProjectEntry[] entries)
     {
         var roots = entries.Where(x => x.Root != null)
@@ -213,7 +280,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if(!await _dockService.CloseFileAsync(tab.Key)) return;
             }
             
-            proj.Cleanup();
+            _fileWatchService.Unregister(proj);
 
             var activeProj = proj == ActiveProject;
                 
@@ -268,7 +335,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             if (entry is IProjectRoot root)
             {
-                root.Cleanup();
                 foreach (var item in root.Items.ToList())
                     await DeleteAsync(item);
             }
@@ -283,10 +349,30 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
 
         await RemoveAsync(new []{entry});
-
-            
     }
 
+    #endregion
+    
+    #region Import
+    public void ImportStorageItems(IProjectFolder parent, params IStorageItem[] storageItems)
+    {
+        foreach (var f in storageItems)
+        {
+            var path = f.TryGetLocalPath();
+            if (path == null) continue;
+                        
+            var attr = File.GetAttributes(path);
+
+            if (attr.HasFlag(FileAttributes.Directory))
+            {
+                var folder = parent.AddFolder(Path.GetFileName(path));
+                ImportFolderRecursive(f.Path.LocalPath, folder);
+            }
+            else
+                ImportFile(f.Path.LocalPath, parent);
+        }    
+    }
+    
     public async Task ImportFolderDialogAsync(IProjectFolder? destination = null)
     {
         destination ??= ActiveProject;
@@ -381,7 +467,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
     }
-
+    #endregion
+    
+    #region File Change
+    
     public async Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName)
     {
         var oldName = entry.Header;
@@ -417,7 +506,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
-        (entry as IProjectEntry)!.Header = newName;
+        entry.Header = newName;
 
         await ReloadAsync(entry);
 
@@ -522,6 +611,53 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
     
+    #endregion
+    
+    #region Copy and Paste
+
+    public async Task CopyAsync(TopLevel topLevel)
+    {
+        if (topLevel.Clipboard is not {} clipboard) return;
+
+        var dataObject = await GetDataObjectFromItemsAsync(topLevel, SelectedItems);
+        
+        if (dataObject == null) return;
+        await clipboard.SetDataObjectAsync(dataObject);
+    }
+
+    public static async Task<DataObject?> GetDataObjectFromItemsAsync(TopLevel topLevel, IEnumerable<IProjectEntry> items)
+    {
+        var files = (await items
+                .SelectAsync(async x => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath)))
+            .Where(x => x != null)
+            .Cast<IStorageFile>()
+            .ToArray();
+        
+        if (!files.Any()) return null;
+        
+        var dataObject = new DataObject();
+        dataObject.Set(DataFormats.Files, files);
+        return dataObject;
+    }
+    
+    public async Task PasteAsync(TopLevel topLevel)
+    {
+        if (topLevel.Clipboard is not {} clipboard) return;
+        
+        var target = SelectedItem as IProjectFolder ?? SelectedItem?.TopFolder;
+        if (target == null) return;
+        
+        var files = await topLevel.Clipboard.GetDataAsync(DataFormats.Files);
+        if (files is IEnumerable<IStorageItem> storageItems)
+        {
+            ImportStorageItems(target, storageItems.ToArray());
+        }
+    }
+    
+    #endregion
+    
+    #region LastProjectsFile
+    
     public async Task SaveLastProjectsFileAsync()
     {
         try
@@ -578,4 +714,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             Path = path;
         }
     }
+    
+    #endregion
 }

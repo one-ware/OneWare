@@ -114,10 +114,10 @@
                 
                 <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="24" Padding="3"
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
-                    <i:Interaction.Behaviors>
-                        <behaviours:CommandOnEnterBehavior Command="{Binding SendText}"
+                    <Interaction.Behaviors>
+                        <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
                                                           CommandParameter="{Binding #CommandBox.Text}" />
-                    </i:Interaction.Behaviors>
+                    </Interaction.Behaviors>
                 </TextBox>
             </DockPanel>
         </Border>

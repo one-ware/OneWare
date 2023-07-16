@@ -58,7 +58,11 @@ namespace OneWare.Core.Views.Windows
                     }
                 };
 
-                Opened += (o, i) => { InputBox.Focus(); };
+                Opened += (o, i) =>
+                {
+                    InputBox.Focus();
+                    InputBox.SelectAll();
+                };
             }
             else
             {
