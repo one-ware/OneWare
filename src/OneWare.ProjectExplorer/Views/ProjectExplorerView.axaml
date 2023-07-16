@@ -7,6 +7,7 @@
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
              xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+             xmlns:behaviours1="clr-namespace:OneWare.ProjectExplorer.Behaviours"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -26,6 +27,29 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
+        <Style Selector="TreeView.NodesDragAndDrop">
+            <Style.Resources>
+                <behaviours1:ProjectExplorerViewDropHandler x:Key="NodesTreeViewDropHandler" />
+            </Style.Resources>
+            <Setter Property="Interaction.Behaviors">
+                <BehaviorCollectionTemplate>
+                    <BehaviorCollection>
+                        <ContextDropBehavior Handler="{StaticResource NodesTreeViewDropHandler}" />
+                    </BehaviorCollection>
+                </BehaviorCollectionTemplate>
+            </Setter>
+        </Style>
+        
+        <Style Selector="TreeView.NodesDragAndDrop TreeViewItem">
+            <Setter Property="Interaction.Behaviors">
+                <BehaviorCollectionTemplate>
+                    <BehaviorCollection>
+                        <ContextDragBehavior />
+                    </BehaviorCollection>
+                </BehaviorCollectionTemplate>
+            </Setter>
+        </Style>
+        
     </UserControl.Styles>
 
     <Grid>
@@ -40,10 +64,9 @@
             <views:SearchBox Background="{DynamicResource ThemeBackgroundBrush}" SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
-        <TreeView AutoScrollToSelectedItem="True"
+        <TreeView AutoScrollToSelectedItem="True" Classes="NodesDragAndDrop"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
-                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}"
-                  DragDrop.AllowDrop="True" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
+                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
             <TreeView.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
                              ItemsSource="{Binding TreeViewContextMenu}">

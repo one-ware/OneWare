@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using OneWare.Shared;
@@ -98,6 +99,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     }
                 });
             }
+            if(entry is not IProjectRoot) menuItems.Add(new MenuItemModel("Delete")
+            {
+                Header = "Delete",
+                Command = new RelayCommand(() => _ = DeleteDialogAsync(entry)),
+                ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
+            });
             if(entry is not IProjectRoot) menuItems.Add(new MenuItemModel("Rename")
             {
                 Header = "Rename",
@@ -350,11 +357,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         //await destination.Root.SaveProjectAsync();
         //await destination.Root.ResolveAsync();
     }
-
-    private static void ImportFile(string source, IProjectFolder top, bool overwrite = false)
+    
+    
+    public void ImportFile(string source, IProjectFolder top, bool overwrite = false)
     {
-        //Format Path
-        source = Path.GetFullPath(source);
         var destination = Path.Combine(top.FullPath, Path.GetFileName(source));
 
         //Check if File exists
