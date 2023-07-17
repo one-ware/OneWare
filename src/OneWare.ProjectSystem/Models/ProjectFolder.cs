@@ -59,7 +59,13 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         entry.TopFolder = this;
         (entry.Root as ProjectRoot)?.RegisterEntry(entry);
     }
-    
+
+    public void Add(IProjectEntry entry)
+    {
+        entry.TopFolder = this;
+        Insert(entry);
+    }
+
     public void Remove(IProjectEntry entry)
     {
         if (entry is ProjectFolder folder)

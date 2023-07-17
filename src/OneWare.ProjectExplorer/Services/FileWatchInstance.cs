@@ -109,8 +109,12 @@ public class FileWatchInstance : IDisposable
                     if (args is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
                     {
                         await _projectExplorerService.RemoveAsync(oldEntry);
-                        if (oldEntry is IProjectFolder) _root.AddFolder(relativePath);
-                        else _root.AddFile(relativePath);
+                        if (oldEntry is IProjectFile) _root.AddFile(relativePath);
+                        else
+                        {
+                            var folder = _root.AddFolder(relativePath);
+                            _projectExplorerService.ImportFolderRecursive(path, folder);
+                        }
                     }
                     return;
                 case WatcherChangeTypes.Created:

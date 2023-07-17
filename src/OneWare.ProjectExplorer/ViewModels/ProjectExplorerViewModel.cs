@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.InteropServices;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -614,13 +615,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     #endregion
     
     #region Copy and Paste
-
+    
     public async Task CopyAsync(TopLevel topLevel)
     {
         if (topLevel.Clipboard is not {} clipboard) return;
 
         var dataObject = await GetDataObjectFromItemsAsync(topLevel, SelectedItems);
-        
+
         if (dataObject == null) return;
         await clipboard.SetDataObjectAsync(dataObject);
     }
@@ -647,7 +648,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var target = SelectedItem as IProjectFolder ?? SelectedItem?.TopFolder;
         if (target == null) return;
         
-        var files = await topLevel.Clipboard.GetDataAsync(DataFormats.Files);
+        var files = await clipboard.GetDataAsync(DataFormats.Files);
         if (files is IEnumerable<IStorageItem> storageItems)
         {
             ImportStorageItems(target, storageItems.ToArray());
