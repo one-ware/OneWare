@@ -1,0 +1,25 @@
+using System.Text;
+
+namespace OneWare.Shared.Extensions;
+
+public static class TextReaderExtensions
+{
+    public static void ProcessWords(this TextReader reader, int maxLength, Func<string, bool> processWord)
+    {
+        var wordBuilder = new StringBuilder();
+        
+        //read Definition
+        for (var i = 0; i < maxLength; i++)
+        {
+            var character = reader.Read();
+            if (character is not (' ' or '\n')) wordBuilder.Append(character);
+            else
+            {
+                //Process word
+                if(!processWord.Invoke(wordBuilder.ToString())) return;
+
+                wordBuilder.Clear();
+            }
+        }
+    }
+}
