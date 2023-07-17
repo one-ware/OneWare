@@ -173,9 +173,8 @@ namespace OneWare.Core.ViewModels.DockViews
         private CompositeDisposable _composite = new();
         public void InitializeContent()
         {
-            _composite.Dispose();
-            _composite = new CompositeDisposable();
-            
+            Reset();
+
             if (string.IsNullOrWhiteSpace(FullPath))
             {
                 IsLoading = false;
@@ -346,6 +345,8 @@ namespace OneWare.Core.ViewModels.DockViews
         private void Reset()
         {
             TypeAssistance?.Close();
+            _composite.Dispose();
+            _composite = new CompositeDisposable();
             if (CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
         }
 

@@ -1,8 +1,6 @@
-﻿using System.Security.Cryptography;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using OneWare.Shared;
 using OneWare.Shared.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 
@@ -13,6 +11,9 @@ public class FileWatchInstance : IDisposable
     private readonly ILogger _logger;
     private readonly IProjectRoot _root;
     private readonly FileSystemWatcher _fileSystemWatcher;
+    private readonly object _lock = new();
+    private DispatcherTimer? _timer;
+    private readonly Dictionary<string, FileSystemEventArgs> _changes = new();
 
     public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService, ISettingsService settingsService, ILogger logger)
     {
@@ -20,107 +21,113 @@ public class FileWatchInstance : IDisposable
         _projectExplorerService = projectExplorerService;
         _settingsService = settingsService;
         _logger = logger;
-        
+
         _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
         {
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
             IncludeSubdirectories = true
         };
-        
+
         _fileSystemWatcher.Changed += File_Changed;
-        _fileSystemWatcher.Deleted += File_Deleted;
-        _fileSystemWatcher.Renamed += File_Renamed;
-        _fileSystemWatcher.Created += File_Created;
+        _fileSystemWatcher.Deleted += File_Changed;
+        _fileSystemWatcher.Renamed += File_Changed;
+        _fileSystemWatcher.Created += File_Changed;
 
         try
         {
             _settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
             {
-                _fileSystemWatcher.EnableRaisingEvents = true;
+                _fileSystemWatcher.EnableRaisingEvents = x;
+
+                _timer?.Stop();
+                if (x)
+                {
+                    _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(100), DispatcherPriority.Background, (_, _) =>
+                    {
+                        lock (_lock)
+                        {
+                            ProcessChanges();
+                        }
+                    });
+                    _timer.Start();
+                }
             });
+
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
         }
     }
-    
+
     private void File_Changed(object source, FileSystemEventArgs e)
     {
         if (e.Name == null) return;
-        Dispatcher.UIThread.Post(() =>
+        lock (_lock)
         {
-            if (_root.Search(e.FullPath) is { } entry)
-            {
-                Console.WriteLine(CalculateMD5(entry.FullPath));
-                //_projectExplorerService.ReloadAsync(entry);
-            }
-        });
-    }
-    
-    static string CalculateMD5(string filename)
-    {
-        using var md5 = MD5.Create();
-        using (var stream = File.OpenRead(filename))
-        {
-            var hash = md5.ComputeHash(stream);
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            _changes[e.FullPath] = e;
         }
     }
 
-    private void File_Deleted(object source, FileSystemEventArgs e)
+    private void ProcessChanges()
     {
-        /*e.ChangeType 
-        
-        if (e.Name == null) return; 
-        Dispatcher.UIThread.Post(() =>
+        foreach(var change in _changes)
         {
-            if (_watcherHandle.Contains(e.Name)) return;
-            _watcherHandle.Add(e.Name);
-            if (Search(e.Name) is { } entry)
-            {
-                entry.LoadingFailed = true;
-            }
+            _ = ProcessAsync(change.Key, change.Value);
+        }
 
-            _watcherHandle.Remove(e.Name);
-        }, DispatcherPriority.Background);*/
+        //Task.WhenAll(_changes.Select(x => ProcessAsync(x.Key, x.Value)));
+        _changes.Clear();
     }
 
-    private void File_Created(object source, FileSystemEventArgs e)
+    private async Task ProcessAsync(string path, FileSystemEventArgs args)
     {
-        /*if (e.Name == null) return;
-        _ = Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            if (_watcherHandle.Contains(e.Name)) return;
-            _watcherHandle.Add(e.Name);
-            if (Search(e.Name) is { } entry && entry.LoadingFailed)
-                entry.LoadingFailed = false;
-            _watcherHandle.Remove(e.Name);
-        }, DispatcherPriority.Background);*/
-    }
+        var entry = _root.Search(path);
 
-    private void File_Renamed(object source, RenamedEventArgs e)
-    {
-        /*if (e.Name == null) return;
-        _ = Dispatcher.UIThread.InvokeAsync(async () =>
+        if (entry is not null)
         {
-            if (e.OldName != null && Search(e.OldName) is { } entry)
+            switch (args.ChangeType)
             {
-                entry.Header = e.Name;
-                if (_watcherHandle.Contains(e.Name)) return;
-
-                if (entry.LoadingFailed)
-                {
-                    _watcherHandle.Add(e.Name);
-                    await ContainerLocator.Container.Resolve<IProjectExplorerService>(e.FullPath).HandleFileChangeAsync(e.FullPath);
-                    _watcherHandle.Remove(e.Name);
-                }
+                case WatcherChangeTypes.Created:
+                case WatcherChangeTypes.Renamed:
+                case WatcherChangeTypes.Changed:
+                    await _projectExplorerService.ReloadAsync(entry);
+                    return;
+                case WatcherChangeTypes.Deleted:
+                    await _projectExplorerService.DeleteAsync(entry);
+                    return;
             }
-        }, DispatcherPriority.Background);*/
+        }
+
+        if (entry is null)
+        {
+            var relativePath = Path.GetRelativePath(_root.ProjectPath, path);
+            
+            switch (args.ChangeType)
+            {
+                case WatcherChangeTypes.Renamed:
+                    if (args is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
+                    {
+                        await _projectExplorerService.RemoveAsync(oldEntry);
+                        if (oldEntry is IProjectFolder) _root.AddFolder(relativePath);
+                        else _root.AddFile(relativePath);
+                    }
+                    return;
+                case WatcherChangeTypes.Created:
+                    var attr = File.GetAttributes(path);
+                    
+                    if (attr.HasFlag(FileAttributes.Directory))
+                        _root.AddFolder(relativePath);
+                    else
+                        _root.AddFile(relativePath);
+                    return;
+            }
+        }
     }
 
     public void Dispose()
     {
+        _timer?.Stop();
         _fileSystemWatcher.Dispose();
     }
 }

@@ -255,7 +255,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     #endregion
     
     #region Remove and Delete
-    private async Task RemoveAsync(params IProjectEntry[] entries)
+    public async Task RemoveAsync(params IProjectEntry[] entries)
     {
         var roots = entries.Where(x => x.Root != null)
             .Select(x => x.Root)
@@ -506,7 +506,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
-        entry.Header = newName;
+        //entry.Header = newName;
 
         await ReloadAsync(entry);
 
