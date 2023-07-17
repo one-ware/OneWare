@@ -1,4 +1,5 @@
 using System.Text;
+using DynamicData;
 using OneWare.Shared.Extensions;
 
 namespace OneWare.VcdViewer.Parser;
@@ -12,6 +13,11 @@ public class VcdParser
         using var stream = File.OpenRead(path);
         using var reader = new StreamReader(stream);
 
+        var definition = ReadDefinition(reader);
+    }
+
+    private static VcdDefinition ReadDefinition(TextReader reader)
+    {
         var definition = new VcdDefinition();
         string? keyWord = null;
         string? value = null;
@@ -39,7 +45,6 @@ public class VcdParser
                                 definition.Scopes.Add(new VcdScope(value!));
                                 break;
                             case "$upscope":
-                    
                                 break;
                             case "$enddefinitions":
                                 return false;
@@ -57,5 +62,6 @@ public class VcdParser
             }
             return true;
         });
+        return definition;
     }
 }
