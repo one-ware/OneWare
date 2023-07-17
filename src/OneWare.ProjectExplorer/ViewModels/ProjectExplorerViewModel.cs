@@ -297,7 +297,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             
             return;
         }
-            
+
         if (entry.TopFolder == null) throw new NullReferenceException(entry.Header + " has no TopFolder");
 
         entry.TopFolder.Remove(entry);

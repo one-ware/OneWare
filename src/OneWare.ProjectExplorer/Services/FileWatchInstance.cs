@@ -7,6 +7,7 @@ namespace OneWare.ProjectExplorer.Services;
 public class FileWatchInstance : IDisposable
 {
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IDockService _dockService;
     private readonly ISettingsService _settingsService;
     private readonly ILogger _logger;
     private readonly IProjectRoot _root;
@@ -15,10 +16,11 @@ public class FileWatchInstance : IDisposable
     private DispatcherTimer? _timer;
     private readonly Dictionary<string, FileSystemEventArgs> _changes = new();
 
-    public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService, ISettingsService settingsService, ILogger logger)
+    public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService, ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
         _settingsService = settingsService;
         _logger = logger;
 
@@ -108,10 +110,17 @@ public class FileWatchInstance : IDisposable
                 case WatcherChangeTypes.Renamed:
                     if (args is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
                     {
-                        await _projectExplorerService.RemoveAsync(oldEntry);
-                        if (oldEntry is IProjectFile) _root.AddFile(relativePath);
+                        if (oldEntry is IProjectFile file)
+                        {
+                            _dockService.OpenFiles.TryGetValue(file, out var tab);
+                            await _projectExplorerService.RemoveAsync(oldEntry);
+                            var newItem = _root.AddFile(relativePath);
+                            if (tab is IEditor editor) editor.FullPath = newItem.FullPath;
+                            tab?.InitializeContent();
+                        }
                         else
                         {
+                            await _projectExplorerService.RemoveAsync(oldEntry);
                             var folder = _root.AddFolder(relativePath);
                             _projectExplorerService.ImportFolderRecursive(path, folder);
                         }
