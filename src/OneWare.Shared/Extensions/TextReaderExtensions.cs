@@ -11,8 +11,8 @@ public static class TextReaderExtensions
         //read Definition
         for (var i = 0; i < maxLength; i++)
         {
-            var character = reader.Read();
-            if (character is not (' ' or '\n')) wordBuilder.Append(character);
+            var character = (char)reader.Read();
+            if (character is not (' ' or '\n' or '\r')) wordBuilder.Append(character);
             else
             {
                 //Process word

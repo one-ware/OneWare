@@ -8,19 +8,21 @@ public class VcdParser
 {
     private const int MaxDefinitionSize = 100000;
     
-    public static void ParseVcd(string path)
+    public static VcdDefinition ParseVcd(string path)
     {
         using var stream = File.OpenRead(path);
         using var reader = new StreamReader(stream);
 
         var definition = ReadDefinition(reader);
+
+        return definition;
     }
 
     private static VcdDefinition ReadDefinition(TextReader reader)
     {
         var definition = new VcdDefinition();
         string? keyWord = null;
-        string? value = null;
+        var words = new List<string>();
         
         reader.ProcessWords(MaxDefinitionSize, x =>
         {
@@ -32,17 +34,16 @@ public class VcdParser
                         switch (keyWord)
                         {
                             case "$timescale":
-                                definition.TimeScale = value;
+                                definition.TimeScale = string.Join(' ', words);
                                 break;
                             case "$var":
-                                var words = value!.Split(' ');
-                                if (words.Length == 4)
+                                if (words.Count == 4)
                                 {
                                     definition.Scopes.Last().Signals.Add(new VcdSignal(words[0], int.Parse(words[1]), words[2], words[3]));
                                 }
                                 break;
                             case "$scope":
-                                definition.Scopes.Add(new VcdScope(value!));
+                                definition.Scopes.Add(new VcdScope(string.Join(' ', words)));
                                 break;
                             case "$upscope":
                                 break;
@@ -55,10 +56,11 @@ public class VcdParser
                         return false;
                 }
                 keyWord = x;
+                words.Clear();
             }
             else
             {
-                value += x;
+                words.Add(x);
             }
             return true;
         });

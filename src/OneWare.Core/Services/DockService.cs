@@ -115,10 +115,7 @@ namespace OneWare.Core.Services
             if (OpenFiles.ContainsKey(pf))
             {
                 var vm = OpenFiles[pf];
-                if (vm is EditViewModel evm)
-                {
-                    if (vm.IsDirty && !await evm.TryCloseAsync()) return false;
-                }
+                if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
                 OpenFiles.Remove(pf);
                 CloseDockable(vm);
             }

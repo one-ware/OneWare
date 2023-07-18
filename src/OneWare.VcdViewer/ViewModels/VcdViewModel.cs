@@ -1,9 +1,13 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Avalonia.Media;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using OneWare.Shared.Views;
+using OneWare.VcdViewer.Parser;
+using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
+using Prism.Ioc;
 
 namespace OneWare.VcdViewer.ViewModels;
 
@@ -28,14 +32,21 @@ public class VcdViewModel : ExtendedDocument
     {
         try
         {
-            File.ReadAllText(FullPath);
+            var definition = VcdParser.ParseVcd(FullPath);
+            foreach (var scope in definition.Scopes)
+            {
+                foreach (var signal in scope.Signals)
+                {
+                    WaveFormViewer.Signals.Add(new WaveModel(signal.Name, Brushes.Aqua));
+                }
+            }
         }
         catch (Exception e)
         {
-            
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            LoadingFailed = false;
         }
-
-        LoadingFailed = false;
+        
         IsLoading = false;
         return Task.FromResult(true);
     }

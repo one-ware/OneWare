@@ -38,12 +38,12 @@
                 <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal"
                             HorizontalAlignment="Left">
 
-                    <Button ToolTip.Tip="Undo" x:CompileBindings="False"
-                            Command="{Binding DockService.CurrentDocument.Undo}">
+                    <Button ToolTip.Tip="Undo"
+                            Command="{Binding DockService.CurrentDocument.Undo, FallbackValue={x:Null}}">
                         <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
                     </Button>
-                    <Button ToolTip.Tip="Redo" x:CompileBindings="False"
-                            Command="{Binding DockService.CurrentDocument.Redo}">
+                    <Button ToolTip.Tip="Redo"
+                            Command="{Binding DockService.CurrentDocument.Redo, FallbackValue={x:Null}}">
                         <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
                     </Button>
 
