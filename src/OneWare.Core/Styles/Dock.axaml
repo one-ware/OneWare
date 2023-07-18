@@ -3,9 +3,7 @@
         xmlns:idc="using:Dock.Avalonia.Controls"
         xmlns:core="using:Dock.Model.Core"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-        xmlns:sharedViews="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
-        xmlns:sharedConverters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-        xmlns:coreConverters="clr-namespace:OneWare.Core.Converters">
+        xmlns:sharedViews="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared">
 
     <Styles.Resources>
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>
@@ -66,6 +64,14 @@
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="4 1 4 0" />
     </Style>
+    
+    <Style Selector="StackPanel#HeaderContainer.LoadingFailed">
+        <Setter Property="ToolTip.Tip" Value="Loading failed"/>
+    </Style>
+    
+    <Style Selector="StackPanel#HeaderContainer.LoadingFailed > TextBlock">
+        <Setter Property="Foreground" Value="#FFBB0000"/>
+    </Style>
 
     <Style Selector="DocumentControl">
         <Setter Property="HeaderTemplate">
@@ -73,13 +79,31 @@
                 <ContentControl Content="{Binding}">
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="shared:IEditor">
-                            <StackPanel Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
+                            <StackPanel Name="HeaderContainer" Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
+                                <Interaction.Behaviors>
+                                    <DataTriggerBehavior Binding="{Binding LoadingFailed}"
+                                                         ComparisonCondition="Equal"
+                                                         Value="true">
+                                        <AddClassAction StyledElement="HeaderContainer"
+                                                        ClassName="LoadingFailed"/>
+                                    </DataTriggerBehavior>
+                                    <DataTriggerBehavior Binding="{Binding LoadingFailed}"
+                                                         ComparisonCondition="Equal"
+                                                         Value="false">
+                                        <RemoveClassAction StyledElement="HeaderContainer"
+                                                           ClassName="LoadingFailed"/>
+                                    </DataTriggerBehavior>
+                                </Interaction.Behaviors>
+                                
                                 <sharedViews:Spinner IsVisible="{Binding IsLoading}" Height="17" Width="17"/> 
+                                
                                 <Image
                                     Height="17" Width="17"
                                     Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}"/>
-                                <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center"/>
+                                <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Name="Title" Margin="3 0 0 0" 
+                                           Text="{Binding Title}" VerticalAlignment="Center">
+                                </TextBlock>
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
                             </StackPanel>
                         </DataTemplate>

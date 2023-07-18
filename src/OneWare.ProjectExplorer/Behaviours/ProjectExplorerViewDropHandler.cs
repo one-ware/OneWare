@@ -31,7 +31,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    vm.ImportStorageItems(targetParent, files.ToArray());
+                    _ = vm.ImportStorageItemsAsync(targetParent, files.ToArray());
                 }
                 return true;
             }

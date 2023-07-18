@@ -19,7 +19,7 @@ using OneWare.Shared.Services;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
-    public class EditViewModel : Document, IExtendedDocument, IEditor, IWaitForContent
+    public class EditViewModel : Document, IEditor
     {
         private readonly ILogger _logger;
         private readonly IDockService _dockService;
@@ -230,6 +230,11 @@ namespace OneWare.Core.ViewModels.DockViews
 
             if (TypeAssistance != null)
             {
+                if (TypeAssistance.CanAddBreakPoints)
+                {
+                    Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, CurrentFile, new BreakpointStore()));
+                }
+                
                 if (TypeAssistance.FoldingStrategy != null)
                 {
                     _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
@@ -256,11 +261,6 @@ namespace OneWare.Core.ViewModels.DockViews
                 //         h => TypeAssistance.AssistanceDeactivated += h,
                 //         h => TypeAssistance.AssistanceDeactivated -= h)
                 //     .Subscribe(x => {  });
-                    
-                if (TypeAssistance.CanAddBreakPoints)
-                {
-                    // TODO Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, currentFile, Global.Breakpoints));
-                }
                 
                 TypeAssistance.Open();
             }
@@ -377,9 +377,9 @@ namespace OneWare.Core.ViewModels.DockViews
         /// <returns>If file could be saved</returns>
         public async Task<bool> SaveAsync()
         {
-            if (IsReadOnly) return true;
+            if (IsReadOnly || CurrentFile == null) return true;
 
-            var success = await SaveFileAsync(CurrentFile!.FullPath, CurrentDocument.Text);
+            var success = await SaveFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
 
             if (success)
             {
@@ -396,6 +396,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 FileSaved?.Invoke(this, EventArgs.Empty);
 
                 CurrentFile.LoadingFailed = false;
+                LoadingFailed = false;
                 return true;
             }
 
@@ -415,6 +416,7 @@ namespace OneWare.Core.ViewModels.DockViews
             if (!result.Item1)
             {
                 CurrentFile.LoadingFailed = true;
+                LoadingFailed = true;
 
                 OnFileLoaded(false);
                 
@@ -428,6 +430,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 else CurrentDocument.Text = result.Item2;
                 
                 CurrentFile.LoadingFailed = false;
+                LoadingFailed = false;
                 OnFileLoaded(true);
                 return true;
             }

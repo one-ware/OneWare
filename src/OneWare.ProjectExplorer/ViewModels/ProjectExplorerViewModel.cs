@@ -297,7 +297,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             
             return;
         }
-
+        else if (entry is IProjectFile file)
+        {
+            if(!await _dockService.CloseFileAsync(file)) return;
+        }
         if (entry.TopFolder == null) throw new NullReferenceException(entry.Header + " has no TopFolder");
 
         entry.TopFolder.Remove(entry);
@@ -355,22 +358,44 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     #endregion
     
     #region Import
-    public void ImportStorageItems(IProjectFolder parent, params IStorageItem[] storageItems)
+    public async Task ImportStorageItemsAsync(IProjectFolder parent, params IStorageItem[] storageItems)
     {
         foreach (var f in storageItems)
         {
             var path = f.TryGetLocalPath();
             if (path == null) continue;
-                        
+            var fileName = Path.GetFileName(path);
             var attr = File.GetAttributes(path);
 
             if (attr.HasFlag(FileAttributes.Directory))
             {
-                var folder = parent.AddFolder(Path.GetFileName(path));
-                ImportFolderRecursive(f.Path.LocalPath, folder);
+                var folder = parent.AddFolder(fileName);
+                ImportFolderRecursive(path, folder);
             }
             else
-                ImportFile(f.Path.LocalPath, parent);
+            {
+                if (File.Exists(path))
+                {
+                    var newName = await _windowService.ShowInputAsync("Copy File", $"Enter a new name for {fileName}", MessageBoxIcon.Info,
+                        fileName, _dockService.GetWindowOwner(this));
+
+                    if(newName == null) continue;
+                    
+                    var newPath = Path.Combine(Path.GetDirectoryName(path) ?? "", newName);
+                    try
+                    {
+                        Tools.CopyFile(path, newPath);
+                        path = newPath;
+                    }
+                    catch (Exception e)
+                    {
+                        ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                        continue;
+                    }
+                }
+                ImportFile(path, parent);
+            }
+                
         }    
     }
     
@@ -651,7 +676,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var files = await clipboard.GetDataAsync(DataFormats.Files);
         if (files is IEnumerable<IStorageItem> storageItems)
         {
-            ImportStorageItems(target, storageItems.ToArray());
+            await ImportStorageItemsAsync(target, storageItems.ToArray());
         }
     }
     
