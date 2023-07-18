@@ -16,12 +16,16 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.Views;
 
 namespace OneWare.Core.ViewModels.DockViews
 {
-    public class EditViewModel : Document, IEditor
+    public class EditViewModel : ExtendedDocument, IEditor
     {
-        private readonly ILogger _logger;
+        private static readonly IBrush ErrorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
+        private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
+        private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
+        
         private readonly IDockService _dockService;
         private readonly ILanguageManager _languageManager;
         private readonly ISettingsService _settingsService;
@@ -30,65 +34,13 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly IProjectExplorerService _projectExplorerService;
         private readonly BackupService _backupService;
 
-        private string _fullPath;
-
-        [DataMember]
-        public string FullPath
-        {
-            get => _fullPath;
-            set
-            {
-                SetProperty(ref _fullPath, value);
-                Id = $"Editor: {value}";
-            }
-        }
-
-        private IFile? _currentFile;
-        public IFile? CurrentFile
-        {
-            get => _currentFile;
-            private set => SetProperty(ref _currentFile, value);
-        }
+        private CompositeDisposable _composite = new();
         
         public ExtendedTextEditor Editor { get; } = new();
 
         public ITypeAssistance? TypeAssistance { get; private set; }
 
         public TextDocument CurrentDocument => Editor.Document;
-
-        public IRelayCommand Undo { get; }
-
-        public IRelayCommand Redo { get; }
-
-        private bool _isLoading = true;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        private bool _loadingFailed;
-        public bool LoadingFailed
-        {
-            get => _loadingFailed;
-            set => SetProperty(ref _loadingFailed, value);
-        }
-
-        private bool _isReadOnly;
-
-        public bool IsReadOnly
-        {
-            get => _isReadOnly;
-            set => SetProperty(ref _isReadOnly, value);
-        }
-
-        private bool _isDirty;
-
-        public bool IsDirty
-        {
-            get => _isDirty;
-            set => SetProperty(ref _isDirty, value);
-        }
 
         public ScrollInfoContext ScrollInfo { get; } = new();
         
@@ -102,18 +54,11 @@ namespace OneWare.Core.ViewModels.DockViews
         }
 
         public event EventHandler? FileSaved;
-        
-        static IBrush _errorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
-        static IBrush _errorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
-        static IBrush _warningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService)
+            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService)
         {
-            _fullPath = fullPath;
-            
-            _logger = logger;
             _settingsService = settingsService;
             _dockService = dockService;
             _windowService = windowService;
@@ -156,8 +101,8 @@ namespace OneWare.Core.ViewModels.DockViews
                         .Select(c => c.StartLine)
                         .Distinct();
 
-                    scrollInfo.AddRange(warningLines.Select(l => new ScrollInfoLine(l, _warningBrush)));
-                    scrollInfo.AddRange(errorLines.Select(l => new ScrollInfoLine(l, _errorBrush)));
+                    scrollInfo.AddRange(warningLines.Select(l => new ScrollInfoLine(l, WarningBrush)));
+                    scrollInfo.AddRange(errorLines.Select(l => new ScrollInfoLine(l, ErrorBrush)));
                 }
                 
                 ScrollInfo.Refresh("ErrorContext", scrollInfo.ToArray());
@@ -169,11 +114,12 @@ namespace OneWare.Core.ViewModels.DockViews
                 if(CurrentFile != null && o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
             };
         }
-
-        private CompositeDisposable _composite = new();
-        public void InitializeContent()
+        
+        protected override void ChangeCurrentFile(IFile? oldFile)
         {
             Reset();
+            
+            if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
 
             if (string.IsNullOrWhiteSpace(FullPath))
             {
@@ -181,11 +127,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 LoadingFailed = true;
                 return;
             }
-            
-            CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
 
-            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
-            
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
 
             _dockService.OpenFiles.TryAdd(CurrentFile, this);
@@ -230,16 +172,13 @@ namespace OneWare.Core.ViewModels.DockViews
 
             if (TypeAssistance != null)
             {
-                if (TypeAssistance.CanAddBreakPoints)
-                {
-                    Editor.TextArea.LeftMargins.Add(new BreakPointMargin(Editor, CurrentFile, new BreakpointStore()));
-                }
-                
+                Editor.SetEnableBreakpoints(TypeAssistance.CanAddBreakPoints, CurrentFile);
+
                 if (TypeAssistance.FoldingStrategy != null)
                 {
                     _settingsService.GetSettingObservable<bool>("Editor_UseFolding").Subscribe(x =>
                     {
-                        Editor.SetFolding(x);
+                        Editor.SetEnableFolding(x);
                         if (x) UpdateFolding();
                     }).DisposeWith(_composite);
                     
@@ -347,10 +286,9 @@ namespace OneWare.Core.ViewModels.DockViews
             TypeAssistance?.Close();
             _composite.Dispose();
             _composite = new CompositeDisposable();
-            if (CurrentFile is ExternalFile) ContainerLocator.Container.Resolve<IErrorService>().Clear(CurrentFile);
         }
 
-        public async Task<bool> TryCloseAsync()
+        public override async Task<bool> TryCloseAsync()
         {
             if (!IsDirty) return true;
 
@@ -370,112 +308,14 @@ namespace OneWare.Core.ViewModels.DockViews
 
             return false;
         }
-
-        /// <summary>
-        ///     Saves
-        /// </summary>
-        /// <returns>If file could be saved</returns>
-        public async Task<bool> SaveAsync()
+        
+        public override async Task<bool> SaveAsync()
         {
             if (IsReadOnly || CurrentFile == null) return true;
-
-            var success = await SaveFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
-
-            if (success)
-            {
-                CurrentFile.LastSaveTime = DateTime.Now;
-
-                ContainerLocator.Container.Resolve<ILogger>()
-                    ?.Log($"Saved {CurrentFile.Header}!", ConsoleColor.Green);
-                IsDirty = false;
-
-                //if (MainDock.OpenComparisons.ContainsKey(CurrentFile.FullPath))
-                //    MainDock.SourceControl.Compare(CurrentFile.FullPath, false);
-                //_ = MainDock.SourceControl.RefreshAsync(); TODO
-
-                FileSaved?.Invoke(this, EventArgs.Empty);
-
-                CurrentFile.LoadingFailed = false;
-                LoadingFailed = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        public virtual async Task<bool> LoadAsync()
-        {
-            if (CurrentFile == null) return false;
             
-            var result = await LoadFileAsync();
-
-            CurrentDocument.UndoStack.ClearAll();
-
-            IsLoading = false;
-            
-            if (!result.Item1)
-            {
-                CurrentFile.LoadingFailed = true;
-                LoadingFailed = true;
-
-                OnFileLoaded(false);
-                
-                return false;
-            }
-            else
-            {
-                CurrentFile.LastSaveTime = result.lastModified;
-                if (CurrentFile.Extension is not (null or "" or ".py"))
-                    CurrentDocument.Text = result.Item2.Replace("\t", "    ");
-                else CurrentDocument.Text = result.Item2;
-                
-                CurrentFile.LoadingFailed = false;
-                LoadingFailed = false;
-                OnFileLoaded(true);
-                return true;
-            }
-        }
-
-        private void OnFileLoaded(bool status)
-        {
-            if (CurrentFile == null || !status) return;
-            _ = _backupService.SearchForBackupAsync(CurrentFile);
-            IsDirty = false;
-        }
-        
-        private async Task<(bool, string, DateTime lastModified)> LoadFileAsync()
-        {
-            if(!File.Exists(CurrentFile!.FullPath)) return (false, "", DateTime.MinValue); 
             try
             {
-                var stream = new FileStream(CurrentFile!.FullPath, FileMode.Open, FileAccess.Read,
-                    FileShare.ReadWrite);
-                    
-                var text = "";
-                using (var reader = new StreamReader(stream))
-                {
-                    text = await reader.ReadToEndAsync();
-                }
-
-                stream.Close();
-                return (true, text, File.GetLastWriteTime(CurrentFile!.FullPath));
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
-                return (false, "", DateTime.MinValue); 
-            }
-        }
-
-        /// <summary>
-        ///     Saves file async
-        /// </summary>
-        private async Task<bool> SaveFileAsync(string path, string text)
-        {
-            try
-            {
-                await Tools.WriteTextFileAsync(path, text);
+                await Tools.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
             }
             catch (Exception e)
             {
@@ -483,7 +323,54 @@ namespace OneWare.Core.ViewModels.DockViews
                 return false;
             }
 
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Log($"Saved {CurrentFile.Header}!", ConsoleColor.Green);
+            
+            IsDirty = false;
+            CurrentFile.LastSaveTime = DateTime.Now;
+            CurrentFile.LoadingFailed = false;
+            LoadingFailed = false;
+            
+            FileSaved?.Invoke(this, EventArgs.Empty);
+            
             return true;
+        }
+
+        private async Task<bool> LoadAsync()
+        {
+            if (CurrentFile == null) return false;
+
+            IsLoading = true;
+            
+            var success = true;
+            try
+            {
+                await using var stream = File.OpenRead(CurrentFile.FullPath);
+                using var reader = new StreamReader(stream);
+
+                var text = await reader.ReadToEndAsync();
+
+                CurrentFile.LastSaveTime = File.GetLastWriteTime(CurrentFile.FullPath);
+
+                CurrentDocument.Text = text;
+                CurrentDocument.UndoStack.ClearAll();
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+                
+                success = false;
+            }
+            
+            IsLoading = false;
+            CurrentFile.LoadingFailed = !success;
+            LoadingFailed = !success;
+            IsDirty = false;
+            
+            if (success) _ = _backupService.SearchForBackupAsync(CurrentFile);
+            
+            return success;
         }
 
         #endregion

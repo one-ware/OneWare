@@ -1,0 +1,68 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.WaveFormViewer.ViewModels"
+             xmlns:models="clr-namespace:OneWare.WaveFormViewer.Models"
+             xmlns:controls="clr-namespace:OneWare.WaveFormViewer.Controls"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" x:DataType="viewModels:WaveFormViewModel"
+             x:Class="OneWare.WaveFormViewer.Views.WaveFormView">
+
+    <UserControl.Resources>
+        <x:Double x:Key="LineHeight">16</x:Double>
+    </UserControl.Resources>
+    
+    <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid" RowDefinitions="*,22,Auto"
+              ColumnDefinitions="Auto,Auto,*">
+
+            <ScrollViewer MinWidth="100" Padding="3,0,3,0" Name="TextPartScroll"
+                          Grid.Column="0" Grid.Row="0" HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Hidden">
+                <ItemsControl Padding="5, 0, 5, 0" ItemsSource="{Binding Signals}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:WaveModel">
+                            <DockPanel Background="Transparent"
+                                       Height="{DynamicResource LineHeight}">
+                                <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Label}" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <GridSplitter Background="{DynamicResource ThemeControlLowBrush}" Width="2" VerticalAlignment="Stretch" Grid.Row="0"
+                          Grid.Column="1" />
+
+            <!--
+            <controls:SimulatorScaleRenderer IsHitTestVisible="False" Margin="2,0,1,0" Name="SimulatorScaleRenderer"
+                                             Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="2" />
+                                             -->
+
+            <ScrollViewer ClipToBounds="True" Name="SimPartScroll" Grid.Row="0" Grid.Column="2"
+                          HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                <ItemsControl ItemsSource="{Binding Signals}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:WaveModel">
+                            <controls:Wave
+                                Height="{DynamicResource LineHeight}"
+                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!--
+            <controls:SimulatorEffectsRenderer Name="SimulatorEffectsRenderer" VerticalAlignment="Stretch"
+                                               IsHitTestVisible="False" Margin="0 0 1 0"
+                                               HorizontalAlignment="Stretch" Grid.Row="0" Grid.Column="2" />
+                                               -->
+
+            <Border Grid.Column="0" Height="30" Grid.ColumnSpan="3" Grid.Row="2"
+                    Background="{DynamicResource ThemeBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                    BorderThickness="0, 1, 0, 0">
+                <DockPanel Height="22" VerticalAlignment="Center">
+                    
+                </DockPanel>
+            </Border>
+    </Grid>
+</UserControl>

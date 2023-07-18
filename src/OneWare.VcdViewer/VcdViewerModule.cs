@@ -1,4 +1,6 @@
-﻿using Prism.Ioc;
+﻿using OneWare.Shared.Services;
+using OneWare.VcdViewer.ViewModels;
+using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.VcdViewer;
@@ -7,11 +9,11 @@ public class VcdViewerModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        throw new NotImplementedException();
+        containerRegistry.Register<VcdViewModel>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        throw new NotImplementedException();
+        containerProvider.Resolve<IDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
     }
 }

@@ -5,6 +5,11 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-        <ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\WaveFormView.axaml.cs">
+        <DependentUpon>WaveFormView.axaml</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

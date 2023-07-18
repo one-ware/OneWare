@@ -5,7 +5,7 @@ using Dock.Model.Mvvm.Controls;
 
 namespace OneWare.Shared;
 
-public class ExtendedTool : Tool, IExtendedTool
+public abstract class ExtendedTool : Tool, IExtendedTool
 {
     private IImage? _icon;
     public IImage? Icon

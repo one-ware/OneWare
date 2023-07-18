@@ -11,6 +11,7 @@ public interface IDockService : INotifyPropertyChanged
     public RootDock? Layout { get; }
     
     public IExtendedDocument? CurrentDocument { get; }
+    public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument;
 
     public void RegisterLayoutExtension<T>(DockShowLocation location);
     

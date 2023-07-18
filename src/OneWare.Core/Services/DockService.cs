@@ -26,6 +26,7 @@ namespace OneWare.Core.Services
         private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
 
         public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new ();
+        public readonly Dictionary<string, Type> DocumentViewRegistrations = new ();
         
         private readonly IPaths _paths;
         private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
@@ -71,6 +72,14 @@ namespace OneWare.Core.Services
             );
         }
 
+        public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument
+        {
+            foreach (var extension in extensions)
+            {
+                DocumentViewRegistrations.TryAdd(extension, typeof(T));
+            }
+        }
+
         public void RegisterLayoutExtension<T>(DockShowLocation location)
         {
             LayoutRegistrations.TryAdd(location, new List<Type>());
@@ -86,20 +95,11 @@ namespace OneWare.Core.Services
                 return OpenFiles[pf];
             }
 
-            var viewModel = pf switch
-            {
-                /*ProjectFileGhdp => new SimulatorViewModel(pf)
-                {
-                    Id = pf.FullPath,
-                    Title = pf.Header
-                },
-                {Type: FileType.Vcd} => new VcdViewModel(pf)
-                {
-                    Id = pf.FullPath,
-                    Title = pf.Header
-                },*/
-                _ => ContainerLocator.Current.Resolve<EditViewModel>((typeof(string), pf.FullPath))
-            };
+            DocumentViewRegistrations.TryGetValue(pf.Extension, out var type);
+            type ??= typeof(EditViewModel);
+            var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
+
+            if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
 
             Show(viewModel, DockShowLocation.Document);
             

@@ -35,11 +35,8 @@ namespace OneWare.Shared.EditorExtensions
         {
             if (TextView.VisualLinesValid)
             {
-                //Application.Current.FindResource("ThemeControlLowBrush") as IBrush
                 context.FillRectangle(Brushes.Transparent,
                     new Rect(0, 0, Bounds.Width, Bounds.Height));
-                //context.DrawLine(new Pen(Brushes.Red, 0.5),
-                //    new Point(Bounds.Width, 0), new Point(Bounds.Width, Bounds.Height));
 
                 if (TextView.VisualLines.Count > 0)
                 {
@@ -127,7 +124,7 @@ namespace OneWare.Shared.EditorExtensions
                 }
             }
 
-            //InvalidateVisual();
+            InvalidateVisual();
         }
 
         protected override Size MeasureOverride(Size availableSize)

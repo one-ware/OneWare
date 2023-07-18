@@ -374,25 +374,25 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
             else
             {
-                if (File.Exists(path))
-                {
-                    var newName = await _windowService.ShowInputAsync("Copy File", $"Enter a new name for {fileName}", MessageBoxIcon.Info,
-                        fileName, _dockService.GetWindowOwner(this));
-
-                    if(newName == null) continue;
-                    
-                    var newPath = Path.Combine(Path.GetDirectoryName(path) ?? "", newName);
-                    try
-                    {
-                        Tools.CopyFile(path, newPath);
-                        path = newPath;
-                    }
-                    catch (Exception e)
-                    {
-                        ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-                        continue;
-                    }
-                }
+                // if (File.Exists(path))
+                // {
+                //     var newName = await _windowService.ShowInputAsync("Copy File", $"Enter a new name for {fileName}", MessageBoxIcon.Info,
+                //         fileName, _dockService.GetWindowOwner(this));
+                //
+                //     if(newName == null) continue;
+                //     
+                //     var newPath = Path.Combine(Path.GetDirectoryName(path) ?? "", newName);
+                //     try
+                //     {
+                //         Tools.CopyFile(path, newPath);
+                //         path = newPath;
+                //     }
+                //     catch (Exception e)
+                //     {
+                //         ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                //         continue;
+                //     }
+                // }
                 ImportFile(path, parent);
             }
                 

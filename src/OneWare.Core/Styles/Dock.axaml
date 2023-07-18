@@ -78,7 +78,7 @@
             <DataTemplate DataType="core:IDockable">
                 <ContentControl Content="{Binding}">
                     <ContentControl.DataTemplates>
-                        <DataTemplate DataType="shared:IEditor">
+                        <DataTemplate DataType="shared:IExtendedDocument">
                             <StackPanel Name="HeaderContainer" Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
                                 <Interaction.Behaviors>
                                     <DataTriggerBehavior Binding="{Binding LoadingFailed}"
@@ -95,7 +95,7 @@
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
                                 
-                                <sharedViews:Spinner IsVisible="{Binding IsLoading}" Height="17" Width="17"/> 
+                                <sharedViews:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15"/> 
                                 
                                 <Image
                                     Height="17" Width="17"

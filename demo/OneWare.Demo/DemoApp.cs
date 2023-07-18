@@ -7,6 +7,7 @@ using OneWare.Json;
 using OneWare.Settings;
 using OneWare.Shared.Services;
 using OneWare.Toml;
+using OneWare.VcdViewer;
 using OneWare.Verilog;
 using OneWare.Vhdl;
 using Prism.Ioc;
@@ -59,5 +60,6 @@ public class DemoApp : App
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
+        moduleCatalog.AddModule<VcdViewerModule>();
     }
 }
