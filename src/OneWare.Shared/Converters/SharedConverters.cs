@@ -4,7 +4,6 @@ namespace OneWare.Shared.Converters;
 
 public static class SharedConverters
 {
-    public static readonly IValueConverter BoolToOpacityConverter = new BoolToOpacityConverter();
     public static readonly IValueConverter
         BoolToScrollBarVisibilityConverter = new BoolToScrollBarVisibilityConverter();
     public static readonly IValueConverter ComparisonConverter = new ComparisonConverter();
