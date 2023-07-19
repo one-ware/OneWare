@@ -80,12 +80,19 @@ namespace OneWare.Core.Views.DockViews
             };
         }
 
-        private void Setup()
+        private void Reset()
         {
-            //Cleanup
             _compositeDisposable.Dispose();
             _compositeDisposable = new CompositeDisposable();
-            DetachEvents();
+            _typeAssistance?.Detach();
+            CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
+            CodeBox.ModificationService.ClearModification("Control_Underline");
+            DetachEvents(); 
+        }
+        
+        private void Setup()
+        {
+            Reset();
             
             //Attach Events
             AttachEvents();
@@ -181,6 +188,8 @@ namespace OneWare.Core.Views.DockViews
 
         private void Search_Updated(object? sender, IEnumerable<SearchResult> results)
         {
+            if(ViewModel?.DisableEditViewEvents ?? true) return;
+            
             try
             {
                 if (ViewModel == null) return;
@@ -213,6 +222,8 @@ namespace OneWare.Core.Views.DockViews
 
         public void PointerPressedAfterCaretUpdate(object? sender, PointerPressedEventArgs e)
         {
+            if(ViewModel?.DisableEditViewEvents ?? true) return;
+            
             _ = PointerPressedAfterCaretUpdateAsync(sender, e);
         }
 
@@ -231,8 +242,7 @@ namespace OneWare.Core.Views.DockViews
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            DetachEvents();
-            _typeAssistance?.Detach();
+            Reset();
             base.OnDetachedFromVisualTree(e);
         }
 
@@ -269,6 +279,8 @@ namespace OneWare.Core.Views.DockViews
         /// </summary>
         private void PointerPressedBeforeCaretUpdate(object? sender, PointerEventArgs e)
         {
+            if(ViewModel?.DisableEditViewEvents ?? true) return;
+            
             //Left Button
             if (e.GetCurrentPoint(null).Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed)
             {
