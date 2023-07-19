@@ -8,6 +8,7 @@ namespace OneWare.Shared.Views;
 public abstract class ExtendedDocument : Document, IExtendedDocument
 {
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IDockService _dockService;
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
 
@@ -66,10 +67,11 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set => SetProperty(ref _isDirty, value);
     }
 
-    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService)
+    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService)
     {
         _fullPath = fullPath;
         _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
     }
 
     public virtual Task<bool> TryCloseAsync()
@@ -86,6 +88,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     {
         var oldCurrentFile = CurrentFile;
         CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+        _dockService.OpenFiles.TryAdd(CurrentFile, this);
         Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
         ChangeCurrentFile(oldCurrentFile);
     }

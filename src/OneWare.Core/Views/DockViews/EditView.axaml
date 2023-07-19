@@ -5,7 +5,6 @@
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:dockViews1="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
-             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.DockViews.EditView" x:DataType="dockViews1:EditViewModel"
              Background="{DynamicResource ThemeControlLowBrush}" Name="EditViewView">
@@ -77,6 +76,7 @@
                             Background="{DynamicResource ThemeBackgroundBrush}">
                 <ContentControl.Styles>
                     <Style Selector="avaloniaEdit|TextEditor">
+                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                         <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
                         <Setter Property="Background" Value="Transparent"/>

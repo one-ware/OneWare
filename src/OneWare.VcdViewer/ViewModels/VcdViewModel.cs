@@ -16,7 +16,7 @@ public class VcdViewModel : ExtendedDocument
     private readonly IProjectExplorerService _projectExplorerService;
     public WaveFormViewModel WaveFormViewer { get; } = new();
 
-    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService) : base(fullPath, projectExplorerService)
+    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService) : base(fullPath, projectExplorerService, dockService)
     {
         _projectExplorerService = projectExplorerService;
         

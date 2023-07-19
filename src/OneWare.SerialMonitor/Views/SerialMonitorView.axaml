@@ -24,6 +24,7 @@
                                  FontWeight="Regular"
                                  Document="{Binding OutputDocument}"
                                  FontFamily="{DynamicResource EditorFont}"
+                                 FontSize="{DynamicResource EditorFontSize}"
                                  Padding="5" />
 
         <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2"

@@ -45,6 +45,7 @@
                                      Foreground="{DynamicResource ThemeForegroundBrush}"
                                      FontWeight="Regular"
                                      FontFamily="{DynamicResource EditorFont}"
+                                     FontSize="{DynamicResource EditorFontSize}"
                                      Document="{Binding OutputDocument}"
                                      Padding="5" />
         </DockPanel>

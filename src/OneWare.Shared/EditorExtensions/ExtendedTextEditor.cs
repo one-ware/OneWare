@@ -1,3 +1,7 @@
+using System.Reactive.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
@@ -23,6 +27,14 @@ public class ExtendedTextEditor : TextEditor
     
     public ExtendedTextEditor()
     {
+        // //Avoid Styles to improve performance
+        Bind(FontFamilyProperty, Application.Current!.GetResourceObservable("EditorFont"));
+        Bind(FontSizeProperty, Application.Current!.GetResourceObservable("EditorFontSize"));
+        // Bind(FoldingMargin.FoldingMarkerBrushProperty, Application.Current!.GetResourceObservable("ThemeBorderLowBrush"));
+        // Bind(FoldingMargin.SelectedFoldingMarkerBrushProperty, Application.Current!.GetResourceObservable("ThemeControlLowBrush"));
+        // Bind(FoldingMargin.SelectedFoldingMarkerBrushProperty, Application.Current!.GetResourceObservable("ThemeForegroundBrush"));
+        // Bind(FoldingMargin.SelectedFoldingMarkerBackgroundBrushProperty, Application.Current!.GetResourceObservable("ThemeControlLowBrush"));
+
         Options.AllowScrollBelowDocument = true;
         Options.ConvertTabsToSpaces = true;
         

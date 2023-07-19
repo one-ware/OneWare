@@ -7,6 +7,7 @@ using AvaloniaEdit.Rendering;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
+using DryIoc;
 using DynamicData.Binding;
 using OneWare.Core.Services;
 using Prism.Ioc;
@@ -34,11 +35,19 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly IProjectExplorerService _projectExplorerService;
         private readonly BackupService _backupService;
 
+        public bool DisableEditViewEvents { get; private set; }
+        
         private CompositeDisposable _composite = new();
         
         public ExtendedTextEditor Editor { get; } = new();
 
-        public ITypeAssistance? TypeAssistance { get; private set; }
+        private ITypeAssistance? _typeAssistance;
+
+        public ITypeAssistance? TypeAssistance
+        {
+            get => _typeAssistance;
+            private set => SetProperty(ref _typeAssistance, value);
+        }
 
         public TextDocument CurrentDocument => Editor.Document;
 
@@ -57,7 +66,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService)
+            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService, dockService)
         {
             _settingsService = settingsService;
             _dockService = dockService;
@@ -121,45 +130,44 @@ namespace OneWare.Core.ViewModels.DockViews
             
             if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
 
-            if (string.IsNullOrWhiteSpace(FullPath))
-            {
-                IsLoading = false;
-                LoadingFailed = true;
-                return;
-            }
-
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
 
-            _dockService.OpenFiles.TryAdd(CurrentFile, this);
-            
             async void OnInitialized()
             {
                 var result = await LoadAsync();
-                
-                var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
-                if (scope != null)
+
+                DisableEditViewEvents = CurrentDocument.TextLength > 100000;
+                if (DisableEditViewEvents)
                 {
-                    if(Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
-                    Editor.TextMateInstallation?.SetGrammar(scope);
-                    _languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
-                    {
-                        Editor.TextMateInstallation?.SetTheme(x);
-                    }).DisposeWith(_composite);
+                    ContainerLocator.Container.Resolve<ILogger>().Warning("Some features are disabled for this large file to reduce performance loss");
                 }
                 else
                 {
-                    if (Editor.TextMateInstallation != null)
+                    var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
+                    if (scope != null)
                     {
-                        Editor.RemoveTextmate();
+                        if(Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
+                        Editor.TextMateInstallation?.SetGrammar(scope);
+                        _languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
+                        {
+                            Editor.TextMateInstallation?.SetTheme(x);
+                        }).DisposeWith(_composite);
                     }
+                    else
+                    {
+                        if (Editor.TextMateInstallation != null)
+                        {
+                            Editor.RemoveTextmate();
+                        }
+                    }
+                
+                    Observable.FromEventPattern(
+                            h => Editor.Document.TextChanged += h,
+                            h => Editor.Document.TextChanged -= h)
+                        .Subscribe(x => { IsDirty = true; }).DisposeWith(_composite);
+                
+                    if(result) InitTypeAssistance();
                 }
-                
-                Observable.FromEventPattern(
-                        h => Editor.Document.TextChanged += h,
-                        h => Editor.Document.TextChanged -= h)
-                    .Subscribe(x => { IsDirty = true; }).DisposeWith(_composite);
-                
-                if(result) InitTypeAssistance();
             }
             OnInitialized();
         }
@@ -347,12 +355,20 @@ namespace OneWare.Core.ViewModels.DockViews
             {
                 await using var stream = File.OpenRead(CurrentFile.FullPath);
                 using var reader = new StreamReader(stream);
+                
+                var doc = await Task.Run(() =>
+                {
+                    var d = new TextDocument(reader.ReadToEnd());
+                    d.SetOwnerThread(null);
+                    return d;
+                });
 
-                var text = await reader.ReadToEndAsync();
+                doc.SetOwnerThread(Thread.CurrentThread);
 
+                Editor.Document = doc;
+                
                 CurrentFile.LastSaveTime = File.GetLastWriteTime(CurrentFile.FullPath);
-
-                CurrentDocument.Text = text;
+                
                 CurrentDocument.UndoStack.ClearAll();
             }
             catch (Exception e)
