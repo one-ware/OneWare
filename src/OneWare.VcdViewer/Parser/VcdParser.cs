@@ -12,15 +12,20 @@ public class VcdParser
     public static VcdDefinition ParseVcd(string path)
     {
         using var stream = File.OpenRead(path);
-        using var reader = new StreamReader(stream);
 
-        var definition = ReadDefinition(reader);
+        var definition = ReadDefinition(stream);
 
+        var endDefinition = stream.Position;
+        
+        ReadSignals(stream, definition, stream.Position, stream.Length, 0.5f);
+        
         return definition;
     }
 
-    private static VcdDefinition ReadDefinition(TextReader reader)
+    private static VcdDefinition ReadDefinition(Stream stream)
     {
+        using var reader = new StreamReader(stream, null, true, -1, true);
+        
         var definition = new VcdDefinition();
         IScopeHolder currentScope = definition;
         string? keyWord = null;
@@ -69,6 +74,85 @@ public class VcdParser
             }
             return true;
         });
+
         return definition;
+    }
+
+    private enum ParsingContext
+    {
+        None,
+        Time,
+        Signal
+    }
+    
+    private static void ReadSignals(Stream stream, VcdDefinition definition, long start, long end, float accuracy)
+    {        
+        stream.Seek(start, SeekOrigin.Begin);
+        using var reader = new StreamReader(stream);
+
+        var stack = new Stack<(long, List<string>)>();
+        
+        var gap =  (1f / accuracy)-1;
+        var lastC = ' ';
+        var parsingPos = ParsingContext.None;
+        var stringBuilder = new StringBuilder();
+
+        var lastBlockLength = 0;
+        
+        while(stream.Position < end)
+        {
+            lastBlockLength++;
+            var c = (char)reader.Read();
+            switch (c)
+            {
+                case '\r':
+                    break;
+                case ' ':
+                case '\n':
+                    c = ' ';
+                    switch (parsingPos)
+                    {
+                        case ParsingContext.Time:
+                            stack.Push((ParseLong(stringBuilder), new List<string>()));
+                            stringBuilder.Clear();
+                            
+                            //Block end
+                            stream.Seek((long)(lastBlockLength*gap), SeekOrigin.Current);
+                            lastBlockLength = 0;
+
+                            break;
+                    }
+                    parsingPos = ParsingContext.None;
+                    break;
+                case '#' when lastC is ' ':
+                    stringBuilder.Clear();
+                    parsingPos = ParsingContext.Time;
+                    break;
+                default:
+                    stringBuilder.Append(c);
+                    break;
+            }
+            lastC = c;
+        }
+        
+        Console.WriteLine(stack.Count);
+    }
+    
+    static long ParseLong(StringBuilder stringBuilder)
+    {
+        long result = 0;
+        for (var i = 0; i < stringBuilder.Length; i++)
+        {
+            var c = stringBuilder[i];
+            if (c is >= '0' and <= '9')
+            {
+                result = result * 10 + (c - '0');
+            }
+            else
+            {
+                throw new FormatException("Invalid time parsing");
+            }
+        }
+        return result;
     }
 }

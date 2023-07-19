@@ -11,7 +11,10 @@ public static class TextReaderExtensions
         //read Definition
         for (var i = 0; i < maxLength; i++)
         {
-            var character = (char)reader.Read();
+            var ci = reader.Read();
+            if (ci == -1) return; //TODO send last word
+            
+            var character = (char)ci;
             if (character is not (' ' or '\n' or '\r')) wordBuilder.Append(character);
             else
             {

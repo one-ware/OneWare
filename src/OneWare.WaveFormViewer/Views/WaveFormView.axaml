@@ -9,7 +9,7 @@
              x:Class="OneWare.WaveFormViewer.Views.WaveFormView">
 
     <UserControl.Resources>
-        <x:Double x:Key="LineHeight">16</x:Double>
+        <x:Double x:Key="LineHeight">40</x:Double>
     </UserControl.Resources>
     
         <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid"

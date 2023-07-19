@@ -273,23 +273,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         #region LoadAndSave
 
-        public override bool OnClose()
-        {
-            if (IsDirty)
-            {
-                if(CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
-                return false;
-            }
-            else
-            {
-                if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
-            }
-
-            Reset();
-            return true;
-        }
-
-        private void Reset()
+        protected override void Reset()
         {
             TypeAssistance?.Close();
             _composite.Dispose();

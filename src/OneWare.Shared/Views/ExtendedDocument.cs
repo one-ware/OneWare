@@ -73,6 +73,27 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
     }
+    
+    public override bool OnClose()
+    {
+        if (IsDirty)
+        {
+            if(CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
+            return false;
+        }
+        else
+        {
+            if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
+        }
+
+        Reset();
+        return true;
+    }
+
+    protected virtual void Reset()
+    {
+        
+    }
 
     public virtual Task<bool> TryCloseAsync()
     {
