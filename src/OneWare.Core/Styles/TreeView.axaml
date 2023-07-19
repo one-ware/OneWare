@@ -4,15 +4,10 @@
     <!--TreeView-->
     <Style Selector="TreeView">
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="0" />
     </Style>
 
     <Style Selector="TreeViewItem TextBox:disabled /template/ Border#border">
         <Setter Property="Opacity" Value="1" />
-    </Style>
-
-    <Style Selector="TreeViewItem:selected /template/ Border#SelectionBorder">
-        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
     </Style>
 
     <Style Selector="TreeViewItem /template/ Border#SelectionBorder">

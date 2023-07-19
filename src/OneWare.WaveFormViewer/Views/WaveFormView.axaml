@@ -12,10 +12,15 @@
         <x:Double x:Key="LineHeight">16</x:Double>
     </UserControl.Resources>
     
-    <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid" RowDefinitions="*,22,Auto"
-              ColumnDefinitions="Auto,Auto,*">
+        <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid"
+              RowDefinitions="*,22,Auto">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="150" Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <ScrollViewer MinWidth="100" Padding="3,0,3,0" Name="TextPartScroll"
+            <ScrollViewer Padding="3,0,3,0" Name="TextPartScroll"
                           Grid.Column="0" Grid.Row="0" HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Hidden">
                 <ItemsControl Padding="5, 0, 5, 0" ItemsSource="{Binding Signals}">
@@ -30,7 +35,8 @@
                 </ItemsControl>
             </ScrollViewer>
 
-            <GridSplitter Background="{DynamicResource ThemeControlLowBrush}" Width="2" VerticalAlignment="Stretch" Grid.Row="0"
+            <GridSplitter Background="{DynamicResource ThemeControlLowBrush}" Width="2" VerticalAlignment="Stretch"
+                          Grid.Row="0"
                           Grid.Column="1" />
 
             <!--
@@ -58,11 +64,12 @@
                                                -->
 
             <Border Grid.Column="0" Height="30" Grid.ColumnSpan="3" Grid.Row="2"
-                    Background="{DynamicResource ThemeBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                    Background="{DynamicResource ThemeBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                     BorderThickness="0, 1, 0, 0">
                 <DockPanel Height="22" VerticalAlignment="Center">
-                    
+
                 </DockPanel>
             </Border>
-    </Grid>
+        </Grid>
 </UserControl>

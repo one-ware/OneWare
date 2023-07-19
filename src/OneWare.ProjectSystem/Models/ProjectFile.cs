@@ -26,8 +26,5 @@ public class ProjectFile : ProjectEntry, IProjectFile
                 Icon = x as IImage;
             });
         });
-
-        DoubleTabCommand =
-            new RelayCommand(() => ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(this));
     }
 }

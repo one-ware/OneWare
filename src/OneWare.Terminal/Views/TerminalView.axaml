@@ -13,7 +13,7 @@
         <Style Selector="vt100|VirtualTerminalControl">
             <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
         </Style>
     </UserControl.Styles>
 

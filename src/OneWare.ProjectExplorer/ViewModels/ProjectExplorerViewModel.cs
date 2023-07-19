@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -51,6 +52,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (_activeProject is not null) _activeProject.IsActive = true;
         }
     }
+    
+    public ICommand? DoubleTabCommand { get; protected set; }
+    public Action<Action<string>>? RequestRename { get; set; }
 
     public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, 
         IProjectManagerService projectManagerService, IFileWatchService fileWatchService)
@@ -70,6 +74,22 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         Title = "Project Explorer";
     }
 
+    public void DoubleTab(IProjectEntry entry)
+    {
+        if (entry is IProjectFile file)
+        {
+            _ = _dockService.OpenFileAsync(file);
+        }
+        else
+        {
+            entry.IsExpanded = !entry.IsExpanded;
+        }
+    }
+    public void OpenFile(IFile file)
+    {
+        
+    }
+    
     public void ConstructContextMenu(TopLevel topLevel)
     {
         var menuItems = new List<IMenuItem>();

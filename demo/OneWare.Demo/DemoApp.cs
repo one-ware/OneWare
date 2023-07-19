@@ -60,6 +60,6 @@ public class DemoApp : App
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
-        //moduleCatalog.AddModule<VcdViewerModule>();
+        moduleCatalog.AddModule<VcdViewerModule>();
     }
 }

@@ -1,6 +1,7 @@
 using System.Text;
 using DynamicData;
 using OneWare.Shared.Extensions;
+using OneWare.VcdViewer.Models;
 
 namespace OneWare.VcdViewer.Parser;
 
@@ -21,6 +22,7 @@ public class VcdParser
     private static VcdDefinition ReadDefinition(TextReader reader)
     {
         var definition = new VcdDefinition();
+        IScopeHolder currentScope = definition;
         string? keyWord = null;
         var words = new List<string>();
         
@@ -39,13 +41,16 @@ public class VcdParser
                             case "$var":
                                 if (words.Count == 4)
                                 {
-                                    definition.Scopes.Last().Signals.Add(new VcdSignal(words[0], int.Parse(words[1]), words[2], words[3]));
+                                    currentScope.Signals.Add(new VcdSignal(words[0], int.Parse(words[1]), words[2], words[3]));
                                 }
                                 break;
                             case "$scope":
-                                definition.Scopes.Add(new VcdScope(string.Join(' ', words)));
+                                var newScope = new VcdScope(currentScope, string.Join(' ', words));
+                                currentScope.Scopes.Add(newScope);
+                                currentScope = newScope;
                                 break;
                             case "$upscope":
+                                currentScope = currentScope.Parent ?? throw new Exception("Invalid VCD Definition");
                                 break;
                             case "$enddefinitions":
                                 return false;

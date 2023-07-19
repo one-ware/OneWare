@@ -25,9 +25,7 @@ public interface IProjectEntry : IHasPath
     public IProjectRoot Root { get; }
     
     public IProjectFolder? TopFolder { get; set; }
-    
-    public ICommand? DoubleTabCommand { get; }
-    
+
     public Action<Action<string>>? RequestRename { get; set; }
     
     public bool IsValid();

@@ -3,7 +3,64 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.VcdViewer.ViewModels"
+             xmlns:models="clr-namespace:OneWare.VcdViewer.Models"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.VcdViewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
-    <ContentControl Content="{Binding WaveFormViewer}"/>
+
+    <UserControl.Resources>
+
+    </UserControl.Resources>
+    
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="150" Width="Auto" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition MinWidth="150" Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid RowDefinitions="*, 5, *">
+                <TreeView BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
+                          ItemsSource="{Binding VcdDefinition.Scopes, FallbackValue={x:Null}}"
+                          SelectedItem="{Binding SelectedScope}">
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="models:VcdScope" ItemsSource="{Binding Scopes}">
+                            <TextBlock Text="{Binding Name}" />
+                        </TreeDataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
+
+                <GridSplitter Background="{DynamicResource ThemeBackgroundBrush}"
+                              Height="5" HorizontalAlignment="Stretch" BorderThickness="0 1"
+                              BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                              Grid.Row="1" />
+
+                <ListBox BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="2"
+                         SelectedItem="{Binding SelectedSignal}"
+                         ItemsSource="{Binding SelectedScope.Signals, FallbackValue={x:Null}}">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem" x:DataType="models:VcdSignal">
+                            <Setter Property="ContextMenu">
+                                <ContextMenu>
+                                    <MenuItem Header="Show" Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}" 
+                                              CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </Setter>
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBox.DataTemplates>
+                        <DataTemplate DataType="models:VcdSignal">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.DataTemplates>
+                </ListBox>
+            </Grid>
+
+            <GridSplitter BorderThickness="1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                          Background="{DynamicResource ThemeBackgroundBrush}" Width="5" VerticalAlignment="Stretch"
+                          Grid.Column="1" />
+
+            <ContentControl Grid.Column="2" Content="{Binding WaveFormViewer}" />
+
+        </Grid>
 </UserControl>

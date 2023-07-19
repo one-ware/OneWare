@@ -119,7 +119,6 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         }
     }
     
-    public ICommand? DoubleTabCommand { get; protected set; }
     public Action<Action<string>>? RequestRename { get; set; }
 
     protected ProjectEntry(string header, IProjectFolder? topFolder)
