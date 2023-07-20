@@ -27,10 +27,11 @@ public class VcdParserTests
     {
         var sw = new Stopwatch();
         sw.Start();
-        var result = VcdParser.ParseVcd(@"C:\Users\Hendrik\OneWareStudio\Projects\Test\SimTest\Sim_tb.vcd");
+        var result = VcdParser.ParseVcd(GetTestStream());
         sw.Stop();
         
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        //Assert.Equal(24004, result.Changes.Count);
+        Assert.Equal(5, result.Definition.SignalRegister.Count);
+        Assert.Equal(24003, result.Definition.SignalRegister['#'].Changes.Count);
     }
 }

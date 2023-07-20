@@ -44,7 +44,7 @@ public static class VcdParser
         return ParseVcd(stream);
     }
     
-    private static VcdFile ParseVcd(Stream stream)
+    public static VcdFile ParseVcd(Stream stream)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
         
