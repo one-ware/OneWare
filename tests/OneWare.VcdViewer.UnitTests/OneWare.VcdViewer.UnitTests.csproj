@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\props\XUnit.props" />
+    
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <IsPackable>False</IsPackable>
+        <IsTestProject>True</IsTestProject>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\OneWare.VcdViewer\OneWare.VcdViewer.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Remove="Assets\GHDL.vcd" />
+      <EmbeddedResource Include="Assets\GHDL.vcd" />
+    </ItemGroup>
+
+</Project>

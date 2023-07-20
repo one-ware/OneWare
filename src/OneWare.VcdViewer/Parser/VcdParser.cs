@@ -12,12 +12,16 @@ public class VcdParser
     public static VcdDefinition ParseVcd(string path)
     {
         using var stream = File.OpenRead(path);
-
+        return ParseVcd(stream);
+    }
+    
+    public static VcdDefinition ParseVcd(Stream stream, float accuracy = 1f)
+    {
         var definition = ReadDefinition(stream);
 
         var endDefinition = stream.Position;
         
-        ReadSignals(stream, definition, stream.Position, stream.Length, 0.5f);
+        ReadSignals(stream, definition, stream.Position, stream.Length, accuracy);
         
         return definition;
     }
@@ -88,7 +92,7 @@ public class VcdParser
     private static void ReadSignals(Stream stream, VcdDefinition definition, long start, long end, float accuracy)
     {        
         stream.Seek(start, SeekOrigin.Begin);
-        using var reader = new StreamReader(stream);
+        using var reader = new StreamReader(stream, null, true, -1, true);
 
         var stack = new Stack<(long, List<string>)>();
         
@@ -98,11 +102,16 @@ public class VcdParser
         var stringBuilder = new StringBuilder();
 
         var lastBlockLength = 0;
+
+        var test = "";
         
         while(stream.Position < end)
         {
             lastBlockLength++;
             var c = (char)reader.Read();
+
+            test += c;
+            
             switch (c)
             {
                 case '\r':
@@ -115,9 +124,12 @@ public class VcdParser
                         case ParsingContext.Time:
                             stack.Push((ParseLong(stringBuilder), new List<string>()));
                             stringBuilder.Clear();
+
+                            test = "";
                             
                             //Block end
                             stream.Seek((long)(lastBlockLength*gap), SeekOrigin.Current);
+                            reader.DiscardBufferedData();
                             lastBlockLength = 0;
 
                             break;

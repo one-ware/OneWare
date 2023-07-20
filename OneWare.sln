@@ -71,6 +71,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
 		build\props\JavaScriptEngineSwitcher.props = build\props\JavaScriptEngineSwitcher.props
 		build\props\Avalonia.Controls.TreeDataGrid.props = build\props\Avalonia.Controls.TreeDataGrid.props
+		build\props\XUnit.props = build\props\XUnit.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorTextBlock.Avalonia", "src\Markdown.Avalonia\ColorTextBlock.Avalonia\ColorTextBlock.Avalonia.csproj", "{0B2AD173-5342-46AB-B766-E6899216A9AB}"
@@ -104,6 +105,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.VcdViewer", "src\OneWare.VcdViewer\OneWare.VcdViewer.csproj", "{0AE3FFDC-AC0B-4E97-8551-3D756071320C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.WaveFormViewer", "src\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj", "{B888DC29-F870-4CBE-9B00-EFDF25549F00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.VcdViewer.UnitTests", "tests\OneWare.VcdViewer.UnitTests\OneWare.VcdViewer.UnitTests.csproj", "{05D56251-D9CD-4794-B9A4-C9AF8E00B92C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{EB783E04-C3C8-45F8-B810-24798DAE2450}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -243,6 +248,10 @@ Global
 		{B888DC29-F870-4CBE-9B00-EFDF25549F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B888DC29-F870-4CBE-9B00-EFDF25549F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B888DC29-F870-4CBE-9B00-EFDF25549F00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05D56251-D9CD-4794-B9A4-C9AF8E00B92C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05D56251-D9CD-4794-B9A4-C9AF8E00B92C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05D56251-D9CD-4794-B9A4-C9AF8E00B92C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05D56251-D9CD-4794-B9A4-C9AF8E00B92C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{192886D3-6203-4AD9-9A44-E071A6AF3059} = {B99724E4-1AA2-46D9-B982-6A3B381C5258}
@@ -278,5 +287,6 @@ Global
 		{C1BBAA36-DC12-47B8-8AA1-A1AF56EC32C4} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{0AE3FFDC-AC0B-4E97-8551-3D756071320C} = {C1BBAA36-DC12-47B8-8AA1-A1AF56EC32C4}
 		{B888DC29-F870-4CBE-9B00-EFDF25549F00} = {C1BBAA36-DC12-47B8-8AA1-A1AF56EC32C4}
+		{05D56251-D9CD-4794-B9A4-C9AF8E00B92C} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 	EndGlobalSection
 EndGlobal
