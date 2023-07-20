@@ -5,11 +5,14 @@
              xmlns:viewModels="clr-namespace:OneWare.VcdViewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.VcdViewer.Models"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums;assembly=OneWare.WaveFormViewer"
+             xmlns:behaviours="clr-namespace:OneWare.VcdViewer.Behaviours"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.VcdViewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 
     <UserControl.Resources>
-
+        <behaviours:SignalListBoxDropHandler x:Key="SignalListBoxDropHandler" />
     </UserControl.Resources>
     
         <Grid>
@@ -23,6 +26,11 @@
                 <TreeView BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
                           ItemsSource="{Binding VcdFile.Definition.Scopes, FallbackValue={x:Null}}"
                           SelectedItem="{Binding SelectedScope}">
+                    <TreeView.Styles>
+                        <Style Selector="TreeViewItem" x:DataType="models:VcdScope">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
+                        </Style>
+                    </TreeView.Styles>
                     <TreeView.DataTemplates>
                         <TreeDataTemplate DataType="models:VcdScope" ItemsSource="{Binding Scopes}">
                             <TextBlock Text="{Binding Name}" />
@@ -46,11 +54,26 @@
                                               CommandParameter="{Binding}" />
                                 </ContextMenu>
                             </Setter>
+                            <Setter Property="Interaction.Behaviors">
+                                <BehaviorCollectionTemplate>
+                                    <BehaviorCollection>
+                                        <ContextDragBehavior />
+                                    </BehaviorCollection>
+                                </BehaviorCollectionTemplate>
+                            </Setter>
                         </Style>
                     </ListBox.Styles>
                     <ListBox.DataTemplates>
                         <DataTemplate DataType="models:VcdSignal">
-                            <TextBlock Text="{Binding Name}" />
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Grid>
+                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:SignalLineType.Reg}}" 
+                                       Height="16" Width="16" Source="{DynamicResource Material.Pulse}"/>
+                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:SignalLineType.Integer}}" 
+                                       Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"/>
+                                </Grid>
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
                         </DataTemplate>
                     </ListBox.DataTemplates>
                 </ListBox>
@@ -60,7 +83,10 @@
                           Background="{DynamicResource ThemeBackgroundBrush}" Width="5" VerticalAlignment="Stretch"
                           Grid.Column="1" />
 
-            <ContentControl Grid.Column="2" Content="{Binding WaveFormViewer}" />
-
+            <ContentControl DragDrop.AllowDrop="True" Grid.Column="2" Content="{Binding WaveFormViewer}">
+                <Interaction.Behaviors>
+                    <ContextDropBehavior Handler="{StaticResource SignalListBoxDropHandler}" />
+                </Interaction.Behaviors>
+            </ContentControl>
         </Grid>
 </UserControl>

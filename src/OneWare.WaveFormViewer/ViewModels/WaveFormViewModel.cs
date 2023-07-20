@@ -2,8 +2,8 @@
 using System.Globalization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
 using OneWare.Shared.Converters;
+using OneWare.Shared.Extensions;
 using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
@@ -52,6 +52,7 @@ public class WaveFormViewModel : ObservableObject
         {
             this.SetProperty(ref _markerOffset, value >= 0 ? value : 0);
             this.OnPropertyChanged(nameof(MarkerText));
+            SetSignalMarkerValues(MarkerOffset);
         }
     }
     
@@ -64,6 +65,7 @@ public class WaveFormViewModel : ObservableObject
         {
             this.SetProperty(ref _secondMarkerOffset, value >= 0 ? value : 0);
             this.OnPropertyChanged(nameof(MarkerText));
+            SetSignalMarkerValues(SecondMarkerOffset);
         }
     }
     
@@ -83,6 +85,21 @@ public class WaveFormViewModel : ObservableObject
             var dist = SecondMarkerOffset - MarkerOffset;
             return (dist > 0 ? "+" : "") + TimeUnitConverter.Instance.Convert(dist, typeof(string), null,
                 CultureInfo.CurrentCulture);
+        }
+    }
+
+    public void SetSignalMarkerValues(long offset)
+    {
+        foreach (var s in Signals)
+        {
+            var index = s.Line.BinarySearchNext(offset, (l, part, nextPart) =>
+            {
+                if (l >= part.Time && l <= nextPart.Time) return 0;
+                if (l > part.Time) return 1;
+                return -1;
+            });
+
+            s.MarkerValue = index >= 0 ? s.Line[index].Data.ToString() : null;
         }
     }
     

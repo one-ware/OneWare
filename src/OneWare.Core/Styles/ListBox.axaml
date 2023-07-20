@@ -14,6 +14,10 @@
     <Style Selector="ListBox">
         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
+    
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="4" />
+    </Style>
 
     <Style Selector="ListBox.InvisibleSelection ListBoxItem:selected > ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
@@ -22,5 +26,6 @@
     <Style Selector="ListBox.InvisibleSelection ListBoxItem:pointerover > ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
     </Style>
+
     
 </Styles>

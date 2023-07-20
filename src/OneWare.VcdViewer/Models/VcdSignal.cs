@@ -11,7 +11,7 @@ public class VcdSignal
     public char Id { get; }
     public string Name { get; }
 
-    public List<VcdChange> Changes { get; } = new();
+    public List<WavePart> Changes { get; } = new();
 
     public VcdSignal(SignalLineType type, int bitWidth, char id, string name)
     {

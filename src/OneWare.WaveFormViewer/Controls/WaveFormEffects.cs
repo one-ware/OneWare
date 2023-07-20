@@ -81,8 +81,8 @@ namespace OneWare.WaveFormViewer.Controls
 
             if (!pointerPressed)
             {
-                vm.MarkerOffset = offset;
                 vm.SecondMarkerOffset = long.MaxValue;
+                vm.MarkerOffset = offset;
             }
             else
             {

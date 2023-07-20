@@ -1,14 +1,22 @@
 ﻿using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.WaveFormViewer.Enums;
 
 namespace OneWare.WaveFormViewer.Models;
 
-public class WaveModel
+public class WaveModel : ObservableObject
 {
+    private string? _markerValue;
+    public string? MarkerValue
+    {
+        get => _markerValue;
+        set => SetProperty(ref _markerValue, value);
+    }
+    
     public string Label { get; }
     public IBrush WaveBrush { get; }
     public SignalLineType LineType { get; }
-    public SignalDataType DataType => SignalDataType.Binary;
+    public SignalDataType DataType => SignalDataType.Decimal;
     public WavePart[] Line { get; }
 
     public WaveModel(string label, SignalLineType lineType, WavePart[] line, IBrush waveBrush)

@@ -31,7 +31,11 @@
                     <DataTemplate x:DataType="models:WaveModel">
                         <DockPanel Background="Transparent"
                                    Height="{DynamicResource LineHeight}">
-                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Label}" />
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" DockPanel.Dock="Left">
+                                <TextBlock Text="{Binding Label}" />
+                                <TextBlock Text=" = " />
+                                <TextBlock Text="{Binding MarkerValue}" FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" />
+                            </StackPanel>
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

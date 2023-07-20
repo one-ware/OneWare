@@ -77,17 +77,10 @@ public class VcdViewModel : ExtendedDocument
 
     public WavePart[] Construct(VcdSignal signal)
     {
-        var parts = new List<WavePart>();
-        
-        foreach (var c in signal.Changes)
+        if (signal.Changes.Any() && signal.Changes.Last().Time < VcdFile?.LastChangeTime)
         {
-            parts.Add(new WavePart(c.Time, c.Value));   
+            signal.Changes.Add(new WavePart(VcdFile.LastChangeTime, signal.Changes.Last().Data));
         }
-
-        if (parts.Any() && parts.Last().Time < VcdFile?.LastChangeTime)
-        {
-            parts.Add(new WavePart(VcdFile.LastChangeTime, parts.Last().Data));
-        }
-        return parts.ToArray();
+        return signal.Changes.ToArray();
     }
 }
