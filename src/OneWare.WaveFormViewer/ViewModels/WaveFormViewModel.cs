@@ -88,19 +88,24 @@ public class WaveFormViewModel : ObservableObject
         }
     }
 
-    public void SetSignalMarkerValues(long offset)
+    private void SetSignalMarkerValues(long offset)
     {
         foreach (var s in Signals)
         {
-            var index = s.Line.BinarySearchNext(offset, (l, part, nextPart) =>
-            {
-                if (l >= part.Time && l <= nextPart.Time) return 0;
-                if (l > part.Time) return 1;
-                return -1;
-            });
-
-            s.MarkerValue = index >= 0 ? s.Line[index].Data.ToString() : null;
+            SetSignalMarkerValue(s, offset);
         }
+    }
+
+    private void SetSignalMarkerValue(WaveModel model, long offset)
+    {
+        var index = model.Line.BinarySearchNext(offset, (l, part, nextPart) =>
+        {
+            if (l >= part.Time && l <= nextPart.Time) return 0;
+            if (l > part.Time) return 1;
+            return -1;
+        });
+
+        model.MarkerValue = index >= 0 ? model.Line[index].Data.ToString() : null;
     }
     
     public void ZoomIn()
@@ -133,6 +138,13 @@ public class WaveFormViewModel : ObservableObject
 
     public void AddSignal(string name, SignalLineType type, WavePart[] line)
     {
-        Signals.Add(new WaveModel(name, type, line, WaveColors[Signals.Count % WaveColors.Length]));
+        var waveModel = new WaveModel(name, type, line, WaveColors[Signals.Count % WaveColors.Length]);
+        SetSignalMarkerValue(waveModel, MarkerOffset);
+        Signals.Add(waveModel);
+    }
+
+    public void RemoveSignal(WaveModel model)
+    {
+        Signals.Remove(model);
     }
 }

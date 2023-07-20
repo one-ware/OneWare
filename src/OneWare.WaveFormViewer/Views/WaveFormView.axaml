@@ -12,6 +12,16 @@
 
     <UserControl.Resources>
         <x:Double x:Key="LineHeight">40</x:Double>
+        
+        <ContextMenu x:Key="WaveModelContextMenu" x:DataType="models:WaveModel">
+            <MenuItem Header="Remove Signal"
+                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).RemoveSignal}" 
+                      CommandParameter="{Binding}">
+                <MenuItem.Icon>
+                    <Image Source="{DynamicResource MaterialDesign.Delete}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid"
@@ -29,7 +39,7 @@
             <ItemsControl Padding="5, 0, 5, 0" ItemsSource="{Binding Signals}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:WaveModel">
-                        <DockPanel Background="Transparent"
+                        <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
                                    Height="{DynamicResource LineHeight}">
                             <StackPanel VerticalAlignment="Center" Orientation="Horizontal" DockPanel.Dock="Left">
                                 <TextBlock Text="{Binding Label}" />
