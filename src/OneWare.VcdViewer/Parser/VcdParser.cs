@@ -7,11 +7,32 @@ using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.VcdViewer.Parser;
 
-public class VcdParser
+public static class VcdParser
 {
     private const int MaxDefinitionSize = 100000;
     private const int BufferSize = 1024;
 
+    public static (VcdFile, StreamReader) ParseVcdDefinition(string path)
+    {
+        var stream = File.OpenRead(path);
+        var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
+        
+        var definition = ReadDefinition(reader);
+        
+        var vcdFile = new VcdFile(definition);
+        
+        return (vcdFile, reader);
+    }
+
+    public static async Task StartAndReportProgressAsync(StreamReader reader, VcdFile vcdFile, IProgress<int> progress)
+    {
+        await Task.Run(() =>
+        {
+            ReadSignals(reader, vcdFile, progress);
+        });
+        reader.Dispose();
+    }
+    
     public static Task<VcdFile> ParseVcdAsync(string path)
     {
         return Task.Run(() => ParseVcd(path));
@@ -23,7 +44,7 @@ public class VcdParser
         return ParseVcd(stream);
     }
     
-    public static VcdFile ParseVcd(Stream stream)
+    private static VcdFile ParseVcd(Stream stream)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
         
@@ -97,7 +118,7 @@ public class VcdParser
         Signal
     }
 
-    private static void ReadSignals(StreamReader reader, VcdFile file)
+    private static void ReadSignals(StreamReader reader, VcdFile file, IProgress<int>? progress = null)
     {
         var currentTime = 0L;
         var currentInteger = 0;
@@ -105,17 +126,31 @@ public class VcdParser
         var lastC = ' ';
         var parsingPos = ParsingPosition.None;
         var parsingSignalType = SignalLineType.Reg;
-        var stringBuilder = new StringBuilder();
-        
+
         /*  Example Block
             #78083021000\r\n
             0#\r\n
             0$\r\n
         */
-
+        
+        long? progressSnap = progress != null ? reader.BaseStream.Length / 100 : null;
+        var progressC = 0;
+        long counter = 0;
+        
         while(!reader.EndOfStream)
         {
             var c = (char)reader.Read();
+            if (progress != null)
+            {
+                counter++;
+
+                if (counter > progressSnap)
+                {
+                    progressC++;
+                    progress.Report(progressC);
+                    counter = 0;
+                }
+            }
 
             switch (c)
             {
@@ -176,6 +211,11 @@ public class VcdParser
                     break;
             }
             lastC = c;
+        }
+
+        foreach (var (_, signal) in file.Definition.SignalRegister)
+        {
+            signal.Changes.Add(new WavePart(long.MaxValue-10, signal.Changes.Last().Data));
         }
     }
 

@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.VcdViewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.VcdViewer.Models"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums;assembly=OneWare.WaveFormViewer"
              xmlns:behaviours="clr-namespace:OneWare.VcdViewer.Behaviours"

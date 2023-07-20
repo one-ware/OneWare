@@ -55,10 +55,25 @@ public class VcdViewModel : ExtendedDocument
 
     private async Task<bool> LoadAsync()
     {
+        IsLoading = true;
+        
         try
         {
-            VcdFile = await VcdParser.ParseVcdAsync(FullPath);
-            WaveFormViewer.Max = VcdFile.LastChangeTime;
+            var progress = new Progress<int>();
+
+            var context = VcdParser.ParseVcdDefinition(FullPath);
+
+            VcdFile = context.Item1;
+            
+            progress.ProgressChanged += (o, i) =>
+            {
+                Title = $"{Path.GetFileName(FullPath)} {i}%";
+                WaveFormViewer.Max = VcdFile.LastChangeTime;
+            };
+
+            await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress);
+            
+            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile!.Header;
         }
         catch (Exception e)
         {
@@ -72,15 +87,6 @@ public class VcdViewModel : ExtendedDocument
 
     public void AddSignal(VcdSignal signal)
     {
-        WaveFormViewer.AddSignal(signal.Name, signal.Type, Construct(signal));
-    }
-
-    public WavePart[] Construct(VcdSignal signal)
-    {
-        if (signal.Changes.Any() && signal.Changes.Last().Time < VcdFile?.LastChangeTime)
-        {
-            signal.Changes.Add(new WavePart(VcdFile.LastChangeTime, signal.Changes.Last().Data));
-        }
-        return signal.Changes.ToArray();
+        WaveFormViewer.AddSignal(signal.Name, signal.Type, signal.Changes);
     }
 }

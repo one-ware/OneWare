@@ -10,9 +10,4 @@ public class WavePart
         Time = time;
         Data = data;
     }
-
-    public WavePart AddTime(long time)
-    {
-        return new WavePart(Time + time, Data);
-    }
 }

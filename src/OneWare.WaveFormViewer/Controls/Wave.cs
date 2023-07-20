@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using OneWare.Shared.Extensions;
 using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 using ReactiveUI;
@@ -96,8 +97,7 @@ namespace OneWare.WaveFormViewer.Controls
             for (var i = 0; i < Bounds.Width;)
             {
                 var searchOffset = (long)((i + 2) * mz + Offset);
-                var signalPair = SearchSignal(signal.Line,
-                    searchOffset > Max ? Max : searchOffset, false);
+                var signalPair = SearchSignal(signal.Line, searchOffset);
                 if (!signalPair.HasValue) break;
 
                 var lastSignal = signalPair.Value.Item1;
@@ -225,55 +225,18 @@ namespace OneWare.WaveFormViewer.Controls
             }
         }
 
-        private static (WavePart, WavePart)? SearchSignal(WavePart[] signalLine, long offset, bool clk)
+        private static (WavePart, WavePart)? SearchSignal(List<WavePart> signalLine, long offset)
         {
-            if (signalLine.Length <= 1) return null;
-            if (clk)
+            if (signalLine.Count <= 1) return null;
+            var l = signalLine.BinarySearchNext(offset, (l, part, nextPart) =>
             {
-                var max = signalLine[^1].Time;
-                var newOffset = offset % max;
-                var diff = offset - newOffset;
-                if (diff < 0) diff = 0;
+                if (l >= part.Time && l <= nextPart.Time) return 0;
+                if (l > part.Time) return 1;
+                return -1;
+            });
 
-                var l = SearchSignalIndex(signalLine, newOffset);
-
-                if (l < 0 || l + 1 >= signalLine.Length) return null;
-                return (signalLine[l].AddTime(diff), signalLine[l + 1].AddTime(diff));
-            }
-            else
-            {
-                var l = SearchSignalIndex(signalLine, offset);
-
-                if (l < 0 || l + 1 >= signalLine.Length) return null;
-                return (signalLine[l], signalLine[l + 1]);
-            }
-        }
-
-        private static int SearchSignalIndex(WavePart[] signalLine, long x)
-        {
-            var l = BinarySearchIterative(signalLine, x);
-
-            if (l > -1 && x >= signalLine[l].Time) return l;
-
-            return -1;
-        }
-
-
-        private static int BinarySearchIterative(WavePart[] inputArray, long key)
-        {
-            var min = 0;
-            var max = inputArray.Length - 1;
-            while (min <= max)
-            {
-                var mid = (min + max) / 2;
-                if (key == inputArray[mid].Time) return mid;
-                if (key < inputArray[mid].Time)
-                    max = mid - 1;
-                else
-                    min = mid + 1;
-            }
-
-            return min - 1;
+            if (l < 0 || l + 1 > signalLine.Count) return null;
+            return (signalLine[l], signalLine[l + 1]);
         }
 
         public static double CalcMult(long max, double width)

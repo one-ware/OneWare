@@ -17,9 +17,9 @@ public class WaveModel : ObservableObject
     public IBrush WaveBrush { get; }
     public SignalLineType LineType { get; }
     public SignalDataType DataType => SignalDataType.Decimal;
-    public WavePart[] Line { get; }
+    public List<WavePart> Line { get; }
 
-    public WaveModel(string label, SignalLineType lineType, WavePart[] line, IBrush waveBrush)
+    public WaveModel(string label, SignalLineType lineType, List<WavePart> line, IBrush waveBrush)
     {
         Label = label;
         LineType = lineType;

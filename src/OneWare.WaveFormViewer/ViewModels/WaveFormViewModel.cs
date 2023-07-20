@@ -44,7 +44,7 @@ public class WaveFormViewModel : ObservableObject
         set => this.SetProperty(ref _cursorOffset, value >= 0 ? value : 0);
     }
     
-    private long _markerOffset = long.MaxValue;
+    private long _markerOffset = 0;
     public long MarkerOffset
     {
         get => _markerOffset;
@@ -136,7 +136,7 @@ public class WaveFormViewModel : ObservableObject
         Offset -= minus >= 1 ? minus : 1;
     }
 
-    public void AddSignal(string name, SignalLineType type, WavePart[] line)
+    public void AddSignal(string name, SignalLineType type, List<WavePart> line)
     {
         var waveModel = new WaveModel(name, type, line, WaveColors[Signals.Count % WaveColors.Length]);
         SetSignalMarkerValue(waveModel, MarkerOffset);
