@@ -4,5 +4,5 @@ public struct VcdChange
 {
     public long Time { get; init; }
     
-    public bool Value { get; init; }
+    public object Value { get; init; }
 }

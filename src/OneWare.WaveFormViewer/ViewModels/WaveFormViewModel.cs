@@ -4,6 +4,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using OneWare.Shared.Converters;
+using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.WaveFormViewer.ViewModels;
@@ -113,8 +114,8 @@ public class WaveFormViewModel : ObservableObject
         Offset -= minus >= 1 ? minus : 1;
     }
 
-    public void AddSignal(string name, WavePart[] line)
+    public void AddSignal(string name, SignalLineType type, WavePart[] line)
     {
-        Signals.Add(new WaveModel(name, WaveColors[Signals.Count % WaveColors.Length], line));
+        Signals.Add(new WaveModel(name, type, line, WaveColors[Signals.Count % WaveColors.Length]));
     }
 }

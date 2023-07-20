@@ -27,7 +27,7 @@ public class VcdParserTests
     {
         var sw = new Stopwatch();
         sw.Start();
-        var result = VcdParser.ParseVcd(GetTestStream());
+        var result = VcdParser.ParseVcd(@"C:\Users\Hendrik\OneWareStudio\Projects\Test\SimTest\Sim_tb.vcd");
         sw.Stop();
         
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");

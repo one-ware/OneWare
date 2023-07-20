@@ -7,14 +7,15 @@ public class WaveModel
 {
     public string Label { get; }
     public IBrush WaveBrush { get; }
-    public SignalLineType Type => SignalLineType.Reg;
+    public SignalLineType LineType { get; }
     public SignalDataType DataType => SignalDataType.Binary;
     public WavePart[] Line { get; }
 
-    public WaveModel(string label, IBrush waveBrush, WavePart[] line)
+    public WaveModel(string label, SignalLineType lineType, WavePart[] line, IBrush waveBrush)
     {
         Label = label;
-        WaveBrush = waveBrush;
+        LineType = lineType;
         Line = line;
+        WaveBrush = waveBrush;
     }
 }

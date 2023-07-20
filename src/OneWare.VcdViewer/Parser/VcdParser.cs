@@ -2,6 +2,7 @@ using System.Text;
 using DynamicData;
 using OneWare.Shared.Extensions;
 using OneWare.VcdViewer.Models;
+using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.VcdViewer.Parser;
@@ -57,7 +58,7 @@ public class VcdParser
                             case "$var":
                                 if (words.Count == 4)
                                 {
-                                    var newSignal = new VcdSignal(words[0], int.Parse(words[1]), words[2][0], words[3]);
+                                    var newSignal = new VcdSignal(Enum.Parse<SignalLineType>(words[0], true), int.Parse(words[1]), words[2][0], words[3]);
                                     currentScope.Signals.Add(newSignal);
                                     definition.SignalRegister.TryAdd(newSignal.Id, newSignal);
                                 }
@@ -96,19 +97,15 @@ public class VcdParser
         Signal
     }
 
-    private enum ParsingSignalType
-    {
-        Reg,
-        Byte
-    }
-    
     private static void ReadSignals(StreamReader reader, VcdFile file)
     {
         var currentTime = 0L;
+        var currentInteger = 0;
+        
         var lastC = ' ';
         var parsingPos = ParsingPosition.None;
-        var parsingSignalType = ParsingSignalType.Reg;
-        //var stringBuilder = new StringBuilder();
+        var parsingSignalType = SignalLineType.Reg;
+        var stringBuilder = new StringBuilder();
         
         /*  Example Block
             #78083021000\r\n
@@ -142,27 +139,47 @@ public class VcdParser
                     break;
                 case '0' when lastC is '\n' && parsingPos is ParsingPosition.None:
                 case '1' when lastC is '\n' && parsingPos is ParsingPosition.None:
-                    parsingSignalType = ParsingSignalType.Reg;
+                    parsingSignalType = SignalLineType.Reg;
                     parsingPos = ParsingPosition.Signal;
                     break;
+                case 'b' when lastC is '\n' && parsingPos is ParsingPosition.None:
+                    parsingSignalType = SignalLineType.Integer;
+                    parsingPos = ParsingPosition.Signal;
+                    currentInteger = 0;
+                    break;
+                case '0' when parsingPos is ParsingPosition.Signal && parsingSignalType is SignalLineType.Integer:
+                    currentInteger <<= 1;
+                    break;
+                case '1' when parsingPos is ParsingPosition.Signal && parsingSignalType is SignalLineType.Integer:
+                    currentInteger <<= 1;
+                    currentInteger += 1;
+                    break;
                 default:
-                    if (parsingPos is ParsingPosition.Signal)
+                    switch (parsingPos)
                     {
-                        if(parsingSignalType is ParsingSignalType.Reg) file.Definition.SignalRegister[c].Changes
-                            .Add(new VcdChange()
-                            {
-                                Time = currentTime, 
-                                Value = lastC == '1'
-                            });
-                    }
-                    else if (parsingPos is ParsingPosition.Time)
-                    {
-                        currentTime = AddNumber(currentTime, c);
-                    }
-                    else
-                    {
-                        parsingSignalType = ParsingSignalType.Byte;
-                        //stringBuilder.Append(c);
+                        case ParsingPosition.Signal when parsingSignalType is SignalLineType.Reg:
+                            file.Definition.SignalRegister[c].Changes
+                                .Add(new VcdChange()
+                                {
+                                    Time = currentTime, 
+                                    Value = lastC == '1'
+                                });
+                            break;
+                        case ParsingPosition.Signal when parsingSignalType is SignalLineType.Integer && lastC is ' ':
+                        {
+                            file.Definition.SignalRegister[c].Changes
+                                .Add(new VcdChange()
+                                {
+                                    Time = currentTime, 
+                                    Value = currentInteger
+                                });
+                            break;
+                        }
+                        case ParsingPosition.Time:
+                            currentTime = AddNumber(currentTime, c);
+                            break;
+                        default:
+                            break;
                     }
                     break;
             }

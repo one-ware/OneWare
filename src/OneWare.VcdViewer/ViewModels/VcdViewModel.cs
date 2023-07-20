@@ -72,7 +72,7 @@ public class VcdViewModel : ExtendedDocument
 
     public void AddSignal(VcdSignal signal)
     {
-        WaveFormViewer.AddSignal(signal.Name, Construct(signal));
+        WaveFormViewer.AddSignal(signal.Name, signal.Type, Construct(signal));
     }
 
     public WavePart[] Construct(VcdSignal signal)

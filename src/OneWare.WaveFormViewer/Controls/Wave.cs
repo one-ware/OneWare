@@ -156,7 +156,7 @@ namespace OneWare.WaveFormViewer.Controls
                     }
                 }
 
-                if (signal.Type == SignalLineType.Reg && !signal.Label.EndsWith(']')) //Simple type
+                if (signal.LineType == SignalLineType.Reg && !signal.Label.EndsWith(']')) //Simple type
                 {
                     if (sWidth > 3)
                     {
@@ -195,7 +195,7 @@ namespace OneWare.WaveFormViewer.Controls
 
                         var cutText = lastSignal.Data.ToString() ?? "";
 
-                        cutText = SignalConverter.ConvertSignal(cutText, signal.DataType);
+                        //cutText = SignalConverter.ConvertSignal(cutText, signal.DataType);
 
                         var maxChars = (int)((sWidth - 4) / (12 * 0.70));
                         if (cutText.Length > maxChars)
