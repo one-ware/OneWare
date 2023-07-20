@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using OneWare.VcdViewer.Models;
 using OneWare.VcdViewer.Parser;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,27 +21,16 @@ public class VcdParserTests
         var assembly = Assembly.GetExecutingAssembly();
         return assembly.GetManifestResourceStream("OneWare.VcdViewer.UnitTests.Assets.GHDL.vcd")!;
     }
-    
-        
+
     [Fact]
-    public void ParseTest100()
+    public void ParseTest()
     {
         var sw = new Stopwatch();
         sw.Start();
-        VcdParser.ParseVcd(GetTestStream(), 1f);
+        var result = VcdParser.ParseVcd(GetTestStream());
         sw.Stop();
         
-        _output.WriteLine($"Parsing with 100% accuracy took {sw.ElapsedMilliseconds}ms");
-    }
-    
-    [Fact]
-    public void ParseTest50()
-    {
-        var sw = new Stopwatch();
-        sw.Start();
-        VcdParser.ParseVcd(GetTestStream(), 0.5f);
-        sw.Stop();
-        
-        _output.WriteLine($"Parsing with 50% accuracy took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
+        //Assert.Equal(24004, result.Changes.Count);
     }
 }

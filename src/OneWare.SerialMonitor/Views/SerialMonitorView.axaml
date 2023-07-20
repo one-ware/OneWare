@@ -113,7 +113,7 @@
                     </Menu>
                 </StackPanel>
                 
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="24" Padding="3"
+                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Margin="5 0" Height="24" Padding="2"
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"

@@ -21,7 +21,7 @@
 
             <Grid RowDefinitions="*, 5, *">
                 <TreeView BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
-                          ItemsSource="{Binding VcdDefinition.Scopes, FallbackValue={x:Null}}"
+                          ItemsSource="{Binding VcdFile.Definition.Scopes, FallbackValue={x:Null}}"
                           SelectedItem="{Binding SelectedScope}">
                     <TreeView.DataTemplates>
                         <TreeDataTemplate DataType="models:VcdScope" ItemsSource="{Binding Scopes}">

@@ -2,34 +2,41 @@ using System.Text;
 using DynamicData;
 using OneWare.Shared.Extensions;
 using OneWare.VcdViewer.Models;
+using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.VcdViewer.Parser;
 
 public class VcdParser
 {
     private const int MaxDefinitionSize = 100000;
+    private const int BufferSize = 1024;
+
+    public static Task<VcdFile> ParseVcdAsync(string path)
+    {
+        return Task.Run(() => ParseVcd(path));
+    }
     
-    public static VcdDefinition ParseVcd(string path)
+    public static VcdFile ParseVcd(string path)
     {
         using var stream = File.OpenRead(path);
         return ParseVcd(stream);
     }
     
-    public static VcdDefinition ParseVcd(Stream stream, float accuracy = 1f)
+    public static VcdFile ParseVcd(Stream stream)
     {
-        var definition = ReadDefinition(stream);
+        using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
+        
+        var definition = ReadDefinition(reader);
+        
+        var vcdFile = new VcdFile(definition);
 
-        var endDefinition = stream.Position;
+        ReadSignals(reader, vcdFile);
         
-        ReadSignals(stream, definition, stream.Position, stream.Length, accuracy);
-        
-        return definition;
+        return vcdFile;
     }
 
-    private static VcdDefinition ReadDefinition(Stream stream)
+    private static VcdDefinition ReadDefinition(TextReader reader)
     {
-        using var reader = new StreamReader(stream, null, true, -1, true);
-        
         var definition = new VcdDefinition();
         IScopeHolder currentScope = definition;
         string? keyWord = null;
@@ -37,7 +44,7 @@ public class VcdParser
         
         reader.ProcessWords(MaxDefinitionSize, x =>
         {
-            if (x.StartsWith('$'))
+            if (x.StartsWith('$') && x.Length > 1)
             {
                 switch (x)
                 {
@@ -50,7 +57,9 @@ public class VcdParser
                             case "$var":
                                 if (words.Count == 4)
                                 {
-                                    currentScope.Signals.Add(new VcdSignal(words[0], int.Parse(words[1]), words[2], words[3]));
+                                    var newSignal = new VcdSignal(words[0], int.Parse(words[1]), words[2][0], words[3]);
+                                    currentScope.Signals.Add(newSignal);
+                                    definition.SignalRegister.TryAdd(newSignal.Id, newSignal);
                                 }
                                 break;
                             case "$scope":
@@ -66,8 +75,6 @@ public class VcdParser
                         }
                         keyWord = null;
                         break;
-                    case "$enddefinitions":
-                        return false;
                 }
                 keyWord = x;
                 words.Clear();
@@ -78,76 +85,98 @@ public class VcdParser
             }
             return true;
         });
-
+        
         return definition;
     }
 
-    private enum ParsingContext
+    private enum ParsingPosition
     {
         None,
         Time,
         Signal
     }
+
+    private enum ParsingSignalType
+    {
+        Reg,
+        Byte
+    }
     
-    private static void ReadSignals(Stream stream, VcdDefinition definition, long start, long end, float accuracy)
-    {        
-        stream.Seek(start, SeekOrigin.Begin);
-        using var reader = new StreamReader(stream, null, true, -1, true);
-
-        var stack = new Stack<(long, List<string>)>();
-        
-        var gap =  (1f / accuracy)-1;
+    private static void ReadSignals(StreamReader reader, VcdFile file)
+    {
+        var currentTime = 0L;
         var lastC = ' ';
-        var parsingPos = ParsingContext.None;
-        var stringBuilder = new StringBuilder();
-
-        var lastBlockLength = 0;
-
-        var test = "";
+        var parsingPos = ParsingPosition.None;
+        var parsingSignalType = ParsingSignalType.Reg;
+        //var stringBuilder = new StringBuilder();
         
-        while(stream.Position < end)
+        /*  Example Block
+            #78083021000\r\n
+            0#\r\n
+            0$\r\n
+        */
+
+        while(!reader.EndOfStream)
         {
-            lastBlockLength++;
             var c = (char)reader.Read();
 
-            test += c;
-            
             switch (c)
             {
                 case '\r':
                     break;
-                case ' ':
                 case '\n':
-                    c = ' ';
                     switch (parsingPos)
                     {
-                        case ParsingContext.Time:
-                            stack.Push((ParseLong(stringBuilder), new List<string>()));
-                            stringBuilder.Clear();
-
-                            test = "";
-                            
-                            //Block end
-                            stream.Seek((long)(lastBlockLength*gap), SeekOrigin.Current);
-                            reader.DiscardBufferedData();
-                            lastBlockLength = 0;
-
+                        case ParsingPosition.Time:
+                            file.LastChangeTime = currentTime;
                             break;
                     }
-                    parsingPos = ParsingContext.None;
+                    //stringBuilder.Clear();
+
+                    parsingPos = ParsingPosition.None;
                     break;
-                case '#' when lastC is ' ':
-                    stringBuilder.Clear();
-                    parsingPos = ParsingContext.Time;
+                case '#' when lastC is '\n':
+                    //stringBuilder.Clear();
+                    currentTime = 0L;
+                    parsingPos = ParsingPosition.Time;
+                    break;
+                case '0' when lastC is '\n' && parsingPos is ParsingPosition.None:
+                case '1' when lastC is '\n' && parsingPos is ParsingPosition.None:
+                    parsingSignalType = ParsingSignalType.Reg;
+                    parsingPos = ParsingPosition.Signal;
                     break;
                 default:
-                    stringBuilder.Append(c);
+                    if (parsingPos is ParsingPosition.Signal)
+                    {
+                        if(parsingSignalType is ParsingSignalType.Reg) file.Definition.SignalRegister[c].Changes
+                            .Add(new VcdChange()
+                            {
+                                Time = currentTime, 
+                                Value = lastC == '1'
+                            });
+                    }
+                    else if (parsingPos is ParsingPosition.Time)
+                    {
+                        currentTime = AddNumber(currentTime, c);
+                    }
+                    else
+                    {
+                        parsingSignalType = ParsingSignalType.Byte;
+                        //stringBuilder.Append(c);
+                    }
                     break;
             }
             lastC = c;
         }
-        
-        Console.WriteLine(stack.Count);
+    }
+
+    static long AddNumber(long n, char c)
+    {
+        if (c is >= '0' and <= '9')
+        {
+            return n * 10 + (c - '0');
+        }
+        throw new FormatException("Invalid time parsing");
     }
     
     static long ParseLong(StringBuilder stringBuilder)

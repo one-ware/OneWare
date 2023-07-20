@@ -1,22 +1,49 @@
 ﻿using System.Globalization;
 using System.Numerics;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using DynamicData.Binding;
 using OneWare.WaveFormViewer.ViewModels;
 
 namespace OneWare.WaveFormViewer.Controls
 {
     public class WaveFormScale : Control
     {
-        /*private readonly IPen _markerBrushPen;
+        private readonly IPen _markerBrushPen;
         
         public WaveFormScale()
         {
             ClipToBounds = true;
             var markerBrush = (IBrush)new BrushConverter().ConvertFrom("#575151")!;
             _markerBrushPen = new Pen(markerBrush, 2);
+        }
+
+        private CompositeDisposable _disposableReg = new();
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+
+            _disposableReg.Dispose();
+            _disposableReg = new CompositeDisposable();
+            
+            if (DataContext is WaveFormViewModel vm)
+            {
+                vm.WhenValueChanged(x => x.Max).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.Offset).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.ZoomMultiply).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+            }
         }
 
         /// <summary>
@@ -96,7 +123,7 @@ namespace OneWare.WaveFormViewer.Controls
             _ = Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
         }
 
-        private Rect _textAreaBounds = Rect.Empty;
+        private Rect _textAreaBounds;
 
         public Rect TextAreaBounds
         {
@@ -154,13 +181,13 @@ namespace OneWare.WaveFormViewer.Controls
 
                 var text = new FormattedText(drawT, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                         Typeface.Default,
-                        11, this.FindResource("ThemeForegroundBrush") as IBrush);
+                        11, this.FindResource(Application.Current?.ActualThemeVariant, "ThemeForegroundBrush") as IBrush);
                 
                 //Text
                 context.DrawText(text, new Point(xx - text.Width / 2, yOffset + 7));
             }
         }
 
-        #endregion*/
+        #endregion
     }
 }

@@ -8,4 +8,6 @@ public class VcdDefinition : IScopeHolder
     public string? TimeScale { get; set; }
     public List<VcdScope> Scopes { get; } = new();
     public List<VcdSignal> Signals { get; } = new();
+
+    public Dictionary<char, VcdSignal> SignalRegister { get; } = new();
 }

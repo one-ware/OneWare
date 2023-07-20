@@ -51,6 +51,16 @@ namespace OneWare.WaveFormViewer.Controls
             _typeface = new Typeface(fontFamily!);
         }
 
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            if(change.Property == OffsetProperty 
+               || change.Property == ZoomMultiplyProperty 
+               || change.Property == MaxProperty) 
+                Redraw();
+            
+            base.OnPropertyChanged(change);
+        }
+
         #region Rendering
 
         public override void Render(DrawingContext context)
@@ -120,11 +130,11 @@ namespace OneWare.WaveFormViewer.Controls
 
                 switch (lastSignal.Data)
                 {
-                    case "1":
+                    case true:
                         startPoint = startPointTop;
                         endPoint = endPointTop;
                         break;
-                    case "0":
+                    case false:
                         startPoint = startPointBottom;
                         endPoint = endPointBottom;
                         break;
@@ -183,7 +193,7 @@ namespace OneWare.WaveFormViewer.Controls
                         DrawByteBorder(context, new Point(startPointTop.X, startPointTop.Y),
                             new Point(endPointTop.X, endPointBottom.Y), signalPen);
 
-                        var cutText = lastSignal.Data ?? "";
+                        var cutText = lastSignal.Data.ToString() ?? "";
 
                         cutText = SignalConverter.ConvertSignal(cutText, signal.DataType);
 

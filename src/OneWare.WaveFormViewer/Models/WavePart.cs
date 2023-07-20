@@ -3,9 +3,9 @@
 public class WavePart
 {
     public long Time { get; }
-    public string Data { get; }
+    public object Data { get; }
 
-    public WavePart(long time, string data)
+    public WavePart(long time, object data)
     {
         Time = time;
         Data = data;

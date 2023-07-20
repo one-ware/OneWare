@@ -2,21 +2,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="22"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24"
              x:Class="OneWare.Core.Views.Controls.TimeSelectorBox" Name="TimeSelectorBoxView">
-    <Grid Margin="0">
-        <Grid.ColumnDefinitions>*,50</Grid.ColumnDefinitions>
-        <TextBox Margin="0 0 0 0" Padding="4 2 4 0" FontSize="12"
-                 Watermark="{Binding #TimeSelectorBoxView.Label}"
-                 Text="{Binding #TimeSelectorBoxView.Input}"/>
-        <ComboBox Padding="3, 2, 1, 0" Grid.Column="1"
+    <Border CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+    <DockPanel>
+        <ComboBox DockPanel.Dock="Right" Padding="3, 2"
                   SelectedIndex="{Binding #TimeSelectorBoxView.WaitUnit}"
-                  BorderThickness="0, 1, 1, 1" Name="ComboBoxFrequencyUnit">
+                  BorderThickness="0" Name="ComboBoxFrequencyUnit">
             <ComboBoxItem>ps</ComboBoxItem>
             <ComboBoxItem>ns</ComboBoxItem>
             <ComboBoxItem>µs</ComboBoxItem>
             <ComboBoxItem>ms</ComboBoxItem>
             <ComboBoxItem>s</ComboBoxItem>
         </ComboBox>
-    </Grid>
+        <Border DockPanel.Dock="Right" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"></Border>
+        <TextBox Margin="0 0 0 0" Padding="4 2"
+                 Watermark="{Binding #TimeSelectorBoxView.Label}" BorderThickness="0"
+                 Text="{Binding #TimeSelectorBoxView.Input}"/>
+    </DockPanel>
+    </Border>
 </UserControl>

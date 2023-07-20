@@ -9,12 +9,12 @@ public class WaveModel
     public IBrush WaveBrush { get; }
     public SignalLineType Type => SignalLineType.Reg;
     public SignalDataType DataType => SignalDataType.Binary;
-    
     public WavePart[] Line { get; }
 
-    public WaveModel(string label, IBrush waveBrush)
+    public WaveModel(string label, IBrush waveBrush, WavePart[] line)
     {
         Label = label;
         WaveBrush = waveBrush;
+        Line = line;
     }
 }

@@ -1,12 +1,15 @@
-﻿using Avalonia;
+﻿using System.Reactive.Disposables;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using DynamicData.Binding;
 using OneWare.WaveFormViewer.ViewModels;
 
 namespace OneWare.WaveFormViewer.Controls
 {
-    /*public class WaveFormEffects : Control
+    public class WaveFormEffects : Control
     {
         private readonly IPen _markerBrushPen;
 
@@ -15,6 +18,31 @@ namespace OneWare.WaveFormViewer.Controls
             ClipToBounds = true;
             IBrush markerBrush = Brushes.DarkRed;
             _markerBrushPen = new Pen(markerBrush, 2);
+        }
+        
+        private CompositeDisposable _disposableReg = new();
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+
+            _disposableReg.Dispose();
+            _disposableReg = new CompositeDisposable();
+            
+            if (DataContext is WaveFormViewModel vm)
+            {
+                vm.WhenValueChanged(x => x.Max).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.Offset).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.ZoomMultiply).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+            }
         }
 
         #region Rendering
@@ -70,5 +98,5 @@ namespace OneWare.WaveFormViewer.Controls
         }
 
         #endregion*/
-    //}
+    }
 }

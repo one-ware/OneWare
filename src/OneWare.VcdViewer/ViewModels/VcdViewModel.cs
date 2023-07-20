@@ -7,6 +7,7 @@ using OneWare.Shared.Services;
 using OneWare.Shared.Views;
 using OneWare.VcdViewer.Models;
 using OneWare.VcdViewer.Parser;
+using OneWare.WaveFormViewer.Controls;
 using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 using Prism.Ioc;
@@ -17,11 +18,11 @@ public class VcdViewModel : ExtendedDocument
 {
     private readonly IProjectExplorerService _projectExplorerService;
 
-    private VcdDefinition? _vcdDefinition;
-    public VcdDefinition? VcdDefinition
+    private VcdFile? _vcdFile;
+    public VcdFile? VcdFile
     {
-        get => _vcdDefinition;
-        set => SetProperty(ref _vcdDefinition, value);
+        get => _vcdFile;
+        set => SetProperty(ref _vcdFile, value);
     }
 
     private VcdScope? _selectedScope;
@@ -52,11 +53,12 @@ public class VcdViewModel : ExtendedDocument
         _ = LoadAsync();
     }
 
-    private Task<bool> LoadAsync()
+    private async Task<bool> LoadAsync()
     {
         try
         {
-            VcdDefinition = VcdParser.ParseVcd(FullPath);
+            VcdFile = await VcdParser.ParseVcdAsync(FullPath);
+            WaveFormViewer.Max = VcdFile.LastChangeTime;
         }
         catch (Exception e)
         {
@@ -65,11 +67,27 @@ public class VcdViewModel : ExtendedDocument
         }
         
         IsLoading = false;
-        return Task.FromResult(true);
+        return true;
     }
 
     public void AddSignal(VcdSignal signal)
     {
-        WaveFormViewer.Signals.Add(new WaveModel(signal.Name, Brushes.Aqua));
+        WaveFormViewer.AddSignal(signal.Name, Construct(signal));
+    }
+
+    public WavePart[] Construct(VcdSignal signal)
+    {
+        var parts = new List<WavePart>();
+        
+        foreach (var c in signal.Changes)
+        {
+            parts.Add(new WavePart(c.Time, c.Value));   
+        }
+
+        if (parts.Any() && parts.Last().Time < VcdFile?.LastChangeTime)
+        {
+            parts.Add(new WavePart(VcdFile.LastChangeTime, parts.Last().Data));
+        }
+        return parts.ToArray();
     }
 }
