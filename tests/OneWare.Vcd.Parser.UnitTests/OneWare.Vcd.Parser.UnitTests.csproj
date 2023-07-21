@@ -13,7 +13,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\..\src\OneWare.VcdViewer\OneWare.VcdViewer.csproj" />
+      <ProjectReference Include="..\..\src\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
     </ItemGroup>
     
     <ItemGroup>

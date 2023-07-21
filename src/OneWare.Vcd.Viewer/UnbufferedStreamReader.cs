@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace OneWare.VcdViewer;
+namespace OneWare.Vcd.Viewer;
 
 class UnbufferedStreamReader: TextReader
 {

@@ -2,7 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace OneWare.VcdViewer.Views;
+namespace OneWare.Vcd.Viewer.Views;
 
 public partial class VcdView : UserControl
 {

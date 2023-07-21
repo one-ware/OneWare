@@ -7,7 +7,7 @@ using OneWare.Json;
 using OneWare.Settings;
 using OneWare.Shared.Services;
 using OneWare.Toml;
-using OneWare.VcdViewer;
+using OneWare.Vcd.Viewer;
 using OneWare.Verilog;
 using OneWare.Vhdl;
 using Prism.Ioc;

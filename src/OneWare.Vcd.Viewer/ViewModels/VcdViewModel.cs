@@ -5,14 +5,12 @@ using DynamicData;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using OneWare.Shared.Views;
-using OneWare.VcdViewer.Models;
-using OneWare.VcdViewer.Parser;
 using OneWare.WaveFormViewer.Controls;
 using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 using Prism.Ioc;
 
-namespace OneWare.VcdViewer.ViewModels;
+namespace OneWare.Vcd.Viewer.ViewModels;
 
 public class VcdViewModel : ExtendedDocument
 {
@@ -103,7 +101,5 @@ public class VcdViewModel : ExtendedDocument
             d.Value.Changes.Clear();
             d.Value.Changes.TrimExcess();
         }
-
-        GC.Collect();
     }
 }

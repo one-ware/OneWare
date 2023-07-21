@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.VcdViewer.ViewModels"
-             xmlns:models="clr-namespace:OneWare.VcdViewer.Models"
+             xmlns:viewModels="clr-namespace:OneWare.Vcd.Viewer.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums;assembly=OneWare.WaveFormViewer"
-             xmlns:behaviours="clr-namespace:OneWare.VcdViewer.Behaviours"
+             xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.VcdViewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
+             x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 
     <UserControl.Resources>
         <behaviours:SignalListBoxDropHandler x:Key="SignalListBoxDropHandler" />

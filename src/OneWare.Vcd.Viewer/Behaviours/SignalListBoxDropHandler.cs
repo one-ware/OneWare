@@ -3,10 +3,10 @@ using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using OneWare.Core.ViewModels.Windows;
-using OneWare.VcdViewer.Models;
-using OneWare.VcdViewer.ViewModels;
+using OneWare.Vcd.Viewer.ViewModels;
+using OneWare.Vcd.Viewer.Models;
 
-namespace OneWare.VcdViewer.Behaviours;
+namespace OneWare.Vcd.Viewer.Behaviours;
 
 public class SignalListBoxDropHandler : DropHandlerBase
 {

@@ -1,9 +1,9 @@
 ﻿using OneWare.Shared.Services;
-using OneWare.VcdViewer.ViewModels;
+using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.VcdViewer;
+namespace OneWare.Vcd.Viewer;
 
 public class VcdViewerModule : IModule
 {

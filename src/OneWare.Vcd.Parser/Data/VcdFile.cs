@@ -1,4 +1,4 @@
-﻿namespace OneWare.VcdViewer.Models;
+﻿namespace OneWare.Vcd.Parser.Data;
 
 public class VcdFile
 {
