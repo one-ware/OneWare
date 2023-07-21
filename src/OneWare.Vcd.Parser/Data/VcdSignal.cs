@@ -6,8 +6,8 @@ public class VcdSignal<T> : IVcdSignal
     public int BitWidth { get; }
     public char Id { get; }
     public string Name { get; }
-
-    public List<VcdChange<T>> Changes { get; } = new();
+    private List<int> ChangeTimes { get; } = new();
+    private List<T?> Changes { get; } = new();
 
     public VcdSignal(VcdLineType type, int bitWidth, char id, string name)
     {
@@ -17,8 +17,15 @@ public class VcdSignal<T> : IVcdSignal
         Name = name;
     }
     
-    public void AddChange(object change)
+    public void AddChange(int timeIndex, object change)
     {
-        Changes.Add(change is VcdChange<T> vcdChange ? vcdChange : default);
+        ChangeTimes.Add(timeIndex);
+        Changes.Add(change is T val ? val : default);
+    }
+
+    public void Clear()
+    {
+        Changes.Clear();
+        Changes.TrimExcess();
     }
 }

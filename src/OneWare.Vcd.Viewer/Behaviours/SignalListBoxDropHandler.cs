@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using OneWare.Core.ViewModels.Windows;
+using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.ViewModels;
 using OneWare.Vcd.Viewer.Models;
 
@@ -10,7 +11,7 @@ namespace OneWare.Vcd.Viewer.Behaviours;
 
 public class SignalListBoxDropHandler : DropHandlerBase
 {
-    private bool Validate<T>(ContentControl viewer, DragEventArgs e, object? sourceContext, object? targetContext, bool bExecute) where T : VcdSignal
+    private bool Validate<T>(ContentControl viewer, DragEventArgs e, object? sourceContext, object? targetContext, bool bExecute) where T : IVcdSignal
     {
         if (sourceContext is not T sourceItem || targetContext is not VcdViewModel vm)
         {
@@ -28,7 +29,7 @@ public class SignalListBoxDropHandler : DropHandlerBase
     {
         if (e.Source is Control && sender is ContentControl viewer)
         {
-            return Validate<VcdSignal>(viewer, e, sourceContext, targetContext, false);
+            return Validate<IVcdSignal>(viewer, e, sourceContext, targetContext, false);
         }
         return false;
     }
@@ -37,7 +38,7 @@ public class SignalListBoxDropHandler : DropHandlerBase
     {
         if (e.Source is Control && sender is ContentControl viewer)
         {
-            return Validate<VcdSignal>(viewer, e, sourceContext, targetContext, true);
+            return Validate<IVcdSignal>(viewer, e, sourceContext, targetContext, true);
         }
         return false;
     }

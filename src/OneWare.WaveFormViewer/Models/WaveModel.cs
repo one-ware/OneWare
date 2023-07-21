@@ -12,7 +12,6 @@ public class WaveModel : ObservableObject
         get => _markerValue;
         set => SetProperty(ref _markerValue, value);
     }
-    
     public string Label { get; }
     public IBrush WaveBrush { get; }
     public SignalLineType LineType { get; }

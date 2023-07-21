@@ -7,6 +7,8 @@
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums;assembly=OneWare.WaveFormViewer"
              xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
+             xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
+             xmlns:models1="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 
@@ -23,15 +25,15 @@
 
             <Grid RowDefinitions="*, 5, *">
                 <TreeView BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
-                          ItemsSource="{Binding VcdFile.Definition.Scopes, FallbackValue={x:Null}}"
+                          ItemsSource="{Binding Scopes, FallbackValue={x:Null}}"
                           SelectedItem="{Binding SelectedScope}">
                     <TreeView.Styles>
-                        <Style Selector="TreeViewItem" x:DataType="models:VcdScope">
+                        <Style Selector="TreeViewItem" x:DataType="models:VcdScopeModel">
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
                         </Style>
                     </TreeView.Styles>
                     <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="models:VcdScope" ItemsSource="{Binding Scopes}">
+                        <TreeDataTemplate DataType="models:VcdScopeModel" ItemsSource="{Binding Scopes}">
                             <TextBlock Text="{Binding Name}" />
                         </TreeDataTemplate>
                     </TreeView.DataTemplates>
@@ -46,7 +48,7 @@
                          SelectedItem="{Binding SelectedSignal}"
                          ItemsSource="{Binding SelectedScope.Signals, FallbackValue={x:Null}}">
                     <ListBox.Styles>
-                        <Style Selector="ListBoxItem" x:DataType="models:VcdSignal">
+                        <Style Selector="ListBoxItem" x:DataType="data:IVcdSignal">
                             <Setter Property="ContextMenu">
                                 <ContextMenu>
                                     <MenuItem Header="Show" Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}" 
@@ -63,12 +65,12 @@
                         </Style>
                     </ListBox.Styles>
                     <ListBox.DataTemplates>
-                        <DataTemplate DataType="models:VcdSignal">
+                        <DataTemplate DataType="data:IVcdSignal">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <Grid>
-                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:SignalLineType.Reg}}" 
+                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Reg}}" 
                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}"/>
-                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:SignalLineType.Integer}}" 
+                                <Image IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Integer}}" 
                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"/>
                                 </Grid>
                                 <TextBlock Text="{Binding Name}" />

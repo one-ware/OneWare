@@ -1,11 +1,17 @@
-﻿using Avalonia.Media;
+﻿using System.Collections.ObjectModel;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using DynamicData;
 using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.Views;
+using OneWare.Vcd.Parser;
+using OneWare.Vcd.Parser.Data;
+using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.Controls;
+using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 using Prism.Ioc;
@@ -17,21 +23,17 @@ public class VcdViewModel : ExtendedDocument
     private readonly IProjectExplorerService _projectExplorerService;
 
     private VcdFile? _vcdFile;
-    public VcdFile? VcdFile
-    {
-        get => _vcdFile;
-        set => SetProperty(ref _vcdFile, value);
-    }
-
-    private VcdScope? _selectedScope;
-    public VcdScope? SelectedScope
+    public ObservableCollection<VcdScopeModel> Scopes { get; } = new();
+    
+    private VcdScopeModel? _selectedScope;
+    public VcdScopeModel? SelectedScope
     {
         get => _selectedScope;
         set => SetProperty(ref _selectedScope, value);
     }
 
-    private VcdSignal? _selectedSignal;
-    public VcdSignal? SelectedSignal
+    private IVcdSignal? _selectedSignal;
+    public IVcdSignal? SelectedSignal
     {
         get => _selectedSignal;
         set => SetProperty(ref _selectedSignal, value);
@@ -56,6 +58,7 @@ public class VcdViewModel : ExtendedDocument
     private async Task<bool> LoadAsync()
     {
         IsLoading = true;
+        Scopes.Clear();
         
         try
         {
@@ -63,12 +66,14 @@ public class VcdViewModel : ExtendedDocument
 
             var context = VcdParser.ParseVcdDefinition(FullPath);
 
-            VcdFile = context.Item1;
+            _vcdFile = context.Item1;
+            
+            Scopes.AddRange(_vcdFile.Definition.Scopes.Select(x => new VcdScopeModel(x)));
             
             progress.ProgressChanged += (o, i) =>
             {
                 Title = $"{Path.GetFileName(FullPath)} {i}%";
-                WaveFormViewer.Max = VcdFile.LastChangeTime;
+                WaveFormViewer.Max = context.Item1.ChangeTimes.Last();
             };
 
             await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress);
@@ -85,21 +90,20 @@ public class VcdViewModel : ExtendedDocument
         return true;
     }
 
-    public void AddSignal(VcdSignal signal)
+    public void AddSignal(IVcdSignal signal)
     {
-        WaveFormViewer.AddSignal(signal.Name, signal.Type, signal.Changes);
+        //WaveFormViewer.AddSignal(signal.Name, (SignalLineType)signal.Type, signal.Changes);
     }
 
     protected override void Reset()
     {
-        if (VcdFile == null) return;
+        if (_vcdFile == null) return;
 
         //Manual cleanup because ViewModel is stuck somewhere
-        //TODO Fix this to allow normal GC collection
-        foreach (var d in VcdFile.Definition.SignalRegister)
+        //TODO Fix DOCK to allow normal GC collection
+        foreach (var (_, signal) in _vcdFile.Definition.SignalRegister)
         {
-            d.Value.Changes.Clear();
-            d.Value.Changes.TrimExcess();
+            signal.Clear();
         }
     }
 }

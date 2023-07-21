@@ -5,6 +5,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
         <ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
     </ItemGroup>
 </Project>
