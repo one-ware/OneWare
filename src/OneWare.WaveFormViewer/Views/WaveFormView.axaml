@@ -69,7 +69,8 @@
                             Max="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Max, FallbackValue={x:Null}}"
                             ZoomMultiply="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ZoomMultiply, FallbackValue={x:Null}}"
                             Offset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Offset, FallbackValue={x:Null}}"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                            ExtendSignals="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ExtendSignals, FallbackValue={x:Null}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

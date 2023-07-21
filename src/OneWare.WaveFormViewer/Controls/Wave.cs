@@ -12,6 +12,15 @@ namespace OneWare.WaveFormViewer.Controls
 {
     public class Wave : Control
     {
+        public static readonly StyledProperty<bool> ExtendSignalsProperty =
+            AvaloniaProperty.Register<Wave, bool>(nameof(ExtendSignals));
+
+        public bool ExtendSignals
+        {
+            get => GetValue(ExtendSignalsProperty);
+            set => SetValue(ExtendSignalsProperty, value);
+        }
+        
         public static readonly StyledProperty<long> OffsetProperty =
             AvaloniaProperty.Register<Wave, long>(nameof(Offset));
 
@@ -225,9 +234,10 @@ namespace OneWare.WaveFormViewer.Controls
             }
         }
 
-        private static (WavePart, WavePart)? SearchSignal(List<WavePart> signalLine, long offset)
+        private (WavePart, WavePart)? SearchSignal(List<WavePart> signalLine, long offset)
         {
-            if (signalLine.Count <= 1) return null;
+            if (signalLine.Count < 1) return null;
+            
             var l = signalLine.BinarySearchNext(offset, (l, part, nextPart) =>
             {
                 if (l >= part.Time && l <= nextPart.Time) return 0;
@@ -235,7 +245,11 @@ namespace OneWare.WaveFormViewer.Controls
                 return -1;
             });
 
-            if (l < 0 || l + 1 > signalLine.Count) return null;
+            if (l < 0 || l + 1 > signalLine.Count)
+            {
+                if (ExtendSignals) return (signalLine.Last(), new WavePart(long.MaxValue - 10, signalLine.Last().Data));
+                return null;
+            }
             return (signalLine[l], signalLine[l + 1]);
         }
 

@@ -32,6 +32,6 @@ public class VcdParserTests
         
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
         Assert.Equal(5, result.Definition.SignalRegister.Count);
-        Assert.Equal(24003, result.Definition.SignalRegister['#'].Changes.Count);
+        Assert.Equal(24002, result.Definition.SignalRegister['#'].Changes.Count);
     }
 }

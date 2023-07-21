@@ -212,11 +212,6 @@ public static class VcdParser
             }
             lastC = c;
         }
-
-        foreach (var (_, signal) in file.Definition.SignalRegister)
-        {
-            signal.Changes.Add(new WavePart(long.MaxValue-10, signal.Changes.Last().Data));
-        }
     }
 
     static long AddNumber(long n, char c)
@@ -226,23 +221,5 @@ public static class VcdParser
             return n * 10 + (c - '0');
         }
         throw new FormatException("Invalid time parsing");
-    }
-    
-    static long ParseLong(StringBuilder stringBuilder)
-    {
-        long result = 0;
-        for (var i = 0; i < stringBuilder.Length; i++)
-        {
-            var c = stringBuilder[i];
-            if (c is >= '0' and <= '9')
-            {
-                result = result * 10 + (c - '0');
-            }
-            else
-            {
-                throw new FormatException("Invalid time parsing");
-            }
-        }
-        return result;
     }
 }

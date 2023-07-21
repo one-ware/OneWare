@@ -15,7 +15,14 @@ public class WaveFormViewModel : ObservableObject
         { Brushes.Lime, Brushes.Magenta, Brushes.Yellow, Brushes.CornflowerBlue };
     
     public ObservableCollection<WaveModel> Signals { get; } = new();
-    
+
+    private bool _extendSignals;
+    public bool ExtendSignals
+    {
+        get => _extendSignals;
+        set => SetProperty(ref _extendSignals, value);
+    }
+
     private long _offset;
     public long Offset
     {
@@ -105,7 +112,10 @@ public class WaveFormViewModel : ObservableObject
             return -1;
         });
 
-        model.MarkerValue = index >= 0 ? model.Line[index].Data.ToString() : null;
+        if (index < 0 && ExtendSignals && offset > 0 && model.Line.Count > 0)
+            model.MarkerValue = model.Line.Last().Data.ToString();
+        else 
+            model.MarkerValue = index >= 0 ? model.Line[index].Data.ToString() : null;
     }
     
     public void ZoomIn()

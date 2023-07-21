@@ -43,6 +43,8 @@ public class VcdViewModel : ExtendedDocument
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService) : base(fullPath, projectExplorerService, dockService)
     {
+        WaveFormViewer.ExtendSignals = true;
+        
         _projectExplorerService = projectExplorerService;
         
         Title = $"Loading {Path.GetFileName(fullPath)}";
