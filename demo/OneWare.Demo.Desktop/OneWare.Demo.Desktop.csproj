@@ -4,25 +4,28 @@
     <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
     <Import Project="..\..\build\props\Avalonia.Desktop.props" />
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <OutputType>Exe</OutputType>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <OutputType>WinExe</OutputType>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-        <ApplicationIcon>..\OneWare.Demo\Assets\icon.ico</ApplicationIcon>
-        <RuntimeIdentifiers>win-x64;osx-x64;osx-arm64;linux-x64</RuntimeIdentifiers>
-        <LangVersion>latest</LangVersion>
-        <Nullable>enable</Nullable>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <PublishAot>false</PublishAot>
-    </PropertyGroup>
-
     <PropertyGroup>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <OutputType Condition="'$(Configuration.toUpper())' != 'DEBUG'">WinExe</OutputType>
+        <OutputType Condition="'$(Configuration.toUpper())' == 'DEBUG'">Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <ApplicationIcon>..\OneWare.Demo\Assets\icon.ico</ApplicationIcon>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishReadyToRun>true</PublishReadyToRun>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration.toUpper())' == 'RELEASE'">
+        <SelfContained>true</SelfContained>
+        <PublishAot>false</PublishAot>
+        <PublishTrimmed>false</PublishTrimmed>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+        <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
+        <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,14 +35,5 @@
         <ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
         <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
-    
-    <Target Name="GetTargetPath" Returns="@(_FakeOutputPath)">
-        <ItemGroup>
-            <_FakeOutputPath Include="$(MSBuildProjectDirectory)\$(PackageOutputPath)\$(AssemblyName).dll" />
-        </ItemGroup>
-    </Target>
-    <PropertyGroup>
-        <OutputPath>bin/$(Configuration)</OutputPath>
-    </PropertyGroup>
     
 </Project>
