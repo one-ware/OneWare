@@ -1,13 +1,7 @@
 ﻿namespace OneWare.WaveFormViewer.Models;
 
-public class WavePart
+public record struct WavePart
 {
-    public long Time { get; }
-    public object Data { get; }
-
-    public WavePart(long time, object data)
-    {
-        Time = time;
-        Data = data;
-    }
+    public long Time { get; init; }
+    public object Data { get; init; }
 }

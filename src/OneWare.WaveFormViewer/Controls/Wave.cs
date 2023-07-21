@@ -247,7 +247,11 @@ namespace OneWare.WaveFormViewer.Controls
 
             if (l < 0 || l + 1 > signalLine.Count)
             {
-                if (ExtendSignals) return (signalLine.Last(), new WavePart(long.MaxValue - 10, signalLine.Last().Data));
+                if (ExtendSignals) return (signalLine.Last(), new WavePart() 
+                {
+                    Time = long.MaxValue - 10, 
+                    Data = signalLine.Last().Data
+                });
                 return null;
             }
             return (signalLine[l], signalLine[l + 1]);

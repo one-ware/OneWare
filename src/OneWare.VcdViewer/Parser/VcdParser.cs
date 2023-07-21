@@ -194,12 +194,20 @@ public static class VcdParser
                     {
                         case ParsingPosition.Signal when parsingSignalType is SignalLineType.Reg:
                             file.Definition.SignalRegister[c].Changes
-                                .Add(new WavePart(currentTime, lastC == '1'));
+                                .Add(new WavePart
+                                {
+                                    Time = currentTime,
+                                    Data = lastC == '1',
+                                });
                             break;
                         case ParsingPosition.Signal when parsingSignalType is SignalLineType.Integer && lastC is ' ':
                         {
                             file.Definition.SignalRegister[c].Changes
-                                .Add(new WavePart(currentTime, currentInteger));
+                                .Add(new WavePart
+                                {
+                                    Time = currentTime,
+                                    Data = currentInteger,
+                                });
                             break;
                         }
                         case ParsingPosition.Time:

@@ -91,4 +91,19 @@ public class VcdViewModel : ExtendedDocument
     {
         WaveFormViewer.AddSignal(signal.Name, signal.Type, signal.Changes);
     }
+
+    protected override void Reset()
+    {
+        if (VcdFile == null) return;
+
+        //Manual cleanup because ViewModel is stuck somewhere
+        //TODO Fix this to allow normal GC collection
+        foreach (var d in VcdFile.Definition.SignalRegister)
+        {
+            d.Value.Changes.Clear();
+            d.Value.Changes.TrimExcess();
+        }
+
+        GC.Collect();
+    }
 }
