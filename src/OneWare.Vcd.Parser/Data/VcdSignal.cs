@@ -13,7 +13,7 @@ public class VcdSignal<T> : IVcdSignal
     private readonly List<int> _changeTimeOffsets = new();
     private readonly List<T?> _values = new();
 
-    public event EventHandler RequestRedraw;
+    public event EventHandler? RequestRedraw;
 
     public VcdSignal(List<long> changeTimes, VcdLineType type, int bitWidth, char id, string name)
     {
@@ -50,7 +50,7 @@ public class VcdSignal<T> : IVcdSignal
             return -1;
         });
 
-        return result;
+        return (result < 0 && _changeTimeOffsets.Count > 0) ? _changeTimeOffsets.Count-1 : result;
     }
 
     private T? GetValue(long offset)
@@ -62,7 +62,7 @@ public class VcdSignal<T> : IVcdSignal
     
     public object? GetValueFromOffset(long offset)
     {
-        return GetValue(offset) as object;
+        return GetValue(offset);
     }
 
     public long GetChangeTimeFromIndex(int index)

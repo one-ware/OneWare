@@ -22,6 +22,8 @@ public class VcdViewModel : ExtendedDocument
 {
     private readonly IProjectExplorerService _projectExplorerService;
 
+    private CancellationTokenSource? _cancellationTokenSource;
+    
     private VcdFile? _vcdFile;
     public ObservableCollection<VcdScopeModel> Scopes { get; } = new();
     
@@ -52,12 +54,21 @@ public class VcdViewModel : ExtendedDocument
 
     protected override void ChangeCurrentFile(IFile? oldFile)
     {
-        _ = LoadAsync();
+        Refresh();
+    }
+
+    public void Refresh()
+    {
+        WaveFormViewer.MarkerOffset = long.MaxValue;
+        if (CurrentFile != null)
+            _ = LoadAsync();
     }
 
     private async Task<bool> LoadAsync()
     {
         IsLoading = true;
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
         Scopes.Clear();
         
         try
@@ -67,13 +78,19 @@ public class VcdViewModel : ExtendedDocument
             var lastTime = await VcdParser.TryFindLastTime(FullPath);
             
             var context = VcdParser.ParseVcdDefinition(FullPath);
-
-            if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
-            
             _vcdFile = context.Item1;
             
             Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any()).Select(x => new VcdScopeModel(x)));
             
+            var currentSignals = WaveFormViewer.Signals.Select(x => x.Signal.Id).ToArray();
+            WaveFormViewer.Signals.Clear();
+            foreach (var signal in currentSignals)
+            {
+                if(_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
+                    AddSignal(vcdSignal);
+            }
+            if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
+
             progress.ProgressChanged += (o, i) =>
             {
                 Title = $"{Path.GetFileName(FullPath)} {i}%";
@@ -88,10 +105,9 @@ public class VcdViewModel : ExtendedDocument
                 }
             };
 
-            await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress);
+            await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress, _cancellationTokenSource.Token);
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
-            
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile!.Header;
         }
         catch (Exception e)
@@ -111,6 +127,7 @@ public class VcdViewModel : ExtendedDocument
 
     protected override void Reset()
     {
+        _cancellationTokenSource?.Cancel();
         if (_vcdFile == null) return;
 
         //Manual cleanup because ViewModel is stuck somewhere

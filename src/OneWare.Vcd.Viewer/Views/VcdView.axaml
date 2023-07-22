@@ -23,8 +23,8 @@
                 <ColumnDefinition MinWidth="150" Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Grid RowDefinitions="*, 5, *">
-                <TreeView BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
+            <Grid RowDefinitions="*, 5, *, 30">
+                <TreeView Grid.Row="0" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
                           ItemsSource="{Binding Scopes, FallbackValue={x:Null}}"
                           SelectedItem="{Binding SelectedScope}">
                     <TreeView.Styles>
@@ -78,6 +78,14 @@
                         </DataTemplate>
                     </ListBox.DataTemplates>
                 </ListBox>
+                
+                <Border Grid.Row="3" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <StackPanel Height="26" Orientation="Horizontal" Margin="5 0">
+                        <Button Command="{Binding Refresh}">
+                            <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <GridSplitter BorderThickness="1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"

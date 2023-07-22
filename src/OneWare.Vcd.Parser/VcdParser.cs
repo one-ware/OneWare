@@ -21,9 +21,9 @@ public static class VcdParser
         return (vcdFile, reader);
     }
 
-    public static async Task StartAndReportProgressAsync(StreamReader reader, VcdFile vcdFile, IProgress<int> progress)
+    public static async Task StartAndReportProgressAsync(StreamReader reader, VcdFile vcdFile, IProgress<int> progress, CancellationToken cancellationToken)
     {
-        await Task.Run(() => { ReadSignals(reader, vcdFile, progress); });
+        await Task.Run(() => { ReadSignals(reader, vcdFile, progress, cancellationToken); }, cancellationToken);
         reader.Dispose();
     }
 
@@ -150,7 +150,7 @@ public static class VcdParser
         return null;
     }
     
-    private static void ReadSignals(StreamReader reader, VcdFile file, IProgress<int>? progress = null)
+    private static void ReadSignals(StreamReader reader, VcdFile file, IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
     {
         var currentTime = 0L;
         var currentInteger = 0;
@@ -171,6 +171,11 @@ public static class VcdParser
 
         while (!reader.EndOfStream)
         {
+            if (cancellationToken is {IsCancellationRequested: true})
+            {
+                return;
+            }
+            
             var c = (char)reader.Read();
 
             if (progress != null)
