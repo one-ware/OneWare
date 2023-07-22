@@ -6,6 +6,7 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Core\OneWare.Core.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
     </ItemGroup>
 
     <ItemGroup>

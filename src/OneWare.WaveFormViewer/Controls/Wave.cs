@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Shared.Extensions;
+using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 using ReactiveUI;
@@ -85,9 +86,9 @@ namespace OneWare.WaveFormViewer.Controls
             _ = Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
         }
 
-        public void DrawSignal(DrawingContext context, WaveModel signal)
+        public void DrawSignal(DrawingContext context, WaveModel model)
         {
-            IPen signalPen = new Pen(signal.WaveBrush, 2);
+            IPen signalPen = new Pen(model.WaveBrush, 2);
             IPen xPen = new Pen(Brushes.Red, 2);
             IPen zPen = new Pen(Brushes.RoyalBlue, 2);
 
@@ -106,13 +107,14 @@ namespace OneWare.WaveFormViewer.Controls
             for (var i = 0; i < Bounds.Width;)
             {
                 var searchOffset = (long)((i + 2) * mz + Offset);
-                var signalPair = SearchSignal(signal.Line, searchOffset);
-                if (!signalPair.HasValue) break;
+                var index = model.Signal.FindIndex(searchOffset);
+                if(index < 0) break;
 
-                var lastSignal = signalPair.Value.Item1;
-                var currentSignal = signalPair.Value.Item2;
-                var x = (lastSignal.Time - Offset) / mz;
-                var sWidth = (currentSignal.Time - lastSignal.Time) / mz;
+                var currentChangeTime = model.Signal.GetChangeTimeFromIndex(index);
+                var currentValue = model.Signal.GetValueFromIndex(index);
+                var nextChangeTime = model.Signal.GetChangeTimeFromIndex(index + 1);
+                var x = (currentChangeTime - Offset) / mz;
+                var sWidth = (nextChangeTime - currentChangeTime) / mz;
 
                 if (x < 0)
                 {
@@ -136,23 +138,23 @@ namespace OneWare.WaveFormViewer.Controls
                 Point startPoint;
                 Point endPoint;
                 var currentPen = signalPen;
-
-                switch (lastSignal.Data)
+                
+                switch (currentValue)
                 {
-                    case true:
+                    case (byte)1:
                         startPoint = startPointTop;
                         endPoint = endPointTop;
                         break;
-                    case false:
+                    case (byte)0:
                         startPoint = startPointBottom;
                         endPoint = endPointBottom;
                         break;
-                    case "Z":
+                    case 2:
                         currentPen = zPen;
                         startPoint = startPointMid;
                         endPoint = endPointMid;
                         break;
-                    case "X":
+                    case 3:
                         currentPen = xPen;
                         startPoint = startPointMid;
                         endPoint = endPointMid;
@@ -165,7 +167,7 @@ namespace OneWare.WaveFormViewer.Controls
                     }
                 }
 
-                if (signal.LineType == SignalLineType.Reg && !signal.Label.EndsWith(']')) //Simple type
+                if (model.Signal.Type == VcdLineType.Reg) //Simple type
                 {
                     if (sWidth > 3)
                     {
@@ -177,7 +179,7 @@ namespace OneWare.WaveFormViewer.Controls
                                     : lastEndPoint.Value);
 
                         //Signal
-                        switch (lastSignal.Data)
+                        switch (currentValue)
                         {
                             case "Z":
                                 context.DrawLine(new Pen(Brushes.RoyalBlue, 2), startPoint, endPoint);
@@ -192,7 +194,7 @@ namespace OneWare.WaveFormViewer.Controls
                     }
                     else
                     {
-                        context.FillRectangle(signal.WaveBrush, new Rect(x, 5, sWidth, Height - 10));
+                        context.FillRectangle(model.WaveBrush, new Rect(x, 5, sWidth, Height - 10));
                     }
                 }
                 else
@@ -202,7 +204,7 @@ namespace OneWare.WaveFormViewer.Controls
                         DrawByteBorder(context, new Point(startPointTop.X, startPointTop.Y),
                             new Point(endPointTop.X, endPointBottom.Y), signalPen);
 
-                        var cutText = lastSignal.Data.ToString() ?? "";
+                        var cutText = currentValue?.ToString() ?? "";
 
                         //cutText = SignalConverter.ConvertSignal(cutText, signal.DataType);
 
@@ -222,7 +224,7 @@ namespace OneWare.WaveFormViewer.Controls
                     }
                     else
                     {
-                        context.FillRectangle(signal.WaveBrush, new Rect(x, 5, sWidth, Height - 10));
+                        context.FillRectangle(model.WaveBrush, new Rect(x, 5, sWidth, Height - 10));
                     }
                 }
 
@@ -232,29 +234,6 @@ namespace OneWare.WaveFormViewer.Controls
                 lastEndPoint = endPoint;
                 lastPen = currentPen;
             }
-        }
-
-        private (WavePart, WavePart)? SearchSignal(List<WavePart> signalLine, long offset)
-        {
-            if (signalLine.Count < 1) return null;
-            
-            var l = signalLine.BinarySearchNext(offset, (l, part, nextPart) =>
-            {
-                if (l >= part.Time && l <= nextPart.Time) return 0;
-                if (l > part.Time) return 1;
-                return -1;
-            });
-
-            if (l < 0 || l + 1 > signalLine.Count)
-            {
-                if (ExtendSignals) return (signalLine.Last(), new WavePart() 
-                {
-                    Time = long.MaxValue - 10, 
-                    Data = signalLine.Last().Data
-                });
-                return null;
-            }
-            return (signalLine[l], signalLine[l + 1]);
         }
 
         public static double CalcMult(long max, double width)

@@ -4,6 +4,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Extensions;
+using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
@@ -105,17 +106,7 @@ public class WaveFormViewModel : ObservableObject
 
     private void SetSignalMarkerValue(WaveModel model, long offset)
     {
-        var index = model.Line.BinarySearchNext(offset, (l, part, nextPart) =>
-        {
-            if (l >= part.Time && l <= nextPart.Time) return 0;
-            if (l > part.Time) return 1;
-            return -1;
-        });
-
-        if (index < 0 && ExtendSignals && offset > 0 && model.Line.Count > 0)
-            model.MarkerValue = model.Line.Last().Data.ToString();
-        else 
-            model.MarkerValue = index >= 0 ? model.Line[index].Data.ToString() : null;
+        model.MarkerValue = model.Signal.GetValueFromOffset(offset)?.ToString();
     }
     
     public void ZoomIn()
@@ -146,9 +137,9 @@ public class WaveFormViewModel : ObservableObject
         Offset -= minus >= 1 ? minus : 1;
     }
 
-    public void AddSignal(string name, SignalLineType type, List<WavePart> line)
+    public void AddSignal(IVcdSignal signal)
     {
-        var waveModel = new WaveModel(name, type, line, WaveColors[Signals.Count % WaveColors.Length]);
+        var waveModel = new WaveModel(signal, WaveColors[Signals.Count % WaveColors.Length]);
         SetSignalMarkerValue(waveModel, MarkerOffset);
         Signals.Add(waveModel);
     }

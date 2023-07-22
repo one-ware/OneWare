@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -23,6 +24,27 @@ public class VcdParserTests
     }
 
     [Fact]
+    public void SignalLineTest()
+    {
+        var changeTimes = new List<long>()
+        {
+            0, 1000, 10000, 100000
+        };
+        var signal = new VcdSignal<byte>(changeTimes, VcdLineType.Reg, 4, '#', "Line");
+        
+        signal.AddChange(0, (byte)0);
+        signal.AddChange(1, (byte)1);
+        signal.AddChange(2, (byte)2);
+        signal.AddChange(3, (byte)3);
+        Assert.Equal((byte)2, signal.GetValueFromOffset(10000));
+        Assert.Equal((byte)2, signal.GetValueFromOffset(10001));
+        Assert.Equal(1, signal.FindIndex(1005));
+        
+        Assert.Equal(3, signal.FindIndex(1000000000));
+        Assert.Equal((byte)3, signal.GetValueFromIndex(3));
+    }
+    
+    [Fact]
     public void ParseTest()
     {
         var sw = new Stopwatch();
@@ -36,6 +58,6 @@ public class VcdParserTests
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
         _output.WriteLine($"Memory occupied: {(after-before)/1000}kB");
         Assert.Equal(5, result.Definition.SignalRegister.Count);
-        //Assert.Equal(24002, (result.Definition.SignalRegister['#'] as VcdChange<bool>).Changes.Count);
+        Assert.Equal(24003, result.Definition.ChangeTimes.Count);
     }
 }

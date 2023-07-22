@@ -42,7 +42,7 @@
                         <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
                                    Height="{DynamicResource LineHeight}">
                             <StackPanel VerticalAlignment="Center" Orientation="Horizontal" DockPanel.Dock="Left">
-                                <TextBlock Text="{Binding Label}" />
+                                <TextBlock Text="{Binding Signal.Name}" />
                                 <TextBlock Text=" = " />
                                 <TextBlock Text="{Binding MarkerValue}" FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" />
                             </StackPanel>

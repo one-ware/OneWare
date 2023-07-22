@@ -2,7 +2,7 @@
 
 public class VcdFile
 {
-    public List<long> ChangeTimes { get; } = new();
+    
     public VcdDefinition Definition { get; }
 
     public VcdFile(VcdDefinition definition)

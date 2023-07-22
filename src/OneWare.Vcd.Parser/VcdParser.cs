@@ -77,9 +77,9 @@ public static class VcdParser
 
                                     IVcdSignal signal = type switch
                                     {
-                                        VcdLineType.Reg => new VcdSignal<byte>(type, int.Parse(words[1]), words[2][0], words[3]),
-                                        VcdLineType.Integer => new VcdSignal<int>(type, int.Parse(words[1]), words[2][0], words[3]),
-                                        _ => new VcdSignal<object>(type, int.Parse(words[1]), words[2][0], words[3]),
+                                        VcdLineType.Reg => new VcdSignal<byte>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
+                                        VcdLineType.Integer => new VcdSignal<int>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
+                                        _ => new VcdSignal<object>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
                                     };
                                     
                                     currentScope.Signals.Add(signal);
@@ -166,7 +166,7 @@ public static class VcdParser
                     switch (parsingPos)
                     {
                         case ParsingPosition.Time:
-                            file.ChangeTimes.Add(currentTime);
+                            file.Definition.ChangeTimes.Add(currentTime);
                             break;
                     }
                     //stringBuilder.Clear();
@@ -207,11 +207,11 @@ public static class VcdParser
                                 'X' => 3,
                                 _ => byte.MaxValue,
                             };
-                            file.Definition.SignalRegister[c].AddChange(file.ChangeTimes.Count-1, data);
+                            file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, data);
                             break;
                         case ParsingPosition.Signal when parsingSignalType is VcdLineType.Integer && lastC is ' ':
                         {
-                            //file.Definition.SignalRegister[c].AddChange(new VcdChange<int>(currentTime, currentInteger));
+                            file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, currentInteger);
                             break;
                         }
                         case ParsingPosition.Time:

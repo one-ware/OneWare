@@ -73,7 +73,7 @@ public class VcdViewModel : ExtendedDocument
             progress.ProgressChanged += (o, i) =>
             {
                 Title = $"{Path.GetFileName(FullPath)} {i}%";
-                WaveFormViewer.Max = context.Item1.ChangeTimes.Last();
+                WaveFormViewer.Max = context.Item1.Definition.ChangeTimes.Last();
             };
 
             await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress);
@@ -92,7 +92,7 @@ public class VcdViewModel : ExtendedDocument
 
     public void AddSignal(IVcdSignal signal)
     {
-        //WaveFormViewer.AddSignal(signal.Name, (SignalLineType)signal.Type, signal.Changes);
+        WaveFormViewer.AddSignal(signal);
     }
 
     protected override void Reset()
@@ -105,5 +105,7 @@ public class VcdViewModel : ExtendedDocument
         {
             signal.Clear();
         }
+        _vcdFile.Definition.ChangeTimes.Clear();
+        _vcdFile.Definition.ChangeTimes.TrimExcess();
     }
 }
