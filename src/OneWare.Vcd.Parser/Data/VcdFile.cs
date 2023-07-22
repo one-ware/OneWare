@@ -2,7 +2,6 @@
 
 public class VcdFile
 {
-    
     public VcdDefinition Definition { get; }
 
     public VcdFile(VcdDefinition definition)

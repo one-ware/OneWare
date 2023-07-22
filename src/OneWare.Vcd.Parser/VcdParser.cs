@@ -146,6 +146,9 @@ public static class VcdParser
         while (!reader.EndOfStream)
         {
             var c = (char)reader.Read();
+            
+            if(c is '\r') continue;
+            
             if (progress != null)
             {
                 counter++;
@@ -158,47 +161,56 @@ public static class VcdParser
                 }
             }
 
-            switch (c)
+            switch (parsingPos)
             {
-                case '\r':
-                    break;
-                case '\n':
-                    switch (parsingPos)
-                    {
-                        case ParsingPosition.Time:
-                            file.Definition.ChangeTimes.Add(currentTime);
-                            break;
-                    }
-                    //stringBuilder.Clear();
+                case ParsingPosition.None:
 
-                    parsingPos = ParsingPosition.None;
-                    break;
-                case '#' when lastC is '\n':
-                    //stringBuilder.Clear();
-                    currentTime = 0L;
-                    parsingPos = ParsingPosition.Time;
-                    break;
-                case '0' when lastC is '\n' && parsingPos is ParsingPosition.None:
-                case '1' when lastC is '\n' && parsingPos is ParsingPosition.None:
-                    parsingSignalType = VcdLineType.Reg;
-                    parsingPos = ParsingPosition.Signal;
-                    break;
-                case 'b' when lastC is '\n' && parsingPos is ParsingPosition.None:
-                    parsingSignalType = VcdLineType.Integer;
-                    parsingPos = ParsingPosition.Signal;
-                    currentInteger = 0;
-                    break;
-                case '0' when parsingPos is ParsingPosition.Signal && parsingSignalType is VcdLineType.Integer:
-                    currentInteger <<= 1;
-                    break;
-                case '1' when parsingPos is ParsingPosition.Signal && parsingSignalType is VcdLineType.Integer:
-                    currentInteger <<= 1;
-                    currentInteger += 1;
-                    break;
-                default:
-                    switch (parsingPos)
+                    if (lastC is '\n')
                     {
-                        case ParsingPosition.Signal when parsingSignalType is VcdLineType.Reg:
+                        switch (c)
+                        {
+                            case '0':
+                            case '1':
+                                parsingSignalType = VcdLineType.Reg;
+                                parsingPos = ParsingPosition.Signal;
+                                break;
+                            case 'b':
+                                parsingSignalType = VcdLineType.Integer;
+                                parsingPos = ParsingPosition.Signal;
+                                currentInteger = 0;
+                                break;
+                            case '#':
+                                currentTime = 0L;
+                                parsingPos = ParsingPosition.Time;
+                                break;
+                        }
+                    }
+
+                    break;
+                
+                case ParsingPosition.Signal:
+                    switch (parsingSignalType)
+                    {
+                        case VcdLineType.Integer:
+                            switch (c)
+                            {
+                                case '0':
+                                    currentInteger <<= 1;
+                                    break;
+                                case '1':
+                                    currentInteger <<= 1;
+                                    currentInteger += 1;
+                                    break;
+                                default:
+                                    if (lastC is ' ')
+                                    {
+                                        file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, currentInteger);
+                                        parsingPos = ParsingPosition.None;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case VcdLineType.Reg:
                             byte data = lastC switch
                             {
                                 '0' => 0,
@@ -208,19 +220,22 @@ public static class VcdParser
                                 _ => byte.MaxValue,
                             };
                             file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, data);
-                            break;
-                        case ParsingPosition.Signal when parsingSignalType is VcdLineType.Integer && lastC is ' ':
-                        {
-                            file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, currentInteger);
-                            break;
-                        }
-                        case ParsingPosition.Time:
-                            currentTime = AddNumber(currentTime, c);
-                            break;
-                        default:
+                            parsingPos = ParsingPosition.None;
                             break;
                     }
-
+                    break;
+                
+                case ParsingPosition.Time:
+                    switch (c)
+                    {
+                        case '\n':
+                            file.Definition.ChangeTimes.Add(currentTime);
+                            parsingPos = ParsingPosition.None;
+                            break;
+                        default:
+                            currentTime = AddNumber(currentTime, c);
+                            break;
+                    }
                     break;
             }
 
@@ -234,7 +249,6 @@ public static class VcdParser
         {
             return n * 10 + (c - '0');
         }
-
         throw new FormatException("Invalid time parsing");
     }
 }
