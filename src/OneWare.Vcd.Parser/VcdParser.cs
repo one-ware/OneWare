@@ -146,9 +146,7 @@ public static class VcdParser
         while (!reader.EndOfStream)
         {
             var c = (char)reader.Read();
-            
-            if(c is '\r') continue;
-            
+
             if (progress != null)
             {
                 counter++;
@@ -228,6 +226,7 @@ public static class VcdParser
                 case ParsingPosition.Time:
                     switch (c)
                     {
+                        case '\r':
                         case '\n':
                             file.Definition.ChangeTimes.Add(currentTime);
                             parsingPos = ParsingPosition.None;
@@ -237,13 +236,15 @@ public static class VcdParser
                             break;
                     }
                     break;
+                default:
+                    throw new Exception("Unexpected Character");
             }
 
             lastC = c;
         }
     }
 
-    static long AddNumber(long n, char c)
+    private static long AddNumber(long n, char c)
     {
         if (c is >= '0' and <= '9')
         {
