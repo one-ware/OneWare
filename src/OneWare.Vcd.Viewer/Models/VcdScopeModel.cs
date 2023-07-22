@@ -6,7 +6,7 @@ namespace OneWare.Vcd.Viewer.Models;
 
 public class VcdScopeModel : ObservableObject
 {
-    private bool _isExpanded;
+    private bool _isExpanded = true;
     public bool IsExpanded
     {
         get => _isExpanded;
@@ -18,8 +18,8 @@ public class VcdScopeModel : ObservableObject
 
     public VcdScopeModel(VcdScope scope)
     {
-        Name = scope.Name;
-        Scopes = scope.Scopes.Select(x => new VcdScopeModel(x));
+        Name = scope.Name.Split(' ').Last();
+        Scopes = scope.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any()).Select(x => new VcdScopeModel(x));
         Signals = scope.Signals;
     }
 }

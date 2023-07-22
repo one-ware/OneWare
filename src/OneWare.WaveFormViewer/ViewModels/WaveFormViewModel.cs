@@ -13,7 +13,7 @@ namespace OneWare.WaveFormViewer.ViewModels;
 public class WaveFormViewModel : ObservableObject
 {
     private static readonly IBrush[] WaveColors =
-        { Brushes.Lime, Brushes.Magenta, Brushes.Yellow, Brushes.CornflowerBlue };
+        { Brushes.Lime, Brushes.Aqua, Brushes.Magenta, Brushes.Yellow};
     
     public ObservableCollection<WaveModel> Signals { get; } = new();
 

@@ -72,7 +72,7 @@ public class VcdViewModel : ExtendedDocument
             
             _vcdFile = context.Item1;
             
-            Scopes.AddRange(_vcdFile.Definition.Scopes.Select(x => new VcdScopeModel(x)));
+            Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any()).Select(x => new VcdScopeModel(x)));
             
             progress.ProgressChanged += (o, i) =>
             {
