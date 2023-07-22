@@ -155,7 +155,7 @@ public static class VcdParser
         var currentTime = 0L;
         var currentInteger = 0;
 
-        var lastC = ' ';
+        var lastC = '\n';
         var parsingPos = ParsingPosition.None;
         var parsingSignalType = VcdLineType.Reg;
 

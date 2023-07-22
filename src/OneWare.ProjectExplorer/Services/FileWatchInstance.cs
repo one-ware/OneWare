@@ -93,7 +93,12 @@ public class FileWatchInstance : IDisposable
                 case WatcherChangeTypes.Created:
                 case WatcherChangeTypes.Renamed:
                 case WatcherChangeTypes.Changed:
-                    await _projectExplorerService.ReloadAsync(entry);
+                    if (entry is IFile file)
+                    {
+                        if(File.GetLastWriteTime(file.FullPath) > file.LastSaveTime)
+                            await _projectExplorerService.ReloadAsync(entry);
+                    }
+                    else await _projectExplorerService.ReloadAsync(entry);
                     return;
                 case WatcherChangeTypes.Deleted:
                     await _projectExplorerService.DeleteAsync(entry);
