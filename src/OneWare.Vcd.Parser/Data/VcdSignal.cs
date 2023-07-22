@@ -57,7 +57,7 @@ public class VcdSignal<T> : IVcdSignal
     {
         var index = FindIndex(offset);
 
-        return index >= 0 ? _values[index] : default;
+        return index >= 0 && index < _values.Count ? _values[index] : default;
     }
     
     public object? GetValueFromOffset(long offset)

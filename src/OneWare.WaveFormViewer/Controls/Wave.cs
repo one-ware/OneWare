@@ -129,7 +129,7 @@ namespace OneWare.WaveFormViewer.Controls
                 var currentChangeTime = model.Signal.GetChangeTimeFromIndex(index);
                 var currentValue = model.Signal.GetValueFromIndex(index);
                 var nextChangeTime = model.Signal.GetChangeTimeFromIndex(index + 1);
-                if (nextChangeTime == long.MaxValue) nextChangeTime = Max;
+                //if (nextChangeTime == long.MaxValue) nextChangeTime = Max;
                 var x = (currentChangeTime - Offset) / mz;
                 var sWidth = (nextChangeTime - currentChangeTime) / mz;
 
