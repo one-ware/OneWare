@@ -41,19 +41,19 @@ namespace OneWare.WaveFormViewer.Views
             _viewModel = vm;
         }
 
-        private void OnPointerMoved(object sender, PointerEventArgs e)
+        private void OnPointerMoved(object? sender, PointerEventArgs e)
         {
             SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed,
                 !_pointerPressed);
         }
 
-        private void OnPointerPressed(object sender, PointerEventArgs e)
+        private void OnPointerPressed(object? sender, PointerEventArgs e)
         {
             SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed);
             _pointerPressed = true;
         }
 
-        private void OnPointerReleased(object sender, PointerEventArgs e)
+        private void OnPointerReleased(object? sender, PointerEventArgs e)
         {
             _pointerPressed = false;
             SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed);

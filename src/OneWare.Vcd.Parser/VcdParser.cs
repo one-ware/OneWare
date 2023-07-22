@@ -124,6 +124,32 @@ public static class VcdParser
         Signal
     }
 
+    public static async Task<long?> TryFindLastTime(string path, int backOffset = 1000)
+    {
+        await using var stream = File.OpenRead(path);
+        var result = await TryFindLastTime(stream, backOffset);
+        return result;
+    }
+    
+    public static async Task<long?> TryFindLastTime(Stream stream, int backOffset = 500)
+    {
+        if (stream.Length < backOffset) 
+            backOffset = (int)stream.Length;
+        
+        stream.Seek(-backOffset, SeekOrigin.End);
+        using var reader = new StreamReader(stream);
+
+        var text = await reader.ReadToEndAsync();
+
+        var lines = text.Split('\n');
+        var lastTime = lines.Last(x => x.StartsWith('#'));
+        if (!string.IsNullOrWhiteSpace(lastTime))
+        {
+            if(long.TryParse(lastTime.Trim()[1..], out var time)) return time;
+        }
+        return null;
+    }
+    
     private static void ReadSignals(StreamReader reader, VcdFile file, IProgress<int>? progress = null)
     {
         var currentTime = 0L;
@@ -242,6 +268,8 @@ public static class VcdParser
 
             lastC = c;
         }
+        
+        progress?.Report(100);
     }
 
     private static long AddNumber(long n, char c)

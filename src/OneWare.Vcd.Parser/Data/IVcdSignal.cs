@@ -2,6 +2,7 @@
 
 public interface IVcdSignal
 {
+    public event EventHandler RequestRedraw;
     public VcdLineType Type { get; }
     public string Name { get; }
     public char Id { get; }
@@ -11,4 +12,5 @@ public interface IVcdSignal
     public object? GetValueFromOffset(long offset);
     public long GetChangeTimeFromIndex(int index);
     public object? GetValueFromIndex(int index);
+    public void Invalidate();
 }

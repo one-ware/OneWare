@@ -52,7 +52,7 @@ public class WaveFormViewModel : ObservableObject
         set => this.SetProperty(ref _cursorOffset, value >= 0 ? value : 0);
     }
     
-    private long _markerOffset = 0;
+    private long _markerOffset = long.MaxValue;
     public long MarkerOffset
     {
         get => _markerOffset;
@@ -77,19 +77,38 @@ public class WaveFormViewModel : ObservableObject
         }
     }
     
+    private long _loadingMarkerOffset = long.MaxValue;
+    public long LoadingMarkerOffset
+    {
+        get => _loadingMarkerOffset;
+        set
+        {
+            SetProperty(ref _loadingMarkerOffset, value >= 0 ? value : 0);
+            if(MarkerOffset == long.MaxValue) SetSignalMarkerValues(_loadingMarkerOffset);
+        }
+    }
+    
     public string MarkerText
     {
         get
         {
+            if (LoadingMarkerOffset != long.MaxValue)
+            {
+                if (MarkerOffset != long.MaxValue)
+                    return TimeUnitConverter.Instance.Convert(MarkerOffset, typeof(string), null, CultureInfo.CurrentCulture)
+                        as string ?? "";
+                return "?";
+            }
+            
             if (SecondMarkerOffset == long.MaxValue)
             {
                 if (MarkerOffset != long.MaxValue)
                     return TimeUnitConverter.Instance.Convert(MarkerOffset, typeof(string), null, CultureInfo.CurrentCulture)
                         as string ?? "";
-                return "0";
+                return "?";
             }
 
-            if (MarkerOffset == long.MaxValue) return "0";
+            if (MarkerOffset == long.MaxValue) return "?";
             var dist = SecondMarkerOffset - MarkerOffset;
             return (dist > 0 ? "+" : "") + TimeUnitConverter.Instance.Convert(dist, typeof(string), null,
                 CultureInfo.CurrentCulture);

@@ -64,8 +64,12 @@ public class VcdViewModel : ExtendedDocument
         {
             var progress = new Progress<int>();
 
+            var lastTime = await VcdParser.TryFindLastTime(FullPath);
+            
             var context = VcdParser.ParseVcdDefinition(FullPath);
 
+            if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
+            
             _vcdFile = context.Item1;
             
             Scopes.AddRange(_vcdFile.Definition.Scopes.Select(x => new VcdScopeModel(x)));
@@ -73,10 +77,20 @@ public class VcdViewModel : ExtendedDocument
             progress.ProgressChanged += (o, i) =>
             {
                 Title = $"{Path.GetFileName(FullPath)} {i}%";
-                WaveFormViewer.Max = context.Item1.Definition.ChangeTimes.Last();
+                if (!lastTime.HasValue) WaveFormViewer.Max = context.Item1.Definition.ChangeTimes.Last();
+                else
+                {
+                    foreach (var (_, signal) in _vcdFile.Definition.SignalRegister)
+                    {
+                        signal.Invalidate();
+                        WaveFormViewer.LoadingMarkerOffset = _vcdFile.Definition.ChangeTimes.Last();
+                    }
+                }
             };
 
             await VcdParser.StartAndReportProgressAsync(context.Item2, context.Item1, progress);
+
+            WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile!.Header;
         }

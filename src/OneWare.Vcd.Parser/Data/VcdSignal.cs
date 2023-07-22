@@ -13,6 +13,8 @@ public class VcdSignal<T> : IVcdSignal
     private readonly List<int> _changeTimeOffsets = new();
     private readonly List<T?> _values = new();
 
+    public event EventHandler RequestRedraw;
+
     public VcdSignal(List<long> changeTimes, VcdLineType type, int bitWidth, char id, string name)
     {
         ChangeTimes = changeTimes;
@@ -71,5 +73,10 @@ public class VcdSignal<T> : IVcdSignal
     public object? GetValueFromIndex(int index)
     {
         return index < _values.Count ? _values[index] : null;
+    }
+
+    public void Invalidate()
+    {
+        RequestRedraw?.Invoke(null, EventArgs.Empty);
     }
 }

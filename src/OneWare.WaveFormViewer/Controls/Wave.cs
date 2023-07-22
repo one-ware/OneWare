@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -60,6 +62,20 @@ namespace OneWare.WaveFormViewer.Controls
 
             var fontFamily = Application.Current?.FindResource("EditorFont") as FontFamily;
             _typeface = new Typeface(fontFamily!);
+        }
+
+        private CompositeDisposable _compositeDisposable = new();
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            _compositeDisposable.Dispose();
+            _compositeDisposable = new CompositeDisposable();
+            if (DataContext is WaveModel model)
+            {
+                Observable.FromEventPattern<EventArgs>(model.Signal, nameof(model.Signal.RequestRedraw)).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_compositeDisposable);
+            }
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

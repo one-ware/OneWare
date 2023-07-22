@@ -12,12 +12,14 @@ namespace OneWare.WaveFormViewer.Controls
     public class WaveFormEffects : Control
     {
         private readonly IPen _markerBrushPen;
+        
+        private readonly IPen _loadingMarkerBrushPen;
 
         public WaveFormEffects()
         {
             ClipToBounds = true;
-            IBrush markerBrush = Brushes.DarkRed;
-            _markerBrushPen = new Pen(markerBrush, 2);
+            _markerBrushPen = new Pen(Brushes.DarkRed, 2);
+            _loadingMarkerBrushPen = new Pen(Brushes.Chartreuse, 5);
         }
         
         private CompositeDisposable _disposableReg = new();
@@ -39,6 +41,22 @@ namespace OneWare.WaveFormViewer.Controls
                     Redraw();
                 }).DisposeWith(_disposableReg);
                 vm.WhenValueChanged(x => x.ZoomMultiply).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.MarkerOffset).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.SecondMarkerOffset).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.LoadingMarkerOffset).Subscribe(x =>
+                {
+                    Redraw();
+                }).DisposeWith(_disposableReg);
+                vm.WhenValueChanged(x => x.CursorOffset).Subscribe(x =>
                 {
                     Redraw();
                 }).DisposeWith(_disposableReg);
@@ -67,6 +85,14 @@ namespace OneWare.WaveFormViewer.Controls
                 if (xxx > 0 && xxx < Bounds.Width)
                     context.DrawLine(_markerBrushPen, new Point(xxx, 0), new Point(xxx, Bounds.Height));
             }
+            
+            if (vm.LoadingMarkerOffset != long.MaxValue)
+            {
+                var xxx = (vm.LoadingMarkerOffset - vm.Offset) / (multiplier / vm.ZoomMultiply);
+
+                if (xxx > 0 && xxx < Bounds.Width)
+                    context.DrawLine(_loadingMarkerBrushPen, new Point(xxx, 0), new Point(xxx, Bounds.Height));
+            }
         }
 
         public void SetPos(double x, bool pointerPressed, bool cursorOnly = false)
@@ -88,8 +114,6 @@ namespace OneWare.WaveFormViewer.Controls
             {
                 vm.SecondMarkerOffset = offset;
             }
-
-            Redraw();
         }
 
         private void Redraw()
