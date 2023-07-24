@@ -24,6 +24,15 @@ namespace OneWare.WaveFormViewer.Controls
             set => SetValue(ExtendSignalsProperty, value);
         }
         
+        public static readonly StyledProperty<long> LoadingOffsetProperty =
+            AvaloniaProperty.Register<Wave, long>(nameof(LoadingOffset));
+
+        public long LoadingOffset
+        {
+            get => GetValue(LoadingOffsetProperty);
+            set => SetValue(LoadingOffsetProperty, value);
+        }
+        
         public static readonly StyledProperty<long> OffsetProperty =
             AvaloniaProperty.Register<Wave, long>(nameof(Offset));
 
@@ -129,6 +138,15 @@ namespace OneWare.WaveFormViewer.Controls
                 var currentChangeTime = model.Signal.GetChangeTimeFromIndex(index);
                 var currentValue = model.Signal.GetValueFromIndex(index);
                 var nextChangeTime = model.Signal.GetChangeTimeFromIndex(index + 1);
+
+                if (LoadingOffset > 0)
+                {
+                    if (nextChangeTime > LoadingOffset)
+                    {
+                        nextChangeTime = LoadingOffset;
+                        //if(nextChangeTime >= currentChangeTime) break;
+                    }
+                }
                 //if (nextChangeTime == long.MaxValue) nextChangeTime = Max;
                 var x = (currentChangeTime - Offset) / mz;
                 var sWidth = (nextChangeTime - currentChangeTime) / mz;
@@ -243,6 +261,8 @@ namespace OneWare.WaveFormViewer.Controls
                         context.FillRectangle(model.WaveBrush, new Rect(x, 5, sWidth, Height - 10));
                     }
                 }
+
+                if (nextChangeTime == LoadingOffset) break;
 
                 i += (int)sWidth;
                 if (x + sWidth > i) i = (int)(x + sWidth);
