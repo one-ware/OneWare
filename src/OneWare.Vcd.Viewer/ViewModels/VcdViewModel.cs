@@ -56,6 +56,8 @@ public class VcdViewModel : ExtendedDocument
     
     public WaveFormViewModel WaveFormViewer { get; } = new();
 
+    public override string CloseWarningMessage => $"Do you want to save the current view to the file {CurrentFile?.Header}? All added signals will be opened automatically next time!";
+
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService, IWindowService windowService) 
         : base(fullPath, projectExplorerService, dockService, windowService)
     {
@@ -74,6 +76,11 @@ public class VcdViewModel : ExtendedDocument
             this.WhenValueChanged(x => x.LoadingThreads));
 
         LoadingThreadOptions = settingsService.GetComboOptions<int>("VcdViewer_LoadingThreads");
+
+        WaveFormViewer.SignalRemoved += (_, _) =>
+        {
+            if(_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) IsDirty = true;
+        };
     }
 
     protected override void ChangeCurrentFile(IFile? oldFile)
@@ -99,7 +106,7 @@ public class VcdViewModel : ExtendedDocument
 
         try
         {
-            var context = _vcdFile == null ? await VcdContextManager.LoadContextAsync(FullPath + "vcdSave.json") : null;
+            var context = _vcdFile == null ? await VcdContextManager.LoadContextAsync(FullPath + ".vcdSave.json") : null;
             
             _vcdFile = VcdParser.ParseVcdDefinition(FullPath);
             Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any())
@@ -161,6 +168,7 @@ public class VcdViewModel : ExtendedDocument
         timer?.Dispose();
         
         IsLoading = false;
+        IsDirty = false;
         return true;
     }
 
@@ -182,7 +190,7 @@ public class VcdViewModel : ExtendedDocument
     public void AddSignal(IVcdSignal signal)
     {
         WaveFormViewer.AddSignal(signal);
-        IsDirty = true;
+        if(_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) IsDirty = true;
     }
 
     protected override void Reset()
@@ -195,6 +203,7 @@ public class VcdViewModel : ExtendedDocument
 
     public override async Task<bool> SaveAsync()
     {
+        if(!_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) return true;
         var result = await VcdContextManager.SaveContextAsync(FullPath + ".vcdSave.json", new VcdContext(WaveFormViewer.Signals.Select(x => x.Signal.Id)));
         if (result) IsDirty = false;
         return result;

@@ -18,7 +18,7 @@ public static class VcdParser
 
     public static VcdFile ParseVcdDefinition(string path)
     {
-        using var stream = File.OpenRead(path);
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);// File.OpenRead(path);
         using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
 
         var vcdFile = ReadDefinition(reader);
@@ -31,7 +31,7 @@ public static class VcdParser
         //Use thread safe variant
         if (threads == 1) 
         {
-            await using var stream = File.OpenRead(path);
+            await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);;
             stream.Seek(vcdFile.DefinitionParseEndPosition+1, SeekOrigin.Begin);
             var reader = new StreamReader(stream);
             await Task.Run(async () =>
@@ -79,7 +79,7 @@ public static class VcdParser
     {
         return Task.Run(() =>
         {
-            Stream stream = File.OpenRead(path);
+            Stream stream =  new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
             
             stream.Seek(begin, SeekOrigin.Begin);
             stream = new StreamReadLimitLengthWrapper(stream, length);
@@ -105,7 +105,7 @@ public static class VcdParser
 
     public static VcdFile ParseVcd(string path)
     {
-        using var stream = File.OpenRead(path);
+        using var stream =  new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
         return ParseVcd(stream);
     }
 
@@ -191,7 +191,7 @@ public static class VcdParser
     
     public static async Task<long?> TryFindLastTime(string path, int backOffset = 1000)
     {
-        await using var stream = File.OpenRead(path);
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
         var result = await TryFindLastTime(stream, backOffset);
         return result;
     }

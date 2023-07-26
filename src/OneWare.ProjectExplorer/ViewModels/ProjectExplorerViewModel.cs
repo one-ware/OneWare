@@ -604,11 +604,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (entry is IProjectFile file)
         {
             _dockService.OpenFiles.TryGetValue(file, out var evm);
-            if (evm is IEditor editor)
+            if (evm is not null)
             {
-                editor.FullPath = file.FullPath;
+                evm.FullPath = file.FullPath;
+                evm.InitializeContent();
             }
-            evm?.InitializeContent();
             return file;
         }
 

@@ -16,8 +16,10 @@ public class VcdViewerModule : IModule
     {
         containerProvider.Resolve<IDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
         
+        containerProvider.Resolve<ISettingsService>().RegisterTitled("Simulator", "VCD Viewer", "VcdViewer_SaveView_Enable", "Enable Save File", "Enables storing view settings like open signals in a separate file", true);
+        
         containerProvider.Resolve<ISettingsService>().RegisterSettingCategory("Simulator", 0, "Material.Pulse");
-        containerProvider.Resolve<ISettingsService>().RegisterTitledCombo("Simulator", "Vcd Viewer", "VcdViewer_LoadingThreads", "Loading Threads", 
+        containerProvider.Resolve<ISettingsService>().RegisterTitledCombo("Simulator", "VCD Viewer", "VcdViewer_LoadingThreads", "Loading Threads", 
             "Sets amount of threads used to loading VCD Files", 4, Enumerable.Range(1, Environment.ProcessorCount).ToArray());
     }
 }

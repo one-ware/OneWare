@@ -66,8 +66,10 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public bool IsDirty
     {
         get => _isDirty;
-        set => SetProperty(ref _isDirty, value);
+        protected set => SetProperty(ref _isDirty, value);
     }
+
+    public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Header}?";
 
     protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService)
     {
@@ -102,8 +104,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     {
         if (!IsDirty) return true;
 
-        var result = await _windowService.ShowYesNoCancelAsync("Warning",
-            "Do you want to save changes to the file " + CurrentFile?.Header + "?", MessageBoxIcon.Warning,
+        var result = await _windowService.ShowYesNoCancelAsync("Warning", CloseWarningMessage, MessageBoxIcon.Warning,
             _dockService.GetWindowOwner(this));
 
         if (result == MessageBoxStatus.Yes)

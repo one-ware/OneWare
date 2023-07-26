@@ -115,6 +115,8 @@ public class WaveFormViewModel : ObservableObject
         }
     }
 
+    public event EventHandler? SignalRemoved;
+
     private void SetSignalMarkerValues(long offset)
     {
         foreach (var s in Signals)
@@ -166,5 +168,6 @@ public class WaveFormViewModel : ObservableObject
     public void RemoveSignal(WaveModel model)
     {
         Signals.Remove(model);
+        SignalRemoved?.Invoke(this, EventArgs.Empty);
     }
 }
