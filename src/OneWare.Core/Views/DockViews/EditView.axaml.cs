@@ -247,10 +247,7 @@ namespace OneWare.Core.Views.DockViews
         }
 
         private string _enteredString = "";
-
-        /// <summary>
-        ///     Saves if CTRL + S is pressed
-        /// </summary>
+        
         private void TextBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.F && e.KeyModifiers == Global.ControlKey && e.KeyModifiers == KeyModifiers.Shift)

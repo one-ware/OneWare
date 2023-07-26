@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 
 namespace OneWare.Shared.Views;
@@ -9,6 +10,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
+    private readonly IWindowService _windowService;
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
 
@@ -67,11 +69,12 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set => SetProperty(ref _isDirty, value);
     }
 
-    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService)
+    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService)
     {
         _fullPath = fullPath;
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
+        _windowService = windowService;
     }
     
     public override bool OnClose()
@@ -95,9 +98,25 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         
     }
 
-    public virtual Task<bool> TryCloseAsync()
+    public virtual async Task<bool> TryCloseAsync()
     {
-        return Task.FromResult(true);
+        if (!IsDirty) return true;
+
+        var result = await _windowService.ShowYesNoCancelAsync("Warning",
+            "Do you want to save changes to the file " + CurrentFile?.Header + "?", MessageBoxIcon.Warning,
+            _dockService.GetWindowOwner(this));
+
+        if (result == MessageBoxStatus.Yes)
+        {
+            if (await SaveAsync()) return true;
+        }
+        else if (result == MessageBoxStatus.No)
+        {
+            IsDirty = false;
+            return true;
+        }
+
+        return false;
     }
 
     public virtual Task<bool> SaveAsync()

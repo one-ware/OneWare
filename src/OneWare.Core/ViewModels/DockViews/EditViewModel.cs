@@ -66,7 +66,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService, dockService)
+            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
         {
             _settingsService = settingsService;
             _dockService = dockService;
@@ -280,27 +280,6 @@ namespace OneWare.Core.ViewModels.DockViews
             _composite = new CompositeDisposable();
         }
 
-        public override async Task<bool> TryCloseAsync()
-        {
-            if (!IsDirty) return true;
-
-            var result = await _windowService.ShowYesNoCancelAsync("Warning",
-                "Do you want to save changes to the file " + CurrentFile?.Header + "?", MessageBoxIcon.Warning,
-                _dockService.GetWindowOwner(this));
-
-            if (result == MessageBoxStatus.Yes)
-            {
-                if (await SaveAsync()) return true;
-            }
-            else if (result == MessageBoxStatus.No)
-            {
-                IsDirty = false;
-                return true;
-            }
-
-            return false;
-        }
-        
         public override async Task<bool> SaveAsync()
         {
             if (IsReadOnly || CurrentFile == null) return true;

@@ -11,6 +11,7 @@ using OneWare.Shared.Services;
 using OneWare.Shared.Views;
 using OneWare.Vcd.Parser;
 using OneWare.Vcd.Parser.Data;
+using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.Controls;
 using OneWare.WaveFormViewer.Enums;
@@ -55,7 +56,8 @@ public class VcdViewModel : ExtendedDocument
     
     public WaveFormViewModel WaveFormViewer { get; } = new();
 
-    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService) : base(fullPath, projectExplorerService, dockService)
+    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService, IWindowService windowService) 
+        : base(fullPath, projectExplorerService, dockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
         
@@ -63,7 +65,7 @@ public class VcdViewModel : ExtendedDocument
         _settingsService = settingsService;
         
         Title = $"Loading {Path.GetFileName(fullPath)}";
-        
+
         settingsService.GetSettingObservable<int>("VcdViewer_LoadingThreads").Subscribe(x =>
         {
             LoadingThreads = x;
@@ -97,16 +99,31 @@ public class VcdViewModel : ExtendedDocument
 
         try
         {
+            var context = _vcdFile == null ? await VcdContextManager.LoadContextAsync(FullPath + "vcdSave.json") : null;
+            
             _vcdFile = VcdParser.ParseVcdDefinition(FullPath);
             Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any())
                 .Select(x => new VcdScopeModel(x)));
+            
             var lastTime = await VcdParser.TryFindLastTime(FullPath);
-            var currentSignals = WaveFormViewer.Signals.Select(x => x.Signal.Id).ToArray();
-            WaveFormViewer.Signals.Clear();
-            foreach (var signal in currentSignals)
+
+            if (context == null)
             {
-                if (_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
-                    AddSignal(vcdSignal);
+                var currentSignals = WaveFormViewer.Signals.Select(x => x.Signal.Id).ToArray();
+                WaveFormViewer.Signals.Clear();
+                foreach (var signal in currentSignals)
+                {
+                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
+                        WaveFormViewer.AddSignal(vcdSignal);
+                }
+            }
+            else
+            {
+                foreach (var signal in context.OpenIds)
+                {
+                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
+                        WaveFormViewer.AddSignal(vcdSignal);
+                }
             }
 
             if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
@@ -165,6 +182,7 @@ public class VcdViewModel : ExtendedDocument
     public void AddSignal(IVcdSignal signal)
     {
         WaveFormViewer.AddSignal(signal);
+        IsDirty = true;
     }
 
     protected override void Reset()
@@ -173,5 +191,12 @@ public class VcdViewModel : ExtendedDocument
         //Manual cleanup because ViewModel is stuck somewhere
         //TODO Fix DOCK to allow normal GC collection
         _vcdFile = null;
+    }
+
+    public override async Task<bool> SaveAsync()
+    {
+        var result = await VcdContextManager.SaveContextAsync(FullPath + ".vcdSave.json", new VcdContext(WaveFormViewer.Signals.Select(x => x.Signal.Id)));
+        if (result) IsDirty = false;
+        return result;
     }
 }
