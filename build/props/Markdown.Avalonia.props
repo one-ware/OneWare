@@ -3,6 +3,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
-        <!--<PackageReference Include="Markdown.Avalonia" Version="11.0.0-d1"/>-->
+        <!--<PackageReference Include="Markdown.Avalonia" Version="11.0.1-d1"/>-->
     </ItemGroup>
 </Project>
