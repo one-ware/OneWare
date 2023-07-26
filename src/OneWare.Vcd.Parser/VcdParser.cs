@@ -31,17 +31,17 @@ public static class VcdParser
         //Use thread safe variant
         if (threads == 1) 
         {
-            await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);;
-            stream.Seek(vcdFile.DefinitionParseEndPosition+1, SeekOrigin.Begin);
-            var reader = new StreamReader(stream);
             await Task.Run(async () =>
             {
-                ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, 
+                await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
+                stream.Seek(vcdFile.DefinitionParseEndPosition+1, SeekOrigin.Begin);
+                var reader = new StreamReader(stream);
+                await ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, 
                     new Progress<int>(x => progress.Report((0, x))), 
                     cancellationToken);
                 if(!cancellationToken.IsCancellationRequested) await Task.Delay(1, cancellationToken);
-            }, cancellationToken);
-            reader.Dispose();
+                reader.Dispose();
+            });
             return;
         }
         
@@ -77,25 +77,26 @@ public static class VcdParser
     private static Task<(List<long> times, Dictionary<char, IVcdSignal> signals)> ReadSignalsPart(string path, long begin, long length, VcdFile file, 
         int threadId, IProgress<(int thread, int progress)> progress, CancellationToken cancellationToken)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
-            Stream stream =  new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
-            
+            await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
             stream.Seek(begin, SeekOrigin.Begin);
-            stream = new StreamReadLimitLengthWrapper(stream, length);
-            using var reader = new StreamReader(stream);
+            await using var limitStream = new StreamReadLimitLengthWrapper(stream, length);
+            var reader = new StreamReader(limitStream);
 
             var signals = file.Definition.SignalRegister
                 .ToDictionary(f => f.Key, f => f.Value.CloneEmpty());
 
             var changeTimes = new List<long>();
             
-            ReadSignals(reader, signals, changeTimes, new Progress<int>(x =>
+            await ReadSignals(reader, signals, changeTimes, new Progress<int>(x =>
             {
                 progress.Report((threadId, x));
             }), cancellationToken);
+            
+            reader.Dispose();
             return (changeTimes, signals);
-        }, cancellationToken);
+        });
     }
     
     public static Task<VcdFile> ParseVcdAsync(string path)
@@ -115,7 +116,7 @@ public static class VcdParser
 
         var vcdFile = ReadDefinition(reader);
 
-        ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes);
+        ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes).Wait();
 
         return vcdFile;
     }
@@ -215,7 +216,7 @@ public static class VcdParser
         return null;
     }
     
-    private static void ReadSignals(StreamReader reader, IReadOnlyDictionary<char, IVcdSignal> signalRegister, 
+    private static async Task ReadSignals(StreamReader reader, IReadOnlyDictionary<char, IVcdSignal> signalRegister, 
         ICollection<long> changeTimes,
         IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
     {
@@ -243,8 +244,15 @@ public static class VcdParser
             {
                 return;
             }
-            
+
             var c = (char)reader.Read();
+            
+            if (reader.EndOfStream)
+            {
+                //Wait for new input from simulator
+                await Task.Delay(50);
+                continue;
+            }
 
             if (progress != null)
             {

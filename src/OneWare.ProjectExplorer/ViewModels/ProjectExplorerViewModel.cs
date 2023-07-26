@@ -711,6 +711,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             var roots = Items.Where(x => x is IProjectRoot).Cast<IProjectRoot>();
             var serialization = roots.Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath)).ToArray();
             await using var stream = File.OpenWrite(_lastProjectsFile);
+            stream.SetLength(0);
             await JsonSerializer.SerializeAsync(stream, serialization);
         }
         catch (Exception e)

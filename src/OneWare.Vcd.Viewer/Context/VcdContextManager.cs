@@ -34,6 +34,7 @@ public static class VcdContextManager
         try
         {
             await using var stream = File.OpenWrite(path);
+            stream.SetLength(0);
             await JsonSerializer.SerializeAsync(stream, context, Options);
             return true;
         }

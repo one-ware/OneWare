@@ -1,21 +1,13 @@
 ﻿using System.Collections.ObjectModel;
-using Avalonia.Media;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Mvvm.Controls;
-using DynamicData;
 using DynamicData.Binding;
 using OneWare.Shared;
-using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.Views;
 using OneWare.Vcd.Parser;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
-using OneWare.WaveFormViewer.Controls;
-using OneWare.WaveFormViewer.Enums;
-using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 using Prism.Ioc;
 
@@ -26,6 +18,8 @@ public class VcdViewModel : ExtendedDocument
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
+    private bool _isParsing;
+    
     private CancellationTokenSource? _cancellationTokenSource;
     
     private VcdFile? _vcdFile;
@@ -91,13 +85,14 @@ public class VcdViewModel : ExtendedDocument
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
-        if (CurrentFile != null)
+        if (CurrentFile != null && !_isParsing)
             _ = LoadAsync();
     }
 
     private async Task<bool> LoadAsync()
     {
         IsLoading = true;
+        _isParsing = true;
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
         Scopes.Clear();
@@ -135,6 +130,7 @@ public class VcdViewModel : ExtendedDocument
 
             if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
 
+            var useThreads = FileInUse(FullPath) ? 1 : _loadingThreads;
             //Progress Handling
             var progressParts = new int[LoadingThreads];
             var progress = new Progress<(int part, int progress)>(x =>
@@ -145,17 +141,19 @@ public class VcdViewModel : ExtendedDocument
             timer = DispatcherTimer.Run(() =>
             {
                 var progressAverage = (int)progressParts.Average();
-                    ReportProgress(progressAverage, lastTime);
-                    return progressAverage < 100;
-                }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
+                    ReportProgress(progressAverage, lastTime ?? 0, useThreads);
+                    return true;
+            }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
 
-            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token,
-                _loadingThreads);
+            //Check if a process is writing to this VCD to disable multicore parsing
 
-            foreach (var (_, s) in _vcdFile.Definition.SignalRegister)
-            {
-                s.Invalidate();
-            }
+            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads);
+            
+            if(_vcdFile != null)
+                foreach (var (_, s) in _vcdFile.Definition.SignalRegister)
+                {
+                    s.Invalidate();
+                }
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile!.Header;
@@ -166,18 +164,36 @@ public class VcdViewModel : ExtendedDocument
             LoadingFailed = false;
         }
         timer?.Dispose();
-        
+
+        _isParsing = false;
         IsLoading = false;
         IsDirty = false;
         return true;
     }
+    
+    private static bool FileInUse(string path) 
+    {
+        try
+        {
+            using var f = File.OpenWrite(path);
+        }
+        catch
+        {
+            return true;
+        }
 
-    private void ReportProgress(int progress, long? lastTime)
+        return false;
+    }
+
+    private void ReportProgress(int progress, long lastTime, int threads)
     {
         if (_vcdFile == null) return;
         Title = $"{Path.GetFileName(FullPath)} {progress}%";
-        if (!lastTime.HasValue) WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
-        else if(LoadingThreads == 1 && _vcdFile.Definition.ChangeTimes.Any())
+        
+        if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
+            WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
+        
+        if(_vcdFile.Definition.ChangeTimes.Any())
         {
             foreach (var (_, signal) in _vcdFile.Definition.SignalRegister)
             {
