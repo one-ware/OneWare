@@ -20,6 +20,6 @@ public class VcdViewerModule : IModule
         
         containerProvider.Resolve<ISettingsService>().RegisterSettingCategory("Simulator", 0, "Material.Pulse");
         containerProvider.Resolve<ISettingsService>().RegisterTitledCombo("Simulator", "VCD Viewer", "VcdViewer_LoadingThreads", "Loading Threads", 
-            "Sets amount of threads used to loading VCD Files", 4, Enumerable.Range(1, Environment.ProcessorCount).ToArray());
+            "Sets amount of threads used to loading VCD Files", Math.Max(1,Environment.ProcessorCount/2), Enumerable.Range(1, Environment.ProcessorCount).ToArray());
     }
 }
