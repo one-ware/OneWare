@@ -23,8 +23,18 @@
                 <ColumnDefinition MinWidth="150" Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Grid RowDefinitions="*, 5, *, 30">
-                <TreeView Grid.Row="0" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
+            <Grid RowDefinitions="30, *, 5, *">
+                <Border BorderThickness="0 0 0 1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <StackPanel Height="26" Orientation="Horizontal" Margin="5 0" Spacing="5">
+                        <Button VerticalAlignment="Center" Command="{Binding Refresh}">
+                            <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}"/>
+                        </Button>
+                        <TextBlock VerticalAlignment="Center" Text="Threads"/>
+                        <ComboBox MinWidth="50" ItemsSource="{Binding LoadingThreadOptions}" SelectedItem="{Binding LoadingThreads}"/>
+                    </StackPanel>
+                </Border>
+                
+                <TreeView Grid.Row="1" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
                           ItemsSource="{Binding Scopes, FallbackValue={x:Null}}"
                           SelectedItem="{Binding SelectedScope}">
                     <TreeView.Styles>
@@ -42,9 +52,9 @@
                 <GridSplitter Background="{DynamicResource ThemeBackgroundBrush}"
                               Height="5" HorizontalAlignment="Stretch" BorderThickness="0 1"
                               BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                              Grid.Row="1" />
+                              Grid.Row="2" />
 
-                <ListBox BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="2"
+                <ListBox BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="3"
                          SelectedItem="{Binding SelectedSignal}"
                          ItemsSource="{Binding SelectedScope.Signals, FallbackValue={x:Null}}">
                     <ListBox.Styles>
@@ -78,16 +88,6 @@
                         </DataTemplate>
                     </ListBox.DataTemplates>
                 </ListBox>
-                
-                <Border Grid.Row="3" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                    <StackPanel Height="26" Orientation="Horizontal" Margin="5 0" Spacing="5">
-                        <Button VerticalAlignment="Center" Command="{Binding Refresh}">
-                            <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}"/>
-                        </Button>
-                        <TextBlock VerticalAlignment="Center" Text="Threads"/>
-                        <ComboBox MinWidth="50" ItemsSource="{Binding LoadingThreadOptions}" SelectedItem="{Binding LoadingThreads}"/>
-                    </StackPanel>
-                </Border>
             </Grid>
 
             <GridSplitter BorderThickness="1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"

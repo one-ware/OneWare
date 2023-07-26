@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Numerics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData;
@@ -7,9 +8,6 @@ namespace OneWare.Core.Views.Controls
 {
     public partial class TimeSelectorBox : UserControl
     {
-        public static readonly StyledProperty<bool> RoundInputProperty =
-            AvaloniaProperty.Register<TimeSelectorBox, bool>(nameof(RoundInput));
-        
         public static readonly StyledProperty<bool> AdjustInputToWaitUnitProperty =
             AvaloniaProperty.Register<TimeSelectorBox, bool>(nameof(WaitUnit));
         
@@ -22,18 +20,12 @@ namespace OneWare.Core.Views.Controls
         public static readonly StyledProperty<string> LabelProperty =
             AvaloniaProperty.Register<TimeSelectorBox, string>(nameof(Label));
         
-        public static readonly StyledProperty<double> InputProperty =
-            AvaloniaProperty.Register<TimeSelectorBox, double>(nameof(Input));
+        public static readonly StyledProperty<long> InputProperty =
+            AvaloniaProperty.Register<TimeSelectorBox, long>(nameof(Input));
         
         public static readonly StyledProperty<int> WaitUnitProperty =
             AvaloniaProperty.Register<TimeSelectorBox, int>(nameof(WaitUnit));
 
-        public bool RoundInput
-        {
-            get => GetValue(RoundInputProperty);
-            set => SetValue(RoundInputProperty, value);
-        }
-        
         public bool AdjustInputToWaitUnit
         {
             get => GetValue(AdjustInputToWaitUnitProperty);
@@ -65,7 +57,7 @@ namespace OneWare.Core.Views.Controls
             set => SetValue(WaitUnitProperty, value);
         }
 
-        public double Input
+        public long Input
         {
             get => GetValue(InputProperty);
             set => SetValue(InputProperty, value);
@@ -82,7 +74,7 @@ namespace OneWare.Core.Views.Controls
             {
                 if (AdjustInputToWaitUnit)
                 {
-                    Input = PicoSeconds / Math.Pow(1000, WaitUnit);
+                    Input = PicoSeconds / (long)BigInteger.Pow(1000, WaitUnit);
                 }
                 else
                 {
@@ -95,19 +87,18 @@ namespace OneWare.Core.Views.Controls
             }
             if (change.Property == FemtoSecondsProperty)
             {
-                Input = FemtoSeconds / Math.Pow(1000, WaitUnit) / 1000;
+                Input = FemtoSeconds / (long)BigInteger.Pow(1000, WaitUnit) / 1000;
             }
             if (change.Property == PicoSecondsProperty)
             {
-                Input = PicoSeconds / Math.Pow(1000, WaitUnit);
+                Input = PicoSeconds / (long)BigInteger.Pow(1000, WaitUnit);
             }
-            if (RoundInput) Input = Math.Round(Input);
             base.OnPropertyChanged(change);
         }
 
         private void CalculateResultFromInput()
         {
-            PicoSeconds = (long)(Math.Pow(1000, WaitUnit) * Input);
+            PicoSeconds = (long)(BigInteger.Pow(1000, WaitUnit) * Input);
             FemtoSeconds = PicoSeconds * 1000;
         }
     }
