@@ -69,6 +69,18 @@ public class SettingsService : ISettingsService
         throw new ArgumentException($"Setting {key} is not registered!");
     }
 
+    public T[] GetComboOptions<T>(string key)
+    {
+        Settings.TryGetValue(key, out var value);
+        if (value is ComboBoxSetting cs && value?.Value is T)
+        {
+            var destinationArray = new T[cs.Options.Length];
+            Array.Copy(cs.Options, destinationArray, cs.Options.Length);
+            return destinationArray;
+        }
+        throw new ArgumentException($"Setting {key} is not registered!");
+    }
+
     public void SetSettingValue(string key, object value)
     {
         Settings.TryGetValue(key, out var s);

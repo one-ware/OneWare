@@ -2,6 +2,7 @@
 
 public class VcdFile
 {
+    public long DefinitionParseEndPosition { get; set; }
     public VcdDefinition Definition { get; }
 
     public VcdFile(VcdDefinition definition)

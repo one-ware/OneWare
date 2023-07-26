@@ -6,27 +6,98 @@ namespace OneWare.Vcd.Parser;
 
 public static class VcdParser
 {
-    private const int MaxDefinitionSize = 100000;
+    private enum ParsingPosition
+    {
+        None,
+        Time,
+        Signal
+    }
+    
+    private const int MaxDefinitionSize = 10000;
     private const int BufferSize = 1024;
 
-    public static (VcdFile, StreamReader) ParseVcdDefinition(string path)
+    public static VcdFile ParseVcdDefinition(string path)
     {
-        var stream = File.OpenRead(path);
-        var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
+        using var stream = File.OpenRead(path);
+        using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
 
-        var definition = ReadDefinition(reader);
+        var vcdFile = ReadDefinition(reader);
 
-        var vcdFile = new VcdFile(definition);
+        return vcdFile;
+    }
+    
+    public static async Task ReadSignalsAsync(string path, VcdFile vcdFile, IProgress<(int thread, int progress)> progress, CancellationToken cancellationToken, int threads)
+    {
+        //Use thread safe variant
+        if (threads == 1) 
+        {
+            await using var stream = File.OpenRead(path);
+            stream.Seek(vcdFile.DefinitionParseEndPosition+1, SeekOrigin.Begin);
+            var reader = new StreamReader(stream);
+            await Task.Run(async () =>
+            {
+                ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, 
+                    new Progress<int>(x => progress.Report((0, x))), 
+                    cancellationToken);
+                await Task.Delay(1, cancellationToken);
+            }, cancellationToken);
+            reader.Dispose();
+            return;
+        }
+        
+        var info = new FileInfo(path);
+        var remainingLength = info.Length - vcdFile.DefinitionParseEndPosition;
+        
+        var partLength = remainingLength / threads;
 
-        return (vcdFile, reader);
+        var tasks = new List<Task<(List<long> times, Dictionary<char, IVcdSignal> signals)>>();
+
+        var threadC = 0;
+        for (var i = vcdFile.DefinitionParseEndPosition + 1; i < info.Length; i += partLength)
+        {
+            tasks.Add(ReadSignalsPart(path, i, partLength, vcdFile, threadC, progress, cancellationToken));
+            threadC++;
+        }
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var r in results.OrderBy(x => x.times.LastOrDefault()))
+        {
+            foreach (var signal in r.signals)
+            {
+                vcdFile.Definition.SignalRegister[signal.Key].AddChanges(signal.Value);
+            }
+            vcdFile.Definition.ChangeTimes.AddRange(r.times);
+            r.signals.Clear();
+            r.signals.TrimExcess();
+            r.times.Clear();
+            r.times.TrimExcess();
+        }
     }
 
-    public static async Task StartAndReportProgressAsync(StreamReader reader, VcdFile vcdFile, IProgress<int> progress, CancellationToken cancellationToken)
+    private static Task<(List<long> times, Dictionary<char, IVcdSignal> signals)> ReadSignalsPart(string path, long begin, long length, VcdFile file, 
+        int threadId, IProgress<(int thread, int progress)> progress, CancellationToken cancellationToken)
     {
-        await Task.Run(() => { ReadSignals(reader, vcdFile, progress, cancellationToken); }, cancellationToken);
-        reader.Dispose();
-    }
+        return Task.Run(() =>
+        {
+            Stream stream = File.OpenRead(path);
+            
+            stream.Seek(begin, SeekOrigin.Begin);
+            stream = new StreamReadLimitLengthWrapper(stream, length);
+            using var reader = new StreamReader(stream);
 
+            var signals = file.Definition.SignalRegister
+                .ToDictionary(f => f.Key, f => f.Value.CloneEmpty());
+
+            var changeTimes = new List<long>();
+            
+            ReadSignals(reader, signals, changeTimes, new Progress<int>(x =>
+            {
+                progress.Report((threadId, x));
+            }), cancellationToken);
+            return (changeTimes, signals);
+        }, cancellationToken);
+    }
+    
     public static Task<VcdFile> ParseVcdAsync(string path)
     {
         return Task.Run(() => ParseVcd(path));
@@ -42,88 +113,82 @@ public static class VcdParser
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
 
-        var definition = ReadDefinition(reader);
+        var vcdFile = ReadDefinition(reader);
 
-        var vcdFile = new VcdFile(definition);
-
-        ReadSignals(reader, vcdFile);
+        ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes);
 
         return vcdFile;
     }
 
-    private static VcdDefinition ReadDefinition(TextReader reader)
+    private static VcdFile ReadDefinition(TextReader reader)
     {
         var definition = new VcdDefinition();
         IScopeHolder currentScope = definition;
         string? keyWord = null;
         var words = new List<string>();
 
-        reader.ProcessWords(MaxDefinitionSize, x =>
+        var vcdFile = new VcdFile(definition)
         {
-            if (x.StartsWith('$') && x.Length > 1)
+            DefinitionParseEndPosition = reader.ProcessWords(MaxDefinitionSize, x =>
             {
-                switch (x)
+                if (x.StartsWith('$') && x.Length > 1)
                 {
-                    case "$end":
-                        switch (keyWord)
-                        {
-                            case "$timescale":
-                                definition.TimeScale = string.Join(' ', words);
-                                break;
-                            case "$var":
-                                if (words.Count == 4)
-                                {
-                                    var type = Enum.Parse<VcdLineType>(words[0], true);
-
-                                    IVcdSignal signal = type switch
+                    switch (x)
+                    {
+                        case "$end":
+                            switch (keyWord)
+                            {
+                                case "$timescale":
+                                    definition.TimeScale = string.Join(' ', words);
+                                    break;
+                                case "$var":
+                                    if (words.Count == 4)
                                     {
-                                        VcdLineType.Reg => new VcdSignal<byte>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
-                                        VcdLineType.Integer => new VcdSignal<int>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
-                                        _ => new VcdSignal<object>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
-                                    };
+                                        var type = Enum.Parse<VcdLineType>(words[0], true);
+
+                                        IVcdSignal signal = type switch
+                                        {
+                                            VcdLineType.Reg => new VcdSignal<byte>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
+                                            VcdLineType.Integer => new VcdSignal<int>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
+                                            _ => new VcdSignal<object>(definition.ChangeTimes, type, int.Parse(words[1]), words[2][0], words[3]),
+                                        };
                                     
-                                    currentScope.Signals.Add(signal);
-                                    definition.SignalRegister.TryAdd(signal.Id, signal);
-                                }
+                                        currentScope.Signals.Add(signal);
+                                        definition.SignalRegister.TryAdd(signal.Id, signal);
+                                    }
 
-                                break;
-                            case "$scope":
-                                var newScope = new VcdScope(currentScope, string.Join(' ', words));
-                                currentScope.Scopes.Add(newScope);
-                                currentScope = newScope;
-                                break;
-                            case "$upscope":
-                                currentScope = currentScope.Parent ?? throw new Exception("Invalid VCD Definition");
-                                break;
-                            case "$enddefinitions":
-                                return false;
-                        }
+                                    break;
+                                case "$scope":
+                                    var newScope = new VcdScope(currentScope, string.Join(' ', words));
+                                    currentScope.Scopes.Add(newScope);
+                                    currentScope = newScope;
+                                    break;
+                                case "$upscope":
+                                    currentScope = currentScope.Parent ?? throw new Exception("Invalid VCD Definition");
+                                    break;
+                                case "$enddefinitions":
+                                    return false;
+                            }
 
-                        keyWord = null;
-                        break;
+                            keyWord = null;
+                            break;
+                    }
+
+                    keyWord = x;
+                    words.Clear();
+                }
+                else
+                {
+                    words.Add(x);
                 }
 
-                keyWord = x;
-                words.Clear();
-            }
-            else
-            {
-                words.Add(x);
-            }
+                return true;
+            })
+        };
 
-            return true;
-        });
-
-        return definition;
+        return vcdFile;
     }
-
-    private enum ParsingPosition
-    {
-        None,
-        Time,
-        Signal
-    }
-
+    
     public static async Task<long?> TryFindLastTime(string path, int backOffset = 1000)
     {
         await using var stream = File.OpenRead(path);
@@ -150,10 +215,13 @@ public static class VcdParser
         return null;
     }
     
-    private static void ReadSignals(StreamReader reader, VcdFile file, IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
+    private static void ReadSignals(StreamReader reader, IReadOnlyDictionary<char, IVcdSignal> signalRegister, 
+        ICollection<long> changeTimes,
+        IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
     {
         var currentTime = 0L;
         var currentInteger = 0;
+        var addedTime = false;
 
         var lastC = '\n';
         var parsingPos = ParsingPosition.None;
@@ -165,7 +233,7 @@ public static class VcdParser
             0$\r\n
         */
 
-        long? progressSnap = progress != null ? reader.BaseStream.Length / 100 : null;
+        long? progressSnap = progress != null ? (reader.BaseStream.Length-reader.BaseStream.Position) / 100 : null;
         var progressC = 0;
         long counter = 0;
 
@@ -200,10 +268,12 @@ public static class VcdParser
                         {
                             case '0':
                             case '1':
+                                if(!addedTime) break;
                                 parsingSignalType = VcdLineType.Reg;
                                 parsingPos = ParsingPosition.Signal;
                                 break;
                             case 'b':
+                                if(!addedTime) break;
                                 parsingSignalType = VcdLineType.Integer;
                                 parsingPos = ParsingPosition.Signal;
                                 currentInteger = 0;
@@ -218,6 +288,7 @@ public static class VcdParser
                     break;
                 
                 case ParsingPosition.Signal:
+                    if(!addedTime) continue;
                     switch (parsingSignalType)
                     {
                         case VcdLineType.Integer:
@@ -233,7 +304,7 @@ public static class VcdParser
                                 default:
                                     if (lastC is ' ')
                                     {
-                                        file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, currentInteger);
+                                        signalRegister[c].AddChange(changeTimes.Count-1, currentInteger);
                                         parsingPos = ParsingPosition.None;
                                     }
                                     break;
@@ -248,7 +319,7 @@ public static class VcdParser
                                 'X' => 3,
                                 _ => byte.MaxValue,
                             };
-                            file.Definition.SignalRegister[c].AddChange(file.Definition.ChangeTimes.Count-1, data);
+                            signalRegister[c].AddChange(changeTimes.Count-1, data);
                             parsingPos = ParsingPosition.None;
                             break;
                     }
@@ -259,7 +330,8 @@ public static class VcdParser
                     {
                         case '\r':
                         case '\n':
-                            file.Definition.ChangeTimes.Add(currentTime);
+                            changeTimes.Add(currentTime);
+                            addedTime = true;
                             parsingPos = ParsingPosition.None;
                             break;
                         default:

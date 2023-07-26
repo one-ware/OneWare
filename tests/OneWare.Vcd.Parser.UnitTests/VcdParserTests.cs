@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using OneWare.Vcd.Parser.Data;
 using Xunit;
@@ -18,10 +19,9 @@ public class VcdParserTests
         _output = output;
     }
     
-    private static Stream GetTestStream()
+    private static string GetTestPath()
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        return assembly.GetManifestResourceStream("OneWare.Vcd.Parser.UnitTests.Assets.GHDL.vcd")!;
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/GHDL.vcd");
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class VcdParserTests
 
         var before = GC.GetTotalMemory(true);
         sw.Start();
-        var result = VcdParser.ParseVcd(GetTestStream());
+        var result = VcdParser.ParseVcd(GetTestPath());
         sw.Stop();
         var after = GC.GetTotalMemory(true);
         
@@ -65,8 +65,33 @@ public class VcdParserTests
     [Fact]
     public async Task FindLastTimeTest()
     {
-        var lastTime = await VcdParser.TryFindLastTime(GetTestStream());
+        var lastTime = await VcdParser.TryFindLastTime(GetTestPath());
         
         Assert.Equal(1000079333000, lastTime);
+    }
+
+    private async Task ParseMulticore(string path, int threads)
+    {
+        var sw = new Stopwatch();
+        var vcdFile = VcdParser.ParseVcdDefinition(path);
+
+        var before = GC.GetTotalMemory(true);
+        sw.Start();
+        await VcdParser.ReadSignalsAsync(path, vcdFile, new Progress<(int,int)>(),
+            new CancellationToken(), threads);
+        sw.Stop();
+        var after = GC.GetTotalMemory(true);
+
+        _output.WriteLine($"Parsing with {threads} Threads took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"Memory occupied: {(after-before)/1000}kB");
+    }
+    
+    [Fact]
+    public async Task ParseTestMulticore()
+    {
+        await ParseMulticore(GetTestPath(), 1);
+        await ParseMulticore(GetTestPath(), 2);
+        await ParseMulticore(GetTestPath(), 4);
+        await ParseMulticore(GetTestPath(), 8);
     }
 }

@@ -7,10 +7,12 @@ public interface IVcdSignal
     public string Name { get; }
     public char Id { get; }
     public void AddChange(int time, object change);
+    public void AddChanges(IVcdSignal signal);
     public void Clear();
     public int FindIndex(long offset);
     public object? GetValueFromOffset(long offset);
     public long GetChangeTimeFromIndex(int index);
     public object? GetValueFromIndex(int index);
     public void Invalidate();
+    public IVcdSignal CloneEmpty();
 }

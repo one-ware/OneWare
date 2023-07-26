@@ -17,8 +17,9 @@
     </ItemGroup>
     
     <ItemGroup>
-      <None Remove="Assets\GHDL.vcd" />
-      <EmbeddedResource Include="Assets\GHDL.vcd" />
+      <Content Include="Assets\GHDL.vcd">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

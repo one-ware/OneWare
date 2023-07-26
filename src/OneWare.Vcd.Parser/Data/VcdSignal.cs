@@ -29,6 +29,17 @@ public class VcdSignal<T> : IVcdSignal
         _changeTimeOffsets.Add(timeIndex);
         _values.Add((T)change);
     }
+    
+    public void AddChanges(IVcdSignal signal)
+    {
+        if (signal is not VcdSignal<T> s) return;
+        var offset = ChangeTimes.Count;
+        foreach (var off in s._changeTimeOffsets)
+        {
+            _changeTimeOffsets.Add(off+offset);
+        }
+        _values.AddRange(s._values);
+    }
 
     public void Clear()
     {
@@ -78,5 +89,10 @@ public class VcdSignal<T> : IVcdSignal
     public void Invalidate()
     {
         RequestRedraw?.Invoke(null, EventArgs.Empty);
+    }
+
+    public IVcdSignal CloneEmpty()
+    {
+        return new VcdSignal<T>(new List<long>(), Type, BitWidth, Id, Name);
     }
 }
