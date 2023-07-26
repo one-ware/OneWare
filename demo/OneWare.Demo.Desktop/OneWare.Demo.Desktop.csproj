@@ -8,7 +8,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <OutputType Condition="'$(Configuration.toUpper())' != 'DEBUG'">WinExe</OutputType>
         <OutputType Condition="'$(Configuration.toUpper())' == 'DEBUG'">Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <ApplicationIcon>..\OneWare.Demo\Assets\icon.ico</ApplicationIcon>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
