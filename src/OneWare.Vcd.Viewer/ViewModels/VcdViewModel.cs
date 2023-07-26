@@ -64,7 +64,10 @@ public class VcdViewModel : ExtendedDocument
         
         Title = $"Loading {Path.GetFileName(fullPath)}";
         
-        _loadingThreads = settingsService.GetSettingValue<int>("VcdViewer_LoadingThreads");
+        settingsService.GetSettingObservable<int>("VcdViewer_LoadingThreads").Subscribe(x =>
+        {
+            LoadingThreads = x;
+        });
         settingsService.Bind("VcdViewer_LoadingThreads", 
             this.WhenValueChanged(x => x.LoadingThreads));
 

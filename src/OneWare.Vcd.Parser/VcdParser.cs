@@ -39,7 +39,7 @@ public static class VcdParser
                 ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, 
                     new Progress<int>(x => progress.Report((0, x))), 
                     cancellationToken);
-                await Task.Delay(1, cancellationToken);
+                if(!cancellationToken.IsCancellationRequested) await Task.Delay(1, cancellationToken);
             }, cancellationToken);
             reader.Dispose();
             return;
