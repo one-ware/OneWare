@@ -251,7 +251,6 @@ public static class VcdParser
             {
                 //Wait for new input from simulator
                 await Task.Delay(50);
-                continue;
             }
 
             if (progress != null)
