@@ -1,4 +1,5 @@
 ﻿using OneWare.Cpp;
+using OneWare.Ghdl;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.SourceControl;
@@ -25,5 +26,6 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<GhdlModule>();
     }
 }
