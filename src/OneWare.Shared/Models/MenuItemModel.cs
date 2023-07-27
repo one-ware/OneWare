@@ -54,6 +54,13 @@ namespace OneWare.Shared.Models
             }
         }
 
+        private KeyGesture? _hotKey;
+        public KeyGesture? HotKey
+        {
+            get => _hotKey;
+            set => SetProperty(ref _hotKey, value);
+        }
+        
         private KeyGesture? _inputGesture;
         public KeyGesture? InputGesture
         {

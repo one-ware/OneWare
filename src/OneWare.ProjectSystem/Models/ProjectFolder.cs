@@ -84,6 +84,30 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (Items.Count == 0) IsExpanded = false;
     }
 
+    public IProjectFile? ImportFile(string path, bool overwrite)
+    {
+        var destination = Path.Combine(FullPath, Path.GetFileName(path));
+
+        //Check if File exists
+        if (!File.Exists(path))
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {path}. File does not exist");
+            return null;
+        }
+        try
+        {
+            if(!path.IsSamePathAs(destination))
+                Tools.CopyFile(path, destination, overwrite);
+
+            return AddFile(Path.GetFileName(destination));
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            return null;
+        }
+    }
+
     public IProjectFile AddFile(string path, bool createNew = false)
     {
         var split = path.LastIndexOf(Path.DirectorySeparatorChar);

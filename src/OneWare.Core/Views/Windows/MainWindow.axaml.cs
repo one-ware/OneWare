@@ -113,7 +113,7 @@ namespace OneWare.Core.Views.Windows
                 {
                     var nmi = new NativeMenuItem(mi.Header as string ?? "")
                     {
-                        Gesture = mi.InputGesture
+                        Gesture = mi.InputGesture,
                     };
 
                     if (false) //TODO

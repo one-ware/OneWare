@@ -413,7 +413,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 //         continue;
                 //     }
                 // }
-                ImportFile(path, parent);
+                parent.ImportFile(path);
             }
                 
         }    
@@ -461,7 +461,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
             else
             {
-                ImportFile(entry, destination);
+                destination.ImportFile(entry);
             }
         }
     }
@@ -484,35 +484,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (!files.Any()) return;
             
         //After Dialog closes
-        foreach (var path in files) ImportFile(path, destination);
+        foreach (var path in files) destination.ImportFile(path);
 
         //await destination.Root.SaveProjectAsync();
         //await destination.Root.ResolveAsync();
     }
     
-    
-    public void ImportFile(string source, IProjectFolder top, bool overwrite = false)
-    {
-        var destination = Path.Combine(top.FullPath, Path.GetFileName(source));
-
-        //Check if File exists
-        if (!File.Exists(source))
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {source}. File does not exist");
-            return;
-        }
-        try
-        {
-            if(!source.IsSamePathAs(destination))
-                Tools.CopyFile(source, destination, overwrite);
-
-            top.AddFile(Path.GetFileName(destination));
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-        }
-    }
     #endregion
     
     #region File Change

@@ -58,6 +58,7 @@
         <Setter Property="Command" Value="{Binding Command}" />
         <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
         <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="HotKey" Value="{Binding HotKey}"/>
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
@@ -75,6 +76,7 @@
         <Setter Property="Command" Value="{Binding Command}" />
         <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
         <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="HotKey" Value="{Binding HotKey}"/>
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>

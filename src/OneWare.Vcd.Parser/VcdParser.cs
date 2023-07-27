@@ -208,7 +208,7 @@ public static class VcdParser
         var text = await reader.ReadToEndAsync();
 
         var lines = text.Split('\n');
-        var lastTime = lines.Last(x => x.StartsWith('#'));
+        var lastTime = lines.LastOrDefault(x => x.StartsWith('#'));
         if (!string.IsNullOrWhiteSpace(lastTime))
         {
             if(long.TryParse(lastTime.Trim()[1..], out var time)) return time;

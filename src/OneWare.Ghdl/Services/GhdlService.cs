@@ -13,18 +13,22 @@ public class GhdlService
 {
     private readonly ILogger _logger;
     private readonly IActive _active;
+    private readonly IDockService _dockService;
+    private readonly IProjectExplorerService _projectExplorerService;
     
-    public GhdlService(ILogger logger, IActive active)
+    public GhdlService(ILogger logger, IActive active, IDockService dockService, IProjectExplorerService projectExplorerService)
     {
         _logger = logger;
         _active = active;
+        _dockService = dockService;
+        _projectExplorerService = projectExplorerService;
     }
     
     private static ProcessStartInfo GetGhdlProcessStartInfo(string workingDirectory, string arguments)
     {
         return new ProcessStartInfo
         {
-            FileName = @"C:\Users\Hendrik\VHDPlus\Packages\ghdl\GHDL\bin\ghdl.exe",
+            FileName = "/home/hendrik/VHDPlus/Packages/ghdl/bin/ghdl", //@"C:\Users\Hendrik\VHDPlus\Packages\ghdl\GHDL\bin\ghdl.exe",
             Arguments = $"{arguments}",
             CreateNoWindow = true,
             WorkingDirectory = workingDirectory,
@@ -107,7 +111,8 @@ public class GhdlService
                 .Select(x => "\"" + x.FullPath + "\""));
 
         var top = Path.GetFileNameWithoutExtension(file.FullPath);
-        var waveFormFileArgument = $"--vcd={top}.vcd";
+        var vcdPath = $"{top}.vcd";
+        var waveFormFileArgument = $"--vcd={vcdPath}";
         var ghdlOptions = "--std=02";
         var simulatingOptions = "--ieee-asserts=disable";
         var folder = file.TopFolder!.FullPath;
@@ -119,6 +124,11 @@ public class GhdlService
         var elaboration = make && await ExecuteGhdlShellAsync(folder, $"-e {ghdlOptions} {top}",
             "Running GHDL Elaboration");
                     
+        var openFile = file.TopFolder.Search($"{top}.vcd") as IProjectFile;
+        openFile ??= file.TopFolder.AddFile(vcdPath, true);
+        
+        await _dockService.OpenFileAsync(openFile);
+        
         var run = elaboration && await ExecuteGhdlShellAsync(folder,
             $"-r {ghdlOptions} {top} {waveFormFileArgument} {simulatingOptions}",
             "Running GHDL Simulation");

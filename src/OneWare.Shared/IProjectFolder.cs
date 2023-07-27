@@ -4,7 +4,8 @@ public interface IProjectFolder : IProjectEntry
 {
     public void Add(IProjectEntry entry);
     public void Remove(IProjectEntry entry);
-
+    public IProjectFile? ImportFile(string path, bool overwrite = false);
+    
     public IProjectFile AddFile(string path, bool createNew = false);
 
     public IProjectFolder AddFolder(string path, bool createNew = false);

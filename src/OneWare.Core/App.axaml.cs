@@ -52,6 +52,7 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<IDockService, DockService>();
             containerRegistry.RegisterSingleton<IWindowService, WindowService>();
             containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
+            containerRegistry.RegisterSingleton<IHotkeyService, HotkeyService>();
             containerRegistry.RegisterSingleton<BackupService>();
 
             //ViewModels - Windows
@@ -59,11 +60,11 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<SettingsViewModel>();
             containerRegistry.RegisterSingleton<ChangelogViewModel>();
             containerRegistry.RegisterSingleton<AboutViewModel>();
-            
+
             //ViewModels - Dock
             containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
             containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
-            
+
             //ViewModels Documents
             containerRegistry.Register<EditViewModel>();
 
@@ -79,46 +80,60 @@ namespace OneWare.Core
             var paths = Container.Resolve<IPaths>();
 
             Name = paths.AppName;
-            
+
             //General
             settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");
 
             //Editor settings
             settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
-            
-            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font", 
-                "Editor Font Family", 
-                "JetBrains Mono NL", 
+
+            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
+                "Editor Font Family",
+                "JetBrains Mono NL",
                 "JetBrains Mono NL", "IntelOne Mono", "Consolas", "Fira Code");
-            
+
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontSize", "Font Size",
                 "Editor Font Size", 15, Enumerable.Range(10, 30).ToArray());
 
-            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Dark", "Editor Theme Dark", 
-                 "Setts the theme for Syntax Highlighting in Dark Mode", ThemeName.DarkPlus, Enum.GetValues<ThemeName>());
-            
-            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Light", "Editor Theme Light", 
-                "Setts the theme for Syntax Highlighting in Light Mode", ThemeName.LightPlus, Enum.GetValues<ThemeName>());
-            
+            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Dark", "Editor Theme Dark",
+                "Setts the theme for Syntax Highlighting in Dark Mode", ThemeName.DarkPlus,
+                Enum.GetValues<ThemeName>());
+
+            settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Light",
+                "Editor Theme Light",
+                "Setts the theme for Syntax Highlighting in Light Mode", ThemeName.LightPlus,
+                Enum.GetValues<ThemeName>());
+
             //settingsService.RegisterTitled("Editor", "Appearance", "Editor_ErrorMarking_Mode", "Error Marking mode"); dfdf 
 
-            settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoFormatting", "Use Auto Formatting", "Use Auto Formatting in Editor", true);
-            settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoBracket", "Use Auto Bracket", "Use Auto Bracket in Editor", true);
+            settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoFormatting", "Use Auto Formatting",
+                "Use Auto Formatting in Editor", true);
+            settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoBracket", "Use Auto Bracket",
+                "Use Auto Bracket in Editor", true);
 
-            settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding", "Use Folding in Editor", true);
-            
-            settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable, "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes", ApplicationLifetime is IClassicDesktopStyleApplicationLifetime);
-            settingsService.RegisterTitledCombo("Editor", "Backups", BackupService.KeyBackupServiceInterval, "Auto backup interval (s)", 
+            settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding",
+                "Use Folding in Editor", true);
+
+            settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable,
+                "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes",
+                ApplicationLifetime is IClassicDesktopStyleApplicationLifetime);
+            settingsService.RegisterTitledCombo("Editor", "Backups", BackupService.KeyBackupServiceInterval,
+                "Auto backup interval (s)",
                 "Interval the IDE uses to save files for backup", 30, 5, 10, 15, 30, 60, 120);
-            
-            settingsService.RegisterTitled("Editor", "External Changes", "Editor_DetectExternalChanges", "Detect external changes", "", true);
-            settingsService.RegisterTitled("Editor", "External Changes", "Editor_NotifyExternalChanges", "Notify external changes", "", false);
-            
+
+            settingsService.RegisterTitled("Editor", "External Changes", "Editor_DetectExternalChanges",
+                "Detect external changes", "", true);
+            settingsService.RegisterTitled("Editor", "External Changes", "Editor_NotifyExternalChanges",
+                "Notify external changes", "", false);
+
             //TypeAssistance
-            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover", "Enable Hover Information", "Enable Hover Information", true);
-            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion", "Enable Code Suggestions", "Enable completion suggestions", true);
-            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting", "Enable Auto Formatting", "Enable automatic formatting", true);
-            
+            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",
+                "Enable Hover Information", "Enable Hover Information", true);
+            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
+                "Enable Code Suggestions", "Enable completion suggestions", true);
+            settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
+                "Enable Auto Formatting", "Enable automatic formatting", true);
+
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
@@ -156,7 +171,7 @@ namespace OneWare.Core
                 Command = new RelayCommand(() => Container.Resolve<MainWindowViewModel>().CurrentEditor?.Format()),
                 InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
             });
-            
+
             //AvaloniaEdit Hyperlink support
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
             {
@@ -173,7 +188,7 @@ namespace OneWare.Core
             else
             {
                 var mainWindow = Container.Resolve<MainWindow>();
-            
+
                 mainWindow.Closing += (o, i) => _ = TryShutDownAsync(o, i);
 
                 return mainWindow;
@@ -184,7 +199,7 @@ namespace OneWare.Core
         {
             return new AggregateModuleCatalog();
         }
-        
+
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
             moduleCatalog.AddModule<SearchListModule>();
@@ -197,7 +212,7 @@ namespace OneWare.Core
         }
 
         protected virtual string GetDefaultLayoutName => "Default";
-        
+
         public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
@@ -211,7 +226,7 @@ namespace OneWare.Core
             Container.Resolve<BackupService>().LoadAutoSaveFile();
             Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
             Container.Resolve<BackupService>().Init();
-            
+
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
             {
                 if (Tools.IsFontInstalled(x))
@@ -219,26 +234,27 @@ namespace OneWare.Core
                     Resources["EditorFont"] = new FontFamily(x);
                     return;
                 }
+
                 var findFont = this.TryFindResource(x, out var resourceFont);
                 if (findFont && resourceFont is FontFamily fFamily)
-                { 
+                {
                     Resources["EditorFont"] = this.FindResource(x);
                 }
             });
-            
+
             Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
             {
                 Resources["EditorFontSize"] = x;
             });
 
             _ = LoadContentAsync();
-            
+
             base.OnFrameworkInitializationCompleted();
         }
-                
+
         private async Task LoadContentAsync()
         {
-            Window? splashWindow = null; 
+            Window? splashWindow = null;
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
                 splashWindow = new SplashWindow()
@@ -247,7 +263,7 @@ namespace OneWare.Core
                 };
                 splashWindow.Show();
             }
-            
+
             var arguments = Environment.GetCommandLineArgs();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime && arguments.GetLength(0) > 1)
             {
@@ -285,9 +301,9 @@ namespace OneWare.Core
                     var soft = dummy.AddFile("CppTest.cpp");
                     Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
                     Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
-                
+
                     Container.Resolve<IDockService>().InitializeDocuments();
-                    
+
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
                     (editor as IEditor)!.CurrentDocument.Text = @"
 // Your First C++ Program
@@ -349,7 +365,7 @@ BEGIN
   
 END BEHAVIORAL;
 ";
-                    
+
                     editor = await Container.Resolve<IDockService>().OpenFileAsync(hard2);
                     (editor as IEditor)!.CurrentDocument.Text = @"
 module HELLO_WORLD(); // module doesn't have input or outputs
@@ -360,7 +376,7 @@ module HELLO_WORLD(); // module doesn't have input or outputs
 endmodule
 ";
                 }
-                
+
                 //Global.MainWindowViewModel.RefreshArduinoQuickMenu();
                 //_ = Global.MainWindowViewModel.RefreshHardwareAsync();
                 //_ = Global.MainWindowViewModel.RefreshSerialPortsAsync();
@@ -368,7 +384,7 @@ endmodule
 
                 _ = FinishedLoadingAsync();
             }
-            
+
             await Task.Delay(1000);
             splashWindow?.Close();
         }
@@ -385,15 +401,14 @@ endmodule
                     settingsService.SetSettingValue("LastVersion", Global.VersionCode);
 
                     Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                        $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog", () =>
-                        {
-                            Container.Resolve<IWindowService>().Show(new ChangelogView());
-                        }, App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                        $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
+                        () => { Container.Resolve<IWindowService>().Show(new ChangelogView()); },
+                        App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 }
 
                 //await Task.Factory.StartNew(() =>
                 //{
-                    //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
+                //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
                 //}, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
             }
             catch (Exception e)
@@ -411,12 +426,13 @@ endmodule
             var unsavedFiles = new List<IExtendedDocument>();
 
             foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
-                if (tab.Value is {IsDirty: true} evm) unsavedFiles.Add(evm);
+                if (tab.Value is { IsDirty: true } evm)
+                    unsavedFiles.Add(evm);
 
             var mainWin = MainWindow as Window;
             if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
             var shutdownReady = await Tools.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
-            
+
             if (shutdownReady) await ShutdownAsync();
         }
 
@@ -425,7 +441,7 @@ endmodule
             if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime cds)
                 foreach (var win in cds.Windows)
                     win.Hide();
-            
+
             //DockService.ProjectFiles.SaveLastProjectData();
             Container.Resolve<BackupService>().CleanUp();
 
@@ -437,13 +453,13 @@ endmodule
 
             //Save active layout
             Container.Resolve<IDockService>().SaveLayout();
-            
+
             //Save settings
             Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
 
-            Environment.Exit(0); 
+            Environment.Exit(0);
         }
-        
+
         private void About_Click(object? sender, EventArgs e)
         {
             Container.Resolve<IWindowService>().Show(new AboutView()
