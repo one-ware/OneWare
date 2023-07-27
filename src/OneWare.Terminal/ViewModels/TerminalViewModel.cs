@@ -1,14 +1,11 @@
-using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
-using AvalonStudio.Terminals;
-using AvalonStudio.Terminals.Unix;
-using AvalonStudio.Terminals.Win32;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared;
-using OneWare.Shared.Services;
-using Prism.Common;
+using OneWare.Terminal.Provider;
+using OneWare.Terminal.Provider.Unix;
+using OneWare.Terminal.Provider.Win32;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
@@ -16,9 +13,9 @@ namespace OneWare.Terminal.ViewModels
 {
     public class TerminalViewModel : ObservableObject
     {
-        private static readonly IPsuedoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? new Win32PsuedoTerminalProvider()
-            : new UnixPsuedoTerminalProvider();
+        private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? new Win32PseudoTerminalProvider()
+            : new UnixPseudoTerminalProvider();
 
         private readonly object _createLock = new();
 

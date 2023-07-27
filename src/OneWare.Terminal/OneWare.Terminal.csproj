@@ -3,8 +3,21 @@
     <Import Project="..\..\build\props\OneWare.Module.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
+    <PropertyGroup>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    </PropertyGroup>
+    
     <ItemGroup>
-        <ProjectReference Include="..\AvalonStudio.TerminalEmulator\src\AvalonStudio.Terminals\AvalonStudio.Terminals.csproj" />
+        <ProjectReference Include="..\AvalonStudio.TerminalEmulator\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(Configuration.toUpper())' == 'DEBUG'">
+        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(Configuration.toUpper())' == 'RELEASE'">
+        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     </ItemGroup>
 </Project>
