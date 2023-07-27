@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit;
+using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using DynamicData;
@@ -57,6 +58,12 @@ public class ExtendedTextEditor : TextEditor
 
         TextArea.TextView.LineTransformers.Add(ModificationService);
         TextArea.TextView.ElementGenerators.Add(ElementGenerator);
+    }
+
+    protected override void OnDocumentChanged(DocumentChangedEventArgs e)
+    {
+        base.OnDocumentChanged(e);
+        if(e?.NewDocument != null) MarkerService?.ChangeDocument(e.NewDocument);
     }
 
     public void InitTextmate(IRegistryOptions options)

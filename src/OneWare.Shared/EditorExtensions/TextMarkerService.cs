@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Net.Mime;
+using Avalonia;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
@@ -13,6 +14,12 @@ namespace OneWare.Shared.EditorExtensions
         private TextSegmentCollection<DiagnosticTextMarker> _diagnosticMarkers;
 
         public TextMarkerService(TextDocument document)
+        {
+            _document = document;
+            _diagnosticMarkers = new TextSegmentCollection<DiagnosticTextMarker>(document);
+        }
+
+        public void ChangeDocument(TextDocument document)
         {
             _document = document;
             _diagnosticMarkers = new TextSegmentCollection<DiagnosticTextMarker>(document);
