@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using OneWare.Terminal.ViewModels;
 
 namespace OneWare.Terminal.Views
@@ -15,7 +14,7 @@ namespace OneWare.Terminal.Views
         {
             base.OnDataContextChanged(e);
             
-            if (DataContext is TerminalViewModel tvm && IsArrangeValid)
+            if (DataContext is TerminalViewModel tvm)
             {
                 tvm.StartCreate();
             }

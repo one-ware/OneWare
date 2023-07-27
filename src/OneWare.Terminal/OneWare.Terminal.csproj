@@ -8,7 +8,6 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <ProjectReference Include="..\AvalonStudio.TerminalEmulator\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
         <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
     </ItemGroup>
