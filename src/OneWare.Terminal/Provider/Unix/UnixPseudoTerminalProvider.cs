@@ -6,7 +6,7 @@ namespace OneWare.Terminal.Provider.Unix
 {
     public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
     {
-        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string command, params string[] arguments)
+        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string? command, params string[]? arguments)
         {
             //Create PseudoTerminal
             var fdm = Native.open("/dev/ptmx", Native.O_RDWR | Native.O_NOCTTY);
@@ -47,7 +47,7 @@ namespace OneWare.Terminal.Provider.Unix
                 envVars.Add(null!);
 
                 var argsArray = new List<string> { "/bin/bash" };
-                if(arguments.Length > 0 && !string.IsNullOrEmpty(arguments[0])) 
+                if(arguments?.Length > 0 && !string.IsNullOrEmpty(arguments[0])) 
                     argsArray.AddRange(arguments);
                 
                 argsArray.Add(null!);
