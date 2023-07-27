@@ -11,23 +11,14 @@ namespace OneWare.Terminal.Views
             InitializeComponent();
         }
 
-        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        protected override void OnDataContextChanged(EventArgs e)
         {
-            base.OnApplyTemplate(e);
-            if (DataContext is TerminalViewModel tvm)
+            base.OnDataContextChanged(e);
+            
+            if (DataContext is TerminalViewModel tvm && IsArrangeValid)
             {
-                DataContext_Changed(this, EventArgs.Empty);
+                tvm.StartCreate();
             }
-            else
-            {
-                DataContextChanged -= DataContext_Changed;
-                DataContextChanged += DataContext_Changed;
-            }
-        }
-
-        private void DataContext_Changed(object? sender, EventArgs e)
-        {
-            if (DataContext is TerminalViewModel tvm) tvm.StartCreate();
         }
     }
 }

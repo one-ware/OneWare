@@ -1,9 +1,15 @@
 ﻿using System.Runtime.InteropServices;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable IdentifierTypo
+// ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable StringLiteralTypo
+
 namespace OneWare.Terminal.Provider.Unix
 {
-    internal class NativeDelegates
+    internal static class NativeDelegates
     {
+        
         [DllImport("libdl.so.2", EntryPoint = "dlopen")]
         private static extern IntPtr dlopen_lin(string path, int flags);
 
@@ -34,22 +40,6 @@ namespace OneWare.Terminal.Provider.Unix
             }
         }
 
-        public static T GetProc<T>(string function)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                var dl = dlopen_mac("libSystem.dylib", 2);
-                var a = dlsym_mac(dl, function);
-                return Marshal.GetDelegateForFunctionPointer<T>(a);
-            }
-            else
-            {
-                var dl = dlopen_lin("libc.6.so", 2);
-                var a = dlsym_lin(dl, function);
-                return Marshal.GetDelegateForFunctionPointer<T>(a);
-            }
-        }
-
         public delegate void dup2(int oldfd, int newfd);
         public delegate int fork();
         public delegate void setsid();
@@ -60,7 +50,7 @@ namespace OneWare.Terminal.Provider.Unix
         public delegate IntPtr ptsname(int fd);
         public delegate int grantpt(int fd);
         public delegate int unlockpt(int fd);
-        public unsafe delegate void execve([MarshalAs(UnmanagedType.LPStr)]string path, [MarshalAs(UnmanagedType.LPArray)]string[] argv, [MarshalAs(UnmanagedType.LPArray)]string[] envp);
+        public delegate void execve([MarshalAs(UnmanagedType.LPStr)]string path, [MarshalAs(UnmanagedType.LPArray)]string[] argv, [MarshalAs(UnmanagedType.LPArray)]string[] envp);
         public delegate int read(int fd, IntPtr buffer, int length);
         public delegate int write(int fd, IntPtr buffer, int length);
         public delegate void free(IntPtr ptr);
@@ -127,15 +117,12 @@ namespace OneWare.Terminal.Provider.Unix
         public static NativeDelegates.ioctl ioctl = NativeDelegates.GetProc<NativeDelegates.ioctl>();        
         public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();
         public static NativeDelegates.fork fork = NativeDelegates.GetProc<NativeDelegates.fork>();
-
-
+        
         public static IntPtr StructToPtr(object obj)
         {
             var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(obj));
             Marshal.StructureToPtr(obj, ptr, false);
             return ptr;
         }
-
-
     }
 }

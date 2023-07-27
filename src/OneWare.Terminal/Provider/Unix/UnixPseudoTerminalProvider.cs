@@ -6,7 +6,7 @@ namespace OneWare.Terminal.Provider.Unix
 {
     public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
     {
-        public IPseudoTerminal Create(int columns, int rows, string initialDirectory, string environment, string command, params string[] arguments)
+        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string command, params string[] arguments)
         {
             //Create PseudoTerminal
             var fdm = Native.open("/dev/ptmx", Native.O_RDWR | Native.O_NOCTTY);

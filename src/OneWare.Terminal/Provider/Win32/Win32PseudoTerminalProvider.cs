@@ -7,52 +7,34 @@ namespace OneWare.Terminal.Provider.Win32
 {
     public class Win32PseudoTerminalProvider : IPseudoTerminalProvider
     {
-        private static IntPtr TryGetHandle(Process p)
+        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string command, params string[] arguments)
         {
-            var result = IntPtr.Zero;
-
-            try
-            {
-                result = p.Handle;
-            }
-            catch (Exception e)
-            {
-
-            }
-
-            return result;
-        }
-
-        public IPseudoTerminal Create(int columns, int rows, string initialDirectory, string environment, string command, params string[] arguments)
-        {
-            var cfg = winpty_config_new(WINPTY_FLAG_COLOR_ESCAPES, out IntPtr err);
+            var cfg = winpty_config_new(WINPTY_FLAG_COLOR_ESCAPES, out var err);
             winpty_config_set_initial_size(cfg, columns, rows);
 
             var handle = winpty_open(cfg, out err);
 
             if (err != IntPtr.Zero)
             {
-                System.Console.WriteLine(winpty_error_code(err));
+                Console.WriteLine(winpty_error_code(err));
                 return null;
             }
 
-            string exe = command;
-            string args = String.Join(" ", arguments);
-            string cwd = initialDirectory;
+            var args = string.Join(" ", arguments);
 
-            var spawnCfg = winpty_spawn_config_new(WINPTY_SPAWN_FLAG_AUTO_SHUTDOWN, exe, args, cwd, environment, out err);
+            var spawnCfg = winpty_spawn_config_new(WINPTY_SPAWN_FLAG_AUTO_SHUTDOWN, command, args, initialDirectory, environment, out err);
             if (err != IntPtr.Zero)
             {
-                System.Console.WriteLine(winpty_error_code(err));
+                Console.WriteLine(winpty_error_code(err));
                 return null;
             }
 
             var stdin = CreatePipe(winpty_conin_name(handle), PipeDirection.Out);
             var stdout = CreatePipe(winpty_conout_name(handle), PipeDirection.In);
 
-            if (!winpty_spawn(handle, spawnCfg, out IntPtr process, out IntPtr thread, out int procError, out err))
+            if (!winpty_spawn(handle, spawnCfg, out var process, out var thread, out var procError, out err))
             {
-                System.Console.WriteLine(winpty_error_code(err));
+                Console.WriteLine(winpty_error_code(err));
                 return null;
             }
 
@@ -64,9 +46,9 @@ namespace OneWare.Terminal.Provider.Win32
         }
 
         [DllImport("kernel32.dll")]
-        static extern int GetProcessId(IntPtr handle);
+        private static extern int GetProcessId(IntPtr handle);
 
-        private Stream CreatePipe(string pipeName, PipeDirection direction)
+        private static Stream CreatePipe(string pipeName, PipeDirection direction)
         {
             string serverName = ".";
 

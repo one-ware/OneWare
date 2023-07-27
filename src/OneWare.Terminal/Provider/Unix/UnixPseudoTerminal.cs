@@ -58,7 +58,7 @@ namespace OneWare.Terminal.Provider.Unix
                 ws_col = (ushort)(columns > 0 ? columns : 80)
             };
             var ptr = Native.StructToPtr(size);
-            var res = Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
+            Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
             Marshal.FreeHGlobal(ptr);
         }
     }

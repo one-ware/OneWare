@@ -3,9 +3,11 @@ using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared;
+using OneWare.Shared.Services;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
 using OneWare.Terminal.Provider.Win32;
+using Prism.Ioc;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
@@ -87,6 +89,12 @@ namespace OneWare.Terminal.ViewModels
                     {
                         var terminal = SProvider.Create(80, 32, WorkingDir, null, shellExecutable, StartArguments);
 
+                        if (terminal == null)
+                        {
+                            ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                            return;
+                        }
+                            
                         Connection = new PsuedoTerminalConnection(terminal);
 
                         Terminal = new VirtualTerminalController();
