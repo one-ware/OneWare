@@ -68,7 +68,7 @@ namespace OneWare.WaveFormViewer.Controls
         public override void Render(DrawingContext context)
         {
             if (DataContext is not WaveFormViewModel vm) return;
-            var multiplier = Wave.CalcMult(vm.Max, Bounds.Width);
+            var multiplier = Wave.CalcMult(vm.Max, Bounds.Width - 10);
 
             if (vm.MarkerOffset != long.MaxValue)
             {
@@ -99,7 +99,7 @@ namespace OneWare.WaveFormViewer.Controls
         {
             if (DataContext is not WaveFormViewModel vm) return;
 
-            var multiplier = Wave.CalcMult(vm.Max, Bounds.Width);
+            var multiplier = Wave.CalcMult(vm.Max, Bounds.Width - 10);
             var offset = (long)((vm.Offset * vm.ZoomMultiply + x * multiplier) / vm.ZoomMultiply);
             vm.CursorOffset = offset;
 
