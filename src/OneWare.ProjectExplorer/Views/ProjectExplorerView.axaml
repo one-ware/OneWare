@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
-             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
              xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
              xmlns:behaviours1="clr-namespace:OneWare.ProjectExplorer.Behaviours"

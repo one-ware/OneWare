@@ -18,13 +18,12 @@
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="models:SourceControlModel">
-                        <DockPanel Margin="14, 3, 4, 3">
+                        <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
                                <Image Margin="1, 0, 0, 0" Height="16" Width="16"
                                        Source="{Binding File.Extension, Converter={x:Static converters:SharedConverters.FileExtensionIconConverter}}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Grid>
-
                             <Grid DockPanel.Dock="Right" Width="11">
                                 <TextBlock HorizontalAlignment="Center"
                                            ToolTip.Tip="{Binding Status.State, Converter={x:Static converters:SharedConverters.EnumToStringConverter}}"
@@ -32,7 +31,6 @@
                                            FontWeight="Bold"
                                            Foreground="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusBrushConverter}}" />
                             </Grid>
-
                             <TextBlock Text="{Binding Status.FilePath}" ToolTip.Tip="{Binding Status.FilePath}" />
                         </DockPanel>
                     </DataTemplate>

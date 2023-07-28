@@ -87,7 +87,7 @@ namespace OneWare.Core.Services
             LayoutRegistrations.TryAdd(location, new List<Type>());
             LayoutRegistrations[location].Add(typeof(T));
         }
-
+        
         public async Task<IExtendedDocument> OpenFileAsync(IFile pf)
         {
             if (OpenFiles.ContainsKey(pf))
@@ -152,7 +152,7 @@ namespace OneWare.Core.Services
             base.InitLayout(layout);
         }
         
-        private IDockable? SearchView(IDockable instance, IDockable? layout = null)
+        public IDockable? SearchView(IDockable instance, IDockable? layout = null)
         {
             layout ??= Layout;
 
@@ -177,7 +177,7 @@ namespace OneWare.Core.Services
             return null;
         }
 
-        private IEnumerable<T> SearchView<T>(IDockable? layout = null)
+        public IEnumerable<T> SearchView<T>(IDockable? layout = null)
         {
             layout ??= Layout;
 
@@ -211,6 +211,11 @@ namespace OneWare.Core.Services
 
         #region ShowWindows
 
+        public void Show<T>(DockShowLocation location = DockShowLocation.Window) where T : IDockable
+        {
+            Show(ContainerLocator.Container.Resolve<T>(), location);
+        }
+        
         public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
         {
             //Check if dockable already exists

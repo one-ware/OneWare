@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Shared;
@@ -18,7 +19,8 @@ public class VcdViewModel : ExtendedDocument
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
-    private bool _isParsing;
+    private bool _waitForLiveStream = false;
+    private bool _isLiveExecution = false;
     
     private CancellationTokenSource? _cancellationTokenSource;
     
@@ -47,7 +49,7 @@ public class VcdViewModel : ExtendedDocument
         get => _loadingThreads;
         set => SetProperty(ref _loadingThreads, value);
     }
-    
+
     public WaveFormViewModel WaveFormViewer { get; } = new();
 
     public override string CloseWarningMessage => $"Do you want to save the current view to the file {CurrentFile?.Header}? All added signals will be opened automatically next time!";
@@ -56,7 +58,7 @@ public class VcdViewModel : ExtendedDocument
         : base(fullPath, projectExplorerService, dockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
-        
+
         _projectExplorerService = projectExplorerService;
         _settingsService = settingsService;
         
@@ -76,27 +78,41 @@ public class VcdViewModel : ExtendedDocument
             if(_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) IsDirty = true;
         };
     }
+    
+    public void PrepareLiveStream()
+    {
+        Reset();
+        _waitForLiveStream = true;
+        _isLiveExecution = false;
+    }
 
     protected override void ChangeCurrentFile(IFile? oldFile)
     {
         Refresh();
     }
-
+    
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
-        if (CurrentFile != null && !_isParsing)
+        if (CurrentFile != null && (_waitForLiveStream && !_isLiveExecution) || !_waitForLiveStream)
+        {
+            if (_waitForLiveStream)
+            {
+                _isLiveExecution = true;
+                _waitForLiveStream = false;
+            }
             _ = LoadAsync();
+        }
     }
 
     private async Task<bool> LoadAsync()
     {
+        Console.WriteLine("LOADING");
         IsLoading = true;
-        _isParsing = true;
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
         Scopes.Clear();
-        
+
         IDisposable? timer = null;
 
         try
@@ -130,7 +146,9 @@ public class VcdViewModel : ExtendedDocument
 
             if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
 
-            var useThreads = FileInUse(FullPath) ? 1 : _loadingThreads;
+            //Check if a process is writing to this VCD to disable multicore parsing
+            var useThreads = _isLiveExecution ? 1 : _loadingThreads;
+            
             //Progress Handling
             var progressParts = new int[LoadingThreads];
             var progress = new Progress<(int part, int progress)>(x =>
@@ -140,12 +158,12 @@ public class VcdViewModel : ExtendedDocument
 
             timer = DispatcherTimer.Run(() =>
             {
+                if (_cancellationTokenSource.Token.IsCancellationRequested) return false;
+                
                 var progressAverage = (int)progressParts.Average();
-                    ReportProgress(progressAverage, lastTime ?? 0, useThreads);
-                    return true;
+                ReportProgress(progressAverage, lastTime ?? 0, _isLiveExecution);
+                return true;
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
-
-            //Check if a process is writing to this VCD to disable multicore parsing
 
             await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads);
             
@@ -164,8 +182,8 @@ public class VcdViewModel : ExtendedDocument
             LoadingFailed = false;
         }
         timer?.Dispose();
-
-        _isParsing = false;
+        
+        _isLiveExecution = false;
         IsLoading = false;
         IsDirty = false;
         return true;
@@ -185,13 +203,17 @@ public class VcdViewModel : ExtendedDocument
         return false;
     }
 
-    private void ReportProgress(int progress, long lastTime, int threads)
+    private void ReportProgress(int progress, long lastTime, bool isLive)
     {
         if (_vcdFile == null) return;
-        Title = $"{Path.GetFileName(FullPath)} {progress}%";
+
+        if (!isLive)
+        {
+            Title = $"{Path.GetFileName(FullPath)} {progress}%";
         
-        if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
-            WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
+            if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
+                WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
+        }
         
         if(_vcdFile.Definition.ChangeTimes.Any())
         {

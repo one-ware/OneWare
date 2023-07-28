@@ -6,6 +6,14 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
         <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
+        <ProjectReference Include="..\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" />
         <ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\GhdlMainWindowToolBarExtension.axaml.cs">
+        <DependentUpon>ProjectExplorerMainWindowToolBarExtension.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

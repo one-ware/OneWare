@@ -1,11 +1,19 @@
 ﻿using System.Diagnostics;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Windows.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Output;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
+using OneWare.Vcd.Viewer.ViewModels;
+using ReactiveUI;
 
 namespace OneWare.Ghdl.Services;
 
@@ -15,6 +23,8 @@ public class GhdlService
     private readonly IActive _active;
     private readonly IDockService _dockService;
     private readonly IProjectExplorerService _projectExplorerService;
+
+    public AsyncRelayCommand SimulateCommand { get; }
     
     public GhdlService(ILogger logger, IActive active, IDockService dockService, IProjectExplorerService projectExplorerService)
     {
@@ -22,6 +32,14 @@ public class GhdlService
         _active = active;
         _dockService = dockService;
         _projectExplorerService = projectExplorerService;
+        
+        SimulateCommand = new AsyncRelayCommand(SimulateCurrentFileAsync, 
+            () => _dockService.CurrentDocument?.CurrentFile?.Extension is ".vhd" or ".vhdl");
+
+        _dockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
+        {
+            SimulateCommand.NotifyCanExecuteChanged();
+        });
     }
     
     private static ProcessStartInfo GetGhdlProcessStartInfo(string workingDirectory, string arguments)
@@ -104,8 +122,17 @@ public class GhdlService
         return success;
     }
 
+    private Task SimulateCurrentFileAsync()
+    {
+        if (_dockService.CurrentDocument?.CurrentFile is IProjectFile selectedFile)
+            return SimulateFileAsync(selectedFile);
+        return Task.CompletedTask;
+    }
+    
     public async Task SimulateFileAsync(IProjectFile file)
     {
+        _dockService.Show<IOutputService>();
+        
         var vhdlFiles = string.Join(' ',
             file.Root.Files.Where(x => x.Extension is ".vhd" or ".vhdl")
                 .Select(x => "\"" + x.FullPath + "\""));
@@ -127,7 +154,11 @@ public class GhdlService
         var openFile = file.TopFolder.Search($"{top}.vcd") as IProjectFile;
         openFile ??= file.TopFolder.AddFile(vcdPath, true);
         
-        await _dockService.OpenFileAsync(openFile);
+        var doc = await _dockService.OpenFileAsync(openFile);
+        if (doc is VcdViewModel vcd)
+        {
+            vcd.PrepareLiveStream();
+        }
         
         var run = elaboration && await ExecuteGhdlShellAsync(folder,
             $"-r {ghdlOptions} {top} {waveFormFileArgument} {simulatingOptions}",

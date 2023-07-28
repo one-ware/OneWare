@@ -39,6 +39,7 @@ namespace OneWare.Core.ViewModels.Windows
         }
         
         public ObservableCollection<Control> RoundToolBarExtension { get; }
+        public ObservableCollection<Control> LeftToolBarExtension { get; }
         public ObservableCollection<Control> BottomRightExtension { get; }
         public ObservableCollection<IMenuItem> MainMenu { get; }
         
@@ -53,6 +54,7 @@ namespace OneWare.Core.ViewModels.Windows
             _settingsService = settingsService;
             
             RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
+            LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
             BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
 
             MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");

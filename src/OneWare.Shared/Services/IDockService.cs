@@ -18,6 +18,8 @@ public interface IDockService : INotifyPropertyChanged
     
     public void RegisterLayoutExtension<T>(DockShowLocation location);
     
+    public void Show<T>(DockShowLocation location = DockShowLocation.Window) where T : IDockable;
+    
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window);
     
     public void CloseDockable(IDockable dockable);
@@ -27,6 +29,10 @@ public interface IDockService : INotifyPropertyChanged
     public Task<bool> CloseFileAsync(IFile pf);
 
     public Window? GetWindowOwner(IDockable dockable);
+
+    public IDockable? SearchView(IDockable instance, IDockable? layout = null);
+
+    public IEnumerable<T> SearchView<T>(IDockable? layout = null);
 
     public void LoadLayout(string name, bool reset = false);
 

@@ -1042,12 +1042,13 @@ namespace OneWare.SourceControl.ViewModels
                     ? path
                     : Path.Combine(CurrentRepo.Info.WorkingDirectory, path.Replace('/', Path.DirectorySeparatorChar));
 
-                var vm = ContainerLocator.Container.Resolve<CompareFileViewModel>((typeof(string), fullPath));
+                var openTab = _dockService.SearchView<CompareFileViewModel>().FirstOrDefault(x => x.FullPath == fullPath);
+                openTab ??= ContainerLocator.Container.Resolve<CompareFileViewModel>((typeof(string), fullPath));
 
-                vm.Title = titlePrefix + Path.GetFileName(path);
-                vm.Id = titlePrefix + fullPath;
+                openTab.Title = titlePrefix + Path.GetFileName(path);
+                openTab.Id = titlePrefix + fullPath;
                 
-                _dockService.Show(vm, DockShowLocation.Document);
+                _dockService.Show(openTab, DockShowLocation.Document);
             }
             catch (Exception e)
             {

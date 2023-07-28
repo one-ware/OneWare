@@ -57,6 +57,15 @@
                         </ItemsControl>
                     </StackPanel>
                 </Border>
+                
+                <ItemsControl ItemsSource="{Binding LeftToolBarExtension}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+                
             </StackPanel>
             
             <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
