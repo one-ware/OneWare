@@ -257,6 +257,14 @@ namespace OneWare.Core.ViewModels.DockViews
             _ = SelectAsync(offset, length);
         }
 
+        public override bool OnClose()
+        {
+            var r = base.OnClose();
+            if (!r) return false;
+            _composite.Dispose();
+            return true;
+        }
+
         private async Task SelectAsync(int offset, int length)
         {
             if (!await WaitForEditorReadyAsync()) return;
