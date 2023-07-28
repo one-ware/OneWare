@@ -7,23 +7,31 @@ namespace OneWare.Shared;
 
 public abstract class ExtendedTool : Tool, IExtendedTool
 {
+    public bool IsContentInitialized { get; private set; }
+    
     private IImage? _icon;
     public IImage? Icon
     {
         get => _icon;
-        set => SetProperty(ref _icon, value);
+        private set => SetProperty(ref _icon, value);
     }
 
-    public ExtendedTool(string iconKey)
+    protected ExtendedTool(string iconKey)
     {
         Application.Current?.GetResourceObservable(iconKey).Subscribe(x =>
         {
             Icon = x as IImage;
         });
     }
-    
-    public ExtendedTool(IImage icon)
+
+    protected ExtendedTool(IImage icon)
     {
         _icon = icon;
+    }
+
+
+    public virtual void InitializeContent()
+    {
+        IsContentInitialized = true;
     }
 }

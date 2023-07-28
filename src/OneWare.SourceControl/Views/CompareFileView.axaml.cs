@@ -18,7 +18,7 @@ namespace OneWare.SourceControl.Views
         {
             InitializeComponent();
             
-            DiffEditor.Options.AllowScrollBelowDocument = false;
+            DiffEditor.Options.AllowScrollBelowDocument = true;
             DiffEditor.Options.ConvertTabsToSpaces = true;
             _rightInfoMargin = new DiffInfoMargin();
             DiffEditor.ShowLineNumbers = true;
@@ -27,7 +27,7 @@ namespace OneWare.SourceControl.Views
             _rightBackgroundRenderer = new DiffLineBackgroundRenderer();
             DiffEditor.TextArea.TextView.BackgroundRenderers.Add(_rightBackgroundRenderer);
 
-            HeadEditor.Options.AllowScrollBelowDocument = false;
+            HeadEditor.Options.AllowScrollBelowDocument = true;
             HeadEditor.Options.ConvertTabsToSpaces = true;
             HeadEditor.ShowLineNumbers = true;
             _leftInfoMargin = new DiffInfoMargin();
@@ -36,7 +36,7 @@ namespace OneWare.SourceControl.Views
             _leftBackgroundRenderer = new DiffLineBackgroundRenderer();
             HeadEditor.TextArea.TextView.BackgroundRenderers.Add(_leftBackgroundRenderer);
 
-            DiffEditor.TextArea.TextView.ScrollOffsetChanged += (o, i) =>
+            DiffEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) =>
             {
                 HeadEditor.ScrollViewer.Offset = DiffEditor.ScrollViewer.Offset;
                 // var canScrollH = DiffEditor.ScrollViewer.Ca .GetValue(ScrollViewer.CanHorizontallyScrollProperty);
@@ -44,7 +44,7 @@ namespace OneWare.SourceControl.Views
                 // else HeadEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
             };
 
-            HeadEditor.TextArea.TextView.ScrollOffsetChanged += (o, i) =>
+            HeadEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) =>
             {
                 DiffEditor.ScrollViewer.Offset = HeadEditor.ScrollViewer.Offset;
                 // var canScrollH = HeadEditor.ScrollViewer.GetValue(ScrollViewer.CanHorizontallyScrollProperty);
@@ -56,19 +56,18 @@ namespace OneWare.SourceControl.Views
             {
                 if (DataContext is not CompareFileViewModel vm) return;
                 
-                Load(vm);
-                
                 vm.WhenValueChanged(a => a.Chunks)
                     .Subscribe(b =>
                     {
-                        if (b != null) Load(vm);
+                        if (b != null && vm.CurrentFile != null) Load(vm);
                     });
             };
         }
-        
-        public void Load(CompareFileViewModel vm)
+
+        private void Load(CompareFileViewModel vm)
         {
-            if (vm.Path == null) return;
+            if (vm.CurrentFile == null) throw new NullReferenceException(nameof(vm.CurrentFile));
+            if (vm.Chunks == null) throw new NullReferenceException(nameof(vm.Chunks));
             
             if (vm.Chunks.Count > 1)
             {
@@ -150,7 +149,7 @@ namespace OneWare.SourceControl.Views
                 DiffEditor.Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ");;
             }
             
-            var language = Path.GetExtension(vm.Path);
+            var language = Path.GetExtension(vm.CurrentFile.Extension);
 
             var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
             if (languageManager.GetTextMateScopeByExtension(language) is {} scope)

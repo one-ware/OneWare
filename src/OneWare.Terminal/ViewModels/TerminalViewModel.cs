@@ -129,45 +129,10 @@ namespace OneWare.Terminal.ViewModels
                 Connection = null;
             }
         }
-
-        //public override void OnOpen()
-        //{
-        //    CreateConnection();
-
-        //Observable.FromEventPattern<SolutionChangedEventArgs>(_studio, nameof(_studio.SolutionChanged)).Subscribe(args =>
-        //{
-        //    CreateConnection();
-        //});
-
-        //    base.OnOpen();
-        //}
-
+        
         public void Close()
         {
             CloseConnection();
         }
-
-        // public static void ExecScriptInTerminal(string scriptPath, bool elevated, string title)
-        // {
-        //     try
-        //     {
-        //         Tools.ExecBash("chmod u+x " + scriptPath);
-        //
-        //         var sudo = elevated ? "sudo " : "";
-        //         var terminal = Global.Factory.AddTerminal(title ?? "", "", App.Paths.PackagesDirectory, true);
-        //
-        //         async void OnTerminalOnTerminalReady(object o, EventArgs i)
-        //         {
-        //             terminal.TerminalReady -= OnTerminalOnTerminalReady;
-        //             await Task.Delay(100);
-        //             terminal.Send($"{sudo}{scriptPath}");
-        //         }
-        //         terminal.TerminalReady += OnTerminalOnTerminalReady;
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-        //     }
-        // }
     }
 }

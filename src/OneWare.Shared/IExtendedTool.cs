@@ -3,7 +3,7 @@ using Dock.Model.Core;
 
 namespace OneWare.Shared;
 
-public interface IExtendedTool : IDockable
+public interface IExtendedTool : IDockable, IWaitForContent
 {
     public IImage? Icon { get; }
 }

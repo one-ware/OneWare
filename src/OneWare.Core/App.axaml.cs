@@ -288,7 +288,7 @@ namespace OneWare.Core
                 {
                     var key = Container.Resolve<IActive>().AddState("Loading last projects...", AppState.Loading);
                     await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                    Container.Resolve<IDockService>().InitializeDocuments();
+                    Container.Resolve<IDockService>().InitializeContent();
                     Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
                 }
                 else if (ApplicationLifetime is ISingleViewApplicationLifetime)
@@ -302,7 +302,7 @@ namespace OneWare.Core
                     Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
                     Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
 
-                    Container.Resolve<IDockService>().InitializeDocuments();
+                    Container.Resolve<IDockService>().InitializeContent();
 
                     var editor = await Container.Resolve<IDockService>().OpenFileAsync(soft);
                     (editor as IEditor)!.CurrentDocument.Text = @"

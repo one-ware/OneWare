@@ -229,13 +229,7 @@ namespace OneWare.Core.Services
                 _mainDocumentDockViewModel.VisibleDockables?.Add(dockable);
                 InitActiveDockable(dockable, _mainDocumentDockViewModel);
                 SetActiveDockable(dockable);
-
-                if (dockable is IWaitForContent wC)
-                {
-                    wC.InitializeContent();
-                }
             }
-            
             else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
                 Dispatcher.UIThread.Post(() =>
@@ -261,6 +255,10 @@ namespace OneWare.Core.Services
                         }
                     }
                 });
+            }
+            if (dockable is IWaitForContent wC)
+            {
+                wC.InitializeContent();
             }
         }
 
@@ -320,7 +318,7 @@ namespace OneWare.Core.Services
             Serializer.Save(stream, Layout);
         }
 
-        public void InitializeDocuments()
+        public void InitializeContent()
         {
             var extendedDocs = SearchView<IWaitForContent>();
             foreach (var extendedDocument in extendedDocs)

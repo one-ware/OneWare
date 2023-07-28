@@ -107,10 +107,6 @@
                 </Style>
             </avaloniaEdit:TextEditor.Styles>
         </avaloniaEdit:TextEditor>
-        
-        <Panel Grid.Column="0" Grid.ColumnSpan="3" IsVisible="{Binding PatchFile, Converter={x:Static ObjectConverters.IsNull}}" Background="{DynamicResource ThemeControlLowBrush}">
-            <views:Spinner Height="30" Width="30" IsVisible="{Binding PatchFile, Converter={x:Static ObjectConverters.IsNull}}"></views:Spinner>
-        </Panel>
     </Grid>
     <!--
     

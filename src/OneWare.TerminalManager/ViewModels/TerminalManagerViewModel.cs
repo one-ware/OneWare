@@ -1,13 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
-using Avalonia.Media;
-using Avalonia.Threading;
-using CommunityToolkit.Mvvm.Input;
 using OneWare.Shared;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
+using Prism.Ioc;
 
 namespace OneWare.TerminalManager.ViewModels;
 
@@ -45,7 +44,11 @@ public class TerminalManagerViewModel : ExtendedTool
         //             t.Terminal.Redraw();
         //         } 
         //     }));
-        
+    }
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
         NewTerminal();
     }
 
@@ -81,5 +84,35 @@ public class TerminalManagerViewModel : ExtendedTool
         
         Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(homeFolder), this));
         SelectedTerminalTab = Terminals.Last();
+    }
+    
+    public void ExecScriptInTerminal(string scriptPath, bool elevated, string title)
+    {
+        try
+        {
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                Tools.ExecBash("chmod u+x " + scriptPath);
+
+                var sudo = elevated ? "sudo " : "";
+                var terminal = new TerminalViewModel(_paths.DocumentsDirectory);
+
+                var wrapper = new StandaloneTerminalViewModel(title, terminal);
+
+                _dockService.Show(wrapper, DockShowLocation.Window);
+
+                Observable.FromEventPattern(terminal, nameof(terminal.TerminalReady)).Take(1)
+                    .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(
+                        x => { terminal.Send($"{sudo}{scriptPath}"); });
+            }
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
     }
 }

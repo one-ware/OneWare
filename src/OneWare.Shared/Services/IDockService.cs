@@ -31,5 +31,5 @@ public interface IDockService : INotifyPropertyChanged
 
     public void SaveLayout();
 
-    public void InitializeDocuments();
+    public void InitializeContent();
 }

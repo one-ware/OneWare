@@ -5,53 +5,40 @@ using DiffPlex;
 using Dock.Model.Mvvm.Controls;
 using LibGit2Sharp;
 using OneWare.Shared;
+using OneWare.Shared.EditorExtensions;
+using OneWare.Shared.Services;
+using OneWare.Shared.Views;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.Models;
+using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels
 {
-    public class CompareFileViewModel : Document, IWaitForContent
+    public class CompareFileViewModel : ExtendedDocument
     {
         private readonly SourceControlViewModel _sourceControlViewModel;
         
-        private List<DiffSectionViewModel> _chunks = new();
-
-        private Dictionary<IBrush, int[]> _scrollInfoLeft = new();
-
-        private Dictionary<IBrush, int[]> _scrollInfoRight = new();
-        
-        private Patch? _patchFile;
-        public Patch? PatchFile
-        {
-            get => _patchFile;
-            set
-            {
-                SetProperty(ref _patchFile, value);
-                _ = ParsePatchFileAsync();
-            }
-        }
-
-        [DataMember]
-        public string Path { get; init; }
-
-        public List<DiffSectionViewModel> Chunks
+        private List<DiffSectionViewModel>? _chunks;
+        public List<DiffSectionViewModel>? Chunks
         {
             get => _chunks;
-            set => this.SetProperty(ref _chunks, value);
+            private set => SetProperty(ref _chunks, value);
         }
 
-        public Dictionary<IBrush, int[]> ScrollInfoRight
-        {
-            get => _scrollInfoRight;
-            set => this.SetProperty(ref _scrollInfoRight, value);
-        }
-
-        public Dictionary<IBrush, int[]> ScrollInfoLeft
+        private ScrollInfoContext _scrollInfoLeft = new();
+        public ScrollInfoContext ScrollInfoLeft
         {
             get => _scrollInfoLeft;
-            set => this.SetProperty(ref _scrollInfoLeft, value);
+            private set => SetProperty(ref _scrollInfoLeft, value);
         }
         
+        private ScrollInfoContext _scrollInfoRight = new();
+        public ScrollInfoContext ScrollInfoRight
+        {
+            get => _scrollInfoRight;
+            private set => SetProperty(ref _scrollInfoRight, value);
+        }
+
         public static IBrush AddBrush { get; }
         public static IBrush DeleteBrush { get; }
         public static IBrush WarningBrush { get; }
@@ -63,39 +50,47 @@ namespace OneWare.SourceControl.ViewModels
             WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
         }
 
-        public CompareFileViewModel(string path, SourceControlViewModel sourceControlViewModel)
+        public CompareFileViewModel(string fullPath, SourceControlViewModel sourceControlViewModel, IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService) 
+            : base(fullPath, projectExplorerService, dockService, windowService)
         {
-            Path = path;
             _sourceControlViewModel = sourceControlViewModel;
-            PatchFile = sourceControlViewModel.GetPatch(path, 10000);
         }
 
-        public void InitializeContent()
+        protected override void ChangeCurrentFile(IFile? oldFile)
         {
-            async void WaitUntilFree()
+            _ = LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            IsLoading = true;
+            try
             {
                 await _sourceControlViewModel.WaitUntilFreeAsync();
-                PatchFile = _sourceControlViewModel.GetPatch(Path, 10000);
+                var patch = _sourceControlViewModel.GetPatch(FullPath, 10000);
+                if (patch != null) await ParsePatchFileAsync(patch);
+                else
+                {
+                    ScrollInfoLeft = null;
+                    ScrollInfoRight = null;
+                    Chunks = null;
+                }
             }
-            WaitUntilFree();
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            }
+            IsLoading = false;
         }
 
-        public override bool OnClose()
+        private async Task ParsePatchFileAsync(Patch patchFile)
         {
-            //.Factory.OpenComparisons.Remove(Path);
-            return base.OnClose();
-        }
-
-        public async Task ParsePatchFileAsync()
-        {
-            if (PatchFile == null) return;
-            
-            var diffContents = PatchFile.Content;
+            var diffContents = patchFile.Content;
 
             var result = await Task.Run(() =>
             {
-                var scrollInfoLeft = new Dictionary<IBrush, int[]>();
-                var scrollInfoRight = new Dictionary<IBrush, int[]>();
+                var scrollInfoLeft = new List<ScrollInfoLine>();
+                var scrollInfoRight = new List<ScrollInfoLine>();
                 var chunks = new List<DiffSectionViewModel>();
 
                 var allLines = diffContents.Split(new[] { "\n" }, StringSplitOptions.None).ToList();
@@ -156,18 +151,18 @@ namespace OneWare.SourceControl.ViewModels
                         }
                     }
                     
-                    scrollInfoLeft.Add(AddBrush, addIndexLeft.ToArray());
-                    scrollInfoLeft.Add(DeleteBrush, deleteIndexLeft.ToArray());
+                    scrollInfoLeft.AddRange(addIndexLeft.Select(x => new ScrollInfoLine(x, AddBrush)));
+                    scrollInfoLeft.AddRange(deleteIndexLeft.Select(x => new ScrollInfoLine(x, DeleteBrush)));
                     
-                    scrollInfoRight.Add(AddBrush, addIndexRight.ToArray());
-                    scrollInfoRight.Add(DeleteBrush, deleteIndexRight.ToArray());
+                    scrollInfoRight.AddRange(addIndexRight.Select(x => new ScrollInfoLine(x, AddBrush)));
+                    scrollInfoRight.AddRange(deleteIndexRight.Select(x => new ScrollInfoLine(x, DeleteBrush)));
                 }
 
                 return (chunks, scrollInfoLeft, scrollInfoRight);
             });
 
-            ScrollInfoLeft = result.scrollInfoLeft;
-            ScrollInfoRight = result.scrollInfoRight;
+            ScrollInfoLeft.Refresh("Comparison", result.scrollInfoLeft.ToArray());
+            ScrollInfoRight.Refresh("Comparison", result.scrollInfoRight.ToArray());
             Chunks = result.chunks;
         }
 
@@ -248,10 +243,10 @@ namespace OneWare.SourceControl.ViewModels
         }
     }
 
-    public class DiffSectionViewModel
+    public struct DiffSectionViewModel
     {
-        public string DiffSectionHeader { get; set; }
-        public List<DiffLineModel> LeftDiff { get; set; }
-        public List<DiffLineModel> RightDiff { get; set; }
+        public string DiffSectionHeader { get; init; }
+        public List<DiffLineModel> LeftDiff { get; init; }
+        public List<DiffLineModel> RightDiff { get; init; }
     }
 }

@@ -1,8 +1,10 @@
-﻿using Avalonia;
+﻿using System.Reactive.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using AvaloniaEdit.Document;
 using OneWare.Shared.EditorExtensions;
 
 namespace OneWare.Shared.Views
@@ -30,6 +32,23 @@ namespace OneWare.Shared.Views
                 }
                 Redraw();
             });
+        }
+
+        private IDisposable? sub;
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            if (change.Property == ScrollInfoProperty)
+            {
+                sub?.Dispose();
+                if (ScrollInfo != null)
+                {
+                    sub = Observable.FromEventPattern(ScrollInfo, nameof(ScrollInfo.Changed)).Subscribe(x =>
+                    {
+                        Redraw();
+                    });
+                }
+            }
+            base.OnPropertyChanged(change);
         }
 
         public ScrollInfoContext?  ScrollInfo
