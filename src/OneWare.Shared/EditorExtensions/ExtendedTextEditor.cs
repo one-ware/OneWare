@@ -68,6 +68,7 @@ public class ExtendedTextEditor : TextEditor
 
     public void InitTextmate(IRegistryOptions options)
     {
+        TextMateInstallation?.Dispose();
         TextMateInstallation = this.InstallTextMate(options);
     }
 

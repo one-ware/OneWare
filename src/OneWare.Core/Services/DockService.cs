@@ -26,7 +26,7 @@ namespace OneWare.Core.Services
         private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
 
         public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new ();
-        public readonly Dictionary<string, Type> DocumentViewRegistrations = new ();
+        private readonly Dictionary<string, Type> _documentViewRegistrations = new ();
         
         private readonly IPaths _paths;
         private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
@@ -62,6 +62,8 @@ namespace OneWare.Core.Services
             _paths = paths;
             _welcomeScreenViewModel = welcomeScreenViewModel;
             _mainDocumentDockViewModel = mainDocumentDockViewModel;
+            
+            _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
             windowService.RegisterMenuItem("MainWindow_MainMenu/View", 
                 new MenuItemModel("ResetLayout")
@@ -76,7 +78,7 @@ namespace OneWare.Core.Services
         {
             foreach (var extension in extensions)
             {
-                DocumentViewRegistrations.TryAdd(extension, typeof(T));
+                _documentViewRegistrations.TryAdd(extension, typeof(T));
             }
         }
 
@@ -95,7 +97,7 @@ namespace OneWare.Core.Services
                 return OpenFiles[pf];
             }
 
-            DocumentViewRegistrations.TryGetValue(pf.Extension, out var type);
+            _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
             type ??= typeof(EditViewModel);
             var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
 
@@ -105,8 +107,7 @@ namespace OneWare.Core.Services
             
             if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false) 
                 _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
-
-            OpenFiles.TryAdd(pf, viewModel);
+            
             return viewModel;
         }
 

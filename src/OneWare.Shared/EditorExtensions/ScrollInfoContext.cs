@@ -12,6 +12,13 @@ public class ScrollInfoContext
     
     public event EventHandler? Changed;
 
+    public void ClearAll()
+    {
+        _scrollInformation.Clear();
+        _infoLines.Clear();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+    
     private void Clear(string key)
     {
         _scrollInformation.TryGetValue(key, out var inf);

@@ -14,9 +14,22 @@ using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels
 {
-    public class CompareFileViewModel : ExtendedDocument
+    public class CompareFileViewModel : Document, IWaitForContent
     {
+        public bool IsContentInitialized { get; }
+        
         private readonly SourceControlViewModel _sourceControlViewModel;
+        
+        [DataMember]
+        public string FullPath { get; set; }
+        
+        private bool _isLoading = true;
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
         
         private List<DiffSectionViewModel>? _chunks;
         public List<DiffSectionViewModel>? Chunks
@@ -50,13 +63,13 @@ namespace OneWare.SourceControl.ViewModels
             WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
         }
 
-        public CompareFileViewModel(string fullPath, SourceControlViewModel sourceControlViewModel, IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService) 
-            : base(fullPath, projectExplorerService, dockService, windowService)
+        public CompareFileViewModel(string fullPath, SourceControlViewModel sourceControlViewModel)
         {
+            FullPath = fullPath;
             _sourceControlViewModel = sourceControlViewModel;
         }
-
-        protected override void ChangeCurrentFile(IFile? oldFile)
+        
+        public void InitializeContent()
         {
             _ = LoadAsync();
         }
@@ -71,8 +84,8 @@ namespace OneWare.SourceControl.ViewModels
                 if (patch != null) await ParsePatchFileAsync(patch);
                 else
                 {
-                    ScrollInfoLeft = null;
-                    ScrollInfoRight = null;
+                    ScrollInfoLeft.ClearAll();
+                    ScrollInfoRight.ClearAll();
                     Chunks = null;
                 }
             }

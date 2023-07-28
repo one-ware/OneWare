@@ -8,7 +8,6 @@ namespace OneWare.Shared.Views;
 
 public abstract class ExtendedDocument : Document, IExtendedDocument
 {
-    public bool IsContentInitialized { get; private set; }
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
@@ -26,7 +25,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set
         {
             SetProperty(ref _fullPath, value);
-            Id = $"Editor: {value}";
+            Id = $"Document: {value}";
         }
     }
 
@@ -128,7 +127,6 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
     public virtual void InitializeContent()
     {
-        IsContentInitialized = true;
         var oldCurrentFile = CurrentFile;
         CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
         _dockService.OpenFiles.TryAdd(CurrentFile, this);

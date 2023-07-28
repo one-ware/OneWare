@@ -7,8 +7,6 @@ namespace OneWare.Shared;
 
 public abstract class ExtendedTool : Tool, IExtendedTool
 {
-    public bool IsContentInitialized { get; private set; }
-    
     private IImage? _icon;
     public IImage? Icon
     {
@@ -32,6 +30,6 @@ public abstract class ExtendedTool : Tool, IExtendedTool
 
     public virtual void InitializeContent()
     {
-        IsContentInitialized = true;
+        
     }
 }

@@ -1,4 +1,6 @@
-﻿using Avalonia.Controls;
+﻿using System.Reactive.Disposables;
+using Avalonia.Controls;
+using Avalonia.LogicalTree;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using DynamicData.Binding;
@@ -14,6 +16,8 @@ namespace OneWare.SourceControl.Views
         private readonly DiffLineBackgroundRenderer _leftBackgroundRenderer, _rightBackgroundRenderer;
         private readonly DiffInfoMargin _leftInfoMargin, _rightInfoMargin;
 
+        private CompositeDisposable _compositeDisposable = new();
+        
         public CompareFileView()
         {
             InitializeComponent();
@@ -54,21 +58,50 @@ namespace OneWare.SourceControl.Views
 
             this.DataContextChanged += (_, _) =>
             {
+                _compositeDisposable.Dispose();
+                _compositeDisposable = new CompositeDisposable();
+                
                 if (DataContext is not CompareFileViewModel vm) return;
+                
+                //Syntax Highlighting
+                var language = Path.GetExtension(Path.GetExtension(vm.FullPath));
+            
+                var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
+                if (languageManager.GetTextMateScopeByExtension(language) is {} scope)
+                {
+                    var textMateDiff = DiffEditor.InstallTextMate(languageManager.RegistryOptions);
+                    textMateDiff.SetGrammar(scope);
+                    var textMateHead = HeadEditor.InstallTextMate(languageManager.RegistryOptions);
+                    textMateHead.SetGrammar(scope);
+
+                    textMateDiff.DisposeWith(_compositeDisposable);
+                    textMateHead.DisposeWith(_compositeDisposable);
+
+                    languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
+                    {
+                        textMateDiff.SetTheme(x);
+                        textMateHead.SetTheme(x);
+                    }).DisposeWith(_compositeDisposable);
+                }
                 
                 vm.WhenValueChanged(a => a.Chunks)
                     .Subscribe(b =>
                     {
-                        if (b != null && vm.CurrentFile != null) Load(vm);
-                    });
+                        if (b != null) Load(vm);
+                    }).DisposeWith(_compositeDisposable);
             };
+        }
+
+        protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromLogicalTree(e);
+            _compositeDisposable.Dispose();
         }
 
         private void Load(CompareFileViewModel vm)
         {
-            if (vm.CurrentFile == null) throw new NullReferenceException(nameof(vm.CurrentFile));
             if (vm.Chunks == null) throw new NullReferenceException(nameof(vm.Chunks));
-            
+
             if (vm.Chunks.Count > 1)
             {
                 DiffEditor.IsVisible = false;
@@ -147,23 +180,6 @@ namespace OneWare.SourceControl.Views
                 _rightInfoMargin.Lines = chunk.RightDiff;
                 _rightBackgroundRenderer.Lines = chunk.RightDiff;
                 DiffEditor.Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ");;
-            }
-            
-            var language = Path.GetExtension(vm.CurrentFile.Extension);
-
-            var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
-            if (languageManager.GetTextMateScopeByExtension(language) is {} scope)
-            {
-                var textMateDiff = DiffEditor.InstallTextMate(languageManager.RegistryOptions);
-                textMateDiff.SetGrammar(scope);
-                var textMateHead = HeadEditor.InstallTextMate(languageManager.RegistryOptions);
-                textMateHead.SetGrammar(scope);
-                
-                languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
-                {
-                    textMateDiff.SetTheme(x);
-                    textMateHead.SetTheme(x);
-                });
             }
         }
     }
