@@ -6,7 +6,7 @@ namespace OneWare.Terminal.Provider.Unix
 {
     public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
     {
-        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string? command, params string[]? arguments)
+        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment, string? arguments)
         {
             //Create PseudoTerminal
             var fdm = Native.open("/dev/ptmx", Native.O_RDWR | Native.O_NOCTTY);
@@ -17,7 +17,7 @@ namespace OneWare.Terminal.Provider.Unix
             var name = Marshal.PtrToStringAnsi(namePtr);
             if (name == null) throw new NullReferenceException(nameof(name));
 
-            //Collect ENV Vars before to avoid EntryPointNotFoundException
+            //Collect ENV Vars before fork to avoid EntryPointNotFoundException
             var envVars = new List<string>();
             var env = Environment.GetEnvironmentVariables();
             foreach (var variable in env.Keys) 
@@ -45,9 +45,8 @@ namespace OneWare.Terminal.Provider.Unix
                 Native.ioctl(slave, Native.TIOCSCTTY, IntPtr.Zero);
                 Native.chdir(initialDirectory);
                 
-                var argsArray = new List<string> { "/bin/bash" };
-                if(arguments?.Length > 0 && !string.IsNullOrEmpty(arguments[0])) 
-                    argsArray.AddRange(arguments);
+                var argsArray = new List<string> { command };
+                if(arguments != null) argsArray.AddRange(arguments.Split(' '));
                 
                 argsArray.Add(null!);
 

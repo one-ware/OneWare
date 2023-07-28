@@ -87,7 +87,7 @@ namespace OneWare.Terminal.ViewModels
 
                     if (!string.IsNullOrEmpty(shellExecutable))
                     {
-                        var terminal = SProvider.Create(80, 32, WorkingDir, null, shellExecutable, StartArguments);
+                        var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
 
                         if (terminal == null)
                         {

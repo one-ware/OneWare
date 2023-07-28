@@ -7,7 +7,7 @@ namespace OneWare.Terminal.Provider.Win32
 {
     public class Win32PseudoTerminalProvider : IPseudoTerminalProvider
     {
-        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string? command, params string[]? arguments)
+        public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment,  string? arguments)
         {
             var cfg = winpty_config_new(WINPTY_FLAG_COLOR_ESCAPES, out var err);
             winpty_config_set_initial_size(cfg, columns, rows);
@@ -19,10 +19,8 @@ namespace OneWare.Terminal.Provider.Win32
                 Console.WriteLine(winpty_error_code(err));
                 return null;
             }
-
-            var args = arguments != null ? string.Join(" ", arguments) : "";
-
-            var spawnCfg = winpty_spawn_config_new(WINPTY_SPAWN_FLAG_AUTO_SHUTDOWN, command, args, initialDirectory, environment, out err);
+            
+            var spawnCfg = winpty_spawn_config_new(WINPTY_SPAWN_FLAG_AUTO_SHUTDOWN, command, arguments, initialDirectory, environment, out err);
             if (err != IntPtr.Zero)
             {
                 Console.WriteLine(winpty_error_code(err));

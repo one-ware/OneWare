@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -72,7 +73,11 @@ public class TerminalManagerViewModel : ExtendedTool
 
     public void NewTerminal()
     {
-        Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(_projectExplorerService.ActiveProject?.ProjectPath ?? "C:/"), this));
+        var homeFolder = _projectExplorerService.ActiveProject?.ProjectPath;
+
+        homeFolder ??= RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%HOMEDRIVE%" : "$HOME";
+        
+        Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(homeFolder), this));
         SelectedTerminalTab = Terminals.Last();
     }
 }

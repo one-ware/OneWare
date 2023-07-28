@@ -2,6 +2,6 @@
 {
     public interface IPseudoTerminalProvider
     {
-        IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string? environment, string? command, params string[]? arguments);
+        IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment, string? arguments);
     }
 }
