@@ -94,7 +94,7 @@ public class VcdViewModel : ExtendedDocument
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
-        if (CurrentFile != null && (_waitForLiveStream && !_isLiveExecution) || !_waitForLiveStream)
+        if (CurrentFile != null && (!_waitForLiveStream || (_waitForLiveStream && !_isLiveExecution)))
         {
             if (_waitForLiveStream)
             {
@@ -107,7 +107,6 @@ public class VcdViewModel : ExtendedDocument
 
     private async Task<bool> LoadAsync()
     {
-        Console.WriteLine("LOADING");
         IsLoading = true;
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
@@ -118,12 +117,16 @@ public class VcdViewModel : ExtendedDocument
         try
         {
             var context = _vcdFile == null ? await VcdContextManager.LoadContextAsync(FullPath + ".vcdSave.json") : null;
+
+            if (_cancellationTokenSource.IsCancellationRequested) return false;
             
             _vcdFile = VcdParser.ParseVcdDefinition(FullPath);
             Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any())
                 .Select(x => new VcdScopeModel(x)));
             
-            var lastTime = await VcdParser.TryFindLastTime(FullPath);
+            var lastTime = !_isLiveExecution ? await VcdParser.TryFindLastTime(FullPath) : 0;
+            
+            if (_cancellationTokenSource.IsCancellationRequested) return false;
 
             if (context == null)
             {
@@ -210,13 +213,13 @@ public class VcdViewModel : ExtendedDocument
         if (!isLive)
         {
             Title = $"{Path.GetFileName(FullPath)} {progress}%";
-        
-            if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
-                WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
         }
         
         if(_vcdFile.Definition.ChangeTimes.Any())
         {
+            if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
+                WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
+            
             foreach (var (_, signal) in _vcdFile.Definition.SignalRegister)
             {
                 signal.Invalidate();

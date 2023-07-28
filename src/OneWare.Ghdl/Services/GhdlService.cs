@@ -46,7 +46,7 @@ public class GhdlService
     {
         return new ProcessStartInfo
         {
-            FileName = "/home/hendrik/VHDPlus/Packages/ghdl/bin/ghdl", //@"C:\Users\Hendrik\VHDPlus\Packages\ghdl\GHDL\bin\ghdl.exe",
+            FileName = "/Users/hendrikmennen/VHDPlus/Packages/ghdl/bin/ghdl", //@"C:\Users\Hendrik\VHDPlus\Packages\ghdl\GHDL\bin\ghdl.exe",
             Arguments = $"{arguments}",
             CreateNoWindow = true,
             WorkingDirectory = workingDirectory,
