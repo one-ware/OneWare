@@ -17,6 +17,7 @@ public class TerminalManagerViewModel : ExtendedTool
 
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
+    private readonly IPaths _paths;
     
     public ObservableCollection<TerminalTabModel> Terminals { get; } = new();
 
@@ -27,10 +28,11 @@ public class TerminalManagerViewModel : ExtendedTool
         set => SetProperty(ref _selectedTerminalTab, value);
     }
     
-    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService, IProjectExplorerService projectExplorerService, IPaths paths) : base(IconKey)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
+        _paths = paths;
         
         Title = "Terminal";
         Id = "Terminal";
@@ -75,7 +77,7 @@ public class TerminalManagerViewModel : ExtendedTool
     {
         var homeFolder = _projectExplorerService.ActiveProject?.ProjectPath;
 
-        homeFolder ??= RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%HOMEDRIVE%" : "$HOME";
+        homeFolder ??= _paths.ProjectsDirectory;
         
         Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(homeFolder), this));
         SelectedTerminalTab = Terminals.Last();
