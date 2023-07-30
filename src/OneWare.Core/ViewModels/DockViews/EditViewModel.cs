@@ -124,7 +124,7 @@ namespace OneWare.Core.ViewModels.DockViews
             };
         }
         
-        protected override void ChangeCurrentFile(IFile? oldFile)
+        protected override void UpdateCurrentFile(IFile? oldFile)
         {
             Reset();
             

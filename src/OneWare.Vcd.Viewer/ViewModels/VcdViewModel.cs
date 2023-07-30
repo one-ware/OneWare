@@ -86,7 +86,7 @@ public class VcdViewModel : ExtendedDocument
         _isLiveExecution = false;
     }
 
-    protected override void ChangeCurrentFile(IFile? oldFile)
+    protected override void UpdateCurrentFile(IFile? oldFile)
     {
         Refresh();
     }
@@ -94,7 +94,7 @@ public class VcdViewModel : ExtendedDocument
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
-        if (CurrentFile != null && (!_waitForLiveStream || (_waitForLiveStream && !_isLiveExecution)))
+        if (CurrentFile != null && !_isLiveExecution)
         {
             if (_waitForLiveStream)
             {
@@ -116,7 +116,7 @@ public class VcdViewModel : ExtendedDocument
 
         try
         {
-            var context = _vcdFile == null ? await VcdContextManager.LoadContextAsync(FullPath + ".vcdSave.json") : null;
+            var context = !WaveFormViewer.Signals.Any() ? await VcdContextManager.LoadContextAsync(FullPath + ".vcdSave.json") : null;
 
             if (_cancellationTokenSource.IsCancellationRequested) return false;
             
@@ -164,7 +164,7 @@ public class VcdViewModel : ExtendedDocument
                 if (_cancellationTokenSource.Token.IsCancellationRequested) return false;
                 
                 var progressAverage = (int)progressParts.Average();
-                ReportProgress(progressAverage, lastTime ?? 0, _isLiveExecution);
+                ReportProgress(progressAverage, _isLiveExecution);
                 return true;
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
 
@@ -191,33 +191,16 @@ public class VcdViewModel : ExtendedDocument
         IsDirty = false;
         return true;
     }
-    
-    private static bool FileInUse(string path) 
-    {
-        try
-        {
-            using var f = File.OpenWrite(path);
-        }
-        catch
-        {
-            return true;
-        }
 
-        return false;
-    }
-
-    private void ReportProgress(int progress, long lastTime, bool isLive)
+    private void ReportProgress(int progress, bool isLive)
     {
         if (_vcdFile == null) return;
 
-        if (!isLive)
-        {
-            Title = $"{Path.GetFileName(FullPath)} {progress}%";
-        }
+        Title = isLive ? $"{Path.GetFileName(FullPath)} - LIVE" : $"{Path.GetFileName(FullPath)} {progress}%";
         
         if(_vcdFile.Definition.ChangeTimes.Any())
         {
-            if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > lastTime) 
+            if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > WaveFormViewer.Max) 
                 WaveFormViewer.Max = _vcdFile.Definition.ChangeTimes.Last();
             
             foreach (var (_, signal) in _vcdFile.Definition.SignalRegister)
@@ -237,8 +220,8 @@ public class VcdViewModel : ExtendedDocument
     protected override void Reset()
     {
         _cancellationTokenSource?.Cancel();
+        
         //Manual cleanup because ViewModel is stuck somewhere
-        //TODO Fix DOCK to allow normal GC collection
         _vcdFile = null;
     }
 

@@ -128,11 +128,14 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public virtual void InitializeContent()
     {
         var oldCurrentFile = CurrentFile;
-        CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+        if (CurrentFile?.FullPath != FullPath)
+        {
+            CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
+        }
         _dockService.OpenFiles.TryAdd(CurrentFile, this);
-        Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
-        ChangeCurrentFile(oldCurrentFile);
+        UpdateCurrentFile(oldCurrentFile);
     }
 
-    protected abstract void ChangeCurrentFile(IFile? oldFile);
+    protected abstract void UpdateCurrentFile(IFile? oldFile);
 }

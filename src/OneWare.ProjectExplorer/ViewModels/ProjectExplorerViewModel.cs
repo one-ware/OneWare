@@ -96,37 +96,45 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (SelectedItem is { } entry)
         {
-            if (entry is IProjectFile file)
+            switch (entry)
             {
-                menuItems.Add(new MenuItemModel("Open")
-                {
-                    Header = "Open",
-                    Command = new RelayCommand(() => _dockService.OpenFileAsync(file))
-                });
-            }
-            else if (entry is IProjectFolder folder)
-            {
-                menuItems.Add(new MenuItemModel("Add")
-                {
-                    Header = "Add",
-                    Items = new List<IMenuItem>()
+                case IProjectFile file:
+                    menuItems.Add(new MenuItemModel("Open")
                     {
-                        new MenuItemModel("NewFolder")
+                        Header = "Open",
+                        Command = new RelayCommand(() => _dockService.OpenFileAsync(file))
+                    });
+                    break;
+                case IProjectFolder folder:
+                    menuItems.Add(new MenuItemModel("Add")
+                    {
+                        Header = "Add",
+                        Items = new List<IMenuItem>()
                         {
-                            Header = "New Folder",
-                            Command = new RelayCommand(() => _ = CreateFolderDialogAsync(folder)),
-                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
-                        },
-                        new MenuItemModel("NewFile")
-                        {
-                            Header = "New File",
-                            Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
-                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
+                            new MenuItemModel("NewFolder")
+                            {
+                                Header = "New Folder",
+                                Command = new RelayCommand(() => _ = CreateFolderDialogAsync(folder)),
+                                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
+                            },
+                            new MenuItemModel("NewFile")
+                            {
+                                Header = "New File",
+                                Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
+                                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
+                            }
                         }
-                    }
+                    });
+                    break;
+            }
+            if (entry is IProjectRoot root)
+            {
+                menuItems.Add(new MenuItemModel("Close")
+                {
+                    Header = "Close",
+                    Command = new AsyncRelayCommand(() => RemoveAsync(root))
                 });
             }
-
             if (entry is not IProjectRoot)
             {
                 menuItems.Add(new MenuItemModel("Edit")
