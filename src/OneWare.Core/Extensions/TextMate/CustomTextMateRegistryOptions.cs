@@ -1,4 +1,6 @@
-﻿using Avalonia.Platform;
+﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars.Reader;
@@ -25,8 +27,11 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
     
     public IRawGrammar GetGrammar(string scopeName)
     {
+        //For Browser demo Textmate is not working
+        if (Application.Current!.ApplicationLifetime is ISingleViewApplicationLifetime) return null!;
+            
         var g = _availableLanguages.FirstOrDefault(x => x.Id == scopeName.Split('.').Last());
-        
+
         if (g == null) return _defaultRegistryOptions.GetGrammar(scopeName);
         using var s = new StreamReader(AssetLoader.Open(new Uri(g.GrammarPath)));
         {

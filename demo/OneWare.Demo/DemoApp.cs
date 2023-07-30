@@ -19,8 +19,7 @@ public class DemoApp : App
 {
     public static readonly ISettingsService SettingsService = new SettingsService();
     
-    public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Demo/Assets/icon.ico",
-        "avares://OneWare.Demo/Assets/Startup.jpg");
+    public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Demo/Assets/icon.ico");
 
     private static readonly ILogger Logger = new Logger(Paths);
 

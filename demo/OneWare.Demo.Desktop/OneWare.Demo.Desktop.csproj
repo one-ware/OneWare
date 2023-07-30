@@ -36,5 +36,16 @@
         <ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
         <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\Startup.jpg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\SplashWindow.axaml.cs">
+        <DependentUpon>SplashWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
 </Project>

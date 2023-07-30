@@ -4,11 +4,11 @@
     <Import Project="..\..\build\props\OneWare.Module.props" />
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\*" />
+        <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Assets\**\*.*">
+        <Content Include="Assets\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>

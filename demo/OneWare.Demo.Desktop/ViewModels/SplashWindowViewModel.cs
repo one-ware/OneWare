@@ -1,9 +1,10 @@
+using System;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using OneWare.Shared.Services;
 
-namespace OneWare.Core.ViewModels.Windows;
+namespace OneWare.Demo.Desktop.ViewModels;
 
 public class SplashWindowViewModel
 {
@@ -11,6 +12,6 @@ public class SplashWindowViewModel
 
     public SplashWindowViewModel(IPaths paths)
     {
-        SplashScreen = new Bitmap(AssetLoader.Open(new Uri(paths.SplashScreenPath)));
+        SplashScreen = new Bitmap(AssetLoader.Open(new Uri("avares://OneWare.Demo.Desktop/Assets/Startup.jpg")));
     }
 }

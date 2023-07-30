@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 
-namespace OneWare.Core.Views.Windows
+namespace OneWare.Demo.Desktop.Views
 {
     public partial class SplashWindow : Window
     {

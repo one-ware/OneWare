@@ -4,7 +4,6 @@ public interface IPaths
 {
     public string AppName { get; }
     public string AppIconPath { get; }
-    public string SplashScreenPath { get; }
     public string AppFolderName { get; }
     public string AppDataDirectory { get; }
     public string TempDirectory { get; }

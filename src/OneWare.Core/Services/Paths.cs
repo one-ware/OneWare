@@ -7,7 +7,6 @@ public class Paths : IPaths
 {
     public string AppName { get; }
     public string AppIconPath { get; }
-    public string SplashScreenPath { get; }
     public string AppFolderName { get; }
     public string AppDataDirectory => 
         Path.Combine(Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.ApplicationData), AppFolderName);
@@ -22,11 +21,10 @@ public class Paths : IPaths
     public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
     public string ChangelogUrl => "https://raw.githubusercontent.com/VHDPlus/vhdplus-website/master/docs/ide/changelog.md";
     
-    public Paths(string appName, string appIconPath, string splashScreenPath)
+    public Paths(string appName, string appIconPath)
     {
         AppName = appName;
         AppIconPath = appIconPath;
-        SplashScreenPath = splashScreenPath;
         AppFolderName = appName.Replace(" ", "");
 
         Directory.CreateDirectory(AppDataDirectory);
