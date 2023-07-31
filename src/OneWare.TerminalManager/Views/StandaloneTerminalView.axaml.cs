@@ -10,9 +10,4 @@ public partial class StandaloneTerminalView : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

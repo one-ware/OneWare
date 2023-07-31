@@ -13,6 +13,6 @@ public class JsonModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<ILanguageManager>().RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
+        containerProvider.Resolve<ILanguageManager>().RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json", ".fpgaproj", ".vcdconf");
     }
 }

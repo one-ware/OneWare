@@ -57,7 +57,7 @@ namespace OneWare.Core
 
             //ViewModels - Windows
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
-            containerRegistry.RegisterSingleton<SettingsViewModel>();
+            containerRegistry.RegisterSingleton<ApplicationSettingsViewModel>();
             containerRegistry.RegisterSingleton<ChangelogViewModel>();
             containerRegistry.RegisterSingleton<AboutViewModel>();
 
@@ -308,9 +308,9 @@ namespace OneWare.Core
 
         private void Preferences_Click(object? sender, EventArgs e)
         {
-            Container.Resolve<IWindowService>().Show(new SettingsView()
+            Container.Resolve<IWindowService>().Show(new ApplicationSettingsView()
             {
-                DataContext = Container.Resolve<SettingsViewModel>()
+                DataContext = Container.Resolve<ApplicationSettingsViewModel>()
             });
         }
     }

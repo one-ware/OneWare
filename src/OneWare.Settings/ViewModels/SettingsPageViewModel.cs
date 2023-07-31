@@ -4,9 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace OneWare.Settings.Models
+namespace OneWare.Settings.ViewModels
 {
-    public class SettingsPageModel : ObservableObject
+    public class SettingsPageViewModel : ObservableObject
     {
         private bool _isExpanded;
         public bool IsExpanded
@@ -29,14 +29,14 @@ namespace OneWare.Settings.Models
             private set => SetProperty(ref _icon, value);
         }
         
-        private ObservableCollection<SettingsSubCategoryModel> _subCategoryModels = new();
-        public ObservableCollection<SettingsSubCategoryModel> SubCategoryModels
+        private ObservableCollection<SettingsCollectionViewModel> _settingCollections = new();
+        public ObservableCollection<SettingsCollectionViewModel> SettingCollections
         {
-            get => _subCategoryModels;
-            set => SetProperty(ref _subCategoryModels, value);
+            get => _settingCollections;
+            set => SetProperty(ref _settingCollections, value);
         }
 
-        public SettingsPageModel(string title, string? iconKey)
+        public SettingsPageViewModel(string title, string? iconKey)
         {
             _header = title;
 

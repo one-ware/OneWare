@@ -276,7 +276,7 @@ namespace OneWare.Shared
         
         #nullable enable
 
-        public static async Task<string?> SelectFolderAsync(Window owner, string title, string? startDir)
+        public static async Task<string?> SelectFolderAsync(TopLevel owner, string title, string? startDir)
         {
             var startUpLocation = startDir == null ? null : await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(startDir));
             var result = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
@@ -290,7 +290,7 @@ namespace OneWare.Shared
             return result[0].TryGetLocalPath();
         }
         
-        public static async Task<IEnumerable<string>> SelectFoldersAsync(Window owner, string title, string? startDir)
+        public static async Task<IEnumerable<string>> SelectFoldersAsync(TopLevel owner, string title, string? startDir)
         {
             var folders = new List<string>();
             

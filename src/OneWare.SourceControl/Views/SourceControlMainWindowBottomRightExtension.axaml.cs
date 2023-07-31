@@ -9,9 +9,4 @@ public partial class SourceControlMainWindowBottomRightExtension : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

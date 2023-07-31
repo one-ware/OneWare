@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Ghdl.Services"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="30"
-             x:Class="OneWare.ProjectExplorer.Views.GhdlMainWindowToolBarExtension" x:DataType="services:GhdlService">
+             x:Class="OneWare.Ghdl.Views.GhdlMainWindowToolBarExtension" x:DataType="services:GhdlService">
     
     <Button Command="{Binding SimulateCommand}">
         <Image Source="{DynamicResource Material.Pulse}"/>

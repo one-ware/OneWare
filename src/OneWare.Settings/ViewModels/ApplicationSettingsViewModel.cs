@@ -1,5 +1,5 @@
 ﻿using Avalonia.Media;
-using OneWare.Settings.Models;
+using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
@@ -7,12 +7,12 @@ using OneWare.Shared.ViewModels;
 
 namespace OneWare.Settings.ViewModels
 {
-    public class SettingsViewModel : FlexibleWindowViewModelBase
+    public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
     {
-        public List<SettingsPageModel> SettingPages { get; } = new();
+        public List<SettingsPageViewModel> SettingPages { get; } = new();
 
-        private SettingsPageModel? _selectedPage;
-        public SettingsPageModel? SelectedPage
+        private SettingsPageViewModel? _selectedPage;
+        public SettingsPageViewModel? SelectedPage
         {
             get => _selectedPage;
             set
@@ -28,10 +28,10 @@ namespace OneWare.Settings.ViewModels
             get => _selectedItem;
             set
             {
-                SelectedPage = value as SettingsPageModel;
-                if (SelectedPage != null && value is SettingsSubCategoryModel sub)
+                SelectedPage = value as SettingsPageViewModel;
+                if (SelectedPage != null && value is SettingsCollectionViewModel sub)
                 {
-                    SelectedPage = SettingPages.FirstOrDefault(x => x.SubCategoryModels.Contains(sub));
+                    SelectedPage = SettingPages.FirstOrDefault(x => x.SettingCollections.Contains(sub));
                 }
                 SetProperty(ref _selectedItem, value);
                 if(SelectedPage != null) SelectedPage.IsExpanded = true;
@@ -42,7 +42,7 @@ namespace OneWare.Settings.ViewModels
         private readonly IPaths _paths;
         private readonly IWindowService _windowService;
 
-        public SettingsViewModel(ISettingsService settingsService, IPaths paths, IWindowService windowService)
+        public ApplicationSettingsViewModel(ISettingsService settingsService, IPaths paths, IWindowService windowService)
         {
             Id = "Settings";
             Title = "Settings";
@@ -56,39 +56,39 @@ namespace OneWare.Settings.ViewModels
             
             foreach (var category in s.SettingCategories.OrderBy(x => x.Value.Priority))
             {
-                var pageModel = new SettingsPageModel(category.Key, category.Value.IconKey);
+                var pageModel = new SettingsPageViewModel(category.Key, category.Value.IconKey);
 
                 foreach (var subCategory in category.Value.SettingSubCategories.OrderBy(x => x.Value.Priority))
                 {
-                    var subCategoryModel = new SettingsSubCategoryModel(subCategory.Key, subCategory.Value.IconKey);
+                    var subCategoryModel = new SettingsCollectionViewModel(subCategory.Key, subCategory.Value.IconKey);
                     
                     foreach (var setting in subCategory.Value.Settings)
                     {
                         if (setting is ComboBoxSetting cS)
                         {
-                            subCategoryModel.SettingModels.Add(new SettingModelComboBox(cS));
+                            subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
                         }
                         else
                         {
                             switch (setting.Value)
                             {
                                 case bool:
-                                    subCategoryModel.SettingModels.Add(new SettingModelCheckBox(setting));
+                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(setting));
                                     break;
                                 case string:
                                 case int:
                                 case float:
                                 case double:
-                                    subCategoryModel.SettingModels.Add(new SettingModelTextBox(setting));
+                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(setting));
                                     break;
                                 case Color:
-                                    subCategoryModel.SettingModels.Add(new SettingModelColorPicker(setting));
+                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(setting));
                                     break;
                             }
                         }
                     }
                     
-                    pageModel.SubCategoryModels.Add(subCategoryModel);
+                    pageModel.SettingCollections.Add(subCategoryModel);
                 }
 
                 SettingPages.Add(pageModel);

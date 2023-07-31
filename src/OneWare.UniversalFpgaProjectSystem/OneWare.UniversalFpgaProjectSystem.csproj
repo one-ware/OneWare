@@ -5,6 +5,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
+        <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
 </Project>

@@ -27,7 +27,6 @@
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
     
 </Project>

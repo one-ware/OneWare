@@ -22,6 +22,7 @@
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml" />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml"/>
+        <StyleInclude Source="avares://OneWare.Shared/Controls/SharedControls.axaml"/>
     </Application.Styles>
     
     <NativeMenu.Menu>

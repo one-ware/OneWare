@@ -1,16 +1,18 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Settings.ViewModels.SettingTypes;
 
-namespace OneWare.Settings.Models;
+namespace OneWare.Settings.ViewModels;
 
-public class SettingsSubCategoryModel
+public class SettingsCollectionViewModel : ObservableObject
 {
     public IImage? Icon { get; set; }
 
-    public List<SettingModel> SettingModels { get; } = new();
+    public List<SettingViewModel> SettingModels { get; } = new();
 
-    public SettingsSubCategoryModel(string label, string? iconKey = null, string? toolTip = null)
+    public SettingsCollectionViewModel(string label, string? iconKey = null, string? toolTip = null)
     {
         Header = label;
         SidebarHeader = label.Split(" ")[0];

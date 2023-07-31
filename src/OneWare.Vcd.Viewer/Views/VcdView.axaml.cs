@@ -19,9 +19,4 @@ public partial class VcdView : UserControl
         if (e.Key == Key.S && e.KeyModifiers == Global.ControlKey) _ = (DataContext as VcdViewModel)?.SaveAsync();
         base.OnKeyDown(e);
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

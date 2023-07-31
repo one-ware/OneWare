@@ -7,6 +7,7 @@ using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 using Prism.Modularity;
+using GhdlMainWindowToolBarExtension = OneWare.Ghdl.Views.GhdlMainWindowToolBarExtension;
 
 namespace OneWare.Ghdl;
 

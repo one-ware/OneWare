@@ -78,6 +78,11 @@ public class VcdViewModel : ExtendedDocument
             if(_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) IsDirty = true;
         };
     }
+
+    private static string GetSaveFilePath(string vcdPath)
+    {
+        return Path.Combine(Path.GetDirectoryName(vcdPath) ?? "", Path.GetFileNameWithoutExtension(vcdPath) + ".vcdconf");
+    }
     
     public void PrepareLiveStream()
     {
@@ -116,7 +121,7 @@ public class VcdViewModel : ExtendedDocument
 
         try
         {
-            var context = !WaveFormViewer.Signals.Any() ? await VcdContextManager.LoadContextAsync(FullPath + ".vcdSave.json") : null;
+            var context = !WaveFormViewer.Signals.Any() ? await VcdContextManager.LoadContextAsync(GetSaveFilePath(FullPath)) : null;
 
             if (_cancellationTokenSource.IsCancellationRequested) return false;
             
@@ -228,7 +233,7 @@ public class VcdViewModel : ExtendedDocument
     public override async Task<bool> SaveAsync()
     {
         if(!_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) return true;
-        var result = await VcdContextManager.SaveContextAsync(FullPath + ".vcdSave.json", new VcdContext(WaveFormViewer.Signals.Select(x => x.Signal.Id)));
+        var result = await VcdContextManager.SaveContextAsync(GetSaveFilePath(FullPath), new VcdContext(WaveFormViewer.Signals.Select(x => x.Signal.Id)));
         if (result) IsDirty = false;
         return result;
     }

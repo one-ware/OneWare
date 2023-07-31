@@ -97,9 +97,9 @@ namespace OneWare.Core.ViewModels.Windows
 
         public void OpenSettings()
         {
-            WindowService.Show(new SettingsView()
+            WindowService.Show(new ApplicationSettingsView()
             {
-                DataContext = ContainerLocator.Container.Resolve<SettingsViewModel>()
+                DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
             });
         }
         

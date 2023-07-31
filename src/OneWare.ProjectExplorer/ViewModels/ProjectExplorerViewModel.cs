@@ -225,10 +225,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return result;
     }
     
-    public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager)
+    public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters)
     {
         var filePath = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Project File",
-            _paths.ProjectsDirectory);
+            _paths.ProjectsDirectory, filters);
 
         if (filePath == null) return null;
 

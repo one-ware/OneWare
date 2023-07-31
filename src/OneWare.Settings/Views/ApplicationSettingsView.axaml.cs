@@ -1,21 +1,21 @@
 ﻿using System.Reactive.Linq;
 using Avalonia.Threading;
 using DynamicData.Binding;
-using OneWare.Settings.Models;
+using OneWare.Settings.ViewModels;
 using OneWare.Shared;
 
 namespace OneWare.Settings.Views
 {
-    public partial class SettingsView : FlexibleWindow
+    public partial class ApplicationSettingsView : FlexibleWindow
     {
-        public SettingsView()
+        public ApplicationSettingsView()
         {
             InitializeComponent();
             
             TreeView.WhenValueChanged(x => x.SelectedItem)
                 .Throttle(TimeSpan.FromMilliseconds(50)).Subscribe(x =>
             {
-                if (x is SettingsSubCategoryModel)
+                if (x is SettingsCollectionViewModel)
                 {
                     Dispatcher.UIThread.Post(() =>
                     {

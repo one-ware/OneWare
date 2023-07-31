@@ -1,4 +1,8 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Shared;
 
 namespace OneWare.Settings;
 
@@ -40,5 +44,45 @@ public class ComboBoxSetting : TitledSetting
     public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options) : base(title, description, defaultValue)
     {
         Options = options.ToArray();
+    }
+}
+
+public abstract class PathSetting : TitledSetting
+{
+    public string StartDirectory { get; }
+    
+    protected PathSetting(string title, string description, object defaultValue, string startDirectory) : base(title, description, defaultValue)
+    {
+        StartDirectory = startDirectory;
+    }
+
+    public abstract Task SelectPathAsync(TopLevel topLevel);
+}
+public class FolderPathSetting : PathSetting
+{
+    public FolderPathSetting(string title, string description, object defaultValue, string startDirectory) : base(title, description, defaultValue, startDirectory)
+    {
+    }
+
+    public override async Task SelectPathAsync(TopLevel topLevel)
+    {
+        var folder = await Tools.SelectFolderAsync(topLevel, Title, StartDirectory);
+        if (folder != null) Value = folder;
+    }
+}
+
+public class FilePathSetting : PathSetting
+{
+    public FilePickerFileType[] Filters { get; }
+    
+    public FilePathSetting(string title, string description, object defaultValue, string startDirectory, params FilePickerFileType[] filters) : base(title, description, defaultValue, startDirectory)
+    {
+        Filters = filters;
+    }
+
+    public override async Task SelectPathAsync(TopLevel topLevel)
+    {
+        var folder = await Tools.SelectFileAsync(topLevel, Title, StartDirectory, Filters);
+        if (folder != null) Value = folder;
     }
 }

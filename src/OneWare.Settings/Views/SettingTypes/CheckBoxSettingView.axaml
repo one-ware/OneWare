@@ -1,0 +1,15 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
+             xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView" x:DataType="settingTypes:CheckBoxSettingViewModel">
+    <StackPanel Orientation="Horizontal" Spacing="3">
+        <CheckBox IsChecked="{Binding Setting.Value}"
+                  IsEnabled="{Binding IsEnabled}" />
+        <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
+                   ToolTip.Tip="{Binding Setting.Description}" />
+    </StackPanel>
+</UserControl>

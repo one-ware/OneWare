@@ -7,6 +7,7 @@ using OneWare.Json;
 using OneWare.Settings;
 using OneWare.Shared.Services;
 using OneWare.Toml;
+using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer;
 using OneWare.Verilog;
 using OneWare.Vhdl;
@@ -60,5 +61,6 @@ public class DemoApp : App
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
+        moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
     }
 }
