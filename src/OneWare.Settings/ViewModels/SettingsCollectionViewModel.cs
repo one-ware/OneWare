@@ -8,6 +8,7 @@ namespace OneWare.Settings.ViewModels;
 
 public class SettingsCollectionViewModel : ObservableObject
 {
+    public bool ShowTitle { get; set; } = true;
     public IImage? Icon { get; set; }
 
     public List<SettingViewModel> SettingModels { get; } = new();

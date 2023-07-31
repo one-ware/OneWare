@@ -112,7 +112,7 @@
     <Style Selector="Border.RoundToolBar">
         <Setter Property="CornerRadius" Value="3"></Setter>
         <Setter Property="BorderThickness" Value="1"></Setter>
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
         <Setter Property="Height" Value="24" />
     </Style>
 

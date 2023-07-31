@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData.Binding;
 using OneWare.Shared;
 
 namespace OneWare.Settings;
@@ -38,6 +39,15 @@ public class TitledSetting : Setting
     }
 }
 
+public class TextBoxSetting : TitledSetting
+{
+    public string? Watermark { get; }
+    public TextBoxSetting(string title, string description, object defaultValue, string? watermark) : base(title, description, defaultValue)
+    {
+        Watermark = watermark;
+    }
+}
+
 public class ComboBoxSetting : TitledSetting
 {
     public object[] Options { get; }
@@ -47,20 +57,39 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
-public abstract class PathSetting : TitledSetting
+public abstract class PathSetting : TextBoxSetting
 {
     public string StartDirectory { get; }
+    public bool CanVerify { get; }
     
-    protected PathSetting(string title, string description, object defaultValue, string startDirectory) : base(title, description, defaultValue)
+    private bool _isValid = true;
+
+    public bool IsValid
+    {
+        get => _isValid;
+        set => SetProperty(ref _isValid, value);
+    }
+
+    protected PathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
     {
         StartDirectory = startDirectory;
+
+        if (checkPath != null)
+        {
+            CanVerify = true;
+            this.WhenValueChanged(x => x.Value).Subscribe(x =>
+            {
+                IsValid = checkPath.Invoke((x as string)!);
+            });
+        }
     }
 
     public abstract Task SelectPathAsync(TopLevel topLevel);
 }
 public class FolderPathSetting : PathSetting
 {
-    public FolderPathSetting(string title, string description, object defaultValue, string startDirectory) : base(title, description, defaultValue, startDirectory)
+    public FolderPathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath) 
+        : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
     }
 
@@ -75,7 +104,8 @@ public class FilePathSetting : PathSetting
 {
     public FilePickerFileType[] Filters { get; }
     
-    public FilePathSetting(string title, string description, object defaultValue, string startDirectory, params FilePickerFileType[] filters) : base(title, description, defaultValue, startDirectory)
+    public FilePathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters) 
+        : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
         Filters = filters;
     }

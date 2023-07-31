@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingsCollectionView" x:DataType="viewModels:SettingsCollectionViewModel">
     <DockPanel HorizontalAlignment="Stretch">
-        <DockPanel DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
+        <DockPanel IsVisible="{Binding ShowTitle}" DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
             <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
                    Source="{Binding Icon}" Width="14" />
             <TextBlock Text="{Binding Header}" FontWeight="Bold" />
@@ -19,7 +19,7 @@
         <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding SettingModels}" Background="Transparent" Padding="0">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="4"/>
+                    <StackPanel Spacing="3"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>

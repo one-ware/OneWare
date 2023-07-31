@@ -1,6 +1,22 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <DrawingImage x:Key="BoxIcons.RegularCheck">
+        <GeometryDrawing  Brush="{StaticResource IconColor}" Geometry="M5.225,9.205 L1.57,5.55 L-1.747E-007,7.12 L5.225,12.34 L16,1.57 L14.43,-1.651E-007 z"   />
+    </DrawingImage>
+    
+    <DrawingImage x:Key="BoxIcons.RegularCheck.Green">
+        <GeometryDrawing  Brush="LimeGreen" Geometry="M5.225,9.205 L1.57,5.55 L-1.747E-007,7.12 L5.225,12.34 L16,1.57 L14.43,-1.651E-007 z"   />
+    </DrawingImage>
+    
+    <DrawingImage x:Key="MaterialDesign.Close">
+        <GeometryDrawing  Brush="{StaticResource IconColor}" Geometry="M16,1.611 L9.611,8 L16,14.39 L14.39,16 L8,9.611 L1.611,16 L0,14.39 L6.389,8 L0,1.611 L1.611,0 L8,6.389 L14.39,0 z"   />
+    </DrawingImage>
+    
+    <DrawingImage x:Key="MaterialDesign.Close.Red">
+        <GeometryDrawing  Brush="Red" Geometry="M16,1.611 L9.611,8 L16,14.39 L14.39,16 L8,9.611 L1.611,16 L0,14.39 L6.389,8 L0,1.611 L1.611,0 L8,6.389 L14.39,0 z"   />
+    </DrawingImage>
+    
     <DrawingImage x:Key="BoxIcons.RegularPlus">
         <GeometryDrawing  Brush="{StaticResource IconColor}" Geometry="M16,6.857 L9.143,6.857 L9.143,-2.093E-007 L6.857,-2.093E-007 L6.857,6.857 L9.809E-009,6.857 L9.809E-009,9.143 L6.857,9.143 L6.857,16 L9.143,16 L9.143,9.143 L16,9.143 z"   />
     </DrawingImage>
