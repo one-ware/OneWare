@@ -11,16 +11,24 @@
         <ApplicationIcon>..\OneWare.Demo\Assets\icon.ico</ApplicationIcon>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <SelfContained>true</SelfContained>
+        <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
     
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!--Not working in NET7 / Avalonia 11-->
+    <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAOT'">
+        <TrimMode>partial</TrimMode>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <PublishAot>True</PublishAot>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
         <DebugSymbols>False</DebugSymbols>
         <DebugType>None</DebugType>
         <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     </PropertyGroup>
     
     <PropertyGroup>
