@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
     <Import Project="..\..\build\props\Avalonia.Desktop.props" />
 
     <PropertyGroup>
@@ -13,15 +12,17 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <PublishReadyToRun>true</PublishReadyToRun>
     </PropertyGroup>
     
-    <PropertyGroup Condition="'$(Configuration.toUpper())' == 'RELEASE'">
-        <SelfContained>true</SelfContained>
-        <PublishAot>false</PublishAot>
-        <PublishTrimmed>false</PublishTrimmed>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PublishAot>True</PublishAot>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <DebugSymbols>False</DebugSymbols>
+        <DebugType>None</DebugType>
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     </PropertyGroup>
-
+    
     <PropertyGroup>
         <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
         <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
@@ -39,13 +40,6 @@
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\Startup.jpg" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\SplashWindow.axaml.cs">
-        <DependentUpon>SplashWindow.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
     </ItemGroup>
     
 </Project>

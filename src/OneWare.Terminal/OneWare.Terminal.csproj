@@ -12,11 +12,7 @@
         <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
     </ItemGroup>
     
-    <ItemGroup Condition="'$(Configuration.toUpper())' == 'DEBUG'">
-        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6" />
-    </ItemGroup>
-    
-    <ItemGroup Condition="'$(Configuration.toUpper())' == 'RELEASE'">
-        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <ItemGroup>
+        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6"/>
     </ItemGroup>
 </Project>
