@@ -7,7 +7,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -15,7 +14,6 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.FolderProjectSystem;
-using OneWare.FolderProjectSystem.Models;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
 using OneWare.ProjectSystem.Services;
@@ -284,6 +282,8 @@ namespace OneWare.Core
             Container.Resolve<BackupService>().CleanUp();
 
             await Container.Resolve<LanguageManager>().CleanResourcesAsync();
+
+            await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
 
             //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
 

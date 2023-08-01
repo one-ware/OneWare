@@ -63,7 +63,10 @@ public class ExtendedTextEditor : TextEditor
     protected override void OnDocumentChanged(DocumentChangedEventArgs e)
     {
         base.OnDocumentChanged(e);
-        if(e?.NewDocument != null) MarkerService?.ChangeDocument(e.NewDocument);
+        if (e?.NewDocument != null)
+        {
+            MarkerService?.ChangeDocument(e.NewDocument);
+        }
     }
 
     public void InitTextmate(IRegistryOptions options)

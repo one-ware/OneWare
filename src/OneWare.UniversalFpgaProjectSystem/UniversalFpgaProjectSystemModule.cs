@@ -27,7 +27,7 @@ public class UniversalFpgaProjectSystemModule : IModule
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
         
-        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".fpgaproj", ".json");
+        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemModel("FpgaProject")
@@ -42,9 +42,9 @@ public class UniversalFpgaProjectSystemModule : IModule
             {
                 Header = "Project",
                 Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>().LoadProjectFileDialogAsync(manager, 
-                    new FilePickerFileType("Universal FPGA Project (*.fpgaproj)")
+                    new FilePickerFileType($"Universal FPGA Project (*.{UniversalFpgaProjectRoot.ProjectFileExtension})")
                 {
-                    Patterns = new[] { "*.fpgaproj" }
+                    Patterns = new[] { $"*{UniversalFpgaProjectRoot.ProjectFileExtension}" }
                 })),
                 ImageIcon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });

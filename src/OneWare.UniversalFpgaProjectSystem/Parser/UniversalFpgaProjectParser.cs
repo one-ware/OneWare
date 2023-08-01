@@ -1,4 +1,6 @@
-﻿using OneWare.Shared.Services;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
 
@@ -6,13 +8,21 @@ namespace OneWare.UniversalFpgaProjectSystem.Parser;
 
 public static class UniversalFpgaProjectParser
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+    
     public static UniversalFpgaProjectRoot? Deserialize(string path)
     {
         try
         {
-            using var file = File.OpenRead(path);
+            using var stream = File.OpenRead(path);
 
-            return new UniversalFpgaProjectRoot(path);
+            var properties = JsonSerializer.Deserialize<FpgaProjectProperties>(stream, SerializerOptions);
+            
+            return new UniversalFpgaProjectRoot(path, properties!);
         }
         catch (Exception e)
         {
@@ -25,7 +35,11 @@ public static class UniversalFpgaProjectParser
     {
         try
         {
-            using var file = File.Create(root.ProjectFilePath);
+            using var stream = File.OpenWrite(root.ProjectFilePath);
+            stream.SetLength(0);
+
+            JsonSerializer.Serialize(stream, root.Properties, SerializerOptions);
+            
             return true;
         }
         catch (Exception e)

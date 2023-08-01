@@ -1,13 +1,9 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.Serialization;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Mvvm.Controls;
-using DryIoc;
 using DynamicData.Binding;
 using OneWare.Core.Services;
 using Prism.Ioc;
@@ -283,6 +279,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
         protected override void Reset()
         {
+            Editor.SetEnableFolding(false);
             TypeAssistance?.Close();
             _composite.Dispose();
             _composite = new CompositeDisposable();

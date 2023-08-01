@@ -1,4 +1,6 @@
-﻿using OneWare.Shared;
+﻿using CommunityToolkit.Mvvm.Input;
+using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -43,5 +45,19 @@ public class UniversalFpgaProjectManager : IProjectManager
     public Task<bool> SaveProjectAsync(IProjectRoot root)
     {
         return Task.FromResult(root is UniversalFpgaProjectRoot uFpga && UniversalFpgaProjectParser.Serialize(uFpga));
+    }
+
+    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
+    {
+        switch (entry)
+        {
+            case UniversalFpgaProjectRoot root:
+                yield return new MenuItemModel("Save")
+                {
+                    Header = "Save",
+                    Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
+                };
+                break;
+        }
     }
 }

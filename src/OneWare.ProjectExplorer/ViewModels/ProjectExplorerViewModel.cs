@@ -96,6 +96,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (SelectedItem is { } entry)
         {
+            var manager = _projectManagerService.GetManager(entry.Root.ProjectTypeId);
+            
             switch (entry)
             {
                 case IProjectFile file:
@@ -127,6 +129,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     });
                     break;
             }
+            
+            if(manager != null) menuItems.AddRange(manager.ConstructContextMenu(entry));
+            
             if (entry is IProjectRoot root)
             {
                 menuItems.Add(new MenuItemModel("Close")
@@ -177,7 +182,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     }
                 });
             }
-            
+
             menuItems.Add(new MenuItemModel("OpenFileViewer")
             {
                 Header = "Open in File Viewer",
@@ -191,7 +196,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     
     public async Task OpenFileDialogAsync()
     {
-        var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this), "Select File", null);
+        var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this)!, "Select File", null);
 
         if (file != null)
         {
@@ -239,13 +244,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return result;
     }
 
-    public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager)
+    public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true)
     {
         var project = await manager.LoadProjectAsync(path);
         
         if (project == null) return null;
-        
-        project.IsExpanded = true;
+
+        if (expand) project.IsExpanded = expand;
         
         Insert(project);
         ActiveProject = project;
@@ -486,7 +491,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
 
-        var files = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this), "Import Files to " + destination.Header,
+        var files = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this)!, "Import Files to " + destination.Header,
             destination.FullPath);
 
         if (!files.Any()) return;
@@ -540,11 +545,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         //entry.Header = newName;
 
         await ReloadAsync(entry);
-
-        //if (entry.HasRoot)
-        //{
-            //_ = entry.Root.SaveProjectAsync(); TODO
-        //}
+        
 
         return entry;
     }
@@ -694,7 +695,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         try
         {
             var roots = Items.Where(x => x is IProjectRoot).Cast<IProjectRoot>();
-            var serialization = roots.Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath)).ToArray();
+            var serialization = roots.Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath, x.IsExpanded)).ToArray();
             await using var stream = File.OpenWrite(_lastProjectsFile);
             stream.SetLength(0);
             await JsonSerializer.SerializeAsync(stream, serialization);
@@ -721,7 +722,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 var manager = _projectManagerService.GetManager(l.ProjectType);
                 if (manager != null)
                 {
-                    loadProjectTasks.Add(LoadProjectAsync(l.Path, manager));
+                    loadProjectTasks.Add( LoadProjectAsync(l.Path, manager, l.IsExpanded));
                 }
                 else ContainerLocator.Container.Resolve<ILogger>()?
                     .Warning($"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
@@ -739,11 +740,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         public string ProjectType { get; set; }
         public string Path { get; set; }
+        public bool IsExpanded { get; set; }
 
-        public ProjectSerialization(string projectType, string path)
+        public ProjectSerialization(string projectType, string path, bool isExpanded)
         {
             ProjectType = projectType;
             Path = path;
+            IsExpanded = isExpanded;
         }
     }
     

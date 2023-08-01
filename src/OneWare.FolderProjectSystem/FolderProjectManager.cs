@@ -1,5 +1,6 @@
 ﻿using OneWare.FolderProjectSystem.Models;
 using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.FolderProjectSystem;
@@ -37,5 +38,10 @@ public class FolderProjectManager : IProjectManager
     public Task<bool> SaveProjectAsync(IProjectRoot root)
     {
         return Task.FromResult(true);
+    }
+
+    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
+    {
+        return Array.Empty<MenuItemModel>();
     }
 }

@@ -6,6 +6,7 @@ using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Parser;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -77,9 +78,9 @@ public class UniversalFpgaProjectCreatorViewModel : ObservableObject
                 Directory.CreateDirectory(folder);
             }
         
-            var projectFile = Path.Combine(folder, name + ".fpgaproj");
+            var projectFile = Path.Combine(folder, name + UniversalFpgaProjectRoot.ProjectFileExtension);
             
-            var root = new UniversalFpgaProjectRoot(projectFile);
+            var root = new UniversalFpgaProjectRoot(projectFile, new FpgaProjectProperties());
 
             await _manager.SaveProjectAsync(root);
             
