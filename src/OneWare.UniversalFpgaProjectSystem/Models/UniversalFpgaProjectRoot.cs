@@ -1,5 +1,7 @@
-﻿using Avalonia.Media.Imaging;
+﻿using System.Text.Json;
+using Avalonia.Media.Imaging;
 using OneWare.ProjectSystem.Models;
+using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -11,13 +13,13 @@ public class UniversalFpgaProjectRoot : ProjectRoot
 {
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
+    public DateTime LastSaveTime { get; set; }
     public override string ProjectPath => ProjectFilePath;
     public override string ProjectTypeId => ProjectType;
     public string ProjectFilePath { get; }
-    
-    public FpgaProjectProperties Properties { get; }
+    public JsonDocument Properties { get; }
 
-    public UniversalFpgaProjectRoot(string projectFilePath, FpgaProjectProperties properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
+    public UniversalFpgaProjectRoot(string projectFilePath, JsonDocument properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;
         Properties = properties;

@@ -258,18 +258,24 @@ namespace OneWare.Core
         private async Task TryShutDownAsync(object? sender, CancelEventArgs e)
         {
             e.Cancel = true;
+            try
+            {
+                var unsavedFiles = new List<IExtendedDocument>();
 
-            var unsavedFiles = new List<IExtendedDocument>();
+                foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
+                    if (tab.Value is { IsDirty: true } evm)
+                        unsavedFiles.Add(evm);
 
-            foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
-                if (tab.Value is { IsDirty: true } evm)
-                    unsavedFiles.Add(evm);
+                var mainWin = MainWindow as Window;
+                if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
+                var shutdownReady = await Tools.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
 
-            var mainWin = MainWindow as Window;
-            if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-            var shutdownReady = await Tools.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
-
-            if (shutdownReady) await ShutdownAsync();
+                if (shutdownReady) await ShutdownAsync();
+            }
+            catch (Exception ex)
+            {
+                Container.Resolve<ILogger>().Error(ex.Message, ex);
+            }
         }
 
         private async Task ShutdownAsync()

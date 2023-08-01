@@ -14,9 +14,7 @@ namespace OneWare.ProjectSystem.Models;
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
     public ObservableCollection<IProjectEntry> Items { get; init; } = new();
-    
-    public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
-    
+
     public IProjectFolder? TopFolder { get; set; }
 
     private IBrush _background = Brushes.Transparent;

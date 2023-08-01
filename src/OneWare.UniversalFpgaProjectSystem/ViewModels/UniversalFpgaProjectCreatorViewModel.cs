@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using OneWare.Settings;
 using OneWare.Settings.ViewModels;
@@ -80,7 +81,7 @@ public class UniversalFpgaProjectCreatorViewModel : ObservableObject
         
             var projectFile = Path.Combine(folder, name + UniversalFpgaProjectRoot.ProjectFileExtension);
             
-            var root = new UniversalFpgaProjectRoot(projectFile, new FpgaProjectProperties());
+            var root = new UniversalFpgaProjectRoot(projectFile, JsonDocument.Parse("{}"));
 
             await _manager.SaveProjectAsync(root);
             

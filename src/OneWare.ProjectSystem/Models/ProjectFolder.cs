@@ -36,7 +36,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             });
         }
     }
-    
+
     private void Insert(IProjectEntry entry)
     {
         //Insert in correct posiion

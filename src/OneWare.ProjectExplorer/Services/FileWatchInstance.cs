@@ -8,8 +8,6 @@ public class FileWatchInstance : IDisposable
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
-    private readonly ISettingsService _settingsService;
-    private readonly ILogger _logger;
     private readonly IProjectRoot _root;
     private readonly FileSystemWatcher _fileSystemWatcher;
     private readonly object _lock = new();
@@ -21,8 +19,6 @@ public class FileWatchInstance : IDisposable
         _root = root;
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
-        _settingsService = settingsService;
-        _logger = logger;
 
         _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
         {
@@ -37,28 +33,26 @@ public class FileWatchInstance : IDisposable
 
         try
         {
-            _settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
+            settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
             {
                 _fileSystemWatcher.EnableRaisingEvents = x;
 
                 _timer?.Stop();
-                if (x)
+                if (!x) return;
+                _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
                 {
-                    _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
+                    lock (_lock)
                     {
-                        lock (_lock)
-                        {
-                            ProcessChanges();
-                        }
-                    });
-                    _timer.Start();
-                }
+                        ProcessChanges();
+                    }
+                });
+                _timer.Start();
             });
 
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            logger.Error(e.Message, e);
         }
     }
 
@@ -83,7 +77,7 @@ public class FileWatchInstance : IDisposable
         _changes.Clear();
     }
 
-    private async Task ProcessAsync(string path, List<FileSystemEventArgs> changes)
+    private async Task ProcessAsync(string path, IReadOnlyCollection<FileSystemEventArgs> changes)
     {
         var entry = _root.Search(path);
 

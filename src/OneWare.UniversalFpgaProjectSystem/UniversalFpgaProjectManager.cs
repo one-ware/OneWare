@@ -34,12 +34,7 @@ public class UniversalFpgaProjectManager : IProjectManager
     public Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         var root = UniversalFpgaProjectParser.Deserialize(path);
-        if (root != null)
-        {
-            _projectExplorerService.ImportFolderRecursive(Path.GetDirectoryName(path), root);
-            return Task.FromResult<IProjectRoot?>(root);
-        }
-        return Task.FromResult<IProjectRoot?>(null);
+        return Task.FromResult<IProjectRoot?>(root);
     }
 
     public Task<bool> SaveProjectAsync(IProjectRoot root)

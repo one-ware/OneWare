@@ -152,7 +152,7 @@ namespace OneWare.Core.Services
 
         public void CleanUp()
         {
-            foreach (var backup in _backups)
+            foreach (var backup in _backups.ToArray())
             {
                 RemoveBackup(backup);
             }

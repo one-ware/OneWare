@@ -11,6 +11,7 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFile : ProjectEntry, IProjectFile
 {
+    public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
     public string Extension => Path.GetExtension(FullPath);
     
     public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)

@@ -7,7 +7,7 @@ namespace OneWare.Shared;
 public interface IProjectEntry : IHasPath
 {
     public new string Header { get; set; }
-    
+
     public ObservableCollection<IProjectEntry> Items { get; }
     
     public string RelativePath { get; }

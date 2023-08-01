@@ -470,7 +470,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 if(entry.EqualPaths(destination.FullPath)) continue;
                 var folder = destination.AddFolder(Path.GetFileName(entry));
-                ImportFolderRecursive(entry, folder);
+                ImportFolderRecursive(entry, folder, exclude);
             }
             else
             {
