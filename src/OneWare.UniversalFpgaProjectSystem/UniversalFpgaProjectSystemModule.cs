@@ -16,7 +16,7 @@ public class UniversalFpgaProjectSystemModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
+        containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
@@ -26,6 +26,8 @@ public class UniversalFpgaProjectSystemModule : IModule
         containerProvider
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
+        
+        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".fpgaproj", ".json");
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemModel("FpgaProject")

@@ -5,6 +5,7 @@
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+                       xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                        PrefHeight="400" PrefWidth="600" Padding="4"
                        WindowStartupLocation="CenterOwner"
@@ -13,11 +14,15 @@
                        CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
                        x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCreatorView"
                        x:DataType="viewModels:UniversalFpgaProjectCreatorViewModel">
+    <Interaction.Behaviors>
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SaveAsync}"
+                                            CommandParameter="{Binding #UniversalFpgaProjectCreator}" />
+    </Interaction.Behaviors>
     <Grid RowDefinitions="*, Auto">
         <ContentControl Padding="4" Content="{Binding SettingsCollection}"/>
         <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Save}"
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
                     CommandParameter="{Binding #UniversalFpgaProjectCreator}">
                 <TextBlock Text="Save" />
             </Button>

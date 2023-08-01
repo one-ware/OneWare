@@ -13,6 +13,7 @@ namespace OneWare.Core.Extensions.TextMate;
 public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 {
     private List<TextMateLanguage> _availableLanguages = new();
+    private Dictionary<string, string> _extensionLinks = new();
 
     private readonly RegistryOptions _defaultRegistryOptions = new(ThemeName.DarkPlus);
 
@@ -24,6 +25,11 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
             GrammarPath = grammarPath,
             Extensions = extensions
         });
+    }
+
+    public void RegisterExtensionLink(string source, string target)
+    {
+        _extensionLinks.TryAdd(source, target);
     }
     
     public IRawGrammar GetGrammar(string scopeName)
@@ -53,7 +59,9 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
             {
                 Id = def.Id,
             };
-        return _defaultRegistryOptions.GetLanguageByExtension(extension);
+
+        _extensionLinks.TryGetValue(extension, out var target);
+        return _defaultRegistryOptions.GetLanguageByExtension(target ?? extension);
     }
 
     public string GetScopeByLanguageId(string languageId)

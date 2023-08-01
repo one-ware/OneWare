@@ -34,7 +34,8 @@ public class UniversalFpgaProjectManager : IProjectManager
         var root = UniversalFpgaProjectParser.Deserialize(path);
         if (root != null)
         {
-            _projectExplorerService.ImportFolderRecursive(path, root);
+            _projectExplorerService.ImportFolderRecursive(Path.GetDirectoryName(path), root);
+            return Task.FromResult<IProjectRoot?>(root);
         }
         return Task.FromResult<IProjectRoot?>(null);
     }
