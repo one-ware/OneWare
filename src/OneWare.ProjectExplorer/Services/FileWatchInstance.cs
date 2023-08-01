@@ -14,7 +14,7 @@ public class FileWatchInstance : IDisposable
     private readonly FileSystemWatcher _fileSystemWatcher;
     private readonly object _lock = new();
     private DispatcherTimer? _timer;
-    private readonly Dictionary<string, FileSystemEventArgs> _changes = new();
+    private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
 
     public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService, ILogger logger)
     {
@@ -44,7 +44,7 @@ public class FileWatchInstance : IDisposable
                 _timer?.Stop();
                 if (x)
                 {
-                    _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(100), DispatcherPriority.Background, (_, _) =>
+                    _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
                     {
                         lock (_lock)
                         {
@@ -67,7 +67,8 @@ public class FileWatchInstance : IDisposable
         if (e.Name == null) return;
         lock (_lock)
         {
-            _changes[e.FullPath] = e;
+            _changes.TryAdd(e.FullPath, new List<FileSystemEventArgs>());
+            _changes[e.FullPath].Add(e);
         }
     }
 
@@ -82,13 +83,15 @@ public class FileWatchInstance : IDisposable
         _changes.Clear();
     }
 
-    private async Task ProcessAsync(string path, FileSystemEventArgs args)
+    private async Task ProcessAsync(string path, List<FileSystemEventArgs> changes)
     {
         var entry = _root.Search(path);
 
+        var lastArg = changes.Last();
+        
         if (entry is not null)
         {
-            switch (args.ChangeType)
+            switch (lastArg.ChangeType)
             {
                 case WatcherChangeTypes.Created:
                 case WatcherChangeTypes.Renamed:
@@ -110,10 +113,10 @@ public class FileWatchInstance : IDisposable
         {
             var relativePath = Path.GetRelativePath(_root.ProjectPath, path);
             
-            switch (args.ChangeType)
+            switch (lastArg.ChangeType)
             {
                 case WatcherChangeTypes.Renamed:
-                    if (args is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
+                    if (lastArg is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
                     {
                         if (oldEntry is IProjectFile file)
                         {
@@ -132,6 +135,7 @@ public class FileWatchInstance : IDisposable
                     }
                     return;
                 case WatcherChangeTypes.Created:
+                case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                     var attr = File.GetAttributes(path);
                     
                     if (attr.HasFlag(FileAttributes.Directory))
