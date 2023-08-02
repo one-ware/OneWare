@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia.Collections;
 using DynamicData.Binding;
 using OneWare.Shared;
@@ -157,6 +158,13 @@ namespace OneWare.ErrorList.ViewModels
             {
                 Filter = Filter
             };
+
+            Observable.FromEventPattern<IFile>(projectExplorerExplorerViewModel,
+                nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(
+                x =>
+                {
+                    Clear(x.EventArgs);
+                });
             
             _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
                 .Subscribe(x => ErrorListFilterMode = x);

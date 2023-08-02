@@ -10,6 +10,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public ObservableCollection<IProjectEntry> Items { get; }
     public ObservableCollection<IProjectEntry> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
+    public event EventHandler<IFile>? FileRemoved;
     public void Insert(IProjectEntry entry);
     public Task RemoveAsync(params IProjectEntry[] entries);
     public Task DeleteAsync(params IProjectEntry[] entries);
@@ -17,6 +18,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager);
     public Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters);
     public IFile GetTemporaryFile(string path);
+    public void RemoveTemporaryFile(IFile file);
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectEntry entry);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);

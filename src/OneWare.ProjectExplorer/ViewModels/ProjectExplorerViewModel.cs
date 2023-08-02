@@ -56,6 +56,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public ICommand? DoubleTabCommand { get; protected set; }
     public Action<Action<string>>? RequestRename { get; set; }
 
+    public event EventHandler<IFile>? FileRemoved;
+
     public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, 
         IProjectManagerService projectManagerService, IFileWatchService fileWatchService)
     : base(IconKey)
@@ -85,11 +87,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             entry.IsExpanded = !entry.IsExpanded;
         }
     }
-    public void OpenFile(IFile file)
-    {
-        
-    }
-    
+
     public void ConstructContextMenu(TopLevel topLevel)
     {
         var menuItems = new List<IMenuItem>();
@@ -214,6 +212,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public void RemoveTemporaryFile(IFile file)
     {
         TemporaryFiles.Remove(file.FullPath);
+        FileRemoved?.Invoke(this, file);
     }
 
     public override void Insert(IProjectEntry entry)
@@ -340,6 +339,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         else if (entry is IProjectFile file)
         {
             if(!await _dockService.CloseFileAsync(file)) return;
+            FileRemoved?.Invoke(this, file);
         }
         if (entry.TopFolder == null) throw new NullReferenceException(entry.Header + " has no TopFolder");
 

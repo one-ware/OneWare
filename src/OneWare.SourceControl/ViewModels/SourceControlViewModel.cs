@@ -980,7 +980,7 @@ namespace OneWare.SourceControl.ViewModels
             if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
 
             if (!(ProjectExplorerService.ActiveProject?.Search(path) is IFile file))
-                file = new ExternalFile(path);
+                file = ProjectExplorerService.GetTemporaryFile(path);
 
             await _dockService.OpenFileAsync(file);
             return file;
@@ -997,7 +997,7 @@ namespace OneWare.SourceControl.ViewModels
                 commitContent = await content.ReadToEndAsync();
             }
 
-            var file = new ExternalFile(path);
+            var file = ProjectExplorerService.GetTemporaryFile(path);
             
             var evm = await _dockService.OpenFileAsync(file);
 

@@ -1,9 +1,11 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
@@ -47,7 +49,7 @@ namespace OneWare.Core.Views.Windows
                     break;
             }
 
-            if (mode == MessageBoxMode.Input || mode == MessageBoxMode.PasswordInput)
+            if (mode is MessageBoxMode.Input or MessageBoxMode.PasswordInput)
             {
                 KeyDown += (o, i) =>
                 {
@@ -58,11 +60,15 @@ namespace OneWare.Core.Views.Windows
                     }
                 };
 
-                Opened += (o, i) =>
-                {
-                    InputBox.Focus();
-                    InputBox.SelectAll();
-                };
+                Observable.FromEventPattern(this, nameof(this.Opened)).Take(1).Delay(TimeSpan.FromMilliseconds(10)).Subscribe(
+                    x =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            InputBox.Focus();
+                            InputBox.SelectAll();
+                        });
+                    });
             }
             else
             {

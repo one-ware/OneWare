@@ -89,6 +89,8 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         else
         {
             if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
+            if(CurrentFile is ExternalFile externalFile) 
+                _projectExplorerService.RemoveTemporaryFile(externalFile);
         }
 
         Reset();
@@ -130,7 +132,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         var oldCurrentFile = CurrentFile;
         if (CurrentFile?.FullPath != FullPath)
         {
-            CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? new ExternalFile(FullPath);
+            CurrentFile = _projectExplorerService.Search(FullPath) as IFile ?? _projectExplorerService.GetTemporaryFile(FullPath);
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile.Header;
         }
         _dockService.OpenFiles.TryAdd(CurrentFile, this);

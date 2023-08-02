@@ -66,7 +66,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                 yield return new MenuItemModel("Edit")
                 {
                     Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
-                    Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(new ExternalFile(root.ProjectFilePath))),
+                    Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(_projectExplorerService.GetTemporaryFile(root.ProjectFilePath))),
                 };
                 break;
         }
