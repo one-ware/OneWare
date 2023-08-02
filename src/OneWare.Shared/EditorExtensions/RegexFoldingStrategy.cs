@@ -26,7 +26,7 @@ public class RegexFoldingStrategy : IFoldingStrategy
 	    firstErrorOffset = -1;
 	    var newFoldings = new List<NewFolding>();
 
-	    var startOffsets = new Stack<int>();
+	    var startOffsets = new Stack<(int offset, string name)>();
 	    foreach (var line in document.Lines)
         {
 	        var lineText = document.GetText(line.Offset, line.Length);
@@ -35,12 +35,16 @@ public class RegexFoldingStrategy : IFoldingStrategy
 
 	        if (start.Success && !end.Success)
 	        {
-		        startOffsets.Push(line.Offset + start.Index + start.Length);
+		        startOffsets.Push((line.Offset + start.Index, start.Value.TrimEnd()));
 	        }
 
 	        if (end.Success && !start.Success && startOffsets.Any())
 	        {
-		        newFoldings.Add(new NewFolding(startOffsets.Pop(), line.Offset + end.Index));
+		        var startPop = startOffsets.Pop();
+		        newFoldings.Add(new NewFolding(startPop.offset, line.Offset + end.Index + end.Length)
+		        {
+			        Name = startPop.name + "..." + end.Value.TrimStart()
+		        });
 	        }
         }
 

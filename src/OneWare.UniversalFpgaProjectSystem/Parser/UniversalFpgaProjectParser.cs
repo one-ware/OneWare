@@ -15,7 +15,8 @@ public static class UniversalFpgaProjectParser
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        AllowTrailingCommas = true
     };
     
     public static UniversalFpgaProjectRoot? Deserialize(string path)
@@ -40,35 +41,47 @@ public static class UniversalFpgaProjectParser
         }
     }
 
-    private static void ImportFolderRecursive(string source, IProjectFolder destination, string[] include, string[] exclude)
+    private static IEnumerable<(string path, FileAttributes attributes)> GetFileMatches(string source, string[] includeWildcards, string[] excludeWildcards)
     {
-        var entries = Directory.GetFileSystemEntries(source);
-        foreach (var entry in entries)
-        {
-            var attr = File.GetAttributes(entry);
-            
-            if (attr.HasFlag(FileAttributes.Hidden)) continue;
+        var entries = Directory.EnumerateFileSystemEntries(source);
 
-            try
-            {
-                var incl = include.Any(includePattern => FileSystemName.MatchesSimpleExpression(includePattern, entry));
-                if (!incl || exclude.Any(excludePattern => FileSystemName.MatchesSimpleExpression(excludePattern, entry))) return;
-            }
-            catch
-            {
-                return;
-            }
+        foreach (var path in entries)
+        {
+            var attr = File.GetAttributes(path);
+            if (attr.HasFlag(FileAttributes.Hidden)) continue;
 
             if (attr.HasFlag(FileAttributes.Directory))
             {
-                if(entry.EqualPaths(destination.FullPath)) continue;
-                var folder = destination.AddFolder(Path.GetFileName(entry));
-                ImportFolderRecursive(entry, folder, include, exclude);
+                var subDirMatches = GetFileMatches(path, includeWildcards, excludeWildcards);
+                foreach (var subMatch in subDirMatches)
+                {
+                    yield return (Path.Combine(Path.GetFileName(path), subMatch.path), subMatch.attributes);
+                }
+                continue;
             }
-            else
+            
+            var match = MatchWildCards(path, includeWildcards, excludeWildcards);
+            if (match) yield return (Path.GetFileName(path), attr);
+        }
+    }
+
+    private static bool MatchWildCards(string path, IEnumerable<string> include, IEnumerable<string> exclude)
+    {
+        return include.Any(includePattern => FileSystemName.MatchesSimpleExpression(includePattern, path))  
+               && !exclude.Any(excludePattern => FileSystemName.MatchesSimpleExpression(excludePattern, path));
+    }
+
+    private static void ImportFolderRecursive(string source, IProjectFolder destination, string[] includeWildcards, string[] excludeWildcards)
+    {
+        var matches = GetFileMatches(source, includeWildcards, excludeWildcards);
+
+        foreach (var match in matches)
+        {
+            if (match.attributes.HasFlag(FileAttributes.Directory))
             {
-                destination.ImportFile(entry);
+                destination.AddFolder(match.path);
             }
+            else destination.AddFile(match.path);
         }
     }
 

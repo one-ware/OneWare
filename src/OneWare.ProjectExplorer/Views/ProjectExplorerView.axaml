@@ -72,7 +72,7 @@
             </TreeView.Styles>
             <TreeView.DataTemplates>
                 <TreeDataTemplate DataType="shared:IProjectEntry" ItemsSource="{Binding Items}">
-                    <StackPanel Orientation="Horizontal" Spacing="5" Background="Transparent">
+                    <StackPanel Orientation="Horizontal" Spacing="4" Background="Transparent">
                         <Interaction.Behaviors>
                             <behaviours:CommandOnDoubleTapBehaviour Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, 
                             FallbackValue={x:Null}}" CommandParameter="{Binding}"/>
@@ -85,40 +85,6 @@
                             <Image Height="16" Width="16"
                                    Source="{DynamicResource VsImageLib.StatusCriticalErrorOverlayExp16X}"
                                    IsVisible="{Binding LoadingFailed}" />
-                            <!--
-                            <Image ToolTip.Tip="Startup Folder" Margin="1, 0, 0, 0" Height="16" Width="16"
-                                   Source="{DynamicResource VsImageLib2019.DownloadOverlay16X}">
-                                <Image.IsVisible>
-                                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
-                                        <Binding Path="Type" Converter="{x:Static converters:SharedConverters.ComparisonConverter}"
-                                                 ConverterParameter="{x:Static enums:FileType.Folder}" />
-                                        <MultiBinding Converter="{StaticResource PathsEqualConverter}">
-                                            <Binding Path="Root.Properties.SoftwareStartPath" />
-                                            <Binding Path="RelativePath" />
-                                        </MultiBinding>
-                                    </MultiBinding>
-                                </Image.IsVisible>
-                            </Image>
-                            <Image ToolTip.Tip="Startup File" Margin="1, 0, 0, 0" Height="16" Width="16"
-                                   Source="{DynamicResource VsImageLib2019.DownloadOverlay16X}">
-                                <Image.IsVisible>
-                                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
-                                        <Binding Path="Type" Converter="{StaticResource NoComparisonConverter}"
-                                                 ConverterParameter="{x:Static enums:FileType.Folder}" />
-                                        <MultiBinding Converter="{StaticResource BooleanOrConverter}">
-                                            <MultiBinding Converter="{StaticResource PathsEqualConverter}">
-                                                <Binding Path="Root.Properties.HardwareStartPath" />
-                                                <Binding Path="RelativePath" />
-                                            </MultiBinding>
-                                            <MultiBinding Converter="{StaticResource PathsEqualConverter}">
-                                                <Binding Path="Root.Properties.HardwareStartPath" />
-                                                <Binding Path="FullPath" />
-                                            </MultiBinding>
-                                        </MultiBinding>
-                                    </MultiBinding>
-                                </Image.IsVisible>
-                            </Image>
-                            -->
                         </Grid>
 
                         <!--

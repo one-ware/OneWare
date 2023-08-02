@@ -34,7 +34,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         
     }
     
-    public void Insert(IProjectEntry entry)
+    public virtual void Insert(IProjectEntry entry)
     {
         if (Items.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {

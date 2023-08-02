@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
 using OneWare.Shared;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -13,12 +15,14 @@ namespace OneWare.UniversalFpgaProjectSystem;
 public class UniversalFpgaProjectManager : IProjectManager
 {
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
     private readonly ILogger _logger;
     
-    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IWindowService windowService, ILogger logger)
+    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService, ILogger logger)
     {
         _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
         _windowService = windowService;
         _logger = logger;
     }
@@ -51,6 +55,18 @@ public class UniversalFpgaProjectManager : IProjectManager
                 {
                     Header = "Save",
                     Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
+                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
+                };
+                yield return new MenuItemModel("Reload")
+                {
+                    Header = $"Reload",
+                    Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
+                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
+                };
+                yield return new MenuItemModel("Edit")
+                {
+                    Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
+                    Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(new ExternalFile(root.ProjectFilePath))),
                 };
                 break;
         }

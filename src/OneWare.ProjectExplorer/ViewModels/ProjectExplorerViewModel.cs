@@ -216,6 +216,15 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         TemporaryFiles.Remove(file.FullPath);
     }
 
+    public override void Insert(IProjectEntry entry)
+    {
+        base.Insert(entry);
+        if (entry is IProjectRoot root)
+        {
+            _fileWatchService.Register(root);
+        }
+    }
+
     public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
     {
         var folderPath = await Tools.SelectFolderAsync(_dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Folder Path",
@@ -254,8 +263,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         
         Insert(project);
         ActiveProject = project;
-        
-        _fileWatchService.Register(project);
 
         return project;
     }
@@ -560,7 +567,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (entry is IProjectRoot root)
         {
-            await RemoveAsync(entry);
             var manager = _projectManagerService.GetManager(root.ProjectTypeId);
 
             if (manager == null)
@@ -568,14 +574,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 entry.LoadingFailed = true;
                 ContainerLocator.Container.Resolve<ILogger>()
                     .Error($"Cannot reload {entry.Header}. Manager not found!");
-                return entry;
             }
-            var proj = await manager.LoadProjectAsync(entry.FullPath);
+            var proj = manager != null ? await manager.LoadProjectAsync(root.ProjectPath) : null;
             if (proj == null)
             {
                 entry.LoadingFailed = true;
                 return entry;
             }
+            var expanded = root.IsExpanded;
+            var active = root.IsActive;
+            await RemoveAsync(root);
+            Insert(proj);
+            proj.IsExpanded = expanded;
+            if (active) ActiveProject = proj;
             return proj;
         }
 
@@ -601,48 +612,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         throw new Exception("Unknown filetype");
     }
 
-    public async Task HandleFileChangeAsync(string path)
-    {
-        try
-        {
-            await Task.Delay(10);
-                
-            //TODO await MainDock.SourceControl.WaitUntilFreeAsync();
-
-            //if (MainDock.OpenComparisons.ContainsKey(fullPath))
-            //    MainDock.SourceControl.Compare(fullPath, false); //Or check for violation
-
-            if (Search(path) is {} entry) //NOT Ignored
-                if (entry is IFile file)
-                {
-                    var fileDate = File.GetLastWriteTime(path);
-                    if (file.LastSaveTime >= fileDate) return;
-                    
-                    var fileOpen = _dockService.OpenFiles.ContainsKey(file);
-                        
-                    if (!fileOpen) return;
-                       
-                    if (fileOpen && _settingsService.GetSettingValue<bool>("Editor_NotifyExternalChanges"))
-                    {
-                        var result = await _windowService.ShowYesNoAsync("Warning",
-                            $"{entry.RelativePath} has been modified by another program. Would you like to reload it?",
-                            MessageBoxIcon.Warning, _dockService.GetWindowOwner(this));
-                        if (result != MessageBoxStatus.Yes) return;
-                    }
-                    else
-                    {
-                        await Task.Delay(100);
-                    }
-
-                    _ = ReloadAsync(entry);
-                }
-        }
-        catch (Exception ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(ex.Message, ex);
-        }
-    }
-    
     #endregion
     
     #region Copy and Paste

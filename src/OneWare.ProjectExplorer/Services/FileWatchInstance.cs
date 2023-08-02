@@ -1,6 +1,7 @@
 ﻿using Avalonia.Threading;
 using OneWare.Shared;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 
@@ -14,7 +15,8 @@ public class FileWatchInstance : IDisposable
     private DispatcherTimer? _timer;
     private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
 
-    public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService, IDockService dockService, ISettingsService settingsService, ILogger logger)
+    public FileWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
+        IDockService dockService, ISettingsService settingsService, ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
@@ -48,7 +50,6 @@ public class FileWatchInstance : IDisposable
                 });
                 _timer.Start();
             });
-
         }
         catch (Exception e)
         {
@@ -68,7 +69,7 @@ public class FileWatchInstance : IDisposable
 
     private void ProcessChanges()
     {
-        foreach(var change in _changes)
+        foreach (var change in _changes)
         {
             _ = ProcessAsync(change.Key, change.Value);
         }
@@ -79,65 +80,88 @@ public class FileWatchInstance : IDisposable
 
     private async Task ProcessAsync(string path, IReadOnlyCollection<FileSystemEventArgs> changes)
     {
-        var entry = _root.Search(path);
-
-        var lastArg = changes.Last();
-        
-        if (entry is not null)
+        try
         {
-            switch (lastArg.ChangeType)
+            var entry = _root.Search(path);
+
+            var lastArg = changes.Last();
+
+            if (entry is not null)
             {
-                case WatcherChangeTypes.Created:
-                case WatcherChangeTypes.Renamed:
-                case WatcherChangeTypes.Changed:
-                    if (entry is IFile file)
-                    {
-                        if(File.GetLastWriteTime(file.FullPath) > file.LastSaveTime)
-                            await _projectExplorerService.ReloadAsync(entry);
-                    }
-                    else await _projectExplorerService.ReloadAsync(entry);
-                    return;
-                case WatcherChangeTypes.Deleted:
-                    await _projectExplorerService.DeleteAsync(entry);
-                    return;
+                switch (lastArg.ChangeType)
+                {
+                    case WatcherChangeTypes.Created:
+                    case WatcherChangeTypes.Renamed:
+                    case WatcherChangeTypes.Changed:
+                        if (entry is IFile file)
+                        {
+                            if (File.GetLastWriteTime(file.FullPath) > file.LastSaveTime)
+                                await _projectExplorerService.ReloadAsync(entry);
+
+                            if (file is IProjectFile { Root: IProjectRootWithFile rootWithFile } &&
+                                rootWithFile.ProjectFilePath == file.FullPath)
+                            {
+                                await _projectExplorerService.ReloadAsync(rootWithFile);
+                            }
+                        }
+                        else await _projectExplorerService.ReloadAsync(entry);
+
+                        return;
+                    case WatcherChangeTypes.Deleted:
+                        await _projectExplorerService.DeleteAsync(entry);
+                        return;
+                }
+            }
+
+            if (entry is null)
+            {
+                if (_projectExplorerService.Items.FirstOrDefault(x => x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is IProjectRoot root)
+                {
+                    await _projectExplorerService.ReloadAsync(root);
+                }
+
+                var relativePath = Path.GetRelativePath(_root.FullPath, path);
+
+                switch (lastArg.ChangeType)
+                {
+                    case WatcherChangeTypes.Renamed:
+                        if (lastArg is RenamedEventArgs { Name: not null, OldFullPath: not null } renamedEventArgs &&
+                            _root.Search(renamedEventArgs.OldFullPath) is { } oldEntry)
+                        {
+                            if (oldEntry is IProjectFile file)
+                            {
+                                _dockService.OpenFiles.TryGetValue(file, out var tab);
+                                await _projectExplorerService.RemoveAsync(oldEntry);
+                                var newItem = _root.AddFile(relativePath);
+                                if (tab is IEditor editor) editor.FullPath = newItem.FullPath;
+                                tab?.InitializeContent();
+                            }
+                            else
+                            {
+                                await _projectExplorerService.RemoveAsync(oldEntry);
+                                var folder = _root.AddFolder(relativePath);
+                                _projectExplorerService.ImportFolderRecursive(path, folder);
+                            }
+                        }
+
+                        return;
+                    case WatcherChangeTypes.Created:
+                    case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
+                        var attr = File.GetAttributes(path);
+
+                        if (attr.HasFlag(FileAttributes.Hidden)) return;
+
+                        if (attr.HasFlag(FileAttributes.Directory))
+                            _root.AddFolder(relativePath);
+                        else
+                            _root.AddFile(relativePath);
+                        return;
+                }
             }
         }
-
-        if (entry is null)
+        catch (Exception e)
         {
-            var relativePath = Path.GetRelativePath(_root.ProjectPath, path);
-            
-            switch (lastArg.ChangeType)
-            {
-                case WatcherChangeTypes.Renamed:
-                    if (lastArg is RenamedEventArgs {Name: not null, OldFullPath: not null} renamedEventArgs && _root.Search(renamedEventArgs.OldFullPath) is {} oldEntry)
-                    {
-                        if (oldEntry is IProjectFile file)
-                        {
-                            _dockService.OpenFiles.TryGetValue(file, out var tab);
-                            await _projectExplorerService.RemoveAsync(oldEntry);
-                            var newItem = _root.AddFile(relativePath);
-                            if (tab is IEditor editor) editor.FullPath = newItem.FullPath;
-                            tab?.InitializeContent();
-                        }
-                        else
-                        {
-                            await _projectExplorerService.RemoveAsync(oldEntry);
-                            var folder = _root.AddFolder(relativePath);
-                            _projectExplorerService.ImportFolderRecursive(path, folder);
-                        }
-                    }
-                    return;
-                case WatcherChangeTypes.Created:
-                case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
-                    var attr = File.GetAttributes(path);
-                    
-                    if (attr.HasFlag(FileAttributes.Directory))
-                        _root.AddFolder(relativePath);
-                    else
-                        _root.AddFile(relativePath);
-                    return;
-            }
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
         }
     }
 

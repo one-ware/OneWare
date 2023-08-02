@@ -9,7 +9,7 @@ using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class UniversalFpgaProjectRoot : ProjectRoot
+public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
 {
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
