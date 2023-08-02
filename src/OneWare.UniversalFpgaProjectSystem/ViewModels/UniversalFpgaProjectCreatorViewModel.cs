@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using OneWare.Settings;
@@ -80,8 +81,13 @@ public class UniversalFpgaProjectCreatorViewModel : ObservableObject
             }
         
             var projectFile = Path.Combine(folder, name + UniversalFpgaProjectRoot.ProjectFileExtension);
-            
-            var root = new UniversalFpgaProjectRoot(projectFile, JsonDocument.Parse("{}"));
+
+            var defaultProperties = new JsonObject()
+            {
+                ["Include"] = new JsonArray("*.vhd", "*.vhdl", "*.v"),
+                ["Exclude"] = new JsonArray("bin"),
+            };
+            var root = new UniversalFpgaProjectRoot(projectFile, defaultProperties);
 
             await _manager.SaveProjectAsync(root);
             

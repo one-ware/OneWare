@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Dock.Model.Controls;
+using Dock.Model.Core;
 using DynamicData.Binding;
 using OneWare.SearchList.Models;
 using OneWare.Shared;
@@ -14,7 +16,6 @@ namespace OneWare.SearchList.ViewModels
         public const string IconKey = "VsImageLib.Search16XMd";
         
         private IDockService _dockService;
-        private ISettingsService _settingsService;
         private IProjectExplorerService _projectExplorerService;
         
         private CancellationTokenSource? _lastCancellationToken;
@@ -38,6 +39,7 @@ namespace OneWare.SearchList.ViewModels
         }
 
         private bool _caseSensitive;
+        [DataMember]
         public bool CaseSensitive
         {
             get => _caseSensitive;
@@ -45,6 +47,7 @@ namespace OneWare.SearchList.ViewModels
         }
 
         private bool _wholeWord;
+        [DataMember]
         public bool WholeWord
         {
             get => _wholeWord;
@@ -52,6 +55,7 @@ namespace OneWare.SearchList.ViewModels
         }
 
         private bool _useRegex;
+        [DataMember]
         public bool UseRegex
         {
             get => _useRegex;
@@ -59,31 +63,22 @@ namespace OneWare.SearchList.ViewModels
         }
 
         private int _searchListFilterMode = 1;
+        [DataMember]
         public int SearchListFilterMode
         {
             get => _searchListFilterMode;
             set => SetProperty(ref _searchListFilterMode, value);
         }
 
-        public SearchListViewModel(IDockService dockService, ISettingsService settingsService, IProjectExplorerService projectExplorerService) : base(IconKey)
+        public SearchListViewModel(IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
         {
             _dockService = dockService;
-            _settingsService = settingsService;
             _projectExplorerService = projectExplorerService;
-
-            settingsService.Bind("SearchList_FilterMode", this.WhenValueChanged(x => x.SearchListFilterMode))
-                .Subscribe(x => SearchListFilterMode = x);
-            
-            this.WhenValueChanged(x => x.SearchListFilterMode).Subscribe(x =>
-            {
-                Search(LastSearchString);
-                _settingsService.SetSettingValue("SearchList_FilterMode", x);
-            });
 
             Title = "Search";
             Id = "Search";
         }
-
+        
         public void Search(string searchText)
         {
             Items.Clear();
@@ -227,6 +222,9 @@ namespace OneWare.SearchList.ViewModels
             if (SelectedItem?.File == null) return;
 
             if(await _dockService.OpenFileAsync(SelectedItem.File) is not IEditor evb) return;
+
+            if(_dockService.GetWindowOwner(this) is IHostWindow);
+                _dockService.CloseDockable(this);
             
             //JUMP TO LINE
             if (SelectedItem.Line > 0)

@@ -40,5 +40,6 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     {
         if (entry is ProjectFile file) Files.Remove(file);
     }
-    
+
+    public abstract bool IsPathIncluded(string path);
 }

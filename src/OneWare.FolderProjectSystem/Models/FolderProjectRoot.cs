@@ -34,5 +34,9 @@ public class FolderProjectRoot : ProjectRoot
             }
         });
     }
-
+    
+    public override bool IsPathIncluded(string path)
+    {
+        return true;
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO.Enumeration;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -56,7 +57,7 @@ namespace OneWare.Shared
 
             return true;
         }
-        
+
         public static string NormalizePath(string path)
         {
             return Path.GetFullPath(new Uri(path).LocalPath)
@@ -111,33 +112,32 @@ namespace OneWare.Shared
 
         public static void CopyDirectory(string sourcePath, string destPath)
         {
-            if (!Directory.Exists(destPath)) Directory.CreateDirectory(destPath);
+            // Get information about the source directory
+            var dir = new DirectoryInfo(sourcePath);
 
-            foreach (var file in Directory.GetFiles(sourcePath))
+            // Check if the source directory exists
+            if (!dir.Exists)
+                throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+            // Cache directories before we start copying
+            var dirs = dir.GetDirectories();
+
+            // Create the destination directory
+            Directory.CreateDirectory(destPath);
+
+            // Get the files in the source directory and copy to the destination directory
+            foreach (var file in dir.GetFiles())
             {
-                var dest = Path.Combine(destPath, Path.GetFileName(file));
-                File.Copy(file, dest);
+                var targetFilePath = Path.Combine(destPath, file.Name);
+                file.CopyTo(targetFilePath);
             }
 
-            foreach (var folder in Directory.GetDirectories(sourcePath))
+            // If recursive and copying subdirectories, recursively call this method
+            foreach (DirectoryInfo subDir in dirs)
             {
-                var dest = Path.Combine(destPath, Path.GetFileName(folder));
-                CopyDirectory(folder, dest);
+                var newDestinationDir = Path.Combine(destPath, subDir.Name);
+                CopyDirectory(subDir.FullName, newDestinationDir);
             }
-        }
-
-        public static T? VisualUpwardSearch<T>(Interactive? source)
-        {
-            while (source != null && !(source is T)) source = source.GetInteractiveParent();
-            if (source == null) return default;
-            return (T) Convert.ChangeType(source, typeof(T));
-        }
-
-        private static string RepeatChar(int number, char c)
-        {
-            var returnString = "";
-            for (var j = 0; j < number; j++) returnString += c;
-            return returnString;
         }
 
         public static bool IsValidFileName(string name)
@@ -153,11 +153,6 @@ namespace OneWare.Shared
         public static bool IsFontInstalled(string fontName)
         {
             return FontManager.Current.SystemFonts.Contains(fontName);
-        }
-
-        public static bool IsValidDirectory(string path)
-        {
-            return Directory.Exists(path);
         }
 
         public static void ExecBash(string cmd)

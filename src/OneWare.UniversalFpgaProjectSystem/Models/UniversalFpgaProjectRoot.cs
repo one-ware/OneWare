@@ -1,8 +1,10 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
 using OneWare.ProjectSystem.Models;
 using OneWare.Shared;
 using OneWare.Shared.Converters;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using Prism.Ioc;
@@ -17,13 +19,23 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     public override string ProjectPath => ProjectFilePath;
     public override string ProjectTypeId => ProjectType;
     public string ProjectFilePath { get; }
-    public JsonDocument Properties { get; }
+    public JsonObject Properties { get; }
 
-    public UniversalFpgaProjectRoot(string projectFilePath, JsonDocument properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
+    public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;
         Properties = properties;
         
         Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
+    }
+    
+    public override bool IsPathIncluded(string path)
+    {
+        var relativePath = Path.GetRelativePath(FullPath, path);
+        
+        var includes = Properties?["Include"].Deserialize<string[]>();
+        var excludes = Properties?["Exclude"].Deserialize<string[]>();
+        
+        return ProjectHelpers.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
     }
 }

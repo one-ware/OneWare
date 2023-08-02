@@ -17,9 +17,7 @@ namespace OneWare.SearchList.Views
             {
                 if (DataContext is SearchListViewModel evm) evm.Search(Search.SearchText);
             };
-
-            SearchList.AddHandler(DoubleTappedEvent, Open_SearchResult, RoutingStrategies.Bubble);
-
+            
             KeyDown += (o, i) =>
             {
                 if (i.Key == Key.Escape) (VisualRoot as Window)?.Close();
@@ -39,14 +37,6 @@ namespace OneWare.SearchList.Views
         {
             await Task.Delay(100);
             Search.Focus();
-        }
-
-        /// <summary>
-        /// Double tapped event
-        /// </summary>
-        public void Open_SearchResult(object? sender, RoutedEventArgs e)
-        {
-            (DataContext as SearchListViewModel)?.GoToSearchResultAsync();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Avalonia.Threading;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
@@ -140,7 +141,7 @@ public class FileWatchInstance : IDisposable
                             {
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 var folder = _root.AddFolder(relativePath);
-                                _projectExplorerService.ImportFolderRecursive(path, folder);
+                                ProjectHelpers.ImportEntries(path, folder);
                             }
                         }
 

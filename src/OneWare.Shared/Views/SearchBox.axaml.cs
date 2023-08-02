@@ -59,8 +59,9 @@ namespace OneWare.Shared.Views
 
         protected override Type StyleKeyOverride => typeof(SearchBox);
 
-        private void SearchTextBoxFocus(object? sender, GotFocusEventArgs e)
+        protected override void OnGotFocus(GotFocusEventArgs e)
         {
+            SearchTextBox.Focus();
             SearchTextBox.SelectAll();
         }
 

@@ -145,20 +145,12 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
     public void AddProject(IProjectRoot project)
     {
-        //AllServers.Add(new LanguageServiceVhdl(project.ProjectPath));
-        //AllServers.Add(new LanguageServiceVerilog(project.ProjectPath));
-        //AllServers.Add(new LanguageServiceSystemVerilog(project.ProjectPath));
+        
     }
 
     public void RemoveProject(IProjectRoot project)
     {
-        // var remove = _workspaceServers.SelectMany(x => x.Value.Where(x => x.Key == project.RootFolderPath));
-        //
-        // foreach (var r in remove)
-        // {
-        //     _workspaceServers.Remove(r.Key);
-        //     _ = r.Value.DeactivateAsync();
-        // }
+        
     }
 
     public async Task CleanResourcesAsync()

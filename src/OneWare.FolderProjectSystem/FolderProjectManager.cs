@@ -1,5 +1,6 @@
 ﻿using OneWare.FolderProjectSystem.Models;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
@@ -7,12 +8,10 @@ namespace OneWare.FolderProjectSystem;
 
 public class FolderProjectManager : IProjectManager
 {
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly ILogger _logger;
 
-    public FolderProjectManager(IProjectExplorerService projectExplorerService, ILogger logger)
+    public FolderProjectManager(ILogger logger)
     {
-        _projectExplorerService = projectExplorerService;
         _logger = logger;
     }
 
@@ -26,7 +25,7 @@ public class FolderProjectManager : IProjectManager
         var root = new FolderProjectRoot(path);
         try
         {
-            _projectExplorerService.ImportFolderRecursive(path, root);
+            ProjectHelpers.ImportEntries(path, root);
         }
         catch (Exception e)
         {

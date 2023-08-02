@@ -11,6 +11,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public ObservableCollection<IProjectEntry> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
     public event EventHandler<IFile>? FileRemoved;
+    public event EventHandler<IProjectRoot>? ProjectRemoved;
     public void Insert(IProjectEntry entry);
     public Task RemoveAsync(params IProjectEntry[] entries);
     public Task DeleteAsync(params IProjectEntry[] entries);
@@ -22,7 +23,6 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectEntry entry);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
-    public void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude);
     public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
     public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();

@@ -31,7 +31,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    _ = vm.ImportStorageItemsAsync(targetParent, files.ToArray());
+                    vm.Import(targetParent, files.Select(x => x.TryGetLocalPath()).Where(x => x != null).Cast<string>().ToArray());
                 }
                 return true;
             }
@@ -83,6 +83,9 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 }
                 case DragDropEffects.Move:
                 {
+                    if (sourceNode.FullPath == targetParent.FullPath) 
+                        return false;
+                    
                     if (bExecute)
                     {
                         try
@@ -111,7 +114,6 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                     {
                         
                     }
-
                     return true;
                 }
             }

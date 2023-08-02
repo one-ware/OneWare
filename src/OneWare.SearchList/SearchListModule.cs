@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.SearchList.ViewModels;
 using Prism.Ioc;
@@ -27,13 +28,15 @@ public class SearchListModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<ISettingsService>().Register("SearchList_FilterMode", 0);
+        var hotkey = new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Shift);
         
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey)
+            ImageIconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey),
+            InputGesture = hotkey,
+            HotKey = hotkey,
         });
     }
 }

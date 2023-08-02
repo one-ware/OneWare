@@ -166,6 +166,13 @@ namespace OneWare.ErrorList.ViewModels
                     Clear(x.EventArgs);
                 });
             
+            Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
+                nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(
+                x =>
+                {
+                    Clear(x.EventArgs);
+                });
+            
             _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
                 .Subscribe(x => ErrorListFilterMode = x);
 

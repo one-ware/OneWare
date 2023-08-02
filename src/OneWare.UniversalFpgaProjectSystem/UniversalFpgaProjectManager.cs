@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -38,6 +39,10 @@ public class UniversalFpgaProjectManager : IProjectManager
     public Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         var root = UniversalFpgaProjectParser.Deserialize(path);
+        
+        if(root != null)
+            ProjectHelpers.ImportEntries(root.FullPath, root);
+        
         return Task.FromResult<IProjectRoot?>(root);
     }
 

@@ -917,7 +917,7 @@ namespace OneWare.SourceControl.ViewModels
                         File.Delete(path);
                         if (ProjectExplorerService.ActiveProject?.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
                                 path)) is IProjectFile file)
-                            file.TopFolder?.Remove(file);
+                            _ = ProjectExplorerService.RemoveAsync(file);
                     }
                     catch (Exception e)
                     {

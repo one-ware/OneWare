@@ -16,4 +16,6 @@ public interface ILanguageManager : INotifyPropertyChanged
     public void RegisterStandaloneTypeAssistance(Type type, params string[] supportedFileTypes);
     public ILanguageService? GetLanguageService(IFile file);
     public ITypeAssistance? GetTypeAssistance(IEditor editor);
+    public void AddProject(IProjectRoot project);
+    public void RemoveProject(IProjectRoot project);
 }

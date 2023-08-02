@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Windows.Input;
 using Avalonia;
@@ -28,6 +29,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IWindowService _windowService;
     private readonly IProjectManagerService _projectManagerService;
     private readonly IFileWatchService _fileWatchService;
+    private readonly ILanguageManager _languageManager;
     
     private readonly string _lastProjectsFile;
 
@@ -57,9 +59,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public Action<Action<string>>? RequestRename { get; set; }
 
     public event EventHandler<IFile>? FileRemoved;
+    public event EventHandler<IProjectRoot>? ProjectRemoved;
 
     public ProjectExplorerViewModel(IActive active, IPaths paths, IDockService dockService, IWindowService windowService, ISettingsService settingsService, 
-        IProjectManagerService projectManagerService, IFileWatchService fileWatchService)
+        IProjectManagerService projectManagerService, IFileWatchService fileWatchService, ILanguageManager languageManager)
     : base(IconKey)
     {
         Active = active;
@@ -69,6 +72,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _settingsService = settingsService;
         _projectManagerService = projectManagerService;
         _fileWatchService = fileWatchService;
+        _languageManager = languageManager;
         
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
@@ -221,6 +225,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (entry is IProjectRoot root)
         {
             _fileWatchService.Register(root);
+            _languageManager.AddProject(root);
         }
     }
 
@@ -319,14 +324,16 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 if(!await _dockService.CloseFileAsync(tab.Key)) return;
             }
-            
+
+            ProjectRemoved?.Invoke(this, proj);
             _fileWatchService.Unregister(proj);
+            _languageManager.RemoveProject(proj);
 
             var activeProj = proj == ActiveProject;
                 
             Items.Remove(proj);
 
-            if (Items.Count == 0) //Avalonia bug fix
+            if (Items.Count == 0) //Avalonia bugfix
             {
                 SelectedItems.Clear();
             }
@@ -398,47 +405,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     #endregion
     
     #region Import
-    public async Task ImportStorageItemsAsync(IProjectFolder parent, params IStorageItem[] storageItems)
-    {
-        foreach (var f in storageItems)
-        {
-            var path = f.TryGetLocalPath();
-            if (path == null) continue;
-            var fileName = Path.GetFileName(path);
-            var attr = File.GetAttributes(path);
 
-            if (attr.HasFlag(FileAttributes.Directory))
-            {
-                var folder = parent.AddFolder(fileName);
-                ImportFolderRecursive(path, folder);
-            }
-            else
-            {
-                // if (File.Exists(path))
-                // {
-                //     var newName = await _windowService.ShowInputAsync("Copy File", $"Enter a new name for {fileName}", MessageBoxIcon.Info,
-                //         fileName, _dockService.GetWindowOwner(this));
-                //
-                //     if(newName == null) continue;
-                //     
-                //     var newPath = Path.Combine(Path.GetDirectoryName(path) ?? "", newName);
-                //     try
-                //     {
-                //         Tools.CopyFile(path, newPath);
-                //         path = newPath;
-                //     }
-                //     catch (Exception e)
-                //     {
-                //         ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-                //         continue;
-                //     }
-                // }
-                parent.ImportFile(path);
-            }
-                
-        }    
-    }
-    
     public async Task ImportFolderDialogAsync(IProjectFolder? destination = null)
     {
         destination ??= ActiveProject;
@@ -451,39 +418,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
             
-        var paths = await Tools.SelectFoldersAsync(_dockService.GetWindowOwner(this), "Import Folders to " + destination.Header,
+        var folders = await Tools.SelectFoldersAsync(_dockService.GetWindowOwner(this)!, "Import Folders to " + destination.Header,
             destination.FullPath);
 
-        foreach (var path in paths)
-        {
-            var folder = destination.AddFolder(Path.GetFileName(path));
-            ImportFolderRecursive(path, folder);
-        }
-            
-        //await destination.Root.SaveProjectAsync();
-        //await destination.Root.ResolveAsync();
-    }
-
-    public void ImportFolderRecursive(string source, IProjectFolder destination, params string[] exclude)
-    {
-        var entries = Directory.GetFileSystemEntries(source);
-        foreach (var entry in entries)
-        {
-            var attr = File.GetAttributes(entry);
-            if (attr.HasFlag(FileAttributes.Hidden)) continue;
-            if (exclude.Contains(Path.GetFileName(entry)) || exclude.Contains(entry)) continue;
-
-            if (attr.HasFlag(FileAttributes.Directory))
-            {
-                if(entry.EqualPaths(destination.FullPath)) continue;
-                var folder = destination.AddFolder(Path.GetFileName(entry));
-                ImportFolderRecursive(entry, folder, exclude);
-            }
-            else
-            {
-                destination.ImportFile(entry);
-            }
-        }
+        Import(destination, folders.ToArray());
     }
 
     public async Task ImportFileDialogAsync(IProjectFolder? destination = null)
@@ -500,16 +438,35 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         var files = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this)!, "Import Files to " + destination.Header,
             destination.FullPath);
-
-        if (!files.Any()) return;
-            
-        //After Dialog closes
-        foreach (var path in files) destination.ImportFile(path);
-
-        //await destination.Root.SaveProjectAsync();
-        //await destination.Root.ResolveAsync();
+        
+        Import(destination, files.ToArray());
     }
-    
+
+    public void Import(IProjectFolder destination, params string[] paths)
+    {
+        foreach (var path in paths)
+        {
+            if(path == destination.FullPath) continue;
+            
+            try
+            {
+                var attr = File.GetAttributes(path);
+                if (attr.HasFlag(FileAttributes.Directory))
+                {
+                    Tools.CopyDirectory(path, Path.Combine(destination.FullPath,Path.GetFileName(path)).CheckNameDirectory());
+                }
+                else
+                {
+                    Tools.CopyFile(path, Path.Combine(destination.FullPath,Path.GetFileName(path)).CheckNameFile());
+                }
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            }
+        }
+    }
+
     #endregion
     
     #region File Change
@@ -626,18 +583,28 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         await clipboard.SetDataObjectAsync(dataObject);
     }
 
-    public static async Task<DataObject?> GetDataObjectFromItemsAsync(TopLevel topLevel, IEnumerable<IProjectEntry> items)
+    private const string CustomFileCopyFormat = "application/oneware-projectexplorer-copy";
+    
+    private static async Task<DataObject?> GetDataObjectFromItemsAsync(TopLevel topLevel, IEnumerable<IProjectEntry> items)
     {
-        var files = (await items
-                .SelectAsync(async x => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath)))
-            .Where(x => x != null)
-            .Cast<IStorageFile>()
-            .ToArray();
-        
-        if (!files.Any()) return null;
-        
         var dataObject = new DataObject();
-        dataObject.Set(DataFormats.Files, files);
+        
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var files = (await items
+                    .SelectAsync(async x => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath)))
+                .Where(x => x != null)
+                .Cast<IStorageFile>()
+                .ToArray();
+        
+            if (!files.Any()) return null;
+            
+            dataObject.Set(DataFormats.Files, files);
+        }
+        else
+        {
+            dataObject.Set(CustomFileCopyFormat, string.Join('|',items.Select(x => x.FullPath)));
+        }
         return dataObject;
     }
     
@@ -647,11 +614,30 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         
         var target = SelectedItem as IProjectFolder ?? SelectedItem?.TopFolder;
         if (target == null) return;
-        
-        var files = await clipboard.GetDataAsync(DataFormats.Files);
-        if (files is IEnumerable<IStorageItem> storageItems)
+
+        var formats = await clipboard.GetFormatsAsync();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            await ImportStorageItemsAsync(target, storageItems.ToArray());
+            var files = await clipboard.GetDataAsync(DataFormats.Files);
+            if (files is IEnumerable<IStorageItem> storageItems)
+            {
+                Import(target, storageItems
+                    .Select(x => x.TryGetLocalPath())
+                    .Where(x => x != null)
+                    .Cast<string>().ToArray());
+            }
+        }
+        else
+        {
+            var copyContext = await clipboard.GetDataAsync(CustomFileCopyFormat);
+            if (copyContext is byte[] {Length: > 0} byteArray)
+            {
+                var str = Encoding.Default.GetString(byteArray);
+                var files = str.Split('|');
+
+                Import(target, files);
+            }
         }
     }
     

@@ -167,7 +167,8 @@ namespace OneWare.Core
                 Header = $"Format",
                 ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
                 Command = new RelayCommand(() => Container.Resolve<MainWindowViewModel>().CurrentEditor?.Format()),
-                InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
+                InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
+                HotKey = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
             });
 
             //AvaloniaEdit Hyperlink support
