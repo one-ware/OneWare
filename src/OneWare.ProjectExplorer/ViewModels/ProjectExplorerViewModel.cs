@@ -110,6 +110,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     });
                     break;
                 case IProjectFolder folder:
+
+                    if (folder is IProjectRoot {IsActive: false} inactiveRoot)
+                    {
+                        menuItems.Add(new MenuItemModel("SetActive")
+                        {
+                            Header = "Set as Active Project",
+                            Command = new RelayCommand(() => ActiveProject = inactiveRoot),
+                            ImageIconObservable = Application.Current!.GetResourceObservable("VsCodeLight.Debug-Start")
+                        });    
+                    }
+                    
                     menuItems.Add(new MenuItemModel("Add")
                     {
                         Header = "Add",
