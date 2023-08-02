@@ -35,7 +35,6 @@ public static class ProjectHelpers
                 {
                     yield return subMatch;
                 }
-                continue;
             }
             
             var match = valid?.Invoke(path) ?? true;

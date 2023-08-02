@@ -33,8 +33,10 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         var relativePath = Path.GetRelativePath(FullPath, path);
         
-        var includes = Properties?["Include"].Deserialize<string[]>();
-        var excludes = Properties?["Exclude"].Deserialize<string[]>();
+        var includes = Properties["Include"].Deserialize<string[]>();
+        var excludes = Properties["Exclude"].Deserialize<string[]>();
+
+        if (includes == null && excludes == null) return true;
         
         return ProjectHelpers.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
     }
