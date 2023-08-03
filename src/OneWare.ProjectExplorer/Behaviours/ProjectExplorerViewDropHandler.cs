@@ -25,7 +25,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         if (targetParent == null) return false;
         
         //Import files or folders from outside
-        if (sourceContext is not T sourceNode)
+        if (sourceContext is not ICollection<T> sourceNodes)
         {
             if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
             {
@@ -42,45 +42,40 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             return false;
         }
         
-        var sourceParent = sourceNode.TopFolder;
-
-        if (sourceParent is null) return false;
-        
-        var sourceNodes = sourceParent.Items;
-        var targetNodes = targetParent.Items;
-
-        if (sourceNodes != targetNodes)
+        foreach (var sourceNode in sourceNodes)
         {
+            if (targetParent == sourceNode.TopFolder) return false;
+                
             if (sourceNode.FullPath == targetParent.FullPath) 
                 return false;
 
             if (sourceNode is IProjectFolder && targetParent.FullPath.StartsWith(sourceNode.FullPath))
                 return false;
-            
-            switch (e.DragEffects)
+        }
+
+        switch (e.DragEffects)
+        {
+            case DragDropEffects.Copy:
             {
-                case DragDropEffects.Copy:
+                if (bExecute)
                 {
-                    if (bExecute)
-                    {
-                        _ = vm.DropAsync(targetParent, true, true, sourceNode.FullPath);
-                    }
+                    _ = vm.DropAsync(targetParent, true, true, sourceNodes.Select(x => x.FullPath).ToArray());
+                }
 
-                    return true;
-                }
-                case DragDropEffects.Move:
+                return true;
+            }
+            case DragDropEffects.Move:
+            {
+                if (bExecute)
                 {
-                    if (bExecute)
-                    {
-                        _ = vm.DropAsync(targetParent, true, false, sourceNode.FullPath);
-                    }
+                    _ = vm.DropAsync(targetParent, true, false,sourceNodes.Select(x => x.FullPath).ToArray());
+                }
 
-                    return true;
-                }
-                case DragDropEffects.Link:
-                {
-                    return false;
-                }
+                return true;
+            }
+            case DragDropEffects.Link:
+            {
+                return false;
             }
         }
 

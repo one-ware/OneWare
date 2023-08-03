@@ -660,6 +660,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if(result is not MessageBoxStatus.Yes) return;
         }
         await ImportAsync(destination, copy, true, paths);
+        destination.IsExpanded = true;
     }
 
     public async Task CopyAsync(TopLevel topLevel)
@@ -730,6 +731,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 await ImportAsync(target, true, true, files);
             }
         }
+        target.IsExpanded = true;
     }
 
     #endregion

@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using Avalonia.Xaml.Interactivity;
 using OneWare.ProjectExplorer.ViewModels;
@@ -12,18 +13,12 @@ namespace OneWare.ProjectExplorer.Behaviours;
 /// <summary>
 /// 
 /// </summary>
-public class FileDragBehaviour : Behavior<Control>
+public class TreeDragBehaviour : Behavior<Control>
 {
     private Point _dragStartPoint;
     private PointerEventArgs? _triggerEvent;
     private bool _lock;
     private bool _captured;
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public static readonly StyledProperty<object?> ContextProperty =
-        AvaloniaProperty.Register<ContextDragBehavior, object?>(nameof(Context));
 
     /// <summary>
     /// 
@@ -42,15 +37,7 @@ public class FileDragBehaviour : Behavior<Control>
     /// </summary>
     public static readonly StyledProperty<double> VerticalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(VerticalDragThreshold), 3);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public object? Context
-    {
-        get => GetValue(ContextProperty);
-        set => SetValue(ContextProperty, value);
-    }
+    
 
     /// <summary>
     /// 
@@ -152,6 +139,10 @@ public class FileDragBehaviour : Behavior<Control>
                 _triggerEvent = e;
                 _lock = true;
                 _captured = true;
+                
+                //Manipulate selection behaviour. Remove once fixed by avalonia
+                var treeView = control.FindLogicalAncestorOfType<TreeView>();
+                if (treeView?.SelectedItems.Count > 1 && e.KeyModifiers == KeyModifiers.None) e.Handled = true;
             }
         }
     }
@@ -160,9 +151,24 @@ public class FileDragBehaviour : Behavior<Control>
     {
         if (_captured)
         {
-            if (e.InitialPressMouseButton == MouseButton.Left && _triggerEvent is { })
+            if (e.InitialPressMouseButton == MouseButton.Left && _triggerEvent is not null)
             {
                 Released();
+                if (e.Source is Control control
+                    && AssociatedObject?.DataContext == control.DataContext)
+                {
+                    _dragStartPoint = e.GetPosition(null);
+                    _triggerEvent = e;
+                    _lock = true;
+                    _captured = true;
+                    
+                    //Manipulate selection behaviour. Remove once fixed by avalonia
+                    var treeView = control.FindLogicalAncestorOfType<TreeView>();
+                    if (treeView != null && e.KeyModifiers == KeyModifiers.None)
+                    {
+                        treeView.SelectedItem = AssociatedObject!.DataContext;
+                    }
+                }
             }
 
             _captured = false;
@@ -192,7 +198,7 @@ public class FileDragBehaviour : Behavior<Control>
                     return;
                 }
 
-                var context = Context ?? AssociatedObject?.DataContext;
+                var context = AssociatedObject.FindLogicalAncestorOfType<TreeView>()?.SelectedItems;
                     
                 Handler?.BeforeDragDrop(sender, _triggerEvent, context);
 

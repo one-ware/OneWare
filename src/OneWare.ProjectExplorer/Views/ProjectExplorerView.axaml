@@ -64,7 +64,7 @@
                     <Setter Property="Interaction.Behaviors">
                         <BehaviorCollectionTemplate>
                             <BehaviorCollection>
-                                <behaviours1:FileDragBehaviour />
+                                <behaviours1:TreeDragBehaviour />
                             </BehaviorCollection>
                         </BehaviorCollectionTemplate>
                     </Setter>
