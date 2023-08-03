@@ -6,7 +6,7 @@ public static class ProjectHelpers
 {
     public static void ImportEntries(string source, IProjectFolder destination)
     {
-        var matches = GetFileMatches(source, destination.Root.IsPathIncluded);
+        var matches = GetFileMatches(source, x => destination.Root.IsPathIncluded(Path.GetRelativePath(destination.Root.FullPath, x)));
 
         foreach (var match in matches)
         {

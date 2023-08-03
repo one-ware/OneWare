@@ -1,23 +1,36 @@
 ﻿using OneWare.Shared;
-using OneWare.Shared.Services;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class FileWatchService : IFileWatchService
 {
-    private readonly Dictionary<IProjectRoot, FileWatchInstance> _fileWatcher = new();
+    private readonly Dictionary<IFile, FileWatchInstance> _fileWatchInstances = new();
+    private readonly Dictionary<IProjectRoot, ProjectWatchInstance> _projectFileWatcher = new();
+
+    public void Register(IFile file)
+    {
+        if (_fileWatchInstances.ContainsKey(file)) return;
+        _fileWatchInstances.Add(file, ContainerLocator.Container.Resolve<FileWatchInstance>((file.GetType(), file)));
+    }
+
+    public void Unregister(IFile file)
+    {
+        _fileWatchInstances.TryGetValue(file, out var watcher);
+        _fileWatchInstances.Remove(file);
+        watcher?.Dispose();
+    }
 
     public void Register(IProjectRoot project)
     {
-        if (_fileWatcher.ContainsKey(project)) return;
-        _fileWatcher.Add(project, ContainerLocator.Container.Resolve<FileWatchInstance>((project.GetType(), project)));
+        if (_projectFileWatcher.ContainsKey(project)) return;
+        _projectFileWatcher.Add(project, ContainerLocator.Container.Resolve<ProjectWatchInstance>((project.GetType(), project)));
     }
 
     public void Unregister(IProjectRoot project)
     {
-        _fileWatcher.TryGetValue(project, out var watcher);
-        _fileWatcher.Remove(project);
+        _projectFileWatcher.TryGetValue(project, out var watcher);
+        _projectFileWatcher.Remove(project);
         watcher?.Dispose();
     }
 }

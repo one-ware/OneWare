@@ -36,7 +36,6 @@ public class SearchListModule : IModule
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
             ImageIconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey),
             InputGesture = hotkey,
-            HotKey = hotkey,
         });
     }
 }

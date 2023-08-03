@@ -24,6 +24,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public void ExpandToRoot(IProjectEntry entry);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
     public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
+    public Task SaveProjectAsync(IProjectRoot project);
     public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();
 }

@@ -7,5 +7,6 @@ public interface IProjectRoot : IProjectFolder
     public string RootFolderPath { get; }
     List<IProjectFile> Files { get; }
     public bool IsActive { get; set; }
-    public bool IsPathIncluded(string path);
+    public bool IsPathIncluded(string relativePath);
+    public void IncludePath(string path);
 }

@@ -18,14 +18,12 @@ public class UniversalFpgaProjectManager : IProjectManager
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
-    private readonly ILogger _logger;
     
-    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService, ILogger logger)
+    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _windowService = windowService;
-        _logger = logger;
     }
 
     public async Task NewProjectDialogAsync()
@@ -36,19 +34,19 @@ public class UniversalFpgaProjectManager : IProjectManager
         });
     }
     
-    public Task<IProjectRoot?> LoadProjectAsync(string path)
+    public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        var root = UniversalFpgaProjectParser.Deserialize(path);
+        var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
         
         if(root != null)
             ProjectHelpers.ImportEntries(root.FullPath, root);
         
-        return Task.FromResult<IProjectRoot?>(root);
+        return root;
     }
 
-    public Task<bool> SaveProjectAsync(IProjectRoot root)
+    public async Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return Task.FromResult(root is UniversalFpgaProjectRoot uFpga && UniversalFpgaProjectParser.Serialize(uFpga));
+        return root is UniversalFpgaProjectRoot uFpga && await UniversalFpgaProjectParser.SerializeAsync(uFpga);
     }
 
     public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)

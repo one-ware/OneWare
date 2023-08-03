@@ -39,4 +39,9 @@ public class FolderProjectRoot : ProjectRoot
     {
         return true;
     }
+
+    public override void IncludePath(string path)
+    {
+        //Not needed
+    }
 }

@@ -130,6 +130,7 @@ namespace OneWare.Shared
             {
                 var targetFilePath = Path.Combine(destPath, file.Name);
                 file.CopyTo(targetFilePath);
+                ChmodFile(targetFilePath);
             }
 
             // If recursive and copying subdirectories, recursively call this method

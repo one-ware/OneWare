@@ -53,13 +53,6 @@ namespace OneWare.Shared.Models
                 _subscription = value?.Subscribe(x => ImageIcon = x as IImage);
             }
         }
-
-        private KeyGesture? _hotKey;
-        public KeyGesture? HotKey
-        {
-            get => _hotKey;
-            set => SetProperty(ref _hotKey, value);
-        }
         
         private KeyGesture? _inputGesture;
         public KeyGesture? InputGesture

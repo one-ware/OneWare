@@ -31,7 +31,11 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    vm.Import(targetParent, files.Select(x => x.TryGetLocalPath()).Where(x => x != null).Cast<string>().ToArray());
+                    _ = vm.ImportAsync(targetParent, true, true, files
+                        .Select(x => x.TryGetLocalPath())
+                        .Where(x => x != null)
+                        .Cast<string>()
+                        .ToArray());
                 }
                 return true;
             }
@@ -47,74 +51,32 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
 
         if (sourceNodes != targetNodes)
         {
-            // var sourceIndex = sourceNodes.IndexOf(sourceNode);
-            // var targetIndex = targetNodes.IndexOf(targetNode);
-            //
-            // if (sourceIndex < 0 || targetIndex < 0)
-            // {
-            //     return false;
-            // }
-
+            if (sourceNode.FullPath == targetParent.FullPath) 
+                return false;
+            
             switch (e.DragEffects)
             {
                 case DragDropEffects.Copy:
                 {
                     if (bExecute)
                     {
-                        try
-                        {
-                            switch (sourceNode)
-                            {
-                                case IProjectFile:
-                                    Tools.CopyFile(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
-                                    break;
-                                case IProjectFolder:
-                                    Tools.CopyDirectory(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
-                                    break;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ContainerLocator.Container.Resolve<ILogger>().Error(ex.Message, ex);
-                        }
+                        _ = vm.ImportAsync(targetParent, true, true, sourceNode.FullPath);
                     }
 
                     return true;
                 }
                 case DragDropEffects.Move:
                 {
-                    if (sourceNode.FullPath == targetParent.FullPath) 
-                        return false;
-                    
                     if (bExecute)
                     {
-                        try
-                        {
-                            switch (sourceNode)
-                            {
-                                case IProjectFile:
-                                    File.Move(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
-                                    break;
-                                case IProjectFolder:
-                                    Directory.Move(sourceNode.FullPath, Path.Combine(targetParent.FullPath, sourceNode.Header));
-                                    break;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ContainerLocator.Container.Resolve<ILogger>().Error(ex.Message, ex);
-                        }
+                        _ = vm.ImportAsync(targetParent, false, true, sourceNode.FullPath);
                     }
 
                     return true;
                 }
                 case DragDropEffects.Link:
                 {
-                    if (bExecute)
-                    {
-                        
-                    }
-                    return true;
+                    return false;
                 }
             }
         }

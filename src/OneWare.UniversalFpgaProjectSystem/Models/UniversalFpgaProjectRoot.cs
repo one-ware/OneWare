@@ -29,15 +29,21 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
         Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
     }
     
-    public override bool IsPathIncluded(string path)
+    public override bool IsPathIncluded(string relativePath)
     {
-        var relativePath = Path.GetRelativePath(FullPath, path);
-        
         var includes = Properties["Include"].Deserialize<string[]>();
         var excludes = Properties["Exclude"].Deserialize<string[]>();
 
         if (includes == null && excludes == null) return true;
         
         return ProjectHelpers.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
+    }
+
+    public override void IncludePath(string path)
+    {
+        if(!Properties.ContainsKey("Include")) 
+            Properties.Add("Include", new JsonArray());
+        
+        Properties["Include"]!.AsArray().Add(path);
     }
 }

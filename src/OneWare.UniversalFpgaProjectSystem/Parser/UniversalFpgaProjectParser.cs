@@ -20,13 +20,13 @@ public static class UniversalFpgaProjectParser
         AllowTrailingCommas = true
     };
     
-    public static UniversalFpgaProjectRoot? Deserialize(string path)
+    public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path)
     {
         try
         {
-            using var stream = File.OpenRead(path);
+            await using var stream = File.OpenRead(path);
 
-            var properties = JsonSerializer.Deserialize<JsonObject>(stream, SerializerOptions);
+            var properties = await JsonSerializer.DeserializeAsync<JsonObject>(stream, SerializerOptions);
 
             var root = new UniversalFpgaProjectRoot(path, properties!);
             return root;
@@ -38,14 +38,14 @@ public static class UniversalFpgaProjectParser
         }
     }
 
-    public static bool Serialize(UniversalFpgaProjectRoot root)
+    public static async Task<bool> SerializeAsync(UniversalFpgaProjectRoot root)
     {
         try
         {
-            using var stream = File.OpenWrite(root.ProjectFilePath);
+            await using var stream = File.OpenWrite(root.ProjectFilePath);
             stream.SetLength(0);
-
-            JsonSerializer.Serialize(stream, root.Properties, SerializerOptions);
+            await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
+            await stream.DisposeAsync();
             
             root.LastSaveTime = DateTime.Now;
             
