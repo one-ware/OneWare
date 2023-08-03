@@ -1,12 +1,16 @@
-﻿using Avalonia;
+﻿using System.Reactive.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels;
+using OneWare.UniversalFpgaProjectSystem.Views;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -22,14 +26,14 @@ public class UniversalFpgaProjectSystemModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
-        
+        var windowService = containerProvider.Resolve<IWindowService>();
         containerProvider
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
         
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/New",
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemModel("FpgaProject")
             {
                 Header = "Project",
@@ -37,7 +41,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                 ImageIcon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
         
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemModel("FpgaProject")
             {
                 Header = "Project",
@@ -48,5 +52,17 @@ public class UniversalFpgaProjectSystemModule : IModule
                 })),
                 ImageIcon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
+
+        var toolBarExtension = new UniversalFpgaProjectToolBarView()
+        {
+            DataContext = new UniversalFpgaProjectToolBarViewModel()
+        };
+
+        toolBarExtension.Bind(Visual.IsVisibleProperty, containerProvider
+            .Resolve<IProjectExplorerService>()
+            .WhenValueChanged(x => x.ActiveProject)
+            .Select(x => x is UniversalFpgaProjectRoot));
+        
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", toolBarExtension);
     }
 }

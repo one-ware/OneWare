@@ -142,6 +142,20 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                                 Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
                                 ImageIconObservable =
                                     Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
+                            },
+                            new MenuItemModel("ExistingFolder")
+                            {
+                                Header = "Import Folder",
+                                Command = new RelayCommand(() => _ = ImportFolderDialogAsync(folder)),
+                                ImageIconObservable =
+                                    Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
+                            },
+                            new MenuItemModel("ExistingFile")
+                            {
+                                Header = "Import File",
+                                Command = new RelayCommand(() => _ = ImportFileDialogAsync(folder)),
+                                ImageIconObservable =
+                                    Application.Current?.GetResourceObservable("VsImageLib.File16X")
                             }
                         }
                     });
