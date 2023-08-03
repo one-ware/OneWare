@@ -521,7 +521,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     if (askForInclude)
                         if(!await AskForIncludeDialogAsync(destination.Root,
                                Path.GetRelativePath(destination.Root.FullPath, destPath))) return;
-                    if (copy) File.Move(path, destPath);
+                    if (copy) Tools.CopyFile(path, destPath);
                     else File.Move(path, destPath);
                 }
             }
@@ -648,7 +648,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     #endregion
 
-    #region Copy and Paste
+    #region Copy and Paste, Drop Files
+
+    public async Task DropAsync(IProjectFolder destination, bool warning, bool copy, params string[] paths)
+    {
+        if (warning)
+        {
+            var action = (copy ? "copy" : "move");
+            var result = await _windowService.ShowYesNoAsync("Warning",
+                $"Are you sure you want to {action} {paths.Length} objects?", MessageBoxIcon.Warning);
+            if(result is not MessageBoxStatus.Yes) return;
+        }
+        await ImportAsync(destination, copy, true, paths);
+    }
 
     public async Task CopyAsync(TopLevel topLevel)
     {

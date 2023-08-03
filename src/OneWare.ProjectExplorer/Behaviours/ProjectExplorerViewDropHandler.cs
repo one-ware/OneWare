@@ -31,7 +31,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    _ = vm.ImportAsync(targetParent, true, true, files
+                    _ = vm.DropAsync(targetParent, false, true, files
                         .Select(x => x.TryGetLocalPath())
                         .Where(x => x != null)
                         .Cast<string>()
@@ -53,6 +53,9 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         {
             if (sourceNode.FullPath == targetParent.FullPath) 
                 return false;
+
+            if (sourceNode is IProjectFolder && targetParent.FullPath.StartsWith(sourceNode.FullPath))
+                return false;
             
             switch (e.DragEffects)
             {
@@ -60,7 +63,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 {
                     if (bExecute)
                     {
-                        _ = vm.ImportAsync(targetParent, true, true, sourceNode.FullPath);
+                        _ = vm.DropAsync(targetParent, true, true, sourceNode.FullPath);
                     }
 
                     return true;
@@ -69,7 +72,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 {
                     if (bExecute)
                     {
-                        _ = vm.ImportAsync(targetParent, false, true, sourceNode.FullPath);
+                        _ = vm.DropAsync(targetParent, true, false, sourceNode.FullPath);
                     }
 
                     return true;
