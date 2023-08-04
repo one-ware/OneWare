@@ -1,19 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
+    <PropertyGroup>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+    </PropertyGroup>
+    
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
-        <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
-        <ProjectReference Include="..\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" />
-        <ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\GhdlMainWindowToolBarExtension.axaml.cs">
-        <DependentUpon>ProjectExplorerMainWindowToolBarExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="runtime"/>
+        <ProjectReference Include="..\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" Private="false" ExcludeAssets="all"/>
     </ItemGroup>
 </Project>

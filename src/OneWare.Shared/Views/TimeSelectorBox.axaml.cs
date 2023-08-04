@@ -1,10 +1,8 @@
 ﻿using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using DynamicData;
 
-namespace OneWare.Core.Views.Controls
+namespace OneWare.Shared.Views
 {
     public partial class TimeSelectorBox : UserControl
     {

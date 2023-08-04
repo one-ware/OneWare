@@ -1,13 +1,9 @@
-﻿using Avalonia.Controls;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Ghdl.Services;
-using OneWare.ProjectExplorer.Views;
-using OneWare.Shared;
+﻿using OneWare.Ghdl.Services;
+using OneWare.Ghdl.Views;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 using Prism.Modularity;
-using GhdlMainWindowToolBarExtension = OneWare.Ghdl.Views.GhdlMainWindowToolBarExtension;
 
 namespace OneWare.Ghdl;
 

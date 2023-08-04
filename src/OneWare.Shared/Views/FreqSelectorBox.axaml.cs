@@ -4,8 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using DynamicData.Binding;
 
-
-namespace OneWare.Core.Views.Controls
+namespace OneWare.Shared.Views
 {
     public partial class FreqSelectorBox : UserControl
     {

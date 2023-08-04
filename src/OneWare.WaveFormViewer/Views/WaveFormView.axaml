@@ -6,7 +6,7 @@
              xmlns:models="clr-namespace:OneWare.WaveFormViewer.Models"
              xmlns:controls="clr-namespace:OneWare.WaveFormViewer.Controls"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             xmlns:controls1="clr-namespace:OneWare.Core.Views.Controls;assembly=OneWare.Core"
+             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" x:DataType="viewModels:WaveFormViewModel"
              x:Class="OneWare.WaveFormViewer.Views.WaveFormView">
 
@@ -48,7 +48,7 @@
                         <Image Source="{DynamicResource BoxIcons.RegularChevronRight}" />
                     </Button>
                     
-                    <controls1:TimeSelectorBox AdjustInputToWaitUnit="True" FemtoSeconds="{Binding Offset, Mode=TwoWay}" Width="130"/>
+                    <views:TimeSelectorBox AdjustInputToWaitUnit="True" FemtoSeconds="{Binding Offset, Mode=TwoWay}" Width="130"/>
                     
                     <Border Classes="SplitterBorder" />
                     

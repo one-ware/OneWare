@@ -1,7 +1,7 @@
 using Avalonia.Media;
 using Dock.Model.Core;
 
-namespace OneWare.Output;
+namespace OneWare.Shared.Services;
 
 public interface IOutputService : IDockable
 {

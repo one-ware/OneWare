@@ -2,7 +2,6 @@
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
-using OneWare.Core.ViewModels.Windows;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.ViewModels;
 using OneWare.Vcd.Viewer.Models;

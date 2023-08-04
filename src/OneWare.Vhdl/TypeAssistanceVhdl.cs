@@ -27,7 +27,7 @@ namespace OneWare.Vhdl
             var items = new List<CompletionData>();
 
             var text = Editor.CurrentDocument.Text;
-            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text));
+            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text).Select(x => x.ToString()).Distinct());
 
             items.Add(new CompletionData("library IEEE;\nuse IEEE.std_logic_1164.all;\nuse IEEE.numeric_std.all; ",
                 "ieee", "IEEE Standard Packages",
@@ -41,8 +41,7 @@ namespace OneWare.Vhdl
             
             foreach (var word in usedWords)
             {
-                if(word.ToString() is { } s)
-                    items.Add(new CompletionData(s, s, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
+                items.Add(new CompletionData(word, word, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
             }
 
             return items;

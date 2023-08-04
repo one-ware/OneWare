@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="22"
-             x:Class="OneWare.Core.Views.Controls.FreqSelectorBox">
+             x:Class="OneWare.Shared.Views.FreqSelectorBox">
     <Grid Margin="0">
         <Grid.ColumnDefinitions>*,50</Grid.ColumnDefinitions>
         <TextBox Margin="0 0 0 0" Padding="4 2 4 0" FontSize="12" Name="InputBox" x:CompileBindings="False"

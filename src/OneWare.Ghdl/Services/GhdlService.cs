@@ -1,19 +1,10 @@
 ﻿using System.Diagnostics;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Windows.Input;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using OneWare.Core.Data;
-using OneWare.Core.Services;
-using OneWare.Output;
 using OneWare.Shared;
-using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using OneWare.Vcd.Viewer.ViewModels;
-using ReactiveUI;
 
 namespace OneWare.Ghdl.Services;
 

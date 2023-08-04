@@ -6,4 +6,14 @@
     <Import Project="..\..\build\props\Dock.Avalonia.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
     <Import Project="..\..\build\props\Avalonia.Xaml.Interactions.props" />
+    <ItemGroup>
+      <Compile Update="Views\FreqSelectorBox.axaml.cs">
+        <DependentUpon>FreqSelectorBox.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\TimeSelectorBox.axaml.cs">
+        <DependentUpon>TimeSelectorBox.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project> 

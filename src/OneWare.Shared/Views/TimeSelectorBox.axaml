@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24"
-             x:Class="OneWare.Core.Views.Controls.TimeSelectorBox" Name="TimeSelectorBoxView">
+             x:Class="OneWare.Shared.Views.TimeSelectorBox" Name="TimeSelectorBoxView">
     <Border CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
     <DockPanel>
         <ComboBox DockPanel.Dock="Right" Padding="3, 2"
