@@ -1,4 +1,4 @@
-﻿namespace OneWare.Shared
+﻿namespace OneWare.Shared.Helpers
 {
     /// <summary>
     ///     Helps reading from streams with specified timeout

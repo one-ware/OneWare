@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using LibGit2Sharp;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.SourceControl.Models;

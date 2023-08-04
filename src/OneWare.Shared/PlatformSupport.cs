@@ -11,7 +11,7 @@ namespace OneWare.Shared
         Unix
     }
 
-    public static class PlatformSupport //From AvalonStudio
+    public static class PlatformSupport
     {
         private static readonly ShellExecutorType ExecutorType;
 

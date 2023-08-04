@@ -1,10 +1,6 @@
 ﻿using System.Diagnostics;
-using System.IO.Enumeration;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using OneWare.Shared.Enums;
@@ -112,20 +108,15 @@ namespace OneWare.Shared
 
         public static void CopyDirectory(string sourcePath, string destPath)
         {
-            // Get information about the source directory
             var dir = new DirectoryInfo(sourcePath);
-
-            // Check if the source directory exists
+            
             if (!dir.Exists)
                 throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
-
-            // Cache directories before we start copying
+            
             var dirs = dir.GetDirectories();
-
-            // Create the destination directory
+            
             Directory.CreateDirectory(destPath);
-
-            // Get the files in the source directory and copy to the destination directory
+            
             foreach (var file in dir.GetFiles())
             {
                 var targetFilePath = Path.Combine(destPath, file.Name);
@@ -133,8 +124,7 @@ namespace OneWare.Shared
                 ChmodFile(targetFilePath);
             }
 
-            // If recursive and copying subdirectories, recursively call this method
-            foreach (DirectoryInfo subDir in dirs)
+            foreach (var subDir in dirs)
             {
                 var newDestinationDir = Path.Combine(destPath, subDir.Name);
                 CopyDirectory(subDir.FullName, newDestinationDir);
@@ -160,26 +150,19 @@ namespace OneWare.Shared
         {
             var escapedArgs = cmd.Replace("\"", "\\\"");
 
-            using var process = new Process
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{escapedArgs}\""
-                }
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{escapedArgs}\""
             };
 
             process.Start();
             process.WaitForExit();
-        }
-
-        public static string GetNumbers(string input)
-        {
-            return new string(input.Where(c => char.IsDigit(c)).ToArray());
         }
 
         public static bool Exists(string path)
@@ -209,32 +192,6 @@ namespace OneWare.Shared
 
             return null;
         }
-
-        private static readonly IPEndPoint DefaultLoopbackEndpoint = new(IPAddress.Loopback, 0);
-
-        public static int GetAvailablePort()
-        {
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                socket.Bind(DefaultLoopbackEndpoint);
-                return ((IPEndPoint)socket!.LocalEndPoint!).Port;
-            }
-        }
-
-        public static string? FirstFileInPath(string path, string extension)
-        {
-            try
-            {
-                return Directory
-                    .GetFiles(path)
-                    .FirstOrDefault(x => Path.GetExtension(x).Equals(extension, StringComparison.OrdinalIgnoreCase));
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-                return null;
-            }
-        }
         
         #region LinuxPermissionMadness
 
@@ -258,19 +215,19 @@ namespace OneWare.Shared
 
         public static void ChmodFile(string path)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) ExecBash("chmod 777 " + path);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) 
+                ExecBash("chmod 777 " + path);
         }
 
         public static void ChmodFolder(string path)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) ExecBash("chmod -R 777 " + path);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) 
+                ExecBash("chmod -R 777 " + path);
         }
 
         #endregion
         
         #region FileManager
-        
-        #nullable enable
 
         public static async Task<string?> SelectFolderAsync(TopLevel owner, string title, string? startDir)
         {

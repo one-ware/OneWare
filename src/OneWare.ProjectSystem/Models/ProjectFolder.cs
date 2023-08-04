@@ -96,7 +96,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
         try
         {
-            if(!path.IsSamePathAs(destination))
+            if(!path.EqualPaths(destination))
                 Tools.CopyFile(path, destination, overwrite);
 
             return AddFile(Path.GetFileName(destination));
@@ -204,8 +204,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         foreach (var i in Items)
         {
             if (path.Equals(i.Header, StringComparison.OrdinalIgnoreCase) //Search for name equality
-                || path.IsSamePathAs(i.RelativePath)
-                || path.IsSamePathAs(i.FullPath))
+                || path.EqualPaths(i.RelativePath)
+                || path.EqualPaths(i.FullPath))
                 return i;
             if (recursive && i is ProjectFolder folder)
             {

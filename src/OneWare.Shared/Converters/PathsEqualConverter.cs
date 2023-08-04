@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Avalonia.Data.Converters;
+using OneWare.Shared.Extensions;
 
 namespace OneWare.Shared.Converters
 {
@@ -11,7 +12,7 @@ namespace OneWare.Shared.Converters
             {
                 if (values[i] is not string p1 || values[0] is not string p2)
                     return false;
-                if (!p1.IsSamePathAs(p2))
+                if (!p1.EqualPaths(p2))
                     return false;
             }
             return true;
