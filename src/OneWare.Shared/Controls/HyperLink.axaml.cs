@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
@@ -50,7 +51,7 @@ namespace OneWare.Shared.Controls
             }
             else
             {
-                Tools.OpenHyperLink(Url);
+                PlatformHelper.OpenHyperLink(Url);
             }
         }
     }

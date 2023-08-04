@@ -10,6 +10,7 @@ using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -291,7 +292,7 @@ namespace OneWare.Core.ViewModels.DockViews
             
             try
             {
-                await Tools.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
+                await PlatformHelper.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
             }
             catch (Exception e)
             {

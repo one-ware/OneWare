@@ -38,7 +38,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
         
         if(root != null)
-            ProjectHelpers.ImportEntries(root.FullPath, root);
+            ProjectHelper.ImportEntries(root.FullPath, root);
         
         return root;
     }

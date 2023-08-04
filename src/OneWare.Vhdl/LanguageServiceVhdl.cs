@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -50,7 +51,7 @@ namespace OneWare.Vhdl
                         ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
                 }
                 
-                Tools.ChmodFolder(ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                PlatformHelper.ChmodFolder(ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
             }
                 
             await base.ActivateAsync();

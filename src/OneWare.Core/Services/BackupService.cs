@@ -6,6 +6,7 @@ using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
@@ -140,7 +141,7 @@ namespace OneWare.Core.Services
 
                         if (!_backups.Contains(backup)) _backups.Add(backup);
 
-                        Tools.WriteTextFile(backup.BackupPath, evm.CurrentDocument.Text);
+                        PlatformHelper.WriteTextFile(backup.BackupPath, evm.CurrentDocument.Text);
                     }
                     catch (Exception e)
                     {

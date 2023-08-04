@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
+using OneWare.Core.Helpers;
 using OneWare.Shared;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
@@ -53,7 +54,7 @@ public class AdvancedHostWindow : HostWindow
 
     private async Task TrySafeFilesAsync(List<IExtendedDocument> unsavedFiles)
     {
-        var close = await Tools.HandleUnsavedFilesAsync(unsavedFiles, this);
+        var close = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, this);
         if (close)
         {
             _cancelClose = false;

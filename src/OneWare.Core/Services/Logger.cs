@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 
 namespace OneWare.Core.Services;
@@ -101,7 +102,7 @@ public class Logger : ILogger
         {
             Directory.CreateDirectory(_paths.DocumentsDirectory);
             _log = File.CreateText(LogFilePath);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) Tools.ExecBash("chmod 777 " + LogFilePath);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PlatformHelper.ExecBash("chmod 777 " + LogFilePath);
         }
         catch
         {

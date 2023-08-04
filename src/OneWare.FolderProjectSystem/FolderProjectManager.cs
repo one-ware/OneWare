@@ -24,7 +24,7 @@ public class FolderProjectManager : IProjectManager
         var root = new FolderProjectRoot(path);
         try
         {
-            ProjectHelpers.ImportEntries(path, root);
+            ProjectHelper.ImportEntries(path, root);
         }
         catch (Exception e)
         {

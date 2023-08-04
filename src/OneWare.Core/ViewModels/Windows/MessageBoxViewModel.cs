@@ -2,6 +2,7 @@
 using OneWare.Shared;
 using OneWare.Shared.Controls;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
@@ -114,7 +115,7 @@ namespace OneWare.Core.ViewModels.Windows
         
         public async Task SelectPathAsync(FlexibleWindow window)
         {
-            var folder = await Tools.SelectFolderAsync(window.Host, "Select Directory", Input);
+            var folder = await StorageProviderHelper.SelectFolderAsync(window.Host, "Select Directory", Input);
             
             Input = folder ?? "";
         }

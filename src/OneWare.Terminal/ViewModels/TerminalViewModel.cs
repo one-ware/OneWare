@@ -3,6 +3,7 @@ using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
@@ -81,7 +82,7 @@ namespace OneWare.Terminal.ViewModels
                 {
                     CloseConnection();
 
-                    var shellExecutable = PlatformSupport.ResolveFullExecutablePath(
+                    var shellExecutable = PlatformHelper.GetFullPath(
                         (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash"));
 
                     if (!string.IsNullOrEmpty(shellExecutable))

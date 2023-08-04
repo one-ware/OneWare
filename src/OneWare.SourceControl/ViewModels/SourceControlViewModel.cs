@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using LibGit2Sharp;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Extensions;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -193,7 +194,7 @@ namespace OneWare.SourceControl.ViewModels
 
             await Task.Delay(200);
 
-            var startFilePath = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this),
+            var startFilePath = await StorageProviderHelper.SelectFilesAsync(_dockService.GetWindowOwner(this),
                 "Open Project from cloned repository",
                 folder);
 
@@ -271,8 +272,7 @@ namespace OneWare.SourceControl.ViewModels
                     HeadBranch = null;
                     AvailableBranchesMenu.Clear();
 
-                    if (CurrentRepo == null || Tools.NormalizePath(CurrentRepo.Info.WorkingDirectory) !=
-                        Tools.NormalizePath(WorkingPath))
+                    if (CurrentRepo == null || CurrentRepo.Info.WorkingDirectory.EqualPaths(WorkingPath))
                     {
                         if (Repository.IsValid(WorkingPath))
                             CurrentRepo = new Repository(WorkingPath);
@@ -280,8 +280,7 @@ namespace OneWare.SourceControl.ViewModels
                             CurrentRepo = null;
                     }
 
-                    if (CurrentRepo != null &&
-                        Tools.NormalizePath(CurrentRepo.Info.Path) == Tools.NormalizePath(WorkingPath))
+                    if (CurrentRepo != null && CurrentRepo.Info.Path.EqualPaths(WorkingPath))
                     {
                         HeadBranch = CurrentRepo.Head;
 

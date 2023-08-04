@@ -5,6 +5,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
@@ -129,7 +130,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         yield return new MenuItemModel("OpenFileViewer")
         {
             Header = "Open in File Viewer",
-            Command = new RelayCommand(() => Tools.OpenExplorerPath(FullPath)),
+            Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(FullPath)),
             ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
             Priority = 1000
         };

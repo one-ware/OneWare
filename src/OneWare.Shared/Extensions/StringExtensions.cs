@@ -30,6 +30,24 @@
             return input.Replace('\\', '/');
         }
         
+        public static string NormalizePath(this string path)
+        {
+            return Path.GetFullPath(new Uri(path).LocalPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                .ToUpperInvariant();
+        }
+        
+        public static bool IsValidFileName(this string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            var chars = Path.GetInvalidFileNameChars();
+            foreach (var character in chars)
+                if (name.Contains(character))
+                    return false;
+            return true;
+        }
+
+        
         public static string CheckNameFile(this string fullPath)
         {
             var folderPath = Path.GetDirectoryName(fullPath) ?? "";

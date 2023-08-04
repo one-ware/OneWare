@@ -35,7 +35,7 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
 
         if (includes == null && excludes == null) return true;
         
-        return ProjectHelpers.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
+        return ProjectHelper.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
     }
 
     public override void IncludePath(string path)

@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using OneWare.Terminal.ViewModels;
@@ -97,7 +98,7 @@ public class TerminalManagerViewModel : ExtendedTool
             }
             else
             {
-                Tools.ExecBash("chmod u+x " + scriptPath);
+                PlatformHelper.ExecBash("chmod u+x " + scriptPath);
 
                 var sudo = elevated ? "sudo " : "";
                 var terminal = new TerminalViewModel(_paths.DocumentsDirectory);

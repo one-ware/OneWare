@@ -4,6 +4,7 @@ using Avalonia.Media;
 using DynamicData.Binding;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
@@ -98,7 +99,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         try
         {
             if(!path.EqualPaths(destination))
-                Tools.CopyFile(path, destination, overwrite);
+                PlatformHelper.CopyFile(path, destination, overwrite);
 
             return AddFile(Path.GetFileName(destination));
         }
@@ -141,7 +142,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             {
                 try
                 {
-                    Tools.CreateFile(fullPath);
+                    PlatformHelper.CreateFile(fullPath);
                 }
                 catch (Exception e)
                 {

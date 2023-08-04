@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 
@@ -52,7 +53,7 @@ internal abstract class Program
                 ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
             else Console.WriteLine(ex.ToString());
 
-            Tools.WriteTextFile(
+            PlatformHelper.WriteTextFile(
                 Path.Combine(DemoApp.Paths.CrashReportsDirectory,
                     "crash_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", DateTimeFormatInfo.InvariantInfo) +
                     ".txt"), ex.ToString());

@@ -12,6 +12,7 @@ using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
@@ -220,7 +221,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             menuItems.Add(new MenuItemModel("OpenFileViewer")
             {
                 Header = "Open in File Viewer",
-                Command = new RelayCommand(() => Tools.OpenExplorerPath(entry.FullPath)),
+                Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
                 ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
             });
         }
@@ -230,7 +231,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task OpenFileDialogAsync()
     {
-        var file = await Tools.SelectFileAsync(_dockService.GetWindowOwner(this)!, "Select File", null);
+        var file = await StorageProviderHelper.SelectFileAsync(_dockService.GetWindowOwner(this)!, "Select File", null);
 
         if (file != null)
         {
@@ -287,7 +288,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
     {
-        var folderPath = await Tools.SelectFolderAsync(
+        var folderPath = await StorageProviderHelper.SelectFolderAsync(
             _dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Folder Path",
             _paths.ProjectsDirectory);
 
@@ -303,7 +304,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager,
         params FilePickerFileType[]? filters)
     {
-        var filePath = await Tools.SelectFileAsync(
+        var filePath = await StorageProviderHelper.SelectFileAsync(
             _dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Project File",
             _paths.ProjectsDirectory, filters);
 
@@ -484,7 +485,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
 
-        var folders = await Tools.SelectFoldersAsync(_dockService.GetWindowOwner(this)!,
+        var folders = await StorageProviderHelper.SelectFoldersAsync(_dockService.GetWindowOwner(this)!,
             "Import Folders to " + destination.Header,
             destination.FullPath);
 
@@ -503,7 +504,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
 
-        var files = await Tools.SelectFilesAsync(_dockService.GetWindowOwner(this)!,
+        var files = await StorageProviderHelper.SelectFilesAsync(_dockService.GetWindowOwner(this)!,
             "Import Files to " + destination.Header,
             destination.FullPath);
 
@@ -525,7 +526,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     if (askForInclude)
                         if(!await AskForIncludeDialogAsync(destination.Root,
                             Path.GetRelativePath(destination.Root.FullPath, destPath))) return;
-                    if (copy) Tools.CopyDirectory(path, destPath);
+                    if (copy) PlatformHelper.CopyDirectory(path, destPath);
                     else Directory.Move(path, destPath);
                 }
                 else
@@ -534,7 +535,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     if (askForInclude)
                         if(!await AskForIncludeDialogAsync(destination.Root,
                                Path.GetRelativePath(destination.Root.FullPath, destPath))) return;
-                    if (copy) Tools.CopyFile(path, destPath);
+                    if (copy) PlatformHelper.CopyFile(path, destPath);
                     else File.Move(path, destPath);
                 }
             }
@@ -556,7 +557,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (newName == oldName) return entry;
         var pathBase = Path.GetDirectoryName(entry.FullPath);
 
-        if (!Tools.IsValidFileName(newName) || (entry is IProjectFolder && Path.HasExtension(newName)) ||
+        if (!newName.IsValidFileName() || (entry is IProjectFolder && Path.HasExtension(newName)) ||
             pathBase == null || entry.TopFolder == null)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error($"Can't rename {entry.Header} to {newName}!");

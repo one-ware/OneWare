@@ -173,7 +173,7 @@ public class ProjectWatchInstance : IDisposable
         if (attr.HasFlag(FileAttributes.Directory))
         {
             var folder = _root.AddFolder(relativePath);
-            ProjectHelpers.ImportEntries(path, folder);
+            ProjectHelper.ImportEntries(path, folder);
         }
         else
             _root.AddFile(relativePath);

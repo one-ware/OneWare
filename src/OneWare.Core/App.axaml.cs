@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -24,6 +25,7 @@ using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -175,7 +177,7 @@ namespace OneWare.Core
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
             {
                 var link = args.Uri.ToString();
-                Tools.OpenHyperLink(link);
+                PlatformHelper.OpenHyperLink(link);
             });
 
             if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
@@ -228,7 +230,7 @@ namespace OneWare.Core
 
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
             {
-                if (Tools.IsFontInstalled(x))
+                if (FontManager.Current.SystemFonts.Contains(x))
                 {
                     Resources["EditorFont"] = new FontFamily(x);
                     return;
@@ -269,7 +271,7 @@ namespace OneWare.Core
 
                 var mainWin = MainWindow as Window;
                 if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-                var shutdownReady = await Tools.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
+                var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
 
                 if (shutdownReady) await ShutdownAsync();
             }

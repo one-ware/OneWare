@@ -3,6 +3,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Shared;
+using OneWare.Shared.Helpers;
 
 namespace OneWare.Settings;
 
@@ -94,7 +95,7 @@ public class FolderPathSetting : PathSetting
 
     public override async Task SelectPathAsync(TopLevel topLevel)
     {
-        var folder = await Tools.SelectFolderAsync(topLevel, Title, StartDirectory);
+        var folder = await StorageProviderHelper.SelectFolderAsync(topLevel, Title, StartDirectory);
         if (folder != null) Value = folder;
     }
 }
@@ -111,7 +112,7 @@ public class FilePathSetting : PathSetting
 
     public override async Task SelectPathAsync(TopLevel topLevel)
     {
-        var folder = await Tools.SelectFileAsync(topLevel, Title, StartDirectory, Filters);
+        var folder = await StorageProviderHelper.SelectFileAsync(topLevel, Title, StartDirectory, Filters);
         if (folder != null) Value = folder;
     }
 }

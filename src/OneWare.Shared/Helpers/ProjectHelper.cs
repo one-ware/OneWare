@@ -3,7 +3,7 @@ using OneWare.Shared.Models;
 
 namespace OneWare.Shared.Helpers;
 
-public static class ProjectHelpers
+public static class ProjectHelper
 {
     public static void ImportEntries(string source, IProjectFolder destination)
     {

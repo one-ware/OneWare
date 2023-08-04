@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
 using Nerdbank.Streams;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using Prism.Ioc;
@@ -48,7 +49,7 @@ namespace OneWare.Shared.LanguageService
             }
             else
             {
-                if (!Tools.Exists(ExecutablePath))
+                if (!PlatformHelper.Exists(ExecutablePath))
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
                         ?.Error($"{Name} language server not found! {ExecutablePath}");
