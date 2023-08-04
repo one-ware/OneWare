@@ -1,5 +1,7 @@
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
+using OneWare.Shared.EditorExtensions;
+using OneWare.Shared.Models;
 
 namespace OneWare.Shared.LanguageService
 {

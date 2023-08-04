@@ -3,9 +3,7 @@ using System.Globalization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.Converters;
-using OneWare.Shared.Extensions;
 using OneWare.Vcd.Parser.Data;
-using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.WaveFormViewer.ViewModels;

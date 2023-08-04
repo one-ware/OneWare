@@ -6,6 +6,7 @@ using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Shared;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
 

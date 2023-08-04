@@ -1,11 +1,11 @@
-﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                       xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
                        xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
+                       xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                        PrefHeight="400" PrefWidth="600" Padding="4"
                        WindowStartupLocation="CenterOwner"
@@ -28,4 +28,4 @@
             </Button>
         </StackPanel>
     </Grid>
-</shared:FlexibleWindow>
+</controls:FlexibleWindow>

@@ -4,8 +4,9 @@ using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
-using IFile = OneWare.Shared.IFile;
+using IFile = OneWare.Shared.Models.IFile;
 
 namespace OneWare.Vhdl
 {

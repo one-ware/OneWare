@@ -5,10 +5,8 @@
              xmlns:viewModels="clr-namespace:OneWare.Vcd.Viewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums;assembly=OneWare.WaveFormViewer"
              xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
-             xmlns:models1="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 

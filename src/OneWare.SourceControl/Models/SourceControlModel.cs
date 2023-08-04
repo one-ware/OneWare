@@ -1,5 +1,5 @@
 ﻿using LibGit2Sharp;
-using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.SourceControl.ViewModels;
 
 namespace OneWare.SourceControl.Models

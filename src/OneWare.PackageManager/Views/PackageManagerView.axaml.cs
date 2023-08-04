@@ -1,4 +1,4 @@
-﻿using OneWare.Shared;
+﻿using OneWare.Shared.Controls;
 
 namespace OneWare.PackageManager.Views
 {

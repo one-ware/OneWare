@@ -1,5 +1,4 @@
 ﻿using OneWare.FolderProjectSystem.Models;
-using OneWare.Shared;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;

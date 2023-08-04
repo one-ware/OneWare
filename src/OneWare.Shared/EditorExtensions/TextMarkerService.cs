@@ -1,5 +1,4 @@
-﻿using System.Net.Mime;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;

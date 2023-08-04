@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using ReactiveUI;
 
 namespace OneWare.Shared.EditorExtensions
 {

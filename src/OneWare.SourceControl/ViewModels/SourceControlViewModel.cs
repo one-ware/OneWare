@@ -15,6 +15,7 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using OneWare.SourceControl.Models;
 using Prism.Ioc;
 

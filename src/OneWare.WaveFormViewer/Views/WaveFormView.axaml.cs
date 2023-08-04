@@ -1,9 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using OneWare.WaveFormViewer.ViewModels;
-using ReactiveUI;
 
 namespace OneWare.WaveFormViewer.Views
 {

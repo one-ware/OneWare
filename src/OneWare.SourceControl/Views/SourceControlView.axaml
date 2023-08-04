@@ -6,8 +6,8 @@
              xmlns:models="clr-namespace:OneWare.SourceControl.Models"
              xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:converters1="clr-namespace:OneWare.SourceControl.Converters"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="OneWare.SourceControl.Views.SourceControlView"
              x:DataType="viewModels:SourceControlViewModel" x:CompileBindings="True">
@@ -196,7 +196,7 @@
 
                 <StackPanel Margin="0, 10, 0, 0" Orientation="Horizontal">
                     <TextBlock Text="Learn how to use the Team Explorer " />
-                    <views:HyperLink Url="https://vhdplus.com/docs/ide/teamexplorer" Label="here"
+                    <controls:HyperLink Url="https://vhdplus.com/docs/ide/teamexplorer" Label="here"
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>

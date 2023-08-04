@@ -3,7 +3,6 @@
         xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:mde="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
-        xmlns:data="clr-namespace:OneWare.Core.Data"
         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia">
     <Design.PreviewWith>
         <Border Padding="0">

@@ -1,6 +1,4 @@
-using Avalonia.Media;
-using ImTools;
-using OneWare.Shared;
+using OneWare.Shared.ViewModels;
 using OneWare.Terminal.ViewModels;
 
 namespace OneWare.TerminalManager.ViewModels;

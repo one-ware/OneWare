@@ -1,12 +1,10 @@
-﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         mc:Ignorable="d"
-                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
-                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-                        xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                         x:Class="OneWare.Core.Views.Windows.WaitCalculatorWindow"
                         Width="300" SizeToContent="Height" x:DataType="windows1:WaitCalculatorWindowViewModel"
                         Title="Wait Calculator" Padding="5"
@@ -54,4 +52,4 @@
         </DockPanel>
     </StackPanel>
 
-</shared:FlexibleWindow>
+</controls:FlexibleWindow>

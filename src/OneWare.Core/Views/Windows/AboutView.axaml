@@ -1,14 +1,10 @@
-﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls1:FlexibleWindow xmlns="https://github.com/avaloniaui"
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                        xmlns:controls="clr-namespace:OneWare.Core.Views.Controls"
-                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
-                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-                        xmlns:viewModels="clr-namespace:OneWare.Core.ViewModels"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
                         xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+                        xmlns:controls1="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
                         x:Class="OneWare.Core.Views.Windows.AboutView"
                         PrefWidth="400" PrefHeight="400" Padding="4"
@@ -29,9 +25,9 @@
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <TextBlock Text="Home Page: " />
-            <views:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
+            <controls1:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
         </StackPanel>
         
         <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" />
     </DockPanel>
-</shared:FlexibleWindow>
+</controls1:FlexibleWindow>

@@ -4,9 +4,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using OneWare.ProjectExplorer.ViewModels;
-using OneWare.Shared;
-using OneWare.Shared.Services;
-using Prism.Ioc;
+using OneWare.Shared.Models;
 
 namespace OneWare.ProjectExplorer.Behaviours;
 

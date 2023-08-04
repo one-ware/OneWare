@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Platform;
 using OneWare.FolderProjectSystem.Models;
-using OneWare.Shared;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 

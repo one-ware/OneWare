@@ -8,7 +8,7 @@ using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
-using OneWare.Shared;
+using OneWare.Shared.Controls;
 using OneWare.Shared.Enums;
 using Prism.Ioc;
 using OneWare.Shared.Models;

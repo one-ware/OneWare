@@ -1,4 +1,4 @@
-﻿using OneWare.Shared;
+﻿using OneWare.Shared.Models;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;

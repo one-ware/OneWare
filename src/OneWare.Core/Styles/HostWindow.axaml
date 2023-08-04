@@ -1,6 +1,5 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:data="clr-namespace:OneWare.Core.Data"
         xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared">
 
@@ -93,7 +92,7 @@
         <Setter Property="TransparencyLevelHint" Value="Transparent" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="BorderThickness" Value="1"></Setter>
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{x:Static shared:Shared.WindowsCornerRadius}" />
         <Setter Property="Template">
             <ControlTemplate>

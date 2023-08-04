@@ -1,6 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;

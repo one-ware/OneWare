@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
+using OneWare.Shared.Controls;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 

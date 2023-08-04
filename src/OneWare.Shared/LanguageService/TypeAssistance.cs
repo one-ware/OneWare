@@ -4,6 +4,7 @@ using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Indentation;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Models;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.LanguageService
 {

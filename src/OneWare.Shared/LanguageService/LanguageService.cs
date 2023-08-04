@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using Nerdbank.Streams;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Shared.LanguageService

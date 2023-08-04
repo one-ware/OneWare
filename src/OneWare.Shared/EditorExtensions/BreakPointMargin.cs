@@ -5,6 +5,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Models;
 
 namespace OneWare.Shared.EditorExtensions
 {

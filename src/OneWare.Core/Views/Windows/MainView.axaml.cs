@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Avalonia.Controls;
-using OneWare.Shared;
+using OneWare.Shared.Controls;
 
 namespace OneWare.Core.Views.Windows;
 

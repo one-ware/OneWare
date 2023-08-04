@@ -1,9 +1,5 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:OneWare.Core"
-        xmlns:data="clr-namespace:OneWare.Core.Data;assembly=OneWare.Core"
-        xmlns:dock="clr-namespace:OneWare.Core.Dock;assembly=OneWare.Core"
-        xmlns:sharedModels="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -110,26 +106,26 @@
     </Style>
 
     <Style Selector="Border.RoundToolBar">
-        <Setter Property="CornerRadius" Value="3"></Setter>
-        <Setter Property="BorderThickness" Value="1"></Setter>
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
         <Setter Property="Height" Value="24" />
     </Style>
 
     <Style Selector="Border.RoundToolBar > StackPanel">
-        <Setter Property="Margin" Value="0"></Setter>
-        <Setter Property="Orientation" Value="Horizontal"></Setter>
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Orientation" Value="Horizontal" />
     </Style>
 
     <Style Selector="Border.RoundToolBar > StackPanel > Separator">
-        <Setter Property="Margin" Value="0"></Setter>
-        <Setter Property="Height" Value="24"></Setter>
-        <Setter Property="Width" Value="1"></Setter>
-        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}"></Setter>
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
 
     <Style Selector="Border.RoundToolBar > StackPanel > ComboBox">
-        <Setter Property="BorderThickness" Value="0"></Setter>
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="Border.RoundToolBar Button">

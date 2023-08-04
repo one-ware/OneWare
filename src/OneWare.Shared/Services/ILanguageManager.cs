@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using OneWare.Shared.LanguageService;
+using OneWare.Shared.Models;
+using OneWare.Shared.ViewModels;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 

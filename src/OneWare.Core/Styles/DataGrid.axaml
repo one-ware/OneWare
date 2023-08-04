@@ -54,7 +54,7 @@
     </Style>
     
     <Style Selector="DataGridCell">
-        <Setter Property="Height" Value="22"></Setter>
+        <Setter Property="Height" Value="22" />
     </Style>
     
     <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">

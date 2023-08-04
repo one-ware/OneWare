@@ -1,12 +1,11 @@
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using DynamicData;
+using OneWare.Shared.Models;
 using TextMateSharp.Registry;
 
 namespace OneWare.Shared.EditorExtensions;

@@ -3,10 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.ErrorList.ViewModels"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
              xmlns:models="clr-namespace:OneWare.Shared.Models;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ErrorList.Views.ErrorListView" x:DataType="viewModels:ErrorListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
@@ -113,7 +113,7 @@
 
                 <Border CornerRadius="3" DockPanel.Dock="Right" Width="280" BorderThickness="1" HorizontalAlignment="Right" Height="24"
                         BorderBrush="{DynamicResource ThemeBorderMidBrush}">
-                    <views:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}" 
+                    <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}" 
                                      Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
                 </Border>
             </DockPanel>
@@ -147,17 +147,17 @@
                 <DataGridTemplateColumn Width="4*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItemModel">
-                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}" Text="{Binding Description}"></TextBlock>
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}" Text="{Binding Description}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
-                        <TextBlock Text="Description"></TextBlock>
+                        <TextBlock Text="Description" />
                     </DataGridTemplateColumn.Header>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Source" Binding="{Binding Source}"></DataGridTextColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Project" Binding="{Binding Root.Header}"></DataGridTextColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="File" Binding="{Binding File.Header}"></DataGridTextColumn>
-                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItemModel" Header="Line" Binding="{Binding StartLine}"></DataGridTextColumn>
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Source" Binding="{Binding Source}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Project" Binding="{Binding Root.Header}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="File" Binding="{Binding File.Header}" />
+                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItemModel" Header="Line" Binding="{Binding StartLine}" />
             </DataGrid.Columns>
         </DataGrid>
 

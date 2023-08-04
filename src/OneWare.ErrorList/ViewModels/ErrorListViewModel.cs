@@ -2,10 +2,10 @@
 using System.Reactive.Linq;
 using Avalonia.Collections;
 using DynamicData.Binding;
-using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using ListEx = DynamicData.ListEx;
 
 namespace OneWare.ErrorList.ViewModels

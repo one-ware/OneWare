@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.Models;
 using OneWare.Vcd.Parser.Data;
 
 namespace OneWare.Vcd.Viewer.Models;

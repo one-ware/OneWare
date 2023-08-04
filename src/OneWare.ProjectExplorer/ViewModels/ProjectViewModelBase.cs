@@ -3,9 +3,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
-using OneWare.Shared;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;

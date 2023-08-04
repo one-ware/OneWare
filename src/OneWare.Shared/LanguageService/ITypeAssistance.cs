@@ -1,5 +1,6 @@
 ﻿using Avalonia.Input;
 using AvaloniaEdit.CodeCompletion;
+using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Models;
 
 namespace OneWare.Shared.LanguageService

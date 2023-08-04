@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Shared;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;

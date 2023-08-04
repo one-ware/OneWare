@@ -12,7 +12,9 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
+using IFile = OneWare.Shared.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 

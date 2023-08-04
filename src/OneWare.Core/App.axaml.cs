@@ -27,6 +27,7 @@ using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using TextMateSharp.Grammars;
 
 namespace OneWare.Core

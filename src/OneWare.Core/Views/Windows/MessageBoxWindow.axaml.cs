@@ -7,7 +7,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Windows;
-using OneWare.Shared;
+using OneWare.Shared.Controls;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Enums;
 

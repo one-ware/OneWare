@@ -1,4 +1,4 @@
-﻿using OneWare.Shared;
+﻿using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.ProjectSystem.Services;

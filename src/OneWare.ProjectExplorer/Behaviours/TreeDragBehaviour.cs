@@ -5,8 +5,6 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using Avalonia.Xaml.Interactivity;
-using OneWare.ProjectExplorer.ViewModels;
-using OneWare.Shared;
 
 namespace OneWare.ProjectExplorer.Behaviours;
 

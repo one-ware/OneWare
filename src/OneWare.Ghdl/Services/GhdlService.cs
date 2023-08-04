@@ -2,7 +2,8 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using OneWare.Shared;
+using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Vcd.Viewer.ViewModels;
 

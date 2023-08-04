@@ -1,4 +1,6 @@
-﻿namespace OneWare.Shared.Services;
+﻿using OneWare.Shared.Models;
+
+namespace OneWare.Shared.Services;
 
 public interface IProjectManagerService
 {

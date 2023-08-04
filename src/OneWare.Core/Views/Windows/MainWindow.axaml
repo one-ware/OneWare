@@ -16,11 +16,12 @@
                        WindowStartupLocation="CenterScreen"
                        Background="{DynamicResource ThemeBackgroundBrush}"
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-                       xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                        xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"
                        xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
                        xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
+                       xmlns:controls2="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                       xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
                        x:DataType="viewmodels:MainWindowViewModel">
     
     <Window.DataTemplates>
@@ -98,8 +99,8 @@
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->
-                <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                  IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
+                <controls2:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
+                                  IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                 <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0" Text="{Binding Active.ActiveProcess.StatusMessage}" Foreground="White" />
 

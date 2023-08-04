@@ -4,10 +4,10 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using DynamicData.Binding;
 using OneWare.SearchList.Models;
-using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.SearchList.ViewModels
 {

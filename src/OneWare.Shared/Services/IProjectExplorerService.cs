@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using Avalonia.Platform.Storage;
 using Dock.Model.Core;
+using OneWare.Shared.Models;
 
 namespace OneWare.Shared.Services;
 

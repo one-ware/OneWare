@@ -16,9 +16,9 @@
         </Design.PreviewWith>
         
         <Style Selector="TabControl">
-                <Setter Property="Margin" Value="0"></Setter>
-                <Setter Property="Padding" Value="0"></Setter>
-                <Setter Property="BorderThickness" Value="0"></Setter>
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="BorderThickness" Value="0" />
         </Style>
         
         <Style Selector="TabItem">

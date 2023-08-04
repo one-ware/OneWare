@@ -4,10 +4,11 @@
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                    xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
                    xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-                   xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                    xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                    xmlns:mvvm="http://prismlibrary.com/"
                    xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
+                   xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                   xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                    x:Class="OneWare.Core.Views.Windows.MainView"
                    mvvm:ViewModelLocator.AutoWireViewModel="False" Name="MainViewView"
@@ -77,8 +78,8 @@
                     Background="{DynamicResource ThemeAccentBrush}">
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->
-                    <views:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                   IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static shared:AppState.Loading}}" />
+                    <controls:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
+                                   IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                     <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}"
                                Foreground="White" />

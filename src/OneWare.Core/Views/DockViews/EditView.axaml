@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:dockViews1="clr-namespace:OneWare.Core.ViewModels.DockViews"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.DockViews.EditView" x:DataType="dockViews1:EditViewModel"
              Background="{DynamicResource ThemeControlLowBrush}" Name="EditViewView">
@@ -35,7 +35,7 @@
                     <Border Background="Transparent"
                             UseLayoutRounding="False">
                         <Grid RowDefinitions="*">
-                            <views:ScrollBarRenderer CodeBox="{Binding Editor}"
+                            <controls:ScrollBarRenderer CodeBox="{Binding Editor}"
                                                         ScrollInfo="{Binding ScrollInfo}"
                                                         IsHitTestVisible="False" Grid.Row="0"
                                                         Name="SimulatorRenderer" VerticalAlignment="Stretch"

@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using OneWare.Shared;
+using OneWare.Shared.Controls;
 using OneWare.Shared.Enums;
 using OneWare.Shared.ViewModels;
 

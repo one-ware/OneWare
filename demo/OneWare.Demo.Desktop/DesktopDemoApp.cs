@@ -11,7 +11,7 @@ using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
-using OneWare.Shared;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;

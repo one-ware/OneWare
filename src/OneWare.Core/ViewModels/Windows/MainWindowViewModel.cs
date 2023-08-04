@@ -5,10 +5,10 @@ using DynamicData.Binding;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
-using OneWare.Shared;
 using Prism.Ioc;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

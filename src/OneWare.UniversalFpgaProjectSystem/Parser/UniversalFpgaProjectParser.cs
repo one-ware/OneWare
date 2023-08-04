@@ -1,10 +1,6 @@
-﻿using System.IO.Enumeration;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using OneWare.Shared;
-using OneWare.Shared.Extensions;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;

@@ -82,8 +82,7 @@ namespace OneWare.Terminal.ViewModels
                     CloseConnection();
 
                     var shellExecutable = PlatformSupport.ResolveFullExecutablePath(
-                        (Platform.PlatformIdentifier == Platform.PlatformId.Win32Nt ? "powershell" : "bash") +
-                        Platform.ExecutableExtension);
+                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash"));
 
                     if (!string.IsNullOrEmpty(shellExecutable))
                     {

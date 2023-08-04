@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
-using OneWare.Output;
 using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;

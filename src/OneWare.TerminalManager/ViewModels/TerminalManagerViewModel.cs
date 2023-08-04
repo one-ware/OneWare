@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
 using Prism.Ioc;

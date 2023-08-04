@@ -1,5 +1,5 @@
 using System.Globalization;
-using OneWare.Shared;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
 
 namespace OneWare.Core.ModuleLogic;

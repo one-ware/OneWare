@@ -2,11 +2,10 @@
 using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
 using OneWare.ProjectSystem.Models;
-using OneWare.Shared;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Helpers;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.UniversalFpgaProjectSystem.Parser;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;

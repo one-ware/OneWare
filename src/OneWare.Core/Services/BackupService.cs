@@ -6,6 +6,7 @@ using Prism.Ioc;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 
 namespace OneWare.Core.Services

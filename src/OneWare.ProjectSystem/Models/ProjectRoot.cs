@@ -1,8 +1,5 @@
 ﻿using Avalonia.Media;
-using Avalonia.Threading;
-using OneWare.Shared;
-using OneWare.Shared.Services;
-using Prism.Ioc;
+using OneWare.Shared.Models;
 
 namespace OneWare.ProjectSystem.Models;
 

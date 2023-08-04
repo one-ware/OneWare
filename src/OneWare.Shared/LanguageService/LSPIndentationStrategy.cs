@@ -4,6 +4,7 @@ using AvaloniaEdit.Indentation;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
+using IFile = OneWare.Shared.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 

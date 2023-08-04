@@ -1,7 +1,5 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 using OneWare.Vcd.Viewer.ViewModels;
 
 namespace OneWare.Vcd.Viewer.Views;

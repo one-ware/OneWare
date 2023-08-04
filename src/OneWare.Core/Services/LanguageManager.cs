@@ -2,9 +2,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
 using OneWare.Core.Extensions.TextMate;
-using OneWare.Shared;
 using OneWare.Shared.LanguageService;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;

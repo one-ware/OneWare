@@ -15,8 +15,10 @@ using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Extensions;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
+using IFile = OneWare.Shared.Models.IFile;
 using Location = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 

@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Cpp
@@ -10,7 +10,7 @@ namespace OneWare.Cpp
     public class LanguageServiceCpp : LanguageService
     {
         public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("Clang",
-            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd{Platform.ExecutableExtension}"), 
+            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd"), 
             "--log=error",
             null)
         {

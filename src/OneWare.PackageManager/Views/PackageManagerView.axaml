@@ -1,14 +1,12 @@
-﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
                        xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
                        xmlns:models="clr-namespace:OneWare.PackageManager.Models"
-                       xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-                       xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
                        xmlns:mvvm="http://prismlibrary.com/"
-                       xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+                       xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                        PrefWidth="1050" PrefHeight="600"
                        mc:Ignorable="d"
                        x:Class="OneWare.PackageManager.Views.PackageManagerView"
@@ -18,14 +16,14 @@
                        x:CompileBindings="True" x:DataType="viewModels:PackageManagerViewModel"
                        WindowStartupLocation="CenterOwner">
 
-    <shared:FlexibleWindow.Styles>
+    <controls:FlexibleWindow.Styles>
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="Padding" Value="10" />
         </Style>
-    </shared:FlexibleWindow.Styles>
+    </controls:FlexibleWindow.Styles>
     
     <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
         <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="180,*, *">
@@ -34,7 +32,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="5" Margin="5" HorizontalAlignment="Left">
                     <TextBlock Text="Installed"/>
                     <CheckBox IsChecked="{Binding ShowInstalled}"/>
-                    <Border Height="20" Classes="SplitterBorder" Width="1"></Border>
+                    <Border Height="20" Classes="SplitterBorder" Width="1" />
                     <TextBlock Text="Available"/>
                     <CheckBox IsChecked="{Binding ShowAvailable}"/>
                 </StackPanel>
@@ -60,7 +58,7 @@
             <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical">
                 <Border Padding="3">
                     <Border Classes="RoundToolBar">
-                        <views:SearchBox SearchButtonVisible="False"/>
+                        <controls:SearchBox SearchButtonVisible="False"/>
                     </Border>
                 </Border>
                 <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" BorderThickness="0"
@@ -99,7 +97,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.DataTemplates>
                                         <DataTemplate x:DataType="models:LinkModel">
-                                            <views:HyperLink Url="{Binding Url}" Label="{Binding Label}" HorizontalAlignment="Left"/>
+                                            <controls:HyperLink Url="{Binding Url}" Label="{Binding Label}" HorizontalAlignment="Left"/>
                                         </DataTemplate>
                                     </ItemsControl.DataTemplates>
                                 </ItemsControl>
@@ -122,4 +120,4 @@
         </Grid>
     </Border>
 
-</shared:FlexibleWindow>
+</controls:FlexibleWindow>

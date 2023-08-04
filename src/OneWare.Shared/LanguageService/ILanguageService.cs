@@ -1,4 +1,6 @@
 
+using OneWare.Shared.ViewModels;
+
 namespace OneWare.Shared.LanguageService;
 
 public interface ILanguageService

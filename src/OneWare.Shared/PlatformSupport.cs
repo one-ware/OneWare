@@ -17,17 +17,9 @@ namespace OneWare.Shared
 
         static PlatformSupport()
         {
-            switch (Platform.PlatformIdentifier)
-            {
-                case Platform.PlatformId.Win32Nt:
-                    ExecutorType = ShellExecutorType.Windows;
-                    break;
-
-                case Platform.PlatformId.Unix:
-                case Platform.PlatformId.MacOsx:
-                    ExecutorType = ShellExecutorType.Unix;
-                    break;
-            }
+            ExecutorType = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? ExecutorType = ShellExecutorType.Windows
+                : ShellExecutorType.Unix;
         }
 
         public static void LaunchShell(string workingDirectory, params string[] paths)

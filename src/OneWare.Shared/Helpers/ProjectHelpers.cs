@@ -1,4 +1,5 @@
 using System.IO.Enumeration;
+using OneWare.Shared.Models;
 
 namespace OneWare.Shared.Helpers;
 

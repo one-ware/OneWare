@@ -1,11 +1,10 @@
-﻿<shared:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
-                        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-                        xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                         mc:Ignorable="d"
                         x:Class="OneWare.Core.Views.Windows.ChangelogView"
                         PrefWidth="600" PrefHeight="500"
@@ -24,7 +23,7 @@
                     </md:MarkdownScrollViewer.Styles>
                 </md:MarkdownScrollViewer>
              </Border>
-            <views:Spinner IsVisible="{Binding IsLoading}" Height="30"/>
+            <controls:Spinner IsVisible="{Binding IsLoading}" Height="30"/>
         </Grid>
     </DockPanel>
-</shared:FlexibleWindow>
+</controls:FlexibleWindow>

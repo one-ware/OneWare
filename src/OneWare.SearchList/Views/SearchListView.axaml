@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
              xmlns:viewModels="clr-namespace:OneWare.SearchList.ViewModels"
              xmlns:models="clr-namespace:OneWare.SearchList.Models"
              xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="250"
              x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
@@ -66,7 +66,7 @@
                 <Border DockPanel.Dock="Right" Classes="SplitterBorder" Margin="6 0" />
                 
                 <Border DockPanel.Dock="Left" Classes="RoundToolBar">
-                    <views:SearchBox SearchText="{Binding LastSearchString}" Name="Search" BorderThickness="0"
+                    <controls:SearchBox SearchText="{Binding LastSearchString}" Name="Search" BorderThickness="0"
                                      BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                      HorizontalAlignment="Stretch" />
                 </Border>
@@ -142,7 +142,7 @@
 
         <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Right"
                     VerticalAlignment="Top">
-            <views:Spinner Height="14" Width="14" Margin="0, 8, 295, 0"
+            <controls:Spinner Height="14" Width="14" Margin="0, 8, 295, 0"
                            IsVisible="{Binding IsLoading}"
                            Foreground="{DynamicResource DarkBlue}" />
         </StackPanel>

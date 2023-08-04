@@ -5,11 +5,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
-using OneWare.Shared.Extensions;
 using OneWare.Vcd.Parser.Data;
-using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
-using ReactiveUI;
 
 namespace OneWare.WaveFormViewer.Controls
 {

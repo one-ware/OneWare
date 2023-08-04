@@ -1,10 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
 using Avalonia.Threading;
 using DynamicData.Binding;
-using OneWare.Shared;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.Views;
+using OneWare.Shared.ViewModels;
 using OneWare.Vcd.Parser;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;

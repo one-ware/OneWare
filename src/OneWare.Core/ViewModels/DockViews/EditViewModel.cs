@@ -13,7 +13,7 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
-using OneWare.Shared.Views;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.ViewModels.DockViews
 {

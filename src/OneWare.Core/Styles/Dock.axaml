@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:idc="using:Dock.Avalonia.Controls"
         xmlns:core="using:Dock.Model.Core"
-        xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
-        xmlns:sharedViews="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared">
+        xmlns:viewModels="clr-namespace:OneWare.Shared.ViewModels;assembly=OneWare.Shared"
+        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared">
 
     <Styles.Resources>
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>
@@ -78,7 +78,7 @@
             <DataTemplate DataType="core:IDockable">
                 <ContentControl Content="{Binding}">
                     <ContentControl.DataTemplates>
-                        <DataTemplate DataType="shared:IExtendedDocument">
+                        <DataTemplate DataType="viewModels:IExtendedDocument">
                             <StackPanel Name="HeaderContainer" Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
                                 <Interaction.Behaviors>
                                     <DataTriggerBehavior Binding="{Binding LoadingFailed}"
@@ -95,15 +95,14 @@
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
                                 
-                                <sharedViews:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15"/> 
+                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15"/> 
                                 
                                 <Image
                                     Height="17" Width="17"
                                     Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}"/>
                                 <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Name="Title" Margin="3 0 0 0" 
-                                           Text="{Binding Title}" VerticalAlignment="Center">
-                                </TextBlock>
+                                           Text="{Binding Title}" VerticalAlignment="Center" />
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
                             </StackPanel>
                         </DataTemplate>
@@ -120,7 +119,7 @@
     
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
-            <DataTemplate DataType="shared:IExtendedTool">
+            <DataTemplate DataType="viewModels:IExtendedTool">
                 <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Image VerticalAlignment="Center" Source="{Binding Icon}" Height="12" Width="12"/>
                     <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />

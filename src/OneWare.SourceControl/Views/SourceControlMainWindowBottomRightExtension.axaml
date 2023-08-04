@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
-             xmlns:views="clr-namespace:OneWare.Shared.Views;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.SourceControl.Views.SourceControlMainWindowBottomRightExtension" x:DataType="viewModels:SourceControlViewModel">
     
@@ -12,7 +12,7 @@
             Command="{Binding SyncAsync}"
             ToolTip.Tip="Synchronize Changes">
         <StackPanel Orientation="Horizontal" Spacing="3">
-            <views:Spinner Foreground="White" Height="13"
+            <controls:Spinner Foreground="White" Height="13"
                               CustomIcon="{DynamicResource VsCode.SyncWhite}"
                               IsIntermediate="True"
                               IsAnimationRunning="{Binding IsLoading}" />

@@ -2,7 +2,7 @@
 using Avalonia.Interactivity;
 using DynamicData.Binding;
 using OneWare.ProjectExplorer.ViewModels;
-using OneWare.Shared.Views;
+using OneWare.Shared.Controls;
 
 namespace OneWare.ProjectExplorer.Views;
 

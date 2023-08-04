@@ -4,6 +4,7 @@ using Avalonia.Media;
 using DynamicData.Binding;
 using OneWare.Shared;
 using OneWare.Shared.Extensions;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 

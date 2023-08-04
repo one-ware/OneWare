@@ -1,18 +1,18 @@
 ﻿using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.Shared;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using Prism.Ioc;
-using IFile = OneWare.Shared.IFile;
+using IFile = OneWare.Shared.Models.IFile;
 
 namespace OneWare.Verilog
 {
     public class LanguageServiceVerilog : LanguageService
     {
         public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", 
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls" + Platform.ExecutableExtension) :
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls") :
             Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls"), null, workspace)
         {
             

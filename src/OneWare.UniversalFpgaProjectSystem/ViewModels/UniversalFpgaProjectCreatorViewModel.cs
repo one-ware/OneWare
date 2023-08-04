@@ -1,14 +1,11 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
 using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
-using OneWare.Shared;
+using OneWare.Shared.Controls;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using OneWare.UniversalFpgaProjectSystem.Parser;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 

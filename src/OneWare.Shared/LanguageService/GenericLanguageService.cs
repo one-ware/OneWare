@@ -1,4 +1,6 @@
-﻿namespace OneWare.Shared.LanguageService
+﻿using OneWare.Shared.ViewModels;
+
+namespace OneWare.Shared.LanguageService
 {
     public class GenericLanguageService : LanguageService
     {

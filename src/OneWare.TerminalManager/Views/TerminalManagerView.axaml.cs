@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 
 namespace OneWare.TerminalManager.Views
 {

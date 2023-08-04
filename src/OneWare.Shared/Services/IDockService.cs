@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Shared.Services;
 

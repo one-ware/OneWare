@@ -1,11 +1,8 @@
 ﻿using System.Globalization;
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using OneWare.Shared;
 using OneWare.Shared.Converters;
-using OneWare.Shared.Services;
-using Prism.Ioc;
+using OneWare.Shared.Models;
 
 namespace OneWare.ProjectSystem.Models;
 
