@@ -31,4 +31,8 @@
     <ItemGroup>
       <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="TextMateSharp.Wasm" Version="1.0.55" />
+    </ItemGroup>
 </Project>

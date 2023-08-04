@@ -4,16 +4,12 @@
     
     <PropertyGroup>
         <EnableDynamicLoading>true</EnableDynamicLoading>
+        <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+        <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     </PropertyGroup>
     
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="all"/>
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="runtime"/>
         <ProjectReference Include="..\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" Private="false" ExcludeAssets="all"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Dock.Avalonia" Version="11.0.0" ExcludeAssets="runtime"/>
-        <PackageReference Include="Dock.Model.Mvvm" Version="11.0.0" ExcludeAssets="runtime"/>
-        <PackageReference Include="Prism.Avalonia" Version="8.1.97.11000" ExcludeAssets="runtime"/>
     </ItemGroup>
 </Project>

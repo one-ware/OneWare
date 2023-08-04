@@ -1,31 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\AvaloniaEdit.props" />
     <Import Project="..\..\build\props\OmniSharp.Extensions.Language.props" />
     <Import Project="..\..\build\props\Dock.Avalonia.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
     <Import Project="..\..\build\props\Avalonia.Xaml.Interactions.props" />
     <ItemGroup>
-      <Compile Update="Controls\FreqSelectorBox.axaml.cs">
-        <DependentUpon>FreqSelectorBox.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\HyperLink.axaml.cs">
-        <DependentUpon>HyperLink.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\SearchBox.axaml.cs">
-        <DependentUpon>SearchBox.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\Spinner.axaml.cs">
-        <DependentUpon>Spinner.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\TimeSelectorBox.axaml.cs">
-        <DependentUpon>TimeSelectorBox.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+      <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit.TextMate\AvaloniaEdit.TextMate.csproj" PrivateAssets="all"/>
+      <ProjectReference Include="..\AvaloniaEdit\src\AvaloniaEdit\AvaloniaEdit.csproj" />
     </ItemGroup>
 </Project> 
