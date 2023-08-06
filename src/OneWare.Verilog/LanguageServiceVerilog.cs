@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -12,7 +13,7 @@ namespace OneWare.Verilog
     public class LanguageServiceVerilog : LanguageService
     {
         public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", 
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls") :
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls.exe") :
             Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls"), null, workspace)
         {
             
@@ -38,6 +39,7 @@ namespace OneWare.Verilog
                     await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
                         "https://github.com/chipsalliance/verible/releases/download/v0.0-3365-g76cc3fad/verible-v0.0-3365-g76cc3fad-linux-static-x86_64.tar.gz",
                         ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
+                    PlatformHelper.ChmodFolder(ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {

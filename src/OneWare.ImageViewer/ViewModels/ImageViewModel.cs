@@ -1,6 +1,6 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Svg;
+using Avalonia.Svg.Skia;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
@@ -32,10 +32,15 @@ public class ImageViewModel : ExtendedDocument
             switch (CurrentFile.Extension.ToLower())
             {
                 case ".svg":
-                    Image = new SvgImage()
+                    var svg = new SvgSource();
+                    var picture = svg.Load(FullPath);
+                    if (picture is { })
                     {
-                        Source = SvgSource.Load(FullPath, null),
-                    };
+                        Image = new SvgImage()
+                        {
+                            Source = svg
+                        };
+                    }
                     break;
                 case ".jpg":
                 case ".png":
