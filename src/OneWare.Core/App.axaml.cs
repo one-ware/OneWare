@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Model.Core;
 using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -169,7 +170,7 @@ namespace OneWare.Core
             {
                 Header = $"Format",
                 ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
-                Command = new RelayCommand(() => Container.Resolve<MainWindowViewModel>().CurrentEditor?.Format()),
+                Command = new RelayCommand(() => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format()),
                 InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
             });
 

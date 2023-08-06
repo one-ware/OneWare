@@ -31,8 +31,8 @@ namespace OneWare.Core.ViewModels.Windows
             set => SetProperty(ref _title, value);
         }
 
-        private EditViewModel? _currentEditor;
-        public EditViewModel? CurrentEditor
+        private IEditor? _currentEditor;
+        public IEditor? CurrentEditor
         {
             get => _currentEditor;
             set => SetProperty(ref _currentEditor, value);
@@ -63,18 +63,21 @@ namespace OneWare.Core.ViewModels.Windows
             
             DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
             {
-                if (x is EditViewModel evm)
+                if (x != null)
                 {
-                    CurrentEditor = evm;
-                    Title = $"{paths.AppName} IDE - {evm.CurrentFile?.Header}";
+                    Title = $"{paths.AppName} - {x.CurrentFile?.Header}";
                     
-                    TypeAssistanceQuickOptions.Clear();
-                    var quickOptions = CurrentEditor.TypeAssistance?.GetTypeAssistanceQuickOptions();
-                    if(quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
+                    if (x is IEditor editor)
+                    {
+                        CurrentEditor = editor;
+                        TypeAssistanceQuickOptions.Clear();
+                        var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
+                        if(quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
+                    }
                 }
                 else
                 {
-                    Title = $"{paths.AppName} IDE";
+                    Title = $"{paths.AppName}";
                 }
             });
         }
