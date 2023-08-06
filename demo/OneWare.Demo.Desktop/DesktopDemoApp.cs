@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
+using DynamicData;
+using ImTools;
 using OneWare.Core;
 using OneWare.Core.Data;
+using OneWare.Core.ModuleLogic;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
@@ -23,14 +27,39 @@ namespace OneWare.Demo.Desktop;
 
 public class DesktopDemoApp : DemoApp
 {
-    protected override IModuleCatalog CreateModuleCatalog()
+    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
-        return new DirectoryModuleCatalog()
-        {
-            ModulePath = Paths.ModulesPath
-        };
-    }
+        base.ConfigureModuleCatalog(moduleCatalog);
+        
+        moduleCatalog.AddModule<PackageManagerModule>();
+        moduleCatalog.AddModule<TerminalManagerModule>();
+        moduleCatalog.AddModule<SourceControlModule>();
+        moduleCatalog.AddModule<SerialMonitorModule>();
+        moduleCatalog.AddModule<CppModule>();
 
+        var directoryModules = new DirectoryModuleCatalog()
+        {
+            ModulePath = Paths.ModulesPath,
+        };
+        //ModuleCatalog.AddCatalog(directoryModules);
+        
+        
+        var commandLineArgs = Environment.GetCommandLineArgs();
+        if (commandLineArgs.Length > 1)
+        {
+            var m = commandLineArgs.IndexOf(x => x == "--modules");
+            if (m >= 0 && m < commandLineArgs.Length - 1)
+            {
+                var path = commandLineArgs[m + 1];
+                var extraModule = new DirectoryModuleCatalog()
+                {
+                    ModulePath = path,
+                };
+                ModuleCatalog.AddCatalog(extraModule);
+            }
+        }
+    }
+    
     protected override async Task LoadContentAsync()
     {
         var arguments = Environment.GetCommandLineArgs();
@@ -45,7 +74,7 @@ public class DesktopDemoApp : DemoApp
             splashWindow.Show();
         }
         
-        if (arguments.GetLength(0) > 1)
+        if (arguments.Length > 1 && !arguments[1].StartsWith("--"))
         {
             var fileName = arguments[1];
             //Check file exists
@@ -100,15 +129,5 @@ public class DesktopDemoApp : DemoApp
         {
             Container.Resolve<ILogger>().Error(e.Message, e);
         }
-    }
-
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-    {
-        base.ConfigureModuleCatalog(moduleCatalog);
-        moduleCatalog.AddModule<PackageManagerModule>();
-        moduleCatalog.AddModule<TerminalManagerModule>();
-        moduleCatalog.AddModule<SourceControlModule>();
-        moduleCatalog.AddModule<SerialMonitorModule>();
-        moduleCatalog.AddModule<CppModule>();
     }
 }

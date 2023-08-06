@@ -80,7 +80,7 @@ public class TerminalManagerViewModel : ExtendedTool
 
     public void NewTerminal()
     {
-        var homeFolder = _projectExplorerService.ActiveProject?.ProjectPath;
+        var homeFolder = _projectExplorerService.ActiveProject?.FullPath;
 
         homeFolder ??= _paths.ProjectsDirectory;
         

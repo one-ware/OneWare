@@ -16,6 +16,7 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.FolderProjectSystem;
+using OneWare.ImageViewer;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
 using OneWare.ProjectSystem.Services;
@@ -37,6 +38,8 @@ namespace OneWare.Core
 {
     public class App : PrismApplication
     {
+        protected AggregateModuleCatalog ModuleCatalog { get; } = new();
+
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -199,7 +202,7 @@ namespace OneWare.Core
 
         protected override IModuleCatalog CreateModuleCatalog()
         {
-            return new AggregateModuleCatalog();
+            return ModuleCatalog;
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -209,6 +212,7 @@ namespace OneWare.Core
             moduleCatalog.AddModule<OutputModule>();
             moduleCatalog.AddModule<ProjectExplorerModule>();
             moduleCatalog.AddModule<FolderProjectSystemModule>();
+            moduleCatalog.AddModule<ImageViewerModule>();
 
             base.ConfigureModuleCatalog(moduleCatalog);
         }
