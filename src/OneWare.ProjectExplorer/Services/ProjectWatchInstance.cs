@@ -86,6 +86,10 @@ public class ProjectWatchInstance : IDisposable
     {
         try
         {
+            if (!File.Exists(path)) return;
+            var attributes = File.GetAttributes(path);
+            if(attributes.HasFlag(FileAttributes.Hidden)) return;
+            
             var entry = _root.Search(path);
 
             var lastArg = changes.Last();
