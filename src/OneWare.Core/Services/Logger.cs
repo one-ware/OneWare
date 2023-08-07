@@ -36,7 +36,7 @@ public class Logger : ILogger
             }
     }
     
-    public void Log(object message, ConsoleColor color = ConsoleColor.White, bool writeOutput = false, IBrush? outputBrush = null)
+    public void Log(object message, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
     {
         var appRun = DateTime.Now - AppStart;
 #if DEBUG
@@ -45,7 +45,7 @@ public class Logger : ILogger
             (int)appRun.TotalMinutes, appRun.Seconds) + @"] ");
         if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = color;
         Console.WriteLine(message);
-        if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = ConsoleColor.White;
+        if(RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = default;
 #endif
         if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {

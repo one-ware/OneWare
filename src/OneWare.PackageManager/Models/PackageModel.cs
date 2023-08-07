@@ -15,12 +15,15 @@ public class PackageModel : ObservableObject
     
     public IImage? Image { get; }
     
-    public PackageModel(string title, string shortDescription, string description, IImage? image, List<LinkModel> links)
+    public List<string> Versions { get; }
+    
+    public PackageModel(string title, string shortDescription, string description, IImage? image, List<LinkModel> links, List<string> versions)
     {
         Title = title;
         ShortDescription = shortDescription;
         Description = description;
         Image = image;
         Links = links;
+        Versions = versions;
     }
 }

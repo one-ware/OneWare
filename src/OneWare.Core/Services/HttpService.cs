@@ -21,7 +21,7 @@ public class HttpService : IHttpService
         _handler = new HttpClientHandler();
     }
 
-    private async Task<bool> DownloadFileAsync(string url, Stream stream, IProgress<float>? progress, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    public async Task<bool> DownloadFileAsync(string url, Stream stream, IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -59,7 +59,7 @@ public class HttpService : IHttpService
         return null;
     }
 
-    public async Task<bool> DownloadFileAsync(string url, string location, IProgress<float>? progress, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    public async Task<bool> DownloadFileAsync(string url, string location, IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         try
         {

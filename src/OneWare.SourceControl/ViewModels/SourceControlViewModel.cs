@@ -743,7 +743,7 @@ namespace OneWare.SourceControl.ViewModels
 
             if (result != null)
             {
-                _logger.Log($"Pull Status: {result.Status}", ConsoleColor.White, true);
+                _logger.Log($"Pull Status: {result.Status}", default, true);
                 PublishMergeResult(result);
             }
 
