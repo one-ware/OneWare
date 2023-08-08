@@ -24,11 +24,7 @@
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
         <!--<LanguageServerUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip</LanguageServerUrl>-->
     </PropertyGroup>
-
-    <PropertyGroup>
-        <TempDownloadFolder>$([System.IO.Path]::Combine($([System.IO.Path]::GetTempPath()), $([System.IO.Path]::GetRandomFileName())))</TempDownloadFolder>
-    </PropertyGroup>
-
+    
     <ItemGroup>
         <Content Include="$(IntermediateOutputPath)External_Package/**">
             <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
@@ -36,12 +32,12 @@
         </Content>
     </ItemGroup>
     
-    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Outputs="$(IntermediateOutputPath)External_Package" Condition="'$(LanguageServerUrl)' != ''">
+    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Outputs="$(IntermediateOutputPath)temp_package.zip" Condition="'$(LanguageServerUrl)' != ''">
         <Message Text="$(IntermediateOutputPath)External_Package" Importance="high"/>
         <DownloadFile
                 SourceUrl="$(LanguageServerUrl)"
                 DestinationFileName="temp_package.zip"
-                DestinationFolder="$(TempDownloadFolder)" />
-        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" SourceFiles="$(TempDownloadFolder)/temp_package.zip"/>
+                DestinationFolder="$(IntermediateOutputPath)" />
+        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" SourceFiles="$(IntermediateOutputPath)/temp_package.zip"/>
     </Target>
 </Project>

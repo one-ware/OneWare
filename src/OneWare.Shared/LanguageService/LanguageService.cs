@@ -12,14 +12,14 @@ namespace OneWare.Shared.LanguageService
     {
         private CancellationTokenSource? _cancellation;
         private Process? _process;
-        private readonly string? _arguments;
-        protected readonly string ExecutablePath;
+        protected string? Arguments { get; set; }
+        protected string? ExecutablePath { get; set; }
 
-        protected LanguageService(string name, string executablePath, string? arguments, string? workspace) : base(name,
+        protected LanguageService(string name, string? executablePath, string? arguments, string? workspace) : base(name,
             workspace)
         {
             ExecutablePath = executablePath;
-            _arguments = arguments;
+            Arguments = arguments;
         }
 
         public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
@@ -29,6 +29,12 @@ namespace OneWare.Shared.LanguageService
             //return;
             if (IsActivated) return;
 
+            if (ExecutablePath == null)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Warning($"Tried to activate Language Server {Name} without executable!", new NotSupportedException(), false);
+                return;
+            }
+            
             if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))
             {
                 var websocket = new ClientWebSocket();
@@ -59,7 +65,7 @@ namespace OneWare.Shared.LanguageService
                 var processStartInfo = new ProcessStartInfo
                 {
                     FileName = ExecutablePath,
-                    Arguments = _arguments ?? "",
+                    Arguments = Arguments,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -72,8 +78,8 @@ namespace OneWare.Shared.LanguageService
                     StartInfo = processStartInfo
                 };
 
-                _process.ErrorDataReceived +=
-                    (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "");
+                //_process.ErrorDataReceived +=
+                //    (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "");
 
                 try
                 {

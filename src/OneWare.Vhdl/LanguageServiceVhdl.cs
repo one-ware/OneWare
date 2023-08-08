@@ -15,12 +15,13 @@ namespace OneWare.Vhdl
 {
     public class LanguageServiceVhdl : LanguageService
     {
-        private static string? _executablePath;
+        private static readonly string? StartPath;
+        
         static LanguageServiceVhdl()
         {
             var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
             
-            _executablePath = PlatformHelper.Platform switch
+            StartPath = PlatformHelper.Platform switch
             {
                 PlatformId.LinuxX64 => $"{assemblyPath}/vhdl_ls-x86_64-unknown-linux-musl/bin/vhdl_ls",
                 PlatformId.Wasm => "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app",
@@ -28,9 +29,12 @@ namespace OneWare.Vhdl
             };
         }
         
-        public LanguageServiceVhdl(string workspace) : base ("RustHDL", _executablePath ?? "", null, workspace)
+        public LanguageServiceVhdl(string workspace) : base ("RustHDL", StartPath, null, workspace)
         {
-            
+            if (StartPath != null && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                PlatformHelper.ChmodFile(StartPath);
+            }
         }
 
         public override ITypeAssistance GetTypeAssistance(IEditor editor)
