@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
@@ -12,9 +13,23 @@ namespace OneWare.Verilog
 {
     public class LanguageServiceVerilog : LanguageService
     {
-        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", 
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad-win64", "verible-verilog-ls.exe") :
-            Path.Combine(paths.PackagesDirectory, "verible-v0.0-3365-g76cc3fad", "bin", "verible-verilog-ls"), null, workspace)
+        private static readonly string? StartPath;
+        
+        static LanguageServiceVerilog()
+        {
+            var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            
+            StartPath = PlatformHelper.Platform switch
+            {
+                PlatformId.WinX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-win64/verible-verilog-ls.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0/bin/verible-verilog-ls",
+                PlatformId.OsxX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
+                PlatformId.OsxArm64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
+                _ => null
+            };
+        }
+        
+        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", StartPath, null, workspace)
         {
             
         }

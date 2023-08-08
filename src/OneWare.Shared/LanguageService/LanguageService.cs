@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using Nerdbank.Streams;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
@@ -18,6 +19,10 @@ namespace OneWare.Shared.LanguageService
         protected LanguageService(string name, string? executablePath, string? arguments, string? workspace) : base(name,
             workspace)
         {
+            if (executablePath != null && (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
+            {
+                PlatformHelper.ChmodFile(executablePath);
+            }
             ExecutablePath = executablePath;
             Arguments = arguments;
         }

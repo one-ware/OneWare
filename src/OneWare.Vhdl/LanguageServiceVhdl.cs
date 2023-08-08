@@ -23,6 +23,7 @@ namespace OneWare.Vhdl
             
             StartPath = PlatformHelper.Platform switch
             {
+                PlatformId.WinX64 => $"{assemblyPath}/vhdl_ls-x86_64-pc-windows-msvc/bin/vhdl_ls.exe",
                 PlatformId.LinuxX64 => $"{assemblyPath}/vhdl_ls-x86_64-unknown-linux-musl/bin/vhdl_ls",
                 PlatformId.Wasm => "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app",
                 _ => null
@@ -31,10 +32,7 @@ namespace OneWare.Vhdl
         
         public LanguageServiceVhdl(string workspace) : base ("RustHDL", StartPath, null, workspace)
         {
-            if (StartPath != null && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                PlatformHelper.ChmodFile(StartPath);
-            }
+            
         }
 
         public override ITypeAssistance GetTypeAssistance(IEditor editor)

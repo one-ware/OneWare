@@ -10,4 +10,30 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
     </ItemGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-linux-static-x86_64.tar.gz</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</LanguageServerUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="$(IntermediateOutputPath)External_Package/**"
+                 Link="%(RecursiveDir)%(Filename)%(Extension)"
+                 CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Condition="'$(LanguageServerUrl)' != ''">
+        <DownloadFile
+                SourceUrl="$(LanguageServerUrl)"
+                DestinationFileName="temp_package.zip"
+                DestinationFolder="$(IntermediateOutputPath)" />
+        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" SourceFiles="$(IntermediateOutputPath)/temp_package.zip"/>
+    </Target>
 </Project>
