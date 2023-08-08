@@ -21,10 +21,10 @@ namespace OneWare.Verilog
             
             StartPath = PlatformHelper.Platform switch
             {
-                PlatformId.WinX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-win64/verible-verilog-ls.exe",
-                PlatformId.LinuxX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0/bin/verible-verilog-ls",
-                PlatformId.OsxX64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
-                PlatformId.OsxArm64 => $"{assemblyPath}/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
+                PlatformId.WinX64 => $"{assemblyPath}/verible/verible-v0.0-3401-g0b8cb4e0-win64/verible-verilog-ls.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/verible/verible-v0.0-3401-g0b8cb4e0/bin/verible-verilog-ls",
+                PlatformId.OsxX64 => $"{assemblyPath}/verible/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
+                PlatformId.OsxArm64 => $"{assemblyPath}/verible/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
                 _ => null
             };
         }

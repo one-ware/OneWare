@@ -30,12 +30,6 @@
         <DebugType>None</DebugType>
         <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     </PropertyGroup>
-    
-    <PropertyGroup>
-        <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
-        <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
-        <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
-    </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj" />

@@ -23,8 +23,8 @@ namespace OneWare.Vhdl
             
             StartPath = PlatformHelper.Platform switch
             {
-                PlatformId.WinX64 => $"{assemblyPath}/vhdl_ls-x86_64-pc-windows-msvc/bin/vhdl_ls.exe",
-                PlatformId.LinuxX64 => $"{assemblyPath}/vhdl_ls-x86_64-unknown-linux-musl/bin/vhdl_ls",
+                PlatformId.WinX64 => $"{assemblyPath}/rusthdl/vhdl_ls-x86_64-pc-windows-msvc/bin/vhdl_ls.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/rusthdl/vhdl_ls-x86_64-unknown-linux-musl/bin/vhdl_ls",
                 PlatformId.Wasm => "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app",
                 _ => null
             };

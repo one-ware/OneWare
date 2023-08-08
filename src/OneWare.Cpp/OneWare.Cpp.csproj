@@ -2,35 +2,31 @@
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
+    <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="runtime"/>
     </ItemGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
+        <ExternalPackageUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip</ExternalPackageUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-linux-16.0.2.zip</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
+        <ExternalPackageUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-linux-16.0.2.zip</ExternalPackageUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
+        <ExternalPackageUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip</ExternalPackageUrl>
     </PropertyGroup>
 
-    <ItemGroup>
-        <Content Include="$(IntermediateOutputPath)External_Package/**"
-                 Link="%(RecursiveDir)%(Filename)%(Extension)"
-                 CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
-
-    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Condition="'$(LanguageServerUrl)' != ''">
+    <Target Name="DownloadExternalPackage" AfterTargets="Build" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/clangd')">
         <DownloadFile
-                SourceUrl="$(LanguageServerUrl)"
-                DestinationFileName="temp_package.zip"
+                SourceUrl="$(ExternalPackageUrl)"
+                DestinationFileName="temp_package.tmp"
                 DestinationFolder="$(IntermediateOutputPath)" />
-        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" 
-               SourceFiles="$(IntermediateOutputPath)/temp_package.zip"/>
+        <Uncompress TargetDirectory="$(OutputPath)/tools/clangd"
+                    ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
+        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high" />
     </Target>
 </Project>

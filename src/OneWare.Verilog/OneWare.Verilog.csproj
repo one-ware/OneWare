@@ -2,38 +2,35 @@
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
+    <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="runtime"/>
     </ItemGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
     </ItemGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
+        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</ExternalPackageUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-linux-static-x86_64.tar.gz</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
+        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-linux-static-x86_64.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <LanguageServerUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</LanguageServerUrl>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
+        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
-    <ItemGroup>
-        <Content Include="$(IntermediateOutputPath)External_Package/**"
-                 Link="%(RecursiveDir)%(Filename)%(Extension)"
-                 CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
-
-    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Condition="'$(LanguageServerUrl)' != ''">
+    <Target Name="DownloadExternalPackage" AfterTargets="Build" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/verible')">
         <DownloadFile
-                SourceUrl="$(LanguageServerUrl)"
-                DestinationFileName="temp_package.zip"
+                SourceUrl="$(ExternalPackageUrl)"
+                DestinationFileName="temp_package.tmp"
                 DestinationFolder="$(IntermediateOutputPath)" />
-        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" SourceFiles="$(IntermediateOutputPath)/temp_package.zip"/>
+        <Uncompress TargetDirectory="$(OutputPath)/tools/verible"
+                    ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
+        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high" />
     </Target>
 </Project>

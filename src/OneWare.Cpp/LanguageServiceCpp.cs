@@ -19,10 +19,10 @@ namespace OneWare.Cpp
             
             StartPath = PlatformHelper.Platform switch
             {
-                PlatformId.WinX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd.exe",
-                PlatformId.LinuxX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
-                PlatformId.OsxX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
-                PlatformId.OsxArm64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
+                PlatformId.WinX64 => $"{assemblyPath}/clangd/clangd_16.0.2/bin/clangd.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/clangd/clangd_16.0.2/bin/clangd",
+                PlatformId.OsxX64 => $"{assemblyPath}/clangd/clangd_16.0.2/bin/clangd",
+                PlatformId.OsxArm64 => $"{assemblyPath}/clangd/clangd_16.0.2/bin/clangd",
                 _ => null
             };
         }

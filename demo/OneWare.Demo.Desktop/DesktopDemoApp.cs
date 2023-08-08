@@ -41,7 +41,7 @@ public class DesktopDemoApp : DemoApp
         {
             ModulePath = Paths.ModulesPath,
         };
-        //ModuleCatalog.AddCatalog(directoryModules);
+        ModuleCatalog.AddCatalog(directoryModules);
         
         
         var commandLineArgs = Environment.GetCommandLineArgs();
