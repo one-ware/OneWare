@@ -6,8 +6,57 @@ using Prism.Ioc;
 
 namespace OneWare.Shared.Helpers
 {
+    public enum PlatformId
+    {
+        WinX64,
+        WinArm64,
+        LinuxX64,
+        LinuxArm64,
+        OsxX64,
+        OsxArm64,
+        Wasm,
+        Unknown
+    }
+    
     public static class PlatformHelper
     {
+        public static PlatformId Platform { get; }
+
+        static PlatformHelper()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Platform = RuntimeInformation.OSArchitecture switch
+                {
+                    Architecture.X64 => PlatformId.WinX64,
+                    Architecture.Arm64 => PlatformId.WinArm64,
+                    _ => PlatformId.Unknown
+                };
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Platform = RuntimeInformation.OSArchitecture switch
+                {
+                    Architecture.X64 => PlatformId.LinuxX64,
+                    Architecture.Arm64 => PlatformId.LinuxArm64,
+                    _ => PlatformId.Unknown
+                };
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Platform = RuntimeInformation.OSArchitecture switch
+                {
+                    Architecture.X64 => PlatformId.OsxX64,
+                    Architecture.Arm64 => PlatformId.OsxArm64,
+                    _ => PlatformId.Unknown
+                };
+            }
+            else if (RuntimeInformation.OSArchitecture == Architecture.Wasm)
+            {
+                Platform = PlatformId.Wasm;
+            }
+        }
+        
         public static bool Exists(string path)
         {
             return File.Exists(path) || ExistsOnPath(path);

@@ -5,11 +5,43 @@
     <Import Project="..\..\build\props\JavaScriptEngineSwitcher.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="true" ExcludeAssets="runtime"/>
     </ItemGroup>
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\vhdl.tmLanguage.json" />
       <AvaloniaResource Include="Assets\formatter.js" />
     </ItemGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <LanguageServerUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-pc-windows-msvc.zip</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <LanguageServerUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <!--<LanguageServerUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip</LanguageServerUrl>-->
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <TempDownloadFolder>$([System.IO.Path]::Combine($([System.IO.Path]::GetTempPath()), $([System.IO.Path]::GetRandomFileName())))</TempDownloadFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="$(IntermediateOutputPath)External_Package/**">
+            <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    
+    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Outputs="$(IntermediateOutputPath)External_Package" Condition="'$(LanguageServerUrl)' != ''">
+        <Message Text="$(IntermediateOutputPath)External_Package" Importance="high"/>
+        <DownloadFile
+                SourceUrl="$(LanguageServerUrl)"
+                DestinationFileName="temp_package.zip"
+                DestinationFolder="$(TempDownloadFolder)" />
+        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" SourceFiles="$(TempDownloadFolder)/temp_package.zip"/>
+    </Target>
 </Project>

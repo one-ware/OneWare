@@ -52,7 +52,7 @@ namespace OneWare.Shared.LanguageService
                 if (!PlatformHelper.Exists(ExecutablePath))
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error($"{Name} language server not found! {ExecutablePath}");
+                        ?.Warning($"{Name} language server not found! {ExecutablePath}");
                     return;
                 }
 
