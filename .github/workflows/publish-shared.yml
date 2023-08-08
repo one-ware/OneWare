@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ create_nuget ]
     steps:
-      # Install the .NET SDK indicated in the global.json file
+      # Install the .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -81,6 +81,10 @@ jobs:
         submodules: recursive
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x 
+    - name: Install wasm-tools
+      run: dotnet workload install wasm-tools wasm-experimental
     - name: Run tests
       run: dotnet test --configuration Release
 
@@ -98,10 +102,12 @@ jobs:
           name: nuget
           path: ${{ env.NuGetDirectory }}
 
-      # Install the .NET SDK indicated in the global.json file
-      - name: Setup .NET Core
+      # Install the .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
-
+        with:
+          dotnet-version: 7.0.x 
+          
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
       # If you retry a failed workflow, already published packages will be skipped without error.
