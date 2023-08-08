@@ -92,7 +92,7 @@ namespace OneWare.Shared.LanguageService
                     options.OnPublishDiagnostics(PublishDiag);
                     options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
                     options.EnableDynamicRegistration();
-                    options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.Magenta));
+                    options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
                     options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta); });
                     
                     options.WithCapability(new SynchronizationCapability
@@ -202,7 +202,7 @@ namespace OneWare.Shared.LanguageService
 
             var cancelToken = new CancellationToken();
 
-            ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name, ConsoleColor.Magenta);
+            ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name, ConsoleColor.DarkCyan);
 
             try
             {
@@ -216,7 +216,7 @@ namespace OneWare.Shared.LanguageService
                 return;
             }
 
-            ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name, ConsoleColor.Magenta);
+            ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name, ConsoleColor.DarkCyan);
 
             IsLanguageServiceReady = true;
             Dispatcher.UIThread.Post(() => LanguageServiceActivated?.Invoke(this, EventArgs.Empty));

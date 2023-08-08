@@ -13,7 +13,7 @@ using Prism.Ioc;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 
-public class VcdViewModel : ExtendedDocument
+public class VcdViewModel : ExtendedDocument, IStreamableDocument
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
