@@ -29,7 +29,7 @@ namespace OneWare.Verilog
             };
         }
         
-        public LanguageServiceVerilog(string workspace, IPaths paths) : base ("Verible", StartPath, null, workspace)
+        public LanguageServiceVerilog(string workspace) : base ("Verible", StartPath, null, workspace)
         {
             
         }
@@ -37,32 +37,6 @@ namespace OneWare.Verilog
         public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
             return new TypeAssistanceVerilog(editor, this);
-        }
-        
-        public override async Task ActivateAsync()
-        {
-            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm)
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/chipsalliance/verible/releases/download/v0.0-3365-g76cc3fad/verible-v0.0-3365-g76cc3fad-win64.zip",
-                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/chipsalliance/verible/releases/download/v0.0-3365-g76cc3fad/verible-v0.0-3365-g76cc3fad-linux-static-x86_64.tar.gz",
-                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                    PlatformHelper.ChmodFolder(ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    
-                }
-            }
-                
-            await base.ActivateAsync();
         }
 
         public override IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)

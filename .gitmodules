@@ -1,6 +1,3 @@
-[submodule "src/AvaloniaEdit"]
-	path = src/AvaloniaEdit
-	url = https://github.com/HendrikMennen/AvaloniaEdit
 [submodule "src/Markdown.Avalonia"]
 	path = src/Markdown.Avalonia
 	url = https://github.com/HendrikMennen/Markdown.Avalonia

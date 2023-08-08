@@ -8,7 +8,6 @@ public interface IPaths
     public string AppDataDirectory { get; }
     public string TempDirectory { get; }
     public string LayoutDirectory { get; }
-    public string PackagesDirectory { get; }
     public string SettingsPath { get; }
     public string DocumentsDirectory { get; }
     public string CrashReportsDirectory { get; }

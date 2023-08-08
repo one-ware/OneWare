@@ -15,7 +15,6 @@ public class Paths : IPaths
     public string SettingsPath => Path.Combine(AppDataDirectory, "Settings.json");
     public string DocumentsDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
-    public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
@@ -32,7 +31,6 @@ public class Paths : IPaths
         Directory.CreateDirectory(ModulesPath);
         Directory.CreateDirectory(CrashReportsDirectory);
         Directory.CreateDirectory(ProjectsDirectory);
-        Directory.CreateDirectory(PackagesDirectory);
         //...
     }
 }

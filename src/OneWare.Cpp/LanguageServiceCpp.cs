@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.LanguageService;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
@@ -9,10 +11,23 @@ namespace OneWare.Cpp
 {
     public class LanguageServiceCpp : LanguageService
     {
-        public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("Clang",
-            Path.Combine(paths.PackagesDirectory, "clangd_16.0.2", "bin", $"clangd"), 
-            "--log=error",
-            null)
+        private static readonly string? StartPath;
+        
+        static LanguageServiceCpp()
+        {
+            var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            
+            StartPath = PlatformHelper.Platform switch
+            {
+                PlatformId.WinX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
+                PlatformId.OsxX64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
+                PlatformId.OsxArm64 => $"{assemblyPath}/clangd_16.0.2/bin/clangd",
+                _ => null
+            };
+        }
+        
+        public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("Clang", StartPath,"--log=error",null)
         {
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
             // {
@@ -32,32 +47,6 @@ namespace OneWare.Cpp
         public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
             return new TypeAssistanceCpp(editor, this);
-        }
-
-        public override async Task ActivateAsync()
-        {
-            if (!File.Exists(ExecutablePath) && RuntimeInformation.OSArchitecture is not Architecture.Wasm)
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip",
-                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                { 
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                    "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip",
-                    ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                { 
-                    await ContainerLocator.Container.Resolve<IHttpService>().DownloadAndExtractArchiveAsync(
-                        "https://github.com/clangd/clangd/releases/download/16.0.2/clangd-linux-16.0.2.zip",
-                        ContainerLocator.Container.Resolve<IPaths>().PackagesDirectory);
-                }
-            }
-            await base.ActivateAsync();
         }
     }
 

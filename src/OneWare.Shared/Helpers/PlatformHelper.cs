@@ -21,6 +21,8 @@ namespace OneWare.Shared.Helpers
     public static class PlatformHelper
     {
         public static PlatformId Platform { get; }
+        
+        public static string ExecutableExtension { get; } = string.Empty;
 
         static PlatformHelper()
         {
@@ -32,6 +34,7 @@ namespace OneWare.Shared.Helpers
                     Architecture.Arm64 => PlatformId.WinArm64,
                     _ => PlatformId.Unknown
                 };
+                ExecutableExtension = ".exe";
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {

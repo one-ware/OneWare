@@ -7,7 +7,30 @@
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
 
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-windows-16.0.2.zip</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-linux-16.0.2.zip</LanguageServerUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <LanguageServerUrl>https://github.com/clangd/clangd/releases/download/16.0.2/clangd-mac-16.0.2.zip</LanguageServerUrl>
+    </PropertyGroup>
+
     <ItemGroup>
-      <AvaloniaResource Include="Assets\CPP-Mode.xshd" />
+        <Content Include="$(IntermediateOutputPath)External_Package/**"
+                 Link="%(RecursiveDir)%(Filename)%(Extension)"
+                 CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
+
+    <Target Name="DownloadExternalPackage" AfterTargets="Restore" Condition="'$(LanguageServerUrl)' != ''">
+        <DownloadFile
+                SourceUrl="$(LanguageServerUrl)"
+                DestinationFileName="temp_package.zip"
+                DestinationFolder="$(IntermediateOutputPath)" />
+        <Unzip DestinationFolder="$(IntermediateOutputPath)External_Package" 
+               SourceFiles="$(IntermediateOutputPath)/temp_package.zip"/>
+    </Target>
 </Project>
