@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: publish
+name: Publish Shared Nuget Package
 on:
   workflow_dispatch: # Allow running the workflow manually from the GitHub UI
   release:
