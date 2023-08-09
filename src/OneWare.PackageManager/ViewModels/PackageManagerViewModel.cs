@@ -14,8 +14,10 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageManagerViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
+    private readonly IModuleTracker _moduleTracker;
     private readonly ILogger _logger;
     private PackageCategoryModel? _selectedCategory;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     private bool _showInstalled = true;
     public bool ShowInstalled
@@ -46,9 +48,10 @@ public class PackageManagerViewModel : ObservableObject
     
     public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
 
-    public PackageManagerViewModel(IHttpService httpService, ILogger logger)
+    public PackageManagerViewModel(IHttpService httpService, IModuleTracker moduleTracker, ILogger logger)
     {
         _httpService = httpService;
+        _moduleTracker = moduleTracker;
         _logger = logger;
         
         _ = LoadPackagesAsync();
@@ -66,14 +69,22 @@ public class PackageManagerViewModel : ObservableObject
     
     public async Task LoadPackagesAsync()
     {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+        
         IsLoading = true;
         SelectedCategory = null;
         PackageCategories.Clear();
 
         RegisterPackageCategory(new PackageCategoryModel("Languages", Application.Current?.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
         RegisterPackageCategory(new PackageCategoryModel("Toolchains", Application.Current?.GetResourceObservable("FeatherIcons.Tool")));
+        RegisterPackageCategory(new PackageCategoryModel("Simulators", Application.Current?.GetResourceObservable("Material.Pulse")));
         RegisterPackageCategory(new PackageCategoryModel("Boards", Application.Current?.GetResourceObservable("NiosIcon")));
 
+        foreach (var c in _moduleTracker.ModuleCatalog.Modules)
+        {
+            Console.WriteLine(c.ModuleName);
+        }
         // RegisterPackage(PackageCategories.Last(),
         //     new PackageModel("Max1000 Support", "Support for MAX1000 Development Board", "The MAX1000 FPGA Development Board is the most inexpensive way to start with FPGAs and OneWare Studio",
         //         await _httpService.DownloadImageAsync("https://vhdplus.com/assets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png"), new List<LinkModel>
@@ -97,34 +108,57 @@ public class PackageManagerViewModel : ObservableObject
 
         
         await LoadPackageRepositoryAsync(
-            "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json");
+            "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
         
         IsLoading = false;
     }
     
-    private async Task LoadPackageRepositoryAsync(string url)
+    private async Task LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
-        var stream = new MemoryStream();
-        await _httpService.DownloadFileAsync(url, stream);
-
+        using var stream = new MemoryStream();
+        await _httpService.DownloadFileAsync(url, stream, null, default, cancellationToken);
         stream.Position = 0;
         
         try
         {
-            var repository = JsonSerializer.Deserialize<PackageRepository>(stream, new JsonSerializerOptions()
+            var repository = await JsonSerializer.DeserializeAsync<PackageRepository>(stream, new JsonSerializerOptions()
             {
-                PropertyNameCaseInsensitive = true
-            });
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+            }, cancellationToken);
             
             if (repository is { Packages: not null })
             {
                 foreach (var r in repository.Packages)
                 {
-                    RegisterPackage(PackageCategories.First(), 
-                        new PackageModel(r.Name ?? "", r.Id ?? "", "", 
-                            await _httpService.DownloadImageAsync(r.IconUrl ?? ""), 
-                            new List<LinkModel>(){new("License", r.LicenseUrl ?? "")},
-                            r.Versions.Select(x => x.Version).ToList()));
+                    var icon = r.IconUrl != null
+                        ? await _httpService.DownloadImageAsync(r.IconUrl, cancellationToken: cancellationToken)
+                        : null;
+
+                    var tabs = new List<TabModel>();
+                    if (r.Tabs != null)
+                    {
+                        foreach (var tab in r.Tabs)
+                        {
+                            if(tab.ContentUrl == null) continue;
+                            var content = await _httpService.DownloadTextAsync(tab.ContentUrl,
+                                cancellationToken: cancellationToken);
+                                
+                            tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
+                        }
+                    }
+
+                    var model = new PackageModel()
+                    {
+                        Title = r.Name,
+                        Description = r.Description,
+                        License = r.License,
+                        Image = icon,
+                        Tabs = tabs,
+                        Links = r.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList()
+                    };
+                    
+                    RegisterPackage(PackageCategories.First(), model);
                 }
             }
             else throw new Exception("Packages empty");

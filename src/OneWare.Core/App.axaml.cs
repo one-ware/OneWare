@@ -48,6 +48,8 @@ namespace OneWare.Core
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
+            
             //Services
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
             containerRegistry.RegisterSingleton<IPackageService, PackageService>();

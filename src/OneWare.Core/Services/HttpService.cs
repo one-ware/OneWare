@@ -59,6 +59,26 @@ public class HttpService : IHttpService
         return null;
     }
 
+    public async Task<string?> DownloadTextAsync(string url, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var client = HttpClient;
+            if(timeout != default)
+                client.Timeout = timeout;
+        
+            using var download = await client.GetAsync(
+                url, cancellationToken);
+            
+            return await download.Content.ReadAsStringAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+        return null;
+    }
+
     public async Task<bool> DownloadFileAsync(string url, string location, IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         try

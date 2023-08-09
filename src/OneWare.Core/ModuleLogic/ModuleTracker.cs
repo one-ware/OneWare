@@ -1,6 +1,7 @@
 using System.Globalization;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Services;
+using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic;
 
@@ -8,9 +9,13 @@ class ModuleTracker : IModuleTracker
 {
     private readonly ILogger _logger;
 
-    public ModuleTracker(ILogger logger)
+    public IModuleCatalog ModuleCatalog { get; }
+
+    
+    public ModuleTracker(ILogger logger, IModuleCatalog moduleCatalog)
     {
         _logger = logger;
+        ModuleCatalog = moduleCatalog;
     }
     
     public void RecordModuleLoaded(string moduleName)

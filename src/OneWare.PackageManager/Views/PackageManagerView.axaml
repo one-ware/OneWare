@@ -7,6 +7,7 @@
                        xmlns:models="clr-namespace:OneWare.PackageManager.Models"
                        xmlns:mvvm="http://prismlibrary.com/"
                        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                       xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
                        PrefWidth="1050" PrefHeight="600"
                        mc:Ignorable="d"
                        x:Class="OneWare.PackageManager.Views.PackageManagerView"
@@ -58,13 +59,14 @@
                 </ListBox>
             </Border>
             
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical">
-                <Border Padding="3">
+            <DockPanel Grid.Row="1" Grid.Column="1" >
+                <Border Padding="3" DockPanel.Dock="Top">
                     <Border Classes="RoundToolBar">
                         <controls:SearchBox SearchButtonVisible="False"/>
                     </Border>
                 </Border>
-                <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" BorderThickness="0"
+                <Grid DockPanel.Dock="Top">
+                    <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" BorderThickness="0"
                          ItemsSource="{Binding SelectedCategory.Packages, FallbackValue={x:Null}}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -77,7 +79,7 @@
                                 <Image DockPanel.Dock="Left" Source="{Binding Image}" Height="75" Width="75"/>
                                 <Grid DockPanel.Dock="Right" RowDefinitions="25, 30" Margin="10, 10, 0, 10" ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold" Text="{Binding Title}"/>
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ShortDescription}" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Description}" TextWrapping="Wrap"/>
                                     <Border Grid.Column="1" Grid.Row="0" Classes="RoundToolBar">
                                         <StackPanel Orientation="Horizontal">
                                             <ComboBox ItemsSource="{Binding Versions}" BorderThickness="0"/>
@@ -89,7 +91,9 @@
                         </DataTemplate>
                     </ListBox.DataTemplates>
                 </ListBox>
-            </StackPanel>
+                    <controls:Spinner Height="20" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}"/>
+                </Grid>
+            </DockPanel>
             
             <Border Grid.Row="1" Grid.Column="2" Padding="15" BorderThickness="1, 0, 0, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                 <ContentPresenter Content="{Binding #PluginList.SelectedItem}">
@@ -109,16 +113,17 @@
                                         </DataTemplate>
                                     </ItemsControl.DataTemplates>
                                 </ItemsControl>
-                                <TabControl>
-                                    <TabItem Header="Information">
-                                        <StackPanel Orientation="Vertical" Spacing="10">
-                                            <Image Source="{Binding Image}" HorizontalAlignment="Left"/>
-                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </TabItem>
-                                    <TabItem Header="License">
-                                        <TextBlock Text="License"/>
-                                    </TabItem>
+                                <TabControl ItemsSource="{Binding Tabs}">
+                                    <TabControl.ItemTemplate>
+                                        <DataTemplate DataType="models:TabModel">
+                                            <TextBlock Text="{Binding Title}"/>
+                                        </DataTemplate>
+                                    </TabControl.ItemTemplate>
+                                    <TabControl.ContentTemplate>
+                                        <DataTemplate DataType="models:TabModel">
+                                            <avalonia:MarkdownScrollViewer Markdown="{Binding Content}"/>
+                                        </DataTemplate>
+                                    </TabControl.ContentTemplate>
                                 </TabControl>
                             </StackPanel>
                         </DataTemplate>

@@ -1,7 +1,10 @@
+using Prism.Modularity;
+
 namespace OneWare.Shared.Services;
 
 public interface IModuleTracker
 {
+    public IModuleCatalog ModuleCatalog { get; }
     /// <summary>
     /// Records the module has been loaded
     /// </summary>

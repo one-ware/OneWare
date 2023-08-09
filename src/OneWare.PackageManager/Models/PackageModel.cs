@@ -1,29 +1,16 @@
 ﻿using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.PackageManager.Serializer;
 
 namespace OneWare.PackageManager.Models;
 
 public class PackageModel : ObservableObject
 {
-    public string Title { get; }
-    
-    public string ShortDescription { get; }
-    
-    public string Description { get; }
-    
-    public List<LinkModel> Links { get; }
-    
-    public IImage? Image { get; }
-    
-    public List<string> Versions { get; }
-    
-    public PackageModel(string title, string shortDescription, string description, IImage? image, List<LinkModel> links, List<string> versions)
-    {
-        Title = title;
-        ShortDescription = shortDescription;
-        Description = description;
-        Image = image;
-        Links = links;
-        Versions = versions;
-    }
+    public string? Title { get; init; }
+    public string? Description { get; init; }
+    public string? License { get; init; }
+    public IImage? Image { get; init; }
+    public List<TabModel>? Tabs { get; init; }
+    public List<LinkModel>? Links { get; init; }
+    public List<string>? Versions { get; init; }
 }

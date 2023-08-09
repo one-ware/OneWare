@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <VersionPrefix>0.12.0.2</VersionPrefix>
+        <Version>0.12.0.2</Version>
         <Authors>Hendrik Mennen</Authors>
         <Company>Protop Solutions UG</Company>
         <Description>The FPGA Programming Revolution</Description>
