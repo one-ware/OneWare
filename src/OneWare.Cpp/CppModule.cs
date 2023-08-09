@@ -8,7 +8,7 @@ public class CppModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
+         
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

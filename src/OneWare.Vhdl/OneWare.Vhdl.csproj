@@ -1,24 +1,55 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Prism.Avalonia.props" />
-    <Import Project="..\..\build\props\JavaScriptEngineSwitcher.props" />
-    <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Prism.Avalonia.props"/>
+    <Import Project="..\..\build\props\JavaScriptEngineSwitcher.props"/>
+    <Import Project="..\..\build\props\MsBuildUncompressTask.props"/>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="true" ExcludeAssets="runtime"/>
     </ItemGroup>
 
     <ItemGroup>
-      <AvaloniaResource Include="Assets\vhdl.tmLanguage.json" />
-      <AvaloniaResource Include="Assets\formatter.js" />
+        <AvaloniaResource Include="Assets\vhdl.tmLanguage.json"/>
+        <AvaloniaResource Include="Assets\formatter.js"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\std\textio.vhd" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\std\standard.vhd" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_textio.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_1164.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_1164-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std_unsigned.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std_unsigned-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit_unsigned.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit_unsigned-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_real.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_real-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_complex.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_complex-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\ieee_std_context.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\ieee_bit_context.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_pkg.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_generic_pkg.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_generic_pkg-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_pkg.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_generic_pkg.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_generic_pkg-body.vhdl" />
+      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_float_types.vhdl" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
+        <UsePackageTarget>win-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-pc-windows-msvc.zip</ExternalPackageUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
+        <UsePackageTarget>linux-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip</ExternalPackageUrl>
     </PropertyGroup>
 
@@ -26,13 +57,25 @@
         <!--<ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>-->
     </PropertyGroup>
 
-    <Target Name="DownloadExternalPackage" BeforeTargets="PrepareForBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/rusthdl')">
+    <PropertyGroup>
+        <PackageName>rusthdl</PackageName>
+        <ExtractionFolder>native_tools/$(UsePackageTarget)/$(PackageName)</ExtractionFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <Target Name="DownloadExternalPackage" BeforeTargets="BeforeBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(ExtractionFolder)')">
         <DownloadFile
                 SourceUrl="$(ExternalPackageUrl)"
                 DestinationFileName="temp_package.tmp"
-                DestinationFolder="$(IntermediateOutputPath)" />
-        <Uncompress TargetDirectory="$(OutputPath)/tools/rusthdl"
+                DestinationFolder="$(IntermediateOutputPath)"/>
+        <Uncompress TargetDirectory="$(ExtractionFolder)"
                     ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
-        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high" />
+        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high"/>
+        <ItemGroup>
+            <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
+        </ItemGroup>
     </Target>
 </Project>

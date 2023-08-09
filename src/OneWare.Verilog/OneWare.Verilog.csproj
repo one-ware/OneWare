@@ -12,29 +12,57 @@
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-syntax.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-project.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-preprocessor.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-obfuscate.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-ls.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-lint.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-kythe-kzip-writer.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-kythe-extractor.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-format.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-format-changed-lines-interactive.sh" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-diff.exe" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-transform-interactive.sh" />
+      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-patch-tool.exe" />
+    </ItemGroup>
+
+
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
+        <UsePackageTarget>win-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</ExternalPackageUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
+        <UsePackageTarget>linux-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-linux-static-x86_64.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
+        <UsePackageTarget>osx-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
-    <Target Name="DownloadExternalPackage" BeforeTargets="PrepareForBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/verible')">
+    <PropertyGroup>
+        <PackageName>verible</PackageName>
+        <ExtractionFolder>native_tools/$(UsePackageTarget)/$(PackageName)</ExtractionFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <Target Name="DownloadExternalPackage" BeforeTargets="BeforeBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(ExtractionFolder)')">
         <DownloadFile
                 SourceUrl="$(ExternalPackageUrl)"
                 DestinationFileName="temp_package.tmp"
-                DestinationFolder="$(IntermediateOutputPath)" />
-        <Uncompress TargetDirectory="$(IntermediateOutputPath)/tools/verible"
+                DestinationFolder="$(IntermediateOutputPath)"/>
+        <Uncompress TargetDirectory="$(ExtractionFolder)"
                     ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
-        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high" />
+        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high"/>
         <ItemGroup>
-            <Content Include="$(IntermediateOutputPath)/tools/verible/**" 
-                     CopyToOutputDirectory="Always"/>
-        </ItemGroup> 
+            <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
+        </ItemGroup>
     </Target>
 </Project>

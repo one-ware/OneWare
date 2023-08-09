@@ -3,10 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-UploadPackages.txt
-LaunchGource.bat
-gource.mp4
-HistoryCaptions.txt
+# Packages
+native_tools/
 
 #Snap
 prime/
