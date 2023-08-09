@@ -81,7 +81,7 @@
                                     <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold" Text="{Binding Title}"/>
                                     <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Description}" TextWrapping="Wrap"/>
                                     <Border Grid.Column="1" Grid.Row="0" Classes="RoundToolBar">
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" Background="{DynamicResource ThemeBackgroundBrush}">
                                             <ComboBox ItemsSource="{Binding Versions}" BorderThickness="0"/>
                                             <Button Width="80" Content="Install" BorderThickness="0"/>
                                         </StackPanel>

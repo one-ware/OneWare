@@ -80,11 +80,7 @@ public class PackageManagerViewModel : ObservableObject
         RegisterPackageCategory(new PackageCategoryModel("Toolchains", Application.Current?.GetResourceObservable("FeatherIcons.Tool")));
         RegisterPackageCategory(new PackageCategoryModel("Simulators", Application.Current?.GetResourceObservable("Material.Pulse")));
         RegisterPackageCategory(new PackageCategoryModel("Boards", Application.Current?.GetResourceObservable("NiosIcon")));
-
-        foreach (var c in _moduleTracker.ModuleCatalog.Modules)
-        {
-            Console.WriteLine(c.ModuleName);
-        }
+        
         // RegisterPackage(PackageCategories.Last(),
         //     new PackageModel("Max1000 Support", "Support for MAX1000 Development Board", "The MAX1000 FPGA Development Board is the most inexpensive way to start with FPGAs and OneWare Studio",
         //         await _httpService.DownloadImageAsync("https://vhdplus.com/assets/images/max1000-fd95dd816b048068dd3d9ce70c0f67c0.png"), new List<LinkModel>
@@ -104,6 +100,9 @@ public class PackageManagerViewModel : ObservableObject
         // );
 
         RegisterPackageCategory(new PackageCategoryModel("Libraries", Application.Current?.GetResourceObservable("BoxIcons.RegularLibrary")));
+        
+        RegisterPackageCategory(new PackageCategoryModel("Misc", Application.Current?.GetResourceObservable("Module")));
+        
         SelectedCategory = PackageCategories.First();
 
         
@@ -112,33 +111,45 @@ public class PackageManagerViewModel : ObservableObject
         
         IsLoading = false;
     }
+
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
+    };
     
     private async Task LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
-        using var stream = new MemoryStream();
-        await _httpService.DownloadFileAsync(url, stream, null, default, cancellationToken);
-        stream.Position = 0;
+        var repositoryString = await _httpService.DownloadTextAsync(url,default, cancellationToken);
         
         try
         {
-            var repository = await JsonSerializer.DeserializeAsync<PackageRepository>(stream, new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true,
-                AllowTrailingCommas = true,
-            }, cancellationToken);
+            if (repositoryString == null) throw new NullReferenceException(nameof(repositoryString));
+            
+            var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, _serializerOptions);
             
             if (repository is { Packages: not null })
             {
-                foreach (var r in repository.Packages)
+                foreach (var manifest in repository.Packages)
                 {
-                    var icon = r.IconUrl != null
-                        ? await _httpService.DownloadImageAsync(r.IconUrl, cancellationToken: cancellationToken)
+                    if (manifest.ManifestUrl == null) continue;
+                    
+                    var downloadManifest =
+                        await _httpService.DownloadTextAsync(manifest.ManifestUrl,
+                            cancellationToken: cancellationToken);
+                    
+                    var package = JsonSerializer.Deserialize<Package>(downloadManifest!, _serializerOptions);
+
+                    if(package == null) continue;
+                    
+                    var icon = package.IconUrl != null
+                        ? await _httpService.DownloadImageAsync(package.IconUrl, cancellationToken: cancellationToken)
                         : null;
 
                     var tabs = new List<TabModel>();
-                    if (r.Tabs != null)
+                    if (package.Tabs != null)
                     {
-                        foreach (var tab in r.Tabs)
+                        foreach (var tab in package.Tabs)
                         {
                             if(tab.ContentUrl == null) continue;
                             var content = await _httpService.DownloadTextAsync(tab.ContentUrl,
@@ -150,15 +161,16 @@ public class PackageManagerViewModel : ObservableObject
 
                     var model = new PackageModel()
                     {
-                        Title = r.Name,
-                        Description = r.Description,
-                        License = r.License,
+                        Title = package.Name,
+                        Description = package.Description,
+                        License = package.License,
                         Image = icon,
                         Tabs = tabs,
-                        Links = r.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList()
+                        Links = package.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList(),
+                        Versions = package.Versions?.Select(x => x.Version!).ToList(),
                     };
                     
-                    RegisterPackage(PackageCategories.First(), model);
+                    RegisterPackage(PackageCategories.FirstOrDefault(x => x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last(), model);
                 }
             }
             else throw new Exception("Packages empty");

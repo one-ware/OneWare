@@ -2,5 +2,5 @@
 
 public class PackageRepository
 {
-    public Package[]? Packages { get; init; }
+    public PackageManifest[]? Packages { get; init; }
 }
