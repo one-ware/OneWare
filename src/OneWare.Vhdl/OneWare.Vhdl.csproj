@@ -26,7 +26,7 @@
         <!--<ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>-->
     </PropertyGroup>
 
-    <Target Name="DownloadExternalPackage" BeforeTargets="Build" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/rusthdl')">
+    <Target Name="DownloadExternalPackage" BeforeTargets="PrepareForBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/rusthdl')">
         <DownloadFile
                 SourceUrl="$(ExternalPackageUrl)"
                 DestinationFileName="temp_package.tmp"

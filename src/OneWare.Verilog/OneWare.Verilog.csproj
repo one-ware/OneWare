@@ -24,13 +24,17 @@
         <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
-    <Target Name="DownloadExternalPackage" AfterTargets="Build" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/verible')">
+    <Target Name="DownloadExternalPackage" BeforeTargets="PrepareForBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(OutputPath)/tools/verible')">
         <DownloadFile
                 SourceUrl="$(ExternalPackageUrl)"
                 DestinationFileName="temp_package.tmp"
                 DestinationFolder="$(IntermediateOutputPath)" />
-        <Uncompress TargetDirectory="$(OutputPath)/tools/verible"
+        <Uncompress TargetDirectory="$(IntermediateOutputPath)/tools/verible"
                     ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
         <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high" />
+        <ItemGroup>
+            <Content Include="$(IntermediateOutputPath)/tools/verible/**" 
+                     CopyToOutputDirectory="Always"/>
+        </ItemGroup> 
     </Target>
 </Project>
