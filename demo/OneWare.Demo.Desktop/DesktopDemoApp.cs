@@ -54,8 +54,6 @@ public class DesktopDemoApp : DemoApp
         {
             Container.Resolve<ILogger>().Error(e.Message, e);
         }
-        
-        Container.Resolve<ILogger>().Error("test");
 
         var commandLineArgs = Environment.GetCommandLineArgs();
         if (commandLineArgs.Length > 1)

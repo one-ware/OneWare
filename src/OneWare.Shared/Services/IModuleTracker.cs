@@ -5,6 +5,9 @@ namespace OneWare.Shared.Services;
 public interface IModuleTracker
 {
     public IModuleCatalog ModuleCatalog { get; }
+    
+    public IModuleManager ModuleManager { get; }
+    
     /// <summary>
     /// Records the module has been loaded
     /// </summary>

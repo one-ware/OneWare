@@ -10,12 +10,15 @@ class ModuleTracker : IModuleTracker
     private readonly ILogger _logger;
 
     public IModuleCatalog ModuleCatalog { get; }
+    
+    public IModuleManager ModuleManager { get; }
 
     
-    public ModuleTracker(ILogger logger, IModuleCatalog moduleCatalog)
+    public ModuleTracker(ILogger logger, IModuleCatalog moduleCatalog, IModuleManager moduleManager)
     {
         _logger = logger;
         ModuleCatalog = moduleCatalog;
+        ModuleManager = moduleManager;
     }
     
     public void RecordModuleLoaded(string moduleName)

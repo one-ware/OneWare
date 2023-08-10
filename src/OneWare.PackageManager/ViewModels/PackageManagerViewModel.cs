@@ -8,6 +8,7 @@ using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 using Prism.Modularity;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -218,7 +219,7 @@ public class PackageManagerViewModel : ObservableObject
                 foreach (var module in catalog.Modules)
                 {
                     _moduleTracker.ModuleCatalog.AddModule(module);
-                    _moduleTracker.ModuleCatalog.Initialize();
+                    _moduleTracker.ModuleManager.LoadModule(module.ModuleName);
                 }
             }
             else
