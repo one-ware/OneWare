@@ -12,23 +12,6 @@
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-syntax.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-project.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-preprocessor.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-obfuscate.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-ls.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-lint.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-kythe-kzip-writer.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-kythe-extractor.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-format.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-format-changed-lines-interactive.sh" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-verilog-diff.exe" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-transform-interactive.sh" />
-      <None Remove="tools\verible\verible-v0.0-3401-g0b8cb4e0-win64\verible-patch-tool.exe" />
-    </ItemGroup>
-
-
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
         <UsePackageTarget>win-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</ExternalPackageUrl>

@@ -14,35 +14,6 @@
         <AvaloniaResource Include="Assets\formatter.js"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\std\textio.vhd" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\std\standard.vhd" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_textio.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_1164.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\std_logic_1164-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std_unsigned.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std_unsigned-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_std-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit_unsigned.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit_unsigned-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\numeric_bit-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_real.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_real-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_complex.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\math_complex-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\ieee_std_context.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\ieee_bit_context.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_pkg.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_generic_pkg.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\float_generic_pkg-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_pkg.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_generic_pkg.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_generic_pkg-body.vhdl" />
-      <None Remove="tools\rusthdl\vhdl_ls-x86_64-pc-windows-msvc\vhdl_libraries\ieee2008\fixed_float_types.vhdl" />
-    </ItemGroup>
-
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
         <UsePackageTarget>win-x64</UsePackageTarget>
         <ExternalPackageUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-pc-windows-msvc.zip</ExternalPackageUrl>
