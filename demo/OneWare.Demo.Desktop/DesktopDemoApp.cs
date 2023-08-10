@@ -37,13 +37,26 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
 
-        var directoryModules = new DirectoryModuleCatalog()
+        try
         {
-            ModulePath = Paths.ModulesPath,
-        };
-        ModuleCatalog.AddCatalog(directoryModules);
+            var modules = Directory.GetDirectories(Paths.ModulesPath);
+            foreach (var module in modules)
+            {
+                var directoryModules = new DirectoryModuleCatalog()
+                {
+                    ModulePath = module,
+                };
+                ModuleCatalog.AddCatalog(directoryModules);
+            }
+
+        }
+        catch (Exception e)
+        {
+            Container.Resolve<ILogger>().Error(e.Message, e);
+        }
         
-        
+        Container.Resolve<ILogger>().Error("test");
+
         var commandLineArgs = Environment.GetCommandLineArgs();
         if (commandLineArgs.Length > 1)
         {

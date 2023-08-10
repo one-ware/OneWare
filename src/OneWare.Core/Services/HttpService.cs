@@ -99,6 +99,8 @@ public class HttpService : IHttpService
         
         try
         {
+            Directory.CreateDirectory(location);
+            
             if(!await DownloadFileAsync(url, tempPath, progress, timeout, cancellationToken)) return false;
             
             await Task.Run(() =>

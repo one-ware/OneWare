@@ -1,0 +1,58 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
+             xmlns:models="clr-namespace:OneWare.PackageManager.Models"
+             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:views="clr-namespace:OneWare.PackageManager.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
+             x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
+
+    <StackPanel Orientation="Vertical" Spacing="10">
+        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" />
+        <ItemsControl ItemsSource="{Binding Links}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Vertical" Spacing="5" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.DataTemplates>
+                <DataTemplate x:DataType="models:LinkModel">
+                    <controls:HyperLink Url="{Binding Url}" Label="{Binding Label}"
+                                        HorizontalAlignment="Left" />
+                </DataTemplate>
+            </ItemsControl.DataTemplates>
+        </ItemsControl>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
+                <ComboBox ItemsSource="{Binding Versions}"
+                          SelectedItem="{Binding SelectedVersion}"
+                          BorderThickness="0" />
+            </Border>
+
+            <Button Classes="RoundButton" Width="80" Content="Install" BorderThickness="0"
+                    Command="{Binding $parent[views:PackageManagerView].((viewModels:PackageManagerViewModel)DataContext).InstallPackageAsync, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding}"/>
+
+            <TextBlock Text="Status" VerticalAlignment="Center"></TextBlock>
+        </StackPanel>
+
+        <ProgressBar IsIndeterminate="False" Value="{Binding Progress}" ShowProgressText="True" Maximum="1.0" Height="24" />
+
+        <TabControl ItemsSource="{Binding Tabs}">
+            <TabControl.ItemTemplate>
+                <DataTemplate DataType="models:TabModel">
+                    <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate DataType="models:TabModel">
+                    <avalonia:MarkdownScrollViewer Markdown="{Binding Content}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </StackPanel>
+</UserControl>

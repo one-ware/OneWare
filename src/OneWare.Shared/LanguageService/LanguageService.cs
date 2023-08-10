@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
+using Asmichi.ProcessManagement;
 using Nerdbank.Streams;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
@@ -12,7 +13,7 @@ namespace OneWare.Shared.LanguageService
     public abstract class LanguageService : LanguageServiceBase, ILanguageService
     {
         private CancellationTokenSource? _cancellation;
-        private Process? _process;
+        private IChildProcess? _process;
         protected string? Arguments { get; set; }
         protected string? ExecutablePath { get; set; }
 
@@ -40,12 +41,13 @@ namespace OneWare.Shared.LanguageService
                 return;
             }
             
+            _cancellation = new CancellationTokenSource();
+            
             if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))
             {
                 var websocket = new ClientWebSocket();
                 try
                 {
-                    _cancellation = new CancellationTokenSource();
                     await websocket.ConnectAsync(new Uri(ExecutablePath), _cancellation.Token);
 
                     await InitAsync(websocket.UsePipeReader().AsStream(), websocket.UsePipeWriter().AsStream());
@@ -66,32 +68,34 @@ namespace OneWare.Shared.LanguageService
                         ?.Warning($"{Name} language server not found! {ExecutablePath}");
                     return;
                 }
-
-                var processStartInfo = new ProcessStartInfo
+                
+                var argumentArray = Arguments != null ? 
+                    Arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries).ToArray() : Array.Empty<string>();
+                
+                var processStartInfo = new ChildProcessStartInfo(ExecutablePath, argumentArray)
                 {
-                    FileName = ExecutablePath,
-                    Arguments = Arguments,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true,
-                    UseShellExecute = false
+                    StdOutputRedirection = OutputRedirection.OutputPipe,
+                    StdInputRedirection = InputRedirection.InputPipe,
+                    StdErrorRedirection = OutputRedirection.ErrorPipe,
                 };
-
-                _process = new Process
-                {
-                    StartInfo = processStartInfo
-                };
-
+                
                 //_process.ErrorDataReceived +=
                 //    (o, i) => ContainerLocator.Container.Resolve<ILogger>()?.Error(i.Data ?? "");
 
                 try
                 {
-                    _process.Start();
-                    _process.BeginErrorReadLine();
+                    _process = ChildProcess.Start(processStartInfo);
 
-                    await InitAsync(_process.StandardOutput.BaseStream, _process.StandardInput.BaseStream);
+                    var reader = new StreamReader(_process.StandardError);
+                    _ = Task.Run(() =>
+                    {
+                        while (_process.HasStandardError)
+                        {
+                            Console.WriteLine(reader.ReadToEnd());
+                        }
+                    }, _cancellation.Token);
+                    
+                    await InitAsync(_process.StandardOutput, _process.StandardInput);
                     IsActivated = true;
                 }
                 catch (Exception e)

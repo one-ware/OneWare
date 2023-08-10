@@ -7,4 +7,5 @@
     <Import Project="..\..\build\props\Avalonia.Xaml.Interactions.props" />
     <Import Project="..\..\build\props\AvaloniaEdit.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.TextMate.props"/>
+    <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>
 </Project> 
