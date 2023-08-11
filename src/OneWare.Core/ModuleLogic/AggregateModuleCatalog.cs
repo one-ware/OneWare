@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using OneWare.Shared.Services;
+using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic
@@ -75,7 +77,17 @@ namespace OneWare.Core.ModuleLogic
         /// </summary>
         public void Initialize()
         {
-            this.Catalogs.ToList().ForEach((catalog) => catalog.Initialize());
+            this.Catalogs.ToList().ForEach((catalog) =>
+            {
+                try
+                {
+                    catalog.Initialize();
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Current.Resolve<ILogger>().Error(e.Message, e);
+                }
+            });
         }
 
         /// <summary>

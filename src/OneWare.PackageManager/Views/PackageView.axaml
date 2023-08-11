@@ -7,11 +7,12 @@
              xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
              xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:views="clr-namespace:OneWare.PackageManager.Views"
+             xmlns:serializer="clr-namespace:OneWare.PackageManager.Serializer"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
     <StackPanel Orientation="Vertical" Spacing="10">
-        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" />
+        <TextBlock Text="{Binding Package.Name}" FontSize="18" FontWeight="Bold" />
         <ItemsControl ItemsSource="{Binding Links}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -28,9 +29,15 @@
 
         <StackPanel Orientation="Horizontal" Spacing="10">
             <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
-                <ComboBox ItemsSource="{Binding Versions}"
+                <ComboBox ItemsSource="{Binding Package.Versions}"
                           SelectedItem="{Binding SelectedVersion}"
-                          BorderThickness="0" />
+                          BorderThickness="0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="serializer:PackageVersion">
+                            <TextBlock Text="{Binding Version}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Border>
 
             <Button Classes="RoundButton" Width="80" Content="Install" BorderThickness="0"
@@ -39,6 +46,19 @@
 
             <TextBlock Text="Status" VerticalAlignment="Center"></TextBlock>
         </StackPanel>
+        
+        <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="5" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.DataTemplates>
+                <DataTemplate x:DataType="serializer:PackageTarget">
+                    <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                </DataTemplate>
+            </ItemsControl.DataTemplates>
+        </ItemsControl>
 
         <ProgressBar IsIndeterminate="False" Value="{Binding Progress}" ShowProgressText="True" Maximum="1.0" Height="24" />
 

@@ -166,15 +166,11 @@ public class PackageManagerViewModel : ObservableObject
 
                     var model = new PackageViewModel(package)
                     {
-                        Title = package.Name,
-                        Description = package.Description,
-                        License = package.License,
                         Image = icon,
                         Tabs = tabs,
                         Links = package.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList(),
-                        Versions = package.Versions?.Select(x => x.Version!).ToList(),
                     };
-                    model.SelectedVersion = model.Versions?.LastOrDefault();
+                    model.SelectedVersion = package.Versions?.LastOrDefault();
                     
                     RegisterPackage(PackageCategories.FirstOrDefault(x => x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last(), model);
                 }
@@ -195,7 +191,7 @@ public class PackageManagerViewModel : ObservableObject
             var currentTarget = PlatformHelper.Platform.ToString().ToLower();
         
             var target = model.Package?.Versions?
-                .FirstOrDefault(x => x.Version == model.SelectedVersion)?
+                .FirstOrDefault(x => x == model.SelectedVersion)?
                 .Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget);
 
             if (target is {Url: not null})

@@ -85,11 +85,11 @@
                                         <Grid DockPanel.Dock="Right" RowDefinitions="25, 30" Margin="10, 10, 0, 10"
                                               ColumnDefinitions="*, Auto">
                                             <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
-                                                       Text="{Binding Title}" />
+                                                       Text="{Binding Package.Name}" />
                                             <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
-                                                       Text="{Binding Description}" TextWrapping="Wrap" />
+                                                       Text="{Binding Package.Description}" TextWrapping="Wrap" />
                                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Orientation="Horizontal">
-                                                <TextBlock Text="{Binding SelectedVersion}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                                                <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
                                                 <Button Classes="RoundButton" Width="80" Content="Install" BorderThickness="0"
                                                         Command="{Binding #PackageManagerViewView.((viewModels:PackageManagerViewModel)DataContext).InstallPackageAsync, FallbackValue={x:Null}}"
                                                         CommandParameter="{Binding}"/>
