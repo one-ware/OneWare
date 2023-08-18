@@ -19,8 +19,7 @@ namespace OneWare.Core.ViewModels.Windows
         public string Platform => "Platform: " + RuntimeInformation.OSDescription;
 
         public string License => $"{_paths.AppName} Preview\n" +
-                                 $"© {DateTime.Now.Year} Protop Solutions UG\n" +
-                                 $"Hase ❤️";
+                                 $"© {DateTime.Now.Year} Protop Solutions UG\n";
 
         public AboutViewModel(IPaths paths)
         {

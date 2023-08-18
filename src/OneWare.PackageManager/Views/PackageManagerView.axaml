@@ -7,7 +7,6 @@
                          xmlns:models="clr-namespace:OneWare.PackageManager.Models"
                          xmlns:mvvm="http://prismlibrary.com/"
                          xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
-                         xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
                          PrefWidth="1050" PrefHeight="600"
                          mc:Ignorable="d"
                          x:Class="OneWare.PackageManager.Views.PackageManagerView"
@@ -90,9 +89,7 @@
                                                        Text="{Binding Package.Description}" TextWrapping="Wrap" />
                                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Orientation="Horizontal">
                                                 <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
-                                                <Button Classes="RoundButton" Width="80" Content="Install" BorderThickness="0"
-                                                        Command="{Binding #PackageManagerViewView.((viewModels:PackageManagerViewModel)DataContext).InstallPackageAsync, FallbackValue={x:Null}}"
-                                                        CommandParameter="{Binding}"/>
+                                                <ItemsControl ItemsSource="{Binding Buttons}"/>
                                             </StackPanel>
                                         </Grid>
                                     </DockPanel>

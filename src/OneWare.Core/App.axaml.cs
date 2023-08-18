@@ -51,6 +51,7 @@ namespace OneWare.Core
             containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
             
             //Services
+            containerRegistry.RegisterSingleton<IPluginService, PluginService>();
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
             containerRegistry.RegisterSingleton<IPackageService, PackageService>();
             containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();

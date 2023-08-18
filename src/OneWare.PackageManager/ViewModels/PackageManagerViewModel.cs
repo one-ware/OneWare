@@ -3,21 +3,17 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Newtonsoft.Json;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using Prism.Ioc;
-using Prism.Modularity;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    private readonly IModuleTracker _moduleTracker;
+    private readonly IPluginService _pluginService;
     private readonly ILogger _logger;
     private readonly IPaths _paths;
     private PackageCategoryModel? _selectedCategory;
@@ -52,10 +48,10 @@ public class PackageManagerViewModel : ObservableObject
     
     public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
 
-    public PackageManagerViewModel(IHttpService httpService, IModuleTracker moduleTracker, ILogger logger, IPaths paths)
+    public PackageManagerViewModel(IHttpService httpService, IPluginService pluginService, ILogger logger, IPaths paths)
     {
         _httpService = httpService;
-        _moduleTracker = moduleTracker;
+        _pluginService = pluginService;
         _logger = logger;
         _paths = paths;
         
@@ -147,81 +143,14 @@ public class PackageManagerViewModel : ObservableObject
 
                     if(package == null) continue;
                     
-                    var icon = package.IconUrl != null
-                        ? await _httpService.DownloadImageAsync(package.IconUrl, cancellationToken: cancellationToken)
-                        : null;
+                    var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(Package), package));
 
-                    var tabs = new List<TabModel>();
-                    if (package.Tabs != null)
-                    {
-                        foreach (var tab in package.Tabs)
-                        {
-                            if(tab.ContentUrl == null) continue;
-                            var content = await _httpService.DownloadTextAsync(tab.ContentUrl,
-                                cancellationToken: cancellationToken);
-                                
-                            tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
-                        }
-                    }
-
-                    var model = new PackageViewModel(package)
-                    {
-                        Image = icon,
-                        Tabs = tabs,
-                        Links = package.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList(),
-                    };
-                    model.SelectedVersion = package.Versions?.LastOrDefault();
+                    await model.ResolveAsync(cancellationToken);
                     
                     RegisterPackage(PackageCategories.FirstOrDefault(x => x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last(), model);
                 }
             }
             else throw new Exception("Packages empty");
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-        }
-    }
-
-
-    public async Task InstallPackageAsync(PackageViewModel model)
-    {
-        try
-        {
-            var currentTarget = PlatformHelper.Platform.ToString().ToLower();
-        
-            var target = model.Package?.Versions?
-                .FirstOrDefault(x => x == model.SelectedVersion)?
-                .Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget);
-
-            if (target is {Url: not null})
-            {
-                var progress = new Progress<float>(x =>
-                {
-                    model.Progress = x;
-                });
-
-                var path = Path.Combine(_paths.ModulesPath, model.Package!.Id!);
-                
-                //Download
-                await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress);
-
-                var catalog = new DirectoryModuleCatalog()
-                {
-                    ModulePath = path
-                };
-                catalog.Initialize();
-
-                foreach (var module in catalog.Modules)
-                {
-                    _moduleTracker.ModuleCatalog.AddModule(module);
-                    _moduleTracker.ModuleManager.LoadModule(module.ModuleName);
-                }
-            }
-            else
-            {
-                throw new NotSupportedException("Target not found!");
-            }
         }
         catch (Exception e)
         {

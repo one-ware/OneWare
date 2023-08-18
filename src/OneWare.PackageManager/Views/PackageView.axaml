@@ -41,8 +41,7 @@
             </Border>
 
             <Button Classes="RoundButton" Width="80" Content="Install" BorderThickness="0"
-                    Command="{Binding $parent[views:PackageManagerView].((viewModels:PackageManagerViewModel)DataContext).InstallPackageAsync, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding}"/>
+                    Command="{Binding InstallAsync}"/>
 
             <TextBlock Text="Status" VerticalAlignment="Center"></TextBlock>
         </StackPanel>
