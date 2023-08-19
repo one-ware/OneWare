@@ -16,6 +16,7 @@ using OneWare.Demo.Desktop.ViewModels;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.Shared.Enums;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
@@ -42,13 +43,8 @@ public class DesktopDemoApp : DemoApp
             var modules = Directory.GetDirectories(Paths.ModulesPath);
             foreach (var module in modules)
             {
-                var directoryModules = new DirectoryModuleCatalog()
-                {
-                    ModulePath = module,
-                };
-                ModuleCatalog.AddCatalog(directoryModules);
+                Container.Resolve<IPluginService>().AddPlugin(module);
             }
-
         }
         catch (Exception e)
         {

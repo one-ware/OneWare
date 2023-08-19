@@ -13,9 +13,7 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageManagerViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    private readonly IPluginService _pluginService;
     private readonly ILogger _logger;
-    private readonly IPaths _paths;
     private PackageCategoryModel? _selectedCategory;
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -48,12 +46,10 @@ public class PackageManagerViewModel : ObservableObject
     
     public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
 
-    public PackageManagerViewModel(IHttpService httpService, IPluginService pluginService, ILogger logger, IPaths paths)
+    public PackageManagerViewModel(IHttpService httpService, ILogger logger)
     {
         _httpService = httpService;
-        _pluginService = pluginService;
         _logger = logger;
-        _paths = paths;
         
         _ = LoadPackagesAsync();
     }

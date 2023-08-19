@@ -17,8 +17,7 @@ public class PackageViewModel : ObservableObject
     private readonly IHttpService _httpService;
     private readonly IPaths _paths;
     private readonly ILogger _logger;
-    private readonly IModuleManager _moduleManager;
-    private readonly IModuleCatalog _moduleCatalog;
+    private readonly IPluginService _pluginService;
     
     public Package Package { get; }
     public IImage? Image { get; private set; }
@@ -48,14 +47,13 @@ public class PackageViewModel : ObservableObject
 
     public ObservableCollection<ButtonModel> Buttons { get; } = new();
 
-    public PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IModuleManager moduleManager, IModuleCatalog moduleCatalog)
+    public PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService)
     {
         Package = package;
         _httpService = httpService;
         _paths = paths;
         _logger = logger;
-        _moduleManager = moduleManager;
-        _moduleCatalog = moduleCatalog;
+        _pluginService = pluginService;
         
         Buttons.Add(new ButtonModel()
         {
@@ -110,18 +108,8 @@ public class PackageViewModel : ObservableObject
                 
                 //Download
                 await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress);
-
-                var catalog = new DirectoryModuleCatalog()
-                {
-                    ModulePath = path
-                };
-                catalog.Initialize();
-
-                foreach (var module in catalog.Modules)
-                {
-                    _moduleCatalog.AddModule(module);
-                    _moduleManager.LoadModule(module.ModuleName);
-                }
+                
+                _pluginService.AddPlugin(path);
             }
             else
             {
