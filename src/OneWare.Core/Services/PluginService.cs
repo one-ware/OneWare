@@ -1,3 +1,4 @@
+using OneWare.Shared.Extensions;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
@@ -22,8 +23,7 @@ public class PluginService : IPluginService
         _moduleManager = moduleManager;
         _paths = paths;
 
-        _pluginDirectory = Path.Combine(paths.AppDataDirectory, "Plugins");
-        if(Directory.Exists(_pluginDirectory)) Directory.Delete(_pluginDirectory, true);
+        _pluginDirectory = Path.Combine(paths.TempDirectory, "OneWare Modules").CheckNameDirectory();
         Directory.CreateDirectory(_pluginDirectory);
     }
     
@@ -41,11 +41,12 @@ public class PluginService : IPluginService
         foreach (var module in catalog.Modules)
         {
             _moduleCatalog.AddModule(module);
-            _moduleManager.LoadModule(module.ModuleName);
+            if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
+                _moduleManager.LoadModule(module.ModuleName);
         }
     }
 
-    public void RemovePlugin(string plugin)
+    public void RemovePlugin(string id)
     {
         
     }

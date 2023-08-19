@@ -58,11 +58,7 @@ public class DesktopDemoApp : DemoApp
             if (m >= 0 && m < commandLineArgs.Length - 1)
             {
                 var path = commandLineArgs[m + 1];
-                var extraModule = new DirectoryModuleCatalog()
-                {
-                    ModulePath = path,
-                };
-                ModuleCatalog.AddCatalog(extraModule);
+                Container.Resolve<IPluginService>().AddPlugin(path);
             }
         }
     }
