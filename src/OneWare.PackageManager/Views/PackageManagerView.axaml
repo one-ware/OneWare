@@ -89,7 +89,8 @@
                                                        Text="{Binding Package.Description}" TextWrapping="Wrap" />
                                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Orientation="Horizontal">
                                                 <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
-                                                <ItemsControl ItemsSource="{Binding Buttons}"/>
+                                                <Button Content="{Binding PrimaryButtonText}"
+                                                        Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"/>
                                             </StackPanel>
                                         </Grid>
                                     </DockPanel>

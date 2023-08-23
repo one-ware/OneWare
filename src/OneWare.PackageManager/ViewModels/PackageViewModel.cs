@@ -35,9 +35,19 @@ public class PackageViewModel : ObservableObject
     public PackageStatus Status
     {
         get => _status;
-        set => SetProperty(ref _status, value);
+        set
+        {
+            SetProperty(ref _status, value);
+            PrimaryButtonText = value switch
+            {
+                PackageStatus.Available => "Install",
+                PackageStatus.Installed => "Remove",
+                PackageStatus.Installing => "Cancel",
+                PackageStatus.Unavailable => "Unavailable"
+            };
+        }
     }
-    
+
     private float _progress;
     public float Progress
     {
@@ -45,7 +55,12 @@ public class PackageViewModel : ObservableObject
         set => SetProperty(ref _progress, value);
     }
 
-    public ObservableCollection<ButtonModel> Buttons { get; } = new();
+    private string _primaryButtonText = string.Empty;
+    public string PrimaryButtonText
+    {
+        get => _primaryButtonText;
+        set => SetProperty(ref _primaryButtonText, value);
+    }
 
     public PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService)
     {
@@ -54,14 +69,30 @@ public class PackageViewModel : ObservableObject
         _paths = paths;
         _logger = logger;
         _pluginService = pluginService;
-        
-        Buttons.Add(new ButtonModel()
+
+        if (_pluginService.InstalledPlugins.Any(x => package.Id == x))
         {
-            Header = "Install",
-            Command = new AsyncRelayCommand(InstallAsync)
-        });
+            Status = PackageStatus.Installed;
+        }
+        else
+        {
+            Status = PackageStatus.Available;
+        }
     }
 
+    public async Task ExecuteMainButtonAsync()
+    {
+        switch (Status)
+        {
+            case PackageStatus.Available:
+                await InstallAsync(); 
+                break;
+            case PackageStatus.Installed:
+                await RemoveAsync();
+                break;
+        }
+    }
+    
     public async Task ResolveAsync(CancellationToken cancellationToken)
     {
         var icon = Package.IconUrl != null
@@ -110,6 +141,7 @@ public class PackageViewModel : ObservableObject
                 await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress);
                 
                 _pluginService.AddPlugin(path);
+                Status = PackageStatus.Installed;
             }
             else
             {
@@ -120,10 +152,12 @@ public class PackageViewModel : ObservableObject
         {
             _logger.Error(e.Message, e);
         }
-    }
+    } 
 
-    public void Remove()
+    public async Task RemoveAsync()
     {
-        
+        if (Package.Id == null) throw new NullReferenceException(nameof(Package.Id));
+        _pluginService.RemovePlugin(Package.Id!);
+        Status = PackageStatus.Available;
     }
 }

@@ -13,9 +13,9 @@ public class PluginService : IPluginService
     private readonly IPaths _paths;
 
     private readonly string _pluginDirectory;
-    private List<string> _plugins = new();
-    
-    public IEnumerable<string> Plugins => _plugins;
+    private readonly Dictionary<string, string> _plugins = new();
+
+    public IEnumerable<string> InstalledPlugins => _plugins.Keys;
 
     public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
     {
@@ -43,11 +43,21 @@ public class PluginService : IPluginService
             _moduleCatalog.AddModule(module);
             if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
                 _moduleManager.LoadModule(module.ModuleName);
+
+            _plugins.Add(module.ModuleName, path);
         }
     }
 
     public void RemovePlugin(string id)
     {
+        _plugins.TryGetValue(id, out var path);
+
+        if (path == null) return;
         
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, true);
+        }
+        _plugins.Remove(id);
     }
 }

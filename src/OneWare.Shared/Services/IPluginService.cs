@@ -4,7 +4,7 @@ namespace OneWare.Shared.Services;
 
 public interface IPluginService
 {
-    public IEnumerable<string> Plugins { get; }
+    public IEnumerable<string> InstalledPlugins { get; }
     
     public void AddPlugin(string path);
 
