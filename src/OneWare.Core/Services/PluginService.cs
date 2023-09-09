@@ -2,6 +2,7 @@ using OneWare.Shared.Extensions;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Core.Services;
@@ -11,7 +12,7 @@ public class PluginService : IPluginService
     private readonly IModuleCatalog _moduleCatalog;
     private readonly IModuleManager _moduleManager;
     private readonly IPaths _paths;
-
+    
     private readonly string _pluginDirectory;
     private readonly Dictionary<string, string> _plugins = new();
 
@@ -22,8 +23,8 @@ public class PluginService : IPluginService
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
         _paths = paths;
-
-        _pluginDirectory = Path.Combine(paths.TempDirectory, "OneWare Modules").CheckNameDirectory();
+        
+        _pluginDirectory = Path.Combine(_paths.SessionDirectory, "Plugins");
         Directory.CreateDirectory(_pluginDirectory);
     }
     

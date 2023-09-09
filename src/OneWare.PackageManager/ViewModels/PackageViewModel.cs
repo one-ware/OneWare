@@ -45,6 +45,7 @@ public class PackageViewModel : ObservableObject
                 PackageStatus.Installing => "Cancel",
                 PackageStatus.Unavailable => "Unavailable"
             };
+            PrimaryButtonEnabled = value is PackageStatus.Available or PackageStatus.Installed;
         }
     }
 
@@ -60,6 +61,13 @@ public class PackageViewModel : ObservableObject
     {
         get => _primaryButtonText;
         set => SetProperty(ref _primaryButtonText, value);
+    }
+
+    private bool _primaryButtonEnabled = false;
+    public bool PrimaryButtonEnabled
+    {
+        get => _primaryButtonEnabled;
+        set => SetProperty(ref _primaryButtonEnabled, value);
     }
 
     public PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService)
@@ -118,10 +126,12 @@ public class PackageViewModel : ObservableObject
         SelectedVersion = Package.Versions?.LastOrDefault();
     }
 
-    public async Task InstallAsync()
+    private async Task InstallAsync()
     {
         try
         {
+            Status = PackageStatus.Installing;
+            
             var currentTarget = PlatformHelper.Platform.ToString().ToLower();
         
             var target = Package.Versions?
@@ -151,6 +161,7 @@ public class PackageViewModel : ObservableObject
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            Status = PackageStatus.Available;
         }
     } 
 
@@ -159,5 +170,7 @@ public class PackageViewModel : ObservableObject
         if (Package.Id == null) throw new NullReferenceException(nameof(Package.Id));
         _pluginService.RemovePlugin(Package.Id!);
         Status = PackageStatus.Available;
+        PrimaryButtonEnabled = false;
+        PrimaryButtonText = "Restart Required";
     }
 }

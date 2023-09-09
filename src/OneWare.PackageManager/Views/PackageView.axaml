@@ -42,9 +42,8 @@
                 </ComboBox>
             </Border>
 
-            <Button Content="{Binding PrimaryButtonText}" Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"/>
-
-            <TextBlock Text="Status" VerticalAlignment="Center"></TextBlock>
+            <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}" 
+                    Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"/>
         </StackPanel>
         
         <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">
