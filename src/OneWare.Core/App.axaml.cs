@@ -172,6 +172,19 @@ namespace OneWare.Core
                     DataContext = Container.Resolve<AboutViewModel>()
                 }))
             });
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
+            {
+                Header = "Extras",
+                Priority = 900
+            });
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Settings")
+            {
+                Header = $"Settings",
+                Command = new RelayCommand(() => windowService.Show(new ApplicationSettingsView()
+                {
+                    DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+                }))
+            });
             windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Format")
             {
                 Header = $"Format",

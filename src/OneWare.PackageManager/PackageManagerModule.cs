@@ -21,11 +21,6 @@ public class PackageManagerModule : IModule
     {
         var windowService = containerProvider.Resolve<IWindowService>();
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
-        {
-            Header = "Extras",
-            Priority = 900
-        });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Extensions")
         {
             Header = "Extensions",

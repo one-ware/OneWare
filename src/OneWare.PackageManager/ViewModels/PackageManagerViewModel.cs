@@ -101,7 +101,6 @@ public class PackageManagerViewModel : ObservableObject
         RegisterPackageCategory(new PackageCategoryModel("Misc", Application.Current?.GetResourceObservable("Module")));
         
         SelectedCategory = PackageCategories.First();
-
         
         await LoadPackageRepositoryAsync(
             "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
