@@ -37,6 +37,7 @@ public class ExtendedTextEditor : TextEditor
 
         Options.AllowScrollBelowDocument = true;
         Options.ConvertTabsToSpaces = true;
+        Options.AllowToggleOverstrikeMode = true;
         
         TextArea.TextView.LinkTextUnderline = true;
         TextArea.RightClickMovesCaret = true;

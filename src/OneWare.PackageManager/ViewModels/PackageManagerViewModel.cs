@@ -116,7 +116,7 @@ public class PackageManagerViewModel : ObservableObject
     
     private async Task LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
-        var repositoryString = await _httpService.DownloadTextAsync(url,default, cancellationToken);
+        var repositoryString = await _httpService.DownloadTextAsync(url,TimeSpan.FromSeconds(1), cancellationToken);
         
         try
         {
