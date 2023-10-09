@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 7.0.x 
+      - name: Workload Restore
+        run: dotnet workload restore
       - name: Build
         run: dotnet build ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -o ./out
       - uses: actions/upload-artifact@v3
