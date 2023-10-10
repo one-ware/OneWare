@@ -11,7 +11,7 @@
         <OutputType>Exe</OutputType>
         <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
         <WasmBuildNative>true</WasmBuildNative>
-        <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0 -sTOTAL_MEMORY=33554432</EmccFlags>
+        <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0 -sTOTAL_MEMORY=32M</EmccFlags>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
