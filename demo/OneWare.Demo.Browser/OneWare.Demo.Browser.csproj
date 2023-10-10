@@ -11,7 +11,7 @@
         <OutputType>Exe</OutputType>
         <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
         <WasmBuildNative>true</WasmBuildNative>
-        <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0 -sTOTAL_MEMORY=32M</EmccFlags>
+        <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0</EmccFlags>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -22,6 +22,7 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
         <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
+        <EmccInitialHeapSize>32M</EmccInitialHeapSize>
     </PropertyGroup>
 
     <ItemGroup>
