@@ -12,6 +12,7 @@
         <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
         <WasmBuildNative>true</WasmBuildNative>
         <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0</EmccFlags>
+        <EmccInitialHeapSize>32mb</EmccInitialHeapSize>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
