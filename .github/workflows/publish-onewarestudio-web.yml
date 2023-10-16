@@ -21,7 +21,7 @@ jobs:
       - name: Workload Restore
         run: dotnet workload restore
       - name: Publish
-        run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -f net7.0 -o ./out
+        run: dotnet build ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -o ./out
       - uses: actions/upload-artifact@v3
         with:
           name: oneware-web-build
