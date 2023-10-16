@@ -1,0 +1,48 @@
+name: Deploy OneWare Web Studio
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      # Install the .NET SDK indicated in the global.json file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x 
+      - name: Workload Restore
+        run: dotnet workload restore
+      - name: Publish
+        run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -o ./out
+      - uses: actions/upload-artifact@v3
+        with:
+          name: oneware-web-build
+          path: out
+
+  deploy:
+    permissions:
+      contents: write
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: oneware-web-build
+          path: webapp
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: w01e537f.kasserver.com
+          username: w01e537f
+          password: ${{ secrets.ONEWARE_STUDIO_FTP }}
+          local-dir: webapp/AppBundle/
+          server-dir: demo.oneware.studio/

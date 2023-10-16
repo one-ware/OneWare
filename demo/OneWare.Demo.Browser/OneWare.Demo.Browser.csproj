@@ -23,6 +23,7 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
         <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
+        <EmccInitialHeapSize>32mb</EmccInitialHeapSize>
     </PropertyGroup>
 
     <ItemGroup>
