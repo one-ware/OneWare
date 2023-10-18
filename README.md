@@ -2,6 +2,6 @@
 
 # Extensible Cross-Platform IDE optimized for FPGA Development
 
-[![.NET](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/dotnet.yml)
+[![Test](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml)
 
 Copyright © 2023 Protop Solutions UG
