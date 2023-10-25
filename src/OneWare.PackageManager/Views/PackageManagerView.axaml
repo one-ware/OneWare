@@ -55,8 +55,8 @@
                                     IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     VerticalAlignment="Center" Width="18"
                                     Source="{Binding IconObservable^, FallbackValue={x:Null}}" />
-                                <TextBlock Grid.Column="1" Margin="5 0" FontSize="13" Text="{Binding Header}" />
-                                <TextBlock Grid.Column="2" Margin="5 0" HorizontalAlignment="Right" Text="{Binding VisiblePackages.Count}"/>
+                                <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}" />
+                                <TextBlock Grid.Column="2" Margin="3 0" HorizontalAlignment="Right" TextAlignment="Center" Text="{Binding VisiblePackages.Count}" Foreground="{DynamicResource ThemeBorderHighBrush}"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.DataTemplates>
