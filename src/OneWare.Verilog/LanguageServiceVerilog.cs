@@ -21,10 +21,10 @@ namespace OneWare.Verilog
             
             StartPath = PlatformHelper.Platform switch
             {
-                PlatformId.WinX64 => $"{assemblyPath}/native_tools/win-x64/verible/verible-v0.0-3401-g0b8cb4e0-win64/verible-verilog-ls.exe",
-                PlatformId.LinuxX64 => $"{assemblyPath}/native_tools/linux-x64/verible/verible-v0.0-3401-g0b8cb4e0/bin/verible-verilog-ls",
-                PlatformId.OsxX64 => $"{assemblyPath}/native_tools/osx-x64/verible/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
-                PlatformId.OsxArm64 => $"{assemblyPath}/native_tools/osx-x64/verible/verible-v0.0-3401-g0b8cb4e0-macOS/bin/verible-verilog-ls",
+                PlatformId.WinX64 => $"{assemblyPath}/native_tools/win-x64/verible/verible-v0.0-3426-gac4a37d8-win64/verible-verilog-ls.exe",
+                PlatformId.LinuxX64 => $"{assemblyPath}/native_tools/linux-x64/verible/verible-v0.0-3426-gac4a37d8/bin/verible-verilog-ls",
+                PlatformId.OsxX64 => $"{assemblyPath}/native_tools/osx-x64/verible/verible-v0.0-3426-gac4a37d8-macOS/bin/verible-verilog-ls",
+                PlatformId.OsxArm64 => $"{assemblyPath}/native_tools/osx-x64/verible/verible-v0.0-3426-gac4a37d8-macOS/bin/verible-verilog-ls",
                 _ => null
             };
         }

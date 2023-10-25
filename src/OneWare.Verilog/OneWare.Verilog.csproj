@@ -24,7 +24,7 @@
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
         <UsePackageTarget>osx-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>
+        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3426-gac4a37d8/verible-v0.0-3426-gac4a37d8-macOS.tar.gz</ExternalPackageUrl>
     </PropertyGroup>
 
     <PropertyGroup>
