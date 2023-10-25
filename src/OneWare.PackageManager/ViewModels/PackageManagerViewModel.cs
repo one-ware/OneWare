@@ -3,6 +3,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
 using OneWare.Shared.Services;
@@ -21,16 +22,35 @@ public class PackageManagerViewModel : ObservableObject
     public bool ShowInstalled
     {
         get => _showInstalled;
-        set => SetProperty(ref _showInstalled, value);
+        set
+        {
+            SetProperty(ref _showInstalled, value);
+            FilterPackages();
+        }
     }
 
     private bool _showAvailable = true;
     public bool ShowAvailable
     {
         get => _showAvailable;
-        set => SetProperty(ref _showAvailable, value);
+        set
+        {
+            SetProperty(ref _showAvailable, value); 
+            FilterPackages();
+        }
     }
-    
+
+    private string _filter = string.Empty;
+    public string Filter
+    {
+        get => _filter;
+        set
+        {
+            SetProperty(ref _filter, value);
+            FilterPackages();
+        }
+    }
+
     private bool _isLoading = false;
     public bool IsLoading
     {
@@ -45,7 +65,7 @@ public class PackageManagerViewModel : ObservableObject
     }
     
     public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
-
+    
     public PackageManagerViewModel(IHttpService httpService, ILogger logger)
     {
         _httpService = httpService;
@@ -61,6 +81,7 @@ public class PackageManagerViewModel : ObservableObject
     
     public void RegisterPackage(PackageCategoryModel category, PackageViewModel packageView)
     {
+        PackageCategories.First().Packages.Add(packageView);
         category.Packages.Add(packageView);
     }
     
@@ -70,8 +91,9 @@ public class PackageManagerViewModel : ObservableObject
         _cancellationTokenSource = new CancellationTokenSource();
         
         IsLoading = true;
-        SelectedCategory = null;
         PackageCategories.Clear();
+        PackageCategories.Add(new PackageCategoryModel("All"));
+        SelectedCategory = PackageCategories.First();
 
         RegisterPackageCategory(new PackageCategoryModel("Languages", Application.Current?.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
         RegisterPackageCategory(new PackageCategoryModel("Toolchains", Application.Current?.GetResourceObservable("FeatherIcons.Tool")));
@@ -100,12 +122,19 @@ public class PackageManagerViewModel : ObservableObject
         
         RegisterPackageCategory(new PackageCategoryModel("Misc", Application.Current?.GetResourceObservable("Module")));
         
-        SelectedCategory = PackageCategories.First();
-        
         await LoadPackageRepositoryAsync(
             "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
         
+        FilterPackages();
         IsLoading = false;
+    }
+
+    public void FilterPackages()
+    {
+        foreach (var cat in PackageCategories)
+        {
+            cat.Filter(Filter, _showInstalled, _showAvailable);
+        }
     }
 
     private readonly JsonSerializerOptions _serializerOptions = new()

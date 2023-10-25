@@ -50,13 +50,14 @@
                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
                     <ListBox.DataTemplates>
                         <DataTemplate DataType="models:PackageCategoryModel">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="10">
+                            <Grid ColumnDefinitions="Auto, Auto, *">
                                 <Image
                                     IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     VerticalAlignment="Center" Width="18"
                                     Source="{Binding IconObservable^, FallbackValue={x:Null}}" />
-                                <TextBlock FontSize="13" Text="{Binding Header}" />
-                            </StackPanel>
+                                <TextBlock Grid.Column="1" Margin="5 0" FontSize="13" Text="{Binding Header}" />
+                                <TextBlock Grid.Column="2" Margin="5 0" HorizontalAlignment="Right" Text="{Binding VisiblePackages.Count}"/>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.DataTemplates>
                 </ListBox>
@@ -65,13 +66,13 @@
             <DockPanel Grid.Row="1" Grid.Column="1" Background="{DynamicResource ThemeBackgroundBrush}">
                 <Border Padding="3" DockPanel.Dock="Top">
                     <Border Classes="RoundToolBar">
-                        <controls:SearchBox SearchButtonVisible="False" />
+                        <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False" />
                     </Border>
                 </Border>
                 <Grid DockPanel.Dock="Top">
                     <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              Background="Transparent" BorderThickness="0"
-                             ItemsSource="{Binding SelectedCategory.Packages, FallbackValue={x:Null}}">
+                             ItemsSource="{Binding SelectedCategory.VisiblePackages, FallbackValue={x:Null}}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel />
