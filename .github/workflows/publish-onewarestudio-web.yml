@@ -25,7 +25,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: oneware-web-build
-          path: out
+          path: out/AppBundle
           retention-days: 5
 
   deploy:
@@ -45,5 +45,5 @@ jobs:
           server: w01e537f.kasserver.com
           username: w01e537f
           password: ${{ secrets.ONEWARE_STUDIO_FTP }}
-          local-dir: webapp/AppBundle/
+          local-dir: webapp
           server-dir: demo.oneware.studio/
