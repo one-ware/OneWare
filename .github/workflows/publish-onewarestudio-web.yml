@@ -26,6 +26,7 @@ jobs:
         with:
           name: oneware-web-build
           path: out
+          retention-days: 5
 
   deploy:
     permissions:
