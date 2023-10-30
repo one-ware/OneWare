@@ -272,7 +272,7 @@ namespace OneWare.SourceControl.ViewModels
                     HeadBranch = null;
                     AvailableBranchesMenu.Clear();
 
-                    if (CurrentRepo == null || CurrentRepo.Info.WorkingDirectory.EqualPaths(WorkingPath))
+                    if (CurrentRepo == null || !CurrentRepo.Info.WorkingDirectory.EqualPaths(WorkingPath))
                     {
                         if (Repository.IsValid(WorkingPath))
                             CurrentRepo = new Repository(WorkingPath);
@@ -1126,10 +1126,10 @@ namespace OneWare.SourceControl.ViewModels
                 // Get user/pass from stdout
                 string username = null;
                 string password = null;
-                string line;
+                string? line;
 
                 var autoCredentialTimeout =
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Timeout.Infinite : 1000;
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Timeout.Infinite : 5000;
 
                 //Try to get credentials with timeout of 100ms on linux / 
                 var helper = new StreamReaderHelper(process.StandardOutput);
