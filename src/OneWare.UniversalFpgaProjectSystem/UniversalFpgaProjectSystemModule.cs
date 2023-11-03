@@ -54,7 +54,7 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         var toolBarExtension = new UniversalFpgaProjectToolBarView()
         {
-            DataContext = new UniversalFpgaProjectToolBarViewModel()
+            DataContext = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>()
         };
 
         toolBarExtension.Bind(Visual.IsVisibleProperty, containerProvider

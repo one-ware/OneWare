@@ -8,4 +8,11 @@
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\UniversalFpgaProjectCompileView.axaml.cs">
+        <DependentUpon>UniversalFpgaProjectCompileView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

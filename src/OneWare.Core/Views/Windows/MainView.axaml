@@ -155,9 +155,20 @@
                 </DockPanel>
             </Border>
         </Grid>
-        
-        <Panel Name="DialogControlPanel" Background="#11000000" IsVisible="False">
-            <ContentControl Padding="4" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Name="DialogControl" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+         
+        <Panel Name="DialogControlPanel" IsVisible="False">
+            <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <Grid RowDefinitions="30, *">
+                    <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Image Height="16" Width="16" VerticalAlignment="Center" Name="DialogIcon"/>
+                        <TextBlock Margin="8 0" Height="16" Name="DialogTitle"/>
+                    </StackPanel>
+                    <Button Grid.Row="0"  HorizontalAlignment="Right" Margin="3" Name="DialogCloseButton" Click="DialogCloseButton_OnClick">
+                        <Image Height="12" Source="{DynamicResource MaterialDesign.Close}"/>
+                    </Button>
+                    <ContentControl Grid.Row="1" Name="DialogControl" />
+                </Grid>
+            </Border>
         </Panel>
         
     </Panel>

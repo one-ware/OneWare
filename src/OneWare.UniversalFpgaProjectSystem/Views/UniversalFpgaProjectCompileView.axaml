@@ -1,0 +1,17 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefHeight="400" PrefWidth="600" Padding="4"
+                         WindowStartupLocation="CenterOwner"
+                         Title="{Binding Title}"
+                         CustomIcon="{DynamicResource CreateIcon}"
+                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCompileView"
+                         x:DataType="viewModels:UniversalFpgaProjectCompileViewModel">
+    <Grid RowDefinitions="*, Auto">
+       
+    </Grid>
+</controls:FlexibleWindow>
