@@ -31,7 +31,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         {
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView()
             {
-                DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectCreatorViewModel>((typeof(UniversalFpgaProjectRoot), project))
+                DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectCompileViewModel>((typeof(UniversalFpgaProjectRoot), project))
             });
         }
     }
