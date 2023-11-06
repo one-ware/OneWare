@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -60,15 +61,14 @@ namespace OneWare.Core.Views.Windows
                     }
                 };
 
-                Observable.FromEventPattern(this, nameof(this.Opened)).Take(1).Delay(TimeSpan.FromMilliseconds(10)).Subscribe(
-                    x =>
+                this.AttachedToVisualTree += (_, _) =>
+                {
+                    Dispatcher.UIThread.Post(() =>
                     {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            InputBox.Focus();
-                            InputBox.SelectAll();
-                        });
+                        InputBox.SelectAll();
+                        InputBox.Focus();
                     });
+                };
             }
             else
             {

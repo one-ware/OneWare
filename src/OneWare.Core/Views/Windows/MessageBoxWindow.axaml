@@ -13,7 +13,7 @@
                         Foreground="{DynamicResource ThemeForegroundBrush}"
                         Name="MessageWindow" x:CompileBindings="True" x:DataType="windows:MessageBoxViewModel"
                         WindowStartupLocation="CenterOwner">
-
+    
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
             <TextBlock Margin="2" Background="Transparent" Name="Message" TextWrapping="Wrap"
@@ -29,7 +29,7 @@
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                     <TextBox PasswordChar="{Binding PasswordChar}" Name="InputBox" BorderThickness="0"
                              Height="20" Text="{Binding Input}" Padding="4 2 4 0" FontSize="12"
-                             HorizontalAlignment="Stretch" />
+                             HorizontalAlignment="Stretch"/>
                 </Border>
             </DockPanel>
             <ComboBox IsVisible="{Binding ShowSelection}" ItemsSource="{Binding SelectionItems}"
