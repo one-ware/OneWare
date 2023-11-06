@@ -142,6 +142,8 @@ public class ProjectWatchInstance : IDisposable
                                 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 AddNew(path);
+                                
+                                //TODO dont remove tab and Initialize Current Tab
                             }
                             else
                             {
