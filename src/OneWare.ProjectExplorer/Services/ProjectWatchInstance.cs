@@ -139,10 +139,9 @@ public class ProjectWatchInstance : IDisposable
                             if (oldEntry is IProjectFile file)
                             {
                                 _dockService.OpenFiles.TryGetValue(file, out var tab);
+                                
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 AddNew(path);
-                                if (tab is IEditor editor) editor.FullPath = path;
-                                tab?.InitializeContent();
                             }
                             else
                             {

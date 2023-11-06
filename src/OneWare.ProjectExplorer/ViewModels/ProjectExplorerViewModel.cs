@@ -586,12 +586,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
-
-        //entry.Header = newName;
-
-        await ReloadAsync(entry);
-
-
+        
         return entry;
     }
 
