@@ -4,14 +4,36 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                         xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          PrefHeight="750" PrefWidth="900" Padding="4"
                          WindowStartupLocation="CenterOwner"
                          Title="{Binding Title}"
                          CustomIcon="{DynamicResource CreateIcon}"
                          x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCompileView"
-                         x:DataType="viewModels:UniversalFpgaProjectCompileViewModel">
+                         x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
+                         Name="UniversalFpgaProjectCompileViewView">
+    <Interaction.Behaviors>
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SaveAsync}"
+                                            CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}" />
+    </Interaction.Behaviors>
     <Grid RowDefinitions="*, Auto">
-        <Editor Name="EditorControl"  />
+        <Border Padding="4">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Select FPGA:" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding FpgaModels}" MinWidth="150"
+                              SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        
+        <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                <TextBlock Text="Save" />
+            </Button>
+        </StackPanel>
     </Grid>
 </controls:FlexibleWindow>

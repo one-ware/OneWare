@@ -15,4 +15,8 @@
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Styles\Components.axaml" />
+    </ItemGroup>
 </Project>
