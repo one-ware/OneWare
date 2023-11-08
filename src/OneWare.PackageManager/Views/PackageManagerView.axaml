@@ -91,6 +91,7 @@
                                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Orientation="Horizontal">
                                                 <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
                                                 <Button Content="{Binding PrimaryButtonText}"
+                                                        Background="{Binding PrimaryButtonBrush}"
                                                         Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync}"
                                                         IsEnabled="{Binding PrimaryButtonEnabled}" />
                                             </StackPanel>

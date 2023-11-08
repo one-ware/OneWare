@@ -43,6 +43,7 @@
             </Border>
 
             <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}" 
+                    Background="{Binding PrimaryButtonBrush}"
                     Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"/>
         </StackPanel>
         

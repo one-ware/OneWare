@@ -1,5 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.Enums;
@@ -43,8 +46,22 @@ public class PackageViewModel : ObservableObject
                 PackageStatus.Available => "Install",
                 PackageStatus.Installed => "Remove",
                 PackageStatus.Installing => "Cancel",
-                PackageStatus.Unavailable => "Unavailable"
+                PackageStatus.Unavailable => "Unavailable",
+                _ => "Unknown"
             };
+            
+            var primaryButtonBrushObservable = value switch
+            {
+                PackageStatus.Available => Application.Current!.GetResourceObservable("ThemeAccentBrush"),
+                _ => Application.Current!.GetResourceObservable("ThemeBorderMidBrush")
+            };
+            
+            _primaryButtonBrushSubscription?.Dispose();
+            _primaryButtonBrushSubscription = primaryButtonBrushObservable!.Subscribe(x =>
+            {
+                PrimaryButtonBrush = x as IBrush;
+            });
+            
             PrimaryButtonEnabled = value is PackageStatus.Available or PackageStatus.Installed;
         }
     }
@@ -61,6 +78,15 @@ public class PackageViewModel : ObservableObject
     {
         get => _primaryButtonText;
         set => SetProperty(ref _primaryButtonText, value);
+    }
+
+    private IDisposable? _primaryButtonBrushSubscription;
+    
+    private IBrush? _primaryButtonBrush;
+    public IBrush? PrimaryButtonBrush
+    {
+        get => _primaryButtonBrush;
+        set => SetProperty(ref _primaryButtonBrush, value);
     }
 
     private bool _primaryButtonEnabled = false;
