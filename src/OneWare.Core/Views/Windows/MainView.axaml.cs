@@ -39,8 +39,8 @@ public partial class MainView : UserControl
     {
         DialogControlPanel.IsVisible = true;
         DialogControl.Content = window;
-        DialogControl.Width = window.PrefWidth;
-        DialogControl.Height = window.PrefHeight;
+        DialogControl.Width = window.PrefWidth < this.Bounds.Width ? window.PrefWidth : this.Bounds.Width;
+        DialogControl.Height = window.PrefHeight + 40 < this.Bounds.Height ? window.PrefHeight : this.Bounds.Height - 40;
         DialogControl.Background = window.WindowBackground;
         DialogTitle.Text = window.Title;
         if (window.CustomIcon != null)
