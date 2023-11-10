@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.Controls;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
+using OneWare.UniversalFpgaProjectSystem.Views;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -10,7 +12,7 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
     private readonly UniversalFpgaProjectRoot _project;
     public string Title => "Connect and Compile - " + _project.Header;
 
-    public ObservableCollection<FpgaModel> FpgaModels { get; } = new();
+    public ObservableCollection<FpgaModel> FpgaModels { get; }
 
     private FpgaModel? _selectedFpgaModel;
     public FpgaModel? SelectedFpgaModel
@@ -30,12 +32,13 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
         set => SetProperty(ref _hideExtensions, value);
     }
     
-    public UniversalFpgaProjectCompileViewModel(UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectCompileViewModel(FpgaService fpgaService, UniversalFpgaProjectRoot project)
     {
         _project = project;
+
+        FpgaModels = fpgaService.FpgaModels;
         
-        FpgaModels.Add(new FpgaModel("Max 10"));
-        SelectedFpgaModel = FpgaModels.First();
+        SelectedFpgaModel = FpgaModels.FirstOrDefault();
     }
 
     public async Task SaveAsync(FlexibleWindow window)

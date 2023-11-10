@@ -19,12 +19,25 @@
     </Interaction.Behaviors>
     <Grid RowDefinitions="*, Auto">
         <Border Padding="4">
-            <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical" Spacing="10">
                 <StackPanel Orientation="Horizontal" Spacing="5">
                     <TextBlock Text="Select FPGA:" VerticalAlignment="Center"/>
                     <ComboBox ItemsSource="{Binding FpgaModels}" MinWidth="150"
-                              SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}" />
+                              SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
+                
+                <ContentControl IsVisible="{Binding SelectedFpgaModel.UserInterface, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Content="{Binding SelectedFpgaModel.UserInterface}" />
+                
+                <controls:SearchBox VerticalAlignment="Center" Background="{DynamicResource ThemeBackgroundBrush}"
+                                    VerticalContentAlignment="Center" Height="22" />
+                
             </StackPanel>
         </Border>
         

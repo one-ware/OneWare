@@ -8,6 +8,7 @@ using OneWare.Shared.Converters;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
 using Prism.Ioc;
@@ -20,6 +21,7 @@ public class UniversalFpgaProjectSystemModule : IModule
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
+        containerRegistry.RegisterSingleton<FpgaService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

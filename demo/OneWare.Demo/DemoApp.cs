@@ -3,6 +3,7 @@ using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
+using OneWare.IceBreaker;
 using OneWare.Json;
 using OneWare.Settings;
 using OneWare.Shared.Services;
@@ -62,5 +63,7 @@ public class DemoApp : App
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
+
+        moduleCatalog.AddModule<IceBreakerModule>();
     }
 }

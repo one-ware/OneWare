@@ -1,27 +1,39 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaModel : ObservableObject
 {
-    public string Name { get; }
-
-    public Dictionary<string, FpgaPin> AvailablePins { get; } = new();
+    public Dictionary<string, FpgaPinModel> AvailablePins { get; } = new();
     
-    private CompileConnectionModel _selectedConnection;
-    
-    private FpgaPin _selectedPin;
-    public FpgaPin SelectedPin
+    private FpgaPinModel? _selectedPinModel;
+    public FpgaPinModel? SelectedPinModel
     {
-        get => _selectedPin;
-        set => this.SetProperty(ref _selectedPin, value);
+        get => _selectedPinModel;
+        set => SetProperty(ref _selectedPinModel, value);
     }
 
-    private CompileSignalModel _selectedSignal;
+    private NodeModel? _selectedNode;
+    public NodeModel? SelectedNode
+    {
+        get => _selectedNode;
+        set => SetProperty(ref _selectedNode, value);
+    }
+    
+    public Control? UserInterface { get; }
+    
+    public string Name { get; }
 
-    public FpgaModel(string name)
+    public FpgaModel(string name, Control? userInterface = null)
     {
         Name = name;
+        UserInterface = userInterface;
+    }
+
+    public void SelectPin(FpgaPinModel model)
+    {
+        SelectedPinModel = model;
     }
 
     public override string ToString()

@@ -2,29 +2,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
+             xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models;assembly=OneWare.UniversalFpgaProjectSystem"
              mc:Ignorable="d"
              d:DesignHeight="500"
              d:DesignWidth="1000"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.IceBreakerV1_0e" x:DataType="models:FpgaModel"
+             x:Class="OneWare.IceBreaker.Views.IceBreakerV1_0e" x:DataType="models:FpgaModel"
              x:CompileBindings="True">
 
-
     <UserControl.Styles>
-        <StyleInclude Source="avares://VHDPlus/Styles/Components.axaml" />
+        <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
-
-    <Design.DataContext>
-        <models:FpgaModel />
-    </Design.DataContext>
 
     <Grid HorizontalAlignment="Center" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto, Auto, 20,Auto, Auto">
         <Border Grid.Row="0" Grid.Column="1" Background="#1c1c1c" Height="30" Width="90" Margin="44 0 0 -5"
                 HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <Grid>
-                <Menu x:CompileBindings="False" Classes="CruviLSPMOD BindMenu" DragDrop.AllowDrop="True"
-                      DataContext="{Binding CruviLsInterfaces[0]}" Margin="0,0,0,0" HorizontalAlignment="Left"
-                      VerticalAlignment="Center">
+                    <!--
+                    <Menu x:CompileBindings="False" Classes="CruviLSPMOD BindMenu" DragDrop.AllowDrop="True"
+                          DataContext="{Binding CruviLsInterfaces[0]}" Margin="0,0,0,0" HorizontalAlignment="Left"
+                          VerticalAlignment="Center">
                     <MenuItem Padding="0" x:DataType="cruviExtensions:CruviLsModel" Cursor="Hand"
                               Items="{Binding InterfaceMenu}" VerticalAlignment="Bottom">
                         <MenuItem.Header>
@@ -36,15 +32,17 @@
                         </MenuItem.Header>
                     </MenuItem>
                 </Menu>
+                -->
             </Grid>
         </Border>
 
         <Border Grid.Row="0" Grid.Column="1" Background="#1c1c1c" Height="30" Width="90" Margin="0 0 46 -5"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Grid>
-                <Menu x:CompileBindings="False" Classes="CruviLSPMOD BindMenu" DragDrop.AllowDrop="True"
-                      DataContext="{Binding CruviLsInterfaces[1]}" Margin="0,0,0,0" HorizontalAlignment="Left"
-                      VerticalAlignment="Center">
+                    <!--
+                    <Menu x:CompileBindings="False" Classes="CruviLSPMOD BindMenu" DragDrop.AllowDrop="True"
+                          DataContext="{Binding CruviLsInterfaces[1]}" Margin="0,0,0,0" HorizontalAlignment="Left"
+                          VerticalAlignment="Center">
                     <MenuItem Padding="0" x:DataType="cruviExtensions:CruviLsModel" Cursor="Hand"
                               Items="{Binding InterfaceMenu}" VerticalAlignment="Bottom">
                         <MenuItem.Header>
@@ -56,6 +54,7 @@
                         </MenuItem.Header>
                     </MenuItem>
                 </Menu>
+                -->
             </Grid>
         </Border>
 
@@ -377,6 +376,7 @@
             <TextBlock VerticalAlignment="Center" Text="Button 3" Margin="5 70 0 0"></TextBlock>
         </Grid>
 
+        <!--
         <Border Grid.Row="0" Grid.Column="1"
                 IsVisible="{Binding CruviLsInterfaces[0].Extension, Converter={StaticResource ObjectNotNullConverter}}"
                 Width="150" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top"
@@ -400,6 +400,7 @@
                               DataContext="{Binding CruviLsInterfaces[1].Extension}"
                               Content="{Binding}" />
         </Border>
+        -->
     </Grid>
 
 </UserControl>

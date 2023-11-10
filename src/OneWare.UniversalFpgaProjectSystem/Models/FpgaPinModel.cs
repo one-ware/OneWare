@@ -2,7 +2,7 @@
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class FpgaPin : ObservableObject
+public class FpgaPinModel : ObservableObject
 {
     public FpgaModel Parent { get; }
     public string Name { get; }
@@ -21,8 +21,8 @@ public class FpgaPin : ObservableObject
         set => SetProperty(ref _toolTipText, value);
     }
     
-    private CompileSignalModel _connection;
-    public CompileSignalModel Connection
+    private NodeModel? _connection;
+    public NodeModel? Connection
     {
         get => _connection;
         set
@@ -33,11 +33,10 @@ public class FpgaPin : ObservableObject
         }
     }
     
-    public CompilePinModel(string name, string description, FpgaModel parent)
+    public FpgaPinModel(string name, string description, FpgaModel parent)
     {
         Name = name;
         Description = description;
-        Connection = null;
         Parent = parent;
     }
 }

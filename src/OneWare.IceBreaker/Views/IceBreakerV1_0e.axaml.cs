@@ -1,8 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Controls;
 
-namespace OneWare.UniversalFpgaProjectSystem.Views;
+namespace OneWare.IceBreaker.Views;
 
 public partial class IceBreakerV1_0e : UserControl
 {
