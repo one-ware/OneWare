@@ -1,0 +1,12 @@
+{
+  "Include": [
+    "*.vhd",
+    "*.vhdl",
+    "*.v",
+    "*.cpp",
+    "*.vcd",
+  ],
+  "Exclude": [
+    "bin",
+  ]
+}

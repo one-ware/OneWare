@@ -1,9 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using Dock.Model.Core;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.Shared.Services;
+using OneWare.UniversalFpgaProjectSystem;
+using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Demo.Browser;
@@ -23,29 +28,35 @@ public class WebDemoApp : DemoApp
     {
         try
         {
-            var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "Test");
+            var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "DemoProject");
 
             Directory.CreateDirectory(testProj);
-            var dummy = new FolderProjectRoot(testProj);
-
+            
+            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/DemoProject.fpgaproj"), Path.Combine(testProj, "DemoProject.fpgaproj"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/CppTest.cpp"), Path.Combine(testProj, "CppTest.cpp"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VhdlTest.vhd"), Path.Combine(testProj, "VhdlTest.vhd"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "VerilogTest.v"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VcdTest.vcd"));
-        
-            var vhdl = dummy.AddFile("VhdlTest.vhd");
-            var verilog = dummy.AddFile( "VerilogTest.v");
-            var cpp = dummy.AddFile("CppTest.cpp");
-            var vcd = dummy.AddFile("VcdTest.vcd");
+
+            var dummy = await Container.Resolve<UniversalFpgaProjectManager>().LoadProjectAsync(Path.Combine(testProj, "DemoProject.fpgaproj"));
 
             Container.Resolve<IProjectExplorerService>().Items.Add(dummy);
             Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
-            dummy.IsExpanded = true;
 
-            await Container.Resolve<IDockService>().OpenFileAsync(cpp!);
-            await Container.Resolve<IDockService>().OpenFileAsync(vhdl!);
-            await Container.Resolve<IDockService>().OpenFileAsync(verilog!);
-            await Container.Resolve<IDockService>().OpenFileAsync(vcd!);
+            foreach (var file in dummy!.Files)
+            {
+                var vm = await Container.Resolve<IDockService>().OpenFileAsync(file);
+
+                if (vm is VcdViewModel vcdViewModel)
+                {
+                    var signals = vcdViewModel.Scopes.SelectMany(x => x.Signals);
+                    foreach (var s in signals)
+                    {
+                        vcdViewModel.AddSignal(s);
+                    }
+                }
+            }
+            dummy.IsExpanded = true;
         }
         catch (Exception e)
         {
