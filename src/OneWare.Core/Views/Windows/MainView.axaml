@@ -156,7 +156,7 @@
             </Border>
         </Grid>
          
-        <Panel Name="DialogControlPanel" IsVisible="False">
+        <Panel Name="DialogControlPanel" IsVisible="False" MaxWidth="{Binding #MainViewView.Bounds.Width}" MaxHeight="{Binding #MainViewView.Bounds.Height}">
             <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                 <Grid RowDefinitions="30, *">
                     <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">

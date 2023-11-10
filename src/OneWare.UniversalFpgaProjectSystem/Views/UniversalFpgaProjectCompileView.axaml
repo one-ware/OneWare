@@ -37,7 +37,7 @@
 
                 <DockPanel Grid.Row="1" DataContext="{Binding SelectedFpga}">
 
-                    <ContentControl Padding="0 5" DockPanel.Dock="Top"
+                    <ContentControl Padding="0 10" DockPanel.Dock="Top"
                                     IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
                                     Content="{Binding }" />
 
