@@ -5,10 +5,10 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class FpgaService
 {
-    public ObservableCollection<FpgaModel> FpgaModels { get; } = new();
+    public ObservableCollection<FpgaModelBase> FpgaModels { get; } = new();
     
-    public void AddFpga(FpgaModel fpgaModel)
+    public void AddFpga(FpgaModelBase fpgaModelBase)
     {
-        FpgaModels.Add(fpgaModel);
+        FpgaModels.Add(fpgaModelBase);
     }
 }

@@ -18,6 +18,7 @@ public static class SharedConverters
     public static readonly IValueConverter ObjectTypeConverter = new ObjectTypeConverter();
     public static readonly IValueConverter TimeUnitConverter = new TimeUnitConverter();
     public static readonly IValueConverter PathToWindowIconConverter = new PathToWindowIconConverter();
+    public static readonly IValueConverter ViewFoundConverter = new ViewFoundConverter();
     public static readonly PathToBitmapConverter PathToBitmapConverter = new();
     public static readonly IMultiValueConverter PathsEqualConverter = new PathsEqualConverter();
     public static readonly IMultiValueConverter ObjectsEqualConverter = new ObjectsEqualConverter();

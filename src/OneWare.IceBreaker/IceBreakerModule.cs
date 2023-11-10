@@ -1,4 +1,5 @@
-﻿using OneWare.IceBreaker.Views;
+﻿using OneWare.IceBreaker.ViewModels;
+using OneWare.IceBreaker.Views;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -14,6 +15,6 @@ public class IceBreakerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<FpgaService>().AddFpga(new IceBreakerFpga());
+        containerProvider.Resolve<FpgaService>().AddFpga(new IceBreakerV10EViewModel());
     }
 }

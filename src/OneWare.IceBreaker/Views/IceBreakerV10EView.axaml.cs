@@ -2,9 +2,9 @@
 
 namespace OneWare.IceBreaker.Views;
 
-public partial class IceBreakerV1_0e : UserControl
+public partial class IceBreakerV10EView : UserControl
 {
-    public IceBreakerV1_0e()
+    public IceBreakerV10EView()
     {
         InitializeComponent();
     }

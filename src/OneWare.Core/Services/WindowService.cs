@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Presenters;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
@@ -208,13 +209,13 @@ public class WindowService : IWindowService
             
         //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
         //host.Bind(TemplatedControl.BackgroundProperty, flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty));
-
+        
         host.Height = flexible.PrefHeight;
         host.Width = flexible.PrefWidth;
 
-        host.ExtendClientAreaToDecorationsHint = true;
-        
         host.Content = flexible;
+
+        host.ExtendClientAreaToDecorationsHint = true;
 
         return host;
     }

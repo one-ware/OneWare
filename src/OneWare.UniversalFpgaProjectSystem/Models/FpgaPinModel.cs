@@ -4,7 +4,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaPinModel : ObservableObject
 {
-    public FpgaModel Parent { get; }
+    public FpgaModelBase Parent { get; }
     public string Name { get; }
 
     private string _description;
@@ -33,7 +33,7 @@ public class FpgaPinModel : ObservableObject
         }
     }
     
-    public FpgaPinModel(string name, string description, FpgaModel parent)
+    public FpgaPinModel(string name, string description, FpgaModelBase parent)
     {
         Name = name;
         Description = description;

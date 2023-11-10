@@ -12,18 +12,14 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
     private readonly UniversalFpgaProjectRoot _project;
     public string Title => "Connect and Compile - " + _project.Header;
 
-    public ObservableCollection<FpgaModel> FpgaModels { get; }
+    public ObservableCollection<FpgaModelBase> FpgaModels { get; }
 
-    private FpgaModel? _selectedFpgaModel;
-    public FpgaModel? SelectedFpgaModel
+    private FpgaModelBase? _selectedFpga;
+    public FpgaModelBase? SelectedFpga
     {
-        get => _selectedFpgaModel;
-        set => SetProperty(ref _selectedFpgaModel, value);
+        get => _selectedFpga;
+        set => SetProperty(ref _selectedFpga, value);
     }
-
-    public ObservableCollection<string> Signals { get; } = new();
-
-    public ObservableCollection<string> Pins { get; } = new();
 
     private bool _hideExtensions = false;
     public bool HideExtensions
@@ -38,7 +34,7 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
 
         FpgaModels = fpgaService.FpgaModels;
         
-        SelectedFpgaModel = FpgaModels.FirstOrDefault();
+        SelectedFpga = FpgaModels.FirstOrDefault();
     }
 
     public async Task SaveAsync(FlexibleWindow window)

@@ -13,58 +13,61 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
-    <StackPanel Orientation="Vertical" Spacing="10">
-        <TextBlock Text="{Binding Package.Name}" FontSize="18" FontWeight="Bold" />
-        <ItemsControl ItemsSource="{Binding Links}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Vertical" Spacing="5" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.DataTemplates>
-                <DataTemplate x:DataType="models:LinkModel">
-                    <controls:HyperLink Url="{Binding Url}" Label="{Binding Label}"
-                                        HorizontalAlignment="Left" />
-                </DataTemplate>
-            </ItemsControl.DataTemplates>
-        </ItemsControl>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10">
+            <TextBlock Text="{Binding Package.Name}" FontSize="18" FontWeight="Bold" />
+            <ItemsControl ItemsSource="{Binding Links}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.DataTemplates>
+                    <DataTemplate x:DataType="models:LinkModel">
+                        <controls:HyperLink Url="{Binding Url}" Label="{Binding Label}"
+                                            HorizontalAlignment="Left" />
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
 
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
-                <ComboBox ItemsSource="{Binding Package.Versions}"
-                          SelectedItem="{Binding SelectedVersion}"
-                          BorderThickness="0">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="serializer:PackageVersion">
-                            <TextBlock Text="{Binding Version}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Border>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
+                    <ComboBox ItemsSource="{Binding Package.Versions}"
+                              SelectedItem="{Binding SelectedVersion}"
+                              BorderThickness="0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="serializer:PackageVersion">
+                                <TextBlock Text="{Binding Version}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Border>
 
-            <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}" 
-                    Background="{Binding PrimaryButtonBrush}"
-                    Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"/>
-        </StackPanel>
-        
-        <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="5" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.DataTemplates>
-                <DataTemplate x:DataType="serializer:PackageTarget">
-                    <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
-                </DataTemplate>
-            </ItemsControl.DataTemplates>
-        </ItemsControl>
+                <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}"
+                        Background="{Binding PrimaryButtonBrush}"
+                        Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }" />
+            </StackPanel>
 
-        <ProgressBar IsIndeterminate="False" Value="{Binding Progress}" ShowProgressText="True" Maximum="1.0" Height="24"
-                     IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
+            <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.DataTemplates>
+                    <DataTemplate x:DataType="serializer:PackageTarget">
+                        <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
+
+            <ProgressBar IsIndeterminate="False" Value="{Binding Progress}" ShowProgressText="True" Maximum="1.0"
+                         Height="24"
+                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
+        </StackPanel>
 
-        <TabControl ItemsSource="{Binding Tabs}">
+        <TabControl Margin="0 10 0 0" DockPanel.Dock="Top" ItemsSource="{Binding Tabs}">
             <TabControl.ItemTemplate>
                 <DataTemplate DataType="models:TabModel">
                     <TextBlock Text="{Binding Title}" />
@@ -72,9 +75,10 @@
             </TabControl.ItemTemplate>
             <TabControl.ContentTemplate>
                 <DataTemplate DataType="models:TabModel">
-                    <avalonia:MarkdownScrollViewer Markdown="{Binding Content}"/>
+                    <avalonia:MarkdownScrollViewer Markdown="{Binding Content}" />
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>
-    </StackPanel>
+    </DockPanel>
+
 </UserControl>

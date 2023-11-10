@@ -7,9 +7,7 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Compile Update="Views\IceBreakerV1_0e.axaml.cs">
-        <DependentUpon>IceBreakerV1_0e.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+      <AvaloniaResource Include="Assets\IceBreakerV1.0e.json" />
     </ItemGroup>
+    
 </Project>

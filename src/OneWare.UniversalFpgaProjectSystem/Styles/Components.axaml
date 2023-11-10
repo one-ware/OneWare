@@ -114,7 +114,7 @@
                                     <DataTriggerBehavior ComparisonCondition="Equal" Value="True">
                                         <DataTriggerBehavior.Binding>
                                             <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                <Binding Path="Parent.SelectedPinModel" />
+                                                <Binding Path="Parent.SelectedPin" />
                                                 <Binding Path="#PinBorder.DataContext"/>
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
@@ -128,7 +128,7 @@
                                     <DataTriggerBehavior ComparisonCondition="Equal" Value="False">
                                         <DataTriggerBehavior.Binding>
                                             <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                <Binding Path="Parent.SelectedPinModel" />
+                                                <Binding Path="Parent.SelectedPin" />
                                                 <Binding Path="#PinBorder.DataContext"/>
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
@@ -181,7 +181,7 @@
             </Setter.Value>
         </Setter>
         <Setter Property="Command" Value="{Binding Parent.SelectPin}"/>
-        <Setter Property="CommandParameter" Value="{Binding Name}" />
+        <Setter Property="CommandParameter" Value="{Binding}" />
         <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
     </Style>
 
