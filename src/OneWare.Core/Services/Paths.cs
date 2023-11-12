@@ -39,7 +39,7 @@ public class Paths : IPaths
         Directory.CreateDirectory(CrashReportsDirectory);
         Directory.CreateDirectory(ProjectsDirectory);
         //...
-        
+
         var sessionsDir = Path.Combine(TempDirectory, "OneWare", "Sessions");
         CleanupSessions(sessionsDir);
         
@@ -53,7 +53,6 @@ public class Paths : IPaths
     
     private static void CleanupSessions(string sessionsDir)
     {
-        //Cleanup
         try
         {
             if (Directory.Exists(sessionsDir))

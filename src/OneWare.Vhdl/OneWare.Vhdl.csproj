@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="true" ExcludeAssets="runtime"/>
+        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
 
     <ItemGroup>

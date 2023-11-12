@@ -57,13 +57,12 @@ public class DemoApp : App
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
+        moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
-        moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
-
         moduleCatalog.AddModule<IceBreakerModule>();
     }
 }

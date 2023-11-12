@@ -1,4 +1,6 @@
 ﻿using OneWare.Shared.Services;
+using OneWare.UniversalFpgaProjectSystem.Services;
+using OneWare.Vhdl.Parsing;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -16,5 +18,7 @@ public class VhdlModule : IModule
         containerProvider.Resolve<IErrorService>().RegisterErrorSource("RustHDL");
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl", "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
+        
+        containerProvider.Resolve<NodeProviderService>().RegisterNodeProvider(new VhdlNodeProvider(), ".vhd", ".vhdl");
     }
 }

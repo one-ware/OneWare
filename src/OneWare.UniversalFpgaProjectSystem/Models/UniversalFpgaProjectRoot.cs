@@ -1,6 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Styling;
 using OneWare.ProjectSystem.Models;
 using OneWare.Shared.Converters;
 using OneWare.Shared.Helpers;
@@ -20,14 +24,46 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     public string ProjectFilePath { get; }
     public JsonObject Properties { get; }
 
+    private readonly IImage _topEntityOverlay;
+
+    private IProjectEntry? _topEntity;
+
+    public IProjectEntry? TopEntity
+    {
+        get => _topEntity;
+        set
+        {
+            _topEntity?.IconOverlays.Remove(_topEntityOverlay);
+            SetProperty(ref _topEntity, value);
+            _topEntity?.IconOverlays.Add(_topEntityOverlay);
+
+            if (_topEntity != null)
+                Properties[nameof(TopEntity)] = _topEntity.RelativePath;
+            else
+                Properties.Remove(nameof(TopEntity));
+        }
+    }
+
     public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;
         Properties = properties;
         
+        _topEntityOverlay = Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib2019.DownloadOverlay16X") as IImage 
+                            ?? throw new NullReferenceException("TopEntity Icon");
+        
         Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
     }
-    
+
+    public override void UnregisterEntry(IProjectEntry entry)
+    {
+        if (entry == TopEntity)
+        {
+            TopEntity = null;
+        }
+        base.UnregisterEntry(entry);
+    }
+
     public override bool IsPathIncluded(string relativePath)
     {
         var includes = Properties["Include"].Deserialize<string[]>();

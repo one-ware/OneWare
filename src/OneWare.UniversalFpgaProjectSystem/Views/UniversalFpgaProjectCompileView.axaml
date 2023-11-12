@@ -41,17 +41,18 @@
                                     IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
                                     Content="{Binding }" />
 
-                    <Border BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Background="{DynamicResource ThemeControlLowBrush}">
-                        <DockPanel >
+                    <Grid ColumnDefinitions="*, 100, *" RowDefinitions="Auto, *" DockPanel.Dock="Top">
+                        <TextBlock Text="Nodes"></TextBlock>
+                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
                             <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                 Background="{DynamicResource ThemeBackgroundBrush}"
                                                 VerticalContentAlignment="Center" />
-
-                            <ListBox DockPanel.Dock="Top" AutoScrollToSelectedItem="True"
+                            <ListBox AutoScrollToSelectedItem="True"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible"
                                      BorderThickness="0,1,0,0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                                     Name="SignalList" ItemsSource="{Binding VisiblePins}"
-                                     SelectedItem="{Binding Path=SelectedPin, Mode=TwoWay}" VerticalAlignment="Stretch">
+                                     Name="SignalList" ItemsSource="{Binding VisibleNodes}"
+                                     SelectedItem="{Binding Path=SelectedNode, Mode=TwoWay}" VerticalAlignment="Stretch">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <DockPanel>
@@ -61,7 +62,41 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </DockPanel>
-                    </Border>
+                        </Border>
+                            
+                            <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeBackgroundBrush}">
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="15">
+                                    <Button Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
+                                        <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
+                                        <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Pins"></TextBlock>
+                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                            <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
+                                <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
+                                                    Background="{DynamicResource ThemeBackgroundBrush}"
+                                                    VerticalContentAlignment="Center" />
+                                <ListBox AutoScrollToSelectedItem="True"
+                                         ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                         BorderThickness="0,1,0,0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                         Name="PinList" ItemsSource="{Binding VisiblePins}"
+                                         SelectedItem="{Binding Path=SelectedPin, Mode=TwoWay}" VerticalAlignment="Stretch">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel>
+                                                <TextBlock Text="{Binding Name}" />
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                        </Grid>
                 </DockPanel>
             </Grid>
         </Border>

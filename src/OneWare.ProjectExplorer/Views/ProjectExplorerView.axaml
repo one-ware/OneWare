@@ -80,6 +80,18 @@
                         <Grid VerticalAlignment="Center">
                             <Image Height="16" Width="16"
                                    Source="{Binding Icon}" />
+                            <ItemsControl ItemsSource="{Binding IconOverlays}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Panel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding }"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <Image Height="16" Width="16"
                                    Source="{DynamicResource VsImageLib.StatusCriticalErrorOverlayExp16X}"
                                    IsVisible="{Binding LoadingFailed}" />

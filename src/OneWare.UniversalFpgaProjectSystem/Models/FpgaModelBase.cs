@@ -19,6 +19,9 @@ public abstract class FpgaModelBase : ObservableObject
     
     public Dictionary<string, FpgaPinModel> Pins { get; } = new();
     public ObservableCollection<FpgaPinModel> VisiblePins { get; } = new();
+
+    public Dictionary<string, NodeModel> Nodes { get; } = new();
+    public ObservableCollection<NodeModel> VisibleNodes { get; } = new();
     
     
     private FpgaPinModel? _selectedPin;

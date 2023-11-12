@@ -39,6 +39,8 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get => _icon;
         set => SetProperty(ref _icon, value);
     }
+
+    public ObservableCollection<IImage> IconOverlays { get; } = new();
     
     private string _header;
     public string Header

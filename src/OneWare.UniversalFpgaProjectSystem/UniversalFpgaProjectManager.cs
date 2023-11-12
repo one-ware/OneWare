@@ -36,10 +36,18 @@ public class UniversalFpgaProjectManager : IProjectManager
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
+
+        if (root == null) return root;
         
-        if(root != null)
-            ProjectHelper.ImportEntries(root.FullPath, root);
+        ProjectHelper.ImportEntries(root.FullPath, root);
         
+        //Load Properties
+        var top = root.Properties["TopEntity"];
+        if (top != null && root.Search(top.ToString()) is {} entity)
+        {
+            root.TopEntity = entity;
+        }
+
         return root;
     }
 
@@ -70,6 +78,30 @@ public class UniversalFpgaProjectManager : IProjectManager
                     Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                     Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(_projectExplorerService.GetTemporaryFile(root.ProjectFilePath))),
                 };
+                break;
+            case IProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
+                if (universalFpgaProjectRoot.TopEntity == file)
+                {
+                    yield return new MenuItemModel("Unset Top Entity")
+                    {
+                        Header = $"Unset Top Entity",
+                        Command = new RelayCommand(() =>
+                        {
+                            universalFpgaProjectRoot.TopEntity = null;
+                        }),
+                    };
+                }
+                else
+                {
+                    yield return new MenuItemModel("Set Top Entity")
+                    {
+                        Header = $"Set Top Entity",
+                        Command = new RelayCommand(() =>
+                        {
+                            universalFpgaProjectRoot.TopEntity = file;
+                        }),
+                    };
+                }
                 break;
         }
     }

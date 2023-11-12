@@ -28,12 +28,12 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
         TopFolder = this;
     }
 
-    internal void RegisterEntry(IProjectEntry entry)
+    public virtual void RegisterEntry(IProjectEntry entry)
     {
         if(entry is ProjectFile file) Files.Add(file);
     }
     
-    internal void UnregisterEntry(IProjectEntry entry)
+    public virtual void UnregisterEntry(IProjectEntry entry)
     {
         if (entry is ProjectFile file) Files.Remove(file);
     }

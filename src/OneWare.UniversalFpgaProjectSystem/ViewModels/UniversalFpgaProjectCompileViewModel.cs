@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Shared.Controls;
+using OneWare.Shared.Models;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.Views;
@@ -28,13 +30,23 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
         set => SetProperty(ref _hideExtensions, value);
     }
     
-    public UniversalFpgaProjectCompileViewModel(FpgaService fpgaService, UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectCompileViewModel(FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
     {
         _project = project;
 
         FpgaModels = fpgaService.FpgaModels;
         
         SelectedFpga = FpgaModels.FirstOrDefault();
+
+        if (project.TopEntity is IProjectFile file)
+        {
+            var provider = nodeProviderService.GetNodeProvider(file.Extension);
+            if (provider is not null)
+            {
+                var nodes = provider.ExtractNodes(file);
+                SelectedFpga?.VisibleNodes.AddRange(nodes);
+            }
+        }
     }
 
     public async Task SaveAsync(FlexibleWindow window)

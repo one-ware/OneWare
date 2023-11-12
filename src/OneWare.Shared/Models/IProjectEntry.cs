@@ -13,6 +13,8 @@ public interface IProjectEntry : IHasPath
     
     public IImage Icon { get; }
     
+    public ObservableCollection<IImage> IconOverlays { get; }
+    
     public bool IsExpanded { get; set; }
     
     public IBrush Background { get; set; }
