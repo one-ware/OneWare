@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -209,8 +210,8 @@ public class WindowService : IWindowService
         host.Bind(Window.SizeToContentProperty, flexible.GetObservable(FlexibleWindow.SizeToContentProperty));
             
         //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
-        if(flexible.Background is not null) 
-            host.Bind(TemplatedControl.BackgroundProperty, flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty));
+            host.Bind(TemplatedControl.BackgroundProperty,
+                flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty).Where(x => x is not null));
         
         host.Height = flexible.PrefHeight;
         host.Width = flexible.PrefWidth;

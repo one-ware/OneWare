@@ -24,6 +24,8 @@ public class Paths : IPaths
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
     public string ChangelogUrl => "https://raw.githubusercontent.com/VHDPlus/vhdplus-website/master/docs/ide/changelog.md";
+
+    private FileStream? _fileStreamLock;
     
     public Paths(string appName, string appIconPath)
     {
@@ -45,7 +47,8 @@ public class Paths : IPaths
         Directory.CreateDirectory(SessionDirectory);
         
         //Lock file
-        File.Create(Path.Combine(SessionDirectory, ".session_lock"));
+        _fileStreamLock = new FileStream(Path.Combine(SessionDirectory, ".session_lock"), FileMode.OpenOrCreate, 
+            FileAccess.ReadWrite, FileShare.None);
     }
     
     private static void CleanupSessions(string sessionsDir)
@@ -64,8 +67,9 @@ public class Paths : IPaths
 
                     try
                     {
-                        using (var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.None))
+                        if (fileInfo.Exists)
                         {
+                            using var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.None);
                             stream.Close();
                         }
                         Directory.Delete(session, true);
