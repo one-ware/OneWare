@@ -20,6 +20,7 @@ public class WebDemoApp : DemoApp
     private static void CopyAvaloniaAssetIntoFolder(Uri asset, string location)
     {
         using var stream = AssetLoader.Open(asset);
+        Directory.CreateDirectory(Path.GetDirectoryName(location)!);
         using var writer = File.OpenWrite(location);
         stream.CopyTo(writer);
     }
@@ -33,10 +34,10 @@ public class WebDemoApp : DemoApp
             Directory.CreateDirectory(testProj);
             
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/DemoProject.fpgaproj"), Path.Combine(testProj, "DemoProject.fpgaproj"));
-            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/CppTest.cpp"), Path.Combine(testProj, "CppTest.cpp"));
-            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VhdlTest.vhd"), Path.Combine(testProj, "VhdlTest.vhd"));
-            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "VerilogTest.v"));
-            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VcdTest.vcd"));
+            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/CppTest.cpp"), Path.Combine(testProj, "CPP", "CppTest.cpp"));
+            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VhdlTest.vhd"), Path.Combine(testProj, "VHDL", "VhdlTest.vhd"));
+            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "Verilog", "VerilogTest.v"));
+            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VCD", "VcdTest.vcd"));
 
             var dummy = await Container.Resolve<UniversalFpgaProjectManager>().LoadProjectAsync(Path.Combine(testProj, "DemoProject.fpgaproj"));
 

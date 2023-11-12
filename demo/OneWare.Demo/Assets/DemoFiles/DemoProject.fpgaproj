@@ -4,9 +4,10 @@
     "*.vhdl",
     "*.v",
     "*.cpp",
-    "*.vcd",
+    "*.vcd"
   ],
   "Exclude": [
-    "bin",
-  ]
+    "bin"
+  ],
+  "TopEntity": "VhdlTest.vhd"
 }

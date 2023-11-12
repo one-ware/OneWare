@@ -3,11 +3,6 @@
 public class NodeProviderService
 {
     private readonly Dictionary<string, INodeProvider> _providers = new();
-
-    public NodeProviderService()
-    {
-        Console.WriteLine("?");
-    }
     
     public void RegisterNodeProvider(INodeProvider provider, params string[] extensions)
     {
