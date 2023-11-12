@@ -4,7 +4,8 @@
     "*.vhdl",
     "*.v",
     "*.cpp",
-    "*.vcd"
+    "*.vcd",
+    "*.svg"
   ],
   "Exclude": [
     "bin"
