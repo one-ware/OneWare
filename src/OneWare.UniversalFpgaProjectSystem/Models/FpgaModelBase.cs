@@ -4,7 +4,9 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using DynamicData.Binding;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
@@ -40,9 +42,41 @@ public abstract class FpgaModelBase : ObservableObject
 
     public string Name { get; private set; } = "Unknown";
 
-    protected FpgaModelBase()
+    public RelayCommand ConnectCommand { get; }
+    
+    public RelayCommand DisconnectCommand { get; }
+
+    public FpgaModelBase()
     {
+        ConnectCommand = new RelayCommand(Connect, () => SelectedNode is not null && SelectedPin is not null);
         
+        DisconnectCommand = new RelayCommand(Disconnect, () => SelectedPin is {Connection: not null});
+
+        this.WhenValueChanged(x => x.SelectedNode).Subscribe(x =>
+        {
+            ConnectCommand.NotifyCanExecuteChanged();
+            DisconnectCommand.NotifyCanExecuteChanged();
+        });
+        
+        this.WhenValueChanged(x => x.SelectedPin).Subscribe(x =>
+        {
+            ConnectCommand.NotifyCanExecuteChanged();
+            DisconnectCommand.NotifyCanExecuteChanged();
+        });
+    }
+
+    private void Connect()
+    {
+        SelectedPin!.Connection = SelectedNode;
+        ConnectCommand.NotifyCanExecuteChanged();
+        DisconnectCommand.NotifyCanExecuteChanged();
+    }
+
+    private void Disconnect()
+    {
+        SelectedPin!.Connection = null;
+        ConnectCommand.NotifyCanExecuteChanged();
+        DisconnectCommand.NotifyCanExecuteChanged();
     }
 
     protected void LoadFromJson(string path)

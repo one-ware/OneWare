@@ -66,10 +66,10 @@
                             
                             <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeBackgroundBrush}">
                                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="15">
-                                    <Button Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
+                                    <Button Command="{Binding ConnectCommand}" Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
                                         <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>
-                                    <Button Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
+                                    <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
                                         <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>
                                 </StackPanel>
@@ -90,6 +90,7 @@
                                         <DataTemplate>
                                             <DockPanel>
                                                 <TextBlock Text="{Binding Name}" />
+                                                <TextBlock Text="{Binding Connection}" />
                                             </DockPanel>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

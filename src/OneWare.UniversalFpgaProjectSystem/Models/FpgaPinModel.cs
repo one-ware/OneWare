@@ -36,7 +36,8 @@ public class FpgaPinModel : ObservableObject
     public FpgaPinModel(string name, string description, FpgaModelBase parent)
     {
         Name = name;
-        Description = description;
+        _description = description;
+        _toolTipText = "Click to connect " + Name;
         Parent = parent;
     }
 }
