@@ -262,7 +262,11 @@ namespace OneWare.Core.Views.DockViews
                 if (_enteredString.Length > 0)
                     _enteredString = _enteredString.Remove(_enteredString.Length - 1);
 
-            if (e.Key == Key.S && e.KeyModifiers == Global.ControlKey) _ = ViewModel?.SaveAsync();
+            if (e.Key == Key.S && e.KeyModifiers == Global.ControlKey)
+            {
+                e.Handled = true;
+                _ = ViewModel?.SaveAsync();
+            }
         }
 
         #endregion
