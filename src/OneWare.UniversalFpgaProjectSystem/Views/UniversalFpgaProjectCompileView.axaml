@@ -8,7 +8,7 @@
                          xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          PrefHeight="750" PrefWidth="900" Padding="4"
-                         Background="{DynamicResource ThemeBackgroundColor}"
+                         WindowBackground="{DynamicResource ThemeBackgroundBrush}"
                          WindowStartupLocation="CenterOwner"
                          Title="{Binding Title}"
                          CustomIcon="{DynamicResource CreateIcon}"

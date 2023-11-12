@@ -3,7 +3,8 @@
         xmlns:layout="clr-namespace:Avalonia.Layout;assembly=Avalonia.Base"
         xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
         xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows">
+        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
+        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared">
 
     <Style Selector="windows|AdvancedWindow">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
@@ -70,5 +71,5 @@
         <Setter Property="TransparencyLevelHint" Value="AcrylicBlur"/>
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrushOp}"/>
     </Style>
-
+    
 </Styles>

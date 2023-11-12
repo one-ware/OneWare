@@ -77,7 +77,7 @@
     
     <ResourceDictionary.ThemeDictionaries>
         
-        <!--Remove when Avalonia Bug is fixed-->
+        <!--Remove when Avalonia/Dock Bug is fixed-->
         <ResourceDictionary x:Key="Default">
             <Color x:Key="ThemeBackgroundColor">#FFF5F5F5</Color>
             <Color x:Key="ThemeBorderLowColor">#FFAAAAAA</Color>
@@ -181,7 +181,7 @@
             <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
 
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
-            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.5" />
+            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.9" />
             <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="{StaticResource ThemeBorderLowColor}" />
             <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="{StaticResource ThemeBorderMidColor}" />
             <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="{StaticResource ThemeBorderHighColor}" />
