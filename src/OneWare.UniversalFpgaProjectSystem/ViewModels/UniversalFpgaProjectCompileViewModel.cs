@@ -51,6 +51,41 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
 
     public async Task SaveAsync(FlexibleWindow window)
     {
-        
+        CreatePcf();
+    }
+    
+    private string RemoveLine(string file, string find)
+    {
+        var startIndex = file.IndexOf(find, StringComparison.Ordinal);
+        while (startIndex > -1)
+        {
+            var endIndex = file.IndexOf('\n', startIndex);
+            if (endIndex == -1) endIndex = file.Length - 1;
+            file = file.Remove(startIndex, endIndex - startIndex + 1);
+            startIndex = file.IndexOf(find, startIndex, StringComparison.Ordinal);
+        }
+
+        return file;
+    }
+    
+    private void CreatePcf()
+    {
+        if (SelectedFpga == null) return;
+        var pcfPath = Path.Combine(_project.FullPath, "project.pcf");
+            
+        var pcf = "";
+        if (File.Exists(pcfPath))
+        {
+            var existingPcf = File.ReadAllText(pcfPath);
+            existingPcf = RemoveLine(existingPcf, "set_io");
+            pcf = existingPcf.Trim() + "\n";
+        }
+
+        foreach (var conn in SelectedFpga.Pins.Where(x => x.Value.Connection is not null))
+        {
+            pcf += $"set_io {conn.Value.Connection!.Name} {conn.Value.Name}\n";
+        }
+            
+        File.WriteAllText(pcfPath, pcf);
     }
 }
