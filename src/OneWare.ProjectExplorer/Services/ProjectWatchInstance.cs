@@ -86,7 +86,12 @@ public class ProjectWatchInstance : IDisposable
     {
         try
         {
-            if (!File.Exists(path)) return;
+            if (!File.Exists(path) && changes.Last().ChangeType is WatcherChangeTypes.Deleted && _root.Search(path) is {} deletedEntry)
+            {
+                await _projectExplorerService.RemoveAsync(deletedEntry);
+                return;
+            }
+            
             var attributes = File.GetAttributes(path);
             if(attributes.HasFlag(FileAttributes.Hidden)) return;
             
