@@ -49,12 +49,12 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
                 {
                     CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
-                    SyntaxSetup.CurrentEditorTheme = CurrentEditorTheme;
+                    SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
                 });
             });
 
         //Hoverbox hack
-        SyntaxSetup.RegistryOptions = _textMateRegistryOptions;
+        SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
     }
 
     public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions)
