@@ -37,6 +37,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     private IProjectRoot? _activeProject;
 
+    private readonly List<Func<IList<IProjectEntry>, IEnumerable<IMenuItem>?>> _registerContextMenu = new();
+
     private IEnumerable<IMenuItem>? _treeViewContextMenu;
 
     public IEnumerable<IMenuItem>? TreeViewContextMenu
@@ -55,9 +57,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (_activeProject is not null) _activeProject.IsActive = true;
         }
     }
-
-    public ICommand? DoubleTabCommand { get; protected set; }
-    public Action<Action<string>>? RequestRename { get; set; }
 
     public event EventHandler<IFile>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
@@ -162,6 +161,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     break;
             }
 
+            foreach (var reg in _registerContextMenu)
+            {
+                if(reg.Invoke(SelectedItems) is {} items) menuItems.AddRange(items);
+            }
+            
             if (manager != null) menuItems.AddRange(manager.ConstructContextMenu(entry));
 
             if (entry is IProjectRoot root)
@@ -795,6 +799,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
+    }
+
+    public void RegisterContextMenu(Func<IList<IProjectEntry>, IEnumerable<IMenuItem>?> construct)
+    {
+        _registerContextMenu.Add(construct);
     }
 
     private class ProjectSerialization
