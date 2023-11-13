@@ -801,7 +801,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
 
-    public void RegisterContextMenu(Func<IList<IProjectEntry>, IEnumerable<IMenuItem>?> construct)
+    public void RegisterConstructContextMenu(Func<IList<IProjectEntry>, IEnumerable<IMenuItem>?> construct)
     {
         _registerContextMenu.Add(construct);
     }

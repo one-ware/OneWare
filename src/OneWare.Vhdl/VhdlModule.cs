@@ -22,7 +22,7 @@ public class VhdlModule : IModule
         
         containerProvider.Resolve<NodeProviderService>().RegisterNodeProvider(new VhdlNodeProvider(), ".vhd", ".vhdl");
         
-        containerProvider.Resolve<IProjectExplorerService>().RegisterContextMenu(x =>
+        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu(x =>
         {
             if (x.Count == 1 && x.First() is IProjectFile { Extension: ".vhd" or ".vhdl" })
             {
