@@ -46,6 +46,22 @@ public abstract class FpgaModelBase : ObservableObject
     
     public RelayCommand DisconnectCommand { get; }
 
+    private string _searchTextPins = string.Empty;
+
+    public string SearchTextPins
+    {
+        get => _searchTextPins;
+        set => SetProperty(ref _searchTextPins, value);
+    }
+    
+    private string _searchTextNodes = string.Empty;
+
+    public string SearchTextNodes
+    {
+        get => _searchTextNodes;
+        set => SetProperty(ref _searchTextNodes, value);
+    }
+    
     public FpgaModelBase()
     {
         ConnectCommand = new RelayCommand(Connect, () => SelectedNode is not null && SelectedPin is not null);
@@ -63,18 +79,49 @@ public abstract class FpgaModelBase : ObservableObject
             ConnectCommand.NotifyCanExecuteChanged();
             DisconnectCommand.NotifyCanExecuteChanged();
         });
+
+        this.WhenValueChanged(x => x.SearchTextPins).Subscribe(SearchPins);
+        this.WhenValueChanged(x => x.SearchTextNodes).Subscribe(SearchNodes);
+
+    }
+
+    private void SearchPins(string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            SelectedPin = null;
+            return;
+        }
+
+        SelectedPin = VisiblePins.FirstOrDefault(x => x.Name.Contains(search, StringComparison.OrdinalIgnoreCase) 
+                                                      || x.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void SearchNodes(string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            SelectedNode = null;
+            return;
+        }
+
+        SelectedNode = VisibleNodes.FirstOrDefault(x => x.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
     private void Connect()
     {
-        SelectedPin!.Connection = SelectedNode;
+        if (SelectedPin is null || SelectedNode is null) return;
+        SelectedPin.Connection = SelectedNode;
+        SelectedNode.Connection = SelectedPin;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
     }
 
     private void Disconnect()
     {
+        if (SelectedPin is null || SelectedNode is null) return;
         SelectedPin!.Connection = null;
+        SelectedNode!.Connection = null;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
     }

@@ -15,6 +15,6 @@ public class IceBreakerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<FpgaService>().AddFpga(new IceBreakerV10EViewModel());
+        containerProvider.Resolve<FpgaService>().AddFpga<IceBreakerV10EViewModel>();
     }
 }
