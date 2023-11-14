@@ -17,11 +17,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x 
+          dotnet-version: 7.0.x 
       - name: Workload Restore
         run: dotnet workload restore
       - name: Publish
-        run: dotnet build ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -o ./out
+        run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release -o ./out
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
