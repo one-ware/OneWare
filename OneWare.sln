@@ -120,6 +120,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FpgaSupport", "FpgaSupport"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.IceBreaker", "src\OneWare.IceBreaker\OneWare.IceBreaker.csproj", "{B970E17F-ED6D-4A50-9477-BF2809198416}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{60A1DF89-0129-42B7-A509-D717A887667C}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\publish-onewarestudio-web.yml = .github\workflows\publish-onewarestudio-web.yml
+		.github\workflows\publish-shared.yml = .github\workflows\publish-shared.yml
+		.github\workflows\test.yml = .github\workflows\test.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -304,5 +311,6 @@ Global
 		{20969AC5-F5E0-439C-9217-6FAE0CA01F73} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{52DDC84A-27F8-4AF0-93C4-903614BE613D} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{B970E17F-ED6D-4A50-9477-BF2809198416} = {52DDC84A-27F8-4AF0-93C4-903614BE613D}
+		{60A1DF89-0129-42B7-A509-D717A887667C} = {3782EFDF-2990-4B2C-907F-12739A839A3C}
 	EndGlobalSection
 EndGlobal

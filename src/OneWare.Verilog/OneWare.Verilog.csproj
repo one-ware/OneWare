@@ -14,7 +14,7 @@
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
         <UsePackageTarget>win-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-win64.zip</ExternalPackageUrl>
+        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3428-gcfcbb82b/verible-v0.0-3428-gcfcbb82b-win64.zip</ExternalPackageUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
