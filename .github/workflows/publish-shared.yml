@@ -28,7 +28,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.x 
+        dotnet-version: 8.0.x 
 
     # Create the NuGet package in the folder from the environment variable NuGetDirectory
     - run: dotnet pack ./src/OneWare.Shared/OneWare.Shared.csproj --configuration Release --output ${{ env.NuGetDirectory }} 
@@ -49,7 +49,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x 
+          dotnet-version: 8.0.x 
 
       # Download the NuGet package created in the previous job
       - uses: actions/download-artifact@v3
@@ -82,7 +82,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x 
+          dotnet-version: 8.0.x 
           
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
