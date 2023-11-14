@@ -10,34 +10,46 @@ public class VhdlNodeProvider : INodeProvider
     public IEnumerable<NodeModel> ExtractNodes(IProjectFile file)
     {
         var fileLines = File.ReadAllLines(file.FullPath);
-        
-        bool inEntity = false;
-        foreach (var line in fileLines)
+        return ExtractEntityPorts(fileLines);
+    }
+
+    public static IEnumerable<NodeModel> ExtractEntityPorts(IEnumerable<string> vhdlLines)
+    {
+        bool inPortSection = false;
+        var portPattern = @"\b(\w+)\s+:\s+(in|out|inout|buffer)\s+(\w+)(?:\((\d+)\s+downto\s+(\d+)\))?(?:\s+:=\s+[^;]+)?";
+
+        foreach (var line in vhdlLines)
         {
-            // Check for entity start
-            if (Regex.IsMatch(line, @"\bentity\b", RegexOptions.IgnoreCase))
-            {
-                inEntity = true;
-                continue;
-            }
+            if (line.Trim().StartsWith("port (", StringComparison.OrdinalIgnoreCase)) inPortSection = true;
+            if (line.Trim().StartsWith(");", StringComparison.OrdinalIgnoreCase)) inPortSection = false;
 
-            // Check for entity end
-            if (inEntity && Regex.IsMatch(line, @"\bend entity\b", RegexOptions.IgnoreCase))
+            if (inPortSection)
             {
-                inEntity = false;
-                continue;
-            }
-
-            // Extract inputs and outputs
-            if (inEntity)
-            {
-                MatchCollection matches = Regex.Matches(line, @"\b(\w+)\s*:\s*(in|out)\s*\w+", RegexOptions.IgnoreCase);
-                foreach (Match match in matches)
+                var match = Regex.Match(line, portPattern, RegexOptions.IgnoreCase);
+                if (match.Success)
                 {
-                    string portName = match.Groups[1].Value;
-                    string direction = match.Groups[2].Value;
-                    
-                    yield return new NodeModel(portName);
+                    var portName = match.Groups[1].Value;
+                    var direction = match.Groups[2].Value;
+                    var portType = match.Groups[3].Value;
+                    var upperBound = match.Groups[4].Value;
+                    var lowerBound = match.Groups[5].Value;
+
+                    if (!string.IsNullOrEmpty(upperBound) && !string.IsNullOrEmpty(lowerBound))
+                    {
+                        // Expand std_logic_vector into individual ports
+                        int upper = int.Parse(upperBound);
+                        int lower = int.Parse(lowerBound);
+
+                        for (var i = upper; i >= lower; i--)
+                        {
+                            yield return new NodeModel($"{portName}[{i}]", direction); //$"{portName}({i}) : {direction} {portType}";
+                        }
+                    }
+                    else
+                    {
+                        // Single port
+                        yield return new NodeModel(portName, direction); // $"{portName} : {direction} {portType}";
+                    }
                 }
             }
         }

@@ -14,7 +14,7 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
     private readonly UniversalFpgaProjectRoot _project;
     public string Title => "Connect and Compile - " + _project.Header;
 
-    public ObservableCollection<FpgaModelBase> FpgaModels { get; }
+    public List<FpgaModelBase> FpgaModels { get; }
 
     private FpgaModelBase? _selectedFpga;
     public FpgaModelBase? SelectedFpga
@@ -34,7 +34,7 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
     {
         _project = project;
 
-        FpgaModels = fpgaService.FpgaModels;
+        FpgaModels = fpgaService.GetFpgas().ToList();
         
         SelectedFpga = FpgaModels.FirstOrDefault();
 
