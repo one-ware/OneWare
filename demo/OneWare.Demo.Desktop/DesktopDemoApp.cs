@@ -13,6 +13,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
+using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.Shared.Enums;
@@ -37,6 +38,7 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
 
         try
         {

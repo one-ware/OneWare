@@ -64,27 +64,38 @@ namespace OneWare.Settings.ViewModels
                     
                     foreach (var setting in subCategory.Value.Settings)
                     {
-                        if (setting is ComboBoxSetting cS)
+                        switch (setting)
                         {
-                            subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
-                        }
-                        else
-                        {
-                            switch (setting.Value)
-                            {
-                                case bool:
-                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(setting));
-                                    break;
-                                case string:
-                                case int:
-                                case float:
-                                case double:
-                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(setting));
-                                    break;
-                                case Color:
-                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(setting));
-                                    break;
-                            }
+                            case ComboBoxSetting cS:
+                                subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
+                                break;
+                            case FolderPathSetting pS:
+                                subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
+                                break;
+                            case FilePathSetting pS:
+                                subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
+                                break;
+                            case PathSetting pS:
+                                subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
+                                break;
+                            default:
+                                switch (setting.Value)
+                                {
+                                    case bool:
+                                        subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(setting));
+                                        break;
+                                    case string:
+                                    case int:
+                                    case float:
+                                    case double:
+                                        subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(setting));
+                                        break;
+                                    case Color:
+                                        subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(setting));
+                                        break;
+                                }
+
+                                break;
                         }
                     }
                     

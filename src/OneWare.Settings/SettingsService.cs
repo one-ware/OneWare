@@ -45,7 +45,13 @@ public class SettingsService : ISettingsService
          if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key, new TitledSetting(title, description, defaultValue));
     }
-    
+
+    public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
+    {
+        AddSetting(category, subCategory, key, new FolderPathSetting(title, description, defaultValue, watermark,startDir, validate));
+    }
+
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title, string description, T defaultValue, params T[] options)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));

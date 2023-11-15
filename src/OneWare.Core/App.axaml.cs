@@ -94,6 +94,8 @@ namespace OneWare.Core
 
             //Editor settings
             settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
+            
+            settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
                 "Editor Font Family",

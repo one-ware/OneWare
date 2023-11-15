@@ -13,6 +13,9 @@ public interface ISettingsService
     public void RegisterTitled<T>(string category, string subCategory, string key, string title, string description,
         T defaultValue);
 
+    public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate);
+
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title, string description,
         T defaultValue, params T[] options);
     

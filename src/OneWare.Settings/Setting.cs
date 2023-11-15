@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
-using OneWare.Shared;
 using OneWare.Shared.Helpers;
 
 namespace OneWare.Settings;
@@ -59,7 +58,7 @@ public class ComboBoxSetting : TitledSetting
 
 public abstract class PathSetting : TextBoxSetting
 {
-    public string StartDirectory { get; }
+    public string? StartDirectory { get; }
     public bool CanVerify { get; }
     
     private bool _isValid = true;
@@ -70,7 +69,7 @@ public abstract class PathSetting : TextBoxSetting
         set => SetProperty(ref _isValid, value);
     }
 
-    protected PathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
+    protected PathSetting(string title, string description, object defaultValue, string? watermark, string? startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
     {
         StartDirectory = startDirectory;
 
@@ -88,7 +87,7 @@ public abstract class PathSetting : TextBoxSetting
 }
 public class FolderPathSetting : PathSetting
 {
-    public FolderPathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath) 
+    public FolderPathSetting(string title, string description, object defaultValue, string? watermark, string? startDirectory, Func<string, bool>? checkPath) 
         : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
     }
