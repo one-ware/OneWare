@@ -18,14 +18,13 @@
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <RunAOTCompilation>true</RunAOTCompilation>
+        <RunAOTCompilation>false</RunAOTCompilation>
         <PublishTrimmed>false</PublishTrimmed>
         <TrimMode>full</TrimMode>
         <WasmBuildNative>true</WasmBuildNative>
         <InvariantGlobalization>true</InvariantGlobalization>
         <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
         <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
-        <EmccInitialHeapSize>64mb</EmccInitialHeapSize>
     </PropertyGroup>
 
     <ItemGroup>

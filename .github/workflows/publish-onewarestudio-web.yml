@@ -22,7 +22,7 @@ jobs:
         run: dotnet workload restore
       - name: Publish
         run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release
-      - name: 📂 Sync files
+      - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: w01e537f.kasserver.com
