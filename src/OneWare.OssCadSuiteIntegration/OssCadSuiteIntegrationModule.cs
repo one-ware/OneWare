@@ -1,4 +1,5 @@
-﻿using OneWare.Shared.Helpers;
+﻿using System.Runtime.InteropServices;
+using OneWare.Shared.Helpers;
 using OneWare.Shared.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -34,8 +35,14 @@ public class OssCadSuiteIntegrationModule : IModule
             var pythonBin = Path.Combine(x, "py3bin");
             var lib = Path.Combine(x, "lib");
                 
-            environmentPathSetting = $";{binPath};{pythonBin};{lib};";
+            environmentPathSetting = PlatformHelper.Platform switch
+            {
+                PlatformId.WinX64 or PlatformId.WinArm64 => $";{binPath};{pythonBin};{lib};",
+                _ => $":{binPath}:{pythonBin}:{lib}:"
+            };
+            
             var currentPath = Environment.GetEnvironmentVariable("PATH");
+            
             
             //TODO Add all
             Environment.SetEnvironmentVariable("PATH", $"{environmentPathSetting}{currentPath}");
