@@ -85,16 +85,14 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         {
             case MessageBoxStatus.Yes:
                 SaveAndClose(window);
-                break;
+                return;
             case MessageBoxStatus.No:
                 IsDirty = false;
-                break;
+                window.Close();
+                return;
             case MessageBoxStatus.Canceled:
                 return;
         }
-        
-        IsDirty = false;
-        window.Close();
     }
     
     public void SaveAndClose(FlexibleWindow window)

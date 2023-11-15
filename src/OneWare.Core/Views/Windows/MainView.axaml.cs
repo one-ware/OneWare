@@ -1,7 +1,9 @@
 ﻿using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using DynamicData.Binding;
 using OneWare.Shared.Controls;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
 
@@ -38,11 +40,16 @@ public partial class MainView : UserControl
     private void SetVirtualDialog(FlexibleWindow window)
     {
         DialogControlPanel.IsVisible = true;
+        DialogControl.Height = double.NaN;
+        DialogControl.Width = double.NaN;
         DialogControl.Content = window;
-        DialogControl.Width = window.PrefWidth < this.Bounds.Width ? window.PrefWidth : this.Bounds.Width;
-        DialogControl.Height = window.PrefHeight + 40 < this.Bounds.Height ? window.PrefHeight : this.Bounds.Height - 40;
-        DialogControl.Background = window.WindowBackground;
-        DialogTitle.Text = window.Title;
+        
+        if(!double.IsNaN(window.PrefWidth)) DialogControl.Width = window.PrefWidth < this.Bounds.Width ? window.PrefWidth : this.Bounds.Width;
+        if(!double.IsNaN(window.PrefHeight)) DialogControl.Height = window.PrefHeight + 40 < this.Bounds.Height ? window.PrefHeight : this.Bounds.Height - 40;
+
+        window.WhenValueChanged(x => x.Title).Subscribe(x => DialogTitle.Text = x);
+        window.WhenValueChanged(x => x.Background).Subscribe(x => DialogControl.Background = x);
+        
         if (window.CustomIcon != null)
         {
             DialogIcon.Source = window.CustomIcon;
@@ -56,7 +63,11 @@ public partial class MainView : UserControl
     
     private void DialogCloseButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if(_windowStack.Any())
-            _windowStack.Peek().Close();
+        if (_windowStack.Any())
+        {
+            if(_windowStack.Peek() is {DataContext: FlexibleWindowViewModelBase vm} window)
+                vm.Close(window);
+            else _windowStack.Peek().Close();
+        }
     }
 }
