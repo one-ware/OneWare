@@ -38,7 +38,7 @@ public class OssCadSuiteIntegrationModule : IModule
             var currentPath = Environment.GetEnvironmentVariable("PATH");
             
             //TODO Add all
-            Environment.SetEnvironmentVariable("PATH", $"{currentPath}{environmentPathSetting}");
+            Environment.SetEnvironmentVariable("PATH", $"{environmentPathSetting}{currentPath}");
             Environment.SetEnvironmentVariable("OPENFPGALOADER_SOJ_DIR", Path.Combine(x, "share", "openFPGALoader"));
             Environment.SetEnvironmentVariable("PYTHON_EXECUTABLE", Path.Combine(x, "py3bin", $"python3{PlatformHelper.ExecutableExtension}"));
         });

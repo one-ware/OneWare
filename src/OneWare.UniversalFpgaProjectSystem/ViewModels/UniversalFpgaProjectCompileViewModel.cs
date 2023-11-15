@@ -15,6 +15,7 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 {
     private readonly IWindowService _windowService;
+    private readonly IProjectExplorerService _projectExplorerService;
     private readonly UniversalFpgaProjectRoot _project;
 
     public ObservableCollection<FpgaModelBase> FpgaModels { get; } = new();
@@ -33,9 +34,10 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _hideExtensions, value);
     }
     
-    public UniversalFpgaProjectCompileViewModel(IWindowService windowService, FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectCompileViewModel(IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
+        _projectExplorerService = projectExplorerService;
         _project = project;
 
         this.WhenValueChanged(x => x.IsDirty).Subscribe(x =>
@@ -97,7 +99,9 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     
     public void SaveAndClose(FlexibleWindow window)
     {
+        _project.Properties["Fpga"] = SelectedFpga?.Name;
         CreatePcf();
+        _ = _projectExplorerService.SaveProjectAsync(_project);
         IsDirty = false;
         window.Close();
     }
