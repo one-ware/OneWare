@@ -1,8 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using OneWare.Shared.Controls;
+using OneWare.Shared.ViewModels;
 
 namespace OneWare.Core.Views.Windows
 {
@@ -86,6 +89,16 @@ namespace OneWare.Core.Views.Windows
                     ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
                 }
             }
+        }
+        
+        protected override void OnClosing(WindowClosingEventArgs e)
+        {
+            if (Content is FlexibleWindow {DataContext: FlexibleWindowViewModelBase {IsDirty: true} vm} flexibleWindow)
+            {
+                e.Cancel = true;
+                vm.Close(flexibleWindow);
+            }
+            base.OnClosing(e);
         }
     }
 }

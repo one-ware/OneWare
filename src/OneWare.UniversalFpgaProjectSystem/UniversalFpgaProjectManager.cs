@@ -17,12 +17,15 @@ public class UniversalFpgaProjectManager : IProjectManager
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
-    
-    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService)
+
+    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService,
+        IWindowService windowService)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _windowService = windowService;
+
+        _projectExplorerService.RegisterConstructContextMenu(ConstructContextMenu);
     }
 
     public async Task NewProjectDialogAsync()
@@ -32,18 +35,18 @@ public class UniversalFpgaProjectManager : IProjectManager
             DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectCreatorViewModel>()
         });
     }
-    
+
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
 
         if (root == null) return root;
-        
+
         ProjectHelper.ImportEntries(root.FullPath, root);
-        
+
         //Load Properties
         var top = root.Properties["TopEntity"];
-        if (top != null && root.Search(top.ToString()) is {} entity)
+        if (top != null && root.Search(top.ToString()) is { } entity)
         {
             root.TopEntity = entity;
         }
@@ -56,53 +59,61 @@ public class UniversalFpgaProjectManager : IProjectManager
         return root is UniversalFpgaProjectRoot uFpga && await UniversalFpgaProjectParser.SerializeAsync(uFpga);
     }
 
-    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
+    public IEnumerable<MenuItemModel> ConstructContextMenu(IList<IProjectEntry> selected)
     {
-        switch (entry)
+        if (selected.Count == 1)
         {
-            case UniversalFpgaProjectRoot root:
-                yield return new MenuItemModel("Save")
-                {
-                    Header = "Save",
-                    Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
-                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
-                };
-                yield return new MenuItemModel("Reload")
-                {
-                    Header = $"Reload",
-                    Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
-                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
-                };
-                yield return new MenuItemModel("Edit")
-                {
-                    Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
-                    Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(_projectExplorerService.GetTemporaryFile(root.ProjectFilePath))),
-                };
-                break;
-            case IProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
-                if (universalFpgaProjectRoot.TopEntity == file)
-                {
-                    yield return new MenuItemModel("Unset Top Entity")
+            switch (selected.First())
+            {
+                case UniversalFpgaProjectRoot root:
+                    yield return new MenuItemModel("Save")
                     {
-                        Header = $"Unset Top Entity",
-                        Command = new RelayCommand(() =>
-                        {
-                            universalFpgaProjectRoot.TopEntity = null;
-                        }),
+                        Header = "Save",
+                        Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
+                        ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
                     };
-                }
-                else
-                {
-                    yield return new MenuItemModel("Set Top Entity")
+                    yield return new MenuItemModel("Reload")
                     {
-                        Header = $"Set Top Entity",
-                        Command = new RelayCommand(() =>
-                        {
-                            universalFpgaProjectRoot.TopEntity = file;
-                        }),
+                        Header = $"Reload",
+                        Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
+                        ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
                     };
-                }
-                break;
+                    yield return new MenuItemModel("Edit")
+                    {
+                        Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
+                        Command = new AsyncRelayCommand(() =>
+                            _dockService.OpenFileAsync(root.Search(root.ProjectFilePath) as IProjectFile 
+                                                       ?? _projectExplorerService.GetTemporaryFile(root.ProjectFilePath))),
+                    };
+                    break;
+                case IProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
+                    if (universalFpgaProjectRoot.TopEntity == file)
+                    {
+                        yield return new MenuItemModel("Unset Top Entity")
+                        {
+                            Header = $"Unset Top Entity",
+                            Command = new RelayCommand(() =>
+                            {
+                                universalFpgaProjectRoot.TopEntity = null;
+                                _ = SaveProjectAsync(universalFpgaProjectRoot);
+                            }),
+                        };
+                    }
+                    else
+                    {
+                        yield return new MenuItemModel("Set Top Entity")
+                        {
+                            Header = $"Set Top Entity",
+                            Command = new RelayCommand(() =>
+                            {
+                                universalFpgaProjectRoot.TopEntity = file;
+                                _ = SaveProjectAsync(universalFpgaProjectRoot);
+                            }),
+                        };
+                    }
+
+                    break;
+            }
         }
     }
 }

@@ -165,8 +165,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 if(reg.Invoke(SelectedItems) is {} items) menuItems.AddRange(items);
             }
-            
-            if (manager != null) menuItems.AddRange(manager.ConstructContextMenu(entry));
 
             if (entry is IProjectRoot root)
             {

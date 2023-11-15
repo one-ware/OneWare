@@ -1,15 +1,15 @@
 ﻿using System.Text.Json.Nodes;
-using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.Shared.Controls;
 using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public class UniversalFpgaProjectCreatorViewModel : ObservableObject
+public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 {
     public IPaths Paths { get; }
     private readonly IProjectExplorerService _projectExplorerService;
@@ -92,7 +92,7 @@ public class UniversalFpgaProjectCreatorViewModel : ObservableObject
             
             _projectExplorerService.ActiveProject = root;
             
-            window?.Close();
+            Close(window);
             
             _ = _projectExplorerService.SaveLastProjectsFileAsync();
         }

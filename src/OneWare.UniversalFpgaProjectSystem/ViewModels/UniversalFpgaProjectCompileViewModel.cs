@@ -1,20 +1,22 @@
 ﻿using System.Collections.ObjectModel;
-using AvaloniaEdit.Utils;
-using CommunityToolkit.Mvvm.ComponentModel;
+using System.Reactive.Linq;
+using DynamicData.Binding;
 using OneWare.Shared.Controls;
+using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
+using OneWare.Shared.Services;
+using OneWare.Shared.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using OneWare.UniversalFpgaProjectSystem.Views;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public class UniversalFpgaProjectCompileViewModel : ObservableObject
+public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 {
+    private readonly IWindowService _windowService;
     private readonly UniversalFpgaProjectRoot _project;
-    public string Title => "Connect and Compile - " + _project.Header;
 
-    public List<FpgaModelBase> FpgaModels { get; }
+    public ObservableCollection<FpgaModelBase> FpgaModels { get; } = new();
 
     private FpgaModelBase? _selectedFpga;
     public FpgaModelBase? SelectedFpga
@@ -30,11 +32,30 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
         set => SetProperty(ref _hideExtensions, value);
     }
     
-    public UniversalFpgaProjectCompileViewModel(FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectCompileViewModel(IWindowService windowService, FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
     {
+        _windowService = windowService;
         _project = project;
 
-        FpgaModels = fpgaService.GetFpgas().ToList();
+        this.WhenValueChanged(x => x.IsDirty).Subscribe(x =>
+        {
+            Title = $"Connect and Compile - {_project.Header}{(x ? "*" : "")}";
+        });
+        
+        foreach (var fpga in fpgaService.GetFpgas())
+        {
+            Observable.FromEventPattern(fpga, nameof(fpga.NodeConnected)).Subscribe(_ =>
+            {
+                IsDirty = true;
+            });
+
+            Observable.FromEventPattern(fpga, nameof(fpga.NodeDisconnected)).Subscribe(_ =>
+            {
+                IsDirty = true;
+            });
+            
+            FpgaModels.Add(fpga);
+        }
         
         SelectedFpga = FpgaModels.FirstOrDefault();
 
@@ -49,7 +70,31 @@ public class UniversalFpgaProjectCompileViewModel : ObservableObject
         }
     }
 
-    public async Task SaveAsync(FlexibleWindow window)
+    public override void Close(FlexibleWindow window)
+    {
+        if(!IsDirty) window.Close();
+        _ = SafeQuitAsync(window);
+    }
+    
+    private async Task SafeQuitAsync(FlexibleWindow window)
+    {
+        var result = await _windowService.ShowYesNoCancelAsync("Warning", "Do you want to save changes?", MessageBoxIcon.Warning, window.Host);
+        
+        switch (result)
+        {
+            case MessageBoxStatus.Yes:
+                SaveAndClose(window);
+                break;
+            case MessageBoxStatus.No:
+                IsDirty = false;
+                break;
+            case MessageBoxStatus.Canceled:
+                return;
+        } 
+        window.Close();
+    }
+    
+    public void SaveAndClose(FlexibleWindow window)
     {
         CreatePcf();
     }

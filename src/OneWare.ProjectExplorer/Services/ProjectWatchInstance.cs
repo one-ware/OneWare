@@ -109,11 +109,12 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Changed:
                         if (entry is ISavable savable)
                         {
-                            if (File.GetLastWriteTime(savable.FullPath) > savable.LastSaveTime)
+                            var lastWriteTime = File.GetLastWriteTime(savable.FullPath);
+                            if (lastWriteTime > savable.LastSaveTime)
                                 await _projectExplorerService.ReloadAsync(entry);
 
                             if (savable is IProjectFile { Root: IProjectRootWithFile rootWithFile } &&
-                                rootWithFile.ProjectFilePath == savable.FullPath)
+                                rootWithFile.ProjectFilePath == savable.FullPath && lastWriteTime > rootWithFile.LastSaveTime)
                             {
                                 await _projectExplorerService.ReloadAsync(rootWithFile);
                             }

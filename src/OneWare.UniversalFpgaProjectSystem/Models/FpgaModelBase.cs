@@ -61,6 +61,10 @@ public abstract class FpgaModelBase : ObservableObject
         get => _searchTextNodes;
         set => SetProperty(ref _searchTextNodes, value);
     }
+
+    public event EventHandler NodeConnected;
+
+    public event EventHandler NodeDisconnected;
     
     public FpgaModelBase()
     {
@@ -115,6 +119,7 @@ public abstract class FpgaModelBase : ObservableObject
         SelectedNode.Connection = SelectedPin;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
+        NodeConnected?.Invoke(this, EventArgs.Empty);
     }
 
     private void Disconnect()
@@ -124,6 +129,7 @@ public abstract class FpgaModelBase : ObservableObject
         SelectedNode!.Connection = null;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
+        NodeDisconnected?.Invoke(this, EventArgs.Empty);
     }
 
     protected void LoadFromJson(string path)

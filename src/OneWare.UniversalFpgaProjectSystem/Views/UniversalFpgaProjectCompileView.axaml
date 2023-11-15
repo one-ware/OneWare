@@ -105,7 +105,7 @@
 
         <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAndClose}"
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
                 <TextBlock Text="Save" />
             </Button>
