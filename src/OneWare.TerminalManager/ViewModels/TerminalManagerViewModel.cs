@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using Avalonia.Threading;
 using OneWare.Shared;
 using OneWare.Shared.Enums;
 using OneWare.Shared.Helpers;
@@ -38,14 +39,14 @@ public class TerminalManagerViewModel : ExtendedTool
         Title = "Terminal";
         Id = "Terminal";
         
-        // settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
-        //     .Subscribe(x => Dispatcher.UIThread.Post(() =>
-        //     {
-        //         foreach (var t in Terminals)
-        //         {
-        //             t.Terminal.Redraw();
-        //         } 
-        //     }));
+        settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
+            .Subscribe(x => Dispatcher.UIThread.Post(() =>
+            {
+                foreach (var t in Terminals)
+                {
+                    t.Terminal.Redraw();
+                } 
+            }));
     }
 
     public override void InitializeContent()

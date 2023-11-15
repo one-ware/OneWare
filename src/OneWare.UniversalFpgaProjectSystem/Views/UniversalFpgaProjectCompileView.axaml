@@ -16,7 +16,7 @@
                          x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <Interaction.Behaviors>
-        <behaviours:CommandOnEnterBehaviour Command="{Binding SelectedFpga.ConnectCommand, FallbackValue={x:Null}}"/>
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SelectedFpga.ConnectCommand, FallbackValue={x:Null}}" />
     </Interaction.Behaviors>
 
     <Grid RowDefinitions="*, Auto">
@@ -41,64 +41,82 @@
                                     Content="{Binding }" />
 
                     <Grid ColumnDefinitions="*, 70, *" RowDefinitions="20, *" DockPanel.Dock="Top">
-                        
+
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Pins:"></TextBlock>
-                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                             <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"
                                                     SearchText="{Binding SearchTextPins}"
                                                     VerticalContentAlignment="Center" SearchButtonVisible="False" />
-                                <DataGrid Name="VisiblePinDataGrid" CanUserSortColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="True" 
-                                          Background="{DynamicResource ThemeControlLowBrush}" 
-                                          RowBackground="Transparent" IsReadOnly="True" 
+                                <DataGrid Name="VisiblePinDataGrid" CanUserSortColumns="False"
+                                          CanUserReorderColumns="False" CanUserResizeColumns="True"
+                                          Background="{DynamicResource ThemeControlLowBrush}"
+                                          RowBackground="Transparent" IsReadOnly="True"
                                           ItemsSource="{Binding VisiblePins}"
                                           SelectedItem="{Binding SelectedPin}"
-                                          BorderThickness="0"
+                                          BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Name}"/>
-                                        <DataGridTextColumn Header="Description" Width="*" Binding="{Binding Description}"/>
-                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Connection.Name, FallbackValue={}}"/>
+                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Name}" />
+                                        <DataGridTextColumn Header="Description" Width="*"
+                                                            Binding="{Binding Description}" />
+                                        <DataGridTextColumn Header="Node" Width="*"
+                                                            Binding="{Binding Connection.Name, FallbackValue={}}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>
                         </Border>
-                            
-                            <Border Grid.Column="1" Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}">
-                                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="15">
-                                    <Button Command="{Binding ConnectCommand}" Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
-                                        <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Button>
-                                    <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40" Width="40" CornerRadius="5">
-                                        <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-                        
+
+                        <Border Grid.Column="1" Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}">
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="30">
+                                <Button Command="{Binding ConnectCommand}" Classes="BorderButton" Height="40"
+                                        ToolTip.Tip="Connect" Width="40" CornerRadius="5">
+                                    <Button.RenderTransform>
+                                        <RotateTransform Angle="45"></RotateTransform>
+                                    </Button.RenderTransform>
+                                    <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                                <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40"
+                                        ToolTip.Tip="Disconnect" Width="40" CornerRadius="5">
+                                    <Button.RenderTransform>
+                                        <RotateTransform Angle="45"></RotateTransform>
+                                    </Button.RenderTransform>
+                                    <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="Nodes:"></TextBlock>
-                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                             <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"
-                                                    VerticalContentAlignment="Center" SearchButtonVisible="False" SearchText="{Binding SearchTextNodes}"/>
-                                <DataGrid CanUserSortColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="True" 
-                                          Background="{DynamicResource ThemeControlLowBrush}" 
-                                          RowBackground="Transparent" IsReadOnly="True" 
+                                                    VerticalContentAlignment="Center" SearchButtonVisible="False"
+                                                    SearchText="{Binding SearchTextNodes}" />
+                                <DataGrid CanUserSortColumns="False" CanUserReorderColumns="False"
+                                          CanUserResizeColumns="True"
+                                          Background="{DynamicResource ThemeControlLowBrush}"
+                                          RowBackground="Transparent" IsReadOnly="True"
                                           ItemsSource="{Binding VisibleNodes}"
                                           SelectedItem="{Binding SelectedNode}"
-                                          BorderThickness="0"
+                                          BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Name}"/>
-                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding Direction}"/>
-                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Connection.Name, FallbackValue={}}"/>
+                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Name}" />
+                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding Direction}" />
+                                        <DataGridTextColumn Header="Pin" Width="*"
+                                                            Binding="{Binding Connection.Name, FallbackValue={}}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>
                         </Border>
-                        
-                        </Grid>
+
+                    </Grid>
                 </DockPanel>
             </Grid>
         </Border>

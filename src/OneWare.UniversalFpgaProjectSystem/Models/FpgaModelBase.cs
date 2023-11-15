@@ -62,13 +62,14 @@ public abstract class FpgaModelBase : ObservableObject
         set => SetProperty(ref _searchTextNodes, value);
     }
 
-    public event EventHandler NodeConnected;
+    public event EventHandler? NodeConnected;
 
-    public event EventHandler NodeDisconnected;
+    public event EventHandler? NodeDisconnected;
     
     public FpgaModelBase()
     {
-        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNode is not null && SelectedPin is not null);
+        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNode is { Connection: null } 
+                                                                 && SelectedPin is { Connection :null });
         
         DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPin is {Connection: not null});
 

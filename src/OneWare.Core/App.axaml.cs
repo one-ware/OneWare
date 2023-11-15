@@ -180,6 +180,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Settings")
             {
                 Header = $"Settings",
+                ImageIconObservable = Current?.GetResourceObservable("Material.SettingsOutline"),
                 Command = new RelayCommand(() => windowService.Show(new ApplicationSettingsView()
                 {
                     DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
