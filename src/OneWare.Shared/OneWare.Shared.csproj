@@ -9,7 +9,8 @@
     <Import Project="..\..\build\props\AvaloniaEdit.TextMate.props"/>
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>
     <Import Project="..\..\build\props\NodeEditorAvalonia.props"/>
-    <ItemGroup>
-      <UpToDateCheckInput Remove="Styles\Components.axaml" />
-    </ItemGroup>
+    
+    <PropertyGroup>
+        <IncludeSymbols>true</IncludeSymbols>
+    </PropertyGroup>
 </Project> 
