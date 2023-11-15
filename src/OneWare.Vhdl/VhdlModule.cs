@@ -21,20 +21,5 @@ public class VhdlModule : IModule
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
         
         containerProvider.Resolve<NodeProviderService>().RegisterNodeProvider(new VhdlNodeProvider(), ".vhd", ".vhdl");
-        
-        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu(x =>
-        {
-            if (x.Count == 1 && x.First() is IProjectFile { Extension: ".vhd" or ".vhdl" })
-            {
-                return new[]
-                {
-                    new MenuItemModel("Test")
-                    {
-                        Header = "Test"
-                    }
-                };
-            }
-            return null;
-        });
     }
 }
