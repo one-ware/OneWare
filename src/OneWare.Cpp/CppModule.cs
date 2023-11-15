@@ -15,7 +15,5 @@ public class CppModule : IModule
     {
         containerProvider.Resolve<IErrorService>().RegisterErrorSource("Clang");
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceCpp),false, ".cpp", ".h", ".c", ".hpp");
-        
-        containerProvider.Resolve<IModuleTracker>().RecordModuleInitialized(GetType().Name);
     }
 }

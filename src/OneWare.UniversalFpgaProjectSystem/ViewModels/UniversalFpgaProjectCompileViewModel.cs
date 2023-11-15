@@ -8,6 +8,7 @@ using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -90,13 +91,17 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
                 break;
             case MessageBoxStatus.Canceled:
                 return;
-        } 
+        }
+        
+        IsDirty = false;
         window.Close();
     }
     
     public void SaveAndClose(FlexibleWindow window)
     {
         CreatePcf();
+        IsDirty = false;
+        window.Close();
     }
     
     private string RemoveLine(string file, string find)
@@ -113,6 +118,32 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         return file;
     }
     
+    private void LoadConnectionsFromPcf(string pcf, FpgaModelBase fpga)
+    {
+        var lines = pcf.Split('\n');
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+            if (trimmedLine.StartsWith("set_io"))
+            {
+                var parts = trimmedLine.Split(' ');
+                if (parts.Length != 3)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>().Warning("PCF Line invalid: " + trimmedLine);
+                    continue;
+                }
+
+                var signal = parts[1];
+                var pin = parts[2];
+
+                if (fpga.Pins.TryGetValue(pin, out var pinModel) && fpga.Nodes.TryGetValue(signal, out var signalModel))
+                {
+                    fpga.Connect(pinModel, signalModel);
+                } 
+            }
+        }
+    }
+    
     private void CreatePcf()
     {
         if (SelectedFpga == null) return;
@@ -123,13 +154,14 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         {
             var existingPcf = File.ReadAllText(pcfPath);
             existingPcf = RemoveLine(existingPcf, "set_io");
-            pcf = existingPcf.Trim() + "\n";
+            pcf = existingPcf.Trim();
         }
 
         foreach (var conn in SelectedFpga.Pins.Where(x => x.Value.Connection is not null))
         {
-            pcf += $"set_io {conn.Value.Connection!.Name} {conn.Value.Name}\n";
+            pcf += $"\nset_io {conn.Value.Connection!.Name} {conn.Value.Name}";
         }
+        pcf = pcf.Trim() + '\n';
             
         File.WriteAllText(pcfPath, pcf);
     }

@@ -68,9 +68,9 @@ public abstract class FpgaModelBase : ObservableObject
     
     public FpgaModelBase()
     {
-        ConnectCommand = new RelayCommand(Connect, () => SelectedNode is not null && SelectedPin is not null);
+        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNode is not null && SelectedPin is not null);
         
-        DisconnectCommand = new RelayCommand(Disconnect, () => SelectedPin is {Connection: not null});
+        DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPin is {Connection: not null});
 
         this.WhenValueChanged(x => x.SelectedNode).Subscribe(x =>
         {
@@ -112,24 +112,34 @@ public abstract class FpgaModelBase : ObservableObject
         SelectedNode = VisibleNodes.FirstOrDefault(x => x.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void Connect()
+    public void Connect(FpgaPinModel pin, NodeModel node)
     {
-        if (SelectedPin is null || SelectedNode is null) return;
-        SelectedPin.Connection = SelectedNode;
-        SelectedNode.Connection = SelectedPin;
+        pin.Connection = SelectedNode;
+        node.Connection = SelectedPin;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
         NodeConnected?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Disconnect()
+    public void Disconnect(FpgaPinModel pin)
     {
-        if (SelectedPin is null || SelectedNode is null) return;
-        SelectedPin!.Connection = null;
-        SelectedNode!.Connection = null;
+        if (pin.Connection != null) pin.Connection.Connection = null;
+        pin.Connection = null;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
         NodeDisconnected?.Invoke(this, EventArgs.Empty);
+    }
+    
+    private void ConnectSelected()
+    {
+        if (SelectedPin is null || SelectedNode is null) return;
+        Connect(SelectedPin, SelectedNode);
+    }
+
+    private void DisconnectSelected()
+    {
+        if (SelectedPin is null) return;
+        Disconnect(SelectedPin);
     }
 
     protected void LoadFromJson(string path)
