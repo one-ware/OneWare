@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
@@ -43,7 +44,6 @@ namespace OneWare.Core.ViewModels.Windows
         public ObservableCollection<Control> BottomRightExtension { get; }
         public ObservableCollection<IMenuItem> MainMenu { get; }
         
-
         public MainWindowViewModel(IPaths paths, IActive active, IWindowService windowService, IDockService dockService,
             ISettingsService settingsService)
         {

@@ -1,7 +1,10 @@
-﻿using System.Reactive.Linq;
+﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using DynamicData;
 using DynamicData.Binding;
+using OneWare.Core.Models;
 using OneWare.Shared.Controls;
 using OneWare.Shared.ViewModels;
 
@@ -9,7 +12,7 @@ namespace OneWare.Core.Views.Windows;
 
 public partial class MainView : UserControl
 {
-    private readonly Stack<FlexibleWindow> _windowStack = new();
+    public ObservableCollection<VirtualDialogModel> VirtualDialogModels { get; } = new();
 
     public MainView()
     {
@@ -18,25 +21,16 @@ public partial class MainView : UserControl
     
     public async Task ShowVirtualDialogAsync(FlexibleWindow window)
     {
-        _windowStack.Push(window);
+        var dialog = new VirtualDialogModel(window);
         
-        SetVirtualDialog(window);
+        VirtualDialogModels.Add(dialog);
         
         await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h).Take(1).GetAwaiter();
-        
-        _windowStack.Pop();
-        
-        if (_windowStack.Any())
-        {
-            await ShowVirtualDialogAsync(_windowStack.Pop());
-        }
-        else
-        {
-            DialogControl.Content = null;
-            DialogControlPanel.IsVisible = false;
-        }
+
+        VirtualDialogModels.Remove(dialog);
     }
 
+    /*
     private void SetVirtualDialog(FlexibleWindow window)
     {
         DialogControlPanel.IsVisible = true;
@@ -70,4 +64,5 @@ public partial class MainView : UserControl
             else _windowStack.Peek().Close();
         }
     }
+    */
 }

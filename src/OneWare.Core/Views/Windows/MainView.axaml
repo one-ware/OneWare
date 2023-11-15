@@ -9,6 +9,7 @@
                    xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
                    xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                    xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
+                   xmlns:models="clr-namespace:OneWare.Core.Models"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                    x:Class="OneWare.Core.Views.Windows.MainView"
                    mvvm:ViewModelLocator.AutoWireViewModel="False" Name="MainViewView"
@@ -156,19 +157,36 @@
             </Border>
         </Grid>
          
-        <Panel Name="DialogControlPanel" IsVisible="False">
-            <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <Grid RowDefinitions="30, *">
-                    <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <Image Height="16" Width="16" VerticalAlignment="Center" Name="DialogIcon"/>
-                        <TextBlock Margin="8 0" Height="16" Name="DialogTitle"/>
-                    </StackPanel>
-                    <Button Grid.Row="0"  HorizontalAlignment="Right" Margin="3" Name="DialogCloseButton" Click="DialogCloseButton_OnClick">
-                        <Image Height="12" Source="{DynamicResource MaterialDesign.Close}"/>
-                    </Button>
-                    <ContentControl Grid.Row="1" Name="DialogControl" />
-                </Grid>
-            </Border>
+        <Panel Name="DialogControlPanel" IsVisible="{Binding #VirtualDialogItemsControl.ItemCount}">
+            <ItemsControl Name="VirtualDialogItemsControl" ItemsSource="{Binding #MainViewView.VirtualDialogModels}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Panel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Panel Background="#01000000">
+                        <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                            <Grid RowDefinitions="30, *">
+                                <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <Image Height="16" Width="16" VerticalAlignment="Center" Source="{Binding Dialog.CustomIcon}"/>
+                                    <TextBlock Margin="8 0" Height="16" Text="{Binding Dialog.Title}"/>
+                                </StackPanel>
+                                <Button Grid.Row="0" HorizontalAlignment="Right" Margin="3" Command="{Binding Close}">
+                                    <Image Height="12" Source="{DynamicResource MaterialDesign.Close}"/>
+                                </Button>
+                                <ContentControl MaxHeight="{Binding #DialogControlPanel.Bounds.Height, Converter={x:Static converters:SharedConverters.AddConverter}, ConverterParameter=-35}" 
+                                                MaxWidth="{Binding #DialogControlPanel.Bounds.Width}"
+                                                Width="{Binding Dialog.PrefWidth}"
+                                                Height="{Binding Dialog.PrefHeight}" Grid.Row="1" 
+                                                Content="{Binding Dialog}" />
+                            </Grid>
+                        </Border>
+                        </Panel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Panel>
         
     </Panel>
