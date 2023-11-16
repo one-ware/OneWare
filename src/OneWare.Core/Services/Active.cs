@@ -32,7 +32,7 @@ public class Active : ObservableObject, IActive
             if (_activeStates.Count > 0)
             {
                 //Check if active process is compiling
-                var withProcess = _activeStates.Where(x => x.Process != null || x.Terminate != null).ToArray();
+                var withProcess = _activeStates.Where(x => x.Terminate != null).ToArray();
                 ActiveProcess = (withProcess.Any() ? withProcess.Last() : _activeStates.Last());
             }
             else
@@ -46,7 +46,7 @@ public class Active : ObservableObject, IActive
     /// <summary>
     ///     Use the key to remove the added state with RemoveState()
     /// </summary>
-    public ApplicationProcess AddState(string status, AppState state, Process? process = null,
+    public ApplicationProcess AddState(string status, AppState state,
         Action? terminate = null)
     {
         lock (_activeLock)
@@ -55,7 +55,6 @@ public class Active : ObservableObject, IActive
             {
                 StatusMessage = status,
                 State = state,
-                Process = process,
                 Terminate = terminate
             };
             _activeStates.Add(key);
@@ -72,7 +71,7 @@ public class Active : ObservableObject, IActive
         }
     }
 
-    public async Task TerminateActiveAsync()
+    public async Task TerminateActiveDialogAsync()
     {
         if(ActiveProcess.State == AppState.Idle) return;
         
@@ -81,9 +80,7 @@ public class Active : ObservableObject, IActive
         if (result == MessageBoxStatus.Yes)
         {
             ActiveProcess.Terminated = true;
-        
-            if (ActiveProcess.Terminate != null) ActiveProcess.Terminate.Invoke();
-            else if (ActiveProcess.Process is { } process && process.IsRunning()) process.Kill();
+            ActiveProcess.Terminate?.Invoke();
             RemoveState(ActiveProcess);
         }
     }

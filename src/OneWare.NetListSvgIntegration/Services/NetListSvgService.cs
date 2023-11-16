@@ -77,8 +77,9 @@ public class NetListSvgService
         }
 
         _output = string.Empty;
-        
-        var state = _active.AddState("Rendering Scheme...", AppState.Loading);
+
+        var cancel = new CancellationTokenSource();
+        var state = _active.AddState("Rendering Scheme...", AppState.Loading,  () => cancel.Cancel());
 
         var theme = Application.Current!.ActualThemeVariant;
         var skin = LoadSkin(theme);
@@ -145,7 +146,7 @@ public class NetListSvgService
                     _output = _output.Replace("fill: white; stroke: none", $"fill: {backgroundHex}; stroke: none");
                     _output = _output.Replace("fill:#000", $"fill:#FFF");
                 }
-            });
+            }, cancel.Token);
         }  
         catch (Exception e)
         {

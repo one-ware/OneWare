@@ -42,7 +42,7 @@ public class ChildProcessService : IChildProcessService
 
         using var activeProcess = new Process();
         activeProcess.StartInfo = startInfo;
-        var key = _active.AddState(status, state, activeProcess);
+        var key = _active.AddState(status, state, () => activeProcess?.Kill());
 
         activeProcess.OutputDataReceived += (o, i) =>
         {

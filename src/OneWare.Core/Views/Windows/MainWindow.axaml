@@ -48,7 +48,6 @@
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}">
 
                     <StackPanel Orientation="Horizontal">
-                        
                         <ItemsControl ItemsSource="{Binding RoundToolBarExtension}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -56,7 +55,14 @@
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding Active.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
+                            <Button Command="{Binding Active.TerminateActiveDialogAsync}">
+                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}"></Image>
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
+                    
                 </Border>
                 
                 <ItemsControl ItemsSource="{Binding LeftToolBarExtension}">

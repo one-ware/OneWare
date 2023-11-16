@@ -1000,6 +1000,13 @@
                              Geometry="F1M14,13L2,13 2,5 14,5z M1,14L15,14 15,2 1,2z" />
         </DrawingGroup>
     </DrawingImage>
+    
+    <DrawingImage x:Key="VSImageLib2019.Stop_16x">
+        <DrawingGroup>
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="#FFA1260D" Geometry="F1M12,12L4,12 4,4 12,4z" />
+        </DrawingGroup>
+    </DrawingImage>
 
     <DrawingImage x:Key="BoxIcons.RegularGitBranch">
         <GeometryDrawing Brush="{StaticResource IconColor}"

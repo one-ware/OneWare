@@ -29,8 +29,6 @@ public class ApplicationProcess : ObservableObject
         set => SetProperty(ref _finishMessage, value);
     }
 
-    public Process? Process { get; init; }
-
     public bool Terminated { get; set; }
 
     public Action? Terminate { get; init; }
