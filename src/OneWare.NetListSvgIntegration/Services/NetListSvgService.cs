@@ -12,9 +12,7 @@ public class NetListSvgService
         try
         {
             var engine = new Engine();
-                
-            engine.Execute("const exports = {}");
-            engine.Execute("const window = {};");
+            
             var console = new
             {
                 log = new Action<object>(x => Console.WriteLine(x)),
@@ -22,8 +20,13 @@ public class NetListSvgService
                 error = new Action<object>(x => Console.WriteLine("ERROR: " + x))
             };
             engine.SetValue("console", console);
-            
-            
+            engine.Execute("const window = {};");
+            engine.Execute("window.Math = Math");
+            engine.Execute("window.Array = Array");
+            engine.Execute("console.log(window.Math.sqrt(9));"); 
+            engine.SetValue("window.Array", engine.GetValue("Array"));
+            engine.SetValue("window.Date", new Func<string, object>((input) => DateTime.Parse(input)));
+            engine.Execute("const exports = {}");
             engine.SetValue("setTimeout", new Action<Action, int>((action, delay) =>
             {
                 if (delay <= 0)
