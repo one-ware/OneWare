@@ -28,7 +28,7 @@ public class NetListSvgIntegrationModule : IModule
                     new MenuItemModel("NetListSvg")
                     {
                         Header = "NetListSvg",
-                        Command = new AsyncRelayCommand(() => netListSvgService.CreateFromJsonAsync(json))
+                        Command = new AsyncRelayCommand(() => netListSvgService.ShowSchemeAsync(json))
                     }
                 };
             }

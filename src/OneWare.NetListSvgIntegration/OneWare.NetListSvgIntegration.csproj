@@ -9,7 +9,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AvaloniaResource Include="Assets\netlistsvg.bundle.js" />
-      <AvaloniaResource Include="Assets\elk.bundled.js" />
+      <AvaloniaResource Include="Assets\*.*" />
     </ItemGroup>
 </Project>
