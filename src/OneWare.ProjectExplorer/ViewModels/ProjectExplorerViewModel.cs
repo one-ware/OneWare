@@ -98,10 +98,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var menuItems = new List<IMenuItem>();
 
-        if (SelectedItem is { } entry)
+        if (SelectedItems is [{ } entry])
         {
-            var manager = _projectManagerService.GetManager(entry.Root.ProjectTypeId);
-
             switch (entry)
             {
                 case IProjectFile file:
@@ -226,6 +224,34 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
                 ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
             });
+        }
+        else if(SelectedItems.Count > 1)
+        {
+            menuItems.Add(new MenuItemModel("Edit")
+                {
+                    Header = "Edit",
+                    Items = new List<IMenuItem>()
+                    {
+                        // new MenuItemModel("Cut")
+                        // {
+                        //     Header = "Cut",
+                        //     Command = new RelayCommand(() => _ = CutAsync(entry)),
+                        //     ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
+                        // },
+                        new MenuItemModel("Delete")
+                        {
+                            Header = "Delete",
+                            Command = new RelayCommand(() => _ = DeleteDialogAsync(SelectedItems.ToArray())),
+                            ImageIconObservable =
+                                Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
+                        }
+                    }
+                });
+            
+            foreach (var reg in _registerContextMenu)
+            {
+                if(reg.Invoke(SelectedItems) is {} items) menuItems.AddRange(items);
+            }
         }
 
         TreeViewContextMenu = menuItems;
@@ -719,9 +745,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task PasteAsync(TopLevel topLevel)
     {
-        if (topLevel.Clipboard is not { } clipboard) return;
+        if (topLevel.Clipboard is not { } clipboard || SelectedItems is not [{} selectedItem]) return;
 
-        var target = SelectedItem as IProjectFolder ?? SelectedItem?.TopFolder;
+        var target = selectedItem as IProjectFolder ?? selectedItem?.TopFolder;
         if (target == null) return;
 
         var formats = await clipboard.GetFormatsAsync();

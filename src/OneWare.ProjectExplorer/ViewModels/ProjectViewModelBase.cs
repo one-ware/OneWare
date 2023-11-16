@@ -26,7 +26,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public ObservableCollection<IProjectEntry> Items { get; } = new();
 
     public ObservableCollection<IProjectEntry> SelectedItems { get; } = new();
-    public IProjectEntry? SelectedItem => SelectedItems.Count > 0 ? SelectedItems[^1] : null;
 
     public ObservableCollection<IProjectEntry> SearchResult { get; } = new();
 
