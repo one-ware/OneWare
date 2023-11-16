@@ -155,8 +155,7 @@ public class NetListSvgService
     {
         if (themeVariant == ThemeVariant.Light)
         {
-            return GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/theme_teros.svg");
-            //return GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/theme_light.svg");
+            return GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/theme_light.svg");
         }
         else
         {
