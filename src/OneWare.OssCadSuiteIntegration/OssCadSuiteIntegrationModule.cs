@@ -65,8 +65,20 @@ public class OssCadSuiteIntegrationModule : IModule
                 {
                     new MenuItemModel("Yosys")
                     {
-                        Header = "Yosys",
+                        Header = "Compile with yosys",
                         Command = new AsyncRelayCommand(() => yosysService.SynthAsync(project))
+                    }
+                };
+            }
+            
+            if (x is [IProjectFile {Extension: ".v"} verilog])
+            {
+                return new[]
+                {
+                    new MenuItemModel("YosysNetList")
+                    {
+                        Header = "Generate Json Netlist",
+                        Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
                     }
                 };
             }
