@@ -250,7 +250,7 @@ line {
   <g s:type="lt" transform="translate(50,200)" s:width="25" s:height="25">
     <s:alias val="$lt"/>
 
-    <circle r="12.5" cx="12.5" cy="12.5" fill="#ffffff" class="$cell_id"/>
+    <circle r="12.5" cx="12.5" cy="12.5" fill="#24f8ff" class="$cell_id"/>
     <line style="stroke: #000" x1="6" x2="17" y1="12"  y2="7" class="$cell_id"/>
     <line style="stroke: #000" x1="6" x2="17" y1="12" y2="17" class="$cell_id"/>
 
@@ -262,7 +262,7 @@ line {
   <g s:type="le" transform="translate(150,200)" s:width="25" s:height="25">
     <s:alias val="$le"/>
 
-    <circle r="12.5" cx="12.5" cy="12.5" fill="#ffffff" class="$cell_id"/>
+    <circle r="12.5" cx="12.5" cy="12.5" fill="#24f8ff" class="$cell_id"/>
     <line style="stroke: #000" x1="6" x2="17" y1="11"  y2="6" class="$cell_id"/>
     <line style="stroke: #000" x1="6" x2="17" y1="11" y2="16" class="$cell_id"/>
     <line style="stroke: #000" x1="6" x2="17" y1="14" y2="19" class="$cell_id"/>
@@ -275,7 +275,7 @@ line {
   <g s:type="ge" transform="translate(250,200)" s:width="25" s:height="25">
     <s:alias val="$ge"/>
 
-    <circle r="12" cx="12" cy="12" fill="#ffffff" class="$cell_id"/>
+    <circle r="12" cx="12" cy="12" fill="#24f8ff" class="$cell_id"/>
     <line style="stroke: #000" x1="8" x2="19"  y1="6" y2="11" class="$cell_id"/>
     <line style="stroke: #000" x1="8" x2="19" y1="16" y2="11" class="$cell_id"/>
     <line style="stroke: #000" x1="8" x2="19" y1="19" y2="14" class="$cell_id"/>
@@ -288,7 +288,7 @@ line {
   <g s:type="gt" transform="translate(350,200)" s:width="25" s:height="25">
     <s:alias val="$gt"/>
 
-    <circle r="12" cx="12" cy="12" fill="#ffffff" class="$cell_id"/>
+    <circle r="12" cx="12" cy="12" fill="#24f8ff" class="$cell_id"/>
     <line style="stroke: #000" x1="8" x2="19"  y1="7" y2="12" class="$cell_id"/>
     <line style="stroke: #000" x1="8" x2="19" y1="17" y2="12" class="$cell_id"/>
 
@@ -308,7 +308,7 @@ line {
     <text x="15" y="-4" class="nodelabel $cell_id" s:attribute="ref">constant</text>
 
     <s:alias val="$_constant_"/>
-    <rect width="30" height="20" fill="#745bff" class="$cell_id"/>
+    <rect width="30" height="20" fill="#24e634" class="$cell_id"/>
 
     <g s:x="31" s:y="10" s:pid="Y"/>
   </g>

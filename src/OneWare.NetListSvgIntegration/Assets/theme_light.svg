@@ -315,7 +315,7 @@
     <text x="15" y="-4" class="nodelabel $cell_id" s:attribute="ref">constant</text>
 
     <s:alias val="$_constant_"/>
-    <rect width="30" height="20" fill="#745bff" class="$cell_id"/>
+    <rect width="30" height="20" fill="#24e634" class="$cell_id"/>
 
     <g s:x="31" s:y="10" s:pid="Y"/>
   </g>
