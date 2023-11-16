@@ -99,7 +99,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                             }),
                         };
                     }
-                    else
+                    else if(file.Extension is ".vhd" or ".vhdl" or ".v")
                     {
                         yield return new MenuItemModel("Set Top Entity")
                         {

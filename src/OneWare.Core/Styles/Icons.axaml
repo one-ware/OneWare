@@ -16,7 +16,7 @@
     </DrawingImage>
 
     <DrawingImage x:Key="BoxIcons.RegularCheck.Green">
-        <GeometryDrawing Brush="LimeGreen"
+        <GeometryDrawing Brush="SpringGreen"
                          Geometry="M5.225,9.205 L1.57,5.55 L-1.747E-007,7.12 L5.225,12.34 L16,1.57 L14.43,-1.651E-007 z" />
     </DrawingImage>
 

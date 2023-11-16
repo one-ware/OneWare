@@ -39,7 +39,7 @@ public class TerminalManagerViewModel : ExtendedTool
         Title = "Terminal";
         Id = "Terminal";
         
-        settingsService.GetSettingObservable<string>("General_SelectedTheme").Throttle(TimeSpan.FromMilliseconds(5))
+        settingsService.GetSettingObservable<string>("General_SelectedTheme").Skip(1).Throttle(TimeSpan.FromMilliseconds(5))
             .Subscribe(x => Dispatcher.UIThread.Post(() =>
             {
                 foreach (var t in Terminals)

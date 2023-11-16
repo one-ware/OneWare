@@ -344,6 +344,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (!string.IsNullOrWhiteSpace(newFile))
         {
             parent.IsExpanded = true;
+            if (!parent.Root.IsPathIncluded(newFile))
+            {
+                parent.Root.IncludePath(newFile);
+                _ = SaveProjectAsync(parent.Root);
+            }
             var f = parent.AddFile(newFile, true);
             await _dockService.OpenFileAsync(f);
         }

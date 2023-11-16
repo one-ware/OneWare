@@ -16,7 +16,7 @@ public class ChildProcessService : IChildProcessService
         _active = active;
     }
     
-    private static ProcessStartInfo GetProcessStartInfo(string workingDirectory, string path, string arguments)
+    private static ProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, string arguments)
     {
         return new ProcessStartInfo
         {

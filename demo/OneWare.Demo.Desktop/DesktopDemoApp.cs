@@ -13,6 +13,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
+using OneWare.NetListSvgIntegration;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
@@ -39,6 +40,7 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
+        moduleCatalog.AddModule<NetListSvgIntegrationModule>();
 
         try
         {

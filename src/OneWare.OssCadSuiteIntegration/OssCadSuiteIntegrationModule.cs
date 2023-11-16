@@ -1,6 +1,10 @@
 ﻿using System.Runtime.InteropServices;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.Shared.Helpers;
+using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
 using Prism.Modularity;
 // ReSharper disable StringLiteralTypo
@@ -11,12 +15,13 @@ public class OssCadSuiteIntegrationModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
+        containerRegistry.Register<YosysService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
+        var yosysService = containerProvider.Resolve<YosysService>();
         
         settingsService.RegisterTitledPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path", 
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
@@ -25,6 +30,8 @@ public class OssCadSuiteIntegrationModule : IModule
         
         settingsService.GetSettingObservable<string>("OssCadSuite_Path").Subscribe(x =>
         {
+            if (string.IsNullOrEmpty(x)) return;
+
             if (!IsOssPathValid(x))
             {
                 containerProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null, false);
@@ -48,6 +55,22 @@ public class OssCadSuiteIntegrationModule : IModule
             Environment.SetEnvironmentVariable("PATH", $"{environmentPathSetting}{currentPath}");
             Environment.SetEnvironmentVariable("OPENFPGALOADER_SOJ_DIR", Path.Combine(x, "share", "openFPGALoader"));
             Environment.SetEnvironmentVariable("PYTHON_EXECUTABLE", Path.Combine(x, "py3bin", $"python3{PlatformHelper.ExecutableExtension}"));
+        });
+        
+        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu(x =>
+        {
+            if (x is [UniversalFpgaProjectRoot project])
+            {
+                return new[]
+                {
+                    new MenuItemModel("Yosys")
+                    {
+                        Header = "Yosys",
+                        Command = new AsyncRelayCommand(() => yosysService.SynthAsync(project))
+                    }
+                };
+            }
+            return null;
         });
     }
 

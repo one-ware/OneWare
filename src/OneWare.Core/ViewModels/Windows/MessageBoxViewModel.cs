@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Controls;
 using OneWare.Shared;
 using OneWare.Shared.Controls;
 using OneWare.Shared.Enums;
@@ -115,6 +116,8 @@ namespace OneWare.Core.ViewModels.Windows
         
         public async Task SelectPathAsync(FlexibleWindow window)
         {
+            if (window.Host == null) throw new NullReferenceException(nameof(TopLevel));
+            
             var folder = await StorageProviderHelper.SelectFolderAsync(window.Host, "Select Directory", Input);
             
             Input = folder ?? "";
