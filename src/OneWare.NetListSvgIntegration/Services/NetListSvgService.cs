@@ -5,6 +5,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Styling;
+using Esprima;
+using Esprima.Ast;
 using ImTools;
 using Jint;
 using OneWare.Shared.Enums;
@@ -20,68 +22,34 @@ public class NetListSvgService
     private readonly ILogger _logger;
     private readonly IActive _active;
     private readonly IDockService _dockService;
-    private bool _isRecording;
 
-    private string _output = string.Empty;
-
-    private Engine? _engine;
+    private Script? _script1;
+    private Script? _script2;
     
     public NetListSvgService(ILogger logger, IActive active, IDockService dockService)
     {
         _logger = logger;
         _active = active;
         _dockService = dockService;
+
+        _ = LoadScriptsAsync();
     }
 
-    private void PrepareEngine()
+    private async Task LoadScriptsAsync()
     {
-        try
-        {
-            _engine = new Engine();
-            
-            var console = new
-            {
-                log = new Action<object>(x =>
-                {
-                    if(_isRecording) _output += x;
-                }),
-                warn = new Action<object>(x => _logger.Warning(x.ToString() ?? "")),
-                error = new Action<object>(x => _logger.Error(x.ToString() ?? ""))
-            };
-            _engine.SetValue("console", console);
-            _engine.Execute("const window = {};");
-            _engine.Execute("window.Math = Math");
-            _engine.Execute("window.Array = Array");
-            _engine.SetValue("window.Array", _engine.GetValue("Array"));
-            _engine.SetValue("window.Date", new Func<string, object>((input) => DateTime.Parse(input)));
-            _engine.Execute("const exports = {}");
-            _engine.SetValue("setTimeout", new Action<Action, int>((action, delay) =>
-            {
-                if (delay <= 0)
-                {
-                    action();
-                    return;
-                }
-                var timer = new System.Timers.Timer(delay);
-                timer.Elapsed += (sender, args) =>
-                {
-                    action();
-                    timer.Stop();
-                };
-                timer.Start();
-            }));
+        var script1 = GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/elk.bundled.js");
+        var script2 = GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/netlistsvg.bundle.js");
 
-            var script1 = GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/elk.bundled.js");
-            _engine.Execute(script1);
-            var script2 = GetAvaloniaAsset("avares://OneWare.NetListSvgIntegration/Assets/netlistsvg.bundle.js");
-            _engine.Execute(script2);
-            
-            _engine.Execute("var netlistsvg = window.netlistsvg");
-        }
-        catch (Exception e)
+        var result = await Task.Run(() =>
         {
-            _logger.Error(e.Message, e);
-        }
+            var c = new JavaScriptParser();
+            var c1 = c.ParseScript(script1);
+            var c2 = c.ParseScript(script2);
+            return (c1, c2);
+        });
+
+        _script1 = result.c1;
+        _script2 = result.c2;
     }
 
     public async Task ShowSchemeAsync(IProjectFile jsonFile)
@@ -97,33 +65,79 @@ public class NetListSvgService
             await _dockService.OpenFileAsync(newFile);
         }
     }
+
+    private string _output = string.Empty;
     
     public async Task<string?> CreateFromJsonAsync(IProjectFile jsonFile)
     {
-        _isRecording = true;
-        _output = string.Empty;
+        if (_script1 is null || _script2 is null)
+        {
+            _logger.Error("Scripts not loaded");
+            return null;
+        }
 
+        _output = string.Empty;
+        
         var state = _active.AddState("Rendering Scheme...", AppState.Loading);
 
         var theme = Application.Current!.ActualThemeVariant;
         var skin = LoadSkin(theme);
         var backgroundHex = Application.Current!.FindResource(theme, "ThemeControlLowColor") is Color background ? 
             $"#{background.R:X2}{background.G:X2}{background.B:X2}" : "#FFFFFF";
-
+        
         try
         {
             await Task.Run(() =>
             {
-                if (_engine is null) PrepareEngine();
-                if (_engine is null) throw new NullReferenceException(nameof(_engine));
+                using var engine = new Engine(new Options()
+                {
+                    Strict = true
+                });
+                
+                var console = new
+                {
+                    log = new Action<object>(x =>
+                    {
+                        _output += x;
+                    }),
+                    warn = new Action<object>(x => _logger.Warning(x.ToString() ?? "")),
+                    error = new Action<object>(x => _logger.Error(x.ToString() ?? ""))
+                };
+                engine.SetValue("console", console);
+                engine.Execute("const window = {};");
+                engine.Execute("window.Math = Math");
+                engine.Execute("window.Array = Array");
+                engine.SetValue("window.Array", engine.GetValue("Array"));
+                engine.SetValue("window.Date", new Func<string, object>((input) => DateTime.Parse(input)));
+                engine.Execute("const exports = {}");
+                engine.SetValue("setTimeout", new Action<Action, int>((action, delay) =>
+                {
+                    if (delay <= 0)
+                    {
+                        action();
+                        return;
+                    }
+                    var timer = new System.Timers.Timer(delay);
+                    timer.Elapsed += (sender, args) =>
+                    {
+                        action();
+                        timer.Stop();
+                    };
+                    timer.Start();
+                }));
+            
+                engine.Execute(_script1);
+                engine.Execute(_script2);
+            
+                engine.Execute("var netlistsvg = window.netlistsvg");
                 
                 var json = File.ReadAllText(jsonFile.FullPath);
                 
-                _engine.SetValue("OneWareJsonData", json);
-                _engine.Execute("var OneWareNetList = JSON.parse(OneWareJsonData)");
+                engine.SetValue("OneWareJsonData", json);
+                engine.Execute("var OneWareNetList = JSON.parse(OneWareJsonData)");
                 
-                _engine.SetValue("OneWareSkin", skin);
-                _engine.Execute(
+                engine.SetValue("OneWareSkin", skin);
+                engine.Execute(
                     "netlistsvg.render(OneWareSkin, OneWareNetList, (err, result) => console.log(result));");
 
                 if (theme != ThemeVariant.Light)
@@ -140,7 +154,6 @@ public class NetListSvgService
         
         _active.RemoveState(state);
         
-        _isRecording = false;
         return _output;
     }
 
