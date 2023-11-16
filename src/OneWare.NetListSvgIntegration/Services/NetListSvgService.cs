@@ -91,7 +91,7 @@ public class NetListSvgService
             {
                 using var engine = new Engine(new Options()
                 {
-                    Strict = true
+                    Strict = false
                 });
                 
                 var console = new
