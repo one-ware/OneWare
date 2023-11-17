@@ -44,6 +44,14 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
         }
     }
 
+    private IFpgaToolchain? _toolchain;
+    
+    public IFpgaToolchain? Toolchain
+    {
+        get => _toolchain;
+        set => SetProperty(ref _toolchain, value);
+    }
+
     public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;

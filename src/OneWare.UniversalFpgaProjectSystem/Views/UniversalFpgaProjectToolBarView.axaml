@@ -3,7 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
+             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             mc:Ignorable="d"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectToolBarView"
              x:DataType="viewModels:UniversalFpgaProjectToolBarViewModel">
     
@@ -15,6 +17,33 @@
                 <Image Source="{DynamicResource CreateIcon}" Width="13" />
                 <TextBlock Text="Compile" />
             </StackPanel>
+        </Button>
+        <Button>
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <ItemsControl ItemsSource="{Binding FpgaService.FpgaToolchains}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:IFpgaToolchain">
+                            <MenuItem Header="{Binding Name}" 
+                                      Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleProjectToolchain, FallbackValue={x:Null}}"
+                                      CommandParameter="{Binding}">
+                                <MenuItem.Icon>
+                                    <CheckBox BorderThickness="0">
+                                        <CheckBox.IsChecked>
+                                            <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                                <Binding Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain, FallbackValue={x:Null}}"/>
+                                                <Binding />
+                                            </MultiBinding>
+                                        </CheckBox.IsChecked>
+                                    </CheckBox>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>    
+                    </ItemsControl>
+                </Flyout>
+            </Button.Flyout>
+            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10"/>
         </Button>
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
         <Button ToolTip.Tip="Programs FPGA" Command="{Binding DownloadAsync}">

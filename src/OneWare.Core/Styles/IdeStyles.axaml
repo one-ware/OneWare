@@ -6,6 +6,41 @@
         </Border>
     </Design.PreviewWith>
 
+    <Styles.Resources>
+        <ControlTheme x:Key="FlyoutNoPadding"
+                      TargetType="FlyoutPresenter">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="LayoutRoot"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <ScrollViewer
+                            HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                            VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              HorizontalContentAlignment="Stretch"
+                                              VerticalContentAlignment="Stretch"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+    
     <StyleInclude Source="avares://OneWare.Core/Styles/HostWindow.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Dock.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/TreeView.axaml" />
@@ -18,11 +53,11 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/ScrollViewer.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
-
-    <Style Selector=":is(Window)">
-        <Setter Property="FontFamily" Value="{StaticResource Noto Sans}"/>
-    </Style>
     
+    <Style Selector=":is(Window)">
+        <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
+    </Style>
+
     <Style Selector="Button">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -36,9 +71,9 @@
         <Setter Property="Height" Value="24" />
         <Setter Property="Padding" Value="3 1" />
     </Style>
-    
+
     <Style Selector="CheckBox, ComboBox, TextBox, ComboBoxItem">
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="3" />
     </Style>
 
     <Style Selector="ComboBoxItem">
@@ -60,8 +95,8 @@
     </Style>
 
     <Style Selector="TextBox">
-        <Setter Property="Padding" Value="3 2"/>    
-        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="3 2" />
+        <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="TextBox.ToolBar">
         <Setter Property="Height" Value="24" />
@@ -108,7 +143,7 @@
     <Style Selector="Border.RoundToolBar">
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Height" Value="24" />
     </Style>
 
@@ -134,5 +169,5 @@
         <Setter Property="Width" Value="NaN" />
         <Setter Property="Padding" Value="5 0" />
     </Style>
-    
+
 </Styles>

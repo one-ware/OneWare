@@ -5,6 +5,7 @@ using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 // ReSharper disable StringLiteralTypo
@@ -22,6 +23,8 @@ public class OssCadSuiteIntegrationModule : IModule
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
         var yosysService = containerProvider.Resolve<YosysService>();
+        
+        containerProvider.Resolve<FpgaService>().FpgaToolchains.Add(new YosysToolchain());
         
         settingsService.RegisterTitledPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path", 
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
