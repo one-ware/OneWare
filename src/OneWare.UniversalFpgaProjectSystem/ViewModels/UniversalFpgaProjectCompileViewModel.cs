@@ -71,6 +71,8 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
                 SelectedFpga?.VisibleNodes.AddRange(nodes);
             }
         }
+        
+        _project.Toolchain?.LoadConnections();
     }
 
     public override void Close(FlexibleWindow window)

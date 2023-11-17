@@ -9,16 +9,16 @@ public class YosysToolchain : IFpgaToolchain
     
     public void LoadConnections()
     {
-        throw new NotImplementedException();
+        
     }
 
     public void SaveConnections()
     {
-        throw new NotImplementedException();
+        
     }
 
     public void StartCompile()
     {
-        throw new NotImplementedException();
+        
     }
 }
