@@ -10,6 +10,7 @@ using OneWare.Shared.Converters;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
@@ -50,6 +51,14 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         get => _toolchain;
         set => SetProperty(ref _toolchain, value);
+    }
+    
+    private IFpgaLoader? _loader;
+    
+    public IFpgaLoader? Loader
+    {
+        get => _loader;
+        set => SetProperty(ref _loader, value);
     }
 
     public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))

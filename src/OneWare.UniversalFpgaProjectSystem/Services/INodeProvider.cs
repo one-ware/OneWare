@@ -1,7 +1,7 @@
 ﻿using OneWare.Shared.Models;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
-namespace OneWare.UniversalFpgaProjectSystem;
+namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface INodeProvider
 {

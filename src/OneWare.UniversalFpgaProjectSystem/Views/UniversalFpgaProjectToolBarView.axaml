@@ -5,6 +5,7 @@
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
              xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
              xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             xmlns:services="clr-namespace:OneWare.UniversalFpgaProjectSystem.Services"
              mc:Ignorable="d"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectToolBarView"
              x:DataType="viewModels:UniversalFpgaProjectToolBarViewModel">
@@ -23,7 +24,7 @@
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <ItemsControl ItemsSource="{Binding FpgaService.FpgaToolchains}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:IFpgaToolchain">
+                        <DataTemplate x:DataType="services:IFpgaToolchain">
                             <MenuItem Header="{Binding Name}" 
                                       Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleProjectToolchain, FallbackValue={x:Null}}"
                                       CommandParameter="{Binding}">
@@ -59,6 +60,33 @@
                 </Grid>
                 <TextBlock Text="Download" />
             </StackPanel>
+        </Button>
+        <Button>
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <ItemsControl ItemsSource="{Binding FpgaService.FpgaLoaders}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="services:IFpgaLoader">
+                                <MenuItem Header="{Binding Name}" 
+                                          Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleProjectLoader, FallbackValue={x:Null}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <CheckBox BorderThickness="0">
+                                            <CheckBox.IsChecked>
+                                                <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                                    <Binding Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader, FallbackValue={x:Null}}"/>
+                                                    <Binding />
+                                                </MultiBinding>
+                                            </CheckBox.IsChecked>
+                                        </CheckBox>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>    
+                    </ItemsControl>
+                </Flyout>
+            </Button.Flyout>
+            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10"/>
         </Button>
     </StackPanel>
 

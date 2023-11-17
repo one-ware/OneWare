@@ -37,6 +37,15 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         }
     }
     
+    public void ToggleProjectLoader(IFpgaLoader loader)
+    {
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
+        {
+            if (project.Loader != loader) project.Loader = loader;
+            else project.Loader = null;
+        }
+    }
+    
     public async Task CompileAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)

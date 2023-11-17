@@ -2,6 +2,7 @@
 using OneWare.Shared.Models;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Vhdl.Parsing;
 

@@ -9,6 +9,8 @@ public class FpgaService
 
     public ObservableCollection<IFpgaToolchain> FpgaToolchains { get; } = new();
     
+    public ObservableCollection<IFpgaLoader> FpgaLoaders { get; } = new();
+    
     public void AddFpga<T>() where T : FpgaModelBase
     {
         FpgaModels.Add(typeof(T));
