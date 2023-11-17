@@ -1,7 +1,6 @@
 using Avalonia.Platform;
 using AvaloniaEdit.Document;
-using JavaScriptEngineSwitcher.Core;
-using JavaScriptEngineSwitcher.Jint;
+using Jint;
 using OneWare.Shared.EditorExtensions;
 using OneWare.Shared.Services;
 using Prism.Ioc;
@@ -14,7 +13,7 @@ public class VhdlFormatter : IFormattingStrategy
     {
         try
         {
-            using IJsEngine engine = new JintJsEngine();
+            using var engine = new Engine();
 
             using var stream = AssetLoader.Open(new Uri("avares://OneWare.Vhdl/Assets/formatter.js"));
             using var reader = new StreamReader(stream);
@@ -41,10 +40,10 @@ public class VhdlFormatter : IFormattingStrategy
                 //}
             };
             
-            engine.EmbedHostObject("settings", settings);
-            engine.SetVariableValue("source", source);
+            engine.SetValue("settings", settings);
+            engine.SetValue("source", source);
             engine.Execute("var formatted = beautify(source, settings)");
-            var result = engine.Evaluate<string>("formatted");
+            var result = engine.GetValue("formatted").ToObject() as string;
             return result;
         }
         catch (Exception e)

@@ -151,11 +151,11 @@ public class NetListSvgService
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            return null;
         }
-        
+
         _active.RemoveState(state);
-        
-        return _output;
+        return cancel.IsCancellationRequested ? null : _output;
     }
 
     private string GetAvaloniaAsset(string resource)

@@ -51,6 +51,7 @@ public class ImageViewModel : ExtendedDocument
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message,e);
+            LoadingFailed = true;
         }
         IsLoading = false;
     }
