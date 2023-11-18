@@ -47,9 +47,10 @@ public static class ProjectHelper
     public static bool MatchWildCards(string path, IEnumerable<string> include, IEnumerable<string>? exclude)
     {
         return include.Any(includePattern => FileSystemName.MatchesSimpleExpression(includePattern, path))  
-               && (exclude is null || (!exclude.Any(excludePattern => FileSystemName.MatchesSimpleExpression(excludePattern, path)) 
-                   && !path.ToLinuxPath().Split('/', StringSplitOptions.RemoveEmptyEntries)
-                       .SkipLast(1)
-                       .Any(x => exclude.Any(excludePattern => FileSystemName.MatchesSimpleExpression(excludePattern, x)))));
+               && (exclude is null || !exclude.Any(excludePattern => FileSystemName.MatchesSimpleExpression(excludePattern, path) 
+                        || path.ToLinuxPath()
+                            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                            .SkipLast(1)
+                            .Any(x => FileSystemName.MatchesSimpleExpression(excludePattern, x))));
     }
 }
