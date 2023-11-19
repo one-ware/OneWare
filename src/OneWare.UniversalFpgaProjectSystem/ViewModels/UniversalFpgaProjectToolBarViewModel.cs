@@ -61,6 +61,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
     public async Task DownloadAsync()
     {
-        await Task.Delay(100);
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project) 
+            await project.Loader.DownloadAsync(project);
     }
 }

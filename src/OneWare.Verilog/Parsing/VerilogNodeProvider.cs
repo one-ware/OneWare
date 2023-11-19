@@ -34,12 +34,15 @@ public class VerilogNodeProvider : INodeProvider
         {
             string portType = match.Groups[1].Value;
             string vectorSize = match.Groups[2].Value.Trim();
-            string[] portNames = match.Groups[3].Value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] portNames = match.Groups[3].Value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string portName in portNames)
             {
-                Console.WriteLine($"Port: {portName}, Type: {portType}, Vector Size: {vectorSize}");
-                yield return new FpgaNode(portName, portType);
+                if (!string.IsNullOrWhiteSpace(vectorSize))
+                {
+                    
+                }
+                else yield return new FpgaNode(portName.Trim(), portType);
             }
         }
     }

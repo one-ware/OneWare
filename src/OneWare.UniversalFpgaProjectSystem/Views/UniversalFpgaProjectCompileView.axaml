@@ -184,10 +184,23 @@
 
         <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAndClose}"
+            <Button Command="{Binding SaveAndClose}"
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
-                <TextBlock Text="Save" />
+                <TextBlock Text="Save and Close" Margin="5 0"/>
+            </Button>
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAndCompile}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
+                    IsEnabled="{Binding Project.Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Name="CompileButton">
+                <StackPanel Orientation="Horizontal" Margin="5 0" Spacing="2">
+                    <TextBlock Text="Save And Compile"/>
+                    <StackPanel Spacing="2" Orientation="Horizontal" IsVisible="{Binding #CompileButton.IsEnabled}">
+                        <TextBlock Text="with"/>
+                        <TextBlock Text="{Binding Project.Toolchain.Name, FallbackValue={x:Null}}"/>
+                    </StackPanel>
+                </StackPanel>
             </Button>
         </StackPanel>
+        
     </Grid>
 </controls:FlexibleWindow>

@@ -16,7 +16,8 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 {
     private readonly IWindowService _windowService;
     private readonly IProjectExplorerService _projectExplorerService;
-    private readonly UniversalFpgaProjectRoot _project;
+    
+    public UniversalFpgaProjectRoot Project { get; }
 
     public ObservableCollection<FpgaModel> FpgaModels { get; } = new();
 
@@ -35,7 +36,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
             if (value is not null)
             {
-                _project.Toolchain?.LoadConnections(_project, value);
+                Project.Toolchain?.LoadConnections(Project, value);
                 
                 Observable.FromEventPattern(value, nameof(value.NodeConnected)).Subscribe(_ =>
                 {
@@ -60,11 +61,11 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
-        _project = project;
+        Project = project;
 
         this.WhenValueChanged(x => x.IsDirty).Subscribe(x =>
         {
-            Title = $"Connect and Compile - {_project.Header}{(x ? "*" : "")}";
+            Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
         });
         
         //Construct FpgaModels
@@ -77,7 +78,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             FpgaModels.Add(model);
         }
         
-        if (_project.TopEntity is IProjectFile file)
+        if (Project.TopEntity is IProjectFile file)
         {
             var provider = fpgaService.GetNodeProvider(file.Extension);
             if (provider is not null)
@@ -121,14 +122,20 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
                 return;
         }
     }
+
+    public void SaveAndCompile(FlexibleWindow window)
+    {
+        SaveAndClose(window);
+        if(SelectedFpgaModel != null) Project.Toolchain?.StartCompile(Project, SelectedFpgaModel);
+    }
     
     public void SaveAndClose(FlexibleWindow window)
     {
         if (SelectedFpgaModel != null)
         {
-            _project.Properties["Fpga"] = SelectedFpgaModel.Fpga.Name;
-            _project.Toolchain?.SaveConnections(_project, SelectedFpgaModel);
-            _ = _projectExplorerService.SaveProjectAsync(_project);
+            Project.Properties["Fpga"] = SelectedFpgaModel.Fpga.Name;
+            Project.Toolchain?.SaveConnections(Project, SelectedFpgaModel);
+            _ = _projectExplorerService.SaveProjectAsync(Project);
         }
         IsDirty = false;
         window.Close();

@@ -54,7 +54,7 @@ public class ChildProcessService : IChildProcessService
         {
             if (string.IsNullOrEmpty(i.Data)) return;
             success = false;
-            _logger.Warning(i.Data, null, false);
+            _logger.Warning(i.Data, null, true);
             output += i.Data + '\n';
         };
 

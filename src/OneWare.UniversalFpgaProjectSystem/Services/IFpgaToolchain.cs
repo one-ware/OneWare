@@ -10,5 +10,5 @@ public interface IFpgaToolchain
 
     public void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga);
 
-    public void StartCompile();
+    public void StartCompile(UniversalFpgaProjectRoot project, FpgaModel fpga);
 }

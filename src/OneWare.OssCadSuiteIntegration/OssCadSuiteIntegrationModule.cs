@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
+using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.Shared.Helpers;
 using OneWare.Shared.Models;
@@ -25,6 +25,7 @@ public class OssCadSuiteIntegrationModule : IModule
         var yosysService = containerProvider.Resolve<YosysService>();
 
         containerProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
+        containerProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         
         settingsService.RegisterTitledPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path", 
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);

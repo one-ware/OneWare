@@ -7,7 +7,13 @@ namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysToolchain : IFpgaToolchain
 {
+    private readonly YosysService _yosysService;
     public string Name => "Yosys";
+
+    public YosysToolchain(YosysService yosysService)
+    {
+        _yosysService = yosysService;
+    }
     
     public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
@@ -76,9 +82,9 @@ public class YosysToolchain : IFpgaToolchain
         }
     }
 
-    public void StartCompile()
+    public void StartCompile(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        
+        _yosysService.SynthAsync(project);
     }
     
     private string RemoveLine(string file, string find)
