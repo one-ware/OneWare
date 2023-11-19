@@ -50,7 +50,14 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     public IFpgaToolchain? Toolchain
     {
         get => _toolchain;
-        set => SetProperty(ref _toolchain, value);
+        set
+        {
+            SetProperty(ref _toolchain, value);
+            if (_toolchain != null)
+                Properties[nameof(Toolchain)] = _toolchain.Name;
+            else
+                Properties.Remove(nameof(Toolchain));
+        }
     }
     
     private IFpgaLoader? _loader;
@@ -58,7 +65,14 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
     public IFpgaLoader? Loader
     {
         get => _loader;
-        set => SetProperty(ref _loader, value);
+        set
+        {
+            SetProperty(ref _loader, value);
+            if (_loader != null)
+                Properties[nameof(Loader)] = _loader.Name;
+            else
+                Properties.Remove(nameof(Loader));
+        }
     }
 
     public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))

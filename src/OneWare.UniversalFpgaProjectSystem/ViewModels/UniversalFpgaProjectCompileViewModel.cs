@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using OneWare.Shared.Controls;
@@ -6,9 +7,9 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -18,16 +19,38 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly UniversalFpgaProjectRoot _project;
 
-    public ObservableCollection<FpgaModelBase> FpgaModels { get; } = new();
+    public ObservableCollection<FpgaModel> FpgaModels { get; } = new();
 
-    private FpgaModelBase? _selectedFpga;
-    public FpgaModelBase? SelectedFpga
+    private CompositeDisposable? _compositeDisposable;
+    
+    private FpgaModel? _selectedFpgaModel;
+    public FpgaModel? SelectedFpgaModel
     {
-        get => _selectedFpga;
-        set => SetProperty(ref _selectedFpga, value);
+        get => _selectedFpgaModel;
+        set
+        {
+            SetProperty(ref _selectedFpgaModel, value);
+            
+            _compositeDisposable?.Dispose();
+            _compositeDisposable = new CompositeDisposable();
+
+            if (value is not null)
+            {
+                _project.Toolchain?.LoadConnections(_project, value);
+                
+                Observable.FromEventPattern(value, nameof(value.NodeConnected)).Subscribe(_ =>
+                {
+                    IsDirty = true;
+                }).DisposeWith(_compositeDisposable);
+                Observable.FromEventPattern(value, nameof(value.NodeDisconnected)).Subscribe(_ =>
+                {
+                    IsDirty = true;
+                }).DisposeWith(_compositeDisposable);
+            }
+        }
     }
 
-    private bool _hideExtensions = false;
+    private bool _hideExtensions;
     public bool HideExtensions
     {
         get => _hideExtensions;
@@ -45,34 +68,35 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             Title = $"Connect and Compile - {_project.Header}{(x ? "*" : "")}";
         });
         
-        foreach (var fpga in fpgaService.GetFpgas())
+        //Construct FpgaModels
+        foreach (var fpga in fpgaService.Fpgas)
         {
-            Observable.FromEventPattern(fpga, nameof(fpga.NodeConnected)).Subscribe(_ =>
-            {
-                IsDirty = true;
-            });
-
-            Observable.FromEventPattern(fpga, nameof(fpga.NodeDisconnected)).Subscribe(_ =>
-            {
-                IsDirty = true;
-            });
-            
-            FpgaModels.Add(fpga);
+            fpgaService.CustomFpgaModels.TryGetValue(fpga, out var custom);
+            custom ??= typeof(FpgaModel);
+            var model = Activator.CreateInstance(custom, fpga) as FpgaModel;
+            if (model is null) throw new NullReferenceException(nameof(model));
+            FpgaModels.Add(model);
         }
         
-        SelectedFpga = FpgaModels.FirstOrDefault();
-
-        if (project.TopEntity is IProjectFile file)
+        if (_project.TopEntity is IProjectFile file)
         {
             var provider = nodeProviderService.GetNodeProvider(file.Extension);
             if (provider is not null)
             {
-                var nodes = provider.ExtractNodes(file);
-                SelectedFpga?.VisibleNodes.AddRange(nodes);
+                var nodes = provider.ExtractNodes(file).ToArray();
+                foreach (var fpga in FpgaModels)
+                {
+                    foreach (var nodeModel in nodes)
+                    {
+                        fpga.AddNode(nodeModel);
+                    }
+                }
             }
         }
         
-        _project.Toolchain?.LoadConnections();
+        SelectedFpgaModel = FpgaModels.FirstOrDefault();
+
+        IsDirty = false;
     }
 
     public override void Close(FlexibleWindow window)
@@ -101,72 +125,13 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     
     public void SaveAndClose(FlexibleWindow window)
     {
-        _project.Properties["Fpga"] = SelectedFpga?.Name;
-        CreatePcf();
-        _ = _projectExplorerService.SaveProjectAsync(_project);
+        if (SelectedFpgaModel != null)
+        {
+            _project.Properties["Fpga"] = SelectedFpgaModel.Fpga.Name;
+            _project.Toolchain?.SaveConnections(_project, SelectedFpgaModel);
+            _ = _projectExplorerService.SaveProjectAsync(_project);
+        }
         IsDirty = false;
         window.Close();
-    }
-    
-    private string RemoveLine(string file, string find)
-    {
-        var startIndex = file.IndexOf(find, StringComparison.Ordinal);
-        while (startIndex > -1)
-        {
-            var endIndex = file.IndexOf('\n', startIndex);
-            if (endIndex == -1) endIndex = file.Length - 1;
-            file = file.Remove(startIndex, endIndex - startIndex + 1);
-            startIndex = file.IndexOf(find, startIndex, StringComparison.Ordinal);
-        }
-
-        return file;
-    }
-    
-    private void LoadConnectionsFromPcf(string pcf, FpgaModelBase fpga)
-    {
-        var lines = pcf.Split('\n');
-        foreach (var line in lines)
-        {
-            var trimmedLine = line.Trim();
-            if (trimmedLine.StartsWith("set_io"))
-            {
-                var parts = trimmedLine.Split(' ');
-                if (parts.Length != 3)
-                {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning("PCF Line invalid: " + trimmedLine);
-                    continue;
-                }
-
-                var signal = parts[1];
-                var pin = parts[2];
-
-                if (fpga.Pins.TryGetValue(pin, out var pinModel) && fpga.Nodes.TryGetValue(signal, out var signalModel))
-                {
-                    fpga.Connect(pinModel, signalModel);
-                } 
-            }
-        }
-    }
-    
-    private void CreatePcf()
-    {
-        if (SelectedFpga == null) return;
-        var pcfPath = Path.Combine(_project.FullPath, "project.pcf");
-            
-        var pcf = "";
-        if (File.Exists(pcfPath))
-        {
-            var existingPcf = File.ReadAllText(pcfPath);
-            existingPcf = RemoveLine(existingPcf, "set_io");
-            pcf = existingPcf.Trim();
-        }
-
-        foreach (var conn in SelectedFpga.Pins.Where(x => x.Value.Connection is not null))
-        {
-            pcf += $"\nset_io {conn.Value.Connection!.Name} {conn.Value.Name}";
-        }
-        pcf = pcf.Trim() + '\n';
-            
-        File.WriteAllText(pcfPath, pcf);
     }
 }

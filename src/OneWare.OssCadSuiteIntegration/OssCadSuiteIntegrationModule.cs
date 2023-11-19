@@ -23,8 +23,8 @@ public class OssCadSuiteIntegrationModule : IModule
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
         var yosysService = containerProvider.Resolve<YosysService>();
-        
-        containerProvider.Resolve<FpgaService>().FpgaToolchains.Add(new YosysToolchain());
+
+        containerProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
         
         settingsService.RegisterTitledPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path", 
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);

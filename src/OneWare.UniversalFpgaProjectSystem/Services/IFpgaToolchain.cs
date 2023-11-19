@@ -1,12 +1,14 @@
-﻿namespace OneWare.UniversalFpgaProjectSystem.Services;
+﻿using OneWare.UniversalFpgaProjectSystem.Models;
+
+namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface IFpgaToolchain
 {
     public string Name { get; }
 
-    public void LoadConnections();
+    public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga);
 
-    public void SaveConnections();
+    public void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga);
 
     public void StartCompile();
 }

@@ -6,6 +6,7 @@ using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
 using Prism.Ioc;
@@ -17,13 +18,15 @@ public class UniversalFpgaProjectManager : IProjectManager
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
+    private readonly FpgaService _fpgaService;
 
     public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService,
-        IWindowService windowService)
+        IWindowService windowService, FpgaService fpgaService)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _windowService = windowService;
+        _fpgaService = fpgaService;
 
         _projectExplorerService.RegisterConstructContextMenu(ConstructContextMenu);
     }
@@ -49,6 +52,18 @@ public class UniversalFpgaProjectManager : IProjectManager
         if (top != null && root.Search(top.ToString()) is { } entity)
         {
             root.TopEntity = entity;
+        }
+        
+        var toolchain = root.Properties["Toolchain"];
+        if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain.ToString()) is {} tc)
+        {
+            root.Toolchain = tc;
+        }
+        
+        var loader = root.Properties["Loader"];
+        if (loader != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loader.ToString()) is {} l)
+        {
+            root.Loader = l;
         }
 
         return root;

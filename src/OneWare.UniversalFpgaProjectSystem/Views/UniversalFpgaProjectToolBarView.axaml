@@ -22,7 +22,7 @@
         <Button>
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                    <ItemsControl ItemsSource="{Binding FpgaService.FpgaToolchains}">
+                    <ItemsControl ItemsSource="{Binding FpgaService.Toolchains}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="services:IFpgaToolchain">
                             <MenuItem Header="{Binding Name}" 
@@ -64,7 +64,7 @@
         <Button>
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                    <ItemsControl ItemsSource="{Binding FpgaService.FpgaLoaders}">
+                    <ItemsControl ItemsSource="{Binding FpgaService.Loaders}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="services:IFpgaLoader">
                                 <MenuItem Header="{Binding Name}" 

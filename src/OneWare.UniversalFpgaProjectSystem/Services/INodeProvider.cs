@@ -1,9 +1,9 @@
 ﻿using OneWare.Shared.Models;
-using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface INodeProvider
 {
-    public IEnumerable<NodeModel> ExtractNodes(IProjectFile file);
+    public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file);
 }

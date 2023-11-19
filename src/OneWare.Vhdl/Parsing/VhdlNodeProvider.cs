@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using OneWare.Shared.Models;
 using OneWare.UniversalFpgaProjectSystem;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
@@ -8,13 +9,13 @@ namespace OneWare.Vhdl.Parsing;
 
 public class VhdlNodeProvider : INodeProvider
 {
-    public IEnumerable<NodeModel> ExtractNodes(IProjectFile file)
+    public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
     {
         var fileLines = File.ReadAllLines(file.FullPath);
         return ExtractEntityPorts(fileLines);
     }
 
-    public static IEnumerable<NodeModel> ExtractEntityPorts(IEnumerable<string> vhdlLines)
+    public static IEnumerable<FpgaNode> ExtractEntityPorts(IEnumerable<string> vhdlLines)
     {
         bool inPortSection = false;
         var portPattern = @"\b(\w+)\s+:\s+(in|out|inout|buffer)\s+(\w+)(?:\((\d+)\s+downto\s+(\d+)\))?(?:\s+:=\s+[^;]+)?";
@@ -43,13 +44,13 @@ public class VhdlNodeProvider : INodeProvider
 
                         for (var i = upper; i >= lower; i--)
                         {
-                            yield return new NodeModel($"{portName}[{i}]", direction); //$"{portName}({i}) : {direction} {portType}";
+                            yield return new FpgaNode($"{portName}[{i}]", direction); //$"{portName}({i}) : {direction} {portType}";
                         }
                     }
                     else
                     {
                         // Single port
-                        yield return new NodeModel(portName, direction); // $"{portName} : {direction} {portType}";
+                        yield return new FpgaNode(portName, direction); // $"{portName} : {direction} {portType}";
                     }
                 }
             }

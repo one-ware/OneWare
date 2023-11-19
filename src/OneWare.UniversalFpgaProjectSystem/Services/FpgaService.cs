@@ -1,26 +1,34 @@
 ﻿using System.Collections.ObjectModel;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class FpgaService
 {
-    private ObservableCollection<Type> FpgaModels { get; } = new();
-
-    public ObservableCollection<IFpgaToolchain> FpgaToolchains { get; } = new();
+    public Dictionary<IFpga, Type> CustomFpgaModels { get; } = new();
+    public ObservableCollection<IFpga> Fpgas { get; } = new();
+    public ObservableCollection<IFpgaToolchain> Toolchains { get; } = new();
+    public ObservableCollection<IFpgaLoader> Loaders { get; } = new();
     
-    public ObservableCollection<IFpgaLoader> FpgaLoaders { get; } = new();
-    
-    public void AddFpga<T>() where T : FpgaModelBase
+    public void RegisterFpga(IFpga fpga)
     {
-        FpgaModels.Add(typeof(T));
+        Fpgas.Add(fpga);
     }
-
-    public IEnumerable<FpgaModelBase> GetFpgas()
+    
+    public void RegisterCustomFpgaModel<T>(IFpga fpga) where T : FpgaModel
     {
-        foreach (var t in FpgaModels)
-        {
-            yield return Activator.CreateInstance(t) as FpgaModelBase;
-        }
+        CustomFpgaModels.Add(fpga, typeof(T));
+    }
+    
+    public void RegisterToolchain<T>() where T : IFpgaToolchain
+    {
+        Toolchains.Add(ContainerLocator.Container.Resolve<T>());
+    }
+    
+    public void RegisterLoader<T>() where T : IFpgaLoader
+    {
+        Loaders.Add(ContainerLocator.Container.Resolve<T>());
     }
 }

@@ -16,7 +16,7 @@
                          x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <Interaction.Behaviors>
-        <behaviours:CommandOnEnterBehaviour Command="{Binding SelectedFpga.ConnectCommand, FallbackValue={x:Null}}" />
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
     </Interaction.Behaviors>
 
     <Grid RowDefinitions="*, Auto">
@@ -25,16 +25,16 @@
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="5">
                     <TextBlock Text="Select FPGA:" VerticalAlignment="Center" />
                     <ComboBox ItemsSource="{Binding FpgaModels}" MinWidth="150"
-                              SelectedItem="{Binding SelectedFpga, Mode=TwoWay}">
+                              SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Fpga.Name}" Margin="5 0" VerticalAlignment="Center" />
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
 
-                <DockPanel Grid.Row="1" DataContext="{Binding SelectedFpga}">
+                <DockPanel Grid.Row="1" DataContext="{Binding SelectedFpgaModel}">
 
                     <ContentControl Padding="0 10" DockPanel.Dock="Top"
                                     IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
@@ -54,16 +54,16 @@
                                           CanUserReorderColumns="False" CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"
                                           RowBackground="Transparent" IsReadOnly="True"
-                                          ItemsSource="{Binding VisiblePins}"
-                                          SelectedItem="{Binding SelectedPin}"
+                                          ItemsSource="{Binding VisiblePinModels}"
+                                          SelectedItem="{Binding SelectedPinModel}"
                                           BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Name}" />
+                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Pin.Name}" />
                                         <DataGridTextColumn Header="Description" Width="*"
-                                                            Binding="{Binding Description}" />
+                                                            Binding="{Binding Pin.Description}" />
                                         <DataGridTextColumn Header="Node" Width="*"
-                                                            Binding="{Binding Connection.Name, FallbackValue={}}" />
+                                                            Binding="{Binding Connection.FpgaNode.Name, FallbackValue={}}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>
@@ -102,15 +102,15 @@
                                           CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"
                                           RowBackground="Transparent" IsReadOnly="True"
-                                          ItemsSource="{Binding VisibleNodes}"
-                                          SelectedItem="{Binding SelectedNode}"
+                                          ItemsSource="{Binding VisibleNodeModels}"
+                                          SelectedItem="{Binding SelectedNodeModel}"
                                           BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Name}" />
-                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding Direction}" />
+                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding FpgaNode.Name}" />
+                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding FpgaNode.Direction}" />
                                         <DataGridTextColumn Header="Pin" Width="*"
-                                                            Binding="{Binding Connection.Name, FallbackValue={}}" />
+                                                            Binding="{Binding Connection.Pin.Name, FallbackValue={}}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>

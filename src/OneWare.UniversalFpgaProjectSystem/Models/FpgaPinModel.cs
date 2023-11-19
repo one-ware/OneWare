@@ -1,19 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaPinModel : ObservableObject
 {
-    public FpgaModelBase Parent { get; }
-    public string Name { get; }
-
-    private string _description;
-    public string Description
-    {
-        get => _description;
-        set => SetProperty(ref _description, value);
-    }
-
+    public FpgaPin Pin { get; }
+    public FpgaModel Parent { get; }
+    
     private string _toolTipText;
     public string ToolTipText
     {
@@ -21,23 +15,22 @@ public class FpgaPinModel : ObservableObject
         set => SetProperty(ref _toolTipText, value);
     }
     
-    private NodeModel? _connection;
-    public NodeModel? Connection
+    private FpgaNodeModel? _connection;
+    public FpgaNodeModel? Connection
     {
         get => _connection;
         set
         {
             this.SetProperty(ref _connection, value);
-            if (_connection == null) ToolTipText = "Click to connect " + Name;
-            else ToolTipText = Name + " is connected with " + _connection.Name;
+            if (_connection == null) ToolTipText = "Click to connect " + Pin.Name;
+            else ToolTipText = Pin.Name + " is connected with " + _connection.FpgaNode.Name;
         }
     }
     
-    public FpgaPinModel(string name, string description, FpgaModelBase parent)
+    public FpgaPinModel(FpgaPin pin, FpgaModel parent)
     {
-        Name = name;
-        _description = description;
-        _toolTipText = "Click to connect " + Name;
+        Pin = pin;
+        _toolTipText = "Click to connect " + Pin.Name;
         Parent = parent;
     }
 }

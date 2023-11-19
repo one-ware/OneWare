@@ -34,6 +34,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         {
             if (project.Toolchain != toolchain) project.Toolchain = toolchain;
             else project.Toolchain = null;
+            _ = ProjectExplorerService.SaveProjectAsync(project);
         }
     }
     
@@ -43,6 +44,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         {
             if (project.Loader != loader) project.Loader = loader;
             else project.Loader = null;
+            _ = ProjectExplorerService.SaveProjectAsync(project);
         }
     }
     
