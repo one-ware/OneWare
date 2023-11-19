@@ -22,7 +22,6 @@ public class UniversalFpgaProjectSystemModule : IModule
     {
         containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
         containerRegistry.RegisterSingleton<FpgaService>();
-        containerRegistry.RegisterSingleton<NodeProviderService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

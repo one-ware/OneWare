@@ -66,8 +66,4 @@
         <Setter Property="Fill" Value="{DynamicResource ThemeAccentBrush4}" />
     </Style>
     
-    <Style Selector="DataGridRow:selected">
-        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-    </Style>
-    
 </Styles>

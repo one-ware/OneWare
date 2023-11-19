@@ -20,14 +20,30 @@ public class FpgaModel : ObservableObject
     public FpgaPinModel? SelectedPinModel
     {
         get => _selectedPinModel;
-        set => SetProperty(ref _selectedPinModel, value);
+        set
+        {
+            SetProperty(ref _selectedPinModel, value);
+            LastSelection = value;
+        }
     }
 
     private FpgaNodeModel? _selectedNodeModel;
     public FpgaNodeModel? SelectedNodeModel
     {
         get => _selectedNodeModel;
-        set => SetProperty(ref _selectedNodeModel, value);
+        set
+        {
+            SetProperty(ref _selectedNodeModel, value);
+            LastSelection = value;
+        }
+    }
+
+    private object? _lastSelection;
+
+    public object? LastSelection
+    {
+        get => _lastSelection;
+        set => SetProperty(ref _lastSelection, value);
     }
 
     public RelayCommand ConnectCommand { get; }
@@ -104,7 +120,7 @@ public class FpgaModel : ObservableObject
             return;
         }
 
-        SelectedNodeModel = VisibleNodeModels.FirstOrDefault(x => x.FpgaNode.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        SelectedNodeModel = VisibleNodeModels.FirstOrDefault(x => x.Node.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
     public void Connect(FpgaPinModel pin, FpgaNodeModel fpgaNode)

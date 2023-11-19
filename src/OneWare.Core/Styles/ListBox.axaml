@@ -4,7 +4,7 @@
     <Design.PreviewWith>
         <Border Padding="10" Background="Gray">
             <ListBox Height="400" Width="400">
-                <ListBoxItem Content="Test" />
+                <ListBoxItem Content="Test" IsSelected="True" />
                 <ListBoxItem Content="Test2" />
                 <ListBoxItem Content="Test3" />
             </ListBox>

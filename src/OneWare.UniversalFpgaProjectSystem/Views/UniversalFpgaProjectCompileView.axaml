@@ -6,6 +6,7 @@
                          xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
                          xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
                          xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                         xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          PrefHeight="750" PrefWidth="900" Padding="4"
                          WindowBackground="{DynamicResource ThemeBackgroundBrush}"
@@ -40,7 +41,7 @@
                                     IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
                                     Content="{Binding }" />
 
-                    <Grid ColumnDefinitions="*, 70, *" RowDefinitions="20, *" DockPanel.Dock="Top">
+                    <Grid ColumnDefinitions="*, 90, *" RowDefinitions="20, *" DockPanel.Dock="Top">
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Pins:"></TextBlock>
                         <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
@@ -62,8 +63,27 @@
                                         <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Pin.Name}" />
                                         <DataGridTextColumn Header="Description" Width="*"
                                                             Binding="{Binding Pin.Description}" />
-                                        <DataGridTextColumn Header="Node" Width="*"
-                                                            Binding="{Binding Connection.FpgaNode.Name, FallbackValue={}}" />
+                                        <DataGridTemplateColumn Header="Node" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right"
+                                                                Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
+                                                                CommandParameter="{Binding }"
+                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                Height="20" Width="20"
+                                                                ToolTip.Tip="Disconnect">
+                                                            <Image Source="{DynamicResource MaterialDesign.Close}" Height="10"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                        <TextBlock DockPanel.Dock="Left" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Padding="5 0" Text="{Binding Connection.Node.Name, FallbackValue={}}">
+                                                        </TextBlock>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>
@@ -79,6 +99,27 @@
                                     <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Button>
+                                
+                                <!--
+                                <ContentControl Content="{Binding LastSelection}" HorizontalAlignment="Center">
+                                    <ContentControl.DataTemplates>
+                                        <DataTemplate DataType="models:FpgaPinModel">
+                                            <Grid ColumnDefinitions="*, 8, *">
+                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Pin.Name}"/>
+                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Connection.Node.Name, FallbackValue={x:Null}}"></TextBlock>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate DataType="models:FpgaNodeModel">
+                                            <Grid ColumnDefinitions="*, 8, *">
+                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Connection.Pin.Name, FallbackValue={x:Null}}"></TextBlock>
+                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Node.Name}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ContentControl.DataTemplates>
+                                </ContentControl>
+                                
                                 <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40"
                                         ToolTip.Tip="Disconnect" Width="40" CornerRadius="5">
                                     <Button.RenderTransform>
@@ -87,6 +128,7 @@
                                     <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Button>
+                                -->
                             </StackPanel>
                         </Border>
 
@@ -107,10 +149,29 @@
                                           BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding FpgaNode.Name}" />
-                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding FpgaNode.Direction}" />
-                                        <DataGridTextColumn Header="Pin" Width="*"
-                                                            Binding="{Binding Connection.Pin.Name, FallbackValue={}}" />
+                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Node.Name}" />
+                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding Node.Direction}" />
+                                        <DataGridTemplateColumn Header="Pin" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right"
+                                                                Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
+                                                                CommandParameter="{Binding Connection}"
+                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                Height="20" Width="20"
+                                                                ToolTip.Tip="Disconnect">
+                                                            <Image Source="{DynamicResource MaterialDesign.Close}" Height="10"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                        <TextBlock DockPanel.Dock="Left" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Padding="5 0" Text="{Binding Connection.Pin.Name, FallbackValue={}}">
+                                                        </TextBlock>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>

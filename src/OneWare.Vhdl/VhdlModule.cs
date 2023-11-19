@@ -20,6 +20,6 @@ public class VhdlModule : IModule
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl", "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
         
-        containerProvider.Resolve<NodeProviderService>().RegisterNodeProvider(new VhdlNodeProvider(), ".vhd", ".vhdl");
+        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
     }
 }

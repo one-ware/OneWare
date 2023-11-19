@@ -7,7 +7,6 @@ using OneWare.Shared.Enums;
 using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
-using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
@@ -57,7 +56,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _hideExtensions, value);
     }
     
-    public UniversalFpgaProjectCompileViewModel(IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService, NodeProviderService nodeProviderService, UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectCompileViewModel(IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
@@ -80,7 +79,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         
         if (_project.TopEntity is IProjectFile file)
         {
-            var provider = nodeProviderService.GetNodeProvider(file.Extension);
+            var provider = fpgaService.GetNodeProvider(file.Extension);
             if (provider is not null)
             {
                 var nodes = provider.ExtractNodes(file).ToArray();

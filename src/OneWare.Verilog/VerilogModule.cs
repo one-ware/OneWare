@@ -1,4 +1,6 @@
 ﻿using OneWare.Shared.Services;
+using OneWare.UniversalFpgaProjectSystem.Services;
+using OneWare.Verilog.Parsing;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -16,5 +18,6 @@ public class VerilogModule : IModule
         containerProvider.Resolve<IErrorService>().RegisterErrorSource("Verible");
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog", "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v", ".sv");
         containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVerilog),true, ".v", ".sv");
+        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VerilogNodeProvider>(".v", ".sv");
     }
 }
