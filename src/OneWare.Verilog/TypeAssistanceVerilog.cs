@@ -25,12 +25,11 @@ namespace OneWare.Verilog
             var items = new List<CompletionData>();
 
             var text = Editor.CurrentDocument.Text;
-            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text));
+            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text).Select(x => x.ToString()).Distinct());
             
             foreach (var word in usedWords)
             {
-                if(word.ToString() is { } s)
-                    items.Add(new CompletionData(s, s, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
+                items.Add(new CompletionData(word, word, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
             }
 
             return items;
@@ -41,7 +40,7 @@ namespace OneWare.Verilog
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {
                 var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
-                AutoIndent(line, line);
+                //AutoIndent(line, line);
             }
         }
     }

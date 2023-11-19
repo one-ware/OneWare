@@ -27,7 +27,6 @@ namespace OneWare.Vhdl
             var items = new List<CompletionData>();
 
             var text = Editor.CurrentDocument.Text;
-            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text).Select(x => x.ToString()).Distinct());
 
             items.Add(new CompletionData("library IEEE;\nuse IEEE.std_logic_1164.all;\nuse IEEE.numeric_std.all; ",
                 "ieee", "IEEE Standard Packages",
@@ -38,6 +37,8 @@ namespace OneWare.Vhdl
                 " is\n    port(\n        [I/Os]$0\n    );\nend entity " +
                 Path.GetFileNameWithoutExtension(Editor.CurrentFile.Header) + ";", "entity", "Entity Declaration",
                 TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Class], 0, CodeBox.CaretOffset));
+            
+            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text).Select(x => x.ToString()).Distinct());
             
             foreach (var word in usedWords)
             {
