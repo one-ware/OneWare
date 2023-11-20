@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -97,8 +98,10 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
 
     public override bool IsPathIncluded(string relativePath)
     {
-        var includes = Properties["Include"].Deserialize<string[]>();
-        var excludes = Properties["Exclude"].Deserialize<string[]>();
+        Properties.TryGetPropertyValue("Include", out var includeNode);
+        var includes = includeNode?.AsArray().GetValues<string>();
+        Properties.TryGetPropertyValue("Exclude", out var excludeNode);
+        var excludes = excludeNode?.AsArray().GetValues<string>();
 
         if (includes == null && excludes == null) return true;
         

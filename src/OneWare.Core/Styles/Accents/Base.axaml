@@ -32,23 +32,23 @@
     <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
     <SolidColorBrush
         x:Key="NotificationCardBackgroundBrush"
-        Opacity="0.75"
+        Opacity="0.9"
         Color="#444444" />
     <SolidColorBrush
         x:Key="NotificationCardInformationBackgroundBrush"
-        Opacity="0.75"
+        Opacity="0.9"
         Color="#007ACC" />
     <SolidColorBrush
         x:Key="NotificationCardSuccessBackgroundBrush"
-        Opacity="0.75"
+        Opacity="0.9"
         Color="#1F9E45" />
     <SolidColorBrush
         x:Key="NotificationCardWarningBackgroundBrush"
-        Opacity="0.75"
+        Opacity="0.9"
         Color="#FDB328" />
     <SolidColorBrush
         x:Key="NotificationCardErrorBackgroundBrush"
-        Opacity="0.75"
+        Opacity="0.9"
         Color="#BD202C" />
     <SolidColorBrush x:Key="ThemeControlTransparentBrush" Color="Transparent" />
     <SolidColorBrush

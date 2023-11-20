@@ -7,13 +7,6 @@ namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 
 public abstract class FpgaBase : IFpga
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true
-    };
-
     public string Name { get; private set; } = "Unknown";
 
     public IList<FpgaPin> Pins { get; } = new List<FpgaPin>();
@@ -22,7 +15,7 @@ public abstract class FpgaBase : IFpga
     {
         var stream = AssetLoader.Open(new Uri(path));
         
-        var properties = JsonSerializer.Deserialize<JsonObject>(stream, SerializerOptions);
+        var properties = JsonNode.Parse(stream);
         
         Name = properties?["Name"]?.ToString() ?? "Unknown";
 

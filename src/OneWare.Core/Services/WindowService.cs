@@ -185,7 +185,10 @@ public class WindowService : IWindowService
 
     public void ShowNotification(string title, string message, NotificationType type)
     {
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
+        Dispatcher.UIThread.Post(() =>
+        {
+            ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
+        });
     }
 
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)

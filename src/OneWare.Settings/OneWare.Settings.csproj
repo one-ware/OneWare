@@ -8,26 +8,4 @@
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Views\SettingTypes\CheckBoxSettingView.axaml.cs">
-        <DependentUpon>CheckBoxSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\SettingTypes\ColorPickerSettingView.axaml.cs">
-        <DependentUpon>ColorPickerSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\SettingTypes\ComboBoxSettingView.axaml.cs">
-        <DependentUpon>ComboBoxSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\SettingTypes\PathSettingView.axaml.cs">
-        <DependentUpon>PathSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\SettingTypes\TextBoxSettingView.axaml.cs">
-        <DependentUpon>TextBoxSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
 </Project>
