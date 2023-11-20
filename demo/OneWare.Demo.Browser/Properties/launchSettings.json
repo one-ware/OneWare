@@ -3,6 +3,7 @@
     "OneWare.Demo.Browser": {
       "commandName": "Project",
       "launchBrowser": true,
+      "workingDirectory": "$(ProjectDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

@@ -15,11 +15,10 @@ namespace OneWare.Vcd.Viewer.ViewModels;
 
 public class VcdViewModel : ExtendedDocument, IStreamableDocument
 {
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
-    private bool _waitForLiveStream = false;
-    private bool _isLiveExecution = false;
+    private bool _waitForLiveStream;
+    private bool _isLiveExecution;
     
     private CancellationTokenSource? _cancellationTokenSource;
     
@@ -57,8 +56,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         : base(fullPath, projectExplorerService, dockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
-
-        _projectExplorerService = projectExplorerService;
+        
         _settingsService = settingsService;
         
         Title = $"Loading {Path.GetFileName(fullPath)}";
@@ -112,7 +110,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private async Task<bool> LoadAsync()
     {
         IsLoading = true;
-        _cancellationTokenSource?.Cancel();
+        if(_cancellationTokenSource != null) await _cancellationTokenSource.CancelAsync();
         _cancellationTokenSource = new CancellationTokenSource();
         Scopes.Clear();
 
@@ -125,7 +123,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             if (_cancellationTokenSource.IsCancellationRequested) return false;
             
             _vcdFile = VcdParser.ParseVcdDefinition(FullPath);
-            Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Any() || x.Scopes.Any())
+            Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Count != 0 || x.Scopes.Count != 0)
                 .Select(x => new VcdScopeModel(x)));
             
             var lastTime = !_isLiveExecution ? await VcdParser.TryFindLastTime(FullPath) : 0;
