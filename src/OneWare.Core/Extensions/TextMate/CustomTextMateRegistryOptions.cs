@@ -33,7 +33,7 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
     public IRawGrammar GetGrammar(string scopeName)
     {
         //For Browser Textmate is not working as of now
-        if (RuntimeInformation.ProcessArchitecture == Architecture.Wasm) return null!;
+        //if (RuntimeInformation.ProcessArchitecture == Architecture.Wasm) return null!;
             
         var g = _availableLanguages.FirstOrDefault(x => x.Id == scopeName.Split('.').Last());
 
