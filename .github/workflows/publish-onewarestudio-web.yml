@@ -28,5 +28,5 @@ jobs:
           server: w01e537f.kasserver.com
           username: w01e537f
           password: ${{ secrets.ONEWARE_STUDIO_FTP }}
-          local-dir: ./demo/OneWare.Demo.Browser/bin/Release/net7.0/browser-wasm/AppBundle/
+          local-dir: ./demo/OneWare.Demo.Browser/bin/Release/net8.0/browser-wasm/AppBundle/
           server-dir: demo.oneware.studio/

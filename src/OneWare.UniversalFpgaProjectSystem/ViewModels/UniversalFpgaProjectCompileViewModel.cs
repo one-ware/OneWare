@@ -102,7 +102,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     public override void Close(FlexibleWindow window)
     {
         if(!IsDirty) window.Close();
-        _ = SafeQuitAsync(window);
+        else _ = SafeQuitAsync(window);
     }
     
     private async Task SafeQuitAsync(FlexibleWindow window)
