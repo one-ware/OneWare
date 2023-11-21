@@ -38,7 +38,7 @@ public class WebDemoApp : DemoApp
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VhdlTest.vhd"), Path.Combine(testProj, "VHDL", "VhdlTest.vhd"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "Verilog", "VerilogTest.v"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VCD", "VcdTest.vcd"));
-            CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/out.svg"), Path.Combine(testProj, "Net", "test.svg"));
+            //CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Demo/Assets/DemoFiles/out.svg"), Path.Combine(testProj, "Net", "test.svg"));
 
             var dummy = await Container.Resolve<UniversalFpgaProjectManager>().LoadProjectAsync(Path.Combine(testProj, "DemoProject.fpgaproj"));
 

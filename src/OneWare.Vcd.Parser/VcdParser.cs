@@ -41,7 +41,7 @@ public static class VcdParser
                 await ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, 
                     new Progress<int>(x => progress.Report((0, x))), 
                     cancellationToken);
-                if(!cancellationToken.IsCancellationRequested) await Task.Delay(1, cancellationToken);
+                if(!cancellationToken.IsCancellationRequested && RuntimeInformation.OSArchitecture is not Architecture.Wasm) await Task.Delay(1, cancellationToken);
                 reader.Dispose();
             }, cancellationToken);
             return;
