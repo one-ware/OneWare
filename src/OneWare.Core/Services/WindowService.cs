@@ -106,11 +106,8 @@ public class WindowService : IWindowService
 
     public void Show(FlexibleWindow window, Window? owner = null)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime ? null : ContainerLocator.Container.Resolve<MainWindow>();
-            window.Show(owner);
-        });
+        owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime ? null : ContainerLocator.Container.Resolve<MainWindow>();
+        window.Show(owner);
     }
 
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner)
@@ -181,10 +178,7 @@ public class WindowService : IWindowService
 
     public void ShowNotification(string title, string message, NotificationType type)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
-        });
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
     }
 
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)
