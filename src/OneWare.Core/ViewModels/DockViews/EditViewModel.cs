@@ -325,7 +325,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 await using var stream = File.OpenRead(CurrentFile.FullPath);
                 using var reader = new StreamReader(stream);
                 
-                var doc = await Task.Run(() =>
+                var doc = await PlatformHelper.RunTask(() =>
                 {
                     var d = new TextDocument(reader.ReadToEnd());
                     d.SetOwnerThread(null);

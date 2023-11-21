@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Parser.Extensions;
@@ -31,7 +32,7 @@ public static class VcdParser
         //Use thread safe variant
         if (threads == 1) 
         {
-            await Task.Run(async () =>
+            async Task ReadSignalsLocal()
             {
                 await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
                 stream.Seek(vcdFile.DefinitionParseEndPosition+1, SeekOrigin.Begin);
@@ -41,7 +42,11 @@ public static class VcdParser
                     cancellationToken);
                 if(!cancellationToken.IsCancellationRequested) await Task.Delay(1, cancellationToken);
                 reader.Dispose();
-            });
+            }
+
+            if (RuntimeInformation.OSArchitecture is Architecture.Wasm) _ = ReadSignalsLocal();
+            else await Task.Run(() => _ = ReadSignalsLocal());
+            
             return;
         }
         
@@ -205,7 +210,7 @@ public static class VcdParser
         stream.Seek(-backOffset, SeekOrigin.End);
         using var reader = new StreamReader(stream);
 
-        var text = await reader.ReadToEndAsync();
+        var text = RuntimeInformation.OSArchitecture is Architecture.Wasm ? reader.ReadToEnd() : await reader.ReadToEndAsync();
 
         var lines = text.Split('\n');
         var lastTime = lines.LastOrDefault(x => x.StartsWith('#'));
