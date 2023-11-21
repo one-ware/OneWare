@@ -6,6 +6,7 @@ using OneWare.Shared.Controls;
 using OneWare.Shared.Services;
 using OneWare.Shared.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -13,6 +14,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 {
     public IPaths Paths { get; }
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly FpgaService _fpgaService;
     private readonly ILogger _logger;
     private readonly UniversalFpgaProjectManager _manager;
     
@@ -20,15 +22,18 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
     private readonly ComboBoxSetting _templateSetting;
     private readonly FolderPathSetting _folderPathSetting;
     private readonly TitledSetting _createNewFolderSetting;
+    private readonly ComboBoxSetting _toolchainSetting;
+    private readonly ComboBoxSetting _loaderSetting;
 
     public SettingsCollectionViewModel SettingsCollection { get; } = new("Project Properties")
     {
         ShowTitle = false
     };
 
-    public UniversalFpgaProjectCreatorViewModel(IPaths paths, IProjectExplorerService projectExplorerService, ILogger logger, UniversalFpgaProjectManager manager)
+    public UniversalFpgaProjectCreatorViewModel(IPaths paths, IProjectExplorerService projectExplorerService, ILogger logger, FpgaService fpgaService, UniversalFpgaProjectManager manager)
     {
         _projectExplorerService = projectExplorerService;
+        _fpgaService = fpgaService;
         _logger = logger;
         _manager = manager;
         Paths = paths;
@@ -43,11 +48,23 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
         _createNewFolderSetting = new TitledSetting("Create new Folder",
             "Set if a new folder should be created in the selected location", true);
+
+        _toolchainSetting = new ComboBoxSetting("Toolchain",
+            "Set the toolchain to use for the project (can be changed later)", fpgaService.Toolchains.FirstOrDefault()?.Name ?? "Unset",
+            new[] { "Unset" }.Concat(fpgaService.Toolchains
+                .Select(x => x.Name)));
+        
+        _loaderSetting = new ComboBoxSetting("Loader",
+            "Set the loader to use for the project (can be changed later)", fpgaService.Loaders.FirstOrDefault()?.Name ?? "Unset",
+            new[] { "Unset" }.Concat(fpgaService.Loaders
+                .Select(x => x.Name)));
         
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_nameSetting));
         SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_templateSetting));
         SettingsCollection.SettingModels.Add(new PathSettingViewModel(_folderPathSetting));
         SettingsCollection.SettingModels.Add(new CheckBoxSettingViewModel(_createNewFolderSetting));
+        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_toolchainSetting));
+        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_loaderSetting));
     }
 
     public async Task SaveAsync(FlexibleWindow window)
@@ -82,9 +99,15 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             var defaultProperties = new JsonObject()
             {
                 ["Include"] = new JsonArray("*.vhd", "*.vhdl", "*.v"),
-                ["Exclude"] = new JsonArray("bin"),
+                ["Exclude"] = new JsonArray("build"),
             };
             var root = new UniversalFpgaProjectRoot(projectFile, defaultProperties);
+
+            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is {} tc) 
+                root.Toolchain = tc;
+
+            if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is {} loader) 
+                root.Loader = loader;
 
             await _manager.SaveProjectAsync(root);
             

@@ -9,7 +9,7 @@
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="30"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerMainWindowToolBarExtension" x:DataType="viewModels:ProjectExplorerViewModel">
     
-    <ComboBox Width="150" IsEnabled="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Idle}}"
+    <ComboBox Width="200" IsEnabled="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Idle}}"
               BorderThickness="0"
               ItemsSource="{Binding Items}"
               SelectedItem="{Binding ActiveProject}">

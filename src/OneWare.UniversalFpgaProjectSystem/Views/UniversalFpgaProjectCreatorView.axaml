@@ -18,14 +18,16 @@
         <behaviours:CommandOnEnterBehaviour Command="{Binding SaveAsync}"
                                             CommandParameter="{Binding #UniversalFpgaProjectCreator}" />
     </Interaction.Behaviors>
-    <Grid RowDefinitions="*, Auto">
-        <ContentControl Padding="4" Content="{Binding SettingsCollection}"/>
-        <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
             <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
                     CommandParameter="{Binding #UniversalFpgaProjectCreator}">
                 <TextBlock Text="Save" />
             </Button>
         </StackPanel>
-    </Grid>
+        <ScrollViewer DockPanel.Dock="Top" >
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}"/>
+        </ScrollViewer>
+    </DockPanel>
 </controls:FlexibleWindow>

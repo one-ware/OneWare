@@ -345,7 +345,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return result;
     }
 
-    public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true)
+    public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true, bool setActive = true)
     {
         var project = await manager.LoadProjectAsync(path);
 
@@ -354,7 +354,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (expand) project.IsExpanded = expand;
 
         Insert(project);
-        ActiveProject = project;
+        
+        if(setActive) ActiveProject = project;
 
         return project;
     }
@@ -787,10 +788,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             var roots = Items.Where(x => x is IProjectRoot).Cast<IProjectRoot>();
             var serialization = roots
-                .Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath, x.IsExpanded)).ToArray();
+                .Select(x => new ProjectSerialization(x.ProjectTypeId, x.ProjectPath, x.IsExpanded, x.IsActive)).ToArray();
             await using var stream = File.OpenWrite(_lastProjectsFile);
             stream.SetLength(0);
-            await JsonSerializer.SerializeAsync(stream, serialization);
+            await JsonSerializer.SerializeAsync(stream, serialization, new JsonSerializerOptions()
+            {
+                WriteIndented = true
+            });
         }
         catch (Exception e)
         {
@@ -814,7 +818,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 var manager = _projectManagerService.GetManager(l.ProjectType);
                 if (manager != null)
                 {
-                    loadProjectTasks.Add(LoadProjectAsync(l.Path, manager, l.IsExpanded));
+                    loadProjectTasks.Add(LoadProjectAsync(l.Path, manager, l.IsExpanded, l.IsActive));
                 }
                 else
                     ContainerLocator.Container.Resolve<ILogger>()?
@@ -840,12 +844,15 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         public string ProjectType { get; set; }
         public string Path { get; set; }
         public bool IsExpanded { get; set; }
+        
+        public bool IsActive { get; set; }
 
-        public ProjectSerialization(string projectType, string path, bool isExpanded)
+        public ProjectSerialization(string projectType, string path, bool isExpanded, bool isActive)
         {
             ProjectType = projectType;
             Path = path;
             IsExpanded = isExpanded;
+            IsActive = isActive;
         }
     }
 
