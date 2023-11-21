@@ -126,15 +126,6 @@ namespace OneWare.Shared.Helpers
                 ContainerLocator.Container.Resolve<ILogger>().Error("Can't open " + path + " in explorer. " + e, e, true, true);
             }
         }
-
-        public static Task<TResult> RunTask<TResult>(Func<TResult> function)
-        {
-            if (RuntimeInformation.OSArchitecture is Architecture.Wasm)
-            {
-                return Task.FromResult(function.Invoke());
-            }
-            else return Task.Run(function);
-        }
         
         #region File Management
         

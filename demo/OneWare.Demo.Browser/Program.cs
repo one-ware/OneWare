@@ -13,10 +13,14 @@ internal partial class Program
 {
     public static async Task Main(string[] args)
     {
+#if  DEBUG
         Trace.Listeners.Add(new ConsoleTraceListener());
+#endif
 
         await BuildAvaloniaApp()
+            #if DEBUG
             .LogToTrace()
+            #endif
             .StartBrowserAppAsync("out");
     }
 

@@ -10,13 +10,12 @@
         <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
         <OutputType>Exe</OutputType>
         <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
-        <!-- Multithreading not working at the moment (November 2023)
+        <!--Enable Multithread-->
         <WasmEnableThreads>true</WasmEnableThreads>
-        <MonoWasmRuntimeConfiguration>threads-release</MonoWasmRuntimeConfiguration>
-        -->
+		<_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
+		<_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
         <!--
         <WasmBuildNative>true</WasmBuildNative>
-        <EmccFlags>-sVERBOSE -sERROR_ON_UNDEFINED_SYMBOLS=0</EmccFlags>
         <EmccInitialHeapSize>32mb</EmccInitialHeapSize>
         -->
     </PropertyGroup>
@@ -27,8 +26,6 @@
         <TrimMode>full</TrimMode>
         <WasmBuildNative>true</WasmBuildNative>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
-        <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
     </PropertyGroup>
 
     <ItemGroup>
@@ -40,6 +37,7 @@
     </ItemGroup>
     
     <ItemGroup>
+      <PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0" />
       <PackageReference Include="TextMateSharp.Wasm" Version="1.0.56" />
     </ItemGroup>
 </Project>

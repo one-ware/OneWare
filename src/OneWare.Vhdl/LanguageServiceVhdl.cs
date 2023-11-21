@@ -25,7 +25,7 @@ namespace OneWare.Vhdl
             {
                 PlatformId.WinX64 => $"{assemblyPath}/native_tools/win-x64/rusthdl/vhdl_ls-x86_64-pc-windows-msvc/bin/vhdl_ls.exe",
                 PlatformId.LinuxX64 => $"{assemblyPath}/native_tools/linux-x64/rusthdl/vhdl_ls-x86_64-unknown-linux-musl/bin/vhdl_ls",
-                PlatformId.Wasm => "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app",
+                //PlatformId.Wasm => "wss://oneware-cloud-ls-vhdl-qtuhvc77rq-ew.a.run.app",
                 _ => null
             };
         }
