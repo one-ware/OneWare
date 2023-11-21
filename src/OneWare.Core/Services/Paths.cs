@@ -23,7 +23,7 @@ public class Paths : IPaths
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
-    public string ChangelogUrl => "https://raw.githubusercontent.com/VHDPlus/vhdplus-website/master/docs/ide/changelog.md";
+    public string ChangelogUrl => "https://raw.githubusercontent.com/ProtopSolutions/OneWareStudioWebsite/main/docs/studio/changelog.md";
 
     private FileStream? _fileStreamLock;
     

@@ -37,7 +37,7 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
         using var client = new HttpClient();
         using (var response = await client.GetAsync(_changelogUrl))
         {
-            using (HttpContent content = response.Content)
+            using (var content = response.Content)
             {
                 var result = await content.ReadAsStringAsync();
 

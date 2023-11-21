@@ -196,7 +196,7 @@
 
                 <StackPanel Margin="0, 10, 0, 0" Orientation="Horizontal">
                     <TextBlock Text="Learn how to use the Team Explorer " />
-                    <controls:HyperLink Url="https://vhdplus.com/docs/ide/teamexplorer" Label="here"
+                    <controls:HyperLink Url="https://oneware.studio/docs/studio/teamexplorer" Label="here"
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>
