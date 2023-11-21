@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Shared.Models;
@@ -169,7 +170,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 ReportProgress(progressAverage, _isLiveExecution);
                 return true;
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
-
+            
             await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads);
             
             if(_vcdFile != null)
@@ -177,7 +178,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 {
                     s.Invalidate();
                 }
-
+            
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Header}]" : CurrentFile!.Header;
         }

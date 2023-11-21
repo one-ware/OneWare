@@ -137,13 +137,9 @@ public class WindowService : IWindowService
     
     public async Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        var r = await Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
-            await ShowDialogAsync(msg, owner);
-            return msg.BoxStatus;
-        });
-        return r;
+        var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
+        await ShowDialogAsync(msg, owner);
+        return msg.BoxStatus;
     }
 
     public async Task<MessageBoxStatus> ShowProceedWarningAsync(string message, Window? owner = null)

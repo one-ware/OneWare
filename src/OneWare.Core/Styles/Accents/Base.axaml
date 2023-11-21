@@ -77,25 +77,24 @@
     
     <ResourceDictionary.ThemeDictionaries>
         
-        <!--Remove when Avalonia/Dock Bug is fixed-->
         <ResourceDictionary x:Key="Default">
-            <Color x:Key="ThemeBackgroundColor">#FFF5F5F5</Color>
-            <Color x:Key="ThemeBorderLowColor">#FFAAAAAA</Color>
-            <Color x:Key="ThemeBorderMidColor">#FF888888</Color>
-            <Color x:Key="ThemeBorderHighColor">#FF333333</Color>
-            <Color x:Key="ThemeControlLowColor">#FFFFFFFF</Color>
-            <Color x:Key="ThemeControlMidColor">#FFF5F5F5</Color>
-            <Color x:Key="ThemeControlMidHighColor">#FFC2C3C9</Color>
-            <Color x:Key="ThemeControlHighColor">#FF686868</Color>
-            <Color x:Key="ThemeControlVeryHighColor">#FF5B5B5B</Color>
-            <Color x:Key="ThemeControlHighlightLowColor">#FFF0F0F0</Color>
-            <Color x:Key="ThemeControlHighlightMidColor">#FFD0D0D0</Color>
-            <Color x:Key="ThemeControlHighlightHighColor">#FF808080</Color>
-            <Color x:Key="ThemeForegroundColor">#FF000000</Color>
-            <Color x:Key="ThemeEditorColor">#FF000000</Color>
+            <Color x:Key="ThemeBackgroundColor">#FF303030</Color>
+            <Color x:Key="ThemeBorderLowColor">#FF505050</Color>
+            <Color x:Key="ThemeBorderMidColor">#FF808080</Color>
+            <Color x:Key="ThemeBorderHighColor">#FFA0A0A0</Color>
+            <Color x:Key="ThemeControlLowColor">#FF1e1e1e</Color>
+            <Color x:Key="ThemeControlMidColor">#FF505050</Color>
+            <Color x:Key="ThemeControlMidHighColor">#FF686868</Color>
+            <Color x:Key="ThemeControlHighColor">#FF808080</Color>
+            <Color x:Key="ThemeControlVeryHighColor">#FFEFEBEF</Color>
+            <Color x:Key="ThemeControlHighlightLowColor">#88A8A8A8</Color>
+            <Color x:Key="ThemeControlHighlightMidColor">#884c4c4c</Color>
+            <Color x:Key="ThemeControlHighlightHighColor">#88505050</Color>
+            <Color x:Key="ThemeForegroundColor">#FFd6d2d2</Color>
+            <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
 
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
-            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.8" />
+            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.9" />
             <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="{StaticResource ThemeBorderLowColor}" />
             <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="{StaticResource ThemeBorderMidColor}" />
             <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="{StaticResource ThemeBorderHighColor}" />
@@ -111,10 +110,53 @@
             <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.7" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
-            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#424040" />
+            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
+            <ResourceDictionary.MergedDictionaries>
+                <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+        
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="ThemeBackgroundColor">#FF303030</Color>
+            <Color x:Key="ThemeBorderLowColor">#FF505050</Color>
+            <Color x:Key="ThemeBorderMidColor">#FF808080</Color>
+            <Color x:Key="ThemeBorderHighColor">#FFA0A0A0</Color>
+            <Color x:Key="ThemeControlLowColor">#FF1e1e1e</Color>
+            <Color x:Key="ThemeControlMidColor">#FF505050</Color>
+            <Color x:Key="ThemeControlMidHighColor">#FF686868</Color>
+            <Color x:Key="ThemeControlHighColor">#FF808080</Color>
+            <Color x:Key="ThemeControlVeryHighColor">#FFEFEBEF</Color>
+            <Color x:Key="ThemeControlHighlightLowColor">#88A8A8A8</Color>
+            <Color x:Key="ThemeControlHighlightMidColor">#884c4c4c</Color>
+            <Color x:Key="ThemeControlHighlightHighColor">#88505050</Color>
+            <Color x:Key="ThemeForegroundColor">#FFd6d2d2</Color>
+            <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
+
+            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
+            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.9" />
+            <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="{StaticResource ThemeBorderLowColor}" />
+            <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="{StaticResource ThemeBorderMidColor}" />
+            <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="{StaticResource ThemeBorderHighColor}" />
+            <SolidColorBrush x:Key="ThemeControlLowBrush" Color="{StaticResource ThemeControlLowColor}" />
+            <SolidColorBrush x:Key="ThemeControlMidBrush" Color="{StaticResource ThemeControlMidColor}" />
+            <SolidColorBrush x:Key="ThemeControlMidHighBrush" Color="{StaticResource ThemeControlMidHighColor}" />
+            <SolidColorBrush x:Key="ThemeControlHighBrush" Color="{StaticResource ThemeControlHighColor}" />
+            <SolidColorBrush x:Key="ThemeControlVeryHighBrush" Color="{StaticResource ThemeControlVeryHighColor}" />
+            <SolidColorBrush x:Key="ThemeControlHighlightLowBrush"
+                             Color="{StaticResource ThemeControlHighlightLowColor}" />
+            <SolidColorBrush x:Key="ThemeControlHighlightMidBrush"
+                             Color="{StaticResource ThemeControlHighlightMidColor}" />
+            <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
+                             Color="{StaticResource ThemeControlHighlightHighColor}" />
+            <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
+            <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
+            
+            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
@@ -164,48 +206,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 
-        <ResourceDictionary x:Key="Dark">
-            <Color x:Key="ThemeBackgroundColor">#FF303030</Color>
-            <Color x:Key="ThemeBorderLowColor">#FF505050</Color>
-            <Color x:Key="ThemeBorderMidColor">#FF808080</Color>
-            <Color x:Key="ThemeBorderHighColor">#FFA0A0A0</Color>
-            <Color x:Key="ThemeControlLowColor">#FF1e1e1e</Color>
-            <Color x:Key="ThemeControlMidColor">#FF505050</Color>
-            <Color x:Key="ThemeControlMidHighColor">#FF686868</Color>
-            <Color x:Key="ThemeControlHighColor">#FF808080</Color>
-            <Color x:Key="ThemeControlVeryHighColor">#FFEFEBEF</Color>
-            <Color x:Key="ThemeControlHighlightLowColor">#88A8A8A8</Color>
-            <Color x:Key="ThemeControlHighlightMidColor">#884c4c4c</Color>
-            <Color x:Key="ThemeControlHighlightHighColor">#88505050</Color>
-            <Color x:Key="ThemeForegroundColor">#FFd6d2d2</Color>
-            <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
-
-            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
-            <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.9" />
-            <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="{StaticResource ThemeBorderLowColor}" />
-            <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="{StaticResource ThemeBorderMidColor}" />
-            <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="{StaticResource ThemeBorderHighColor}" />
-            <SolidColorBrush x:Key="ThemeControlLowBrush" Color="{StaticResource ThemeControlLowColor}" />
-            <SolidColorBrush x:Key="ThemeControlMidBrush" Color="{StaticResource ThemeControlMidColor}" />
-            <SolidColorBrush x:Key="ThemeControlMidHighBrush" Color="{StaticResource ThemeControlMidHighColor}" />
-            <SolidColorBrush x:Key="ThemeControlHighBrush" Color="{StaticResource ThemeControlHighColor}" />
-            <SolidColorBrush x:Key="ThemeControlVeryHighBrush" Color="{StaticResource ThemeControlVeryHighColor}" />
-            <SolidColorBrush x:Key="ThemeControlHighlightLowBrush"
-                             Color="{StaticResource ThemeControlHighlightLowColor}" />
-            <SolidColorBrush x:Key="ThemeControlHighlightMidBrush"
-                             Color="{StaticResource ThemeControlHighlightMidColor}" />
-            <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
-                             Color="{StaticResource ThemeControlHighlightHighColor}" />
-            <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
-            <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
-            
-            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
-            <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
 </ResourceDictionary>

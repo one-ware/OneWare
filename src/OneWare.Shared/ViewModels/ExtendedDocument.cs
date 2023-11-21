@@ -109,7 +109,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
         var result = await _windowService.ShowYesNoCancelAsync("Warning", CloseWarningMessage, MessageBoxIcon.Warning,
             _dockService.GetWindowOwner(this));
-
+        
         if (result == MessageBoxStatus.Yes)
         {
             if (await SaveAsync()) return true;

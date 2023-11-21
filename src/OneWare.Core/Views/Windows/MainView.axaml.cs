@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using DynamicData;
 using DynamicData.Binding;
+using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Shared.Controls;
 using OneWare.Shared.ViewModels;
@@ -25,7 +26,8 @@ public partial class MainView : UserControl
         
         VirtualDialogModels.Add(dialog);
         
-        await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h).Take(1).GetAwaiter();
+        //Use Task.Run because of WASM Compatibility
+        await Task.Run(async () => await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h).Take(1).GetAwaiter()) ;
 
         VirtualDialogModels.Remove(dialog);
     }
