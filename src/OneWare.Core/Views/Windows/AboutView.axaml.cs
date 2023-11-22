@@ -1,4 +1,4 @@
-﻿using OneWare.Shared.Controls;
+﻿using OneWare.SDK.Controls;
 
 namespace OneWare.Core.Views.Windows
 {

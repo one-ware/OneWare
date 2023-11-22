@@ -1,5 +1,5 @@
-﻿using OneWare.Shared.Controls;
-using OneWare.Shared.ViewModels;
+﻿using OneWare.SDK.Controls;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Models;
 

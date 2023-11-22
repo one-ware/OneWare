@@ -4,8 +4,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using OneWare.Shared.Controls;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Controls;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Views.Windows
 {

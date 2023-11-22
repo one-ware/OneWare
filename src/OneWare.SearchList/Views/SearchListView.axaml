@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.SearchList.ViewModels"
              xmlns:models="clr-namespace:OneWare.SearchList.Models"
-             xmlns:behaviours="clr-namespace:OneWare.Shared.Behaviours;assembly=OneWare.Shared"
-             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+             xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
+             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="250"
              x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">

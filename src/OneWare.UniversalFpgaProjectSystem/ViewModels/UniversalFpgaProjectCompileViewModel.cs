@@ -2,11 +2,11 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
-using OneWare.Shared.Controls;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Controls;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using OneWare.Shared.Extensions;
-using OneWare.Shared.Services;
+using OneWare.SDK.Extensions;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.Core.Services;

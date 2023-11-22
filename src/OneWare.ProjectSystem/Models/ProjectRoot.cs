@@ -1,5 +1,5 @@
 ﻿using Avalonia.Media;
-using OneWare.Shared.Models;
+using OneWare.SDK.Models;
 
 namespace OneWare.ProjectSystem.Models;
 

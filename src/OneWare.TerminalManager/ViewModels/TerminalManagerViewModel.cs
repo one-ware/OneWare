@@ -2,11 +2,11 @@
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
-using OneWare.Shared;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
 using Prism.Ioc;

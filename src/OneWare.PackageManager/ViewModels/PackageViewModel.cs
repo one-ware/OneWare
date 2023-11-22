@@ -8,9 +8,9 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using Prism.Modularity;
 
 namespace OneWare.PackageManager.ViewModels;
@@ -174,7 +174,11 @@ public class PackageViewModel : ObservableObject
                 var path = Path.Combine(_paths.ModulesPath, Package!.Id!);
                 
                 //Download
-                await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress);
+                if (!await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress))
+                {
+                    Status = PackageStatus.Available;
+                    return;
+                }
                 
                 _pluginService.AddPlugin(path);
                 Status = PackageStatus.Installed;

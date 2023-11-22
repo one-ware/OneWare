@@ -2,7 +2,7 @@
 using System.Globalization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.Converters;
+using OneWare.SDK.Converters;
 using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Models;
 

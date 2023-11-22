@@ -3,12 +3,12 @@
                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                    xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
-                   xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-                   xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                   xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
+                   xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
                    xmlns:mvvm="http://prismlibrary.com/"
                    xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
-                   xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
-                   xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
+                   xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+                   xmlns:enums="clr-namespace:OneWare.SDK.Enums;assembly=OneWare.SDK"
                    xmlns:models="clr-namespace:OneWare.Core.Models"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                    x:Class="OneWare.Core.Views.Windows.MainView"
@@ -80,7 +80,7 @@
             <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}"
                          UseLayoutRounding="False" />
 
-            <Border Grid.Row="3" Padding="2" CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottom}"
+            <Border Grid.Row="3" Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
                     Background="{DynamicResource ThemeAccentBrush}">
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->

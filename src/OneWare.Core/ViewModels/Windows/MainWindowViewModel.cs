@@ -7,9 +7,9 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using Prism.Ioc;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

@@ -1,7 +1,7 @@
 ﻿using OneWare.FolderProjectSystem.Models;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.FolderProjectSystem;
 

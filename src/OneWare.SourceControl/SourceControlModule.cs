@@ -1,9 +1,9 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
 using Prism.Ioc;

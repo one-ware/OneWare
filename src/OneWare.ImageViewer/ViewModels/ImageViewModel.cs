@@ -1,9 +1,9 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.ImageViewer.ViewModels;

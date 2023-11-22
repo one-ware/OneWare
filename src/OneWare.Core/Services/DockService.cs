@@ -14,10 +14,10 @@ using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
 using Prism.Ioc;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Services
 {

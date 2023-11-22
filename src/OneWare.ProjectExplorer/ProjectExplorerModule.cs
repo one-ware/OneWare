@@ -6,9 +6,9 @@ using OneWare.ProjectExplorer.ViewModels;
 using OneWare.ProjectExplorer.Views;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.ProjectExplorer;
 

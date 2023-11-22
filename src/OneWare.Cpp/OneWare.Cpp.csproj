@@ -5,7 +5,7 @@
     <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="false" ExcludeAssets="runtime"/>
+        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" Private="false" ExcludeAssets="runtime" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">

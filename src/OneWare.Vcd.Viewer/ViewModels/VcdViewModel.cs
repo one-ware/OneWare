@@ -2,9 +2,9 @@
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using DynamicData.Binding;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.Vcd.Parser;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;

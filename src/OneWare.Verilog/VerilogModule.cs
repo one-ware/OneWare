@@ -1,4 +1,4 @@
-﻿using OneWare.Shared.Services;
+﻿using OneWare.SDK.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Verilog.Parsing;
 using Prism.Ioc;

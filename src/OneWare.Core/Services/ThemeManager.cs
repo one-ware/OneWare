@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 
 namespace OneWare.Core.Services
 {

@@ -5,8 +5,8 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.SearchList.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.SearchList;
 

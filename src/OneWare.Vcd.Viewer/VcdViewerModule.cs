@@ -1,4 +1,4 @@
-﻿using OneWare.Shared.Services;
+﻿using OneWare.SDK.Services;
 using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;

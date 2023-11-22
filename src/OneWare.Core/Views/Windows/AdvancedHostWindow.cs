@@ -5,9 +5,9 @@ using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Helpers;
-using OneWare.Shared;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
 

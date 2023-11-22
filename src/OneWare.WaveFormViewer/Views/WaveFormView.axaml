@@ -5,8 +5,8 @@
              xmlns:viewModels="clr-namespace:OneWare.WaveFormViewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.WaveFormViewer.Models"
              xmlns:controls="clr-namespace:OneWare.WaveFormViewer.Controls"
-             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
-             xmlns:controls1="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+             xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
+             xmlns:controls1="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" x:DataType="viewModels:WaveFormViewModel"
              x:Class="OneWare.WaveFormViewer.Views.WaveFormView">
 

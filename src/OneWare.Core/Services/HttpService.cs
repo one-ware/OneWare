@@ -1,6 +1,6 @@
 ﻿using Avalonia.Media.Imaging;
 using OneWare.Core.Extensions;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 

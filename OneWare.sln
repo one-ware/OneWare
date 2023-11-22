@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Core", "src\OneWare.Core\OneWare.Core.csproj", "{142377AB-78D8-429E-8403-C89CC8988C09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Shared", "src\OneWare.Shared\OneWare.Shared.csproj", "{94FD4E60-346F-4B14-AB6D-A1B78DD39501}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.SDK", "src\OneWare.SDK\OneWare.SDK.csproj", "{94FD4E60-346F-4B14-AB6D-A1B78DD39501}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF-2990-4B2C-907F-12739A839A3C}"
 EndProject
@@ -131,7 +131,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{BD761CED
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.OssCadSuiteIntegration", "src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj", "{4E2FD886-862B-4DE9-A69E-AE82E52979B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Shared.UnitTests", "tests\OneWare.Shared.UnitTests\OneWare.Shared.UnitTests.csproj", "{5C6FFAFA-590C-400D-8F90-89C9880864AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.SDK.UnitTests", "tests\OneWare.SDK.UnitTests\OneWare.SDK.UnitTests.csproj", "{5C6FFAFA-590C-400D-8F90-89C9880864AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

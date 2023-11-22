@@ -4,10 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Shared;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.ProjectSystem.Models;
 

@@ -23,7 +23,7 @@
         <StyleInclude Source="avares://NodeEditorAvalonia/Themes/NodeEditorTheme.axaml" />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml"/>
-        <StyleInclude Source="avares://OneWare.Shared/Controls/SharedControls.axaml"/>
+        <StyleInclude Source="avares://OneWare.SDK/Controls/SharedControls.axaml"/>
     </Application.Styles>
     
     <NativeMenu.Menu>

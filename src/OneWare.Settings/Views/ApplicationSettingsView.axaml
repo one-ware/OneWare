@@ -2,9 +2,9 @@
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                       xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                       xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
                        xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
-                       xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                       xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
                        PrefWidth="550" PrefHeight="400"
                        mc:Ignorable="d"
                        x:Class="OneWare.Settings.Views.ApplicationSettingsView"
@@ -29,7 +29,7 @@
         <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
 
             <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
-                    CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottomLeft}"
+                    CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottomLeft}"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <TreeView Padding="3" BorderThickness="0" Background="Transparent"
                           ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"

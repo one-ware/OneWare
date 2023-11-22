@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:idc="using:Dock.Avalonia.Controls"
         xmlns:core="using:Dock.Model.Core"
-        xmlns:viewModels="clr-namespace:OneWare.Shared.ViewModels;assembly=OneWare.Shared"
-        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared">
+        xmlns:viewModels="clr-namespace:OneWare.SDK.ViewModels;assembly=OneWare.SDK"
+        xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK">
 
     <Styles.Resources>
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>

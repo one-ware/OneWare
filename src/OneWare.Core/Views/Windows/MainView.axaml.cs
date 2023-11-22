@@ -6,8 +6,8 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.Core.Extensions;
 using OneWare.Core.Models;
-using OneWare.Shared.Controls;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Controls;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
 

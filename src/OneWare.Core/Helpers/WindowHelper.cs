@@ -1,7 +1,7 @@
 using Avalonia.Controls;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Core.Helpers;

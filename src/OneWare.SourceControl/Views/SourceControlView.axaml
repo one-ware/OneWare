@@ -5,9 +5,9 @@
              xmlns:libgit="clr-namespace:LibGit2Sharp;assembly=LibGit2Sharp"
              xmlns:models="clr-namespace:OneWare.SourceControl.Models"
              xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
-             xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+             xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
              xmlns:converters1="clr-namespace:OneWare.SourceControl.Converters"
-             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="OneWare.SourceControl.Views.SourceControlView"
              x:DataType="viewModels:SourceControlViewModel" x:CompileBindings="True">

@@ -5,9 +5,9 @@ using Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using OneWare.SearchList.Models;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SearchList.ViewModels
 {

@@ -1,6 +1,6 @@
 using Prism.Modularity;
 using Prism.Mvvm;
-using OneWare.Shared.Enums;
+using OneWare.SDK.Enums;
 
 namespace OneWare.Core.ModuleLogic;
 

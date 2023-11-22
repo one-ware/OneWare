@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using OneWare.Core.Data;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

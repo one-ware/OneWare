@@ -1,4 +1,4 @@
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 
 namespace OneWare.SerialMonitor.ViewModels;
 

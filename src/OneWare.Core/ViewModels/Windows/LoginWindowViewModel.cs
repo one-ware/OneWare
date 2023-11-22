@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls;
 using Prism.Ioc;
 using RestSharp;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

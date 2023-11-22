@@ -3,12 +3,12 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.DockViews;
 using Prism.Ioc;
-using OneWare.Shared;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Extensions;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Extensions;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.Core.Services
 {

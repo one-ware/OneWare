@@ -4,7 +4,7 @@
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" />
         <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
     </ItemGroup>
 </Project>

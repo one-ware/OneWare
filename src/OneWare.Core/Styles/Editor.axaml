@@ -6,7 +6,7 @@
         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
-        xmlns:editorEx="clr-namespace:OneWare.Shared.EditorExtensions;assembly=OneWare.Shared">
+        xmlns:editorEx="clr-namespace:OneWare.SDK.EditorExtensions;assembly=OneWare.SDK">
     
     <Style Selector="avaloniaEdit|TextEditor">
         <Setter Property="folding:FoldingMargin.FoldingMarkerBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>

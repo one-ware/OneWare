@@ -1,10 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Extensions;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Extensions;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.Core.Services;
 

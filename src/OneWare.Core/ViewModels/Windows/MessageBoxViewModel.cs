@@ -1,10 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using OneWare.Shared;
-using OneWare.Shared.Controls;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK;
+using OneWare.SDK.Controls;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

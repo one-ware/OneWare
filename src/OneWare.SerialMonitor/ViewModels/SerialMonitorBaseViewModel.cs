@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 
 namespace OneWare.SerialMonitor.ViewModels
 {

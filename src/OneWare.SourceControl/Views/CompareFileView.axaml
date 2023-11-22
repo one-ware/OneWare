@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
-             xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.SourceControl.Views.CompareFileView" x:CompileBindings="True" x:DataType="viewModels:CompareFileViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">

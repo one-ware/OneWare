@@ -1,5 +1,5 @@
-﻿using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+﻿using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 
 namespace OneWare.ProjectSystem.Services;
 

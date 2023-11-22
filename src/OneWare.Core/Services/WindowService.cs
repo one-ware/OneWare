@@ -11,11 +11,11 @@ using Avalonia.Threading;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
-using OneWare.Shared.Controls;
-using OneWare.Shared.Enums;
+using OneWare.SDK.Controls;
+using OneWare.SDK.Enums;
 using Prism.Ioc;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 
 namespace OneWare.Core.Services;

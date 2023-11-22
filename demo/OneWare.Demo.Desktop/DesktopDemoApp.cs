@@ -10,16 +10,16 @@ using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
+using OneWare.Demo.Desktop.Views;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Services;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Services;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
 using Prism.Ioc;
 using Prism.Modularity;
-using SplashWindow = OneWare.Demo.Desktop.Views.SplashWindow;
 
 namespace OneWare.Demo.Desktop;
 

@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.Vcd.Viewer.Context;

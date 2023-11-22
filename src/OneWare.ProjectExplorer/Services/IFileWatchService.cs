@@ -1,4 +1,4 @@
-﻿using OneWare.Shared.Models;
+﻿using OneWare.SDK.Models;
 
 namespace OneWare.ProjectExplorer.Services;
 

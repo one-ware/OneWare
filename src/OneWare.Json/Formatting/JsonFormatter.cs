@@ -1,6 +1,6 @@
 ﻿using AvaloniaEdit.Document;
-using OneWare.Shared.EditorExtensions;
-using OneWare.Shared.Services;
+using OneWare.SDK.EditorExtensions;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.Json.Formatting;

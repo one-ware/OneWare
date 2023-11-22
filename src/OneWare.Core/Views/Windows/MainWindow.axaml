@@ -15,13 +15,13 @@
                        Title="{Binding Title}"
                        WindowStartupLocation="CenterScreen"
                        Background="{DynamicResource ThemeBackgroundBrush}"
-                       xmlns:shared="clr-namespace:OneWare.Shared;assembly=OneWare.Shared"
+                       xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
                        xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"
-                       xmlns:converters="clr-namespace:OneWare.Shared.Converters;assembly=OneWare.Shared"
+                       xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
                        xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
-                       xmlns:controls2="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
-                       xmlns:enums="clr-namespace:OneWare.Shared.Enums;assembly=OneWare.Shared"
+                       xmlns:controls2="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+                       xmlns:enums="clr-namespace:OneWare.SDK.Enums;assembly=OneWare.SDK"
                        x:DataType="viewmodels:MainWindowViewModel">
     
     <Window.DataTemplates>
@@ -101,7 +101,7 @@
     </windows:AdvancedWindow.TitleBarContent>
 
     <windows:AdvancedWindow.BottomContent>
-        <Border Padding="2" CornerRadius="{x:Static shared:Shared.WindowsCornerRadiusBottom}"
+        <Border Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->

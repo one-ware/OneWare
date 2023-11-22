@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using Avalonia.Media;
 using DynamicData.Binding;
-using OneWare.Shared.Converters;
-using OneWare.Shared.Models;
+using OneWare.SDK.Converters;
+using OneWare.SDK.Models;
 
 namespace OneWare.ProjectSystem.Models;
 

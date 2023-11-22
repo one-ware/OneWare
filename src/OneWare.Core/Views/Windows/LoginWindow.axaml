@@ -3,7 +3,7 @@
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
-                        xmlns:controls1="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                        xmlns:controls1="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
                         mc:Ignorable="d"
                         x:Class="OneWare.Core.Views.Windows.LoginWindow"
                         Width="400" SizeToContent="Height"

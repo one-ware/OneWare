@@ -7,14 +7,14 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using OneWare.Core.Services;
 using Prism.Ioc;
-using OneWare.Shared;
-using OneWare.Shared.EditorExtensions;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.LanguageService;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
-using OneWare.Shared.ViewModels;
+using OneWare.SDK;
+using OneWare.SDK.EditorExtensions;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.LanguageService;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.ViewModels.DockViews
 {

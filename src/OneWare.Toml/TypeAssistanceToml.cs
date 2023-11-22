@@ -1,5 +1,5 @@
-﻿using OneWare.Shared.LanguageService;
-using OneWare.Shared.ViewModels;
+﻿using OneWare.SDK.LanguageService;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Toml;
 

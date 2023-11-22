@@ -7,10 +7,10 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Styling;
 using OneWare.ProjectSystem.Models;
-using OneWare.Shared.Converters;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Converters;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 

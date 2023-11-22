@@ -4,7 +4,7 @@
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         mc:Ignorable="d"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
-                        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                        xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
                         x:Class="OneWare.Core.Views.Windows.WaitCalculatorWindow"
                         Width="300" SizeToContent="Height" x:DataType="windows1:WaitCalculatorWindowViewModel"
                         Title="Wait Calculator" Padding="5"

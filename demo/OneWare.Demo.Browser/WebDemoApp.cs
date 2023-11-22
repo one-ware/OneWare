@@ -3,11 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform;
-using Dock.Model.Core;
-using OneWare.FolderProjectSystem.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 using OneWare.UniversalFpgaProjectSystem;
-using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;
 

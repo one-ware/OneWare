@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
-using OneWare.Shared.Helpers;
+using OneWare.SDK.Helpers;
 
 namespace OneWare.Settings;
 

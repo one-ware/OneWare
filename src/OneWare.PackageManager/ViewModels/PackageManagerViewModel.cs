@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;

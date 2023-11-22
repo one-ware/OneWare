@@ -4,7 +4,7 @@
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
                         xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
-                        xmlns:controls="clr-namespace:OneWare.Shared.Controls;assembly=OneWare.Shared"
+                        xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
                         mc:Ignorable="d"
                         x:Class="OneWare.Core.Views.Windows.StringConverterWindow"
                         Height="400"

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
 

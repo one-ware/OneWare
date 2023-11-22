@@ -5,7 +5,7 @@
     <Import Project="..\..\build\props\Avalonia.Controls.ColorPicker.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" />
     </ItemGroup>
 
 </Project>

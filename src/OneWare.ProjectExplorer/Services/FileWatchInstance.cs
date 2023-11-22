@@ -1,6 +1,6 @@
 ﻿using Avalonia.Threading;
-using OneWare.Shared.Models;
-using OneWare.Shared.Services;
+using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;

@@ -7,6 +7,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
+        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" />
     </ItemGroup>
 </Project>

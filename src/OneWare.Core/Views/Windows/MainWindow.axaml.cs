@@ -8,7 +8,7 @@ using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Extensions;
-using OneWare.Shared.Models;
+using OneWare.SDK.Models;
 
 namespace OneWare.Core.Views.Windows
 {

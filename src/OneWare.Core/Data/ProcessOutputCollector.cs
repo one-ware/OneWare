@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Avalonia.Threading;
 using OneWare.Core.Events;
 using Prism.Ioc;
-using OneWare.Shared.Services;
+using OneWare.SDK.Services;
 
 namespace OneWare.Core.Data
 {

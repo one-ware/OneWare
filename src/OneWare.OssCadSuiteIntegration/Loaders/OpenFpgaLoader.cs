@@ -1,6 +1,6 @@
 using Asmichi.ProcessManagement;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Services;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

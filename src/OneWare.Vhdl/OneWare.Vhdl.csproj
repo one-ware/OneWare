@@ -6,7 +6,7 @@
     <Import Project="..\..\build\props\MsBuildUncompressTask.props"/>
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" Private="true" ExcludeAssets="runtime"/>
+        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" Private="true" ExcludeAssets="runtime" />
         <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
 

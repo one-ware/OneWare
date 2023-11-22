@@ -1,4 +1,4 @@
-﻿using OneWare.Shared.Models;
+﻿using OneWare.SDK.Models;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;

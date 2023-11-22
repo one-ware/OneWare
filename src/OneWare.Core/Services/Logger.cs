@@ -2,10 +2,10 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Prism.Ioc;
-using OneWare.Shared;
-using OneWare.Shared.Enums;
-using OneWare.Shared.Helpers;
-using OneWare.Shared.Services;
+using OneWare.SDK;
+using OneWare.SDK.Enums;
+using OneWare.SDK.Helpers;
+using OneWare.SDK.Services;
 
 namespace OneWare.Core.Services;
 
