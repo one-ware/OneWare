@@ -11,6 +11,6 @@
     <Import Project="..\..\build\props\NodeEditorAvalonia.props"/>
     
     <PropertyGroup>
-        <IncludeSymbols>true</IncludeSymbols>
+        <IncludeSymbols>false</IncludeSymbols>
     </PropertyGroup>
 </Project> 
