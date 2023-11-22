@@ -123,8 +123,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{60A1DF89-0129-42B7-A509-D717A887667C}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\publish-onewarestudio-web.yml = .github\workflows\publish-onewarestudio-web.yml
-		.github\workflows\publish-shared.yml = .github\workflows\publish-shared.yml
 		.github\workflows\test.yml = .github\workflows\test.yml
+		.github\workflows\publish-nuget.yml = .github\workflows\publish-nuget.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{BD761CED-3D61-4D9E-A2A1-494584F2ED5F}"

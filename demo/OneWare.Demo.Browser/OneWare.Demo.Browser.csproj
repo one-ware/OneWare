@@ -14,10 +14,6 @@
         <WasmEnableThreads>true</WasmEnableThreads>
 		<_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
 		<_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
-        <!--
-        <WasmBuildNative>true</WasmBuildNative>
-        <EmccInitialHeapSize>32mb</EmccInitialHeapSize>
-        -->
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">

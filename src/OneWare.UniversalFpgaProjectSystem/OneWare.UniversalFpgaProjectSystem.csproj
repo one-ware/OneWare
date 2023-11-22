@@ -9,14 +9,7 @@
         <ProjectReference Include="..\OneWare.Shared\OneWare.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Views\UniversalFpgaProjectCompileView.axaml.cs">
-        <DependentUpon>UniversalFpgaProjectCompileView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Styles\Components.axaml" />
-    </ItemGroup>
+    <PropertyGroup>
+        <IncludeSymbols>true</IncludeSymbols>
+    </PropertyGroup>
 </Project>
