@@ -4,6 +4,8 @@ public enum PackageStatus
 {
     Unavailable,
     Available,
+    UpdateAvailable,
     Installing,
-    Installed
+    Installed,
+    Incompatible
 }

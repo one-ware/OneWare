@@ -1,3 +1,7 @@
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using OneWare.Core.ModuleLogic;
 using OneWare.SDK.Extensions;
 using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
@@ -15,8 +19,11 @@ public class PluginService : IPluginService
     
     private readonly string _pluginDirectory;
     private readonly Dictionary<string, string> _plugins = new();
+    private readonly Dictionary<string, string> _failedPlugins = new();
 
     public IEnumerable<string> InstalledPlugins => _plugins.Keys;
+    
+    public IEnumerable<string> FailedPlugins => _failedPlugins.Keys;
 
     public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
     {
@@ -30,22 +37,56 @@ public class PluginService : IPluginService
     
     public void AddPlugin(string path)
     {
-        var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
-        PlatformHelper.CopyDirectory(path, realPath);
+        try
+        {
+            var pluginName = Path.GetFileName(path);
+
+            //Dependency check
+            var depFilePath = Path.Combine(path, "oneware.json");
+            
+            if (!File.Exists(depFilePath))
+                throw new Exception($"Extension {pluginName} incompatible! oneware.json not found in Module");
+            
+            var packageManifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath));
+
+            if (packageManifest?.Dependencies is {} deps)
+            {
+                foreach (var dep in deps)
+                {
+                    var minVersion = Version.Parse(dep.MinVersion ?? "1000");
+                    var maxVersion = Version.Parse(dep.MaxVersion ?? "0");
+
+                    var coreDep = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(x => x.GetName().Name == dep.Name)?.GetName();
+                    
+                    if(coreDep == null) throw new Exception($"Extension {pluginName} incompatible! Dependency {dep.Name} not found!");
+
+                    if (minVersion < coreDep.Version) throw new Exception($"Extension {pluginName} incompatible! MinVersion of {dep.Name} is too low!");
+                    if (maxVersion > coreDep.Version) throw new Exception($"Extension {pluginName} incompatible! MinVersion of {dep.Name} is too high!");
+                }
+            }
+            
+            var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
+            PlatformHelper.CopyDirectory(path, realPath);
         
-        var catalog = new DirectoryModuleCatalog()
-        {
-            ModulePath = realPath
-        };
-        catalog.Initialize();
+            var catalog = new DirectoryModuleCatalog()
+            {
+                ModulePath = realPath
+            };
+            catalog.Initialize();
 
-        foreach (var module in catalog.Modules)
-        {
-            _moduleCatalog.AddModule(module);
-            if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
-                _moduleManager.LoadModule(module.ModuleName);
+            foreach (var module in catalog.Modules)
+            {
+                _moduleCatalog.AddModule(module);
+                if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
+                    _moduleManager.LoadModule(module.ModuleName);
 
-            _plugins.Add(module.ModuleName, path);
+                _plugins.Add(module.ModuleName, path);
+            }
+        }
+        catch (Exception e)
+        {
+            _failedPlugins.Add(Path.GetFileName(path), path);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 

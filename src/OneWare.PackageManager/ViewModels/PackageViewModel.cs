@@ -44,9 +44,11 @@ public class PackageViewModel : ObservableObject
             PrimaryButtonText = value switch
             {
                 PackageStatus.Available => "Install",
+                PackageStatus.UpdateAvailable => "Update",
                 PackageStatus.Installed => "Remove",
                 PackageStatus.Installing => "Cancel",
                 PackageStatus.Unavailable => "Unavailable",
+                PackageStatus.Incompatible => "Incompatible",
                 _ => "Unknown"
             };
             
@@ -107,6 +109,10 @@ public class PackageViewModel : ObservableObject
         if (_pluginService.InstalledPlugins.Any(x => package.Id == x))
         {
             Status = PackageStatus.Installed;
+        }
+        else if (_pluginService.FailedPlugins.Any(x => package.Id == x))
+        {
+            Status = PackageStatus.Incompatible;
         }
         else
         {
