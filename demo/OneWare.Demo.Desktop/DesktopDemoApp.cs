@@ -1,24 +1,19 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
-using DynamicData;
 using ImTools;
 using OneWare.Core;
 using OneWare.Core.Data;
-using OneWare.Core.ModuleLogic;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
-using OneWare.NetListSvgIntegration;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
 using OneWare.SerialMonitor;
 using OneWare.Shared.Enums;
-using OneWare.Shared.Models;
 using OneWare.Shared.Services;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
@@ -40,7 +35,6 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
-        moduleCatalog.AddModule<NetListSvgIntegrationModule>();
 
         try
         {
