@@ -27,7 +27,7 @@ public class PluginPackageViewModel : PackageViewModel
             }
             else
             {
-                WarningText = "";
+                WarningText = null;
                 Status = PackageStatus.Available;
             }
         }
@@ -55,6 +55,12 @@ public class PluginPackageViewModel : PackageViewModel
         if (Plugin != null)
         {
             _pluginService.RemovePlugin(Plugin);
+
+            if (Plugin.IsCompatible)
+            {
+                PrimaryButtonEnabled = false;
+                PrimaryButtonText = "Restart Required";
+            }
             Plugin = null;
         }
     }

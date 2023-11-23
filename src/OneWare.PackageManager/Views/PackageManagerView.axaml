@@ -95,9 +95,16 @@
                                                        ToolTip.Tip="{Binding WarningText}"/>
                                                 <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
                                                 <Button Content="{Binding PrimaryButtonText}"
+                                                        Name="MainButton"
                                                         Background="{Binding PrimaryButtonBrush}"
                                                         Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync}"
-                                                        IsEnabled="{Binding PrimaryButtonEnabled}" />
+                                                        IsEnabled="{Binding PrimaryButtonEnabled}">
+                                                    <Interaction.Behaviors>
+                                                        <ButtonClickEventTriggerBehavior>
+                                                            <ChangePropertyAction TargetObject="PluginList" PropertyName="SelectedItem" Value="{Binding}"/>
+                                                        </ButtonClickEventTriggerBehavior>
+                                                    </Interaction.Behaviors>
+                                                </Button>
                                             </StackPanel>
                                         </Grid>
                                     </DockPanel>

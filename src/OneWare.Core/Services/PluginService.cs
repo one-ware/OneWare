@@ -1,5 +1,4 @@
 using System.Text.Json;
-using ImTools;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.SDK.Helpers;
@@ -12,11 +11,16 @@ namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
+    private static JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+    
     private readonly IModuleCatalog _moduleCatalog;
     private readonly IModuleManager _moduleManager;
 
     private readonly string _pluginDirectory;
-
+    
     public List<IPlugin> InstalledPlugins { get; } = new();
 
     public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
@@ -82,7 +86,7 @@ public class PluginService : IPluginService
                 return compatibilityIssues;
             }
 
-            var packageManifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath));
+            var packageManifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath), _jsonSerializerOptions);
 
             if (packageManifest?.Dependencies is { } deps)
             {
@@ -96,14 +100,14 @@ public class PluginService : IPluginService
 
                     if (coreDep == null)
                     {
-                        compatibilityIssues += $"Dependency {dep.Name} not found!\n";
+                        compatibilityIssues += $"Dependency {dep.Name} not found\n";
                         continue;
                     }
 
-                    if (minVersion < coreDep.Version)
-                        compatibilityIssues += $"MinVersion of {dep.Name} is lower than {coreDep.Version.ToString()}!\n";
-                    if (maxVersion > coreDep.Version)
-                        compatibilityIssues += $"MaxVersion of {dep.Name} is higher than {coreDep.Version.ToString()}\n";
+                    if (coreDep.Version < minVersion)
+                        compatibilityIssues += $"{dep.Name} v{coreDep.Version} is older than min required v{minVersion}\n";
+                    if (coreDep.Version > maxVersion)
+                        compatibilityIssues += $"{dep.Name} v{coreDep.Version} is newer than max required v{maxVersion}\n";
                 }
             }
 

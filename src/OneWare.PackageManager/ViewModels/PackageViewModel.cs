@@ -109,6 +109,7 @@ public abstract class PackageViewModel : ObservableObject
         _paths = paths;
         _logger = logger;
 
+        PackageType = "Package";
         ExtractionFolder = paths.PackagesDirectory;
     }
 
