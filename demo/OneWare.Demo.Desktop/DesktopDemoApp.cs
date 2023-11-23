@@ -38,8 +38,8 @@ public class DesktopDemoApp : DemoApp
 
         try
         {
-            var modules = Directory.GetDirectories(Paths.ModulesPath);
-            foreach (var module in modules)
+            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
+            foreach (var module in plugins)
             {
                 Container.Resolve<IPluginService>().AddPlugin(module);
             }

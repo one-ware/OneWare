@@ -22,7 +22,8 @@ public class Paths : IPaths
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
-    public string ModulesPath => Path.Combine(DocumentsDirectory, "Modules");
+    public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
+    public string PluginsDirectory => Path.Combine(PackagesDirectory, "Plugins");
     public string ChangelogUrl => "https://raw.githubusercontent.com/ProtopSolutions/OneWareStudioWebsite/main/docs/studio/changelog.md";
 
     private FileStream? _fileStreamLock;
@@ -35,7 +36,8 @@ public class Paths : IPaths
 
         Directory.CreateDirectory(AppDataDirectory);
         Directory.CreateDirectory(DocumentsDirectory);
-        Directory.CreateDirectory(ModulesPath);
+        Directory.CreateDirectory(PackagesDirectory);
+        Directory.CreateDirectory(PluginsDirectory);
         Directory.CreateDirectory(CrashReportsDirectory);
         Directory.CreateDirectory(ProjectsDirectory);
         //...

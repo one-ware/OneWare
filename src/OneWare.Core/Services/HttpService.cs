@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using System.Diagnostics;
+using Avalonia.Media.Imaging;
 using OneWare.Core.Extensions;
 using OneWare.SDK.Services;
 using SharpCompress.Common;
@@ -97,11 +98,17 @@ public class HttpService : IHttpService
     {
         var tempPath = Path.Combine(_paths.TempDirectory, Path.GetFileName(url));
         
+        if (Directory.Exists(location))
+        {
+            _logger.Error("Destination dir already exists");
+            return false;
+        }
+        
         try
         {
             Directory.CreateDirectory(location);
-            
-            if(!await DownloadFileAsync(url, tempPath, progress, timeout, cancellationToken)) return false;
+
+            if (!await DownloadFileAsync(url, tempPath, progress, timeout, cancellationToken)) throw new Exception("Download failed");
             
             await Task.Run(() =>
             {
@@ -122,6 +129,14 @@ public class HttpService : IHttpService
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            try
+            {
+                Directory.Delete(location);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
             return false;
         }
     }

@@ -89,6 +89,10 @@
                                             <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
                                                        Text="{Binding Package.Description}" TextWrapping="Wrap" />
                                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal">
+                                                <Image Source="{DynamicResource VsImageLib.StatusWarning16X}" 
+                                                       Height="12"
+                                                       IsVisible="{Binding WarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                       ToolTip.Tip="{Binding WarningText}"/>
                                                 <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
                                                 <Button Content="{Binding PrimaryButtonText}"
                                                         Background="{Binding PrimaryButtonBrush}"

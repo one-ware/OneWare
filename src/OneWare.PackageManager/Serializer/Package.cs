@@ -3,6 +3,8 @@
 public class Package
 {
     public string? Category { get; init; }
+    
+    public string? Type { get; init; }
     public string? Name { get; init; }
     public string? Id { get; init; }
     public string? Description { get; init; }

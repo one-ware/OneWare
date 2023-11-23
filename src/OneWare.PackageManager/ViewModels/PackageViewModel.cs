@@ -1,26 +1,20 @@
-﻿using System.Collections.ObjectModel;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
 using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
 using OneWare.SDK.Services;
-using Prism.Modularity;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageViewModel : ObservableObject
+public abstract class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
     private readonly IPaths _paths;
     private readonly ILogger _logger;
-    private readonly IPluginService _pluginService;
     
     public Package Package { get; }
     public IImage? Image { get; private set; }
@@ -48,7 +42,6 @@ public class PackageViewModel : ObservableObject
                 PackageStatus.Installed => "Remove",
                 PackageStatus.Installing => "Cancel",
                 PackageStatus.Unavailable => "Unavailable",
-                PackageStatus.Incompatible => "Incompatible",
                 _ => "Unknown"
             };
             
@@ -91,33 +84,32 @@ public class PackageViewModel : ObservableObject
         set => SetProperty(ref _primaryButtonBrush, value);
     }
 
-    private bool _primaryButtonEnabled = false;
+    private bool _primaryButtonEnabled;
     public bool PrimaryButtonEnabled
     {
         get => _primaryButtonEnabled;
         set => SetProperty(ref _primaryButtonEnabled, value);
     }
 
-    public PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService)
+    private string? _warningText;
+    public string? WarningText
+    {
+        get => _warningText;
+        set => SetProperty(ref _warningText, value);
+    }
+    
+    protected string ExtractionFolder { get; init; }
+    
+    protected string PackageType { get; init; }
+
+    protected PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger)
     {
         Package = package;
         _httpService = httpService;
         _paths = paths;
         _logger = logger;
-        _pluginService = pluginService;
 
-        if (_pluginService.InstalledPlugins.Any(x => package.Id == x))
-        {
-            Status = PackageStatus.Installed;
-        }
-        else if (_pluginService.FailedPlugins.Any(x => package.Id == x))
-        {
-            Status = PackageStatus.Incompatible;
-        }
-        else
-        {
-            Status = PackageStatus.Available;
-        }
+        ExtractionFolder = paths.PackagesDirectory;
     }
 
     public async Task ExecuteMainButtonAsync()
@@ -125,7 +117,8 @@ public class PackageViewModel : ObservableObject
         switch (Status)
         {
             case PackageStatus.Available:
-                await InstallAsync(); 
+            case PackageStatus.UpdateAvailable:
+                await DownloadAsync(); 
                 break;
             case PackageStatus.Installed:
                 await RemoveAsync();
@@ -158,7 +151,7 @@ public class PackageViewModel : ObservableObject
         SelectedVersion = Package.Versions?.LastOrDefault();
     }
 
-    private async Task InstallAsync()
+    private async Task DownloadAsync()
     {
         try
         {
@@ -177,7 +170,7 @@ public class PackageViewModel : ObservableObject
                     Progress = x;
                 });
 
-                var path = Path.Combine(_paths.ModulesPath, Package!.Id!);
+                var path = Path.Combine(ExtractionFolder, Package!.Id!);
                 
                 //Download
                 if (!await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress))
@@ -186,7 +179,8 @@ public class PackageViewModel : ObservableObject
                     return;
                 }
                 
-                _pluginService.AddPlugin(path);
+                Install(path);
+
                 Status = PackageStatus.Installed;
             }
             else
@@ -199,14 +193,27 @@ public class PackageViewModel : ObservableObject
             _logger.Error(e.Message, e);
             Status = PackageStatus.Available;
         }
-    } 
+    }
 
-    public async Task RemoveAsync()
+    protected abstract void Install(string path);
+
+    protected abstract void Uninstall();
+
+    private Task RemoveAsync()
     {
         if (Package.Id == null) throw new NullReferenceException(nameof(Package.Id));
-        _pluginService.RemovePlugin(Package.Id!);
         Status = PackageStatus.Available;
-        PrimaryButtonEnabled = false;
-        PrimaryButtonText = "Restart Required";
+
+        try
+        {
+            Directory.Delete(Path.Combine(ExtractionFolder, Package.Id), true);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+        Uninstall();
+        
+        return Task.CompletedTask;
     }
 }

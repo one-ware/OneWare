@@ -13,6 +13,7 @@ public interface IPaths
     public string DocumentsDirectory { get; }
     public string CrashReportsDirectory { get; }
     public string ProjectsDirectory { get; }
-    public string ModulesPath { get; }
+    public string PackagesDirectory { get; }
+    public string PluginsDirectory { get; }
     public string ChangelogUrl { get; }
 }

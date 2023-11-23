@@ -46,6 +46,13 @@
                 <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}"
                         Background="{Binding PrimaryButtonBrush}"
                         Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }" />
+                
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding WarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Image Source="{DynamicResource VsImageLib.StatusWarning16X}" 
+                           Height="12" VerticalAlignment="Center"
+                           ToolTip.Tip="{Binding WarningText}"/>
+                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Incompatible"/>
+                </StackPanel>
             </StackPanel>
 
             <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">

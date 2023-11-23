@@ -146,8 +146,17 @@ public class PackageManagerViewModel : ObservableObject
                     var package = JsonSerializer.Deserialize<Package>(downloadManifest!, _serializerOptions);
 
                     if(package == null) continue;
-                    
-                    var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(Package), package));
+
+                    var model = package.Type switch
+                    {
+                        "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
+                        _ => null
+                    };
+
+                    if (model == null)
+                    {
+                        throw new Exception($"Package Type invalid/missing for {manifest}!");
+                    }
 
                     await model.ResolveAsync(cancellationToken);
                     

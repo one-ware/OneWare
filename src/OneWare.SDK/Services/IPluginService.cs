@@ -4,11 +4,9 @@ namespace OneWare.SDK.Services;
 
 public interface IPluginService
 {
-    public IEnumerable<string> InstalledPlugins { get; }
+    public List<IPlugin> InstalledPlugins { get; }
     
-    public IEnumerable<string> FailedPlugins { get; }
+    public IPlugin AddPlugin(string path);
     
-    public void AddPlugin(string path);
-
-    public void RemovePlugin(string plugin);
+    public void RemovePlugin(IPlugin plugin);
 }

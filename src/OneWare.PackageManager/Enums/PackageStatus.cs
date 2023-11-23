@@ -7,5 +7,4 @@ public enum PackageStatus
     UpdateAvailable,
     Installing,
     Installed,
-    Incompatible
 }
