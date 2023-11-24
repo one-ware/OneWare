@@ -21,6 +21,13 @@ public abstract class PackageViewModel : ObservableObject
     public List<TabModel>? Tabs { get; private set; }
     public List<LinkModel>? Links { get; private set; }
 
+    private PackageVersion? _installedVersion;
+    public PackageVersion? InstalledVersion
+    {
+        get => _installedVersion;
+        set => SetProperty(ref _installedVersion, value);
+    }
+
     private PackageVersion? _selectedVersion;
     public PackageVersion? SelectedVersion
     {
@@ -102,6 +109,10 @@ public abstract class PackageViewModel : ObservableObject
     
     protected string PackageType { get; init; }
 
+    public event EventHandler? Installed;
+
+    public event EventHandler? Removed;
+
     protected PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger)
     {
         Package = package;
@@ -159,9 +170,11 @@ public abstract class PackageViewModel : ObservableObject
             Status = PackageStatus.Installing;
             
             var currentTarget = PlatformHelper.Platform.ToString().ToLower();
-        
+
+            var selectedVersion = SelectedVersion;
+            
             var target = Package.Versions?
-                .FirstOrDefault(x => x == SelectedVersion)?
+                .FirstOrDefault(x => x == selectedVersion)?
                 .Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget);
 
             if (target is {Url: not null})
@@ -181,8 +194,11 @@ public abstract class PackageViewModel : ObservableObject
                 }
                 
                 Install(path);
+                
+                InstalledVersion = selectedVersion;
 
                 Status = PackageStatus.Installed;
+                Installed?.Invoke(this, EventArgs.Empty);
             }
             else
             {
@@ -203,8 +219,7 @@ public abstract class PackageViewModel : ObservableObject
     private Task RemoveAsync()
     {
         if (Package.Id == null) throw new NullReferenceException(nameof(Package.Id));
-        Status = PackageStatus.Available;
-
+        
         try
         {
             Directory.Delete(Path.Combine(ExtractionFolder, Package.Id), true);
@@ -214,6 +229,9 @@ public abstract class PackageViewModel : ObservableObject
             _logger.Error(e.Message, e);
         }
         Uninstall();
+        
+        Status = PackageStatus.Available;
+        Removed?.Invoke(this, EventArgs.Empty);
         
         return Task.CompletedTask;
     }

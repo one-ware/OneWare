@@ -4,8 +4,10 @@ using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
+using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
+using OneWare.PackageManager.Serializer.Installed;
 using OneWare.SDK.Services;
 using Prism.Ioc;
 
@@ -17,6 +19,7 @@ public class PackageManagerViewModel : ObservableObject
     private readonly ILogger _logger;
     private PackageCategoryModel? _selectedCategory;
     private CancellationTokenSource? _cancellationTokenSource;
+    private string PackageDataBasePath { get; }
 
     private bool _showInstalled = true;
     public bool ShowInstalled
@@ -66,11 +69,12 @@ public class PackageManagerViewModel : ObservableObject
     
     public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
     
-    public PackageManagerViewModel(IHttpService httpService, ILogger logger)
+    public PackageManagerViewModel(IHttpService httpService, ILogger logger, IPaths paths)
     {
         _httpService = httpService;
         _logger = logger;
-        
+
+        PackageDataBasePath = Path.Combine(paths.PackagesDirectory, "oneware-packages.json");
         _ = LoadPackagesAsync();
     }
 
@@ -83,6 +87,15 @@ public class PackageManagerViewModel : ObservableObject
     {
         PackageCategories.First().Packages.Add(packageView);
         category.Packages.Add(packageView);
+
+        packageView.Installed += (_, _) =>
+        {
+            _ = SaveInstalledPackagesDatabaseAsync();
+        };
+        packageView.Removed += (_, _) =>
+        {
+            _ = SaveInstalledPackagesDatabaseAsync();
+        };
     }
     
     public async Task LoadPackagesAsync()
@@ -164,6 +177,41 @@ public class PackageManagerViewModel : ObservableObject
                 }
             }
             else throw new Exception("Packages empty");
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
+    private async Task LoadInstalledPackagesDatabaseAsync()
+    {
+        try
+        {
+            if (File.Exists(PackageDataBasePath))
+            {
+                //JsonSerializer.Deserialize<Package[]>()
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+    
+    private async Task SaveInstalledPackagesDatabaseAsync()
+    {
+        try
+        {
+            await using var file = File.OpenWrite(PackageDataBasePath);
+            file.SetLength(0);
+            
+            var installedPackages = PackageCategories.First().Packages
+                .Where(x => x.Status == PackageStatus.Installed)
+                .Select(x => new InstalledPackage(x.Package, x.InstalledVersion!.Version!))
+                .ToArray();
+
+            await JsonSerializer.SerializeAsync<InstalledPackage[]>(file, installedPackages);
         }
         catch (Exception e)
         {

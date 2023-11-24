@@ -36,12 +36,14 @@ public class PluginService : IPluginService
     {
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
-        if (CheckCompatibility(path) is {} report)
+        if (CheckCompatibility(path) is {compatible: false} test)
         {
-            plugin.IsCompatible = false;
-            plugin.CompatibilityReport = report;
+            plugin.CompatibilityReport = test.report;
             return plugin;
         }
+
+        plugin.IsCompatible = true;
+        
         try
         {
             var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
@@ -58,8 +60,6 @@ public class PluginService : IPluginService
                 _moduleCatalog.AddModule(module);
                 if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
                     _moduleManager.LoadModule(module.ModuleName);
-
-                plugin.IsCompatible = true;
             }
         }
         catch (Exception e)
@@ -69,7 +69,7 @@ public class PluginService : IPluginService
         return plugin;
     }
 
-    private string? CheckCompatibility(string path)
+    private (bool compatible, string? report) CheckCompatibility(string path)
     {
         try
         {
@@ -83,7 +83,7 @@ public class PluginService : IPluginService
             if (!File.Exists(depFilePath))
             {
                 compatibilityIssues += $"Extension {pluginName} incompatible:\n\noneware.json not found in plugin folder\n";
-                return compatibilityIssues;
+                return (false,compatibilityIssues);
             }
 
             var packageManifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath), _jsonSerializerOptions);
@@ -114,14 +114,14 @@ public class PluginService : IPluginService
             if (compatibilityIssues.Length > 0)
             {
                 compatibilityIssues = $"Extension {pluginName} incompatible:\n\n" + compatibilityIssues;
-                return compatibilityIssues;
+                return (false,compatibilityIssues);
             }
         }
         catch (Exception e)
         {
-            return e.Message;
+            return (false,e.Message);
         }
-        return null;
+        return (true, null);
     }
 
     public void RemovePlugin(IPlugin plugin)

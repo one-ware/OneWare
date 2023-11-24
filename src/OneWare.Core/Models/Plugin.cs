@@ -7,7 +7,7 @@ public class Plugin : IPlugin
     public string Id { get; }
     
     public string Path { get; }
-    
+
     public bool IsCompatible { get; set; }
     
     public string? CompatibilityReport { get; set; }
