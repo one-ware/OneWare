@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using Avalonia;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.SDK.Models;

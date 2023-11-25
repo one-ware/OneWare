@@ -22,6 +22,7 @@
     <Color x:Key="HighlightForegroundColor">#FFFFFFFF</Color>
     <Color x:Key="ErrorColor">#FFFF0000</Color>
     <Color x:Key="ErrorLowColor">#10FF0000</Color>
+    <Color x:Key="WarningColor">#FFFF00</Color>
     <SolidColorBrush x:Key="HighlightForegroundBrush" Color="{StaticResource HighlightForegroundColor}" />
     <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
     <SolidColorBrush x:Key="ThemeAccentBrush" Color="{DynamicResource ThemeAccentColor}" />
@@ -30,6 +31,7 @@
     <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor}" Opacity="0.3" />
     <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
     <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"></SolidColorBrush>
     <SolidColorBrush
         x:Key="NotificationCardBackgroundBrush"
         Opacity="0.9"
