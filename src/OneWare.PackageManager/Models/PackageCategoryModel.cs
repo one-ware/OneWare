@@ -7,9 +7,9 @@ namespace OneWare.PackageManager.Models;
 
 public class PackageCategoryModel : ObservableObject
 {
-    public List<PackageViewModel> Packages { get; } = new ();
+    public List<PackageViewModel> Packages { get; } = [];
     
-    public ObservableCollection<PackageViewModel> VisiblePackages { get; } = new();
+    public ObservableCollection<PackageViewModel> VisiblePackages { get; } = [];
     
     public IObservable<object?>? IconObservable { get; }
     public string Header { get; }
@@ -18,6 +18,17 @@ public class PackageCategoryModel : ObservableObject
     {
         Header = header;
         IconObservable = iconObservable;
+    }
+
+    public void Add(PackageViewModel model)
+    {
+        Packages.Add(model);
+    }
+
+    public void Remove(PackageViewModel model)
+    {
+        Packages.Remove(model);
+        VisiblePackages.Remove(model);
     }
 
     public void Filter(string filter, bool showInstalled, bool showAvailable)
@@ -29,6 +40,6 @@ public class PackageCategoryModel : ObservableObject
         if (!showAvailable) filtered = filtered.Where(x => x.Status != PackageStatus.Available);
 
         VisiblePackages.Clear();
-        VisiblePackages.AddRange(filtered);
+        VisiblePackages.AddRange(filtered.OrderBy(x => x.Package.Name));
     }
 }

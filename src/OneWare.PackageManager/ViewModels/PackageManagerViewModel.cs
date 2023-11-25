@@ -102,9 +102,9 @@ public class PackageManagerViewModel : ObservableObject
 
     private void FilterPackages()
     {
-        foreach (var cat in PackageCategories)
+        foreach (var categoryModel in PackageCategories)
         {
-            cat.Filter(Filter, _showInstalled, _showAvailable);
+            categoryModel.Filter(Filter, _showInstalled, _showAvailable);
         }
     }
     
@@ -142,9 +142,11 @@ public class PackageManagerViewModel : ObservableObject
         var category = PackageCategories.FirstOrDefault(x =>
             x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
  
-        PackageCategories.First().Packages.Add(model);
+        if(category != PackageCategories.First())
+            PackageCategories.First().Add(model);
         Packages.Add(package.Id, model);
-        category.Packages.Add(model);
+        category.Add(model);
+        FilterPackages();
 
         Observable.FromEventPattern(model, nameof(model.Installed))
             .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
@@ -170,8 +172,7 @@ public class PackageManagerViewModel : ObservableObject
             Packages.Remove(rm.Key);
             foreach (var category in PackageCategories)
             {
-                category.Packages.Remove(rm.Value);
-                category.VisiblePackages.Remove(rm.Value);
+                category.Remove(rm.Value);
             }
         }
 
