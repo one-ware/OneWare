@@ -1,7 +1,10 @@
-﻿using Avalonia;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
@@ -13,13 +16,39 @@ namespace OneWare.PackageManager.ViewModels;
 public abstract class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    private readonly IPaths _paths;
     private readonly ILogger _logger;
     
-    public Package Package { get; }
-    public IImage? Image { get; private set; }
-    public List<TabModel>? Tabs { get; private set; }
-    public List<LinkModel>? Links { get; private set; }
+    private bool _resolveTabsStarted;
+    private bool _resolveImageStarted;
+
+    private bool _isTabsResolved;
+
+    public bool IsTabsResolved
+    {
+        get => _isTabsResolved;
+        set => SetProperty(ref _isTabsResolved, value);
+    }
+
+    private Package _package;
+    public Package Package
+    {
+        get => _package;
+        set
+        {
+            SetProperty(ref _package, value);
+            InitPackage();
+        }
+    }
+
+    private IImage? _image;
+    public IImage? Image
+    {
+        get => _image;
+        private set => SetProperty(ref _image, value);
+    }
+
+    public ObservableCollection<TabModel> Tabs { get; } = [];
+    public ObservableCollection<LinkModel> Links { get; } = [];
 
     private PackageVersion? _installedVersion;
     public PackageVersion? InstalledVersion
@@ -32,7 +61,11 @@ public abstract class PackageViewModel : ObservableObject
     public PackageVersion? SelectedVersion
     {
         get => _selectedVersion;
-        set => SetProperty(ref _selectedVersion, value);
+        set
+        {
+            SetProperty(ref _selectedVersion, value);
+            UpdateStatus();
+        }
     }
 
     private PackageStatus _status;
@@ -42,29 +75,7 @@ public abstract class PackageViewModel : ObservableObject
         set
         {
             SetProperty(ref _status, value);
-            PrimaryButtonText = value switch
-            {
-                PackageStatus.Available => "Install",
-                PackageStatus.UpdateAvailable => "Update",
-                PackageStatus.Installed => "Remove",
-                PackageStatus.Installing => "Cancel",
-                PackageStatus.Unavailable => "Unavailable",
-                _ => "Unknown"
-            };
-            
-            var primaryButtonBrushObservable = value switch
-            {
-                PackageStatus.Available => Application.Current!.GetResourceObservable("ThemeAccentBrush"),
-                _ => Application.Current!.GetResourceObservable("ThemeBorderMidBrush")
-            };
-            
-            _primaryButtonBrushSubscription?.Dispose();
-            _primaryButtonBrushSubscription = primaryButtonBrushObservable!.Subscribe(x =>
-            {
-                PrimaryButtonBrush = x as IBrush;
-            });
-            
-            PrimaryButtonEnabled = value is PackageStatus.Available or PackageStatus.Installed;
+            UpdateStatus();
         }
     }
 
@@ -72,14 +83,14 @@ public abstract class PackageViewModel : ObservableObject
     public float Progress
     {
         get => _progress;
-        set => SetProperty(ref _progress, value);
+        private set => SetProperty(ref _progress, value);
     }
 
     private string _primaryButtonText = string.Empty;
     public string PrimaryButtonText
     {
         get => _primaryButtonText;
-        set => SetProperty(ref _primaryButtonText, value);
+        private set => SetProperty(ref _primaryButtonText, value);
     }
 
     private IDisposable? _primaryButtonBrushSubscription;
@@ -88,14 +99,14 @@ public abstract class PackageViewModel : ObservableObject
     public IBrush? PrimaryButtonBrush
     {
         get => _primaryButtonBrush;
-        set => SetProperty(ref _primaryButtonBrush, value);
+        private set => SetProperty(ref _primaryButtonBrush, value);
     }
 
     private bool _primaryButtonEnabled;
     public bool PrimaryButtonEnabled
     {
         get => _primaryButtonEnabled;
-        set => SetProperty(ref _primaryButtonEnabled, value);
+        private set => SetProperty(ref _primaryButtonEnabled, value);
     }
 
     private string? _warningText;
@@ -105,64 +116,150 @@ public abstract class PackageViewModel : ObservableObject
         set => SetProperty(ref _warningText, value);
     }
     
-    protected string ExtractionFolder { get; init; }
-    
-    protected string PackageType { get; init; }
+    protected string ExtractionFolder { get; }
+
+    protected string PackageType { get; }
 
     public event EventHandler? Installed;
 
     public event EventHandler? Removed;
 
-    protected PackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger)
+    public AsyncRelayCommand RemoveCommand { get; }
+
+    public AsyncRelayCommand InstallCommand { get; }
+    
+    public AsyncRelayCommand UpdateCommand { get; }
+    
+
+    protected PackageViewModel(Package package, string packageType, string extractionFolder, IHttpService httpService, ILogger logger)
     {
-        Package = package;
+        _package = package;
         _httpService = httpService;
-        _paths = paths;
         _logger = logger;
 
-        PackageType = "Package";
-        ExtractionFolder = paths.PackagesDirectory;
+        ExtractionFolder = extractionFolder;
+        PackageType = packageType;
+
+        RemoveCommand = new AsyncRelayCommand(RemoveAsync, () => Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+        
+        InstallCommand = new AsyncRelayCommand(DownloadAsync, () => false);
+        
+        UpdateCommand = new AsyncRelayCommand(UpdateAsync, () => false);
+        
+        InitPackage();
     }
 
-    public async Task ExecuteMainButtonAsync()
+    private void InitPackage()
+    {
+        Links.Clear();
+        if(Package.Links != null) Links.AddRange(Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
+        SelectedVersion = Package.Versions?.LastOrDefault();
+        _resolveTabsStarted = false;
+        _resolveImageStarted = false;
+        UpdateStatus();
+        _ = ResolveIconAsync();
+    }
+
+    private void UpdateStatus()
+    {
+        if(Status is not PackageStatus.Installing 
+           && Version.TryParse(SelectedVersion?.Version ?? "", out var sV) 
+           && Version.TryParse(InstalledVersion?.Version ?? "", out var iV))
+        {
+            if (Status is PackageStatus.Installed && sV > iV)
+            {
+                Status = PackageStatus.UpdateAvailable;
+                return;
+            }
+            if (Status is PackageStatus.UpdateAvailable && sV <= iV)
+            {
+                Status = PackageStatus.Installed;
+                return;
+            }
+        }
+
+        PrimaryButtonText = Status switch
+        {
+            PackageStatus.Available => "Install",
+            PackageStatus.UpdateAvailable => "Update",
+            PackageStatus.Installed => "Remove",
+            PackageStatus.Installing => "Installing...",
+            PackageStatus.Unavailable => "Unavailable",
+            PackageStatus.NeedRestart => "Restart Required",
+            _ => "Unknown"
+        };
+            
+        var primaryButtonBrushObservable = Status switch
+        {
+            PackageStatus.Available => Application.Current!.GetResourceObservable("ThemeAccentBrush"),
+            PackageStatus.UpdateAvailable => Application.Current!.GetResourceObservable("ThemeAccentBrush"),
+            _ => Application.Current!.GetResourceObservable("ThemeBorderMidBrush")
+        };
+            
+        _primaryButtonBrushSubscription?.Dispose();
+        _primaryButtonBrushSubscription = primaryButtonBrushObservable!.Subscribe(x =>
+        {
+            PrimaryButtonBrush = x as IBrush;
+        });
+            
+        PrimaryButtonEnabled = Status is PackageStatus.Available or PackageStatus.Installed or PackageStatus.UpdateAvailable;
+        RemoveCommand.NotifyCanExecuteChanged();
+    }
+    
+    public Task ExecuteMainButtonAsync()
     {
         switch (Status)
         {
-            case PackageStatus.Available:
             case PackageStatus.UpdateAvailable:
-                await DownloadAsync(); 
-                break;
+                return UpdateAsync();
+            case PackageStatus.Available:
+                return DownloadAsync(); 
             case PackageStatus.Installed:
-                await RemoveAsync();
-                break;
+                return RemoveAsync();
         }
-    }
-    
-    public async Task ResolveAsync(CancellationToken cancellationToken)
-    {
-        var icon = Package.IconUrl != null
-            ? await _httpService.DownloadImageAsync(Package.IconUrl, cancellationToken: cancellationToken)
-            : null;
 
-        var tabs = new List<TabModel>();
+        return Task.CompletedTask;
+    }
+
+    private async Task ResolveIconAsync()
+    {
+        if (_resolveImageStarted) return;
+        _resolveImageStarted = true;
+        
+        var icon = Package.IconUrl != null
+       ? await _httpService.DownloadImageAsync(Package.IconUrl)
+       : null;
+
+        Image = icon;
+    }
+
+    public async Task ResolveTabsAsync()
+    {
+        if (_resolveTabsStarted) return;
+        _resolveTabsStarted = true;
+        IsTabsResolved = false;
+        Tabs.Clear();
+        
         if (Package.Tabs != null)
         {
             foreach (var tab in Package.Tabs)
             {
                 if(tab.ContentUrl == null) continue;
-                var content = await _httpService.DownloadTextAsync(tab.ContentUrl,
-                    cancellationToken: cancellationToken);
+                var content = await _httpService.DownloadTextAsync(tab.ContentUrl);
                                 
-                tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
+                Tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
             }
         }
-
-        Image = icon;
-        Tabs = tabs;
-        Links = Package.Links?.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")).ToList();
-        SelectedVersion = Package.Versions?.LastOrDefault();
+        
+        IsTabsResolved = true;
     }
 
+    private async Task UpdateAsync()
+    {
+        await RemoveAsync();
+        await DownloadAsync();
+    }
+    
     private async Task DownloadAsync()
     {
         try
@@ -228,9 +325,14 @@ public abstract class PackageViewModel : ObservableObject
         {
             _logger.Error(e.Message, e);
         }
+        
+        InstalledVersion = null;
+        
         Uninstall();
         
-        Status = PackageStatus.Available;
+        if(Status is PackageStatus.Installed or PackageStatus.UpdateAvailable)
+            Status = PackageStatus.Available;
+        
         Removed?.Invoke(this, EventArgs.Empty);
         
         return Task.CompletedTask;

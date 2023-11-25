@@ -5,11 +5,9 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.PackageManager.Serializer.Installed;
 using OneWare.SDK.Services;
 using Prism.Ioc;
 
@@ -17,6 +15,13 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : ObservableObject
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
+        WriteIndented = true
+    };
+    
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
     private PackageCategoryModel? _selectedCategory;
@@ -71,7 +76,9 @@ public class PackageManagerViewModel : ObservableObject
         set => SetProperty(ref _selectedCategory, value);
     }
     
-    public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = new();
+    public ObservableCollection<PackageCategoryModel> PackageCategories { get; } = [];
+
+    public Dictionary<string, PackageViewModel> Packages { get; } = new();
     
     public PackageManagerViewModel(IHttpService httpService, ILogger logger, IPaths paths)
     {
@@ -79,24 +86,71 @@ public class PackageManagerViewModel : ObservableObject
         _logger = logger;
 
         PackageDataBasePath = Path.Combine(paths.PackagesDirectory, "oneware-packages.json");
+        
+        PackageCategories.Add(new PackageCategoryModel("All"));
+        SelectedCategory = PackageCategories.First();
+
+        RegisterPackageCategory(new PackageCategoryModel("Languages", Application.Current?.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
+        RegisterPackageCategory(new PackageCategoryModel("Toolchains", Application.Current?.GetResourceObservable("FeatherIcons.Tool")));
+        RegisterPackageCategory(new PackageCategoryModel("Simulators", Application.Current?.GetResourceObservable("Material.Pulse")));
+        RegisterPackageCategory(new PackageCategoryModel("Boards", Application.Current?.GetResourceObservable("NiosIcon")));
+        RegisterPackageCategory(new PackageCategoryModel("Libraries", Application.Current?.GetResourceObservable("BoxIcons.RegularLibrary")));
+        RegisterPackageCategory(new PackageCategoryModel("Misc", Application.Current?.GetResourceObservable("Module")));
+        
         _ = LoadPackagesAsync();
     }
 
-    public void RegisterPackageCategory(PackageCategoryModel category)
+    private void FilterPackages()
+    {
+        foreach (var cat in PackageCategories)
+        {
+            cat.Filter(Filter, _showInstalled, _showAvailable);
+        }
+    }
+    
+    private void RegisterPackageCategory(PackageCategoryModel category)
     {
         PackageCategories.Add(category);
     }
     
-    public void RegisterPackage(PackageCategoryModel category, PackageViewModel packageView)
+    private void RegisterPackage(Package package, string? installedVersion = null)
     {
-        PackageCategories.First().Packages.Add(packageView);
-        category.Packages.Add(packageView);
+        if (package.Id == null) throw new Exception("Package ID cannot be empty");
+        
+        if (Packages.TryGetValue(package.Id, out var existing))
+        {
+            existing.Package = package;
+            return;
+        }
+        
+        var model = package.Type switch
+        {
+            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
+            _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
+        };
 
-        Observable.FromEventPattern(packageView, nameof(packageView.Installed))
+        if (installedVersion != null)
+        {
+            model.InstalledVersion = package.Versions!.First(x => x.Version == installedVersion);
+            model.Status = PackageStatus.Installed;
+        }
+        else
+        {
+            model.Status = PackageStatus.Available;
+        }
+
+        var category = PackageCategories.FirstOrDefault(x =>
+            x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
+ 
+        PackageCategories.First().Packages.Add(model);
+        Packages.Add(package.Id, model);
+        category.Packages.Add(model);
+
+        Observable.FromEventPattern(model, nameof(model.Installed))
             .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
             .DisposeWith(_packageRegistrationSubscription);
         
-        Observable.FromEventPattern(packageView, nameof(packageView.Removed))
+        Observable.FromEventPattern(model, nameof(model.Removed))
             .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
             .DisposeWith(_packageRegistrationSubscription);
     }
@@ -110,56 +164,24 @@ public class PackageManagerViewModel : ObservableObject
         _packageRegistrationSubscription = new CompositeDisposable();
         
         IsLoading = true;
-        PackageCategories.Clear();
-        PackageCategories.Add(new PackageCategoryModel("All"));
-        SelectedCategory = PackageCategories.First();
+        var removals = Packages.Where(x => x.Value.Status is PackageStatus.Available);
+        foreach (var rm in removals)
+        {
+            Packages.Remove(rm.Key);
+            foreach (var category in PackageCategories)
+            {
+                category.Packages.Remove(rm.Value);
+                category.VisiblePackages.Remove(rm.Value);
+            }
+        }
 
-        RegisterPackageCategory(new PackageCategoryModel("Languages", Application.Current?.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
-        RegisterPackageCategory(new PackageCategoryModel("Toolchains", Application.Current?.GetResourceObservable("FeatherIcons.Tool")));
-        RegisterPackageCategory(new PackageCategoryModel("Simulators", Application.Current?.GetResourceObservable("Material.Pulse")));
-        RegisterPackageCategory(new PackageCategoryModel("Boards", Application.Current?.GetResourceObservable("NiosIcon")));
-        RegisterPackageCategory(new PackageCategoryModel("Libraries", Application.Current?.GetResourceObservable("BoxIcons.RegularLibrary")));
-        RegisterPackageCategory(new PackageCategoryModel("Misc", Application.Current?.GetResourceObservable("Module")));
+        await LoadInstalledPackagesDatabaseAsync(_cancellationTokenSource.Token);
         
         await LoadPackageRepositoryAsync(
             "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
         
         FilterPackages();
         IsLoading = false;
-    }
-
-    public void FilterPackages()
-    {
-        foreach (var cat in PackageCategories)
-        {
-            cat.Filter(Filter, _showInstalled, _showAvailable);
-        }
-    }
-
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-    };
-
-    private void AddPackage(Package package)
-    {
-        
-        var model = package.Type switch
-        {
-            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
-            _ => null
-        };
-
-        if (model == null)
-        {
-            throw new Exception($"Package Type invalid/missing for {package.Name}!");
-        }
-
-        var category = PackageCategories.FirstOrDefault(x =>
-                x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
-        
-        RegisterPackage(category, model);
     }
     
     private async Task LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
@@ -170,7 +192,7 @@ public class PackageManagerViewModel : ObservableObject
         {
             if (repositoryString == null) throw new NullReferenceException(nameof(repositoryString));
             
-            var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, _serializerOptions);
+            var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
             
             if (repository is { Packages: not null })
             {
@@ -182,11 +204,11 @@ public class PackageManagerViewModel : ObservableObject
                         await _httpService.DownloadTextAsync(manifest.ManifestUrl,
                             cancellationToken: cancellationToken);
                     
-                    var package = JsonSerializer.Deserialize<Package>(downloadManifest!, _serializerOptions);
+                    var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
 
                     if(package == null) continue;
                     
-                    AddPackage(package);
+                    RegisterPackage(package);
                 }
             }
             else throw new Exception("Packages empty");
@@ -203,13 +225,28 @@ public class PackageManagerViewModel : ObservableObject
         {
             if (File.Exists(PackageDataBasePath))
             {
-                await using var file = File.OpenWrite(PackageDataBasePath);
-                var installedPackages = await JsonSerializer.DeserializeAsync<InstalledPackage[]>(file, cancellationToken: token);
+                await using var file = File.OpenRead(PackageDataBasePath);
+                var installedPackages = await JsonSerializer.DeserializeAsync<InstalledPackage[]>(file, SerializerOptions, token);
                 if (installedPackages != null)
                 {
                     foreach (var installedPackage in installedPackages)
                     {
-                        AddPackage(installedPackage.Package);
+                        var package = new Package()
+                        {
+                            Id = installedPackage.Id,
+                            Type = installedPackage.Type,
+                            Category = installedPackage.Category,
+                            Versions = [
+                                new PackageVersion()
+                                {
+                                    Version = installedPackage.InstalledVersion
+                                }
+                            ],
+                            Description = installedPackage.Description,
+                            License = installedPackage.License
+                        };
+                        
+                        RegisterPackage(package, installedPackage.InstalledVersion);
                     }
                 }
             }
@@ -229,10 +266,10 @@ public class PackageManagerViewModel : ObservableObject
             
             var installedPackages = PackageCategories.First().Packages
                 .Where(x => x.Status == PackageStatus.Installed)
-                .Select(x => new InstalledPackage(x.Package, x.InstalledVersion!.Version!))
+                .Select(x => new InstalledPackage(x.Package.Id!, x.Package.Type!, x.Package.Category, x.Package.Description, x.Package.License, x.InstalledVersion!.Version!))
                 .ToArray();
 
-            await JsonSerializer.SerializeAsync<InstalledPackage[]>(file, installedPackages);
+            await JsonSerializer.SerializeAsync(file, installedPackages, SerializerOptions);
         }
         catch (Exception e)
         {

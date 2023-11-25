@@ -8,7 +8,7 @@ namespace OneWare.PackageManager.ViewModels;
 public class PluginPackageViewModel : PackageViewModel
 {
     private readonly IPluginService _pluginService;
-
+    
     private IPlugin? _plugin;
 
     public IPlugin? Plugin
@@ -19,7 +19,6 @@ public class PluginPackageViewModel : PackageViewModel
             SetProperty(ref _plugin, value);
             if (_plugin is not null)
             {
-                Status = PackageStatus.Installed;
                 if (!_plugin.IsCompatible)
                 {
                     WarningText = _plugin.CompatibilityReport;
@@ -28,18 +27,14 @@ public class PluginPackageViewModel : PackageViewModel
             else
             {
                 WarningText = null;
-                Status = PackageStatus.Available;
             }
         }
     }
     
     public PluginPackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService) : 
-        base(package, httpService, paths, logger)
+        base(package, "Plugin", paths.PluginsDirectory, httpService, logger)
     {
         _pluginService = pluginService;
-
-        ExtractionFolder = paths.PluginsDirectory;
-        PackageType = "Plugin";
         
         Plugin = _pluginService.InstalledPlugins.FirstOrDefault(x => x.Id == package.Id);
     }
@@ -58,8 +53,7 @@ public class PluginPackageViewModel : PackageViewModel
 
             if (Plugin.IsCompatible)
             {
-                PrimaryButtonEnabled = false;
-                PrimaryButtonText = "Restart Required";
+                Status = PackageStatus.NeedRestart;
             }
             Plugin = null;
         }
