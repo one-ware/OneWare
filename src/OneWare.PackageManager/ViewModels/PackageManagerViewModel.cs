@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
@@ -19,6 +21,8 @@ public class PackageManagerViewModel : ObservableObject
     private readonly ILogger _logger;
     private PackageCategoryModel? _selectedCategory;
     private CancellationTokenSource? _cancellationTokenSource;
+    private CompositeDisposable _packageRegistrationSubscription = new();
+    
     private string PackageDataBasePath { get; }
 
     private bool _showInstalled = true;
@@ -54,7 +58,7 @@ public class PackageManagerViewModel : ObservableObject
         }
     }
 
-    private bool _isLoading = false;
+    private bool _isLoading;
     public bool IsLoading
     {
         get => _isLoading;
@@ -88,20 +92,22 @@ public class PackageManagerViewModel : ObservableObject
         PackageCategories.First().Packages.Add(packageView);
         category.Packages.Add(packageView);
 
-        packageView.Installed += (_, _) =>
-        {
-            _ = SaveInstalledPackagesDatabaseAsync();
-        };
-        packageView.Removed += (_, _) =>
-        {
-            _ = SaveInstalledPackagesDatabaseAsync();
-        };
+        Observable.FromEventPattern(packageView, nameof(packageView.Installed))
+            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
+            .DisposeWith(_packageRegistrationSubscription);
+        
+        Observable.FromEventPattern(packageView, nameof(packageView.Removed))
+            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
+            .DisposeWith(_packageRegistrationSubscription);
     }
     
     public async Task LoadPackagesAsync()
     {
-        _cancellationTokenSource?.Cancel();
+        if(_cancellationTokenSource is not null) await _cancellationTokenSource.CancelAsync();
         _cancellationTokenSource = new CancellationTokenSource();
+        
+        _packageRegistrationSubscription?.Dispose();
+        _packageRegistrationSubscription = new CompositeDisposable();
         
         IsLoading = true;
         PackageCategories.Clear();
@@ -135,6 +141,26 @@ public class PackageManagerViewModel : ObservableObject
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas = true,
     };
+
+    private void AddPackage(Package package)
+    {
+        
+        var model = package.Type switch
+        {
+            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
+            _ => null
+        };
+
+        if (model == null)
+        {
+            throw new Exception($"Package Type invalid/missing for {package.Name}!");
+        }
+
+        var category = PackageCategories.FirstOrDefault(x =>
+                x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
+        
+        RegisterPackage(category, model);
+    }
     
     private async Task LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
@@ -159,21 +185,8 @@ public class PackageManagerViewModel : ObservableObject
                     var package = JsonSerializer.Deserialize<Package>(downloadManifest!, _serializerOptions);
 
                     if(package == null) continue;
-
-                    var model = package.Type switch
-                    {
-                        "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
-                        _ => null
-                    };
-
-                    if (model == null)
-                    {
-                        throw new Exception($"Package Type invalid/missing for {manifest}!");
-                    }
-
-                    await model.ResolveAsync(cancellationToken);
                     
-                    RegisterPackage(PackageCategories.FirstOrDefault(x => x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last(), model);
+                    AddPackage(package);
                 }
             }
             else throw new Exception("Packages empty");
@@ -184,13 +197,21 @@ public class PackageManagerViewModel : ObservableObject
         }
     }
 
-    private async Task LoadInstalledPackagesDatabaseAsync()
+    private async Task LoadInstalledPackagesDatabaseAsync(CancellationToken token)
     {
         try
         {
             if (File.Exists(PackageDataBasePath))
             {
-                //JsonSerializer.Deserialize<Package[]>()
+                await using var file = File.OpenWrite(PackageDataBasePath);
+                var installedPackages = await JsonSerializer.DeserializeAsync<InstalledPackage[]>(file, cancellationToken: token);
+                if (installedPackages != null)
+                {
+                    foreach (var installedPackage in installedPackages)
+                    {
+                        AddPackage(installedPackage.Package);
+                    }
+                }
             }
         }
         catch (Exception e)

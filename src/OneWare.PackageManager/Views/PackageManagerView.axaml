@@ -93,7 +93,7 @@
                                                        Height="12"
                                                        IsVisible="{Binding WarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                        ToolTip.Tip="{Binding WarningText}"/>
-                                                <TextBlock Text="{Binding SelectedVersion.Version}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                                                <TextBlock Text="{Binding InstalledVersion.Version, FallbackValue={}}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
                                                 <Button Content="{Binding PrimaryButtonText}"
                                                         Name="MainButton"
                                                         Background="{Binding PrimaryButtonBrush}"
