@@ -3,6 +3,7 @@ namespace OneWare.PackageManager.Serializer;
 public class InstalledPackage(
     string id,
     string type,
+    string name,
     string? category,
     string? description,
     string? license,
@@ -11,6 +12,8 @@ public class InstalledPackage(
     public string Id { get; } = id;
     
     public string Type { get; } = type;
+
+    public string Name { get; } = name;
     
     public string? Category { get; } = category;
 

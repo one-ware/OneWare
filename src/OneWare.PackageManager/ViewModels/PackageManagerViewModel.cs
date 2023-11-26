@@ -236,6 +236,7 @@ public class PackageManagerViewModel : ObservableObject
                         {
                             Id = installedPackage.Id,
                             Type = installedPackage.Type,
+                            Name = installedPackage.Name,
                             Category = installedPackage.Category,
                             Versions = [
                                 new PackageVersion()
@@ -267,7 +268,7 @@ public class PackageManagerViewModel : ObservableObject
             
             var installedPackages = PackageCategories.First().Packages
                 .Where(x => x.Status == PackageStatus.Installed)
-                .Select(x => new InstalledPackage(x.Package.Id!, x.Package.Type!, x.Package.Category, x.Package.Description, x.Package.License, x.InstalledVersion!.Version!))
+                .Select(x => new InstalledPackage(x.Package.Id!, x.Package.Type!, x.Package.Name!, x.Package.Category, x.Package.Description, x.Package.License, x.InstalledVersion!.Version!))
                 .ToArray();
 
             await JsonSerializer.SerializeAsync(file, installedPackages, SerializerOptions);
