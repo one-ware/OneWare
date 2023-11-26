@@ -257,7 +257,9 @@ public abstract class PackageViewModel : ObservableObject
     private async Task UpdateAsync()
     {
         await RemoveAsync();
+        var restartRequired = Status == PackageStatus.NeedRestart;
         await DownloadAsync();
+        if (restartRequired) Status = PackageStatus.NeedRestart;
     }
     
     private async Task DownloadAsync()

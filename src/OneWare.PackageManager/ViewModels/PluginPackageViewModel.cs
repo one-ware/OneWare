@@ -30,6 +30,8 @@ public class PluginPackageViewModel : PackageViewModel
             }
         }
     }
+
+    private bool _needRestart;
     
     public PluginPackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService) : 
         base(package, "Plugin", paths.PluginsDirectory, httpService, logger)
@@ -42,7 +44,8 @@ public class PluginPackageViewModel : PackageViewModel
     protected override void Install(string path)
     {
         //Load Plugin
-        Plugin = _pluginService.AddPlugin(path);
+        if(!_needRestart)
+            Plugin = _pluginService.AddPlugin(path);
     }
 
     protected override void Uninstall()
@@ -53,6 +56,7 @@ public class PluginPackageViewModel : PackageViewModel
 
             if (Plugin.IsCompatible)
             {
+                _needRestart = true;
                 Status = PackageStatus.NeedRestart;
             }
             Plugin = null;
