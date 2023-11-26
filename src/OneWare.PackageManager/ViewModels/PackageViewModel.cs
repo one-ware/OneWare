@@ -115,7 +115,7 @@ public abstract class PackageViewModel : ObservableObject
         get => _warningText;
         set => SetProperty(ref _warningText, value);
     }
-    
+
     protected string ExtractionFolder { get; }
 
     protected string PackageType { get; }
@@ -257,9 +257,7 @@ public abstract class PackageViewModel : ObservableObject
     private async Task UpdateAsync()
     {
         await RemoveAsync();
-        var restartRequired = Status == PackageStatus.NeedRestart;
         await DownloadAsync();
-        if (restartRequired) Status = PackageStatus.NeedRestart;
     }
     
     private async Task DownloadAsync()
@@ -282,21 +280,18 @@ public abstract class PackageViewModel : ObservableObject
                 {
                     Progress = x;
                 });
-
-                var path = Path.Combine(ExtractionFolder, Package!.Id!);
                 
                 //Download
-                if (!await _httpService.DownloadAndExtractArchiveAsync(target.Url, path, progress))
+                if (!await _httpService.DownloadAndExtractArchiveAsync(target.Url, ExtractionFolder, progress))
                 {
                     Status = PackageStatus.Available;
                     return;
                 }
                 
-                Install(path);
+                Install();
                 
                 InstalledVersion = selectedVersion;
-
-                Status = PackageStatus.Installed;
+                
                 Installed?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -311,8 +306,16 @@ public abstract class PackageViewModel : ObservableObject
         }
     }
 
-    protected abstract void Install(string path);
+    /// <summary>
+    /// Gets called after downloading and extracting
+    /// Make sure to set Status after completing
+    /// </summary>
+    protected abstract void Install();
 
+    /// <summary>
+    /// Gets called after deleting the package
+    /// Make sure to set Status after completing
+    /// </summary>
     protected abstract void Uninstall();
 
     private Task RemoveAsync()
@@ -321,19 +324,17 @@ public abstract class PackageViewModel : ObservableObject
         
         try
         {
-            Directory.Delete(Path.Combine(ExtractionFolder, Package.Id), true);
+            Directory.Delete(ExtractionFolder, true);
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            return Task.CompletedTask;
         }
         
         InstalledVersion = null;
         
         Uninstall();
-        
-        if(Status is PackageStatus.Installed or PackageStatus.UpdateAvailable)
-            Status = PackageStatus.Available;
         
         Removed?.Invoke(this, EventArgs.Empty);
         
