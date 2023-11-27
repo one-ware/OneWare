@@ -16,15 +16,12 @@ using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
+public class UniversalFpgaProjectRoot : UniversalProjectRoot
 {
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
-    public DateTime LastSaveTime { get; set; }
-    public override string ProjectPath => ProjectFilePath;
+    
     public override string ProjectTypeId => ProjectType;
-    public string ProjectFilePath { get; }
-    public JsonObject Properties { get; }
 
     private readonly IImage _topEntityOverlay;
 
@@ -76,43 +73,12 @@ public class UniversalFpgaProjectRoot : ProjectRoot, IProjectRootWithFile
         }
     }
 
-    public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
+    public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties) 
+        : base(projectFilePath, properties)
     {
-        ProjectFilePath = projectFilePath;
-        Properties = properties;
-        
         _topEntityOverlay = Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib2019.DownloadOverlay16X") as IImage 
                             ?? throw new NullReferenceException("TopEntity Icon");
         
         Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
-    }
-
-    public override void UnregisterEntry(IProjectEntry entry)
-    {
-        if (entry == TopEntity)
-        {
-            TopEntity = null;
-        }
-        base.UnregisterEntry(entry);
-    }
-
-    public override bool IsPathIncluded(string relativePath)
-    {
-        Properties.TryGetPropertyValue("Include", out var includeNode);
-        var includes = includeNode?.AsArray().GetValues<string>();
-        Properties.TryGetPropertyValue("Exclude", out var excludeNode);
-        var excludes = excludeNode?.AsArray().GetValues<string>();
-
-        if (includes == null && excludes == null) return true;
-        
-        return ProjectHelper.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
-    }
-
-    public override void IncludePath(string path)
-    {
-        if(!Properties.ContainsKey("Include")) 
-            Properties.Add("Include", new JsonArray());
-        
-        Properties["Include"]!.AsArray().Add(path);
     }
 }
