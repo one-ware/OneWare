@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using OneWare.ApplicationCommands;
 using OneWare.ApplicationCommands.Models;
+using OneWare.ApplicationCommands.Services;
 using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -55,6 +56,7 @@ namespace OneWare.Core
             //Services
             containerRegistry.RegisterSingleton<IPluginService, PluginService>();
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
+            containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
             containerRegistry.RegisterSingleton<IPackageService, PackageService>();
             containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
             containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
@@ -150,6 +152,7 @@ namespace OneWare.Core
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
+            var commandService = Container.Resolve<IApplicationCommandService>();
             
             windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
             {
@@ -199,6 +202,25 @@ namespace OneWare.Core
                 Command = new RelayCommand(() => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format()),
                 InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
             });
+            
+            var saveFileCommand = new AsyncRelayCommand(() => Container.Resolve<IDockService>().CurrentDocument?.SaveAsync() ?? Task.FromResult(false));
+
+            var inputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey);
+            
+            windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
+            {
+                Command = saveFileCommand,
+                Header = "Save File",
+                InputGesture = inputGesture,
+            });
+
+            commandService.RegisterCommand(
+                new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File", inputGesture,
+                    x =>
+                    {
+                        _ = x.SaveAsync();
+                    })
+            );
 
             //AvaloniaEdit Hyperlink support
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
@@ -230,7 +252,6 @@ namespace OneWare.Core
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
-            moduleCatalog.AddModule<ApplicationCommandsModule>();
             moduleCatalog.AddModule<SearchListModule>();
             moduleCatalog.AddModule<ErrorListModule>();
             moduleCatalog.AddModule<OutputModule>();

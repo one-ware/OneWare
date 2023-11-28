@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using OneWare.ApplicationCommands.Models;
@@ -9,13 +10,18 @@ namespace OneWare.ApplicationCommands.Services;
 public class ApplicationCommandService : IApplicationCommandService
 {
     public ObservableCollection<IApplicationCommand> ApplicationCommands { get; } = new();
+
+    public ApplicationCommandService()
+    {
+        InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown, handledEventsToo: false);
+    }
     
     public void RegisterCommand(IApplicationCommand command)
     {
         ApplicationCommands.Add(command);
     }
 
-    public void HandleKeyDown(object? sender, KeyEventArgs args)
+    private void HandleKeyDown(object? sender, KeyEventArgs args)
     {
         var gesture = new KeyGesture(args.Key, args.KeyModifiers);
 
