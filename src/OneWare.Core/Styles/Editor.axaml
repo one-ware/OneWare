@@ -7,7 +7,7 @@
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
         xmlns:editorEx="clr-namespace:OneWare.SDK.EditorExtensions;assembly=OneWare.SDK"
-        xmlns:avalonia="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia">
+        xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia">
 
     <Design.PreviewWith>
         <Border Padding="20">
@@ -72,24 +72,28 @@
         <Setter Property="Padding" Value="5, 3, 3, 3" />
     </Style>
 
-    <Style Selector="ContentControl.ToolTip">
+    <Style Selector="cc|CompletionTipContentControl">
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="Padding" Value="1" />
+        <Setter Property="Padding" Value="2 4" />
         <Setter Property="MaxHeight" Value="350" />
         <Setter Property="MaxWidth" Value="700" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Padding="1" CornerRadius="1" BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            Background="{DynamicResource ThemeBackgroundBrush}">
+                    <Border Padding="{TemplateBinding Padding}" CornerRadius="1" BorderThickness="1"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            Background="{TemplateBinding Background}">
                         <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
                                 <Style Selector="avaloniaEdit|TextEditor">
+                                    <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                    <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                </Style>
+                                <Style Selector="colorTextBlock|CTextBlock">
                                     <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                     <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                 </Style>
