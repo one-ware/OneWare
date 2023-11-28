@@ -8,6 +8,7 @@ using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
+using OneWare.ApplicationCommands;
 using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -56,7 +57,7 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<IPackageService, PackageService>();
             containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
             containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
-            containerRegistry.RegisterSingleton<IActive, Active>();
+            containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
             containerRegistry.RegisterSingleton<IDockService, DockService>();
             containerRegistry.RegisterSingleton<IWindowService, WindowService>();
             containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
@@ -101,7 +102,7 @@ namespace OneWare.Core
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
                 "Editor Font Family",
                 "JetBrains Mono NL",
-                "JetBrains Mono NL", "IntelOne Mono", "Consolas", "Fira Code");
+                "JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code");
 
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontSize", "Font Size",
                 "Editor Font Size", 15, Enumerable.Range(10, 30).ToArray());
@@ -148,17 +149,17 @@ namespace OneWare.Core
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Help")
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
             {
                 Header = "Help",
                 Priority = 1000
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Code")
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Code")
             {
                 Header = "Code",
                 Priority = 100
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Changelog")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Changelog")
             {
                 Header = $"Changelog",
                 ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
@@ -167,7 +168,7 @@ namespace OneWare.Core
                     DataContext = Container.Resolve<ChangelogViewModel>()
                 }))
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("About")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("About")
             {
                 Header = $"About {paths.AppName}",
                 Command = new RelayCommand(() => windowService.Show(new AboutView()
@@ -175,12 +176,12 @@ namespace OneWare.Core
                     DataContext = Container.Resolve<AboutViewModel>()
                 }))
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
+            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Extras")
             {
                 Header = "Extras",
                 Priority = 900
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Settings")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Settings")
             {
                 Header = $"Settings",
                 ImageIconObservable = Current?.GetResourceObservable("Material.SettingsOutline"),
@@ -189,7 +190,7 @@ namespace OneWare.Core
                     DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
                 }))
             });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Format")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
             {
                 Header = $"Format",
                 ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
@@ -227,6 +228,7 @@ namespace OneWare.Core
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
+            moduleCatalog.AddModule<ApplicationCommandsModule>();
             moduleCatalog.AddModule<SearchListModule>();
             moduleCatalog.AddModule<ErrorListModule>();
             moduleCatalog.AddModule<OutputModule>();

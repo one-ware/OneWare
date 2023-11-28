@@ -1,4 +1,4 @@
-﻿namespace OneWare.SDK.Models;
+﻿namespace OneWare.SDK.ViewModels;
 
 public interface IMenuItem
 {

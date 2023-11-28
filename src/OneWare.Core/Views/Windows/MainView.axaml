@@ -60,9 +60,9 @@
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
-                            <StackPanel Orientation="Horizontal" IsVisible="{Binding Active.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <StackPanel Orientation="Horizontal" IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
                                 <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-                                <Button Command="{Binding Active.TerminateActiveDialogAsync}">
+                                <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
                                     <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}"></Image>
                                 </Button>
                             </StackPanel>
@@ -85,9 +85,9 @@
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->
                     <controls:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                   IsVisible="{Binding Active.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
+                                   IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
-                    <TextBlock Margin="5, 2, 3, 2" Text="{Binding Active.ActiveProcess.StatusMessage}"
+                    <TextBlock Margin="5, 2, 3, 2" Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}"
                                Foreground="White" />
 
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"

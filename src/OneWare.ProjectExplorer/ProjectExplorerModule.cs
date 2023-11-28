@@ -9,6 +9,7 @@ using Prism.Modularity;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.ProjectExplorer;
 
@@ -35,14 +36,14 @@ public class ProjectExplorerModule : IModule
             DataContext = vm,
         });
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("File")
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("File")
         {
             Priority = -10,
             Header = "File"
         });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemModel("File")
+            new MenuItemViewModel("File")
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
@@ -50,14 +51,14 @@ public class ProjectExplorerModule : IModule
             });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemModel("File")
+            new MenuItemViewModel("File")
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
                 ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X")
             });
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Project Explorer")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Project Explorer")
         {
             Header = "Project Explorer",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),

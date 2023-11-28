@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Avalonia.Platform.Storage;
 using Dock.Model.Core;
 using OneWare.SDK.Models;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SDK.Services;
 

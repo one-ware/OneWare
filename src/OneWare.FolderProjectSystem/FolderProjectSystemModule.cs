@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -25,7 +26,7 @@ public class FolderProjectSystemModule : IModule
             .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemModel("Folder")
+            new MenuItemViewModel("Folder")
             {
                 Header = "Folder",
                 Command = new RelayCommand(() => _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),

@@ -16,7 +16,7 @@ namespace OneWare.Core.ViewModels.Windows
     public class MainWindowViewModel : ObservableObject
     {
         public IDockService DockService { get; }
-        public IActive Active { get; }
+        public IApplicationStateService ApplicationStateService { get; }
         public IWindowService WindowService { get; }
         public IPaths Paths { get; }
 
@@ -44,10 +44,10 @@ namespace OneWare.Core.ViewModels.Windows
         public ObservableCollection<Control> BottomRightExtension { get; }
         public ObservableCollection<IMenuItem> MainMenu { get; }
         
-        public MainWindowViewModel(IPaths paths, IActive active, IWindowService windowService, IDockService dockService,
+        public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService, IWindowService windowService, IDockService dockService,
             ISettingsService settingsService)
         {
-            Active = active;
+            ApplicationStateService = applicationStateService;
             WindowService = windowService;
             DockService = dockService;
             Paths = paths;

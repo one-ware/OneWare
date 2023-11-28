@@ -80,7 +80,7 @@ namespace OneWare.SDK.LanguageService
         {
         }
 
-        public virtual Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
+        public virtual Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
         {
             throw new NotImplementedException();
         }
@@ -95,7 +95,7 @@ namespace OneWare.SDK.LanguageService
             return Task.FromResult<Action?>(null);
         }
 
-        public virtual IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions()
+        public virtual IEnumerable<MenuItemViewModel>? GetTypeAssistanceQuickOptions()
         {
             return null;
         }

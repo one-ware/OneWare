@@ -2,6 +2,7 @@
 using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.FolderProjectSystem;
 
@@ -38,8 +39,8 @@ public class FolderProjectManager : IProjectManager
         return Task.FromResult(true);
     }
 
-    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
+    public IEnumerable<MenuItemViewModel> ConstructContextMenu(IProjectEntry entry)
     {
-        return Array.Empty<MenuItemModel>();
+        return Array.Empty<MenuItemViewModel>();
     }
 }

@@ -4,7 +4,7 @@ using OneWare.SDK.Models;
 
 namespace OneWare.SDK.Services;
 
-public interface IActive
+public interface IApplicationStateService
 {
     public ApplicationProcess ActiveProcess { get; }
     

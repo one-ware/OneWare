@@ -7,6 +7,7 @@ using Prism.Modularity;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SerialMonitor;
 
@@ -30,7 +31,7 @@ public class SerialMonitorModule : IModule
         
         dockService.RegisterLayoutExtension<ISerialMonitorService>(DockShowLocation.Bottom);
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SerialMonitor")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SerialMonitor")
         {
             Header = "Serial Monitor",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<ISerialMonitorService>())),

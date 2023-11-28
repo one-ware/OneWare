@@ -127,7 +127,7 @@
             <DataGrid.Columns>
                 <DataGridTemplateColumn CanUserResize="False" Width="25" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                        <DataTemplate x:DataType="models:ErrorListItem">
                             <Grid ToolTip.Tip="{Binding Code}">
                                 <Image Width="14" Height="14"
                                        Source="{DynamicResource VsImageLib.StatusInformation16X}"
@@ -146,7 +146,7 @@
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Width="4*">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ErrorListItemModel">
+                        <DataTemplate x:DataType="models:ErrorListItem">
                             <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}" Text="{Binding Description}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -154,10 +154,10 @@
                         <TextBlock Text="Description" />
                     </DataGridTemplateColumn.Header>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Source" Binding="{Binding Source}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="Project" Binding="{Binding Root.Header}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItemModel" Header="File" Binding="{Binding File.Header}" />
-                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItemModel" Header="Line" Binding="{Binding StartLine}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Source" Binding="{Binding Source}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Project" Binding="{Binding Root.Header}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="File" Binding="{Binding File.Header}" />
+                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItem" Header="Line" Binding="{Binding StartLine}" />
             </DataGrid.Columns>
         </DataGrid>
 

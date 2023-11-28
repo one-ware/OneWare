@@ -2,6 +2,7 @@
 using AvaloniaEdit.CodeCompletion;
 using OneWare.SDK.EditorExtensions;
 using OneWare.SDK.Models;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SDK.LanguageService
 {
@@ -23,9 +24,9 @@ namespace OneWare.SDK.LanguageService
         void Format();
         Task TextEnteredAsync(TextInputEventArgs e);
         void TextEntering(TextInputEventArgs e);
-        Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset);
+        Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset);
         Task<string?> GetHoverInfoAsync(int offset);
         Task<Action?> GetActionOnControlWordAsync(int offset);
-        IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions();
+        IEnumerable<MenuItemViewModel>? GetTypeAssistanceQuickOptions();
     }
 }

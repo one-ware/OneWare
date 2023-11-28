@@ -1,6 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:models="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK">
+        xmlns:models="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
+        xmlns:viewModels="clr-namespace:OneWare.SDK.ViewModels;assembly=OneWare.SDK">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
@@ -51,7 +52,7 @@
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     
-    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="models:MenuItemModel">
+    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="viewModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -68,7 +69,7 @@
     </Style>
 
     <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
-           x:DataType="models:MenuItemModel">
+           x:DataType="viewModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />

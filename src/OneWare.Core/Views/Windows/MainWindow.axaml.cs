@@ -9,6 +9,7 @@ using DynamicData.Binding;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Extensions;
 using OneWare.SDK.Models;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Views.Windows
 {
@@ -109,7 +110,7 @@ namespace OneWare.Core.Views.Windows
         private void ConvertMenuToNativeMenu(IEnumerable<object> m, NativeMenu nm)
         {
             foreach (var item in m)
-                if (item is MenuItemModel mi)
+                if (item is MenuItemViewModel mi)
                 {
                     var nmi = new NativeMenuItem(mi.Header as string ?? "")
                     {

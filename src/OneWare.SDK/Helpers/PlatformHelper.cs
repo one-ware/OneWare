@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using OneWare.SDK.Services;
 using Prism.Ioc;
 
@@ -296,6 +297,14 @@ namespace OneWare.SDK.Helpers
         public static CornerRadius WindowsCornerRadiusBottomRight => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
             ? (Environment.OSVersion.Version.Build >= 22000 ? new CornerRadius(0,0,8,0) : new CornerRadius(0))
             : new CornerRadius(0);
+        #endregion
+        
+        #region Keys
+        
+        public static KeyModifiers ControlKey => RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+            ? KeyModifiers.Meta
+            : KeyModifiers.Control;
+        
         #endregion
     }
 }

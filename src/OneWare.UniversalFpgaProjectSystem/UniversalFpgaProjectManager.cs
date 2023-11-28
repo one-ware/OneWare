@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -74,26 +75,26 @@ public class UniversalFpgaProjectManager : IProjectManager
         return root is UniversalFpgaProjectRoot uFpga && await UniversalFpgaProjectParser.SerializeAsync(uFpga);
     }
 
-    public IEnumerable<MenuItemModel> ConstructContextMenu(IList<IProjectEntry> selected)
+    public IEnumerable<MenuItemViewModel> ConstructContextMenu(IList<IProjectEntry> selected)
     {
         if (selected.Count == 1)
         {
             switch (selected.First())
             {
                 case UniversalFpgaProjectRoot root:
-                    yield return new MenuItemModel("Save")
+                    yield return new MenuItemViewModel("Save")
                     {
                         Header = "Save",
                         Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
                         ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
                     };
-                    yield return new MenuItemModel("Reload")
+                    yield return new MenuItemViewModel("Reload")
                     {
                         Header = $"Reload",
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
                         ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
                     };
-                    yield return new MenuItemModel("Edit")
+                    yield return new MenuItemViewModel("Edit")
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
@@ -104,7 +105,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                 case IProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
                     if (universalFpgaProjectRoot.TopEntity == file)
                     {
-                        yield return new MenuItemModel("Unset Top Entity")
+                        yield return new MenuItemViewModel("Unset Top Entity")
                         {
                             Header = $"Unset Top Entity",
                             Command = new RelayCommand(() =>
@@ -116,7 +117,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     }
                     else if(file.Extension is ".vhd" or ".vhdl" or ".v")
                     {
-                        yield return new MenuItemModel("Set Top Entity")
+                        yield return new MenuItemViewModel("Set Top Entity")
                         {
                             Header = $"Set Top Entity",
                             Command = new RelayCommand(() =>

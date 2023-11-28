@@ -2,10 +2,11 @@
 using Avalonia.Input;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.SDK.Models;
 
-namespace OneWare.SDK.Models
+namespace OneWare.SDK.ViewModels
 {
-    public class MenuItemModel : ObservableObject, IMenuItem
+    public class MenuItemViewModel : ObservableObject, IMenuItem
     {
         public int Priority { get; set; }
         
@@ -70,7 +71,7 @@ namespace OneWare.SDK.Models
         
         public string Part { get; }
 
-        public MenuItemModel(string part)
+        public MenuItemViewModel(string part)
         {
             Part = part;
         }

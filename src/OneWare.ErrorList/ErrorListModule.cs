@@ -7,6 +7,7 @@ using Prism.Modularity;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.ErrorList;
 
@@ -41,7 +42,7 @@ public class ErrorListModule : IModule
         _settingsService.Register(KeyErrorListShowExternalErrors, true);
         _settingsService.Register(KeyErrorListVisibleSource, 0);
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Problems")
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Problems")
         {
             Header = "Problems",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IErrorService>())),

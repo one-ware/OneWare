@@ -26,9 +26,11 @@ using OneWare.Core.Views.Controls;
 using OneWare.ErrorList.ViewModels;
 using OneWare.SDK.EditorExtensions;
 using OneWare.SDK.Extensions;
+using OneWare.SDK.Helpers;
 using OneWare.SDK.LanguageService;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Core.Views.DockViews
 {
@@ -131,7 +133,7 @@ namespace OneWare.Core.Views.DockViews
             //Zoom in ctrl + wheel
             CodeBox.AddDisposableHandler(PointerWheelChangedEvent, (o, i) =>
             {
-                if (i.KeyModifiers != Global.ControlKey) return;
+                if (i.KeyModifiers != PlatformHelper.ControlKey) return;
                 var fontSize = _settingsService.GetSettingValue<int>("Editor_FontSize");
                 if (i.Delta.Y > 0) _settingsService.SetSettingValue("Editor_FontSize", fontSize + 1);
                 else _settingsService.SetSettingValue("Editor_FontSize", fontSize - 1);
@@ -250,23 +252,17 @@ namespace OneWare.Core.Views.DockViews
         
         private void TextBox_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.Key == Key.F && e.KeyModifiers == Global.ControlKey && e.KeyModifiers == KeyModifiers.Shift)
+            if (e.Key == Key.F && e.KeyModifiers == PlatformHelper.ControlKey && e.KeyModifiers == KeyModifiers.Shift)
                 if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
                     Dispatcher.UIThread.Post(AutoFormat, DispatcherPriority.Background);
 
-            if (e.Key == Key.V && e.KeyModifiers == Global.ControlKey)
+            if (e.Key == Key.V && e.KeyModifiers == PlatformHelper.ControlKey)
                 if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
                     Dispatcher.UIThread.Post(() => _ = AutoFormatDelayAsync(), DispatcherPriority.Background);
 
             if (e.Key == Key.Back)
                 if (_enteredString.Length > 0)
                     _enteredString = _enteredString.Remove(_enteredString.Length - 1);
-
-            if (e.Key == Key.S && e.KeyModifiers == Global.ControlKey)
-            {
-                e.Handled = true;
-                _ = ViewModel?.SaveAsync();
-            }
         }
 
         #endregion
@@ -316,7 +312,7 @@ namespace OneWare.Core.Views.DockViews
             //Left Button
             if (e.GetCurrentPoint(null).Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed)
             {
-                if (e.KeyModifiers == Global.ControlKey)
+                if (e.KeyModifiers == PlatformHelper.ControlKey)
                     if (_controlAction != null)
                     {
                         _controlAction.Invoke();
@@ -366,17 +362,17 @@ namespace OneWare.Core.Views.DockViews
 
                 HoverBox.IsVisible = false;
 
-                contextMenuList.Add(new MenuItemModel("Cut")
+                contextMenuList.Add(new MenuItemViewModel("Cut")
                 {
                     Header = "Cut", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCut") ,
                     Command = new RelayCommand(CodeBox.Cut)
                 });
-                contextMenuList.Add(new MenuItemModel("Copy")
+                contextMenuList.Add(new MenuItemViewModel("Copy")
                 {
                     Header = "Copy", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCopy") ,
                     Command = new RelayCommand(CodeBox.Copy)
                 });
-                contextMenuList.Add(new MenuItemModel("Paste")
+                contextMenuList.Add(new MenuItemViewModel("Paste")
                 {
                     Header = "Paste", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularPaste") ,
                     Command = new RelayCommand(CodeBox.Paste)
@@ -384,12 +380,12 @@ namespace OneWare.Core.Views.DockViews
                 if (_typeAssistance != null)
                 {
                     contextMenuList.Add(new Separator());
-                    contextMenuList.Add(new MenuItemModel("Comment")
+                    contextMenuList.Add(new MenuItemViewModel("Comment")
                     {
                         Header = "Comment", ImageIconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X") ,
                         Command = new RelayCommand(_typeAssistance.Comment)
                     });
-                    contextMenuList.Add(new MenuItemModel("Uncomment")
+                    contextMenuList.Add(new MenuItemViewModel("Uncomment")
                     {
                         Header = "Uncomment", ImageIconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X") ,
                         Command = new RelayCommand(_typeAssistance.Uncomment)
@@ -407,7 +403,7 @@ namespace OneWare.Core.Views.DockViews
                             (startLine, endLine) = (endLine, startLine);
                         }
                         contextMenuList.Add(new Separator());
-                        contextMenuList.Add(new MenuItemModel("IndentSelection")
+                        contextMenuList.Add(new MenuItemViewModel("IndentSelection")
                         {
                             Header = "Auto-Indent Selection",
                             ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCode") ,
@@ -428,7 +424,7 @@ namespace OneWare.Core.Views.DockViews
 
         //int clickOffset = -1;        
 
-        private ErrorListItemModel? GetErrorAtMousePos(PointerEventArgs e)
+        private ErrorListItem? GetErrorAtMousePos(PointerEventArgs e)
         {
             if (ViewModel?.CurrentFile == null) return null;
             
@@ -472,7 +468,7 @@ namespace OneWare.Core.Views.DockViews
 
             _lastMovedArgs = e;
 
-            if (e.KeyModifiers == Global.ControlKey) _ = GetControlHoverActionAsync();
+            if (e.KeyModifiers == PlatformHelper.ControlKey) _ = GetControlHoverActionAsync();
         }
 
         private Action? _controlAction;

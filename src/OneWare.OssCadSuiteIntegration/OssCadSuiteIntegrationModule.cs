@@ -4,6 +4,7 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
@@ -67,7 +68,7 @@ public class OssCadSuiteIntegrationModule : IModule
             {
                 return new[]
                 {
-                    new MenuItemModel("Yosys")
+                    new MenuItemViewModel("Yosys")
                     {
                         Header = "Compile with yosys",
                         Command = new AsyncRelayCommand(() => yosysService.SynthAsync(project))
@@ -79,7 +80,7 @@ public class OssCadSuiteIntegrationModule : IModule
             {
                 return new[]
                 {
-                    new MenuItemModel("YosysNetList")
+                    new MenuItemViewModel("YosysNetList")
                     {
                         Header = "Generate Json Netlist",
                         Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))

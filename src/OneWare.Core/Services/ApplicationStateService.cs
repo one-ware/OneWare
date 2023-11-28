@@ -8,7 +8,7 @@ using OneWare.SDK.Services;
 
 namespace OneWare.Core.Services;
 
-public class Active : ObservableObject, IActive
+public class ApplicationStateService : ObservableObject, IApplicationStateService
 {
     private readonly IWindowService _windowService;
     
@@ -23,7 +23,7 @@ public class Active : ObservableObject, IActive
         private set => SetProperty(ref _activeProcess, value);
     }
     
-    public Active(IWindowService windowService)
+    public ApplicationStateService(IWindowService windowService)
     {
         _windowService = windowService;
         
