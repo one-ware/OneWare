@@ -25,18 +25,30 @@ public class ApplicationCommandsModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var commandService = containerProvider.Resolve<ApplicationCommandService>();
+        var windowService = containerProvider.Resolve<IWindowService>();
 
         InputElement.KeyDownEvent.AddClassHandler<TopLevel>((sender, args) =>
         {
             commandService.HandleKeyDown(sender, args);
         }, handledEventsToo: false);
+        
+        var saveFileCommand = new AsyncRelayCommand(() => containerProvider.Resolve<IDockService>().CurrentDocument?.SaveAsync() ?? Task.FromResult(false));
+
+        var inputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey);
+            
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
+        {
+            Command = saveFileCommand,
+            Header = "Save File",
+            InputGesture = inputGesture,
+        });
 
         commandService.RegisterCommand(
-            new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File", new KeyGesture(Key.S, PlatformHelper.ControlKey),
+            new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File", inputGesture,
                 x =>
                 {
                     _ = x.SaveAsync();
                 })
-            );
+        );
     }
 }

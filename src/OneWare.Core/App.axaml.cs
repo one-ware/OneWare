@@ -9,6 +9,7 @@ using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using OneWare.ApplicationCommands;
+using OneWare.ApplicationCommands.Models;
 using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -149,6 +150,7 @@ namespace OneWare.Core
             settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
 
             var windowService = Container.Resolve<IWindowService>();
+            
             windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
             {
                 Header = "Help",

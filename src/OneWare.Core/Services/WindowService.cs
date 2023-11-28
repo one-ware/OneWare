@@ -8,6 +8,8 @@ using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Threading;
+using AvaloniaEdit.Utils;
+using DynamicData;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
@@ -84,6 +86,15 @@ public class WindowService : IWindowService
             if (activeCollection.FirstOrDefault(x => x.Part == a.Part) is {} duplicate)
             {
                 activeCollection.Remove(duplicate);
+                
+                //TODO Improve duplicate handling
+                if (a is MenuItemViewModel av && duplicate is MenuItemViewModel dv)
+                {
+                    var newList = new ObservableCollection<IMenuItem>();
+                    if(dv.Items != null) newList.AddRange(dv.Items);
+                    if(av.Items != null) newList.AddRange(av.Items);
+                    av.Items = newList;
+                }
             }
             
             for(var i = 0; i < activeCollection.Count; i++)
