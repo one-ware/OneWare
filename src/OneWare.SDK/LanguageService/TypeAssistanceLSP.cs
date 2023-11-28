@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
@@ -16,6 +17,7 @@ using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 using OneWare.SDK.Extensions;
+using OneWare.SDK.Helpers;
 using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.SDK.Models.IFile;
@@ -37,12 +39,14 @@ namespace OneWare.SDK.LanguageService
 
         private ICompletionData? _lastSelectedCompletionItem;
         private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
-        public LanguageServiceBase Service { get; }
         
         private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(200);
         protected virtual TimeSpan RefreshTime => TimeSpan.FromMilliseconds(500);
         
-        public TypeAssistanceLsp(IEditor evm, LanguageServiceBase langService) : base(evm)
+        protected LanguageServiceBase Service { get; }
+        protected SymbolInformationOrDocumentSymbolContainer? LastDocumentSymbols { get; private set; }
+
+        protected TypeAssistanceLsp(IEditor evm, LanguageServiceBase langService) : base(evm)
         {
             Service = langService;
         }
@@ -509,63 +513,24 @@ namespace OneWare.SDK.LanguageService
                 }
             }
         }
-
+        
         public virtual async Task UpdateSymbolsAsync()
         {
-            if (CodeBox.SyntaxHighlighting == null) return;
-
-            if (Service.IsLanguageServiceReady)
-            {
-                var highlights = await RetrieveSymbolsAsync();
-                
-                if (highlights is not null)
-                {
-                    SetCustomColor(SymbolKind.Function, highlights);
-                    SetCustomColor(SymbolKind.Class, highlights);
-                }
-                else
-                {
-                    //CustomHighlightManager?.ClearHighlights();
-                }
-            }
-            else
-            {
-                //CustomHighlightManager?.ClearHighlights();
-            }
-
-            CodeBox.TextArea.TextView.Redraw();
-        }
-
-        public virtual async Task<List<(string, SymbolKind)>?> RetrieveSymbolsAsync()
-        {
-            var symbolInfo = await Service.RequestSymbolsAsync(CurrentFile.FullPath);
-
-            if (symbolInfo is null) return null;
+            LastDocumentSymbols = await Service.RequestSymbolsAsync(CurrentFile.FullPath);
             
-            var highlights = new List<(string, SymbolKind)>();
-            if (IsOpen)
-                foreach (var c in symbolInfo)
-                    if (c.IsDocumentSymbol && c.DocumentSymbol != null)
-                        //ContainerLocator.Container.Resolve<ILogger>()?.Log("DocumentSymbol not supported! TypeAssistanceLSP RetrieveSymbols()", ConsoleColor.Red);
-                        highlights.Add((c.DocumentSymbol.Name, c.DocumentSymbol.Kind));
-                    else if(c.IsDocumentSymbolInformation && c.SymbolInformation != null)
-                        highlights.Add((c.SymbolInformation.Name, c.SymbolInformation.Kind));
-
-            return highlights;
-        }
-
-        protected virtual void SetCustomColor(SymbolKind kind, IEnumerable<(string, SymbolKind)> symbols)
-        {
-            var color = CodeBox.SyntaxHighlighting.GetNamedColor(kind.ToString());
-
-            if (color == null) return;
-
-            var highlights = symbols
-                .Where(x => x.Item2 == kind)
-                .Select(x => x.Item1)
-                .ToArray();
-
-            //CustomHighlightManager?.SetHightlights(highlights, color);
+            // if (LastDocumentSymbols is not null)
+            // {
+            //     var segments = LastDocumentSymbols
+            //         .Where(x => x.IsDocumentSymbolInformation && x.SymbolInformation != null)
+            //         .Select(x => x.SymbolInformation!.Location.Range.GenerateTextModification(Editor.CurrentDocument, Brushes.Chocolate))
+            //         .ToArray();
+            //     
+            //     Editor.Editor.ModificationService.SetModification("symbol", segments);
+            // }
+            // else
+            // {
+            //     Editor.Editor.ModificationService.ClearModification("symbols");
+            // }
         }
 
         protected virtual async Task ShowOverloadProviderAsync()

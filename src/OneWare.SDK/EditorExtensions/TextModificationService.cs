@@ -82,17 +82,4 @@ public class TextModificationService : DocumentColorizingTransformer
         if (color != null) element.TextRunProperties.SetForegroundBrush(color);
         if (decorations != null) element.TextRunProperties.SetTextDecorations(decorations);
     }
-    
-    public class TextModificationSegment : TextSegment
-    {
-        public TextModificationSegment(int startOffset, int endOffset)
-        {
-            StartOffset = startOffset < 0 ? 0 : startOffset;
-            EndOffset = endOffset;
-        }
-
-        public IBrush? Brush { get; set; }
-        
-        public TextDecorationCollection? Decorations { get; set; }
-    }
 }

@@ -505,7 +505,7 @@ namespace OneWare.Core.Views.DockViews
 
             if (_controlAction != null && _lastControlWordBounds.HasValue)
             {
-                CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationService.TextModificationSegment(
+                CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationSegment(
                     _lastControlWordBounds.Value.Start.Value,
                     _lastControlWordBounds.Value.End.Value) { Decorations = TextDecorationCollection.Parse("Underline") });
             }

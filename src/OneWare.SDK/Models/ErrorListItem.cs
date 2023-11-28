@@ -1,5 +1,6 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.SDK.Enums;
+using OneWare.SDK.Helpers;
 using IFile = OneWare.SDK.Models.IFile;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
@@ -35,19 +36,7 @@ namespace OneWare.SDK.Models
         /// </summary>
         public (int startOffset, int endOffset) GetOffset(TextDocument document)
         {
-            if (StartLine <= 0) return (1, 1);
-            if (StartLine > document.LineCount) return (document.TextLength, document.TextLength);
-            
-            var startOffset = document.GetOffset(StartLine, StartColumn ?? 0);
-
-            if (EndLine != null && EndColumn != null)
-            {
-                var endOffset = document.GetOffset(EndLine.Value, EndColumn.Value);
-                return (startOffset, endOffset);
-            }
-
-            var lineLength = document.GetLineByNumber(StartLine).Length;
-            return (startOffset, startOffset + lineLength);
+            return document.GetStartAndEndOffset(StartLine, StartColumn, EndLine, EndColumn);
         }
 
         public bool Equals(ErrorListItem? model)

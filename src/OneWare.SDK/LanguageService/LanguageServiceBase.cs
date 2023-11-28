@@ -95,12 +95,12 @@ namespace OneWare.SDK.LanguageService
                     options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
                     options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta); });
                     
-                    options.WithCapability(new SynchronizationCapability
-                    {
-                        DidSave = true,
-                        WillSave = true,
-                        WillSaveWaitUntil = true
-                    });
+                    // options.WithCapability(new SynchronizationCapability()
+                    // {
+                    //     DidSave = true,
+                    //     WillSave = true,
+                    //     WillSaveWaitUntil = true
+                    // });
                     options.WithCapability(new HoverCapability
                     {
                         ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText)
@@ -189,11 +189,11 @@ namespace OneWare.SDK.LanguageService
                             WorkspaceFolders = true
                         },
                         Window = new WindowClientCapabilities(),
-                        TextDocument = new TextDocumentClientCapabilities
-                        {
-                            Synchronization = new SynchronizationCapability
-                                { DidSave = true, WillSave = true, WillSaveWaitUntil = true }
-                        }
+                        // TextDocument = new TextDocumentClientCapabilities
+                        // {
+                        //     Synchronization = new SynchronizationCapability
+                        //         { DidSave = true, WillSave = true, WillSaveWaitUntil = true }
+                        // }
                     });
 
                     customOptions?.Invoke(options);
@@ -685,7 +685,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<Container<SymbolInformation>?> RequestWorkspaceSymbolsAsync(string query)
+        public async Task<Container<WorkspaceSymbol>?> RequestWorkspaceSymbolsAsync(string query)
         {
             if (Client == null || Client.ServerSettings.Capabilities.WorkspaceSymbolProvider == null) return null;
             try
