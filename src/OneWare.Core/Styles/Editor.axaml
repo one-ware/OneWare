@@ -6,37 +6,50 @@
         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
-        xmlns:editorEx="clr-namespace:OneWare.SDK.EditorExtensions;assembly=OneWare.SDK">
-    
+        xmlns:editorEx="clr-namespace:OneWare.SDK.EditorExtensions;assembly=OneWare.SDK"
+        xmlns:avalonia="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia">
+
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <search:SearchPanel />
+        </Border>
+    </Design.PreviewWith>
+
     <Style Selector="avaloniaEdit|TextEditor">
-        <Setter Property="folding:FoldingMargin.FoldingMarkerBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
-        <Setter Property="folding:FoldingMargin.FoldingMarkerBackgroundBrush" Value="{DynamicResource ThemeControlLowBrush}"/>
-        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBrush" Value="{DynamicResource ThemeForegroundBrush}"/>
-        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBackgroundBrush" Value="{DynamicResource ThemeControlLowBrush}"/>
+        <Setter Property="folding:FoldingMargin.FoldingMarkerBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="folding:FoldingMargin.FoldingMarkerBackgroundBrush"
+                Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBrush"
+                Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBackgroundBrush"
+                Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
-    
+
     <!--Code completion-->
     <Style Selector="cc|CompletionList">
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="1" Padding="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" Margin="0" Padding="0"
-                                      Name="PART_ListBox" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0">
-                    <cc:CompletionListBox.ItemTemplate>
-                        <DataTemplate DataType="cc:ICompletionData">
-                            <Border>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Image VerticalAlignment="Center" Source="{Binding Image}"
-                                           Width="{Binding #CompletionName.Bounds.Height}"
-                                           Height="{Binding #CompletionName.Bounds.Height}" />
-                                    <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
-                                               Margin="8,0,0,0" Text="{Binding Content}"
-                                               Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </cc:CompletionListBox.ItemTemplate>
-                </cc:CompletionListBox>
+                <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="1" Padding="1"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                          VerticalAlignment="Stretch" Margin="0" Padding="0"
+                                          Name="PART_ListBox" Background="{DynamicResource ThemeBackgroundBrush}"
+                                          BorderThickness="0">
+                        <cc:CompletionListBox.ItemTemplate>
+                            <DataTemplate DataType="cc:ICompletionData">
+                                <Border>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Image VerticalAlignment="Center" Source="{Binding Image}"
+                                               Width="{Binding #CompletionName.Bounds.Height}"
+                                               Height="{Binding #CompletionName.Bounds.Height}" />
+                                        <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
+                                                   Margin="8,0,0,0" Text="{Binding Content}"
+                                                   Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </cc:CompletionListBox.ItemTemplate>
+                    </cc:CompletionListBox>
                 </Border>
             </ControlTemplate>
         </Setter>
@@ -48,7 +61,7 @@
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
-    
+
     <Style Selector="cc|CompletionList TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
@@ -65,20 +78,20 @@
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Padding" Value="1" />
-        <Setter Property="MaxHeight" Value="350"/>
+        <Setter Property="MaxHeight" Value="350" />
         <Setter Property="MaxWidth" Value="700" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Padding="1" CornerRadius="1" BorderThickness="1" 
+                    <Border Padding="1" CornerRadius="1" BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                             Background="{DynamicResource ThemeBackgroundBrush}">
                         <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
                                 <Style Selector="avaloniaEdit|TextEditor">
-                                    <Setter Property="FontFamily" Value="{DynamicResource EditorFont}"/>
-                                    <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}"/>
+                                    <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                    <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                 </Style>
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
@@ -147,7 +160,7 @@
                                                  Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor"/>
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor" />
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
 
@@ -155,7 +168,7 @@
                                                  Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                             <md:MarkdownScrollViewer.Styles>
                                 <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor"/>
+                                <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor" />
                             </md:MarkdownScrollViewer.Styles>
                         </md:MarkdownScrollViewer>
                     </Grid>
@@ -163,16 +176,214 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="editorEx|TextInputControl">
-        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}"/>
-        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <TextBox Background="{DynamicResource ThemeControlLowBrush}" Name="inputBox" IsReadOnly="False"/>
+                    <TextBox Background="{DynamicResource ThemeControlLowBrush}" Name="inputBox" IsReadOnly="False" />
                 </ControlTemplate>
             </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style Selector="search|SearchPanel">
+        <Setter Property="BorderThickness" Value="1 0 1 1" />
+        <Setter Property="CornerRadius" Value="0 0 5 5" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_Border"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        Background="{TemplateBinding Background}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Padding="5">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto">
+                        <ToggleButton Name="Expander"
+                                      Theme="{StaticResource SearchPanelExpanderToggle}"
+                                      VerticalAlignment="Center"
+                                      IsVisible="{Binding !TextEditor.IsReadOnly, RelativeSource={RelativeSource TemplatedParent}}"
+                                      IsChecked="{Binding IsReplaceMode, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      Grid.Column="0"
+                                      Grid.Row="0"
+                                      Width="16"
+                                      Margin="0, 0, 5, 0">
+                            <ToolTip.Tip>
+                                <TextBlock Text="{x:Static avaloniaEdit:SR.SearchToggleReplace}" />
+                            </ToolTip.Tip>
+                        </ToggleButton>
+                        <StackPanel Orientation="Horizontal"
+                                    Grid.Column="2"
+                                    Grid.Row="0">
+                            <TextBox Watermark="{x:Static avaloniaEdit:SR.SearchLabel}"
+                                     Name="PART_searchTextBox"
+                                     Grid.Column="1"
+                                     Grid.Row="0"
+                                     Width="265"
+                                     Margin="0,0,0,0"
+                                     Text="{Binding SearchPattern, RelativeSource={RelativeSource TemplatedParent}}">
+                                <TextBox.InnerRightContent>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ToggleButton Theme="{StaticResource SearchPanelTextBoxButton}"
+                                                      IsChecked="{Binding $parent[search:SearchPanel].MatchCase, Mode=TwoWay}"
+                                                      ToolTip.Tip="{x:Static avaloniaEdit:SR.SearchMatchCaseText}"
+                                                      Cursor="Arrow"
+                                                      BorderThickness="0"
+                                                      Background="Transparent"
+                                                      VerticalAlignment="Center">
+                                            <Path Data="{StaticResource CaseSensitiveIconPath}"
+                                                  Stretch="UniformToFill"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Width="12"
+                                                  Fill="{Binding #PART_searchTextBox.Foreground}"
+                                                  Stroke="{Binding #PART_searchTextBox.Foreground}"
+                                                  StrokeThickness="1" />
+                                        </ToggleButton>
+                                        <ToggleButton Theme="{StaticResource SearchPanelTextBoxButton}"
+                                                      IsChecked="{Binding $parent[search:SearchPanel].WholeWords, Mode=TwoWay}"
+                                                      ToolTip.Tip="{x:Static avaloniaEdit:SR.SearchMatchWholeWordsText}"
+                                                      Margin="3,0,0,0"
+                                                      Cursor="Arrow"
+                                                      BorderThickness="0"
+                                                      Background="Transparent"
+                                                      VerticalAlignment="Center">
+                                            <Path Data="{StaticResource CompleteWordIconPath}"
+                                                  Stretch="Uniform"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Width="14"
+                                                  Fill="{Binding #PART_searchTextBox.Foreground}"
+                                                  Stroke="{Binding #PART_searchTextBox.Foreground}"
+                                                  StrokeThickness="1" />
+                                        </ToggleButton>
+                                        <ToggleButton Theme="{StaticResource SearchPanelTextBoxButton}"
+                                                      IsChecked="{Binding $parent[search:SearchPanel].UseRegex, Mode=TwoWay}"
+                                                      ToolTip.Tip="{x:Static avaloniaEdit:SR.SearchUseRegexText}"
+                                                      Margin="3,0,5,0"
+                                                      Cursor="Arrow"
+                                                      BorderThickness="0"
+                                                      Background="Transparent"
+                                                      VerticalAlignment="Center">
+                                            <Path Data="{StaticResource RegularExpressionIconPath}"
+                                                  Stretch="Uniform"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Width="12"
+                                                  Fill="{Binding #PART_searchTextBox.Foreground}"
+                                                  Stroke="{Binding #PART_searchTextBox.Foreground}"
+                                                  StrokeThickness="1" />
+                                        </ToggleButton>
+                                    </StackPanel>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                            <Button Margin="5,0,0,0"
+                                    MinWidth="34"
+                                    VerticalAlignment="Stretch"
+                                    Command="{x:Static search:SearchCommands.FindPrevious}">
+                                <ToolTip.Tip>
+                                    <TextBlock Text="{x:Static avaloniaEdit:SR.SearchFindPreviousText}" />
+                                </ToolTip.Tip>
+                                <Path Data="{StaticResource FindPreviousIconPath}"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Width="12"
+                                      Fill="{TemplateBinding Foreground}"
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="1" />
+                            </Button>
+                            <Button Margin="3,0,0,0"
+                                    VerticalAlignment="Stretch"
+                                    MinWidth="34"
+                                    Command="{x:Static search:SearchCommands.FindNext}">
+                                <ToolTip.Tip>
+                                    <TextBlock Text="{x:Static avaloniaEdit:SR.SearchFindNextText}" />
+                                </ToolTip.Tip>
+                                <Path Data="{StaticResource FindNextIconPath}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Stretch="Uniform"
+                                      Width="12"
+                                      Fill="{TemplateBinding Foreground}"
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="1" />
+                            </Button>
+                            <Button Margin="3,0,0,0"
+                                    VerticalAlignment="Stretch"
+                                    MinWidth="34"
+                                    Command="{x:Static search:SearchCommands.CloseSearchPanel}"
+                                    Focusable="True">
+                                <Path Data="{StaticResource CloseIconPath}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Stretch="Uniform"
+                                      Width="11"
+                                      Fill="{TemplateBinding Foreground}"
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="1" />
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Name="ReplaceButtons"
+                                    IsVisible="{Binding #Expander.IsChecked}"
+                                    Orientation="Horizontal"
+                                    Margin="0 5 0 0 "
+                                    Grid.Column="2"
+                                    Grid.Row="1">
+                            <TextBox Name="ReplaceBox" Watermark="{x:Static avaloniaEdit:SR.ReplaceLabel}"
+                                     IsVisible="{Binding IsReplaceMode, RelativeSource={RelativeSource TemplatedParent}}"
+                                     Grid.Column="1"
+                                     Grid.Row="1"
+                                     Width="265"
+                                     Margin="0 0 0 0"
+                                     Text="{Binding ReplacePattern, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Button Margin="5, 0, 0, 0"
+                                    VerticalAlignment="Stretch"
+                                    MinWidth="34"
+                                    Command="{x:Static search:SearchCommands.ReplaceNext}">
+                                <ToolTip.Tip>
+                                    <TextBlock Text="{x:Static avaloniaEdit:SR.SearchReplaceNext}" />
+                                </ToolTip.Tip>
+                                <Path Data="{StaticResource ReplaceNextIconPath}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Stretch="Uniform"
+                                      Width="11"
+                                      Fill="{TemplateBinding Foreground}"
+                                      StrokeThickness="1" />
+                            </Button>
+                            <Button Margin="3, 0, 0, 0"
+                                    VerticalAlignment="Stretch"
+                                    MinWidth="34"
+                                    Command="{x:Static search:SearchCommands.ReplaceAll}">
+                                <ToolTip.Tip>
+                                    <TextBlock Text="{x:Static avaloniaEdit:SR.SearchReplaceAll}" />
+                                </ToolTip.Tip>
+                                <Path Data="{StaticResource ReplaceAllIconPath}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Stretch="Uniform"
+                                      Width="14"
+                                      Fill="{TemplateBinding Foreground}" />
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Name="PART_MessageView"
+                                    IsVisible="False"
+                                    Orientation="Horizontal"
+                                    Margin="0 5 0 0 "
+                                    Grid.Column="2"
+                                    Grid.Row="2">
+                            <TextBlock Name="PART_MessageContent"
+                                       FontSize="11" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
         </Setter>
     </Style>
 
