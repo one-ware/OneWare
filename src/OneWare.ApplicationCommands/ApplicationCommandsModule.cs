@@ -37,7 +37,6 @@ public class ApplicationCommandsModule : IModule
                 x =>
                 {
                     _ = x.SaveAsync();
-                    Console.WriteLine("Save lol");
                 }));
     }
 }
