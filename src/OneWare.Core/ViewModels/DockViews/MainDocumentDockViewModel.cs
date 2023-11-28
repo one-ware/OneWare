@@ -10,6 +10,7 @@ public class MainDocumentDockViewModel : DocumentDock
     {
         Id = "CentralDocumentDock";
         IsCollapsable = false;
+        CanClose = false;
 
         VisibleDockables = new ObservableCollection<IDockable>();
     }
