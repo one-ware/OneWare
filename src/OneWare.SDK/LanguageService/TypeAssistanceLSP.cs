@@ -206,9 +206,9 @@ namespace OneWare.SDK.LanguageService
             return string.IsNullOrWhiteSpace(info) ? null : info;
         }
 
-        public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
+        public override async Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
         {
-            var menuItems = new List<MenuItemModel>();
+            var menuItems = new List<MenuItemViewModel>();
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
             var location = CodeBox.Document.GetLocation(offset);
             var pos = CodeBox.Document.GetPositionFromOffset(offset);
@@ -231,13 +231,13 @@ namespace OneWare.SDK.LanguageService
                     {
                         if (ca.IsCodeAction && ca.CodeAction != null)
                         {
-                            if(ca.CodeAction.Command != null) quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
+                            if(ca.CodeAction.Command != null) quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new RelayCommand<Command>(ExecuteCommand),
                                 CommandParameter = ca.CodeAction.Command
                             });
-                            else if(ca.CodeAction.Edit != null) quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
+                            else if(ca.CodeAction.Edit != null) quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
@@ -247,7 +247,7 @@ namespace OneWare.SDK.LanguageService
                     }
 
                     if (quickfixes.Count > 0)
-                        menuItems.Add(new MenuItemModel("Quick fix")
+                        menuItems.Add(new MenuItemViewModel("Quick fix")
                         {
                             Header = "Quick fix...",
                             Items = quickfixes
@@ -258,7 +258,7 @@ namespace OneWare.SDK.LanguageService
             //Refactorings
             var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
             if (prepareRefactor != null)
-                menuItems.Add(new MenuItemModel("Rename")
+                menuItems.Add(new MenuItemViewModel("Rename")
                 {
                     Header = "Rename...",
                     Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
@@ -271,14 +271,14 @@ namespace OneWare.SDK.LanguageService
             if (definition != null && IsOpen)
                 foreach (var i in definition)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemModel("GoToDefinition")
+                        menuItems.Add(new MenuItemViewModel("GoToDefinition")
                         {
                             Header = "Go to Definition",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemModel("GoToDefinition")
+                        menuItems.Add(new MenuItemViewModel("GoToDefinition")
                         {
                             Header = "Go to Definition",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -289,14 +289,14 @@ namespace OneWare.SDK.LanguageService
             if (declaration != null && IsOpen)
                 foreach (var i in declaration)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemModel("GoToDeclaration")
+                        menuItems.Add(new MenuItemViewModel("GoToDeclaration")
                         {
                             Header = "Go to Declaration",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemModel("GoToDeclaration")
+                        menuItems.Add(new MenuItemViewModel("GoToDeclaration")
                         {
                             Header = "Go to Declaration",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -307,14 +307,14 @@ namespace OneWare.SDK.LanguageService
             if (implementation != null && IsOpen)
                 foreach (var i in implementation)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemModel("GoToImplementation")
+                        menuItems.Add(new MenuItemViewModel("GoToImplementation")
                         {
                             Header = "Go to Implementation",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemModel("GoToImplementation")
+                        menuItems.Add(new MenuItemViewModel("GoToImplementation")
                         {
                             Header = "Go to Implentation",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -325,14 +325,14 @@ namespace OneWare.SDK.LanguageService
             if (typeDefinition != null && IsOpen)
                 foreach (var i in typeDefinition)
                     if (i.IsLocation)
-                        menuItems.Add(new MenuItemModel("GoToDefinition")
+                        menuItems.Add(new MenuItemViewModel("GoToDefinition")
                         {
                             Header = "Go to Type Definition",
                             Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                             CommandParameter = i.Location
                         });
                     else
-                        menuItems.Add(new MenuItemModel("GoToDefinition")
+                        menuItems.Add(new MenuItemViewModel("GoToDefinition")
                         {
                             Header = "Go to Type Definition",
                             Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -412,7 +412,7 @@ namespace OneWare.SDK.LanguageService
             if (location == null) return;
             
             var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(path) as Models.IFile;
+            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
             
             var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
@@ -627,9 +627,9 @@ namespace OneWare.SDK.LanguageService
             return Task.FromResult(new List<CompletionData>());
         }
 
-        public override IEnumerable<MenuItemModel> GetTypeAssistanceQuickOptions()
+        public override IEnumerable<MenuItemViewModel> GetTypeAssistanceQuickOptions()
         {
-            return new List<MenuItemModel>
+            return new List<MenuItemViewModel>
             {
                 new("RestartLs")
                 {
@@ -728,7 +728,7 @@ namespace OneWare.SDK.LanguageService
                 comp, offset, AfterComplete);
         }
 
-        public ErrorListItemModel? GetErrorAtLocation(TextLocation location)
+        public ErrorListItem? GetErrorAtLocation(TextLocation location)
         {
             foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
                 if (location.Line >= error.StartLine && location.Column >= error.StartColumn && (location.Line < error.EndLine || location.Line == error.EndLine && location.Column <= error.EndColumn))

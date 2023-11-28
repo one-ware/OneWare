@@ -10,10 +10,4 @@ public partial class VcdView : UserControl
     {
         InitializeComponent();
     }
-
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-        if (e.Key == Key.S && e.KeyModifiers == KeyModifiers.Control) _ = (DataContext as VcdViewModel)?.SaveAsync();
-        base.OnKeyDown(e);
-    }
 }

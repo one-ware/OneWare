@@ -1,39 +1,34 @@
-﻿#nullable enable
-
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.SDK.Enums;
+using IFile = OneWare.SDK.Models.IFile;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
 namespace OneWare.SDK.Models
 {
-    public class ErrorListItemModel : IEquatable<ErrorListItemModel>, IComparable<ErrorListItemModel>
+    public class ErrorListItem(
+        string description,
+        ErrorType type,
+        IFile file,
+        string? source,
+        int startLine,
+        int? startColumn = null,
+        int? endLine = null,
+        int? endColumn = null,
+        string? code = null,
+        Diagnostic? diagnostic = null)
+        : IEquatable<ErrorListItem>, IComparable<ErrorListItem>
     {
-        public Diagnostic? Diagnostic { get; set; }
-        public string Description { get; init; }
-        public ErrorType Type { get; init; }
-        public string? Source { get; init; }
-        public IFile File { get; init; }
-        public IProjectRoot? Root { get; }
-        public int StartLine { get; init; }
-        public int? StartColumn { get; init; }
-        public int? EndLine { get; init; }
-        public int? EndColumn { get; init; }
-        public string? Code { get; init; }
-        
-        public ErrorListItemModel(string description, ErrorType type, IFile file, string? source, int startLine, int? startColumn = null, int? endLine = null, int? endColumn = null, string? code = null, Diagnostic? diagnostic = null)
-        {
-            Description = description;
-            Type = type;
-            Source = source;
-            StartLine = startLine;
-            StartColumn = startColumn;
-            EndLine = endLine;
-            EndColumn = endColumn;
-            File = file;
-            Code = code;
-            Root = (file as IProjectFile)?.Root;
-            Diagnostic = diagnostic;
-        }
+        public Diagnostic? Diagnostic { get; set; } = diagnostic;
+        public string Description { get; init; } = description;
+        public ErrorType Type { get; init; } = type;
+        public string? Source { get; init; } = source;
+        public IFile File { get; init; } = file;
+        public IProjectRoot? Root { get; } = (file as IProjectFile)?.Root;
+        public int StartLine { get; init; } = startLine;
+        public int? StartColumn { get; init; } = startColumn;
+        public int? EndLine { get; init; } = endLine;
+        public int? EndColumn { get; init; } = endColumn;
+        public string? Code { get; init; } = code;
 
         /// <summary>
         /// Returns start and end offsets. If no end offset is specified, the whole line length is used
@@ -55,7 +50,7 @@ namespace OneWare.SDK.Models
             return (startOffset, startOffset + lineLength);
         }
 
-        public bool Equals(ErrorListItemModel? model)
+        public bool Equals(ErrorListItem? model)
         {
             if (model == null) return false;
             return model.Description == Description
@@ -69,7 +64,7 @@ namespace OneWare.SDK.Models
                    && model.Code == Code;
         }
 
-        public int CompareTo(ErrorListItemModel? other)
+        public int CompareTo(ErrorListItem? other)
         {
             if(other == null) return -1;
             if (Type < other.Type) return -1;
@@ -98,7 +93,7 @@ namespace OneWare.SDK.Models
 
         public override bool Equals(object? obj)
         {
-            return Equals(obj as ErrorListItemModel);
+            return Equals(obj as ErrorListItem);
         }
     }
 }

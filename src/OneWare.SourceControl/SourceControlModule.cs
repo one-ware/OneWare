@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
 using Prism.Ioc;
@@ -33,7 +34,7 @@ public class SourceControlModule : IModule
         var dockService = containerProvider.Resolve<IDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SourceControl")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SourceControl")
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<SourceControlViewModel>())),

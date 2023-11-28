@@ -40,10 +40,10 @@ namespace OneWare.Vhdl
             return new TypeAssistanceVhdl(editor, this);
         }
 
-        public override IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
+        public override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
         {
             if (file is IProjectFile pf && pf.TopFolder?.Search(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip", false) != null)
-                return new List<ErrorListItemModel>();
+                return new List<ErrorListItem>();
 
             return base.ConvertErrors(pdp, file);
         }

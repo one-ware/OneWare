@@ -7,6 +7,7 @@ using Prism.Modularity;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.Output;
 
@@ -35,7 +36,7 @@ public class OutputModule : IModule
 
         _settingsService.Register("Output_Autoscroll", true);
         
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Output")
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
         {
             Header = "Output",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),

@@ -93,7 +93,7 @@ namespace OneWare.SDK.EditorExtensions
             foreach (var m in toRemove) _diagnosticMarkers.Remove(m);
         }
         
-        public void SetDiagnostics(IEnumerable<ErrorListItemModel> diagnostics)
+        public void SetDiagnostics(IEnumerable<ErrorListItem> diagnostics)
         {
             _diagnosticMarkers.Clear();
             

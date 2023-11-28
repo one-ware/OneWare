@@ -16,6 +16,7 @@ using OneWare.SDK.Enums;
 using Prism.Ioc;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 
 namespace OneWare.Core.Services;
@@ -46,7 +47,7 @@ public class WindowService : IWindowService
         if(parts.Length > 1)
             foreach (var part in parts.Skip(1))
             {
-                if (activeCollection.FirstOrDefault(x => x.Part == part) is MenuItemModel mi)
+                if (activeCollection.FirstOrDefault(x => x.Part == part) is MenuItemViewModel mi)
                 {
                     activeCollection = mi.Items ?? new ObservableCollection<IMenuItem>();
                     mi.Items = activeCollection;
@@ -54,7 +55,7 @@ public class WindowService : IWindowService
                 else
                 {
                     var newItems = new ObservableCollection<IMenuItem>();
-                    var newPart = new MenuItemModel(part)
+                    var newPart = new MenuItemViewModel(part)
                     {
                         Header = part,
                         Items = newItems

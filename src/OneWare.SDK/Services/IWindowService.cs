@@ -5,6 +5,7 @@ using Avalonia.Media;
 using OneWare.SDK.Controls;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SDK.Services;
 

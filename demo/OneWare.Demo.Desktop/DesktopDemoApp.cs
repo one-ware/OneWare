@@ -96,10 +96,10 @@ public class DesktopDemoApp : DemoApp
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                var key = Container.Resolve<IActive>().AddState("Loading last projects...", AppState.Loading);
+                var key = Container.Resolve<IApplicationStateService>().AddState("Loading last projects...", AppState.Loading);
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
                 Container.Resolve<IDockService>().InitializeContent();
-                Container.Resolve<IActive>().RemoveState(key, "Projects loaded!");
+                Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             }
         }
         

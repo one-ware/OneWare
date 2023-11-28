@@ -20,6 +20,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
+        <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj" />
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj" />
         <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
         <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj" />

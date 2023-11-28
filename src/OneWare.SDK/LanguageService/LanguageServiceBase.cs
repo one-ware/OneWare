@@ -879,14 +879,14 @@ namespace OneWare.SDK.LanguageService
             {
                 var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles
                     .FirstOrDefault(x => x.Key.FullPath.EqualPaths(pdp.Uri.GetFileSystemPath())).Key;
-                file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(pdp.Uri.GetFileSystemPath()) as Models.IFile;
+                file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().Search(pdp.Uri.GetFileSystemPath()) as IFile;
                 file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(pdp.Uri.GetFileSystemPath());
                 ContainerLocator.Container.Resolve<IErrorService>().RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
                 //file.Diagnostics = pdp.Diagnostics;
             }, DispatcherPriority.Background);
         }
 
-        public virtual IEnumerable<ErrorListItemModel> ConvertErrors(PublishDiagnosticsParams pdp, Models.IFile file)
+        public virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
         {
             foreach (var p in pdp.Diagnostics)
             {
@@ -899,7 +899,7 @@ namespace OneWare.SDK.LanguageService
                         _ => ErrorType.Hint
                     };
 
-                yield return new ErrorListItemModel(p.Message, errorType, file, Name, p.Range.Start.Line+1,
+                yield return new ErrorListItem(p.Message, errorType, file, Name, p.Range.Start.Line+1,
                     p.Range.Start.Character+1, p.Range.End.Line+1, p.Range.End.Character+1,  p.Code?.String ?? p.Code?.Long.ToString() ?? "", p);
             }
         }

@@ -72,5 +72,9 @@ public class PluginPackageViewModel : PackageViewModel
             }
             Plugin = null;
         }
+        else if(Status is PackageStatus.Installed)
+        {
+            Status = PackageStatus.Available;
+        }
     }
 }

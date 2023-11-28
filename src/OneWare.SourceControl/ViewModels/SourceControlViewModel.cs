@@ -28,7 +28,7 @@ namespace OneWare.SourceControl.ViewModels
         
         private readonly ILogger _logger;
         private readonly ISettingsService _settingsService;
-        private readonly IActive _active;
+        private readonly IApplicationStateService _applicationStateService;
         private readonly IDockService _dockService;
         private readonly IWindowService _windowService;
         public IProjectExplorerService ProjectExplorerService { get; }
@@ -113,14 +113,14 @@ namespace OneWare.SourceControl.ViewModels
         public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
         public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
 
-        public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
+        public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
         
-        public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IActive active,
+        public SourceControlViewModel(ILogger logger, ISettingsService settingsService, IApplicationStateService applicationStateService,
             IDockService dockService, IWindowService windowService, IProjectExplorerService projectExplorerService) : base(IconKey)
         {
             _logger = logger;
             _settingsService = settingsService;
-            _active = active;
+            _applicationStateService = applicationStateService;
             _dockService = dockService;
             _windowService = windowService;
             ProjectExplorerService = projectExplorerService;
@@ -208,7 +208,7 @@ namespace OneWare.SourceControl.ViewModels
         {
             var success = true;
 
-            var key = _active.AddState("Cloning " + Path.GetFileName(url) + "...", AppState.Loading);
+            var key = _applicationStateService.AddState("Cloning " + Path.GetFileName(url) + "...", AppState.Loading);
             try
             {
                 await WaitUntilFreeAsync();
@@ -233,7 +233,7 @@ namespace OneWare.SourceControl.ViewModels
                 success = false;
             }
 
-            _active.RemoveState(key);
+            _applicationStateService.RemoveState(key);
 
             IsLoading = false;
             //Active.SetStatus(success ? "Done" : "Finished with errors", Active.AppState.Idle);
@@ -288,7 +288,7 @@ namespace OneWare.SourceControl.ViewModels
                         {
                             //if (branch.IsRemote) continue;
 
-                            var menuItem = new MenuItemModel("BranchName")
+                            var menuItem = new MenuItemViewModel("BranchName")
                             {
                                 Header = branch.FriendlyName,
                                 Command = new RelayCommand<Branch>(ChangeBranch),
@@ -306,7 +306,7 @@ namespace OneWare.SourceControl.ViewModels
                         //if (AvailableBranchesMenu.Count > 0)
                         //        AvailableBranchesMenu.Add(new Separator());
 
-                        AvailableBranchesMenu.Add(new MenuItemModel("NewBranch")
+                        AvailableBranchesMenu.Add(new MenuItemViewModel("NewBranch")
                         {
                             Header = "New Branch...",
                             ImageIconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch") ,
@@ -702,7 +702,7 @@ namespace OneWare.SourceControl.ViewModels
         {
             if (CurrentRepo == null) return null;
 
-            var pullState = _active.AddState("Pulling from " + CurrentRepo.Head.RemoteName, AppState.Loading);
+            var pullState = _applicationStateService.AddState("Pulling from " + CurrentRepo.Head.RemoteName, AppState.Loading);
             await WaitUntilFreeAsync();
             IsLoading = true;
 
@@ -739,7 +739,7 @@ namespace OneWare.SourceControl.ViewModels
             });
 
             IsLoading = false;
-            _active.RemoveState(pullState);
+            _applicationStateService.RemoveState(pullState);
 
             if (result != null)
             {
@@ -781,7 +781,7 @@ namespace OneWare.SourceControl.ViewModels
                 if (!success) return false;
             }
 
-            var pullState = _active.AddState("Pushing to " + CurrentRepo.Head.RemoteName, AppState.Loading);
+            var pullState = _applicationStateService.AddState("Pushing to " + CurrentRepo.Head.RemoteName, AppState.Loading);
             await WaitUntilFreeAsync();
             IsLoading = true;
 
@@ -805,7 +805,7 @@ namespace OneWare.SourceControl.ViewModels
                 }
             });
 
-            _active.RemoveState(pullState);
+            _applicationStateService.RemoveState(pullState);
             IsLoading = false;
 
             if (result)

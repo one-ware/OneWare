@@ -7,6 +7,7 @@ using DynamicData.Binding;
 using OneWare.SDK.Converters;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -35,7 +36,7 @@ public class UniversalFpgaProjectSystemModule : IModule
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemModel("FpgaProject")
+            new MenuItemViewModel("FpgaProject")
             {
                 Header = "Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
@@ -43,7 +44,7 @@ public class UniversalFpgaProjectSystemModule : IModule
             });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemModel("FpgaProject")
+            new MenuItemViewModel("FpgaProject")
             {
                 Header = "Project",
                 Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>().LoadProjectFileDialogAsync(manager, 

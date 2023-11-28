@@ -131,12 +131,12 @@ namespace OneWare.ErrorList.ViewModels
             }
         }
 
-        private readonly ObservableCollection<ErrorListItemModel> _items = new();
+        private readonly ObservableCollection<ErrorListItem> _items = new();
         public DataGridCollectionView Collection { get; }
         public string SearchString { get; set; } = "";
 
-        private ErrorListItemModel? _selectedItem;
-        public ErrorListItemModel? SelectedItem
+        private ErrorListItem? _selectedItem;
+        public ErrorListItem? SelectedItem
         {
             get => _selectedItem;
             set => SetProperty(ref _selectedItem, value);
@@ -186,14 +186,14 @@ namespace OneWare.ErrorList.ViewModels
         
         private bool Filter(object arg)
         {
-            if (arg is not ErrorListItemModel error) return false;
+            if (arg is not ErrorListItem error) return false;
             var f = FilterMode(error) && FilterErrorSource(error) &&
                    FilterSearchString(error) && (ShowExternalErrors || error.File is IProjectFile || _dockService.OpenFiles.ContainsKey(error.File));
 
             return f && FilterEnabledType(error);
         }
 
-        private bool FilterMode(ErrorListItemModel error)
+        private bool FilterMode(ErrorListItem error)
         {
             switch (ErrorListFilterMode)
             {
@@ -209,7 +209,7 @@ namespace OneWare.ErrorList.ViewModels
             return false;
         }
 
-        private bool FilterEnabledType(ErrorListItemModel error)
+        private bool FilterEnabledType(ErrorListItem error)
         {
             switch (error.Type)
             {
@@ -222,12 +222,12 @@ namespace OneWare.ErrorList.ViewModels
             }
         }
 
-        private bool FilterErrorSource(ErrorListItemModel error)
+        private bool FilterErrorSource(ErrorListItem error)
         {
             return ErrorListVisibleSource is "All Sources" || ErrorListVisibleSource == error.Source;
         }
 
-        private bool FilterSearchString(ErrorListItemModel error)
+        private bool FilterSearchString(ErrorListItem error)
         {
             if (string.IsNullOrWhiteSpace(SearchString)) return true;
             return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase) || (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
@@ -287,7 +287,7 @@ namespace OneWare.ErrorList.ViewModels
             RefreshCountToggle();
         }
         
-        public IEnumerable<ErrorListItemModel> GetErrorsForFile(IFile file)
+        public IEnumerable<ErrorListItem> GetErrorsForFile(IFile file)
         {
             foreach (var error in _items.Where(x => x.File == file))
             {
@@ -300,7 +300,7 @@ namespace OneWare.ErrorList.ViewModels
         /// <summary>
         /// Adds new Errors and filters old errors out
         /// </summary>
-        public void RefreshErrors(IList<ErrorListItemModel> errors, string source, IFile entry)
+        public void RefreshErrors(IList<ErrorListItem> errors, string source, IFile entry)
         {
             ListEx.RemoveMany(_items, _items.Where(x => (x.File == entry) && x.Source == source && !errors.Contains(x)));
             
@@ -313,7 +313,7 @@ namespace OneWare.ErrorList.ViewModels
             RefreshCountToggle();
         }
 
-        public void Add(ErrorListItemModel entry)
+        public void Add(ErrorListItem entry)
         {
             for (var i = 0; i < _items.Count; i++)
             {

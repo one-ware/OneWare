@@ -8,12 +8,12 @@ namespace OneWare.Core.Services;
 public class ChildProcessService : IChildProcessService
 {
     private readonly ILogger _logger;
-    private readonly IActive _active;
+    private readonly IApplicationStateService _applicationStateService;
     
-    public ChildProcessService(ILogger logger, IActive active)
+    public ChildProcessService(ILogger logger, IApplicationStateService applicationStateService)
     {
         _logger = logger;
-        _active = active;
+        _applicationStateService = applicationStateService;
     }
     
     private static ProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, string arguments)
@@ -42,7 +42,7 @@ public class ChildProcessService : IChildProcessService
 
         using var activeProcess = new Process();
         activeProcess.StartInfo = startInfo;
-        var key = _active.AddState(status, state, () => activeProcess?.Kill());
+        var key = _applicationStateService.AddState(status, state, () => activeProcess?.Kill());
 
         activeProcess.OutputDataReceived += (o, i) =>
         {
@@ -73,7 +73,7 @@ public class ChildProcessService : IChildProcessService
         }
 
         if (key.Terminated) success = false;
-        _active.RemoveState(key);
+        _applicationStateService.RemoveState(key);
 
         return (success,output);
     }

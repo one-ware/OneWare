@@ -73,10 +73,6 @@ namespace OneWare.Core.Data
         {
             Patterns = new[] { "*.*" }
         };
-        
-        public static KeyModifiers ControlKey => RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-            ? KeyModifiers.Meta
-            : KeyModifiers.Control;
 
         #endregion
     }

@@ -5,6 +5,7 @@ using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -21,7 +22,7 @@ public class PackageManagerModule : IModule
     {
         var windowService = containerProvider.Resolve<IWindowService>();
         
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Extensions")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
         {
             Header = "Extensions",
             Command = new RelayCommand(() => windowService.Show(new PackageManagerView()

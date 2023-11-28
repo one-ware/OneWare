@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-
-namespace OneWare.SDK.Models;
+namespace OneWare.SDK.ViewModels;
 
 public class TreeViewItemViewModel : ObservableObject
 {

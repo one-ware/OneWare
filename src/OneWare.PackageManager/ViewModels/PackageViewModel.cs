@@ -321,15 +321,18 @@ public abstract class PackageViewModel : ObservableObject
     private Task RemoveAsync()
     {
         if (Package.Id == null) throw new NullReferenceException(nameof(Package.Id));
-        
-        try
+
+        if (Directory.Exists(ExtractionFolder))
         {
-            Directory.Delete(ExtractionFolder, true);
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-            return Task.CompletedTask;
+            try
+            {
+                Directory.Delete(ExtractionFolder, true);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+                return Task.CompletedTask;
+            }
         }
         
         InstalledVersion = null;

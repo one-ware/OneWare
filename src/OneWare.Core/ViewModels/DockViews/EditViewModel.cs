@@ -51,9 +51,9 @@ namespace OneWare.Core.ViewModels.DockViews
         public ScrollInfoContext ScrollInfo { get; } = new();
         
 
-        private IEnumerable<ErrorListItemModel>? _diagnostics;
+        private IEnumerable<ErrorListItem>? _diagnostics;
         
-        public IEnumerable<ErrorListItemModel>? Diagnostics
+        public IEnumerable<ErrorListItem>? Diagnostics
         {
             get => _diagnostics;
             set => SetProperty(ref _diagnostics, value);

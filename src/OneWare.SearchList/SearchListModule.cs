@@ -7,6 +7,7 @@ using Prism.Ioc;
 using Prism.Modularity;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
+using OneWare.SDK.ViewModels;
 
 namespace OneWare.SearchList;
 
@@ -28,14 +29,11 @@ public class SearchListModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var hotkey = new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Shift);
-        
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Search")
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
             ImageIconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey),
-            InputGesture = hotkey,
         });
     }
 }
