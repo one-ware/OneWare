@@ -43,7 +43,7 @@
             </Border>
             <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" BorderThickness="0, 0, 1, 0"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                    CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadius}"
+                    CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottomLeft}"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <ListBox Padding="3" BorderThickness="0" Background="Transparent"
                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
