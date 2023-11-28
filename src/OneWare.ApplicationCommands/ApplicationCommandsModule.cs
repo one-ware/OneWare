@@ -32,11 +32,11 @@ public class ApplicationCommandsModule : IModule
         }, handledEventsToo: false);
 
         commandService.RegisterCommand(
-            new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File",
-                new KeyGesture(Key.S, PlatformHelper.ControlKey),
+            new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File", new KeyGesture(Key.S, PlatformHelper.ControlKey),
                 x =>
                 {
                     _ = x.SaveAsync();
-                }));
+                })
+            );
     }
 }
