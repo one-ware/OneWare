@@ -43,10 +43,10 @@ namespace OneWare.SDK.LanguageService
         private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(200);
         protected virtual TimeSpan RefreshTime => TimeSpan.FromMilliseconds(500);
         
-        protected LanguageServiceBase Service { get; }
+        protected ILanguageService Service { get; }
         protected SymbolInformationOrDocumentSymbolContainer? LastDocumentSymbols { get; private set; }
 
-        protected TypeAssistanceLsp(IEditor evm, LanguageServiceBase langService) : base(evm)
+        protected TypeAssistanceLsp(IEditor evm, ILanguageService langService) : base(evm)
         {
             Service = langService;
         }

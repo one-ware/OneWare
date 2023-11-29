@@ -28,8 +28,6 @@ namespace OneWare.SDK.LanguageService
             Arguments = arguments;
         }
 
-        public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
-
         public override async Task ActivateAsync()
         {
             //return;

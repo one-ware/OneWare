@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using System.Diagnostics;
+using Avalonia.Threading;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client;
@@ -37,6 +38,8 @@ namespace OneWare.SDK.LanguageService
             Workspace = workspace;
         }
 
+        public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
+
         public abstract Task ActivateAsync();
 
         public virtual async Task DeactivateAsync()
@@ -72,7 +75,7 @@ namespace OneWare.SDK.LanguageService
         /// <summary>
         ///     After Activate
         /// </summary>
-        protected async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
+        protected virtual async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
         {
             Client = LanguageClient.PreInit(
                 options =>
@@ -258,6 +261,7 @@ namespace OneWare.SDK.LanguageService
         {
             //ContainerLocator.Container.Resolve<ILogger>()?.Log("LS: " + log.Message);
             //MainDock.Output.WriteLine(Path.GetFileName(LanguageServerPath) + ": " + log.Type.ToString() + " " + log.Message);
+            Debug.WriteLine(log.Message);
         }
 
         public void ReloadConfiguration()
@@ -265,7 +269,7 @@ namespace OneWare.SDK.LanguageService
             Client?.DidChangeConfiguration(new DidChangeConfigurationParams());
         }
 
-        public void DidOpenTextDocument(string fullPath, string text)
+        public virtual void DidOpenTextDocument(string fullPath, string text)
         {
             Client?.DidOpenTextDocument(new DidOpenTextDocumentParams
             {
@@ -279,7 +283,7 @@ namespace OneWare.SDK.LanguageService
             });
         }
 
-        public void DidSaveTextDocument(string fullPath, string text)
+        public virtual void DidSaveTextDocument(string fullPath, string text)
         {
             Client?.DidSaveTextDocument(new DidSaveTextDocumentParams
             {
@@ -291,7 +295,7 @@ namespace OneWare.SDK.LanguageService
             });
         }
 
-        public void DidCloseTextDocument(string fullPath)
+        public virtual void DidCloseTextDocument(string fullPath)
         {
             Client?.DidCloseTextDocument(new DidCloseTextDocumentParams
             {
@@ -305,7 +309,7 @@ namespace OneWare.SDK.LanguageService
         /// <summary>
         ///     Change watched file
         /// </summary>
-        public void DidChangeWatchedFile(FileChangeType type, string fullPath)
+        public virtual void DidChangeWatchedFile(FileChangeType type, string fullPath)
         {
             Client?.DidChangeWatchedFiles(new DidChangeWatchedFilesParams
             {
@@ -405,7 +409,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(string fullPath,
+        public virtual async Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(string fullPath,
             Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ImplementationProvider == null) return null;
@@ -428,7 +432,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(string fullPath,
+        public virtual async Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(string fullPath,
             Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.TypeDefinitionProvider == null) return null;
@@ -473,7 +477,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public async Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos)
+        public virtual async Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DeclarationProvider == null) return null;
             try
@@ -495,7 +499,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range, Diagnostic diagnostic)
+        public virtual async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range, Diagnostic diagnostic)
         {
             if (Client == null || Client.ServerSettings.Capabilities.CodeActionProvider == null) return null;
             try
@@ -522,7 +526,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public async Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName)
+        public virtual async Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName)
         {
             if (Client == null || Client.ServerSettings.Capabilities.RenameProvider == null) return null;
             try
@@ -546,7 +550,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public async Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos)
+        public virtual async Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.RenameProvider == null) return null;
             try
@@ -592,7 +596,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath)
+        public virtual async Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.FoldingRangeProvider == null) return null;
             try
@@ -638,7 +642,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath)
+        public virtual async Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ColorProvider == null) return null;
             try
@@ -661,7 +665,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos)
+        public virtual async Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentHighlightProvider == null) return null;
             try
@@ -685,7 +689,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<Container<WorkspaceSymbol>?> RequestWorkspaceSymbolsAsync(string query)
+        public virtual async Task<Container<WorkspaceSymbol>?> RequestWorkspaceSymbolsAsync(string query)
         {
             if (Client == null || Client.ServerSettings.Capabilities.WorkspaceSymbolProvider == null) return null;
             try
@@ -705,7 +709,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<LocationContainer?> RequestReferencesAsync(string fullPath, Position pos)
+        public virtual async Task<LocationContainer?> RequestReferencesAsync(string fullPath, Position pos)
         {
             if (Client == null || Client.ServerSettings.Capabilities.ReferencesProvider == null) return null;
             try
@@ -729,7 +733,7 @@ namespace OneWare.SDK.LanguageService
             return null;
         }
 
-        public async Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath)
+        public virtual async Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath)
         {
             if (Client == null || Client.ServerSettings.Capabilities.DocumentSymbolProvider == null) return null;
             try
@@ -780,9 +784,8 @@ namespace OneWare.SDK.LanguageService
 
             return formatting;
         }
-
-
-        public async Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param)
+        
+        public virtual async Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param)
         {
             if (param.Edit.Changes != null)
                 foreach (var docChanges in param.Edit.Changes.Reverse())
@@ -803,7 +806,7 @@ namespace OneWare.SDK.LanguageService
             return new ApplyWorkspaceEditResponse { Applied = true };
         }
         
-        public async Task ApplyWorkspaceEditAsync(WorkspaceEdit? param)
+        public virtual async Task ApplyWorkspaceEditAsync(WorkspaceEdit? param)
         {
             if (param == null) return;
             
@@ -824,7 +827,7 @@ namespace OneWare.SDK.LanguageService
                     }
         }
 
-        public void ApplyContainer(string path, IEnumerable<TextEdit> con)
+        public virtual void ApplyContainer(string path, IEnumerable<TextEdit> con)
         {
             var openDoc =
                 ContainerLocator.Container.Resolve<IDockService>().OpenFiles
@@ -850,7 +853,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public static void ApplyContainer(TextDocument doc, IEnumerable<TextEdit> con, bool beginUpdate = true)
+        private static void ApplyContainer(TextDocument doc, IEnumerable<TextEdit> con, bool beginUpdate = true)
         {
             if (beginUpdate) doc.BeginUpdate();
             try
@@ -873,7 +876,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public void PublishDiag(PublishDiagnosticsParams pdp)
+        public virtual void PublishDiag(PublishDiagnosticsParams pdp)
         {
             Dispatcher.UIThread.Post(() =>
             {
@@ -886,7 +889,7 @@ namespace OneWare.SDK.LanguageService
             }, DispatcherPriority.Background);
         }
 
-        public virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
+        protected virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
         {
             foreach (var p in pdp.Diagnostics)
             {
