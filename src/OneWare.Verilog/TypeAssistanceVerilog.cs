@@ -8,7 +8,7 @@ using OneWare.Verilog.Folding;
 
 namespace OneWare.Verilog
 {
-    internal class TypeAssistanceVerilog : TypeAssistanceLsp
+    internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
     {
         private readonly Regex _usedWordsRegex = new(@"\w{3,}");
         
@@ -35,7 +35,7 @@ namespace OneWare.Verilog
             return items;
         }
 
-        public override void TypeAssistance(TextInputEventArgs e)
+        public override void TextEnteredAutoFormat(TextInputEventArgs e)
         {
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {

@@ -1,19 +1,14 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.SDK;
 using OneWare.SDK.Helpers;
 using OneWare.SDK.LanguageService;
 using OneWare.SDK.Models;
-using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
-using Prism.Ioc;
 using IFile = OneWare.SDK.Models.IFile;
 
 namespace OneWare.Vhdl
 {
-    public class LanguageServiceVhdl : LanguageService
+    public class LanguageServiceVhdl : LanguageServiceLsp
     {
         private static readonly string? StartPath;
         

@@ -6,7 +6,7 @@ using OneWare.SDK.ViewModels;
 
 namespace OneWare.Json;
 
-public class TypeAssistanceJson : TypeAssistance
+public class TypeAssistanceJson : TypeAssistanceBase
 {
     public TypeAssistanceJson(IEditor editor) : base(editor)
     {

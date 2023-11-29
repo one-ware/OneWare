@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
@@ -11,13 +10,11 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OneWare.SDK.EditorExtensions;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 using OneWare.SDK.Extensions;
-using OneWare.SDK.Helpers;
 using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.SDK.Models.IFile;
@@ -26,7 +23,10 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OneWare.SDK.LanguageService
 {
-    public abstract class TypeAssistanceLsp : TypeAssistance
+    /// <summary>
+    /// Type Assistance that uses ILanguageService to perform assistance
+    /// </summary>
+    public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         private bool _completionBusy;
         private int _completionOffset;
@@ -46,7 +46,7 @@ namespace OneWare.SDK.LanguageService
         protected ILanguageService Service { get; }
         protected SymbolInformationOrDocumentSymbolContainer? LastDocumentSymbols { get; private set; }
 
-        protected TypeAssistanceLsp(IEditor evm, ILanguageService langService) : base(evm)
+        protected TypeAssistanceLanguageService(IEditor evm, ILanguageService langService) : base(evm)
         {
             Service = langService;
         }
@@ -111,12 +111,9 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public virtual void CodeUpdated()
+        protected virtual void CodeUpdated()
         {
-            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind.Full)
-            {
-                Service.RefreshTextDocument(CurrentFile.FullPath, CodeBox.Text);
-            }
+            Service.RefreshTextDocument(CurrentFile.FullPath, CodeBox.Text);
             _ = UpdateSymbolsAsync();
         }
 
@@ -149,14 +146,10 @@ namespace OneWare.SDK.LanguageService
         protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
         {
             if (!IsOpen || !Service.IsLanguageServiceReady) return;
-
-            if (Service.Client?.ServerSettings.Capabilities.TextDocumentSync?.Kind is TextDocumentSyncKind
-                    .Incremental or TextDocumentSyncKind.None)
-            {
-                var c = ConvertChanges(e);
-                var changes = new Container<TextDocumentContentChangeEvent>(c);
-                Service.RefreshTextDocument(CurrentFile.FullPath, changes);
-            }
+            
+            var c = ConvertChanges(e);
+            var changes = new Container<TextDocumentContentChangeEvent>(c);
+            Service.RefreshTextDocument(CurrentFile.FullPath, changes);
 
             _lastEditTime = DateTime.Now.TimeOfDay;
         }
@@ -433,11 +426,11 @@ namespace OneWare.SDK.LanguageService
             ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
         }
 
-        public override async Task TextEnteredAsync(TextInputEventArgs args)
+        protected override async Task TextEnteredAsync(TextInputEventArgs args)
         {
             try
             {
-                if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoFormatting")) TypeAssistance(args);
+                if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoFormatting")) TextEnteredAutoFormat(args);
 
                 if (!Service.IsLanguageServiceReady || args.Text == null) return;
 
@@ -473,7 +466,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public virtual void TypeAssistance(TextInputEventArgs e)
+        public virtual void TextEnteredAutoFormat(TextInputEventArgs e)
         {
             if (e.Text == null) return;
             if (e.Text.Contains('\n') && Service.IsLanguageServiceReady)
@@ -600,7 +593,7 @@ namespace OneWare.SDK.LanguageService
                 {
                     Header = "Restart Language Server",
                     Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                    ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.RefreshGrey16X") 
+                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X") 
                 }
             };
         }

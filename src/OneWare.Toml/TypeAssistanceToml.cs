@@ -3,7 +3,7 @@ using OneWare.SDK.ViewModels;
 
 namespace OneWare.Toml;
 
-public class TypeAssistanceToml : TypeAssistance
+public class TypeAssistanceToml : TypeAssistanceBase
 {
     public TypeAssistanceToml(IEditor editor) : base(editor)
     {

@@ -8,7 +8,7 @@ namespace OneWare.SDK.LanguageService
     public class LspFoldingStrategy : IFoldingStrategy
     {
         private readonly List<FoldingEntry> _foldings = new();
-        private readonly LanguageService _languageService;
+        private readonly LanguageServiceLsp _languageService;
 
         private readonly IFile _projectfile;
 
@@ -16,7 +16,7 @@ namespace OneWare.SDK.LanguageService
         ///     Logic how code collapsing should work
         ///     Works but could be better ;)
         /// </summary>
-        public LspFoldingStrategy(LanguageService ls, IFile file)
+        public LspFoldingStrategy(LanguageServiceLsp ls, IFile file)
         {
             _languageService = ls;
             _projectfile = file;

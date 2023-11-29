@@ -11,7 +11,7 @@ using IFile = OneWare.SDK.Models.IFile;
 
 namespace OneWare.Verilog
 {
-    public class LanguageServiceVerilog : LanguageService
+    public class LanguageServiceVerilog : LanguageServiceLsp
     {
         private static readonly string? StartPath;
         

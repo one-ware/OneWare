@@ -22,8 +22,8 @@ namespace OneWare.SDK.LanguageService
         void AutoIndent();
         void AutoIndent(int startLine, int endLine);
         void Format();
-        Task TextEnteredAsync(TextInputEventArgs e);
         void TextEntering(TextInputEventArgs e);
+        void TextEntered(TextInputEventArgs e);
         Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset);
         Task<string?> GetHoverInfoAsync(int offset);
         Task<Action?> GetActionOnControlWordAsync(int offset);

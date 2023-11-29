@@ -635,7 +635,7 @@ namespace OneWare.Core.Views.DockViews
             _caretDiff = 0;
 
             //Language Specific Type Assistance
-            _ = _typeAssistance?.TextEnteredAsync(e);
+            _typeAssistance?.TextEntered(e);
 
             #region Detect Auto Format / Language Specific?
 

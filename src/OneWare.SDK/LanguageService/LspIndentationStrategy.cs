@@ -13,10 +13,10 @@ namespace OneWare.SDK.LanguageService
     public class LspIndentationStrategy : IIndentationStrategy
     {
         private readonly IFile _file;
-        private readonly LanguageService _languageService;
+        private readonly LanguageServiceLsp _languageService;
         private string _indentationString = "\t";
 
-        public LspIndentationStrategy(TextEditorOptions options, LanguageService languageS, IFile file)
+        public LspIndentationStrategy(TextEditorOptions options, LanguageServiceLsp languageS, IFile file)
         {
             IndentationString = options.IndentationString;
             _languageService = languageS;

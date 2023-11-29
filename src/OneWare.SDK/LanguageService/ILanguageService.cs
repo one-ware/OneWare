@@ -1,4 +1,3 @@
-using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.SDK.ViewModels;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -7,7 +6,6 @@ namespace OneWare.SDK.LanguageService;
 
 public interface ILanguageService
 {
-    public LanguageClient? Client { get; }
     public bool IsActivated { get; }
     public bool IsLanguageServiceReady { get; }
     public string? Workspace { get; }
@@ -39,15 +37,18 @@ public interface ILanguageService
     public Task<Hover?> RequestHoverAsync(string fullPath, Position pos);
     public Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos);
     public Task<Container<WorkspaceSymbol>?> RequestWorkspaceSymbolsAsync(string query);
+    public Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(string fullPath,
+        Position pos);
     public Task<IEnumerable<LocationOrLocationLink>?> RequestDefinitionAsync(string fullPath, Position pos);
     public Task<LocationContainer?> RequestReferencesAsync(string fullPath, Position pos);
     public Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(string fullPath,
         Position pos);
     public Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos);
     public Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath);
+    public Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath);
     public Task<TextEditContainer?> RequestFormattingAsync(string fullPath);
     public Task<TextEditContainer?> RequestRangeFormattingAsync(string fullPath, Range range);
+    public Task ExecuteCommandAsync(Command cmd);
     public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param);
     public Task ApplyWorkspaceEditAsync(WorkspaceEdit? param);
-    public Task ExecuteCommandAsync(Command cmd);
 }

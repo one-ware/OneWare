@@ -9,7 +9,7 @@ using Prism.Ioc;
 
 namespace OneWare.Cpp
 {
-    public class LanguageServiceCpp : LanguageService
+    public class LanguageServiceCpp : LanguageServiceLsp
     {
         private static readonly string? StartPath;
         

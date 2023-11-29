@@ -12,7 +12,7 @@ using OneWare.Vhdl.Indentation;
 
 namespace OneWare.Vhdl
 {
-    internal partial class TypeAssistanceVhdl : TypeAssistanceLsp
+    internal partial class TypeAssistanceVhdl : TypeAssistanceLanguageService
     {
         private readonly Regex _usedWordsRegex = new(@"\w{3,}");
         
@@ -80,7 +80,7 @@ namespace OneWare.Vhdl
             return items;
         }
 
-        public override void TypeAssistance(TextInputEventArgs e)
+        public override void TextEnteredAutoFormat(TextInputEventArgs e)
         {
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {

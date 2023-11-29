@@ -8,10 +8,10 @@ using OneWare.SDK.ViewModels;
 
 namespace OneWare.SDK.LanguageService
 {
-    public abstract class TypeAssistance : ITypeAssistance
+    public abstract class TypeAssistanceBase : ITypeAssistance
     {
         public virtual bool CanAddBreakPoints => false;
-        public string? LineCommentSequence { get; protected set; }
+        public string? LineCommentSequence { get; protected init; }
         protected IEditor Editor { get; }
         protected TextEditor CodeBox => Editor.Editor;
         protected IFile CurrentFile => Editor.CurrentFile ?? throw new NullReferenceException(nameof(Editor.CurrentFile));
@@ -34,7 +34,7 @@ namespace OneWare.SDK.LanguageService
         public event EventHandler? AssistanceActivated;
         public event EventHandler? AssistanceDeactivated;
 
-        public TypeAssistance(IEditor editor)
+        protected TypeAssistanceBase(IEditor editor)
         {
             Editor = editor;
         }
@@ -71,7 +71,7 @@ namespace OneWare.SDK.LanguageService
             IsAttached = false;
         }
 
-        public virtual Task TextEnteredAsync(TextInputEventArgs e)
+        protected virtual Task TextEnteredAsync(TextInputEventArgs e)
         {
             return Task.CompletedTask;
         }
@@ -80,9 +80,14 @@ namespace OneWare.SDK.LanguageService
         {
         }
 
+        public void TextEntered(TextInputEventArgs e)
+        {
+            _ = TextEnteredAsync(e);
+        }
+
         public virtual Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<List<MenuItemViewModel>?>(null);
         }
 
         public virtual Task<string?> GetHoverInfoAsync(int offset)
@@ -122,6 +127,8 @@ namespace OneWare.SDK.LanguageService
         
         public virtual void Comment()
         {
+            if (LineCommentSequence is null) return;
+            
             int startLine, endLine;
             if (!CodeBox.TextArea.Selection.IsEmpty)
             {
@@ -144,6 +151,8 @@ namespace OneWare.SDK.LanguageService
         
         public virtual void Uncomment()
         {
+            if (LineCommentSequence is null) return;
+            
             int startLine, endLine;
             if (!CodeBox.TextArea.Selection.IsEmpty)
             {

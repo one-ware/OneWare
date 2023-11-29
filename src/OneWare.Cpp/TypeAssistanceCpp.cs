@@ -10,7 +10,7 @@ using Prism.Ioc;
 
 namespace OneWare.Cpp
 {
-    internal class TypeAssistanceCpp : TypeAssistanceLsp
+    internal class TypeAssistanceCpp : TypeAssistanceLanguageService
     {
         public override bool CanAddBreakPoints => true;
 
