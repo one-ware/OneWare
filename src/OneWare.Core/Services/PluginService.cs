@@ -39,6 +39,7 @@ public class PluginService : IPluginService
         if (CheckCompatibility(path) is {compatible: false} test)
         {
             plugin.CompatibilityReport = test.report;
+            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.report}");
             return plugin;
         }
 

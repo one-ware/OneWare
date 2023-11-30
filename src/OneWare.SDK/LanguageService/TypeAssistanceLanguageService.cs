@@ -466,7 +466,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public virtual void TextEnteredAutoFormat(TextInputEventArgs e)
+        protected virtual void TextEnteredAutoFormat(TextInputEventArgs e)
         {
             if (e.Text == null) return;
             if (e.Text.Contains('\n') && Service.IsLanguageServiceReady)
@@ -506,8 +506,8 @@ namespace OneWare.SDK.LanguageService
                 }
             }
         }
-        
-        public virtual async Task UpdateSymbolsAsync()
+
+        protected virtual async Task UpdateSymbolsAsync()
         {
             LastDocumentSymbols = await Service.RequestSymbolsAsync(CurrentFile.FullPath);
             
@@ -680,7 +680,6 @@ namespace OneWare.SDK.LanguageService
             }
 
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
-            description = description?.Replace("\n", "\n\n");
             
             return new CompletionData(comp.InsertText ?? "", comp.Label, description, icon, 0,
                 comp, offset, AfterComplete);
@@ -698,19 +697,17 @@ namespace OneWare.SDK.LanguageService
         {
             var l = new List<TextDocumentContentChangeEvent>();
             var map = e.OffsetChangeMap;
-
-            //Console.WriteLine("??" + map.Count + " " + e.Offset + " " + e.InsertedText);
-
-            if (map.Count <= 1)
+            
+            foreach (var c in map)
             {
-                var m = e;
-                var location = CodeBox.Document.GetLocation(m.Offset);
+                var location = CodeBox.Document.GetLocation(c.Offset);
+                
                 //calculate newlines
                 var newlines = e.RemovedText.Text.Count(x => x == '\n');
                 var lastIndexNewLine = e.RemovedText.Text.LastIndexOf('\n');
                 var lengthAfterLastNewLine = lastIndexNewLine >= 0
-                    ? e.RemovedText.TextLength - lastIndexNewLine
-                    : location.Column + e.RemovedText.TextLength;
+                    ? c.RemovalLength - lastIndexNewLine
+                    : location.Column + c.RemovalLength;
 
                 var endlocation = new TextLocation(location.Line + newlines, lengthAfterLastNewLine);
 
@@ -722,15 +719,10 @@ namespace OneWare.SDK.LanguageService
                         End = new Position(endlocation.Line - 1, endlocation.Column - 1)
                     },
                     Text = e.InsertedText.Text,
-                    RangeLength = m.RemovalLength
+                    RangeLength = c.RemovalLength
                 };
 
                 l.Add(docChange);
-                //Console.WriteLine("c Start: " + docChange.Range.Start.Line + " " + docChange.Range.Start.Character + " End: " + docChange.Range.End.Line + " " + docChange.Range.End.Character + " T: " + e.InsertedText.Text + " " + e.InsertedText.Text.Length);
-            }
-            else
-            {
-                throw new NotSupportedException("Multiple offsets???");
             }
 
             return l;

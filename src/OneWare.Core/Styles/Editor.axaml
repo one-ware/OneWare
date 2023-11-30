@@ -77,7 +77,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="Padding" Value="2 4" />
+        <Setter Property="Padding" Value="2" />
         <Setter Property="MaxHeight" Value="350" />
         <Setter Property="MaxWidth" Value="700" />
         <Setter Property="Template">
@@ -86,9 +86,8 @@
                     <Border Padding="{TemplateBinding Padding}" CornerRadius="1" BorderThickness="1"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             Background="{TemplateBinding Background}">
-                        <md:MarkdownScrollViewer Classes="ToolTip" Markdown="{TemplateBinding Content}">
+                        <md:MarkdownScrollViewer Markdown="{TemplateBinding Content}">
                             <md:MarkdownScrollViewer.Styles>
-                                <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
                                 <Style Selector="avaloniaEdit|TextEditor">
                                     <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                     <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />

@@ -139,7 +139,7 @@ public class SettingsService : ISettingsService
 
     public void Reset()
     {
-        foreach (var setting in Settings)
+        foreach (var setting in Settings.Where(x => x.Value is not PathSetting))
         {
             setting.Value.Value = setting.Value.DefaultValue;
         }

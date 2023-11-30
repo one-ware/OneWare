@@ -430,7 +430,7 @@ namespace OneWare.SDK.LanguageService
             });
         }
 
-        public Task ExecuteCommandAsync(Command cmd)
+        public override Task ExecuteCommandAsync(Command cmd)
         {
             if (Client?.ServerSettings.Capabilities.ExecuteCommandProvider == null) 
                 return Task.CompletedTask;

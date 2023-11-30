@@ -35,7 +35,7 @@ namespace OneWare.Verilog
             return items;
         }
 
-        public override void TextEnteredAutoFormat(TextInputEventArgs e)
+        protected override void TextEnteredAutoFormat(TextInputEventArgs e)
         {
             if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
             {

@@ -79,7 +79,6 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="Padding" Value="3" />
             <Setter Property="CornerRadius" Value="2" />
-            <Setter Property="Background" Value="Red" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style.Setters>
