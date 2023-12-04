@@ -88,21 +88,21 @@
                         <ListBox.DataTemplates>
                             <DataTemplate DataType="viewModels:PackageViewModel">
                                 <DockPanel>
-                                    <Grid DockPanel.Dock="Left" Width="75" Height="75">
+                                    <Grid DockPanel.Dock="Left" Width="60" Height="60">
                                         <Image
                                             VerticalAlignment="Center" HorizontalAlignment="Center"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                            Source="{Binding Image}" Height="70" Width="70" />
+                                            Source="{Binding Image}" Height="50" Width="50" />
                                         <controls:Spinner
                                             Height="30" Width="30" VerticalAlignment="Center" HorizontalAlignment="Center"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNull}}" />
                                     </Grid>
-                                    <Grid DockPanel.Dock="Right" RowDefinitions="25, 30" Margin="10, 10, 0, 10"
+                                    <Grid DockPanel.Dock="Right" RowDefinitions="25, 25" Margin="10, 5, 0, 5"
                                           ColumnDefinitions="*, Auto">
                                         <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
-                                                   Text="{Binding Package.Name}" />
+                                                   VerticalAlignment="Center" Text="{Binding Package.Name}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
-                                                   Text="{Binding Package.Description}" TextWrapping="Wrap" />
+                                                   VerticalAlignment="Center" Text="{Binding Package.Description}" TextWrapping="Wrap" />
                                         <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal">
                                             <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                                                    Height="12"
