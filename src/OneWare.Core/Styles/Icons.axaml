@@ -1,6 +1,14 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
+    <DrawingImage x:Key="UniversalProject">
+        <DrawingGroup   >
+            <GeometryDrawing Brush="#00000000" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="{StaticResource IconColor}" Geometry="F1M1,2L1,7.262C1.309,7.092,1.657,7,1.999,7L2,7 2,5 14,5 14,13 8,13 8,14 15,14 15,2z" />
+            <GeometryDrawing Brush="{StaticResource ThemeAccentBrush}" Geometry="F1M6,12L6,12 6,14 2,14 2,9 5,9 5,10 6,10z M5.312,8L1.963,8C1.963,8,1,8,1,9L1,14C1,15,1.964,15,1.964,15L5.964,15C6.964,15,7,14,7,14L7,10.137z" />
+        </DrawingGroup>
+    </DrawingImage>
+    
     <DrawingImage x:Key="Octicons.KebabVertical">
         <GeometryDrawing   Brush="{StaticResource ThemeBorderHighBrush}" Geometry="M0,1.846 A1.846,1.846 0 1 0 3.692,1.846 A1.846,1.846 0 0 0 0,1.846 z M0,8 A1.846,1.846 0 1 0 3.692,8 A1.846,1.846 0 0 0 0,8 z M1.846,16 A1.846,1.846 0 1 1 1.846,12.31 A1.846,1.846 0 0 1 1.846,16 z"   />
     </DrawingImage>

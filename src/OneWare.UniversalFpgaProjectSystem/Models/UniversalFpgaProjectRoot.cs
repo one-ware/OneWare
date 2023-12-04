@@ -78,7 +78,5 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     {
         _topEntityOverlay = Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib2019.DownloadOverlay16X") as IImage 
                             ?? throw new NullReferenceException("TopEntity Icon");
-        
-        Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
     }
 }

@@ -1,4 +1,7 @@
 using System.Text.Json.Nodes;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using OneWare.SDK.Converters;
 using OneWare.SDK.Helpers;
@@ -19,8 +22,8 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         ProjectFilePath = projectFilePath;
         Properties = properties;
-        
-        Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap;
+
+        Application.Current!.GetResourceObservable("UniversalProject").Subscribe(x => Icon = x as IImage);
     }
 
     public override bool IsPathIncluded(string relativePath)
