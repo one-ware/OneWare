@@ -1,7 +1,12 @@
-﻿using Avalonia;
+﻿using System.Reactive.Disposables;
+using System.Security.Cryptography;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Services;
@@ -52,6 +57,9 @@ namespace OneWare.SDK.Controls
         
         public static readonly StyledProperty<bool> ExtendClientAreaToDecorationsHintProperty =
             AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ExtendClientAreaToDecorationsHint), true);
+        
+        public static readonly StyledProperty<bool> CloseOnDeactivatedProperty =
+            AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(CloseOnDeactivated), true);
 
         public double PrefWidth
         {
@@ -137,11 +145,23 @@ namespace OneWare.SDK.Controls
             set => SetValue(ExtendClientAreaToDecorationsHintProperty, value);
         }
         
+        public bool CloseOnDeactivated
+        {
+            get => GetValue(CloseOnDeactivatedProperty);
+            set => SetValue(CloseOnDeactivatedProperty, value);
+        }
+        
+        public event EventHandler? Activated;
+        
+        public event EventHandler? Deactivated;
+        
         public event EventHandler? Opened;
         
         public event EventHandler? Closed;
         
         public Window? Host { get; private set; }
+        
+        private CompositeDisposable? Disposables { get; set; }
         
         public void Show(Window? owner)
         {
@@ -149,7 +169,20 @@ namespace OneWare.SDK.Controls
             {
                 Host = ContainerLocator.Container.Resolve<IWindowService>().CreateHost(this);
                 Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
-                if (owner != null) Host.Show(owner);
+                if (owner != null)
+                {
+                    Host.Activated += (o, i) => Activated?.Invoke(o, i);
+                    
+                    Host.Deactivated += (o, i) =>
+                    {
+                        Deactivated?.Invoke(o,i);
+                        if (CloseOnDeactivated)
+                        {
+                            Dispatcher.UIThread.Post(Close);
+                        }
+                    };
+                    Host.Show(owner);
+                }
                 else Host.Show();
             }
             else
@@ -159,6 +192,7 @@ namespace OneWare.SDK.Controls
 
                 ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
             }
+            AttachedToHost();
         }
 
         public Task ShowDialogAsync(Window owner)
@@ -168,11 +202,16 @@ namespace OneWare.SDK.Controls
             Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             return Host.ShowDialog(owner);
         }
-
+        
         public void Close()
         {
             Host?.Close();    
             Closed?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void AttachedToHost()
+        {
+            
         }
     }
 }

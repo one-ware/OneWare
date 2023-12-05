@@ -1,6 +1,8 @@
 ﻿using Avalonia.Input;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using OneWare.SDK.Extensions;
+using OneWare.SDK.Models;
 
 namespace OneWare.ApplicationCommands.Models;
 
@@ -16,14 +18,18 @@ public class LogicalDataContextApplicationCommand<T>(string name, KeyGesture ges
     public string Name { get; } = name;
     
     public KeyGesture Gesture { get; set; } = gesture;
-
-    public Action<T> Action { get; } = action;
     
-    public void Execute(ILogical source)
+    public IImage? Image { get; init; }
+
+    private Action<T> Action { get; } = action;
+    
+    public bool Execute(ILogical source)
     {
         if (source.FindLogicalAncestorWithDataContextType<T>() is { } src)
         {
             Action?.Invoke(src);
+            return true;
         }
+        return false;
     }
 }

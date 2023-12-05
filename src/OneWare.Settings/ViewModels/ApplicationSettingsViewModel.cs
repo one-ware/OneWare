@@ -108,7 +108,7 @@ namespace OneWare.Settings.ViewModels
             SelectedPage = SettingPages.FirstOrDefault();
         }
         
-        public void Okay(FlexibleWindow window)
+        public void Save(FlexibleWindow window)
         {
             this.Close(window);
             _settingsService.Save(_paths.SettingsPath);

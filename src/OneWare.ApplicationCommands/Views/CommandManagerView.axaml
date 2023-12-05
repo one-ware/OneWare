@@ -5,27 +5,65 @@
              xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
              xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
+             xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
+             xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
+             xmlns:models1="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ApplicationCommands.Views.CommandManagerView" x:DataType="viewModels:CommandManagerViewModel"
              PrefWidth="400" SizeToContent="Height"
              ShowTitle="False" Title="Application Commands"
-             SystemDecorations="None"
-             ExtendClientAreaToDecorationsHint="False"
              Name="CommandManagerViewView"
-             WindowStartupLocation="CenterOwner">
+             SystemDecorations="None"
+             Focusable="False"
+             WindowStartupLocation="CenterOwner"
+             CloseOnDeactivated="True">
     <Interaction.Behaviors>
-        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" Command="{Binding Close}"
+        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True" 
+                                                 Command="{Binding Close}"
+                                                 CommandParameter="{Binding #CommandManagerViewView}"/>
+        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False" 
+                                                 Command="{Binding ExecuteSelection}"
                                                  CommandParameter="{Binding #CommandManagerViewView}"/>
     </Interaction.Behaviors>
-    <TabControl ItemsSource="{Binding Tabs}">
+    <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
         <TabControl.ItemTemplate>
             <DataTemplate>
                 <TextBlock Text="{Binding Title}" />
             </DataTemplate>
         </TabControl.ItemTemplate>
         <TabControl.ContentTemplate>
-            <DataTemplate>
-                <TextBlock Text="Test"/>
+            <DataTemplate x:DataType="models:CommandManagerTabModel">
+                <StackPanel Orientation="Vertical" MaxHeight="500">
+                    <TextBox Name="SearchBox" AcceptsReturn="False" Text="{Binding SearchText}"
+                             BorderThickness="0" CornerRadius="0" Padding="7 0"
+                             Watermark="Search..." Height="25" VerticalContentAlignment="Center">
+                        <Interaction.Behaviors>
+                            <FocusOnAttachedToVisualTreeBehavior/>
+                            <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}"/>
+                        </Interaction.Behaviors>
+                    </TextBox>
+                    <ListBox BorderThickness="0 1 0 0" ClipToBounds="True" 
+                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                             ItemsSource="{Binding VisibleItems}"
+                             SelectedItem="{Binding SelectedItem}"
+                             AutoScrollToSelectedItem="True"
+                             Name="ItemList"
+                             CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models1:IApplicationCommand">
+                                <DockPanel VerticalAlignment="Center" Margin="3 0">
+                                    <Image DockPanel.Dock="Left" VerticalAlignment="Center" Source="{Binding Image}"
+                                           Width="{Binding #CompletionName.Bounds.Height}"
+                                           Height="{Binding #CompletionName.Bounds.Height}" />
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Gesture}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0" Name="CompletionName"
+                                               Margin="4,0,0,0" Text="{Binding Name}"
+                                               Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
             </DataTemplate>
         </TabControl.ContentTemplate>
     </TabControl>

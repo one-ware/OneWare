@@ -1,13 +1,16 @@
 ﻿using Avalonia.Input;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 
-namespace OneWare.ApplicationCommands.Models;
+namespace OneWare.SDK.Models;
 
 public interface IApplicationCommand
 {
     public string Name { get; }
     
-    public KeyGesture? Gesture { get; set; }
+    public KeyGesture? Gesture { get; }
     
-    public void Execute(ILogical source);
+    public IImage? Image { get; }
+    
+    public bool Execute(ILogical source);
 }

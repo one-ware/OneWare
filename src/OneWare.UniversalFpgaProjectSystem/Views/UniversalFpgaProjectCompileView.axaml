@@ -50,7 +50,11 @@
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"
                                                     SearchText="{Binding SearchTextPins}"
-                                                    VerticalContentAlignment="Center" SearchButtonVisible="False" />
+                                                    VerticalContentAlignment="Center" SearchButtonVisible="False">
+                                    <Interaction.Behaviors>
+                                        <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #VisiblePinDataGrid}"/>
+                                    </Interaction.Behaviors>
+                                </controls:SearchBox>
                                 <DataGrid Name="VisiblePinDataGrid" CanUserSortColumns="False"
                                           CanUserReorderColumns="False" CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"
@@ -139,8 +143,12 @@
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"
                                                     VerticalContentAlignment="Center" SearchButtonVisible="False"
-                                                    SearchText="{Binding SearchTextNodes}" />
-                                <DataGrid CanUserSortColumns="False" CanUserReorderColumns="False"
+                                                    SearchText="{Binding SearchTextNodes}">
+                                <Interaction.Behaviors>
+                                    <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #VisibleNodeDataGrid}"/>
+                                </Interaction.Behaviors>
+                                </controls:SearchBox>
+                                <DataGrid Name="VisibleNodeDataGrid" CanUserSortColumns="False" CanUserReorderColumns="False"
                                           CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"
                                           RowBackground="Transparent" IsReadOnly="True"

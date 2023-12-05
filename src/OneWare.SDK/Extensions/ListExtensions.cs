@@ -1,4 +1,6 @@
-﻿namespace OneWare.SDK.Extensions;
+﻿using Avalonia.Controls;
+
+namespace OneWare.SDK.Extensions;
 
 public static class ListExtensions
 {

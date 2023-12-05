@@ -2,9 +2,13 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using OneWare.ApplicationCommands.Models;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
+using OneWare.SDK.Controls;
+using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using Prism.Ioc;
 
@@ -12,22 +16,42 @@ namespace OneWare.ApplicationCommands.Services;
 
 public class ApplicationCommandService : IApplicationCommandService
 {
+    private readonly IWindowService _windowService;
     public ObservableCollection<IApplicationCommand> ApplicationCommands { get; } = new();
 
+    private FlexibleWindow? _lastManagerWindow;
+    
     public ApplicationCommandService(IWindowService windowService)
     {
-        InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown, handledEventsToo: false);
+        _windowService = windowService;
         
-        RegisterCommand(new LogicalApplicationCommand<TopLevel>("Open Command Manager", new KeyGesture(Key.Q, KeyModifiers.Control),
-            x =>
+        InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown);
+        
+        RegisterCommand(new LogicalApplicationCommand<TopLevel>("Open Actions", new KeyGesture(Key.Q, KeyModifiers.Control),
+            x => OpenManager(x, "Actions")));
+        
+        RegisterCommand(new LogicalApplicationCommand<TopLevel>("Open Files", new KeyGesture(Key.T, KeyModifiers.Control),
+            x => OpenManager(x, "Files")));
+    }
+
+    private void OpenManager(TopLevel topLevel, string startTab)
+    {
+        if (_lastManagerWindow?.IsAttachedToVisualTree() ?? false)
+        {
+            var manager = _lastManagerWindow.DataContext as CommandManagerViewModel;
+            if (manager == null) throw new NullReferenceException(nameof(manager));
+            manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
+        }
+        else
+        {
+            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), topLevel));
+            manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
+            _lastManagerWindow = new CommandManagerView()
             {
-                var window = new CommandManagerView()
-                {
-                    DataContext = ContainerLocator.Container.Resolve<CommandManagerViewModel>()
-                };
-                windowService.Show(window, x as Window);
-                window.Focus();
-            }));
+                DataContext = manager
+            };
+            _windowService.Show(_lastManagerWindow, topLevel as Window);
+        }
     }
     
     public void RegisterCommand(IApplicationCommand command)
@@ -45,7 +69,11 @@ public class ApplicationCommandService : IApplicationCommandService
         
         foreach (var command in commands)
         {
-            command.Execute(logical);
+            if (command.Execute(logical))
+            {
+                args.Handled = true;
+                return;
+            };
         }
     }
 }

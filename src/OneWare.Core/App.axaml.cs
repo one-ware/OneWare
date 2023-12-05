@@ -5,6 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
@@ -220,6 +221,9 @@ namespace OneWare.Core
                     {
                         _ = x.SaveAsync();
                     })
+                {
+                    Image = Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.Save16XMd") as IImage,
+                }
             );
 
             //AvaloniaEdit Hyperlink support
