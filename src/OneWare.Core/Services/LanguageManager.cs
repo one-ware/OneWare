@@ -25,6 +25,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
     private readonly CustomTextMateRegistryOptions _textMateRegistryOptions = new();
     public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
+    public event EventHandler<string>? LanguageSupportAdded;
 
     private IRawTheme _currentEditorTheme;
 
@@ -66,6 +67,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
     {
         _extensionLinks.TryAdd(source, target);
         _textMateRegistryOptions.RegisterExtensionLink(source, target);
+        
+        LanguageSupportAdded?.Invoke(this, source);
     }
 
     public string? GetTextMateScopeByExtension(string fileExtension)
@@ -84,6 +87,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 _workspaceServerTypes[s] = type;
                 _workspaceServers.TryAdd(type, new Dictionary<string, ILanguageService>());
             }
+            
+            LanguageSupportAdded?.Invoke(this, s);
         }
     }
 
@@ -92,6 +97,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         foreach (var s in supportedFileTypes)
         {
             _standAloneTypeAssistance[s] = type;
+            
+            LanguageSupportAdded?.Invoke(this, s);
         }
     }
 
@@ -100,8 +107,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _extensionLinks.TryGetValue(file.Extension, out var extensionLink);
         if (_workspaceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type2))
         {
-            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ??
-                            "";
+            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ?? "";
 
             if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
             if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not

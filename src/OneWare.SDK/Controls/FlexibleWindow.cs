@@ -59,7 +59,7 @@ namespace OneWare.SDK.Controls
             AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ExtendClientAreaToDecorationsHint), true);
         
         public static readonly StyledProperty<bool> CloseOnDeactivatedProperty =
-            AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(CloseOnDeactivated), true);
+            AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(CloseOnDeactivated), false);
 
         public double PrefWidth
         {

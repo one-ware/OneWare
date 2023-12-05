@@ -10,7 +10,7 @@
              xmlns:models1="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ApplicationCommands.Views.CommandManagerView" x:DataType="viewModels:CommandManagerViewModel"
-             PrefWidth="400" SizeToContent="Height"
+             PrefWidth="500" SizeToContent="Height"
              ShowTitle="False" Title="Application Commands"
              Name="CommandManagerViewView"
              SystemDecorations="None"
@@ -46,6 +46,7 @@
                              BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                              ItemsSource="{Binding VisibleItems}"
                              SelectedItem="{Binding SelectedItem}"
+                             IsVisible="{Binding VisibleItems.Count}"
                              AutoScrollToSelectedItem="True"
                              Name="ItemList"
                              CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}">

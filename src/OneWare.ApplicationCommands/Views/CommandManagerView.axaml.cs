@@ -32,7 +32,7 @@ public partial class CommandManagerView : FlexibleWindow
         base.AttachedToHost();
         if (Host is { Owner: Window ownerWindow })
         {
-            Host.Position = new PixelPoint(Host.Position.X, ownerWindow.Position.Y + 50);
+            Host.Position = new PixelPoint(Host.Position.X, ownerWindow.Position.Y + 100);
         }
     }
 }

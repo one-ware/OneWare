@@ -11,6 +11,7 @@ public interface ILanguageManager : INotifyPropertyChanged
 {
     public IRawTheme CurrentEditorTheme { get; }
     public IRegistryOptions RegistryOptions { get; }
+    public event EventHandler<string>? LanguageSupportAdded;
     public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions);
     public void RegisterLanguageExtensionLink(string source, string target);
     public string? GetTextMateScopeByExtension(string fileExtension);

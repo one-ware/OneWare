@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Media;
+using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
@@ -80,6 +81,12 @@ namespace OneWare.Core.ViewModels.DockViews
             Undo = new RelayCommand(() => Editor.Undo());
             Redo = new RelayCommand(() => Editor.Redo());
 
+            _languageManager.LanguageSupportAdded += (_, s) =>
+            {
+                if (CurrentFile?.Extension == s)
+                    Dispatcher.UIThread.Post(() => UpdateCurrentFile(CurrentFile));
+            };
+            
             this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
             {
                 List<ScrollInfoLine> scrollInfo = new();
@@ -129,7 +136,7 @@ namespace OneWare.Core.ViewModels.DockViews
 
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
 
-            async void OnInitialized()
+            async Task OnInitialized()
             {
                 var result = await LoadAsync();
 
@@ -166,7 +173,7 @@ namespace OneWare.Core.ViewModels.DockViews
                     if(result) InitTypeAssistance();
                 }
             }
-            OnInitialized();
+            _ = OnInitialized();
         }
 
         private void InitTypeAssistance()
