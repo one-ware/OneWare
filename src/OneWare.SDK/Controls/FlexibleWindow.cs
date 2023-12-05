@@ -46,6 +46,12 @@ namespace OneWare.SDK.Controls
         
         public static readonly StyledProperty<IReadOnlyList<WindowTransparencyLevel>> TransparencyLevelHintProperty =
             AvaloniaProperty.Register<FlexibleWindow, IReadOnlyList<WindowTransparencyLevel>>(nameof(TransparencyLevelHint), Array.Empty<WindowTransparencyLevel>());
+        
+        public static readonly StyledProperty<SystemDecorations> SystemDecorationsProperty =
+            AvaloniaProperty.Register<FlexibleWindow, SystemDecorations>(nameof(SystemDecorations), SystemDecorations.Full);
+        
+        public static readonly StyledProperty<bool> ExtendClientAreaToDecorationsHintProperty =
+            AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ExtendClientAreaToDecorationsHint), true);
 
         public double PrefWidth
         {
@@ -117,6 +123,18 @@ namespace OneWare.SDK.Controls
         {
             get => GetValue(TransparencyLevelHintProperty);
             set => SetValue(TransparencyLevelHintProperty, value);
+        }
+        
+        public SystemDecorations SystemDecorations
+        {
+            get => GetValue(SystemDecorationsProperty);
+            set => SetValue(SystemDecorationsProperty, value);
+        }
+        
+        public bool ExtendClientAreaToDecorationsHint
+        {
+            get => GetValue(ExtendClientAreaToDecorationsHintProperty);
+            set => SetValue(ExtendClientAreaToDecorationsHintProperty, value);
         }
         
         public event EventHandler? Opened;

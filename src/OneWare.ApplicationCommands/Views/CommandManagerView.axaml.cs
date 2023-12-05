@@ -1,10 +1,11 @@
 using Avalonia.Controls;
+using OneWare.SDK.Controls;
 
 namespace OneWare.ApplicationCommands.Views;
 
-public partial class CommandView : UserControl
+public partial class CommandManagerView : FlexibleWindow
 {
-    public CommandView()
+    public CommandManagerView()
     {
         InitializeComponent();
     }

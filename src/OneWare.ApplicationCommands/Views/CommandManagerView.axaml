@@ -1,0 +1,32 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+             xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.ApplicationCommands.Views.CommandManagerView" x:DataType="viewModels:CommandManagerViewModel"
+             PrefWidth="400" SizeToContent="Height"
+             ShowTitle="False" Title="Application Commands"
+             SystemDecorations="None"
+             ExtendClientAreaToDecorationsHint="False"
+             Name="CommandManagerViewView"
+             WindowStartupLocation="CenterOwner">
+    <Interaction.Behaviors>
+        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" Command="{Binding Close}"
+                                                 CommandParameter="{Binding #CommandManagerViewView}"/>
+    </Interaction.Behaviors>
+    <TabControl ItemsSource="{Binding Tabs}">
+        <TabControl.ItemTemplate>
+            <DataTemplate>
+                <TextBlock Text="{Binding Title}" />
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+            <DataTemplate>
+                <TextBlock Text="Test"/>
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
+</controls:FlexibleWindow>
