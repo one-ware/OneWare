@@ -27,14 +27,14 @@ public class ApplicationCommandService : IApplicationCommandService
         
         InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown);
         
-        RegisterCommand(new LogicalApplicationCommand<TopLevel>("Open Actions", new KeyGesture(Key.Q, KeyModifiers.Control),
+        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Actions", new KeyGesture(Key.Q, KeyModifiers.Control),
             x => OpenManager(x, "Actions")));
         
-        RegisterCommand(new LogicalApplicationCommand<TopLevel>("Open Files", new KeyGesture(Key.T, KeyModifiers.Control),
+        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Files", new KeyGesture(Key.T, KeyModifiers.Control),
             x => OpenManager(x, "Files")));
     }
 
-    private void OpenManager(TopLevel topLevel, string startTab)
+    private void OpenManager(ILogical logical, string startTab)
     {
         if (_lastManagerWindow?.IsAttachedToVisualTree() ?? false)
         {
@@ -44,13 +44,13 @@ public class ApplicationCommandService : IApplicationCommandService
         }
         else
         {
-            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), topLevel));
+            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
             manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
             _lastManagerWindow = new CommandManagerView()
             {
                 DataContext = manager
             };
-            _windowService.Show(_lastManagerWindow, topLevel as Window);
+            _windowService.Show(_lastManagerWindow, logical as Window);
         }
     }
     

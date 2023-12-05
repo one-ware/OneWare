@@ -25,8 +25,8 @@ public partial class CommandManagerTabModel : ObservableObject
 
         this.WhenValueChanged(x => x.SearchText).Subscribe(x =>
         {
-            if(x is null) return;
             VisibleItems.Clear();
+            if(string.IsNullOrWhiteSpace(x)) return;
             VisibleItems.AddRange(Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(c => !c.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
                 .ThenBy(c => c.Name));

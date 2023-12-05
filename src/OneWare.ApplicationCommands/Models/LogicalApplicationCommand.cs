@@ -25,9 +25,14 @@ public class LogicalApplicationCommand<T>(string name, KeyGesture gesture, Actio
     
     public bool Execute(ILogical source)
     {
-        if (source.FindLogicalAncestorOfType<T>() is { } src)
+        if (source is T src)
         {
             Action?.Invoke(src);
+            return true;
+        }
+        else if (source.FindLogicalAncestorOfType<T>() is { } ancestor)
+        {
+            Action?.Invoke(ancestor);
             return true;
         }
         return false;
