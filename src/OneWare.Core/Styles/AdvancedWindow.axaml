@@ -12,7 +12,6 @@
         <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30"/>
         <Setter Property="Padding" Value="{TemplateBinding Padding}"/>
         <Setter Property="CornerRadius" Value="{x:Static helpers:PlatformHelper.WindowsCornerRadius}"/>
-        <Setter Property="UseLayoutRounding" Value="False"/>
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>

@@ -8,6 +8,7 @@ using OneWare.ApplicationCommands.Models;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
 using OneWare.SDK.Controls;
+using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using Prism.Ioc;
@@ -27,10 +28,10 @@ public class ApplicationCommandService : IApplicationCommandService
         
         InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown);
         
-        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Actions", new KeyGesture(Key.Q, KeyModifiers.Control),
+        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Actions", new KeyGesture(Key.Q, PlatformHelper.ControlKey),
             x => OpenManager(x, "Actions")));
         
-        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Files", new KeyGesture(Key.T, KeyModifiers.Control),
+        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Files", new KeyGesture(Key.T, PlatformHelper.ControlKey),
             x => OpenManager(x, "Files")));
     }
 
