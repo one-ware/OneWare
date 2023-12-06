@@ -1,13 +1,12 @@
-﻿using System.ComponentModel;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
-using OneWare.SDK.Controls;
 using OneWare.SDK.ViewModels;
 
-namespace OneWare.Core.Views.Windows
+namespace OneWare.SDK.Controls
 {
     public class AdvancedWindow : Window
     {
@@ -86,7 +85,7 @@ namespace OneWare.Core.Views.Windows
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
+                    //ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
                 }
             }
         }

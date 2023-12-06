@@ -4,7 +4,7 @@ using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 
-namespace OneWare.Core.Helpers;
+namespace OneWare.SDK.Helpers;
 
 public class WindowHelper
 {

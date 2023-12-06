@@ -199,32 +199,4 @@ public class WindowService : IWindowService
 
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(model);
     }
-
-    public Window CreateHost(FlexibleWindow flexible)
-    {
-        var host = new AdvancedWindow();
-            
-        host.Bind(AdvancedWindow.ShowTitleProperty, flexible.GetObservable(FlexibleWindow.ShowTitleProperty));
-        host.Bind(AdvancedWindow.CustomIconProperty, flexible.GetObservable(FlexibleWindow.CustomIconProperty));
-        host.Bind(AdvancedWindow.TitleBarContentProperty, flexible.GetObservable(FlexibleWindow.TitleBarContentProperty));
-        host.Bind(AdvancedWindow.BottomContentProperty, flexible.GetObservable(FlexibleWindow.BottomContentProperty));
-            
-        host.Bind(Window.WindowStartupLocationProperty, flexible.GetObservable(FlexibleWindow.WindowStartupLocationProperty));
-        host.Bind(Window.IconProperty, flexible.GetObservable(FlexibleWindow.IconProperty));
-        host.Bind(Window.TitleProperty, flexible.GetObservable(FlexibleWindow.TitleProperty));
-        host.Bind(Window.SizeToContentProperty, flexible.GetObservable(FlexibleWindow.SizeToContentProperty));
-        host.Bind(Window.SystemDecorationsProperty, flexible.GetObservable(FlexibleWindow.SystemDecorationsProperty));
-        host.Bind(Window.ExtendClientAreaToDecorationsHintProperty, flexible.GetObservable(FlexibleWindow.ExtendClientAreaToDecorationsHintProperty));
-        
-        //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
-            host.Bind(TemplatedControl.BackgroundProperty,
-                flexible.GetObservable(FlexibleWindow.WindowBackgroundProperty).Where(x => x is not null));
-            
-        host.Height = flexible.PrefHeight;
-        host.Width = flexible.PrefWidth;
-        
-        host.Content = flexible;
-
-        return host;
-    }
 }

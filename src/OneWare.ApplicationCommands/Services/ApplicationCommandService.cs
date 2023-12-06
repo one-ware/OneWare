@@ -36,22 +36,25 @@ public class ApplicationCommandService : IApplicationCommandService
 
     private void OpenManager(ILogical logical, string startTab)
     {
-        if (_lastManagerWindow?.IsAttachedToVisualTree() ?? false)
+        Dispatcher.UIThread.Post(() =>
         {
-            var manager = _lastManagerWindow.DataContext as CommandManagerViewModel;
-            if (manager == null) throw new NullReferenceException(nameof(manager));
-            manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
-        }
-        else
-        {
-            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
-            manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
-            _lastManagerWindow = new CommandManagerView()
+            if (_lastManagerWindow?.IsAttachedToVisualTree() ?? false)
             {
-                DataContext = manager
-            };
-            _windowService.Show(_lastManagerWindow, logical as Window);
-        }
+                var manager = _lastManagerWindow.DataContext as CommandManagerViewModel;
+                if (manager == null) throw new NullReferenceException(nameof(manager));
+                manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
+            }
+            else
+            {
+                var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
+                manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
+                _lastManagerWindow = new CommandManagerView()
+                {
+                    DataContext = manager
+                };
+                _windowService.Show(_lastManagerWindow, logical as Window);
+            }
+        });
     }
     
     public void RegisterCommand(IApplicationCommand command)

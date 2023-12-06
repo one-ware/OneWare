@@ -1,8 +1,10 @@
 ﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -57,6 +59,9 @@ namespace OneWare.SDK.Controls
         
         public static readonly StyledProperty<bool> ExtendClientAreaToDecorationsHintProperty =
             AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ExtendClientAreaToDecorationsHint), true);
+        
+        public static readonly StyledProperty<bool> CanResizeProperty =
+            AvaloniaProperty.Register<Window, bool>(nameof(CanResize), true);
         
         public static readonly StyledProperty<bool> CloseOnDeactivatedProperty =
             AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(CloseOnDeactivated), false);
@@ -145,6 +150,12 @@ namespace OneWare.SDK.Controls
             set => SetValue(ExtendClientAreaToDecorationsHintProperty, value);
         }
         
+        public bool CanResize
+        {
+            get => GetValue(CanResizeProperty);
+            set => SetValue(CanResizeProperty, value);
+        }
+        
         public bool CloseOnDeactivated
         {
             get => GetValue(CloseOnDeactivatedProperty);
@@ -167,7 +178,7 @@ namespace OneWare.SDK.Controls
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                Host = ContainerLocator.Container.Resolve<IWindowService>().CreateHost(this);
+                Host = CreateHost();
                 Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
                 if (owner != null)
                 {
@@ -198,7 +209,7 @@ namespace OneWare.SDK.Controls
         public Task ShowDialogAsync(Window owner)
         {
             if (owner == null) throw new NullReferenceException("Owner is needed on Classic Desktop Environment");
-            Host = ContainerLocator.Container.Resolve<IWindowService>().CreateHost(this);
+            Host = CreateHost();
             Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             return Host.ShowDialog(owner);
         }
@@ -212,6 +223,36 @@ namespace OneWare.SDK.Controls
         protected virtual void AttachedToHost()
         {
             
+        }
+        
+        protected virtual Window CreateHost()
+        {
+            var host = new AdvancedWindow();
+            
+            host.Bind(AdvancedWindow.ShowTitleProperty, this.GetObservable(ShowTitleProperty));
+            host.Bind(AdvancedWindow.CustomIconProperty, this.GetObservable(CustomIconProperty));
+            host.Bind(AdvancedWindow.TitleBarContentProperty, this.GetObservable(TitleBarContentProperty));
+            host.Bind(AdvancedWindow.BottomContentProperty, this.GetObservable(BottomContentProperty));
+            
+            host.Bind(Window.WindowStartupLocationProperty, this.GetObservable(WindowStartupLocationProperty));
+            host.Bind(Window.IconProperty, this.GetObservable(IconProperty));
+            host.Bind(Window.TitleProperty, this.GetObservable(TitleProperty));
+            host.Bind(Window.SystemDecorationsProperty, this.GetObservable(SystemDecorationsProperty));
+            host.Bind(Window.ExtendClientAreaToDecorationsHintProperty, this.GetObservable(ExtendClientAreaToDecorationsHintProperty));
+            host.Bind(Window.CanResizeProperty, this.GetObservable(CanResizeProperty));
+        
+            //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
+            host.Bind(BackgroundProperty,
+                this.GetObservable(WindowBackgroundProperty).Where(x => x is not null));
+            
+            host.Height = PrefHeight;
+            host.Width = PrefWidth;
+            
+            host.Content = this;
+
+            host.Bind(Window.SizeToContentProperty, this.GetObservable(SizeToContentProperty));
+
+            return host;
         }
     }
 }

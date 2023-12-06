@@ -12,7 +12,6 @@ using Dock.Model.Core;
 using OneWare.ApplicationCommands;
 using OneWare.ApplicationCommands.Models;
 using OneWare.ApplicationCommands.Services;
-using OneWare.Core.Helpers;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;

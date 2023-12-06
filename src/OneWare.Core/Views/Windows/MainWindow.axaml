@@ -1,4 +1,4 @@
-﻿<windows:AdvancedWindow xmlns="https://github.com/avaloniaui"
+﻿<sdkControls:AdvancedWindow xmlns="https://github.com/avaloniaui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,16 +16,16 @@
                        WindowStartupLocation="CenterScreen"
                        Background="{DynamicResource ThemeBackgroundBrush}"
                        xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
-                       xmlns:controls1="clr-namespace:OneWare.Core.ViewModels.Controls"
+                       xmlns:coreControls="clr-namespace:OneWare.Core.ViewModels.Controls"
                        xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
                        xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
-                       xmlns:controls2="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+                       xmlns:sdkControls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
                        xmlns:enums="clr-namespace:OneWare.SDK.Enums;assembly=OneWare.SDK"
                        x:DataType="viewmodels:MainWindowViewModel">
     
     <Window.DataTemplates>
-        <DataTemplate DataType="controls1:CustomNotificationViewModel">
+        <DataTemplate DataType="coreControls:CustomNotificationViewModel">
             <controls:CustomNotificationView />
         </DataTemplate>
     </Window.DataTemplates>
@@ -85,7 +85,7 @@
         <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding DockService.Layout}" UseLayoutRounding="False" />
     </Grid>
 
-    <windows:AdvancedWindow.TitleBarContent>
+    <sdkControls:AdvancedWindow.TitleBarContent>
         <StackPanel Orientation="Horizontal" Spacing="5">
             <Image IsHitTestVisible="False" Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="20" Width="20"
                    IsVisible="{Binding $parent[Window].IsExtendedIntoWindowDecorations}" />
@@ -98,14 +98,14 @@
                 </Menu.Styles>
             </Menu>
         </StackPanel>
-    </windows:AdvancedWindow.TitleBarContent>
+    </sdkControls:AdvancedWindow.TitleBarContent>
 
-    <windows:AdvancedWindow.BottomContent>
+    <sdkControls:AdvancedWindow.BottomContent>
         <Border Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->
-                <controls2:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
+                <sdkControls:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
                                   IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                 <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0" Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}" Foreground="White" />
@@ -179,5 +179,5 @@
                 </StackPanel>
             </DockPanel>
         </Border>
-    </windows:AdvancedWindow.BottomContent>
-</windows:AdvancedWindow>
+    </sdkControls:AdvancedWindow.BottomContent>
+</sdkControls:AdvancedWindow>

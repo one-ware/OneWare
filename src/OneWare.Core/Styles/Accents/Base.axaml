@@ -156,6 +156,12 @@
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
+            <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
+            
+            <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
+            <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
+            <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
+            
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
             <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
@@ -199,6 +205,13 @@
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.7" />
+            <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
+            
+            <!-- BaseResources for CaptionButtons.xaml -->
+            <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
+            <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
+            <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
+            
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
             <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#424040" />

@@ -4,12 +4,11 @@ using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
-using OneWare.Core.Helpers;
-using OneWare.SDK;
+using OneWare.SDK.Helpers;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 
-namespace OneWare.Core.Views.Windows;
+namespace OneWare.SDK.Controls;
 
 public class AdvancedHostWindow : HostWindow
 {

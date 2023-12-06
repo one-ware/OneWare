@@ -13,6 +13,7 @@ using DynamicData.Binding;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
+using OneWare.SDK.Controls;
 using Prism.Ioc;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Models;
