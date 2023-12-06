@@ -17,7 +17,7 @@
              ExtendClientAreaToDecorationsHint="False"
              CanResize="False"
              WindowStartupLocation="CenterOwner"
-             CloseOnDeactivated="False"
+             CloseOnDeactivated="True"
              UseLayoutRounding="True">
     <Interaction.Behaviors>
         <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True" 
