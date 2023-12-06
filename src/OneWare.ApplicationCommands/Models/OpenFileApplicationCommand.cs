@@ -27,4 +27,9 @@ public class OpenFileApplicationCommand : IApplicationCommand
         _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(_file);
         return true;
     }
+
+    public bool CanExecute(ILogical source)
+    {
+        return true;
+    }
 }

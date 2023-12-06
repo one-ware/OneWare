@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
@@ -223,7 +224,7 @@ namespace OneWare.SDK.LanguageService
 
                 if (codeactions is not null && IsOpen)
                 {
-                    var quickfixes = new List<IMenuItem>();
+                    var quickfixes = new ObservableCollection<MenuItemViewModel>();
                     foreach (var ca in codeactions)
                     {
                         if (ca.IsCodeAction && ca.CodeAction != null)

@@ -8,6 +8,7 @@
              xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
              xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
              xmlns:models1="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
+             xmlns:converters="clr-namespace:OneWare.ApplicationCommands.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ApplicationCommands.Views.CommandManagerView" x:DataType="viewModels:CommandManagerViewModel"
              PrefWidth="500" SizeToContent="Height"
@@ -17,7 +18,7 @@
              ExtendClientAreaToDecorationsHint="False"
              CanResize="False"
              WindowStartupLocation="CenterOwner"
-             CloseOnDeactivated="True"
+             CloseOnDeactivated="False"
              UseLayoutRounding="True">
     <Interaction.Behaviors>
         <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True" 
@@ -53,6 +54,14 @@
                              Margin="0"
                              Name="ItemList" Padding="0">
                         <ListBox.Styles>
+                            <Style Selector="ListBoxItem" x:DataType="models1:IApplicationCommand">
+                                <Setter Property="IsEnabled">
+                                    <MultiBinding Converter="{x:Static converters:ApplicationCommandExecutableConverter.Instance}">
+                                        <Binding/>
+                                        <Binding Path="#CommandManagerViewView.((viewModels:CommandManagerViewModel)DataContext).ActiveFocus, FallbackValue={x:Null}}"/>
+                                    </MultiBinding>    
+                                </Setter>
+                            </Style>
                             <Style Selector="ListBox ScrollContentPresenter">
                                 <Setter Property="CornerRadius" Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"/>
                             </Style>

@@ -13,4 +13,6 @@ public interface IApplicationCommand
     public IImage? Image { get; }
     
     public bool Execute(ILogical source);
+    
+    public bool CanExecute(ILogical source);
 }

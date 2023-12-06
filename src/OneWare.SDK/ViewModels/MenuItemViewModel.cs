@@ -1,13 +1,14 @@
-﻿using System.Windows.Input;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Avalonia.Input;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.SDK.Models;
 
 namespace OneWare.SDK.ViewModels
 {
-    public class MenuItemViewModel : ObservableObject, IMenuItem
+    public class MenuItemViewModel(string partId) : ObservableObject, ICanHaveObservableItems<MenuItemViewModel>
     {
+        public string PartId { get; } = partId;
         public int Priority { get; set; }
         
         private ICommand? _command;
@@ -62,18 +63,13 @@ namespace OneWare.SDK.ViewModels
             set => SetProperty(ref _inputGesture, value);
         }
         
-        private IList<IMenuItem>? _items;
-        public IList<IMenuItem>? Items
+        private ObservableCollection<MenuItemViewModel>? _items;
+        public ObservableCollection<MenuItemViewModel>? Items
         {
             get => _items;
             set => SetProperty(ref _items, value);
         }
-        
-        public string Part { get; }
 
-        public MenuItemViewModel(string part)
-        {
-            Part = part;
-        }
+        public string Name => Header ?? string.Empty;
     }
 }

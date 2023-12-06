@@ -1,22 +1,15 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
-using Avalonia.Controls.Presenters;
-using Avalonia.Controls.Primitives;
 using Avalonia.Media;
-using Avalonia.Threading;
-using AvaloniaEdit.Utils;
-using DynamicData;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.SDK.Controls;
 using OneWare.SDK.Enums;
 using Prism.Ioc;
-using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
@@ -25,8 +18,10 @@ namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
-    private readonly Dictionary<string, ObservableCollection<IMenuItem>> _menuItems = new();
+    private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<Control>> _uiExtensions = new();
+
+    public event EventHandler<MenuItemViewModel>? MenuItemAdded;
     
     public void RegisterUiExtension(string key, Control control)
     {
@@ -40,23 +35,23 @@ public class WindowService : IWindowService
         return _uiExtensions[key];
     }
 
-    public void RegisterMenuItem(string key, params IMenuItem[] menuItems)
+    public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems)
     {
         var parts = key.Split('/');
-        _menuItems.TryAdd(parts[0], new ObservableCollection<IMenuItem>());
-        IList<IMenuItem> activeCollection = _menuItems[parts[0]];
+        _menuItems.TryAdd(parts[0], new ObservableCollection<MenuItemViewModel>());
+        ObservableCollection<MenuItemViewModel> activeCollection = _menuItems[parts[0]];
         
         if(parts.Length > 1)
             foreach (var part in parts.Skip(1))
             {
-                if (activeCollection.FirstOrDefault(x => x.Part == part) is MenuItemViewModel mi)
+                if (activeCollection.FirstOrDefault(x => x.PartId == part) is { } mi)
                 {
-                    activeCollection = mi.Items ?? new ObservableCollection<IMenuItem>();
+                    activeCollection = mi.Items ?? new ObservableCollection<MenuItemViewModel>();
                     mi.Items = activeCollection;
                 }
                 else
                 {
-                    var newItems = new ObservableCollection<IMenuItem>();
+                    var newItems = new ObservableCollection<MenuItemViewModel>();
                     var newPart = new MenuItemViewModel(part)
                     {
                         Header = part,
@@ -81,38 +76,41 @@ public class WindowService : IWindowService
         
         foreach (var a in menuItems)
         {
-            var insert = false;
-            
-            if (activeCollection.FirstOrDefault(x => x.Part == a.Part) is {} duplicate)
+            if (activeCollection.FirstOrDefault(x => x.PartId == a.PartId) is {} duplicate)
             {
                 activeCollection.Remove(duplicate);
                 
-                //TODO Improve duplicate handling
-                if (a is MenuItemViewModel av && duplicate is MenuItemViewModel dv)
-                {
-                    var newList = new ObservableCollection<IMenuItem>();
-                    if(dv.Items != null) newList.AddRange(dv.Items);
-                    if(av.Items != null) newList.AddRange(av.Items);
-                    av.Items = newList;
-                }
+                var newList = new ObservableCollection<MenuItemViewModel>();
+                if(duplicate.Items != null) Insert(newList, duplicate.Items.ToArray());
+                if(a.Items != null) Insert(newList, a.Items.ToArray());
+                a.Items = newList;
             }
             
-            for(var i = 0; i < activeCollection.Count; i++)
+            Insert(activeCollection, a);
+        }
+    }
+
+    private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
+    {
+        foreach (var item in items)
+        {
+            var insert = false;
+            for(var i = 0; i < collection.Count; i++)
             {
-                if (a.Priority <= activeCollection[i].Priority)
+                if (item.Priority <= collection[i].Priority)
                 {
-                    activeCollection.Insert(i, a);
+                    collection.Insert(i, item);
                     insert = true;
                     break;
                 }
             }
-            if(!insert) activeCollection.Add(a);
+            if(!insert) collection.Add(item);
         }
     }
 
-    public ObservableCollection<IMenuItem> GetMenuItems(string key)
+    public ObservableCollection<MenuItemViewModel> GetMenuItems(string key)
     {
-        _menuItems.TryAdd(key, new ObservableCollection<IMenuItem>());
+        _menuItems.TryAdd(key, new ObservableCollection<MenuItemViewModel>());
         return _menuItems[key];
     }
 

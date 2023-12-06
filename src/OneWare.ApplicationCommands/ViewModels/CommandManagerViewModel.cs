@@ -14,7 +14,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 {
     private readonly IApplicationCommandService _applicationCommandService;
     private readonly IProjectExplorerService _projectExplorerService;
-    private readonly ILogical _logical;
+    public ILogical ActiveFocus { get; }
     public ObservableCollection<CommandManagerTabModel> Tabs { get; } = new();
 
     [ObservableProperty]
@@ -22,16 +22,16 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 
     public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService, IProjectExplorerService projectExplorerService)
     {
-        _logical = logical;
+        ActiveFocus = logical;
         _applicationCommandService = commandService;
         _projectExplorerService = projectExplorerService;
         
-        Tabs.Add(new CommandManagerTabModel("Files")
+        Tabs.Add(new CommandManagerTabModel("Files", logical)
         {
             Items = GetOpenFileCommands()
         });
-        Tabs.Add(new CommandManagerTabModel("Symbols"));
-        Tabs.Add(new CommandManagerTabModel("Actions")
+        Tabs.Add(new CommandManagerTabModel("Symbols", logical));
+        Tabs.Add(new CommandManagerTabModel("Actions", logical)
         {
             Items = commandService.ApplicationCommands
         });
@@ -59,10 +59,10 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         }
         return collection;
     }
-
+    
     public void ExecuteSelection(FlexibleWindow window)
     {
-        SelectedTab?.SelectedItem?.Execute(_logical);
-        Close(window);
+        if(SelectedTab?.SelectedItem?.Execute(ActiveFocus) ?? false)
+            Close(window);
     }
 }

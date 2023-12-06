@@ -167,7 +167,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Changelog")
             {
                 Header = $"Changelog",
-                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
+                ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
                 Command = new RelayCommand(() => windowService.Show(new ChangelogView()
                 {
                     DataContext = Container.Resolve<ChangelogViewModel>()
@@ -189,7 +189,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Settings")
             {
                 Header = $"Settings",
-                ImageIconObservable = Current?.GetResourceObservable("Material.SettingsOutline"),
+                ImageIconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
                 Command = new RelayCommand(() => windowService.Show(new ApplicationSettingsView()
                 {
                     DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
@@ -198,32 +198,37 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
             {
                 Header = $"Format",
-                ImageIconObservable = Current?.GetResourceObservable("BoxIcons.RegularCode"),
-                Command = new RelayCommand(() => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format()),
+                ImageIconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
+                Command = new RelayCommand(
+                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(), 
+                    () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
                 InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
             });
             
-            var saveFileCommand = new AsyncRelayCommand(() => Container.Resolve<IDockService>().CurrentDocument?.SaveAsync() ?? Task.FromResult(false));
-
-            var inputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey);
-            
             windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
             {
-                Command = saveFileCommand,
-                Header = "Save File",
-                InputGesture = inputGesture,
+                Command = new AsyncRelayCommand(
+                    () => Container.Resolve<IDockService>().CurrentDocument?.SaveAsync() ?? Task.FromResult(false), 
+                    () => Container.Resolve<IDockService>().CurrentDocument is not null),
+                Header = "Save Current",
+                InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
+                ImageIconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
             });
-
-            commandService.RegisterCommand(
-                new LogicalDataContextApplicationCommand<IExtendedDocument>("Save File", inputGesture,
-                    x =>
+            
+            windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
+            {
+                Command = new RelayCommand(
+                    () =>
                     {
-                        _ = x.SaveAsync();
-                    })
-                {
-                    Image = Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.Save16XMd") as IImage,
-                }
-            );
+                        foreach (var file in Container.Resolve<IDockService>().OpenFiles)
+                        {
+                            _ = file.Value.SaveAsync();
+                        }
+                    }),
+                Header = "Save All",
+                InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
+                ImageIconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
+            });
 
             //AvaloniaEdit Hyperlink support
             VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
@@ -232,7 +237,7 @@ namespace OneWare.Core
                 PlatformHelper.OpenHyperLink(link);
             });
 
-            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+            if (ApplicationLifetime is ISingleViewApplicationLifetime)
             {
                 var mainView = Container.Resolve<MainView>();
                 mainView.DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();

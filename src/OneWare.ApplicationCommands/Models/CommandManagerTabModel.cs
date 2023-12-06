@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.SDK.Models;
@@ -19,7 +20,7 @@ public partial class CommandManagerTabModel : ObservableObject
     [ObservableProperty]
     private IApplicationCommand? _selectedItem;
 
-    public CommandManagerTabModel(string title)
+    public CommandManagerTabModel(string title, ILogical logical)
     {
         Title = title;
 
@@ -28,7 +29,8 @@ public partial class CommandManagerTabModel : ObservableObject
             VisibleItems.Clear();
             if(string.IsNullOrWhiteSpace(x)) return;
             VisibleItems.AddRange(Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(c => !c.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(c => !c.CanExecute(logical))
+                .ThenBy(c => !c.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
                 .ThenBy(c => c.Name));
             SelectedItem = VisibleItems.FirstOrDefault();
         });

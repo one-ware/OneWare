@@ -2,60 +2,18 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
-using OneWare.ApplicationCommands.Models;
-using OneWare.ApplicationCommands.ViewModels;
-using OneWare.ApplicationCommands.Views;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
-using Prism.Ioc;
 
 namespace OneWare.ApplicationCommands.Services;
 
 public class ApplicationCommandService : IApplicationCommandService
 {
-    private readonly IWindowService _windowService;
     public ObservableCollection<IApplicationCommand> ApplicationCommands { get; } = new();
-
-    private FlexibleWindow? _lastManagerWindow;
     
-    public ApplicationCommandService(IWindowService windowService)
+    public ApplicationCommandService()
     {
-        _windowService = windowService;
-        
         InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown);
-        
-        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Actions", new KeyGesture(Key.Q, PlatformHelper.ControlKey),
-            x => OpenManager(x, "Actions")));
-        
-        RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Files", new KeyGesture(Key.T, PlatformHelper.ControlKey),
-            x => OpenManager(x, "Files")));
-    }
-
-    private void OpenManager(ILogical logical, string startTab)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (_lastManagerWindow?.IsAttachedToVisualTree() ?? false)
-            {
-                var manager = _lastManagerWindow.DataContext as CommandManagerViewModel;
-                if (manager == null) throw new NullReferenceException(nameof(manager));
-                manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
-            }
-            else
-            {
-                var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
-                manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
-                _lastManagerWindow = new CommandManagerView()
-                {
-                    DataContext = manager
-                };
-                _windowService.Show(_lastManagerWindow, logical as Window);
-            }
-        });
     }
     
     public void RegisterCommand(IApplicationCommand command)

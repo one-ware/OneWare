@@ -10,14 +10,14 @@ namespace OneWare.ApplicationCommands.Models;
 /// Command for Logical
 /// </summary>
 /// <param name="name">Name</param>
-/// <param name="gesture">KeyGesture</param>
 /// <param name="action">Action to Execute with Logical as parameter</param>
+/// <param name="gesture">KeyGesture</param>
 /// <typeparam name="T">Logical on which the Gesture is valid</typeparam>
-public class LogicalApplicationCommand<T>(string name, KeyGesture gesture, Action<T> action) : IApplicationCommand where T : class
+public class LogicalApplicationCommand<T>(string name, Action<T> action, KeyGesture? gesture) : IApplicationCommand where T : class
 {
     public string Name { get; } = name;
     
-    public KeyGesture Gesture { get; set; } = gesture;
+    public KeyGesture? Gesture { get; set; } = gesture;
     
     public IImage? Image { get; init; }
 
@@ -27,14 +27,19 @@ public class LogicalApplicationCommand<T>(string name, KeyGesture gesture, Actio
     {
         if (source is T src)
         {
-            Action?.Invoke(src);
+            Action.Invoke(src);
             return true;
         }
         else if (source.FindLogicalAncestorOfType<T>() is { } ancestor)
         {
-            Action?.Invoke(ancestor);
+            Action.Invoke(ancestor);
             return true;
         }
         return false;
+    }
+
+    public bool CanExecute(ILogical source)
+    {
+        return source is T || source.FindLogicalAncestorOfType<T>() is not null;
     }
 }
