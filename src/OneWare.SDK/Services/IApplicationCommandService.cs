@@ -7,4 +7,6 @@ public interface IApplicationCommandService
 {
     public ObservableCollection<IApplicationCommand> ApplicationCommands { get; }
     public void RegisterCommand(IApplicationCommand command);
+    public void LoadKeyConfiguration();
+    public void SaveKeyConfiguration();
 }

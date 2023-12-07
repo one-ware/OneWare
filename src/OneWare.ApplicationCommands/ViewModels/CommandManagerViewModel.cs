@@ -20,6 +20,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
+    private readonly IApplicationCommandService _applicationCommandService;
     
     public ILogical ActiveFocus { get; }
     public ObservableCollection<CommandManagerTabBase> Tabs { get; } = new();
@@ -31,6 +32,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     {
         ActiveFocus = logical;
         _projectExplorerService = projectExplorerService;
+        _applicationCommandService = commandService;
         _windowService = windowService;
         
         Tabs.Add(new CommandManagerAllTab(logical)
@@ -88,6 +90,8 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
             DataContext = new AssignGestureViewModel(SelectedTab.SelectedItem.Command)
         }, window.Host);
 
+        _applicationCommandService.SaveKeyConfiguration();
+        
         window.Host?.Activate();
         window.CloseOnDeactivated = true;
     }

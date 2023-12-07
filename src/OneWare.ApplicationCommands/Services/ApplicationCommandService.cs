@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
+using OneWare.ApplicationCommands.Serialization;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 
@@ -10,10 +11,14 @@ namespace OneWare.ApplicationCommands.Services;
 public class ApplicationCommandService : IApplicationCommandService
 {
     public ObservableCollection<IApplicationCommand> ApplicationCommands { get; } = new();
+
+    private readonly string _keyConfigFile;
     
-    public ApplicationCommandService()
+    public ApplicationCommandService(IPaths paths)
     {
         InputElement.KeyDownEvent.AddClassHandler<TopLevel>(HandleKeyDown);
+
+        _keyConfigFile = Path.Combine(paths.AppDataDirectory, "keyConfig.json");
     }
     
     public void RegisterCommand(IApplicationCommand command)
@@ -37,5 +42,15 @@ public class ApplicationCommandService : IApplicationCommandService
                 return;
             };
         }
+    }
+    
+    public void LoadKeyConfiguration()
+    {
+        KeyConfigSerializer.LoadHotkeys(_keyConfigFile, ApplicationCommands);
+    }
+
+    public void SaveKeyConfiguration()
+    {
+        KeyConfigSerializer.SaveHotkeys(_keyConfigFile, ApplicationCommands);
     }
 }

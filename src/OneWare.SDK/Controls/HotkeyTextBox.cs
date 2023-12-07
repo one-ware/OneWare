@@ -29,7 +29,6 @@ public class HotkeyTextBox : TextBox
     protected override void OnGotFocus(GotFocusEventArgs e)
     {
         base.OnGotFocus(e);
-        CapturedKeyGesture = null;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

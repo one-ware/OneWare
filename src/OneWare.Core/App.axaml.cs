@@ -275,7 +275,8 @@ namespace OneWare.Core
         public override void OnFrameworkInitializationCompleted()
         {
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
-
+            Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
+            
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
             {
                 TypeAssistanceIconStore.Instance.Load();

@@ -9,9 +9,13 @@ namespace OneWare.ApplicationCommands.ViewModels;
 public partial class AssignGestureViewModel(IApplicationCommand command) : FlexibleWindowViewModelBase
 {
     public IApplicationCommand ApplicationCommand { get; } = command;
-
-    [ObservableProperty]
+    
     private KeyGesture? _capturedKeyGesture = command.ActiveGesture;
+    public KeyGesture? CapturedKeyGesture
+    {
+        get => _capturedKeyGesture;
+        set => SetProperty(ref _capturedKeyGesture, value);
+    }
 
     public void Clear()
     {
