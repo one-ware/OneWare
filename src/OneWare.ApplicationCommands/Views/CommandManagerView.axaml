@@ -21,6 +21,12 @@
                          WindowStartupLocation="CenterOwner"
                          CloseOnDeactivated="True"
                          UseLayoutRounding="True">
+    <controls:FlexibleWindow.Styles>
+        <Style Selector="controls|AdvancedWindow.PlatformLinux Border#WindowBorder">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
+        </Style>
+    </controls:FlexibleWindow.Styles>
     <Interaction.Behaviors>
         <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True"
                                                  Command="{Binding Close}"
@@ -29,7 +35,8 @@
                                                  Command="{Binding ExecuteSelection}"
                                                  CommandParameter="{Binding #CommandManagerViewView}" />
     </Interaction.Behaviors>
-    <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
+    <Border Name="WindowBorder">
+        <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
         <TabControl.ItemTemplate>
             <DataTemplate>
                 <TextBlock Text="{Binding Title}" />
@@ -100,4 +107,5 @@
             </DataTemplate>
         </TabControl.ContentTemplate>
     </TabControl>
+    </Border>
 </controls:FlexibleWindow>

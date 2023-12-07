@@ -3,15 +3,13 @@ using Avalonia.Media;
 
 namespace OneWare.SDK.Models;
 
-public interface IProjectEntry : IHasPath
+public interface IProjectEntry : IHasPath, ICanHaveIcon
 {
     public new string Header { get; set; }
 
     public ObservableCollection<IProjectEntry> Items { get; }
     
     public string RelativePath { get; }
-    
-    public IImage Icon { get; }
     
     public ObservableCollection<IImage> IconOverlays { get; }
     

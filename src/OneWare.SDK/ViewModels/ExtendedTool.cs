@@ -2,10 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using Dock.Model.Mvvm.Controls;
+using OneWare.SDK.Models;
 
 namespace OneWare.SDK.ViewModels;
 
-public abstract class ExtendedTool : Tool, IExtendedTool
+public abstract class ExtendedTool : Tool, ICanHaveIcon
 {
     private IImage? _icon;
     public IImage? Icon

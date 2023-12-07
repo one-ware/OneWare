@@ -2,8 +2,7 @@
 
 namespace OneWare.SDK.Models;
 
-public interface IFile : ISavable
+public interface IFile : ISavable, ICanHaveIcon
 {
     public string Extension { get; }
-    public IImage? Icon { get; }
 }

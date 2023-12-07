@@ -9,6 +9,8 @@ namespace OneWare.SDK.Extensions;
 
 public static class ObservableCollectionExtensions
 {
+    private const string PathSeparator = "\u2192";
+    
     public static IDisposable WatchTreeChanges<T>(this ObservableCollection<T> collection, Action<T, string> onAdded, Action<T, string> onRemoved) where T : ICanHaveObservableItems<T>
     {
         var disposable = new CompositeDisposable();
@@ -49,7 +51,7 @@ public static class ObservableCollectionExtensions
                         {
                             if (x != null)
                             {
-                                var s = WatchTreeChangesChildren(x, onAdded, onRemoved, compositeDisposable, disposableDictionary, $"{path}{typeItem.Name} -> ");
+                                var s = WatchTreeChangesChildren(x, onAdded, onRemoved, compositeDisposable, disposableDictionary, $"{path}{typeItem.Name} {PathSeparator} ");
                                 disposableDictionary[typeItem] = s;
                             }
                         }).DisposeWith(subDisposable);
@@ -82,7 +84,7 @@ public static class ObservableCollectionExtensions
         {
             foreach (var i in item.Items)
             {
-                CallRemoveRecursive<T>(i, onRemoved, disposableDictionary, $"{path}{i.Name} -> ");
+                CallRemoveRecursive<T>(i, onRemoved, disposableDictionary, $"{path}{i.Name} {PathSeparator} ");
             }
         }
     }

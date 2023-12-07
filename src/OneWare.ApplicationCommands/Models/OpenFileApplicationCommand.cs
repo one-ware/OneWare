@@ -13,12 +13,12 @@ public class OpenFileApplicationCommand : IApplicationCommand
     public KeyGesture? Gesture { get; init; }
     public IImage? Image { get; }
 
-    private IFile _file;
+    private IProjectFile _file;
 
-    public OpenFileApplicationCommand(IFile file)
+    public OpenFileApplicationCommand(IProjectFile file)
     {
         _file = file;
-        Name = file.Header;
+        Name = Path.Combine(file.Root.Header, file.RelativePath);
         Image = file.Icon;
     }
     
