@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
@@ -15,10 +16,11 @@ public partial class CommandManagerTabModel : ObservableObject
 
     public ObservableCollection<IApplicationCommand> Items { get; init; } = new();
 
-    public ObservableCollection<IApplicationCommand> VisibleItems { get; } = new();
+    [ObservableProperty]
+    private IList<CommandManagerItemModel> _visibleItems = [];
 
     [ObservableProperty]
-    private IApplicationCommand? _selectedItem;
+    private CommandManagerItemModel? _selectedItem;
 
     public CommandManagerTabModel(string title, ILogical logical)
     {
@@ -26,12 +28,23 @@ public partial class CommandManagerTabModel : ObservableObject
 
         this.WhenValueChanged(x => x.SearchText).Subscribe(x =>
         {
-            VisibleItems.Clear();
-            if(string.IsNullOrWhiteSpace(x)) return;
-            VisibleItems.AddRange(Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(c => !c.CanExecute(logical))
-                .ThenBy(c => !c.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
-                .ThenBy(c => c.Name));
+            List<CommandManagerItemModel> newList = [];
+            
+            if (!string.IsNullOrWhiteSpace(x))
+            {
+                newList = Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
+                    .Select(c => new CommandManagerItemModel(c, c.CanExecute(logical)))
+                    .OrderByDescending(c => c.IsEnabled)
+                    .ThenByDescending(c => c.Command.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
+                    .ThenByDescending(c => c.Command.Name)
+                    .ToList();
+            }
+            if (newList.Count == 0 && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                newList.Add(new CommandManagerItemModel(new DummyApplicationCommand(), false));
+            }
+
+            VisibleItems = newList;
             SelectedItem = VisibleItems.FirstOrDefault();
         });
     }

@@ -66,7 +66,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     
     public void ExecuteSelection(FlexibleWindow window)
     {
-        if(SelectedTab?.SelectedItem?.Execute(ActiveFocus) ?? false)
+        if(SelectedTab?.SelectedItem?.Command.Execute(ActiveFocus) ?? false)
             Close(window);
     }
 }
