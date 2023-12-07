@@ -24,7 +24,6 @@ namespace OneWare.Core.Dock
             documentDock.ActiveDockable = null;
             documentDock.FocusedDockable = null;
             documentDock.VisibleDockables?.Clear();
-            documentDock.VisibleDockables?.Add(new WelcomeScreenViewModel());
             dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
             dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
 

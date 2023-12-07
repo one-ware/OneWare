@@ -26,6 +26,10 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         _applicationCommandService = commandService;
         _projectExplorerService = projectExplorerService;
         
+        Tabs.Add(new CommandManagerTabModel("All", logical)
+        {
+            Items = new ObservableCollection<IApplicationCommand>(GetOpenFileCommands().Concat(commandService.ApplicationCommands))
+        });
         Tabs.Add(new CommandManagerTabModel("Files", logical)
         {
             Items = GetOpenFileCommands()

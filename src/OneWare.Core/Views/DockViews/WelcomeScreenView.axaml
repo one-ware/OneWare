@@ -3,10 +3,27 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
+             xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
+             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
     
-    <TextBlock Text="Welcome!" />
+    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="70" Width="70" />
+            <TextBlock Text="{Binding AppName}" FontSize="30" Margin="10, 20, 10, 20" />
+        </StackPanel>
 
+        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfo}" />
+
+        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding Platform}" />
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+            <TextBlock Text="Home Page: " />
+            <controls:HyperLink Label="https://oneware.studio" Url="https://oneware.studio" />
+        </StackPanel>
+        
+        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" />
+    </DockPanel>
 </UserControl>

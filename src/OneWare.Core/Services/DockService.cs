@@ -302,6 +302,7 @@ namespace OneWare.Core.Services
                     _ => DefaultLayout.GetDefaultLayout(this)
                 };
                 OpenFiles.Clear();
+                Show(_welcomeScreenViewModel, DockShowLocation.Document);
             }
 
             layout.Id = name;

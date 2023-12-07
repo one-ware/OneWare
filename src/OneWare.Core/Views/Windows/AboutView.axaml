@@ -25,7 +25,7 @@
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <TextBlock Text="Home Page: " />
-            <controls1:HyperLink Label="https://www.vhdplus.com" Url="https://www.vhdplus.com" />
+            <controls1:HyperLink Label="https://oneware.studio" Url="https://oneware.studio" />
         </StackPanel>
         
         <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" />

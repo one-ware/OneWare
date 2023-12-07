@@ -94,8 +94,9 @@ namespace OneWare.Core.ViewModels.Windows
                 }
             });
             
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Actions", x => OpenManager(x, "Actions"), new KeyGesture(Key.Q, PlatformHelper.ControlKey)));
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Open Files", x => OpenManager(x, "Files"), new KeyGesture(Key.T, PlatformHelper.ControlKey)));
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find All", x => OpenManager(x, "All"), new KeyGesture(Key.T, PlatformHelper.ControlKey)));
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Actions", x => OpenManager(x, "Actions"), new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)));
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Files", x => OpenManager(x, "Files"), new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)));
             
             MainMenu.WatchTreeChanges(AddMenuItem, (r,p) => RemoveMenuItem(r));
         }

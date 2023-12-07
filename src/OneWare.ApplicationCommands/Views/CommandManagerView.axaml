@@ -1,32 +1,33 @@
 <controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
-             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
-             xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
-             xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
-             xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
-             xmlns:models1="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
-             xmlns:converters="clr-namespace:OneWare.ApplicationCommands.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ApplicationCommands.Views.CommandManagerView" x:DataType="viewModels:CommandManagerViewModel"
-             PrefWidth="500" SizeToContent="Height"
-             ShowTitle="False" Title="Application Commands"
-             Name="CommandManagerViewView"
-             SystemDecorations="BorderOnly"
-             ExtendClientAreaToDecorationsHint="False"
-             CanResize="False"
-             WindowStartupLocation="CenterOwner"
-             CloseOnDeactivated="False"
-             UseLayoutRounding="True">
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+                         xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
+                         xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
+                         xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
+                         xmlns:models1="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
+                         xmlns:converters="clr-namespace:OneWare.ApplicationCommands.Converters"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         x:Class="OneWare.ApplicationCommands.Views.CommandManagerView"
+                         x:DataType="viewModels:CommandManagerViewModel"
+                         PrefWidth="500" SizeToContent="Height"
+                         ShowTitle="False" Title="Application Commands"
+                         Name="CommandManagerViewView"
+                         SystemDecorations="BorderOnly"
+                         ExtendClientAreaToDecorationsHint="False"
+                         CanResize="False"
+                         WindowStartupLocation="CenterOwner"
+                         CloseOnDeactivated="True"
+                         UseLayoutRounding="True">
     <Interaction.Behaviors>
-        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True" 
+        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True"
                                                  Command="{Binding Close}"
-                                                 CommandParameter="{Binding #CommandManagerViewView}"/>
-        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False" 
+                                                 CommandParameter="{Binding #CommandManagerViewView}" />
+        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False"
                                                  Command="{Binding ExecuteSelection}"
-                                                 CommandParameter="{Binding #CommandManagerViewView}"/>
+                                                 CommandParameter="{Binding #CommandManagerViewView}" />
     </Interaction.Behaviors>
     <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
         <TabControl.ItemTemplate>
@@ -36,53 +37,65 @@
         </TabControl.ItemTemplate>
         <TabControl.ContentTemplate>
             <DataTemplate x:DataType="models:CommandManagerTabModel">
-                <StackPanel Orientation="Vertical" MaxHeight="500">
+                <StackPanel Orientation="Vertical">
                     <TextBox Name="SearchBox" AcceptsReturn="False" Text="{Binding SearchText}"
                              BorderThickness="0" CornerRadius="0" Padding="7 0"
                              Watermark="Search..." Height="25" VerticalContentAlignment="Center">
                         <Interaction.Behaviors>
-                            <FocusOnAttachedToVisualTreeBehavior/>
-                            <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}"/>
+                            <FocusOnAttachedToVisualTreeBehavior />
+                            <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}" />
                         </Interaction.Behaviors>
                     </TextBox>
-                    <ListBox BorderThickness="0 1 0 0"
-                             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                             ItemsSource="{Binding VisibleItems}"
-                             SelectedItem="{Binding SelectedItem}"
-                             IsVisible="{Binding VisibleItems.Count}"
-                             AutoScrollToSelectedItem="True"
-                             Margin="0"
-                             Name="ItemList" Padding="0">
-                        <ListBox.Styles>
-                            <Style Selector="ListBoxItem" x:DataType="models1:IApplicationCommand">
-                                <Setter Property="IsEnabled">
-                                    <MultiBinding Converter="{x:Static converters:ApplicationCommandExecutableConverter.Instance}">
-                                        <Binding/>
-                                        <Binding Path="#CommandManagerViewView.((viewModels:CommandManagerViewModel)DataContext).ActiveFocus, FallbackValue={x:Null}}"/>
-                                    </MultiBinding>    
-                                </Setter>
-                            </Style>
-                            <Style Selector="ListBox ScrollContentPresenter">
-                                <Setter Property="CornerRadius" Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"/>
-                            </Style>
-                            <Style Selector="ListBoxItem:nth-last-child(1)">
-                                <Setter Property="CornerRadius" Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"/>
-                            </Style>
-                        </ListBox.Styles>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models1:IApplicationCommand">
-                                <DockPanel VerticalAlignment="Center" Margin="3 0">
-                                    <Image DockPanel.Dock="Left" VerticalAlignment="Center" Source="{Binding Image}"
-                                           Width="{Binding #CompletionName.Bounds.Height}"
-                                           Height="{Binding #CompletionName.Bounds.Height}" />
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Gesture}" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
-                                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0" Name="CompletionName"
-                                               Margin="4,0,0,0" Text="{Binding Name}"
-                                               Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                </DockPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+
+                    <Border Background="{DynamicResource ThemeControlLowBrush}"
+                            BorderThickness="0"
+                            CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}">
+                        <ListBox BorderThickness="0 1 0 0"
+                                 BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                 ItemsSource="{Binding VisibleItems}"
+                                 SelectedItem="{Binding SelectedItem}"
+                                 IsVisible="{Binding VisibleItems.Count}"
+                                 AutoScrollToSelectedItem="True"
+                                 Margin="0" MaxHeight="500"
+                                 Name="ItemList" Padding="0">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem" x:DataType="models1:IApplicationCommand">
+                                    <Setter Property="IsEnabled">
+                                        <MultiBinding
+                                            Converter="{x:Static converters:ApplicationCommandExecutableConverter.Instance}">
+                                            <Binding />
+                                            <Binding
+                                                Path="#CommandManagerViewView.((viewModels:CommandManagerViewModel)DataContext).ActiveFocus, FallbackValue={x:Null}}" />
+                                        </MultiBinding>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="ListBox ScrollContentPresenter">
+                                    <Setter Property="CornerRadius"
+                                            Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
+                                </Style>
+                                <Style Selector="ListBoxItem:nth-last-child(1)">
+                                    <Setter Property="CornerRadius"
+                                            Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models1:IApplicationCommand">
+                                    <DockPanel VerticalAlignment="Center" Margin="3 0">
+                                        <Image DockPanel.Dock="Left" VerticalAlignment="Center"
+                                               Source="{Binding Image}"
+                                               Width="{Binding #CompletionName.Bounds.Height}"
+                                               Height="{Binding #CompletionName.Bounds.Height}" />
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Gesture}"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0"
+                                                   Name="CompletionName"
+                                                   Margin="4,0,0,0" Text="{Binding Name}"
+                                                   Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
                 </StackPanel>
             </DataTemplate>
         </TabControl.ContentTemplate>
