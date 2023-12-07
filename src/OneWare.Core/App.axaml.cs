@@ -167,7 +167,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Changelog")
             {
                 Header = $"Changelog",
-                ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
                 Command = new RelayCommand(() => windowService.Show(new ChangelogView()
                 {
                     DataContext = Container.Resolve<ChangelogViewModel>()
@@ -189,7 +189,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Settings")
             {
                 Header = $"Settings",
-                ImageIconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
+                IconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
                 Command = new RelayCommand(() => windowService.Show(new ApplicationSettingsView()
                 {
                     DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
@@ -198,7 +198,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
             {
                 Header = $"Format",
-                ImageIconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
+                IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
                 Command = new RelayCommand(
                     () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(), 
                     () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
@@ -212,7 +212,7 @@ namespace OneWare.Core
                     () => Container.Resolve<IDockService>().CurrentDocument is not null),
                 Header = "Save Current",
                 InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
-                ImageIconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
+                IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
             });
             
             windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
@@ -227,7 +227,7 @@ namespace OneWare.Core
                     }),
                 Header = "Save All",
                 InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
-                ImageIconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
+                IconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
             });
 
             //AvaloniaEdit Hyperlink support

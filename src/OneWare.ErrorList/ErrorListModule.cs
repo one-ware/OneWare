@@ -46,7 +46,7 @@ public class ErrorListModule : IModule
         {
             Header = "Problems",
             Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IErrorService>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable(ErrorListViewModel.IconKey) ,
+            IconObservable = Application.Current?.GetResourceObservable(ErrorListViewModel.IconKey) ,
         });
     }
 }

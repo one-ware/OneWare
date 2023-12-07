@@ -3,11 +3,13 @@ using System.Runtime.InteropServices;
 using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using OneWare.ApplicationCommands.Models;
+using OneWare.SDK.Commands;
 using OneWare.SDK.Models;
 
-namespace OneWare.ApplicationCommands.Models;
+namespace OneWare.ApplicationCommands.Tabs;
 
-public partial class CommandManagerTabModel : ObservableObject
+public abstract partial class CommandManagerTabBase : ObservableObject
 {
     public string Title { get; }
 
@@ -21,8 +23,10 @@ public partial class CommandManagerTabModel : ObservableObject
 
     [ObservableProperty]
     private CommandManagerItemModel? _selectedItem;
+    
+    public abstract string SearchBarText { get; }
 
-    public CommandManagerTabModel(string title, ILogical logical)
+    protected CommandManagerTabBase(string title, ILogical logical)
     {
         Title = title;
 
@@ -39,6 +43,7 @@ public partial class CommandManagerTabModel : ObservableObject
                     .ThenByDescending(c => c.Command.Name)
                     .ToList();
             }
+            //Add empty ListItem for Linux to avoid crash, TODO check with next Avalonia Update
             if (newList.Count == 0 && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 newList.Add(new CommandManagerItemModel(new DummyApplicationCommand(), false));

@@ -11,6 +11,7 @@ using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
+using OneWare.SDK.Commands;
 using OneWare.SDK.Controls;
 using OneWare.SDK.Extensions;
 using OneWare.SDK.Helpers;
@@ -94,9 +95,18 @@ namespace OneWare.Core.ViewModels.Windows
                 }
             });
             
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find All", x => OpenManager(x, "All"), new KeyGesture(Key.T, PlatformHelper.ControlKey)));
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Actions", x => OpenManager(x, "Actions"), new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)));
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Files", x => OpenManager(x, "Files"), new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)));
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find All", x => OpenManager(x, "All"))
+            {
+                DefaultGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
+            });
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Actions", x => OpenManager(x, "Actions"))
+            {
+                DefaultGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
+            });
+            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Files", x => OpenManager(x, "Files"))
+            {
+                DefaultGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
+            });
             
             MainMenu.WatchTreeChanges(AddMenuItem, (r,p) => RemoveMenuItem(r));
         }

@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Core;
+using OneWare.SDK.Services;
 using Prism.Ioc;
 
 namespace OneWare.Core
@@ -15,12 +16,19 @@ namespace OneWare.Core
             var name = data?.GetType()?.AssemblyQualifiedName?.Replace("ViewModel", "View");
             if (name == null) return new TextBlock { Text = "Invalid Data Type" };
             var type = Type.GetType(name);
-            if (type != null && !name.Split(",")[0].EndsWith("model", StringComparison.OrdinalIgnoreCase))
+            if (type != null && name.Split(",")[0].EndsWith("view", StringComparison.OrdinalIgnoreCase))
             {
-                var instance =  ContainerLocator.Current.Resolve(type);
-
-                if (instance != null)
-                    return (Control)instance;
+                try
+                {
+                    var instance = ContainerLocator.Current.Resolve(type);
+                    if (instance != null)
+                        return (Control)instance;
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Current.Resolve<ILogger>().Error(e.Message,e);
+                }
+              
                 return new TextBlock { Text = "Create Instance Failed: " + type.FullName };
             }
 

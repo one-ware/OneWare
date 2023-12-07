@@ -40,7 +40,7 @@ public class UniversalFpgaProjectSystemModule : IModule
             {
                 Header = "Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
-                ImageIcon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
@@ -52,7 +52,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                 {
                     Patterns = new[] { $"*{UniversalFpgaProjectRoot.ProjectFileExtension}" }
                 })),
-                ImageIcon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
 
         var toolBarExtension = new UniversalFpgaProjectToolBarView()

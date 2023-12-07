@@ -219,8 +219,9 @@ namespace OneWare.SourceControl.ViewModels
                 {
                     var options = new CloneOptions
                     {
-                        CredentialsProvider = (url, usernameFromUrl, types) =>
-                            GetCredentialsAsync(url, usernameFromUrl, types).Result,
+                        FetchOptions = { 
+                            CredentialsProvider = (crUrl, usernameFromUrl, types) => GetCredentialsAsync(crUrl, usernameFromUrl, types).Result,
+                        },
                         RecurseSubmodules = true
                     };
                     Repository.Clone(url, path, options);
@@ -296,7 +297,7 @@ namespace OneWare.SourceControl.ViewModels
                             };
                             if (branch.IsCurrentRepositoryHead)
                             {
-                                menuItem.ImageIconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept") ;
+                                menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept") ;
                                 menuItem.IsEnabled = false;
                             }
                             
@@ -309,7 +310,7 @@ namespace OneWare.SourceControl.ViewModels
                         AvailableBranchesMenu.Add(new MenuItemViewModel("NewBranch")
                         {
                             Header = "New Branch...",
-                            ImageIconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch") ,
+                            IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch") ,
                             Command = new AsyncRelayCommand(CreateBranchDialogAsync)
                         });
 

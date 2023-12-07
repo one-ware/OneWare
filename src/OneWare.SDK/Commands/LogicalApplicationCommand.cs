@@ -1,29 +1,19 @@
-﻿using Avalonia.Input;
-using Avalonia.LogicalTree;
-using Avalonia.Media;
-using OneWare.SDK.Extensions;
-using OneWare.SDK.Models;
+﻿using Avalonia.LogicalTree;
 
-namespace OneWare.ApplicationCommands.Models;
+namespace OneWare.SDK.Commands;
 
 /// <summary>
 /// Command for Logical
 /// </summary>
 /// <param name="name">Name</param>
 /// <param name="action">Action to Execute with Logical as parameter</param>
-/// <param name="gesture">KeyGesture</param>
 /// <typeparam name="T">Logical on which the Gesture is valid</typeparam>
-public class LogicalApplicationCommand<T>(string name, Action<T> action, KeyGesture? gesture) : IApplicationCommand where T : class
+public class LogicalApplicationCommand<T>(string name, Action<T> action) : 
+    ApplicationCommandBase(name) where T : class, ILogical
 {
-    public string Name { get; } = name;
-    
-    public KeyGesture? Gesture { get; set; } = gesture;
-    
-    public IImage? Image { get; init; }
-
     private Action<T> Action { get; } = action;
     
-    public bool Execute(ILogical source)
+    public override bool Execute(ILogical source)
     {
         if (source is T src)
         {
@@ -38,7 +28,7 @@ public class LogicalApplicationCommand<T>(string name, Action<T> action, KeyGest
         return false;
     }
 
-    public bool CanExecute(ILogical source)
+    public override bool CanExecute(ILogical source)
     {
         return source is T || source.FindLogicalAncestorOfType<T>() is not null;
     }

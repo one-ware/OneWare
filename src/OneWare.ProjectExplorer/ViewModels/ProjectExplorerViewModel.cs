@@ -119,7 +119,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         {
                             Header = "Set as Active Project",
                             Command = new RelayCommand(() => ActiveProject = inactiveRoot),
-                            ImageIconObservable = Application.Current!.GetResourceObservable("VsCodeLight.Debug-Start")
+                            IconObservable = Application.Current!.GetResourceObservable("VsCodeLight.Debug-Start")
                         });
                     }
 
@@ -132,28 +132,28 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                             {
                                 Header = "New Folder",
                                 Command = new RelayCommand(() => _ = CreateFolderDialogAsync(folder)),
-                                ImageIconObservable =
+                                IconObservable =
                                     Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
                             },
                             new("NewFile")
                             {
                                 Header = "New File",
                                 Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
-                                ImageIconObservable =
+                                IconObservable =
                                     Application.Current?.GetResourceObservable("VsImageLib.NewFile16X")
                             },
                             new("ExistingFolder")
                             {
                                 Header = "Import Folder",
                                 Command = new RelayCommand(() => _ = ImportFolderDialogAsync(folder)),
-                                ImageIconObservable =
+                                IconObservable =
                                     Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
                             },
                             new("ExistingFile")
                             {
                                 Header = "Import File",
                                 Command = new RelayCommand(() => _ = ImportFileDialogAsync(folder)),
-                                ImageIconObservable =
+                                IconObservable =
                                     Application.Current?.GetResourceObservable("VsImageLib.File16X")
                             }
                         }
@@ -192,21 +192,21 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         {
                             Header = "Copy",
                             Command = new RelayCommand(() => _ = CopyAsync(topLevel)),
-                            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCopy"),
+                            IconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularCopy"),
                             InputGesture = new KeyGesture(Key.C, KeyModifiers.Control),
                         },
                         new("Paste")
                         {
                             Header = "Paste",
                             Command = new RelayCommand(() => _ = PasteAsync(topLevel)),
-                            ImageIconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularPaste"),
+                            IconObservable = Application.Current?.GetResourceObservable("BoxIcons.RegularPaste"),
                             InputGesture = new KeyGesture(Key.V, KeyModifiers.Control),
                         },
                         new("Delete")
                         {
                             Header = "Delete",
                             Command = new RelayCommand(() => _ = DeleteDialogAsync(entry)),
-                            ImageIconObservable =
+                            IconObservable =
                                 Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
                         },
                         new("Rename")
@@ -214,7 +214,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                             Header = "Rename",
                             Command = new RelayCommand(() =>
                                 entry.RequestRename?.Invoke((x) => _ = RenameAsync(entry, x))),
-                            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
+                            IconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
                         }
                     }
                 });
@@ -224,7 +224,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 Header = "Open in File Viewer",
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
-                ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
+                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc")
             });
         }
         else if(SelectedItems.Count > 1)
@@ -244,7 +244,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         {
                             Header = "Delete",
                             Command = new RelayCommand(() => _ = DeleteDialogAsync(SelectedItems.ToArray())),
-                            ImageIconObservable =
+                            IconObservable =
                                 Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
                         }
                     }

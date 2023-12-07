@@ -35,7 +35,7 @@ public class SerialMonitorModule : IModule
         {
             Header = "Serial Monitor",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<ISerialMonitorService>())),
-            ImageIconObservable = Application.Current?.GetResourceObservable(SerialMonitorViewModel.IconKey) ,
+            IconObservable = Application.Current?.GetResourceObservable(SerialMonitorViewModel.IconKey) ,
         });
     }
 }

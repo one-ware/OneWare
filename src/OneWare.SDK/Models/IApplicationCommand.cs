@@ -8,9 +8,11 @@ public interface IApplicationCommand
 {
     public string Name { get; }
     
-    public KeyGesture? Gesture { get; }
+    public KeyGesture? ActiveGesture { get; set; }
     
-    public IImage? Image { get; }
+    public KeyGesture? DefaultGesture { get; }
+    
+    public IImage? Icon { get; }
     
     public bool Execute(ILogical source);
     

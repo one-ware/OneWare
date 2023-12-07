@@ -86,13 +86,13 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         Header = "Save",
                         Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
-                        ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
+                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd"),
                     };
                     yield return new MenuItemViewModel("Reload")
                     {
                         Header = $"Reload",
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
-                        ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
+                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X"),
                     };
                     yield return new MenuItemViewModel("Edit")
                     {

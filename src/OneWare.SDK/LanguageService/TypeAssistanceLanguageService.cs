@@ -261,7 +261,7 @@ namespace OneWare.SDK.LanguageService
                     Header = "Rename...",
                     Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
                     CommandParameter = prepareRefactor,
-                    ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X") 
+                    IconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X") 
                 });
 
             var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
@@ -594,7 +594,7 @@ namespace OneWare.SDK.LanguageService
                 {
                     Header = "Restart Language Server",
                     Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                    ImageIconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X") 
+                    IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X") 
                 }
             };
         }

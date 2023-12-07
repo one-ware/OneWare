@@ -8,6 +8,6 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="DiffPlex" Version="1.7.1" />
-        <PackageReference Include="LibGit2Sharp" Version="0.28.0" />
+        <PackageReference Include="LibGit2Sharp" Version="0.29.0" />
     </ItemGroup>
 </Project>

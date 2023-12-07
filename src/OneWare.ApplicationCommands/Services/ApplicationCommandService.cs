@@ -27,7 +27,7 @@ public class ApplicationCommandService : IApplicationCommandService
 
         if (args.Source is not ILogical logical) return;
         
-        var commands = ApplicationCommands.Where(x => x.Gesture?.Equals(gesture) ?? false);
+        var commands = ApplicationCommands.Where(x => x.ActiveGesture?.Equals(gesture) ?? false);
         
         foreach (var command in commands)
         {

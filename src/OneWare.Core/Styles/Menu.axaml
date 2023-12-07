@@ -62,7 +62,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding ImageIcon}" />
+                    <Image Source="{Binding Icon}" />
                 </Template>
             </Setter.Value>
         </Setter>
@@ -79,7 +79,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding ImageIcon}" />
+                    <Image Source="{Binding Icon}" />
                 </Template>
             </Setter.Value>
         </Setter>

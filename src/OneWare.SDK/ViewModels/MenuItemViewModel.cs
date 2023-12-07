@@ -3,13 +3,14 @@ using System.Windows.Input;
 using Avalonia.Input;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.SDK.Models;
 
 namespace OneWare.SDK.ViewModels
 {
-    public class MenuItemViewModel(string partId) : ObservableObject, ICanHaveObservableItems<MenuItemViewModel>
+    public class MenuItemViewModel(string partId) : ObservableObject, ICanHaveObservableItems<MenuItemViewModel>, ICanHaveIcon
     {
         public string PartId { get; } = partId;
-        public int Priority { get; set; }
+        public int Priority { get; init; }
         
         private ICommand? _command;
         public ICommand? Command
@@ -39,20 +40,20 @@ namespace OneWare.SDK.ViewModels
             set => SetProperty(ref _header, value);
         }
 
-        private IImage? _imageIcon;
-        public IImage? ImageIcon
+        private IImage? _icon;
+        public IImage? Icon
         {
-            get => _imageIcon;
-            set => SetProperty(ref _imageIcon, value);
+            get => _icon;
+            set => SetProperty(ref _icon, value);
         }
 
         private IDisposable? _subscription;
-        public IObservable<object?>? ImageIconObservable
+        public IObservable<object?>? IconObservable
         {
             set
             {
                 _subscription?.Dispose();
-                _subscription = value?.Subscribe(x => ImageIcon = x as IImage);
+                _subscription = value?.Subscribe(x => Icon = x as IImage);
             }
         }
         

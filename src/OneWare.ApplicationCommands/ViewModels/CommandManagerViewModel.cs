@@ -1,9 +1,13 @@
 using System.Collections.ObjectModel;
+using Avalonia.Input;
 using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.ApplicationCommands.Models;
-using OneWare.ApplicationCommands.Services;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.ApplicationCommands.Tabs;
+using OneWare.ApplicationCommands.Views;
+using OneWare.SDK.Commands;
 using OneWare.SDK.Controls;
+using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
@@ -12,30 +16,32 @@ namespace OneWare.ApplicationCommands.ViewModels;
 
 public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 {
-    private readonly IApplicationCommandService _applicationCommandService;
+    public static KeyGesture ChangeShortcutGesture => new(Key.Enter, PlatformHelper.ControlKey);
+    
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IWindowService _windowService;
+    
     public ILogical ActiveFocus { get; }
-    public ObservableCollection<CommandManagerTabModel> Tabs { get; } = new();
+    public ObservableCollection<CommandManagerTabBase> Tabs { get; } = new();
 
     [ObservableProperty]
-    private CommandManagerTabModel _selectedTab;
-
-    public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService, IProjectExplorerService projectExplorerService)
+    private CommandManagerTabBase _selectedTab;
+    
+    public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService, IProjectExplorerService projectExplorerService, IWindowService windowService)
     {
         ActiveFocus = logical;
-        _applicationCommandService = commandService;
         _projectExplorerService = projectExplorerService;
+        _windowService = windowService;
         
-        Tabs.Add(new CommandManagerTabModel("All", logical)
+        Tabs.Add(new CommandManagerAllTab(logical)
         {
             Items = new ObservableCollection<IApplicationCommand>(GetOpenFileCommands().Concat(commandService.ApplicationCommands))
         });
-        Tabs.Add(new CommandManagerTabModel("Files", logical)
+        Tabs.Add(new CommandManagerFilesTab(logical)
         {
             Items = GetOpenFileCommands()
         });
-        Tabs.Add(new CommandManagerTabModel("Symbols", logical));
-        Tabs.Add(new CommandManagerTabModel("Actions", logical)
+        Tabs.Add(new CommandManagerActionsTab(logical)
         {
             Items = commandService.ApplicationCommands
         });
@@ -68,5 +74,21 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     {
         if(SelectedTab?.SelectedItem?.Command.Execute(ActiveFocus) ?? false)
             Close(window);
+    }
+
+    [RelayCommand]
+    private async Task ChangeShortcutAsync(FlexibleWindow window)
+    {
+        if (SelectedTab is not CommandManagerActionsTab || SelectedTab.SelectedItem == null) return;
+
+        window.CloseOnDeactivated = false;
+        
+        await _windowService.ShowDialogAsync(new AssignGestureView()
+        {
+            DataContext = new AssignGestureViewModel(SelectedTab.SelectedItem.Command)
+        }, window.Host);
+
+        window.Host?.Activate();
+        window.CloseOnDeactivated = true;
     }
 }

@@ -7,6 +7,7 @@
                          xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
                          xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
                          xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
+                         xmlns:tabs="clr-namespace:OneWare.ApplicationCommands.Tabs"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          x:Class="OneWare.ApplicationCommands.Views.CommandManagerView"
                          x:DataType="viewModels:CommandManagerViewModel"
@@ -32,25 +33,33 @@
         <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False"
                                                  Command="{Binding ExecuteSelection}"
                                                  CommandParameter="{Binding #CommandManagerViewView}" />
+        <behaviours:CommandOnGesturePressedBehaviour TriggerGesture="{Binding ChangeShortcutGesture}" HandledEventsToo="False"
+                                                 Command="{Binding ChangeShortcutCommand}"
+                                                 CommandParameter="{Binding #CommandManagerViewView}" />
     </Interaction.Behaviors>
     <Border Name="WindowBorder">
         <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
         <TabControl.ItemTemplate>
-            <DataTemplate>
+            <DataTemplate DataType="tabs:CommandManagerTabBase">
                 <TextBlock Text="{Binding Title}" />
             </DataTemplate>
         </TabControl.ItemTemplate>
         <TabControl.ContentTemplate>
-            <DataTemplate x:DataType="models:CommandManagerTabModel">
+            <DataTemplate DataType="tabs:CommandManagerTabBase">
                 <StackPanel Orientation="Vertical">
-                    <TextBox Name="SearchBox" AcceptsReturn="False" Text="{Binding SearchText}"
-                             BorderThickness="0" CornerRadius="0" Padding="7 0"
-                             Watermark="Search..." Height="25" VerticalContentAlignment="Center">
-                        <Interaction.Behaviors>
-                            <FocusOnAttachedToVisualTreeBehavior />
-                            <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}" />
-                        </Interaction.Behaviors>
-                    </TextBox>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding SearchBarText}" 
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                   VerticalAlignment="Center" Margin="0 0 5 0"/>
+                        <TextBox DockPanel.Dock="Left" Name="SearchBox" AcceptsReturn="False" Text="{Binding SearchText}"
+                                 BorderThickness="0" CornerRadius="0" Padding="7 0"
+                                 Watermark="Find..." Height="25" VerticalContentAlignment="Center">
+                            <Interaction.Behaviors>
+                                <FocusOnAttachedToVisualTreeBehavior />
+                                <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}" />
+                            </Interaction.Behaviors>
+                        </TextBox>
+                    </DockPanel>
 
                     <Border Background="{DynamicResource ThemeControlLowBrush}"
                             BorderThickness="0"
@@ -76,13 +85,13 @@
                                 </Style>
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:CommandManagerItemModel">
+                                <DataTemplate DataType="models:CommandManagerItemModel">
                                     <DockPanel VerticalAlignment="Center" Margin="3 0">
                                         <Image DockPanel.Dock="Left" VerticalAlignment="Center"
-                                               Source="{Binding Command.Image}"
+                                               Source="{Binding Command.Icon}"
                                                Width="{Binding #CompletionName.Bounds.Height}"
                                                Height="{Binding #CompletionName.Bounds.Height}" />
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Command.Gesture}"
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Command.ActiveGesture}"
                                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0"
                                                    Name="CompletionName"

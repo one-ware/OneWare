@@ -130,7 +130,7 @@ namespace OneWare.Core.Views.Windows
 
                         //cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
                     }
-                    else if (mi.ImageIcon is IObservable<Bitmap> btm)
+                    else if (mi.Icon is IObservable<Bitmap> btm)
                     {
                         nmi.Bind(NativeMenuItem.IconProperty, btm);
                     }

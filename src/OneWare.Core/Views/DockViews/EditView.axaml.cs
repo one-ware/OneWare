@@ -364,17 +364,17 @@ namespace OneWare.Core.Views.DockViews
 
                 contextMenuList.Add(new MenuItemViewModel("Cut")
                 {
-                    Header = "Cut", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCut") ,
+                    Header = "Cut", IconObservable = this.GetResourceObservable("BoxIcons.RegularCut") ,
                     Command = new RelayCommand(CodeBox.Cut)
                 });
                 contextMenuList.Add(new MenuItemViewModel("Copy")
                 {
-                    Header = "Copy", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCopy") ,
+                    Header = "Copy", IconObservable = this.GetResourceObservable("BoxIcons.RegularCopy") ,
                     Command = new RelayCommand(CodeBox.Copy)
                 });
                 contextMenuList.Add(new MenuItemViewModel("Paste")
                 {
-                    Header = "Paste", ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularPaste") ,
+                    Header = "Paste", IconObservable = this.GetResourceObservable("BoxIcons.RegularPaste") ,
                     Command = new RelayCommand(CodeBox.Paste)
                 });
                 if (_typeAssistance != null)
@@ -382,12 +382,12 @@ namespace OneWare.Core.Views.DockViews
                     contextMenuList.Add(new Separator());
                     contextMenuList.Add(new MenuItemViewModel("Comment")
                     {
-                        Header = "Comment", ImageIconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X") ,
+                        Header = "Comment", IconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X") ,
                         Command = new RelayCommand(_typeAssistance.Comment)
                     });
                     contextMenuList.Add(new MenuItemViewModel("Uncomment")
                     {
-                        Header = "Uncomment", ImageIconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X") ,
+                        Header = "Uncomment", IconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X") ,
                         Command = new RelayCommand(_typeAssistance.Uncomment)
                     });
                 }
@@ -406,7 +406,7 @@ namespace OneWare.Core.Views.DockViews
                         contextMenuList.Add(new MenuItemViewModel("IndentSelection")
                         {
                             Header = "Auto-Indent Selection",
-                            ImageIconObservable = this.GetResourceObservable("BoxIcons.RegularCode") ,
+                            IconObservable = this.GetResourceObservable("BoxIcons.RegularCode") ,
                             Command = new RelayCommand(() => _typeAssistance.AutoIndent(startLine, endLine))
                         });
                     }

@@ -134,7 +134,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         {
             Header = "Open in File Viewer",
             Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(FullPath)),
-            ImageIconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
+            IconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
             Priority = 1000
         };
     }

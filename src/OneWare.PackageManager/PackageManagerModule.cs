@@ -29,7 +29,7 @@ public class PackageManagerModule : IModule
             {
                 DataContext = containerProvider.Resolve<PackageManagerViewModel>()
             })),
-            ImageIconObservable = Application.Current?.GetResourceObservable("PackageManager"),
+            IconObservable = Application.Current?.GetResourceObservable("PackageManager"),
         });
     }
 }
