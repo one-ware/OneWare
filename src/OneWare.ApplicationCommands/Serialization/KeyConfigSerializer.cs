@@ -38,6 +38,8 @@ public static class KeyConfigSerializer
         try
         {
             using var stream = File.OpenRead(path);
+            stream.SetLength(0);
+            
             var hotkeys = JsonSerializer.Deserialize<KeyConfigItem[]>(stream, Options);
 
             if (hotkeys == null) throw new Exception("Could not load Hotkey json");
