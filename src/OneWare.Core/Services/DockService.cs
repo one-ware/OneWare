@@ -101,13 +101,18 @@ namespace OneWare.Core.Services
             _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
             type ??= typeof(EditViewModel);
             var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
-
+            
             if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
 
             Show(viewModel, DockShowLocation.Document);
             
             if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false) 
                 _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
+            
+            if (viewModel is EditViewModel evm)
+            {
+                await evm.WaitForEditorReadyAsync();
+            }
             
             return viewModel;
         }

@@ -14,6 +14,8 @@ public class MenuItemApplicationCommand : ApplicationCommandBase
         MenuItem = menuItem;
         IconObservable = menuItem.WhenValueChanged(x => x.Icon);
 
+        DefaultGesture = menuItem.InputGesture;
+        
         this.WhenValueChanged(x => x.ActiveGesture).Subscribe(x =>
         {
             MenuItem.InputGesture = x;

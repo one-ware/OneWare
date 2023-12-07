@@ -15,12 +15,21 @@ namespace OneWare.SearchList.ViewModels
     {
         public const string IconKey = "VsImageLib.Search16XMd";
         
-        private IDockService _dockService;
-        private IProjectExplorerService _projectExplorerService;
+        private readonly IDockService _dockService;
+        private readonly IProjectExplorerService _projectExplorerService;
         
         private CancellationTokenSource? _lastCancellationToken;
-        
-        public string LastSearchString { get; set; } = "";
+
+        private string _searchString = string.Empty;
+        public string SearchString
+        {
+            get => _searchString;
+            set
+            {
+                SetProperty(ref _searchString, value);
+                Search(_searchString);
+            }
+        }
         
         public ObservableCollection<SearchResultModel> Items { get; } = new();
 
@@ -78,8 +87,8 @@ namespace OneWare.SearchList.ViewModels
             Title = "Search";
             Id = "Search";
         }
-        
-        public void Search(string searchText)
+
+        private void Search(string searchText)
         {
             Items.Clear();
             _lastCancellationToken?.Cancel();
@@ -103,7 +112,7 @@ namespace OneWare.SearchList.ViewModels
                     await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Items, searchText,
                         _lastCancellationToken.Token);
                     break;
-                case 2 when _dockService.CurrentDocument is IEditor editor:
+                case 2 when _dockService.CurrentDocument is IEditor {CurrentFile: not null} editor:
                     Items.AddRange(await FindAllIndexesAsync(editor.CurrentFile,
                         searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
                     break;

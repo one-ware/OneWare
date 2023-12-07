@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using DynamicData.Binding;
 
 namespace OneWare.SDK.Controls
@@ -33,7 +34,7 @@ namespace OneWare.SDK.Controls
         {
             InitializeComponent();
 
-            NotifyPropertyChangedEx.WhenValueChanged<TextBox, string>(SearchTextBox, x => x.Text).Subscribe(x => OnTextAddedEvent());
+            SearchTextBox.WhenValueChanged(x => x.Text).Subscribe(x => OnTextAddedEvent());
 
             KeyDown += SearchTextBox_KeyDown;
         }
@@ -60,8 +61,15 @@ namespace OneWare.SDK.Controls
 
         protected override void OnGotFocus(GotFocusEventArgs e)
         {
-            SearchTextBox.Focus();
-            SearchTextBox.SelectAll();
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!SearchTextBox.IsFocused)
+                {
+                    SearchTextBox.Focus();
+                }
+            });
+          
+            //SearchTextBox.SelectAll();
         }
 
         public void Reset()

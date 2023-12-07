@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.SDK.Helpers;
 using OneWare.SearchList.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -32,8 +33,14 @@ public class SearchListModule : IModule
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
         {
             Header = "Search",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<SearchListViewModel>())),
-            IconObservable = Application.Current?.GetResourceObservable(SearchListViewModel.IconKey),
+            Command = new RelayCommand(() =>
+            {
+                var vm = containerProvider.Resolve<SearchListViewModel>();
+                vm.SearchString = string.Empty;
+                _dockService.Show(vm);
+            }),
+            IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
+            InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }
 }
