@@ -1,9 +1,12 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.Models;
@@ -95,23 +98,45 @@ namespace OneWare.Core.ViewModels.Windows
                 }
             });
             
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find All", x => OpenManager(x, "All"))
+            _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new []
             {
-                DefaultGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
-            });
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Actions", x => OpenManager(x, "Actions"))
-            {
-                DefaultGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
-            });
-            applicationCommandService.RegisterCommand(new LogicalApplicationCommand<ILogical>("Find Files", x => OpenManager(x, "Files"))
-            {
-                DefaultGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
+                new MenuItemViewModel("FindAll")
+                {
+                    Header = "Find All",
+                    Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
+                    InputGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
+                },
+                new MenuItemViewModel("FindActions")
+                {
+                    Header = "Find Actions",
+                    Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
+                    InputGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
+                },
+                new MenuItemViewModel("FindFiles")
+                {
+                    Header = "Find Files",
+                    Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
+                    InputGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
+                },
             });
             
             MainMenu.WatchTreeChanges(AddMenuItem, (r,p) => RemoveMenuItem(r));
         }
 
         #region MainWindowButtons
+        
+        private Control GetMainView()
+        {
+            if (Application.Current!.ApplicationLifetime is ISingleViewApplicationLifetime isv)
+            {
+                return isv.MainView ?? throw new NullReferenceException(nameof(isv.MainView));
+            }
+            if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime icv)
+            {
+                return icv.MainWindow ?? throw new NullReferenceException(nameof(icv.MainWindow));
+            }
+            throw new Exception("MainView/MainWindow not found");
+        }
         
         private void OpenManager(ILogical logical, string startTab)
         {
