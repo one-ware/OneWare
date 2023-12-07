@@ -23,6 +23,7 @@ public static class KeyConfigSerializer
         try
         {
             using var stream = File.OpenWrite(path);
+            stream.SetLength(0);
             JsonSerializer.Serialize(stream, ser, Options);
         }
         catch (Exception e)
@@ -38,7 +39,6 @@ public static class KeyConfigSerializer
         try
         {
             using var stream = File.OpenRead(path);
-            stream.SetLength(0);
             
             var hotkeys = JsonSerializer.Deserialize<KeyConfigItem[]>(stream, Options);
 
