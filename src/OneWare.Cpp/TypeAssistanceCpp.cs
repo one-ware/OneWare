@@ -60,7 +60,7 @@ namespace OneWare.Cpp
 
             void AfterComplete()
             {
-                _ = ShowOverloadProviderAsync();
+                _ = ShowSignatureHelpAsync();
             }
 
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
@@ -68,11 +68,6 @@ namespace OneWare.Cpp
             description = description?.Replace("\n", "\n\n");
             return new CompletionData(comp.InsertText ?? "", newLabel, description, icon, 0,
                 comp, offset, AfterComplete);
-        }
-
-        protected override bool CharAtNormalCompletion(char c)
-        {
-            return char.IsLetterOrDigit(c) || c is '_' || c is ':';
         }
     }
 }

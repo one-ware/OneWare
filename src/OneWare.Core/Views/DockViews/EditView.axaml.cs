@@ -103,9 +103,10 @@ namespace OneWare.Core.Views.DockViews
             {
                 var completion = new CompletionWindow(CodeBox)
                 {
-                    CloseWhenCaretAtBeginning = false,
+                    CloseWhenCaretAtBeginning = true,
                     AdditionalOffset = new Vector(0, 3),
-                    MaxHeight = 225
+                    MaxHeight = 225,
+                    CloseAutomatically = true,
                 };
                 _typeAssistance?.Attach(completion);
             }

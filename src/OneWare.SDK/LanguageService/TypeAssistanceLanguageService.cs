@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -30,7 +31,6 @@ namespace OneWare.SDK.LanguageService
     public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         private bool _completionBusy;
-        private int _completionOffset;
         private DispatcherTimer? _dispatcherTimer;
         private TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
         private TimeSpan _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
@@ -435,30 +435,31 @@ namespace OneWare.SDK.LanguageService
 
                 if (!Service.IsLanguageServiceReady || args.Text == null) return;
 
-                var t = args.Text.Length > 0 ? args.Text[0] : ';';
-                var b = CodeBox.CaretOffset > 1 ? CodeBox.Text[CodeBox.CaretOffset - 2] : ' ';
-                //var cLine = CodeBox.Document.GetText(CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset));
-
-                if (t == '(' || b == '(' ||
-                    t == ',') //Function Parameter / Overload insight
-                    if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") &&
-                        !_completionBusy)
+                if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy)
+                {
+                    var triggerChar = args.Text!;
+                    var beforeTriggerChar = CodeBox.CaretOffset > 1 ? CodeBox.Text[CodeBox.CaretOffset - 2] : ' ';
+                
+                    if (Service.GetSignatureHelpTriggerChars().Contains(triggerChar)) //Function Parameter / Overload insight
                     {
                         Completion?.Close();
-                        await ShowOverloadProviderAsync();
+                        await ShowSignatureHelpAsync();
                     }
 
-                if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy &&
-                    (CharBeforeNormalCompletion(b) && CharAtNormalCompletion(t) || //Normal completion
-                     (CharAtNormalCompletion(b) || b is ')') && t == '.')) //Child insight
-                {
-                    _completionBusy = true;
-                    _completionOffset = CodeBox.CaretOffset;
-                    if (t == '.') _completionOffset++;
-                    await ShowCompletionAsync(args.Text, t == '.' ? CompletionTriggerKind.Invoked : CompletionTriggerKind.TriggerCharacter);
+                    if (Service.GetCompletionTriggerChars().Contains(triggerChar))
+                    {
+                        _completionBusy = true;
+                        await ShowCompletionAsync(CompletionTriggerKind.TriggerCharacter, triggerChar); 
+                    }
+                    else if (CharBeforeNormalCompletion(beforeTriggerChar) && triggerChar.All(char.IsLetter))
+                    {
+                        _completionBusy = true;
+                        await ShowCompletionAsync(CompletionTriggerKind.Invoked, triggerChar);
+                    }
+                
                     _completionBusy = false;
                 }
-
+                
                 await base.TextEnteredAsync(args);
             }
             catch (Exception e)
@@ -527,7 +528,7 @@ namespace OneWare.SDK.LanguageService
             // }
         }
 
-        protected virtual async Task ShowOverloadProviderAsync()
+        protected virtual async Task ShowSignatureHelpAsync()
         {
             var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
@@ -545,38 +546,55 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        protected virtual async Task ShowCompletionAsync(string triggerChar, CompletionTriggerKind triggerKind)
+        protected virtual async Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
         {
-            //var t = triggerChar.Length > 0 ? triggerChar[0] : ';';
+            Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
 
-            var completion = await Service.RequestCompletionAsync(CurrentFile.FullPath,
-                new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerChar,
-                triggerKind);
-            var custom = await GetCustomCompletionItemsAsync();
+            var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
+                new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
+                triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
+            
+            var customCompletionItems = await GetCustomCompletionItemsAsync();
 
-            if ((completion is not null || custom.Count > 0) && IsOpen && Completion != null)
+            if ((lspCompletionItems is not null || customCompletionItems.Count > 0) && IsOpen && Completion != null)
             {
-                Completion.EndOffset = CodeBox.CaretOffset;
-                Completion.StartOffset = CodeBox.CaretOffset;
-                if (triggerKind is CompletionTriggerKind.TriggerCharacter) Completion.StartOffset -= triggerChar.Length;
                 Completion.CompletionList.Reset();
-                Completion.CompletionList.CompletionData.AddRange(custom);
-                if (completion is not null)
-                    Completion.CompletionList.CompletionData.AddRange(ConvertCompletionData(completion));
+                Completion.CompletionList.ListBox.ClearSelection();
+                Completion.StartOffset = CodeBox.CaretOffset;
+                Completion.EndOffset = CodeBox.CaretOffset;
+                
+                Completion.CompletionList.CompletionData.AddRange(customCompletionItems);
+                
+                if (lspCompletionItems is not null)
+                {
+                    var completionOffset = CodeBox.CaretOffset;
+                    if (triggerKind is CompletionTriggerKind.TriggerCharacter && triggerChar != null)
+                    {
+                        Completion.ExpectInsertionBeforeStart = true;
+                        completionOffset++;
+                    }
+                    else
+                    {
+                        Completion.ExpectInsertionBeforeStart = false;
+                    }
+                    Completion.CompletionList.CompletionData.AddRange(ConvertCompletionData(lspCompletionItems, completionOffset));
+                }
 
-                //Calculate completionwindow width
+                //Calculate CompletionWindow width
                 var length = 0;
-                foreach (var dataprop in Completion.CompletionList.CompletionData)
-                    if (dataprop.Content is string str && str.Length > length)
+                foreach (var data in Completion.CompletionList.CompletionData)
+                    if (data.Content is string str && str.Length > length)
                         length = str.Length;
-                var calwidth = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
+                var calculatedWith = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
 
-                Completion.Width = calwidth > 400 ? 500 : calwidth;
+                Completion.Width = calculatedWith > 400 ? 400 : calculatedWith;
                 if (Completion.CompletionList.CompletionData.Count > 0)
                 {
-                    if (triggerChar.Length == 1 && char.IsLetter(triggerChar[0]))
-                        Completion.Show(triggerChar);
-                    else Completion.Show();
+                    //Show without starting filter after .
+                    if(triggerKind is CompletionTriggerKind.TriggerCharacter)
+                        Completion.Show();
+                    //Show with filter at normal invocation
+                    else Completion.Show(triggerChar);
                 }
             }
         }
@@ -614,7 +632,7 @@ namespace OneWare.SDK.LanguageService
                 var resolvedCi = await Service.ResolveCompletionItemAsync(completionLsp.CompletionItemLsp);
                 if (resolvedCi != null && IsOpen && Completion.IsOpen)
                 {
-                    var cc = ConvertCompletionItem(resolvedCi, _completionOffset);
+                    var cc = ConvertCompletionItem(resolvedCi, completionLsp.CompletionOffset);
                     var cindex = Completion.CompletionList.CompletionData.IndexOf(completionLsp);
                     if (cindex >= 0)
                     {
@@ -628,11 +646,6 @@ namespace OneWare.SDK.LanguageService
         protected virtual bool CharBeforeNormalCompletion(char c)
         {
             return char.IsWhiteSpace(c) || c is ';' or '#' or '(' or ':' or '+' or '-' or '=' or '*' or '/' or '&' or ',';
-        }
-
-        protected virtual bool CharAtNormalCompletion(char c)
-        {
-            return char.IsLetterOrDigit(c) || c is '_';
         }
 
         public virtual OverloadProvider ConvertOverloadProvider(SignatureHelp signatureHelp)
@@ -663,10 +676,10 @@ namespace OneWare.SDK.LanguageService
             return new OverloadProvider(overloadOptions);
         }
 
-        public virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list)
+        protected virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list, int offset)
         {
             //Parse completionitem
-            foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, _completionOffset);
+            foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, offset);
         }
 
         protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
@@ -677,12 +690,12 @@ namespace OneWare.SDK.LanguageService
 
             void AfterComplete()
             {
-                _ = ShowOverloadProviderAsync();
+                _ = ShowSignatureHelpAsync();
             }
 
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
             
-            return new CompletionData(comp.InsertText ?? "", comp.Label, description, icon, 0,
+            return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, description, icon, 0,
                 comp, offset, AfterComplete);
         }
 

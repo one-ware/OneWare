@@ -25,12 +25,12 @@ namespace OneWare.SDK.LanguageService
     public abstract class LanguageServiceLsp : LanguageServiceBase
     {
         private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
-        protected LanguageClient? Client { get; private set; }
+        private LanguageClient? Client { get; set; }
         
         private CancellationTokenSource? _cancellation;
         private IChildProcess? _process;
-        protected string? Arguments { get; set; }
-        protected string? ExecutablePath { get; set; }
+        private string? Arguments { get; set; }
+        private string? ExecutablePath { get; set; }
         
         protected LanguageServiceLsp(string name, string? executablePath, string? arguments, string? workspace) : base(name, workspace)
         {
@@ -101,9 +101,9 @@ namespace OneWare.SDK.LanguageService
                     var reader = new StreamReader(_process.StandardError);
                     _ = Task.Run(() =>
                     {
-                        while (_process.HasStandardError)
+                        while (_process.HasStandardError && !reader.EndOfStream && !_cancellation.IsCancellationRequested)
                         {
-                            Console.WriteLine(reader.ReadToEnd());
+                            Console.WriteLine("ERR:" + reader.ReadToEnd());
                         }
                     }, _cancellation.Token);
                     
@@ -168,16 +168,16 @@ namespace OneWare.SDK.LanguageService
                     options.EnableDynamicRegistration();
                     options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
                     options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta); });
-                    
-                    // options.WithCapability(new SynchronizationCapability()
-                    // {
-                    //     DidSave = true,
-                    //     WillSave = true,
-                    //     WillSaveWaitUntil = true
-                    // });
+
+                    options.WithCapability(new TextSynchronizationCapability()
+                    {
+                        DidSave = true,
+                        WillSave = false,
+                        WillSaveWaitUntil = false
+                    });
                     options.WithCapability(new HoverCapability
                     {
-                        ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText)
+                        ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText, MarkupKind.Markdown)
                     });
                     options.WithCapability(new PublishDiagnosticsCapability
                     {
@@ -191,12 +191,25 @@ namespace OneWare.SDK.LanguageService
                     {
                         LinkSupport = false
                     });
-                    options.WithCapability(new DidChangeWatchedFilesCapability());
-                    options.WithCapability(new ReferenceCapability());
+                    // options.WithCapability(new DidChangeWatchedFilesCapability()
+                    // {
+                    //     
+                    // });
+                    options.WithCapability(new ReferenceCapability()
+                    {
+                        
+                    });
                     options.WithCapability(new SignatureHelpCapability
                     {
                         SignatureInformation = new SignatureInformationCapabilityOptions
-                            { DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText) },
+                        {
+                            DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                            ParameterInformation = new SignatureParameterInformationCapabilityOptions()
+                            {
+                                LabelOffsetSupport = true
+                            },
+                            ActiveParameterSupport = true
+                        },
                         ContextSupport = true
                     });
                     options.WithCapability(new CodeActionCapability
@@ -220,17 +233,23 @@ namespace OneWare.SDK.LanguageService
                     {
                         CompletionItem = new CompletionItemCapabilityOptions
                         {
-                            CommitCharactersSupport = true,
+                            CommitCharactersSupport = false,
                             DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
                             SnippetSupport = true,
                             PreselectSupport = true,
+                            InsertReplaceSupport = true,
+                            InsertTextModeSupport = new CompletionItemInsertTextModeSupportCapabilityOptions()
+                            {
+                                ValueSet = new Container<InsertTextMode>(InsertTextMode.AdjustIndentation, InsertTextMode.AsIs)
+                            },
+                            ResolveAdditionalTextEditsSupport = true,
                             TagSupport = new Supports<CompletionItemTagSupportCapabilityOptions?>
                             {
                                 Value = new CompletionItemTagSupportCapabilityOptions
                                 {
                                     ValueSet = new Container<CompletionItemTag>(CompletionItemTag.Deprecated)
                                 }
-                            }
+                            },
                         },
                         CompletionItemKind = new CompletionItemKindCapabilityOptions
                         {
@@ -238,7 +257,8 @@ namespace OneWare.SDK.LanguageService
                                 (CompletionItemKind[])Enum.GetValues(typeof(CompletionItemKind)))
                         },
                         ContextSupport = true,
-                        DynamicRegistration = true
+                        InsertTextMode = InsertTextMode.AdjustIndentation,
+                        DynamicRegistration = false
                     });
                     options.WithClientCapabilities(new ClientCapabilities
                     {
@@ -246,13 +266,21 @@ namespace OneWare.SDK.LanguageService
                         {
                             ApplyEdit = true,
                             Configuration = true,
-                            DidChangeConfiguration =
-                                new DidChangeConfigurationCapability { DynamicRegistration = true },
-                            DidChangeWatchedFiles = new DidChangeWatchedFilesCapability { DynamicRegistration = true },
-                            ExecuteCommand = new ExecuteCommandCapability { DynamicRegistration = true },
+                            DidChangeConfiguration = new DidChangeConfigurationCapability
+                            {
+                                DynamicRegistration = false
+                            },
+                            DidChangeWatchedFiles = new DidChangeWatchedFilesCapability
+                            {
+                                DynamicRegistration = false
+                            },
+                            ExecuteCommand = new ExecuteCommandCapability
+                            {
+                                DynamicRegistration = false
+                            },
                             Symbol = new WorkspaceSymbolCapability
                             {
-                                DynamicRegistration = true,
+                                DynamicRegistration = false,
                                 SymbolKind = new SymbolKindCapabilityOptions
                                 {
                                     ValueSet = new Container<SymbolKind>(
@@ -263,11 +291,6 @@ namespace OneWare.SDK.LanguageService
                             WorkspaceFolders = true
                         },
                         Window = new WindowClientCapabilities(),
-                        // TextDocument = new TextDocumentClientCapabilities
-                        // {
-                        //     Synchronization = new SynchronizationCapability
-                        //         { DidSave = true, WillSave = true, WillSaveWaitUntil = true }
-                        // }
                     });
 
                     customOptions?.Invoke(options);
@@ -281,7 +304,6 @@ namespace OneWare.SDK.LanguageService
             try
             {
                 await Client.Initialize(cancelToken).ConfigureAwait(false);
-                //client.ProgressManager.
             }
             catch (Exception e)
             {
@@ -437,8 +459,7 @@ namespace OneWare.SDK.LanguageService
             return Client.ExecuteCommand(cmd);
         }
 
-        public override async Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, string triggerChar,
-            CompletionTriggerKind triggerKind)
+        public override async Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, CompletionTriggerKind triggerKind, string? triggerChar)
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(1000);
@@ -454,7 +475,7 @@ namespace OneWare.SDK.LanguageService
                     Context = new CompletionContext
                     {
                         TriggerKind = triggerKind,
-                        TriggerCharacter = triggerChar
+                        TriggerCharacter = triggerChar,
                     },
                     Position = pos
                 }, cts.Token);
@@ -861,5 +882,19 @@ namespace OneWare.SDK.LanguageService
 
             return formatting;
         }
+        
+        #region Capability Check
+
+        public override IEnumerable<string> GetCompletionTriggerChars()
+        {
+            return Client?.ServerSettings.Capabilities.CompletionProvider?.TriggerCharacters ?? [];
+        }
+
+        public override IEnumerable<string> GetCompletionCommitChars()
+        {
+            return Client?.ServerSettings.Capabilities.CompletionProvider?.AllCommitCharacters ?? [];
+        }
+
+        #endregion
     }
 }

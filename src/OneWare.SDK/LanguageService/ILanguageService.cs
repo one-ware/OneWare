@@ -25,9 +25,13 @@ public interface ILanguageService
 
     public void RefreshTextDocument(string fullPath, Container<TextDocumentContentChangeEvent> changes);
     public void RefreshTextDocument(string fullPath, string newText);
+
+    public IEnumerable<string> GetSignatureHelpTriggerChars();
+    public IEnumerable<string> GetSignatureHelpRetriggerChars();
+    public IEnumerable<string> GetCompletionTriggerChars();
+    public IEnumerable<string> GetCompletionCommitChars();
     
-    public Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, string triggerChar,
-        CompletionTriggerKind triggerKind);
+    public Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, CompletionTriggerKind triggerKind, string? triggerChar);
     public Task<CompletionItem?> ResolveCompletionItemAsync(CompletionItem completionItem);
     public Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos);
     public Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName);

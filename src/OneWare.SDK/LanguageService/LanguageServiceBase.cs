@@ -73,7 +73,27 @@ public abstract class LanguageServiceBase : ILanguageService
         
     }
 
-    public virtual Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, string triggerChar, CompletionTriggerKind triggerKind)
+    public IEnumerable<string> GetSignatureHelpTriggerChars()
+    {
+        return [];
+    }
+
+    public IEnumerable<string> GetSignatureHelpRetriggerChars()
+    {
+        return [];
+    }
+
+    public virtual IEnumerable<string> GetCompletionTriggerChars()
+    {
+        return [];
+    }
+
+    public virtual IEnumerable<string> GetCompletionCommitChars()
+    {
+        return [];
+    }
+
+    public virtual Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, CompletionTriggerKind triggerKind, string? triggerChar)
     {
         return Task.FromResult<CompletionList?>(null);
     }

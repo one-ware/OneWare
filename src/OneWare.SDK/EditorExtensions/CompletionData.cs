@@ -13,7 +13,7 @@ namespace OneWare.SDK.EditorExtensions
 
         private Action? AfterCompletion { get; }
 
-        private int CompletionOffset { get; }
+        public int CompletionOffset { get; }
 
         public IImage? Image { get; }
 
@@ -55,6 +55,8 @@ namespace OneWare.SDK.EditorExtensions
 
             var caretStop = new Regex(@"\$.");
             var placeHolder = new Regex(@"\${.*?}");
+            
+            Console.WriteLine(CompletionOffset + " " + completionSegment.Offset + completionSegment.EndOffset);
 
             var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
             
