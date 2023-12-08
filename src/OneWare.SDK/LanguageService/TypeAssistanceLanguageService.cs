@@ -577,7 +577,7 @@ namespace OneWare.SDK.LanguageService
 
                 Completion.CompletionList.ListBox.WhenValueChanged(x => x.ItemsSource).Subscribe(x =>
                 {
-                    if (Completion.CompletionList.ListBox.VisibleItemCount == 0)
+                    if (Completion.CompletionList.ListBox.Items.Count == 0)
                     {
                         Completion.Close();
                     }
