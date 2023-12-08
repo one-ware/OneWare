@@ -20,7 +20,7 @@ namespace OneWare.SDK.LanguageService
         
         protected IFormattingStrategy? FormattingStrategy { get; init; }
 
-        protected CompletionWindow? Completion { get; private set; }
+        protected CompletionWindow? Completion { get; set; }
 
         protected OverloadInsightWindow? OverloadInsight { get; set; }
 
@@ -59,9 +59,8 @@ namespace OneWare.SDK.LanguageService
             IsOpen = false;
         }
         
-        public virtual void Attach(CompletionWindow completionWindow)
+        public virtual void Attach()
         {
-            Completion = completionWindow;
             IsAttached = true;
         }
 

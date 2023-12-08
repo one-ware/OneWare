@@ -30,7 +30,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="1" Padding="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}" IsVisible="{Binding $parent[cc:CompletionWindow].IsVisible}">
                     <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           VerticalAlignment="Stretch" Margin="0" Padding="0"
                                           Name="PART_ListBox" Background="{DynamicResource ThemeBackgroundBrush}"

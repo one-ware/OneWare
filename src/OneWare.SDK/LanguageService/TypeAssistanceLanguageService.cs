@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,9 +10,10 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
-using AvaloniaEdit.Editing;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using DynamicData.Binding;
+using Jint.Runtime;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.SDK.EditorExtensions;
 using OneWare.SDK.Models;
@@ -37,8 +40,7 @@ namespace OneWare.SDK.LanguageService
 
         private TimeSpan _lastEditTime = DateTime.Now.TimeOfDay;
         private TimeSpan _lastRefreshTime = DateTime.Now.TimeOfDay;
-
-        private ICompletionData? _lastSelectedCompletionItem;
+        
         private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
         
         private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(200);
@@ -70,16 +72,8 @@ namespace OneWare.SDK.LanguageService
 
         }
         
-        public override void Attach(CompletionWindow completion)
+        public override void Attach()
         {
-            base.Attach(completion);
-            
-            completion.CompletionList.SelectionChanged += (_, _) =>
-            {
-                _lastSelectedCompletionItem = completion.CompletionList.SelectedItem;
-                _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
-            };
-
             _dispatcherTimer?.Stop();
             _dispatcherTimer = new DispatcherTimer
             {
@@ -354,12 +348,12 @@ namespace OneWare.SDK.LanguageService
 
                 var initialValue = CodeBox.Text[sOff..eOff];
 
-                TextInput = new TextInputWindow(CodeBox.TextArea,
+                var textInputWindow = new TextInputWindow(CodeBox.TextArea,
                     new TextViewPosition(range.Range.Start.Line + 1, range.Range.Start.Character + 1), initialValue)
                 {
                     CompleteAction = x => _ = RenameSymbolAsync(range, x ?? "")
                 };
-                TextInput.Show();
+                textInputWindow.Show();
             }
             else
             {
@@ -533,40 +527,61 @@ namespace OneWare.SDK.LanguageService
 
         protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar, bool retrigger, SignatureHelp? activeSignatureHelp)
         {
-            Console.WriteLine($"Signature Help request");
-            
             var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerKind, triggerChar, retrigger, activeSignatureHelp);
             if (signatureHelp != null && IsOpen)
             {
-                OverloadInsight = new OverloadInsightWindow(CodeBox);
-
                 var overloadProvider = ConvertOverloadProvider(signatureHelp);
-                OverloadInsight.Provider = overloadProvider;
+                
+                OverloadInsight = new OverloadInsightWindow(CodeBox)
+                {
+                    Provider = overloadProvider,
+                    PlacementGravity = PopupGravity.TopRight,
+                    AdditionalOffset = new Vector(0, -(SettingsService.GetSettingValue<int>("Editor_FontSize") * 1.4))
+                };
 
-                OverloadInsight.PlacementGravity = PopupGravity.TopRight;
-                OverloadInsight.AdditionalOffset = new Vector(0, -(SettingsService.GetSettingValue<int>("Editor_FontSize") * 1.4));
                 OverloadInsight.SetValue(TextBlock.FontSizeProperty, SettingsService.GetSettingValue<int>("Editor_FontSize"));
                 if (overloadProvider.Count > 0) OverloadInsight.Show();
             }
         }
 
+        private CompositeDisposable _completionDisposable = new();
+        
         protected virtual async Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
         {
-            Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
+            //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
 
             var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
                 triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
             
             var customCompletionItems = await GetCustomCompletionItemsAsync();
-
-            if ((lspCompletionItems is not null || customCompletionItems.Count > 0) && IsOpen && Completion != null)
+            
+            if ((lspCompletionItems is not null || customCompletionItems.Count > 0) && IsOpen)
             {
-                Completion.CompletionList.Reset();
-                Completion.CompletionList.ListBox.ClearSelection();
-                Completion.StartOffset = CodeBox.CaretOffset;
-                Completion.EndOffset = CodeBox.CaretOffset;
+                Completion?.Close();
+                _completionDisposable = new CompositeDisposable();
+                
+                Completion = new CompletionWindow(CodeBox)
+                {
+                    CloseWhenCaretAtBeginning = false,
+                    AdditionalOffset = new Vector(0, 3),
+                    MaxHeight = 225,
+                    CloseAutomatically = true,
+                };
+                
+                Observable.FromEventPattern(Completion, nameof(Completion.Closed)).Take(1).Subscribe(x =>
+                {
+                    _completionDisposable.Dispose();
+                }).DisposeWith(_completionDisposable);
+
+                Completion.CompletionList.ListBox.WhenValueChanged(x => x.ItemsSource).Subscribe(x =>
+                {
+                    if (Completion.CompletionList.ListBox.VisibleItemCount == 0)
+                    {
+                        Completion.Close();
+                    }
+                }).DisposeWith(_completionDisposable);
                 
                 Completion.CompletionList.CompletionData.AddRange(customCompletionItems);
                 
@@ -575,12 +590,7 @@ namespace OneWare.SDK.LanguageService
                     var completionOffset = CodeBox.CaretOffset;
                     if (triggerKind is CompletionTriggerKind.TriggerCharacter && triggerChar != null)
                     {
-                        Completion.ExpectInsertionBeforeStart = true;
                         completionOffset++;
-                    }
-                    else
-                    {
-                        Completion.ExpectInsertionBeforeStart = false;
                     }
                     Completion.CompletionList.CompletionData.AddRange(ConvertCompletionData(lspCompletionItems, completionOffset));
                 }
@@ -592,14 +602,15 @@ namespace OneWare.SDK.LanguageService
                         length = str.Length;
                 var calculatedWith = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
 
-                Completion.Width = calculatedWith > 400 ? 400 : calculatedWith;
+                Completion.Width = calculatedWith > 400 ? 500 : calculatedWith;
+                
                 if (Completion.CompletionList.CompletionData.Count > 0)
                 {
-                    //Show without starting filter after .
-                    if(triggerKind is CompletionTriggerKind.TriggerCharacter)
-                        Completion.Show();
-                    //Show with filter at normal invocation
-                    else Completion.Show(triggerChar);
+                    Completion.Show();
+                    if (triggerKind is not CompletionTriggerKind.TriggerCharacter)
+                    {
+                        Completion.CompletionList.SelectItem(triggerChar);
+                    }
                 }
             }
         }
@@ -631,17 +642,16 @@ namespace OneWare.SDK.LanguageService
         public virtual async Task ResolveCompletionAsync()
         {
             //Resolve selected item
-            if (Service.IsLanguageServiceReady && Completion != null && Completion.IsOpen &&
-                _lastSelectedCompletionItem is CompletionData completionLsp && completionLsp.CompletionItemLsp != null)
+            if (Service.IsLanguageServiceReady && Completion is { IsOpen: true, CompletionList: {SelectedItem: CompletionData{CompletionItemLsp: not null} selectedItem} })
             {
-                var resolvedCi = await Service.ResolveCompletionItemAsync(completionLsp.CompletionItemLsp);
+                var resolvedCi = await Service.ResolveCompletionItemAsync(selectedItem.CompletionItemLsp);
                 if (resolvedCi != null && IsOpen && Completion.IsOpen)
                 {
-                    var cc = ConvertCompletionItem(resolvedCi, completionLsp.CompletionOffset);
-                    var cindex = Completion.CompletionList.CompletionData.IndexOf(completionLsp);
+                    var cc = ConvertCompletionItem(resolvedCi, selectedItem.CompletionOffset);
+                    var cindex = Completion.CompletionList.CompletionData.IndexOf(selectedItem);
                     if (cindex >= 0)
                     {
-                        Completion.CompletionList.CompletionData.Remove(completionLsp);
+                        Completion.CompletionList.CompletionData.Remove(selectedItem);
                         Completion.CompletionList.CompletionData.Insert(cindex, cc);
                     }
                 }

@@ -15,7 +15,7 @@ namespace OneWare.SDK.LanguageService
         event EventHandler AssistanceDeactivated;
         void Open();
         void Close();
-        void Attach(CompletionWindow completion);
+        void Attach();
         void Detach();
         void Comment();
         void Uncomment();
