@@ -225,30 +225,36 @@ namespace OneWare.SearchList.ViewModels
                 return indexes;
             }, cancellationToken);
         }
-        
-        public async Task GoToSearchResultAsync()
-        {
-            if (SelectedItem?.File == null) return;
 
-            if(await _dockService.OpenFileAsync(SelectedItem.File) is not IEditor evb) return;
+        public void OpenSelectedResult()
+        {
+            if(SelectedItem == null) return;
+            _ = GoToSearchResultAsync(SelectedItem);
+        }
+        
+        private async Task GoToSearchResultAsync(SearchResultModel resultModel)
+        {
+            if (resultModel?.File == null) return;
+
+            if(await _dockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
 
             if(_dockService.GetWindowOwner(this) is IHostWindow);
                 _dockService.CloseDockable(this);
             
             //JUMP TO LINE
-            if (SelectedItem.Line > 0)
+            if (resultModel.Line > 0)
             {
-                if (SelectedItem.StartOffset == 0 && SelectedItem.EndOffset == 0)
+                if (resultModel is { StartOffset: 0, EndOffset: 0 })
                 {
-                    if (SelectedItem.Line <= evb.CurrentDocument.LineCount)
+                    if (resultModel.Line <= evb.CurrentDocument.LineCount)
                     {
-                        var line = evb.CurrentDocument.GetLineByNumber(SelectedItem.Line);
+                        var line = evb.CurrentDocument.GetLineByNumber(resultModel.Line);
                         evb.Select(line.Offset, line.EndOffset - line.Offset);
                     }
                 }
                 else
                 {
-                    evb.Select(SelectedItem.StartOffset, SelectedItem.EndOffset - SelectedItem.StartOffset);
+                    evb.Select(resultModel.StartOffset, resultModel.EndOffset - resultModel.StartOffset);
                 }
             }
             

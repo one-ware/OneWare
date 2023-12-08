@@ -73,7 +73,7 @@
                             <FocusOnAttachedToVisualTreeBehavior/>
                             <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #SearchList}" />
                             <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False"
-                                                                     Command="{Binding GoToSearchResultAsync}" />
+                                                                     Command="{Binding OpenSelectedResult}" />
                         </Interaction.Behaviors>    
                     </controls:SearchBox>
                 </Border>
@@ -89,7 +89,7 @@
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <Interaction.Behaviors>
                 <behaviours:CommandOnDoubleTapBehaviour
-                    Command="{Binding GoToSearchResultAsync}" />
+                    Command="{Binding OpenSelectedResult}" />
             </Interaction.Behaviors>
             <DataGrid.Columns>
                 <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
