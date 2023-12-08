@@ -671,7 +671,7 @@ namespace OneWare.SDK.LanguageService
             }
         }
 
-        public override async Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos)
+        public override async Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos, SignatureHelpTriggerKind triggerKind, string? triggerChar, bool isRetrigger, SignatureHelp? activeSignatureHelp)
         {
             if (Client?.ServerSettings.Capabilities.SignatureHelpProvider == null) return null;
             try
@@ -682,7 +682,14 @@ namespace OneWare.SDK.LanguageService
                     {
                         Uri = fullPath
                     },
-                    Position = pos
+                    Position = pos,
+                    Context = new SignatureHelpContext()
+                    {
+                        TriggerCharacter = triggerChar,
+                        TriggerKind = triggerKind,
+                        IsRetrigger = isRetrigger,
+                        ActiveSignatureHelp = activeSignatureHelp
+                    }
                 });
                 return signatureHelp;
             }
@@ -884,6 +891,16 @@ namespace OneWare.SDK.LanguageService
         }
         
         #region Capability Check
+
+        public override IEnumerable<string> GetSignatureHelpTriggerChars()
+        {
+            return Client?.ServerSettings.Capabilities.SignatureHelpProvider?.TriggerCharacters ?? [];
+        }
+
+        public override IEnumerable<string> GetSignatureHelpRetriggerChars()
+        {
+            return Client?.ServerSettings.Capabilities.SignatureHelpProvider?.RetriggerCharacters ?? [];
+        }
 
         public override IEnumerable<string> GetCompletionTriggerChars()
         {

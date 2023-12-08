@@ -35,7 +35,11 @@ public interface ILanguageService
     public Task<CompletionItem?> ResolveCompletionItemAsync(CompletionItem completionItem);
     public Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos);
     public Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName);
-    public Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos);
+
+    public Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos,
+        SignatureHelpTriggerKind triggerKind, string? triggerChar, bool isRetrigger,
+        SignatureHelp? activeSignatureHelp);
+    
     public Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range, Diagnostic diagnostic);
     public Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath);
     public Task<Hover?> RequestHoverAsync(string fullPath, Position pos);

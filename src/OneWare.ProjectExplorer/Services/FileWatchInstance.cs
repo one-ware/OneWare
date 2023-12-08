@@ -21,19 +21,19 @@ public class FileWatchInstance : IDisposable
         _dockService = dockService;
         _windowService = windowService;
 
-        _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(file.FullPath)!)
-        {
-            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-            IncludeSubdirectories = false
-        };
-
-        _fileSystemWatcher.Changed += File_Changed;
-        _fileSystemWatcher.Deleted += File_Changed;
-        _fileSystemWatcher.Renamed += File_Changed;
-        _fileSystemWatcher.Created += File_Changed;
-
         try
         {
+            _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(file.FullPath)!)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
+                IncludeSubdirectories = false
+            };
+
+            _fileSystemWatcher.Changed += File_Changed;
+            _fileSystemWatcher.Deleted += File_Changed;
+            _fileSystemWatcher.Renamed += File_Changed;
+            _fileSystemWatcher.Created += File_Changed;
+            
             settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
             {
                 _fileSystemWatcher.EnableRaisingEvents = x;

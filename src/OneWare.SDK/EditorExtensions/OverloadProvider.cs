@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using AvaloniaEdit.CodeCompletion;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace OneWare.SDK.EditorExtensions
 {
@@ -8,6 +9,8 @@ namespace OneWare.SDK.EditorExtensions
     {
         private readonly IList<(string header, string? content)> _items;
         private int _selectedIndex;
+        
+        public SignatureHelp? SignatureHelp { get; init; }
 
         public OverloadProvider(IList<(string header, string? content)> items)
         {

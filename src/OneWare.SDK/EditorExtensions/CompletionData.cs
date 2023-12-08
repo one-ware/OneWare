@@ -55,8 +55,6 @@ namespace OneWare.SDK.EditorExtensions
 
             var caretStop = new Regex(@"\$.");
             var placeHolder = new Regex(@"\${.*?}");
-            
-            Console.WriteLine(CompletionOffset + " " + completionSegment.Offset + completionSegment.EndOffset);
 
             var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
             

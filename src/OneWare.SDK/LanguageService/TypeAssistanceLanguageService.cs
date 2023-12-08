@@ -439,14 +439,17 @@ namespace OneWare.SDK.LanguageService
                 {
                     var triggerChar = args.Text!;
                     var beforeTriggerChar = CodeBox.CaretOffset > 1 ? CodeBox.Text[CodeBox.CaretOffset - 2] : ' ';
-                
-                    if (Service.GetSignatureHelpTriggerChars().Contains(triggerChar)) //Function Parameter / Overload insight
+
+                    var signatureHelpTrigger = Service.GetSignatureHelpTriggerChars();
+                    
+                    if (signatureHelpTrigger.Contains(triggerChar)) //Function Parameter / Overload insight
                     {
                         Completion?.Close();
-                        await ShowSignatureHelpAsync();
+                        await ShowSignatureHelpAsync(SignatureHelpTriggerKind.TriggerCharacter, triggerChar, false, null);
                     }
 
-                    if (Service.GetCompletionTriggerChars().Contains(triggerChar))
+                    var completionTriggerChars = Service.GetCompletionTriggerChars();
+                    if (completionTriggerChars.Contains(triggerChar))
                     {
                         _completionBusy = true;
                         await ShowCompletionAsync(CompletionTriggerKind.TriggerCharacter, triggerChar); 
@@ -528,10 +531,12 @@ namespace OneWare.SDK.LanguageService
             // }
         }
 
-        protected virtual async Task ShowSignatureHelpAsync()
+        protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar, bool retrigger, SignatureHelp? activeSignatureHelp)
         {
+            Console.WriteLine($"Signature Help request");
+            
             var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
-                new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
+                new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerKind, triggerChar, retrigger, activeSignatureHelp);
             if (signatureHelp != null && IsOpen)
             {
                 OverloadInsight = new OverloadInsightWindow(CodeBox);
@@ -648,7 +653,7 @@ namespace OneWare.SDK.LanguageService
             return char.IsWhiteSpace(c) || c is ';' or '#' or '(' or ':' or '+' or '-' or '=' or '*' or '/' or '&' or ',';
         }
 
-        public virtual OverloadProvider ConvertOverloadProvider(SignatureHelp signatureHelp)
+        protected virtual OverloadProvider ConvertOverloadProvider(SignatureHelp signatureHelp)
         {
             var overloadOptions = new List<(string, string?)>();
             foreach (var s in signatureHelp.Signatures)
@@ -673,7 +678,10 @@ namespace OneWare.SDK.LanguageService
                 overloadOptions.Add((m1, m2.Length > 0 ? m2 : null));
             }
 
-            return new OverloadProvider(overloadOptions);
+            return new OverloadProvider(overloadOptions)
+            {
+                SignatureHelp = signatureHelp
+            };
         }
 
         protected virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list, int offset)
@@ -690,7 +698,7 @@ namespace OneWare.SDK.LanguageService
 
             void AfterComplete()
             {
-                _ = ShowSignatureHelpAsync();
+                _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
             }
 
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
