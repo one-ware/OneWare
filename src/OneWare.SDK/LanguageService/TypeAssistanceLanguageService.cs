@@ -550,7 +550,8 @@ namespace OneWare.SDK.LanguageService
         protected virtual async Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
         {
             //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
-
+            var completionOffset = CodeBox.CaretOffset;
+            
             var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
                 triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
@@ -568,6 +569,8 @@ namespace OneWare.SDK.LanguageService
                     AdditionalOffset = new Vector(0, 3),
                     MaxHeight = 225,
                     CloseAutomatically = true,
+                    StartOffset = completionOffset,
+                    EndOffset = completionOffset
                 };
                 
                 Observable.FromEventPattern(Completion, nameof(Completion.Closed)).Take(1).Subscribe(x =>
@@ -587,7 +590,6 @@ namespace OneWare.SDK.LanguageService
                 
                 if (lspCompletionItems is not null)
                 {
-                    var completionOffset = CodeBox.CaretOffset;
                     if (triggerKind is CompletionTriggerKind.TriggerCharacter && triggerChar != null)
                     {
                         completionOffset++;
