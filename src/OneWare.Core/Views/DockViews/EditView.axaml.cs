@@ -622,40 +622,36 @@ namespace OneWare.Core.Views.DockViews
         {
             if(ViewModel?.DisableEditViewEvents ?? true) return;
             
-            //Apply Caret difference
-            if (CodeBox.CaretOffset + _caretDiff < 0) CodeBox.CaretOffset = 0;
-            else if (CodeBox.CaretOffset + _caretDiff > CodeBox.Text.Length) CodeBox.CaretOffset = CodeBox.Text.Length;
-            else CodeBox.CaretOffset += _caretDiff;
-            _caretDiff = 0;
+            // //Apply Caret difference
+            // if (CodeBox.CaretOffset + _caretDiff < 0) CodeBox.CaretOffset = 0;
+            // else if (CodeBox.CaretOffset + _caretDiff > CodeBox.Text.Length) CodeBox.CaretOffset = CodeBox.Text.Length;
+            // else CodeBox.CaretOffset += _caretDiff;
+            // _caretDiff = 0;
 
             //Language Specific Type Assistance
             _typeAssistance?.TextEntered(e);
 
-            #region Detect Auto Format / Language Specific?
-
-            _enteredString += e.Text;
-            var startOffset = -1;
-            if (e.Text == "}")
-                startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("{", StringComparison.Ordinal);
-            else if (e.Text == ")")
-                startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("(", StringComparison.Ordinal);
-            else if (_enteredString.Contains("#endregion"))
-                startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("#region", StringComparison.Ordinal);
-            if (_enteredString.Length > 10) _enteredString = _enteredString.Remove(0, 1);
-
-            if (startOffset >= 0)
-            {
-                var startLineNumber = CodeBox.Document.GetLineByOffset(startOffset).LineNumber;
-                var endLineNumber = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
-                if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
-                    _typeAssistance?.AutoIndent(startLineNumber, endLineNumber);
-            }
-
-            #endregion
+            // #region Detect Auto Format / Language Specific?
+            //
+            // _enteredString += e.Text;
+            // var startOffset = -1;
+            // if (e.Text == "}")
+            //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("{", StringComparison.Ordinal);
+            // else if (e.Text == ")")
+            //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("(", StringComparison.Ordinal);
+            // else if (_enteredString.Contains("#endregion"))
+            //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("#region", StringComparison.Ordinal);
+            // if (_enteredString.Length > 10) _enteredString = _enteredString.Remove(0, 1);
+            //
+            // if (startOffset >= 0)
+            // {
+            //     var startLineNumber = CodeBox.Document.GetLineByOffset(startOffset).LineNumber;
+            //     var endLineNumber = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
+            //     if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
+            //         _typeAssistance?.AutoIndent(startLineNumber, endLineNumber);
+            // }
+            // //#endregion
         }
-
-        //Difference between TextEntering and TextEntered
-        private int _caretDiff;
 
         private void TextEditor_TextArea_TextEntering(object? sender, TextInputEventArgs e)
         {
@@ -663,46 +659,46 @@ namespace OneWare.Core.Views.DockViews
             
             if (e.Text is null) return;
             
-            if (CodeBox.CaretOffset > 1 && CodeBox.CaretOffset <= CodeBox.Text.Length)
-                if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
-                {
-                    if (e.Text[0] == '(')
-                    {
-                        e.Text += ')';
-                        _caretDiff = -1;
-                    }
-                    else if (e.Text[0] == '{')
-                    {
-                        e.Text += '}';
-                        _caretDiff = -1;
-                    }
-                    else if (e.Text[0] == ')' && CodeBox.CaretOffset > 1 &&
-                             CodeBox.CaretOffset < CodeBox.Document.TextLength &&
-                             CodeBox.Text[CodeBox.CaretOffset] == ')')
-                    {
-                        var br = 0;
-                        for (var i = CodeBox.CaretOffset - 1; i >= 0; i--)
-                        {
-                            if (CodeBox.Text[i] == '{') break;
-                            if (CodeBox.Text[i] == '(') br++;
-                            if (CodeBox.Text[i] == ')') br--;
-                        }
-
-                        if (br > 0)
-                        {
-                            e.Text = "";
-                            _caretDiff = 1;
-                            return; //Dont continue without text           
-                        }
-                    }
-                    else if (e.Text[0] == '}' && CodeBox.CaretOffset > 1 &&
-                             CodeBox.Text[CodeBox.CaretOffset - 1] == '{')
-                    {
-                        e.Text = "";
-                        _caretDiff = 1;
-                        return; //Dont continue without text
-                    }
-                }
+            // if (CodeBox.CaretOffset > 1 && CodeBox.CaretOffset <= CodeBox.Text.Length)
+            //     if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
+            //     {
+            //         if (e.Text[0] == '(')
+            //         {
+            //             e.Text += ')';
+            //             _caretDiff = -1;
+            //         }
+            //         else if (e.Text[0] == '{')
+            //         {
+            //             e.Text += '}';
+            //             _caretDiff = -1;
+            //         }
+            //         else if (e.Text[0] == ')' && CodeBox.CaretOffset > 1 &&
+            //                  CodeBox.CaretOffset < CodeBox.Document.TextLength &&
+            //                  CodeBox.Text[CodeBox.CaretOffset] == ')')
+            //         {
+            //             var br = 0;
+            //             for (var i = CodeBox.CaretOffset - 1; i >= 0; i--)
+            //             {
+            //                 if (CodeBox.Text[i] == '{') break;
+            //                 if (CodeBox.Text[i] == '(') br++;
+            //                 if (CodeBox.Text[i] == ')') br--;
+            //             }
+            //
+            //             if (br > 0)
+            //             {
+            //                 e.Text = "";
+            //                 _caretDiff = 1;
+            //                 return; //Dont continue without text           
+            //             }
+            //         }
+            //         else if (e.Text[0] == '}' && CodeBox.CaretOffset > 1 &&
+            //                  CodeBox.Text[CodeBox.CaretOffset - 1] == '{')
+            //         {
+            //             e.Text = "";
+            //             _caretDiff = 1;
+            //             return; //Dont continue without text
+            //         }
+            //     }
 
             //Language Specific TypeAssistance
             _typeAssistance?.TextEntering(e);

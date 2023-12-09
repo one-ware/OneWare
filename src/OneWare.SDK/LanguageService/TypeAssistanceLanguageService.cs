@@ -741,14 +741,14 @@ namespace OneWare.SDK.LanguageService
                     ? c.RemovalLength - lastIndexNewLine
                     : location.Column + c.RemovalLength;
 
-                var endlocation = new TextLocation(location.Line + newlines, lengthAfterLastNewLine);
+                var endLocation = new TextLocation(location.Line + newlines, lengthAfterLastNewLine);
 
                 var docChange = new TextDocumentContentChangeEvent
                 {
                     Range = new Range
                     {
                         Start = new Position(location.Line - 1, location.Column - 1),
-                        End = new Position(endlocation.Line - 1, endlocation.Column - 1)
+                        End = new Position(endLocation.Line - 1, endLocation.Column - 1)
                     },
                     Text = e.InsertedText.Text,
                     RangeLength = c.RemovalLength
