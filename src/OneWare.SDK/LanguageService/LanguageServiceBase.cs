@@ -262,7 +262,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
     }
 
-    public virtual void PublishDiag(PublishDiagnosticsParams pdp)
+    protected virtual void PublishDiag(PublishDiagnosticsParams pdp)
     {
         Dispatcher.UIThread.Post(() =>
         {
