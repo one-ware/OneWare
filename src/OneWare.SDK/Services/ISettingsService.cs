@@ -33,5 +33,7 @@ public interface ISettingsService
 
     public void WhenLoaded(Action action);
 
-    public void Reset();
+    public void Reset(string key);
+    
+    public void ResetAll();
 }

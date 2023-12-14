@@ -12,41 +12,5 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
     </ItemGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
-        <UsePackageTarget>win-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3428-gcfcbb82b/verible-v0.0-3428-gcfcbb82b-win64.zip</ExternalPackageUrl>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
-        <UsePackageTarget>linux-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3428-gcfcbb82b/verible-v0.0-3428-gcfcbb82b-linux-static-x86_64.tar.gz</ExternalPackageUrl>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
-        <UsePackageTarget>osx-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3426-gac4a37d8/verible-v0.0-3426-gac4a37d8-macOS.tar.gz</ExternalPackageUrl>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <PackageName>verible</PackageName>
-        <ExtractionFolder>native_tools/$(UsePackageTarget)/$(PackageName)</ExtractionFolder>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
-
-    <Target Name="DownloadExternalPackage" BeforeTargets="BeforeBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(ExtractionFolder)')">
-        <DownloadFile
-                SourceUrl="$(ExternalPackageUrl)"
-                DestinationFileName="temp_package.tmp"
-                DestinationFolder="$(IntermediateOutputPath)"/>
-        <Uncompress TargetDirectory="$(ExtractionFolder)"
-                    ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
-        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high"/>
-        <ItemGroup>
-            <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
-        </ItemGroup>
-    </Target>
+    
 </Project>

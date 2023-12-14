@@ -120,7 +120,7 @@ namespace OneWare.Settings.ViewModels
                 "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning);
             
             if(result == MessageBoxStatus.Yes)
-                _settingsService.Reset();
+                _settingsService.ResetAll();
         }
     }
 }

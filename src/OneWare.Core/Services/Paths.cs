@@ -23,6 +23,7 @@ public class Paths : IPaths
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
+    public string NativeToolsDirectory => Path.Combine(PackagesDirectory, "NativeTools");
     public string PluginsDirectory => Path.Combine(PackagesDirectory, "Plugins");
     public string ChangelogUrl => "https://raw.githubusercontent.com/ProtopSolutions/OneWareStudioWebsite/main/docs/studio/changelog.md";
 
@@ -38,6 +39,7 @@ public class Paths : IPaths
         Directory.CreateDirectory(DocumentsDirectory);
         Directory.CreateDirectory(PackagesDirectory);
         Directory.CreateDirectory(PluginsDirectory);
+        Directory.CreateDirectory(NativeToolsDirectory);
         Directory.CreateDirectory(CrashReportsDirectory);
         Directory.CreateDirectory(ProjectsDirectory);
         //...

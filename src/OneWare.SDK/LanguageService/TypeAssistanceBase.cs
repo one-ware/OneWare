@@ -4,7 +4,9 @@ using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Indentation;
 using OneWare.SDK.EditorExtensions;
 using OneWare.SDK.Models;
+using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
+using Prism.Ioc;
 
 namespace OneWare.SDK.LanguageService
 {
@@ -72,6 +74,21 @@ namespace OneWare.SDK.LanguageService
 
         protected virtual Task TextEnteredAsync(TextInputEventArgs e)
         {
+            if (ContainerLocator.Container.Resolve<ISettingsService>().GetSettingValue<bool>("Editor_UseAutoBracket"))
+            {
+                var autoBracket = e.Text switch
+                { 
+                    "{" => "}",
+                    "(" => ")",
+                    _ => null
+                };
+
+                if (autoBracket == null) return Task.CompletedTask;
+            
+                CodeBox.TextArea.Document.Insert(CodeBox.TextArea.Caret.Offset, autoBracket);
+                CodeBox.CaretOffset -= autoBracket.Length;
+            }
+            
             return Task.CompletedTask;
         }
 

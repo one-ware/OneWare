@@ -14,40 +14,5 @@
         <AvaloniaResource Include="Assets\vhdl.tmLanguage.json"/>
         <AvaloniaResource Include="Assets\formatter.js"/>
     </ItemGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Windows')))">
-        <UsePackageTarget>win-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-pc-windows-msvc.zip</ExternalPackageUrl>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('Linux')))">
-        <UsePackageTarget>linux-x64</UsePackageTarget>
-        <ExternalPackageUrl>https://github.com/VHDL-LS/rust_hdl/releases/download/v0.65.0/vhdl_ls-x86_64-unknown-linux-musl.zip</ExternalPackageUrl>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX')))">
-        <!--<ExternalPackageUrl>https://github.com/chipsalliance/verible/releases/download/v0.0-3401-g0b8cb4e0/verible-v0.0-3401-g0b8cb4e0-macOS.tar.gz</ExternalPackageUrl>-->
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <PackageName>rusthdl</PackageName>
-        <ExtractionFolder>native_tools/$(UsePackageTarget)/$(PackageName)</ExtractionFolder>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
-
-    <Target Name="DownloadExternalPackage" BeforeTargets="BeforeBuild" Condition="'$(ExternalPackageUrl)' != '' AND !Exists('$(ExtractionFolder)')">
-        <DownloadFile
-                SourceUrl="$(ExternalPackageUrl)"
-                DestinationFileName="temp_package.tmp"
-                DestinationFolder="$(IntermediateOutputPath)"/>
-        <Uncompress TargetDirectory="$(ExtractionFolder)"
-                    ArchivePath="$(IntermediateOutputPath)temp_package.tmp"/>
-        <Message Text="Downloaded Package from $(ExternalPackageUrl)" Importance="high"/>
-        <ItemGroup>
-            <Content Include="$(ExtractionFolder)/**" CopyToOutputDirectory="PreserveNewest"/>
-        </ItemGroup>
-    </Target>
+    
 </Project>

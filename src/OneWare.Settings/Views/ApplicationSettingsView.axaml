@@ -54,7 +54,7 @@
                 </TreeView>
             </Border>
 
-            <ListBox Name="SettingsList" SelectedItem="{Binding SelectedItem, Mode=OneWay}" AutoScrollToSelectedItem="False" 
+            <ListBox Name="SettingsList" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedItem, Mode=OneWay}" AutoScrollToSelectedItem="False" 
                      Grid.Row="0" Grid.Column="1" ItemsSource="{Binding SelectedPage.SettingCollections, FallbackValue=null}">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>

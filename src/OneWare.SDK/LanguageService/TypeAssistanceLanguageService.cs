@@ -616,7 +616,7 @@ namespace OneWare.SDK.LanguageService
                 }
             }
         }
-
+        
         public virtual Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {
             return Task.FromResult(new List<CompletionData>());
@@ -713,6 +713,8 @@ namespace OneWare.SDK.LanguageService
                 _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
             }
 
+            Console.WriteLine(comp.LabelDetails);
+            
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
             
             return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, description, icon, 0,

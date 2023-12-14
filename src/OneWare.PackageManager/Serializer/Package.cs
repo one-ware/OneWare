@@ -12,7 +12,6 @@ public class Package
     
     public string? Description { get; init; }
     
-    
     public string? License { get; init; }
     
     public string? IconUrl { get; init; }

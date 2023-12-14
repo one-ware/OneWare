@@ -57,10 +57,10 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<IPluginService, PluginService>();
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
             containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
-            containerRegistry.RegisterSingleton<IPackageService, PackageService>();
             containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
             containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
             containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
+            containerRegistry.RegisterSingleton<INativeToolService, NativeToolService>();
             containerRegistry.RegisterSingleton<IDockService, DockService>();
             containerRegistry.RegisterSingleton<IWindowService, WindowService>();
             containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
@@ -100,6 +100,8 @@ namespace OneWare.Core
             settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
             
             settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
+            
+            settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
 
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
                 "Editor Font Family",

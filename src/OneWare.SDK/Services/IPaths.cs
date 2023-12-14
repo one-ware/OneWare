@@ -14,6 +14,7 @@ public interface IPaths
     public string CrashReportsDirectory { get; }
     public string ProjectsDirectory { get; }
     public string PackagesDirectory { get; }
+    public string NativeToolsDirectory { get; }
     public string PluginsDirectory { get; }
     public string ChangelogUrl { get; }
 }

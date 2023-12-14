@@ -106,38 +106,63 @@ public class SettingsService : ISettingsService
 
     public void Load(string path)
     {
-        if (!File.Exists(path)) return;
-        using var stream = File.OpenRead(path);
-        var settings = JsonSerializer.Deserialize<Dictionary<string, object>>(stream);
-        if (settings == null) return;
-        foreach (var setting in settings)
+        try
         {
-            try
+            if (!File.Exists(path)) return;
+            using var stream = File.OpenRead(path);
+            var settings = JsonSerializer.Deserialize<Dictionary<string, object>>(stream, new JsonSerializerOptions()
             {
-                if (Settings.TryGetValue(setting.Key, out var setting1))
+                AllowTrailingCommas = true
+            });
+            if (settings == null) return;
+            foreach (var setting in settings)
+            {
+                try
                 {
-                    if (setting.Value is JsonElement je)
-                        setting1.Value = je.Deserialize(setting1.DefaultValue.GetType()) ?? setting1.DefaultValue;
-                    else setting1.Value = setting.Value;
+                    if (Settings.TryGetValue(setting.Key, out var setting1))
+                    {
+                        if (setting.Value is JsonElement je)
+                            setting1.Value = je.Deserialize(setting1.DefaultValue.GetType()) ?? setting1.DefaultValue;
+                        else setting1.Value = setting.Value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
         
-        _afterLoadingActions.ForEach(x => x.Invoke());
+            _afterLoadingActions.ForEach(x => x.Invoke());
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public void Save(string path)
     {
-        var saveD = Settings.ToDictionary(s => s.Key, s => s.Value.Value);
-        using var stream = File.Create(path);
-        JsonSerializer.Serialize(stream, saveD, saveD.GetType(), new JsonSerializerOptions(){WriteIndented = true});
+        try
+        {
+            var saveD = Settings.ToDictionary(s => s.Key, s => s.Value.Value);
+            using var stream = File.Create(path);
+            JsonSerializer.Serialize(stream, saveD, saveD.GetType(), new JsonSerializerOptions(){WriteIndented = true});
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
-    public void Reset()
+    public void Reset(string key)
+    {
+        if (Settings.TryGetValue(key, out var setting))
+        {
+            setting.Value = setting.DefaultValue;
+        }
+    }
+    
+    public void ResetAll()
     {
         foreach (var setting in Settings.Where(x => x.Value is not PathSetting))
         {

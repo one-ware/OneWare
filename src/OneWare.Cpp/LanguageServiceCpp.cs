@@ -9,26 +9,14 @@ using Prism.Ioc;
 
 namespace OneWare.Cpp
 {
-    public class LanguageServiceCpp : LanguageServiceLsp
+    public class LanguageServiceCpp : LanguageServiceLspAutoDownload
     {
-        private static readonly string? StartPath;
-        
-        static LanguageServiceCpp()
+        public LanguageServiceCpp(INativeToolService nativeToolService, ISettingsService settingsService) 
+            : base(settingsService.GetSettingObservable<string>(CppModule.LspPathSetting), () => nativeToolService.InstallAsync(nativeToolService.Get(CppModule.LspName)!), 
+                CppModule.LspName, null)
         {
-            var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-            
-            StartPath = PlatformHelper.Platform switch
-            {
-                PlatformId.WinX64 => $"{assemblyPath}/native_tools/win-x64/clangd/clangd_16.0.2/bin/clangd.exe",
-                PlatformId.LinuxX64 => $"{assemblyPath}/native_tools/linux-x64/clangd/clangd_16.0.2/bin/clangd",
-                PlatformId.OsxX64 => $"{assemblyPath}/native_tools/osx-x64/clangd/clangd_16.0.2/bin/clangd",
-                PlatformId.OsxArm64 => $"{assemblyPath}/native_tools/osx-x64/clangd/clangd_16.0.2/bin/clangd",
-                _ => null
-            };
-        }
-        
-        public LanguageServiceCpp(ISettingsService settingsService, IPaths paths) : base("Clang", StartPath,"--log=error",null)
-        {
+            Arguments = "--log=error";
+                
             // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
             // {
             //     if (IsActivated) _ = RestartAsync();
@@ -43,7 +31,7 @@ namespace OneWare.Cpp
             //     else if (!x && IsActivated) _ = DeactivateAsync();
             // });
         }
-
+        
         public override ITypeAssistance GetTypeAssistance(IEditor editor)
         {
             return new TypeAssistanceCpp(editor, this);

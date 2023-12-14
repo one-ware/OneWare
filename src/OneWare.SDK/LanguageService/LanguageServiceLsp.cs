@@ -22,25 +22,15 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OneWare.SDK.LanguageService
 {
-    public abstract class LanguageServiceLsp : LanguageServiceBase
+    public abstract class LanguageServiceLsp(string name, string? workspace) : LanguageServiceBase(name, workspace)
     {
         private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
         private LanguageClient? Client { get; set; }
         
         private CancellationTokenSource? _cancellation;
         private IChildProcess? _process;
-        private string? Arguments { get; set; }
-        private string? ExecutablePath { get; set; }
-        
-        protected LanguageServiceLsp(string name, string? executablePath, string? arguments, string? workspace) : base(name, workspace)
-        {
-            if (executablePath != null && (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
-            {
-                PlatformHelper.ChmodFile(executablePath);
-            }
-            ExecutablePath = executablePath;
-            Arguments = arguments;
-        }
+        protected string? Arguments { get; set; }
+        protected string? ExecutablePath { get; set; }
 
         public override async Task ActivateAsync()
         {
@@ -51,6 +41,11 @@ namespace OneWare.SDK.LanguageService
             {
                 ContainerLocator.Container.Resolve<ILogger>().Warning($"Tried to activate Language Server {Name} without executable!", new NotSupportedException(), false);
                 return;
+            }
+            
+            if ((RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
+            {
+                PlatformHelper.ChmodFile(ExecutablePath);
             }
             
             _cancellation = new CancellationTokenSource();
@@ -142,11 +137,8 @@ namespace OneWare.SDK.LanguageService
             _cancellation?.Cancel();
             _process?.Kill();
         }
-
-        /// <summary>
-        ///     After Activate
-        /// </summary>
-        protected async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
+        
+        private async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
         {
             Client = LanguageClient.PreInit(
                 options =>
@@ -165,7 +157,6 @@ namespace OneWare.SDK.LanguageService
                     options.OnLogTrace(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.Red));
                     options.OnPublishDiagnostics(PublishDiag);
                     options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
-                    options.EnableDynamicRegistration();
                     options.OnShowMessage(x => ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
                     options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta); });
 
@@ -250,6 +241,7 @@ namespace OneWare.SDK.LanguageService
                                     ValueSet = new Container<CompletionItemTag>(CompletionItemTag.Deprecated)
                                 }
                             },
+                            LabelDetailsSupport = true,
                         },
                         CompletionItemKind = new CompletionItemKindCapabilityOptions
                         {

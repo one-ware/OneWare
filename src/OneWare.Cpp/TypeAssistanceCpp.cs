@@ -47,26 +47,5 @@ namespace OneWare.Cpp
 
             return string.IsNullOrWhiteSpace(info) ? null : info;
         }
-        
-        // protected override ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
-        // {
-        //     var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
-        //         ? instanceIcon
-        //         : TypeAssistanceIconStore.Instance.CustomIcons["Default"];
-        //
-        //     var newLabel = comp.Label.Length > 0 ? comp.Label.Remove(0, 1) : "";
-        //     newLabel = newLabel.Split("(")[0].Split("<")[0];
-        //
-        //     void AfterComplete()
-        //     {
-        //         _ = ShowSignatureHelpAsync();
-        //     }
-        //
-        //     var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
-        //
-        //     description = description?.Replace("\n", "\n\n");
-        //     return new CompletionData(comp.InsertText ?? "", newLabel, description, icon, 0,
-        //         comp, offset, AfterComplete);
-        // }
     }
 }
