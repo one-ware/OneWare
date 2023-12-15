@@ -10,7 +10,7 @@ public class FileWatchInstance : IDisposable
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
     private readonly IFile _file;
-    private readonly FileSystemWatcher _fileSystemWatcher;
+    private readonly FileSystemWatcher? _fileSystemWatcher;
     private readonly object _lock = new();
     private DispatcherTimer? _timer;
     private readonly List<FileSystemEventArgs> _changes = new();
@@ -109,6 +109,6 @@ public class FileWatchInstance : IDisposable
     public void Dispose()
     {
         _timer?.Stop();
-        _fileSystemWatcher.Dispose();
+        _fileSystemWatcher?.Dispose();
     }
 }

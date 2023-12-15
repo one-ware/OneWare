@@ -443,6 +443,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             return;
         }
+        else if (entry is IProjectFolder folder)
+        {
+            await RemoveAsync(folder.Items.ToArray());
+        }
         else if (entry is IProjectFile file)
         {
             if (!await _dockService.CloseFileAsync(file)) return;

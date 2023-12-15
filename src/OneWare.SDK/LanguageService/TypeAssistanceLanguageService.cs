@@ -204,7 +204,7 @@ namespace OneWare.SDK.LanguageService
             if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
             var location = CodeBox.Document.GetLocation(offset);
             var pos = CodeBox.Document.GetPositionFromOffset(offset);
-
+            
             //Quick Fixes
             var error = GetErrorAtLocation(location);
             if (error != null && error.Diagnostic != null)
@@ -712,8 +712,6 @@ namespace OneWare.SDK.LanguageService
             {
                 _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
             }
-
-            Console.WriteLine(comp.LabelDetails);
             
             var description = comp.Documentation != null ? (comp.Documentation.MarkupContent != null ? comp.Documentation.MarkupContent.Value : comp.Documentation.String) : null;
             

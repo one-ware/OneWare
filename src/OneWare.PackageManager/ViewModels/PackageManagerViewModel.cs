@@ -122,39 +122,46 @@ public class PackageManagerViewModel : ObservableObject
             existing.Package = package;
             return;
         }
-        
-        var model = package.Type switch
-        {
-            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
-            _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
-        };
 
-        if (installedVersion != null)
+        try
         {
-            model.InstalledVersion = package.Versions!.First(x => x.Version == installedVersion);
-            model.Status = PackageStatus.Installed;
-        }
-        else
-        {
-            model.Status = PackageStatus.Available;
-        }
+            var model = package.Type switch
+            {
+                "Plugin" => ContainerLocator.Container.Resolve<PluginPackageViewModel>((typeof(Package), package)),
+                _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
+            };
 
-        var category = PackageCategories.FirstOrDefault(x =>
-            x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
+            if (installedVersion != null)
+            {
+                model.InstalledVersion = package.Versions!.First(x => x.Version == installedVersion);
+                model.Status = PackageStatus.Installed;
+            }
+            else
+            {
+                model.Status = PackageStatus.Available;
+            }
+
+            var category = PackageCategories.FirstOrDefault(x =>
+                x.Header.Equals(package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
  
-        if(category != PackageCategories.First())
-            PackageCategories.First().Add(model);
-        Packages.Add(package.Id, model);
-        category.Add(model);
-        FilterPackages();
+            if(category != PackageCategories.First())
+                PackageCategories.First().Add(model);
+            Packages.Add(package.Id, model);
+            category.Add(model);
+            FilterPackages();
 
-        Observable.FromEventPattern(model, nameof(model.Installed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
-            .DisposeWith(_packageRegistrationSubscription);
+            Observable.FromEventPattern(model, nameof(model.Installed))
+                .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
+                .DisposeWith(_packageRegistrationSubscription);
         
-        Observable.FromEventPattern(model, nameof(model.Removed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
-            .DisposeWith(_packageRegistrationSubscription);
+            Observable.FromEventPattern(model, nameof(model.Removed))
+                .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
+                .DisposeWith(_packageRegistrationSubscription);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
     }
     
     public async Task LoadPackagesAsync()

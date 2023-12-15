@@ -128,7 +128,7 @@ public class SettingsService : ISettingsService
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e);
                 }
             }
         

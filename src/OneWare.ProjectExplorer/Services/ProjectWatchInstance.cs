@@ -86,15 +86,11 @@ public class ProjectWatchInstance : IDisposable
     {
         try
         {
-            if (!File.Exists(path))
+            if (File.Exists(path))
             {
-                if(changes.Last().ChangeType is WatcherChangeTypes.Deleted && _root.Search(path) is {} deletedEntry)
-                    await _projectExplorerService.RemoveAsync(deletedEntry);
-                return;
+                var attributes = File.GetAttributes(path);
+                if(attributes.HasFlag(FileAttributes.Hidden)) return;
             }
-            
-            var attributes = File.GetAttributes(path);
-            if(attributes.HasFlag(FileAttributes.Hidden)) return;
             
             var entry = _root.Search(path);
 
@@ -164,6 +160,10 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         AddNew(path);
                         return;
+                    case WatcherChangeTypes.Deleted:
+                        if(_root.Search(path) is {} deletedEntry)
+                            await _projectExplorerService.RemoveAsync(deletedEntry);
+                        return;
                 }
             }
         }
@@ -177,18 +177,20 @@ public class ProjectWatchInstance : IDisposable
     {
         var attr = File.GetAttributes(path);
         var relativePath = Path.GetRelativePath(_root.FullPath, path);
-
-        if (!_root.IsPathIncluded(relativePath)) return;
-
+        
         if (attr.HasFlag(FileAttributes.Hidden)) return;
 
         if (attr.HasFlag(FileAttributes.Directory))
         {
             var folder = _root.AddFolder(relativePath);
             ProjectHelper.ImportEntries(path, folder);
+            if(folder.Items.Count == 0) folder.TopFolder!.Remove(folder);
+            return;
         }
-        else
-            _root.AddFile(relativePath);
+        
+        if (!_root.IsPathIncluded(relativePath)) return;
+        
+        _root.AddFile(relativePath);
     }
 
     public void Dispose()
