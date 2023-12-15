@@ -27,7 +27,7 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
 
         if (tool == null)
         {
-            logger.Warning($"Tool {container.Id} not supported for {PlatformHelper.Platform.ToString()} yet");
+            logger.Warning($"Tool {container.Id} currently not supported for {PlatformHelper.Platform.ToString()}");
             return false;
         }
         
