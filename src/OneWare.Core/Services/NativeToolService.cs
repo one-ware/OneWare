@@ -35,7 +35,7 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
 
         var state = applicationStateService.AddState($"Downloading {container.Id}...", AppState.Loading);
 
-        var success = false;
+        bool success;
         
         try
         {
