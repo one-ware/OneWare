@@ -2,9 +2,8 @@
 
 namespace OneWare.SDK.NativeTools;
 
-public class NativeTool(string id, string url, string fullPath)
+public class NativeTool(string url, string fullPath)
 {
-    public string Id { get; } = id;
     public string Url { get; } = url;
     public string FullPath { get; } = fullPath;
     
@@ -13,7 +12,7 @@ public class NativeTool(string id, string url, string fullPath)
 
     public NativeTool WithShortcut(string shortcutId, string relativePath, string? settingId = null)
     {
-        ShortCuts.Add(shortcutId, new NativeToolShortcut(this, relativePath, settingId));
+        ShortCuts.Add(shortcutId, new NativeToolShortcut(relativePath, settingId));
         return this;
     }
 
@@ -23,7 +22,7 @@ public class NativeTool(string id, string url, string fullPath)
         throw new Exception("Shortcut not registered");
     }
 
-    public string? GetShorcutPath(string key)
+    public string? GetShortcutPath(string key)
     {
         if (ShortCuts.TryGetValue(key, out var shortCut)) return Path.Combine(FullPath,shortCut.RelativePath);
         return null;

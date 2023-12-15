@@ -22,11 +22,13 @@ public class VhdlModule : IModule
     {
         var nativeToolService = containerProvider.Resolve<INativeToolService>();
         
-        nativeToolService.Register(LspName, "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.77.0/vhdl_ls-x86_64-pc-windows-msvc.zip", PlatformId.WinX64)
+        var nativeTool = nativeToolService.Register(LspName);
+            
+        nativeTool.AddPlatform(PlatformId.WinX64, "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.77.0/vhdl_ls-x86_64-pc-windows-msvc.zip")
             .WithShortcut("LSP", Path.Combine("vhdl_ls-x86_64-pc-windows-msvc", "bin" , "vhdl_ls.exe"), LspPathSetting);
         
         containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "VHDL", LspPathSetting, "RustHDL Path", "Path for RustHDL executable", 
-            nativeToolService.Get(LspName)!.GetShorcutPath("LSP")!,
+            nativeToolService.Get(LspName)!.GetShortcutPathOrEmpty("LSP"),
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
         
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);

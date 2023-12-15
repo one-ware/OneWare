@@ -19,11 +19,16 @@ public class CppModule : IModule
     {
         var nativeToolService = containerProvider.Resolve<INativeToolService>();
 
-        nativeToolService.Register(LspName, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-windows-17.0.3.zip", PlatformId.WinX64)
+        var nativeTool = nativeToolService.Register(LspName);
+            
+        nativeTool.AddPlatform(PlatformId.WinX64, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-windows-17.0.3.zip")
             .WithShortcut("LSP", Path.Combine("clangd_17.0.3", "bin", "clangd.exe"), LspPathSetting);
+
+        nativeTool.AddPlatform(PlatformId.OsxX64, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-mac-17.0.3.zip")
+            .WithShortcut("LSP", "clangd_17.0.3/bin/clangd", LspPathSetting);
         
         containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "C++", LspPathSetting, "Clangd Path", "Path for clangd executable", 
-            nativeToolService.Get(LspName)!.GetShorcutPath("LSP")!,
+            nativeToolService.Get(LspName)!.GetShortcutPathOrEmpty("LSP"),
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
         
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);

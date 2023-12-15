@@ -5,8 +5,7 @@ namespace OneWare.SDK.Services;
 
 public interface INativeToolService
 {
-    public NativeTool Register(string id, string url, params PlatformId[] supportedPlatforms);
-
-    public NativeTool? Get(string id);
-    public Task InstallAsync(NativeTool tool);
+    public NativeToolContainer Register(string key);
+    public NativeToolContainer? Get(string key);
+    public Task<bool> InstallAsync(NativeToolContainer container);
 }

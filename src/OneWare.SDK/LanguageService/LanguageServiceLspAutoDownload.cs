@@ -7,8 +7,8 @@ namespace OneWare.SDK.LanguageService;
 
 public abstract class LanguageServiceLspAutoDownload : LanguageServiceLsp
 {
-    private readonly Func<Task> _installTask;
-    protected LanguageServiceLspAutoDownload(IObservable<string> executablePath, Func<Task> install, string name, string? workspace) 
+    private readonly Func<Task<bool>> _installTask;
+    protected LanguageServiceLspAutoDownload(IObservable<string> executablePath, Func<Task<bool>> install, string name, string? workspace) 
         : base(name, workspace)
     {
         _installTask = install;
@@ -23,7 +23,7 @@ public abstract class LanguageServiceLspAutoDownload : LanguageServiceLsp
     {
         if (!File.Exists(ExecutablePath))
         {
-            await _installTask.Invoke();
+            if(!await _installTask.Invoke()) return;
         }
         await base.ActivateAsync();
     }
