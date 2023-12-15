@@ -21,6 +21,8 @@ public class FileWatchInstance : IDisposable
         _dockService = dockService;
         _windowService = windowService;
 
+        if (!File.Exists(file.FullPath)) return;
+        
         try
         {
             _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(file.FullPath)!)

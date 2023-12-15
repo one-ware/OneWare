@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
@@ -20,6 +21,7 @@ using OneWare.SDK.Models;
 using OneWare.SDK.Services;
 using OneWare.SDK.ViewModels;
 using OneWare.SDK.Extensions;
+using OneWare.SDK.Helpers;
 using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.SDK.Models.IFile;
@@ -509,20 +511,22 @@ namespace OneWare.SDK.LanguageService
         protected virtual async Task UpdateSymbolsAsync()
         {
             LastDocumentSymbols = await Service.RequestSymbolsAsync(CurrentFile.FullPath);
+
+            return;
             
-            // if (LastDocumentSymbols is not null)
-            // {
-            //     var segments = LastDocumentSymbols
-            //         .Where(x => x.IsDocumentSymbolInformation && x.SymbolInformation != null)
-            //         .Select(x => x.SymbolInformation!.Location.Range.GenerateTextModification(Editor.CurrentDocument, Brushes.Chocolate))
-            //         .ToArray();
-            //     
-            //     Editor.Editor.ModificationService.SetModification("symbol", segments);
-            // }
-            // else
-            // {
-            //     Editor.Editor.ModificationService.ClearModification("symbols");
-            // }
+            if (LastDocumentSymbols is not null)
+            {
+                var segments = LastDocumentSymbols
+                    .Where(x => x.IsDocumentSymbolInformation && x.SymbolInformation != null)
+                    .Select(x => x.SymbolInformation!.Location.Range.GenerateTextModification(Editor.CurrentDocument, Brushes.Chocolate))
+                    .ToArray();
+                
+                Editor.Editor.ModificationService.SetModification("symbol", segments);
+            }
+            else
+            {
+                Editor.Editor.ModificationService.ClearModification("symbols");
+            }
         }
 
         protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar, bool retrigger, SignatureHelp? activeSignatureHelp)
