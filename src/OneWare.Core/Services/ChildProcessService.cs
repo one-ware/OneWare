@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Avalonia.Media;
+using Avalonia.Threading;
 using OneWare.SDK.Enums;
 using OneWare.SDK.Services;
 
@@ -47,14 +48,14 @@ public class ChildProcessService : IChildProcessService
         activeProcess.OutputDataReceived += (o, i) =>
         {
             if (string.IsNullOrEmpty(i.Data)) return;
-            _logger.Log(i.Data, ConsoleColor.Black, true);
+            Dispatcher.UIThread.Post(() => _logger.Log(i.Data, ConsoleColor.Black, true));
             output += i.Data + '\n';
         };
         activeProcess.ErrorDataReceived += (o, i) =>
         {
             if (string.IsNullOrEmpty(i.Data)) return;
             success = false;
-            _logger.Warning(i.Data, null, true);
+            Dispatcher.UIThread.Post(() => _logger.Warning(i.Data, null, true));
             output += i.Data + '\n';
         };
 

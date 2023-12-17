@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
@@ -55,10 +56,35 @@ public class UniversalFpgaProjectSystemModule : IModule
                 Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
 
+        var toolBarViewModel = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
+            
         var toolBarExtension = new UniversalFpgaProjectToolBarView()
         {
-            DataContext = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>()
+            DataContext = toolBarViewModel
         };
+        
+        windowService.RegisterMenuItem("MainWindow_MainMenu",
+            new MenuItemViewModel("FPGA")
+            {
+                Header = "FPGA",
+                Priority = 200,
+            });
+        
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
+            [
+                new MenuItemViewModel("Download")
+                {
+                    Header = "Download",
+                    Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
+                    IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
+                },
+                new MenuItemViewModel("Compile")
+                {
+                    Header = "Compile",
+                    Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
+                    IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+                },
+            ]);
 
         toolBarExtension.Bind(Visual.IsVisibleProperty, containerProvider
             .Resolve<IProjectExplorerService>()

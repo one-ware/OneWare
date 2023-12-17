@@ -203,13 +203,13 @@ namespace OneWare.SDK.Helpers
         public static void ChmodFile(string path)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) 
-                ExecBash("chmod 777 " + path);
+                ExecBash($"chmod 777 '{path}'");
         }
 
         public static void ChmodFolder(string path)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) 
-                ExecBash("chmod -R 777 " + path);
+                ExecBash($"chmod -R 777 '{path}'");
         }
         
         #endregion

@@ -102,7 +102,7 @@ public class Logger : ILogger
         {
             Directory.CreateDirectory(_paths.DocumentsDirectory);
             _log = File.CreateText(LogFilePath);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PlatformHelper.ExecBash("chmod 777 " + LogFilePath);
+            PlatformHelper.ChmodFile(LogFilePath);
         }
         catch
         {
