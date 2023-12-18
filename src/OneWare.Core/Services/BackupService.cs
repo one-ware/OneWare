@@ -161,7 +161,8 @@ namespace OneWare.Core.Services
 
             try
             {
-                Directory.Delete(_backupFolder, true);
+                if (Directory.Exists(_backupFolder)) 
+                    Directory.Delete(_backupFolder, true);
             }
             catch (Exception e)
             {
