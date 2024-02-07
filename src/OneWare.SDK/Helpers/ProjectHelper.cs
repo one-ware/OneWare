@@ -28,8 +28,7 @@ public static class ProjectHelper
         foreach (var path in entries)
         {
             var attr = File.GetAttributes(path);
-            if (attr.HasFlag(FileAttributes.Hidden)) continue;
-
+            
             if (attr.HasFlag(FileAttributes.Directory))
             {
                 var subDirMatches = GetFileMatches(path,valid);

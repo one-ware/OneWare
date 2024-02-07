@@ -31,7 +31,20 @@ namespace OneWare.WaveFormViewer.Views
 
             AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Bubble);
             AddHandler(PointerMovedEvent, OnPointerMoved, RoutingStrategies.Bubble);
-            AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Bubble);
+            AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Bubble); 
+            
+            AddHandler(PointerWheelChangedEvent, (sender, args) =>
+            {
+                if (_viewModel == null) return;
+                
+                if (args.Delta.X != 0)
+                {
+                    var plus = (long)(_viewModel.Max / _viewModel.ZoomMultiply / 10 * args.Delta.X * -1);
+                    _viewModel.Offset += plus;
+                }
+                else if(args.Delta.Y == 1) _viewModel.ZoomIn();
+                else if(args.Delta.Y == -1) _viewModel.ZoomOut();
+            }, RoutingStrategies.Bubble | RoutingStrategies.Direct | RoutingStrategies.Tunnel, false);
         }
         
         private void Initialize(WaveFormViewModel vm)

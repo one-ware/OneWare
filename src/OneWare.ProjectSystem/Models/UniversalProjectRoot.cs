@@ -32,7 +32,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         var includes = includeNode?.AsArray().GetValues<string>();
         Properties.TryGetPropertyValue("Exclude", out var excludeNode);
         var excludes = excludeNode?.AsArray().GetValues<string>();
-
+        
         if (includes == null && excludes == null) return true;
         
         return ProjectHelper.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);

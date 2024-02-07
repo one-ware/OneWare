@@ -2,7 +2,6 @@
 using OneWare.SDK.Helpers;
 using OneWare.SDK.Models;
 using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
@@ -86,10 +85,11 @@ public class ProjectWatchInstance : IDisposable
     {
         try
         {
-            if (File.Exists(path))
+            FileAttributes attributes = FileAttributes.None;
+            
+            if (File.Exists(path) || Directory.Exists(path))
             {
-                var attributes = File.GetAttributes(path);
-                if(attributes.HasFlag(FileAttributes.Hidden)) return;
+                attributes = File.GetAttributes(path);
             }
             
             var entry = _root.Search(path);
@@ -126,6 +126,13 @@ public class ProjectWatchInstance : IDisposable
 
             if (entry is null)
             {
+                //Ignore change if parent folder is not included
+                if (attributes.HasFlag(FileAttributes.Directory))
+                {
+                    var parentPath = Path.GetDirectoryName(path);
+                    if (parentPath != null && !_root.IsPathIncluded(parentPath)) return;
+                }
+                
                 if (_projectExplorerService.Items.FirstOrDefault(x =>
                         x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is IProjectRoot root and ISavable savable)
                 {
@@ -144,21 +151,21 @@ public class ProjectWatchInstance : IDisposable
                                 _dockService.OpenFiles.TryGetValue(file, out var tab);
                                 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
-                                AddNew(path);
+                                AddNew(path, attributes);
                                 
                                 //TODO dont remove tab and Initialize Current Tab
                             }
                             else
                             {
                                 await _projectExplorerService.RemoveAsync(oldEntry);
-                                AddNew(path);
+                                AddNew(path, attributes);
                             }
                         }
 
                         return;
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
-                        AddNew(path);
+                        AddNew(path, attributes);
                         return;
                     case WatcherChangeTypes.Deleted:
                         if(_root.Search(path) is {} deletedEntry)
@@ -173,14 +180,11 @@ public class ProjectWatchInstance : IDisposable
         }
     }
 
-    private void AddNew(string path)
+    private void AddNew(string path, FileAttributes attributes)
     {
-        var attr = File.GetAttributes(path);
         var relativePath = Path.GetRelativePath(_root.FullPath, path);
         
-        if (attr.HasFlag(FileAttributes.Hidden)) return;
-
-        if (attr.HasFlag(FileAttributes.Directory))
+        if (attributes.HasFlag(FileAttributes.Directory))
         {
             var folder = _root.AddFolder(relativePath);
             ProjectHelper.ImportEntries(path, folder);
