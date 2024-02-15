@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>OneWare Web IDE</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link rel="modulepreload" href="./main.js" />
     <link rel="modulepreload" href="./dotnet.js" />
     <link rel="modulepreload" href="./avalonia.js" />
     <link rel="stylesheet" href="./app.css" />
-</head>
+  </head>
 
-<body style="margin: 0px; overflow: hidden">
+  <body style="margin: 0px; overflow: hidden">
     <div id="out">
-        <div id="avalonia-splash">
-            <div class="center">
-                <div>
-                    <img src="Logo_SVG-ONE-ware.svg" alt="OneWare Logo" class="logo"/>
-                    <div class="loader" />
-                </div>
-            </div>
+      <div id="avalonia-splash">
+        <div class="center">
+          <div class="flexRow">
+            <img src="Logo_SVG-ONE-ware.svg" alt="OneWare Logo" class="logo" />
+            <div class="loader"></div>
+            <p class="warningText">
+              Warning! This version is a preview and has some breaking issues!
+            </p>
+          </div>
         </div>
+      </div>
     </div>
-    <script type='module' src="./main.js"></script>
-</body>
-
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>
