@@ -18,8 +18,8 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x 
-      - name: Workload Restore
-        run: dotnet workload restore ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj
+      - name: Install Wasm-Tools
+        run: dotnet workload install wasm-tools
       - name: Publish
         run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release
       - name: Sync files
