@@ -19,7 +19,7 @@ jobs:
         with:
           dotnet-version: 8.0.x 
       - name: Workload Restore
-        run: dotnet workload restore
+        run: dotnet workload restore ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj
       - name: Publish
         run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release
       - name: Sync files
