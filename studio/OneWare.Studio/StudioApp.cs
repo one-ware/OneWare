@@ -5,8 +5,8 @@ using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.IceBreaker;
 using OneWare.Json;
-using OneWare.Settings;
 using OneWare.SDK.Services;
+using OneWare.Settings;
 using OneWare.Toml;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer;
@@ -15,17 +15,17 @@ using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.Demo;
+namespace OneWare.Studio;
 
-public class DemoApp : App
+public class StudioApp : App
 {
     public static readonly ISettingsService SettingsService = new SettingsService();
     
-    public static readonly IPaths Paths = new Paths("OneWare Demo", "avares://OneWare.Demo/Assets/icon.ico");
+    public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 
     private static readonly ILogger Logger = new Logger(Paths);
 
-    static DemoApp()
+    static StudioApp()
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
         SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
@@ -48,9 +48,9 @@ public class DemoApp : App
         var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
         
-        this.Styles.Add(new StyleInclude(new Uri("avares://OneWare.Demo"))
+        this.Styles.Add(new StyleInclude(new Uri("avares://OneWare.Studio"))
         {
-            Source = new Uri("avares://OneWare.Demo/Styles/Theme.axaml")
+            Source = new Uri("avares://OneWare.Studio/Styles/Theme.axaml")
         });
     }
 

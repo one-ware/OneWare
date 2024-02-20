@@ -31,6 +31,6 @@
             </DrawingGroup>
         </DrawingImage>
         
-        <Color x:Key="ThemeAccentColor">#808080</Color>
+        <Color x:Key="ThemeAccentColor">#009688</Color>
     </Styles.Resources>
 </Styles>
