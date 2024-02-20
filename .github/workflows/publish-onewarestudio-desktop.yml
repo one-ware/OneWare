@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Build MSI and publish
+  # Build MSI and Upload to CDN
   deploy-windows:
     runs-on: windows-latest
     steps:
@@ -12,17 +12,29 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
+      - uses: bbonkr/get-version-action@v1
+        id: oneware_version
+        with:
+          project: './build/props/Base.props'
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x 
+          dotnet-version: 8.0.x
+      - name: Install Wix
+        run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Sign Installer (SKIP)
+        run: echo "test"
+      - name: Rename Installer
+        run: move "./out/en-us/OneWareStudio.WindowsInstaller.msi" 
+      - uses: joutvhu/ftp-transfer@v1
+        name: FTP Upload
         with:
-          server: w01e537f.kasserver.com
+          host: w01e537f.kasserver.com
+          port: 21
           username: w01e537f
           password: ${{ secrets.ONEWARE_FTP }}
-          local-dir: ./out/en-us
-          server-dir: demo.oneware.studio/
+          commands: |
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.oneware_version.outputs.version }}
+            put ./out/en-us/OneWareStudio.WindowsInstaller.msi ./cdn.one-ware.com/onewarestudio/${{ steps.oneware_version.outputs.version }}/OneWareStudio-${{ steps.oneware_version.outputs.version }}-x64.msi
