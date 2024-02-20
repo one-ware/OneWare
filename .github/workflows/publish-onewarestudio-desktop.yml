@@ -6,6 +6,7 @@ on:
 jobs:
   # Build MSI and Upload to CDN
   deploy-windows:
+    name: Deploy for Windows
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -35,8 +36,8 @@ jobs:
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: w01e537f.kasserver.com
-          username: w01e537f
+          server: w01ec151.kasserver.com
+          username: w01ec151
           password: ${{ secrets.ONEWARE_FTP }}
           local-dir: ./${{ steps.get-oneware-version.outputs.info }}/
           server-dir: ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/
