@@ -17,7 +17,7 @@ jobs:
         id: get-oneware-version
         with:
           xml-file: './build/props/Base.props'
-          xpath: '//Version'
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
