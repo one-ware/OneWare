@@ -12,12 +12,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: mavrosxristoforos/get-xml-info@1.0
+      - uses: mavrosxristoforos/get-xml-info@2.0
         name: Get Version
         id: get-oneware-version
         with:
           xml-file: './build/props/Base.props'
-          xpath: "/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']/text()"
+          xpath: '/Project/PropertyGroup/Version/text()'
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
