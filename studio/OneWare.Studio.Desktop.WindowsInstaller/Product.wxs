@@ -1,5 +1,5 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="OneWare Studio" Language="1033" Version="1.0.0.0" Manufacturer="!(loc.Company)"
+  <Package Name="OneWare Studio" Language="1033" Version="$(var.BuildVersion)" Manufacturer="!(loc.Company)"
     UpgradeCode="4791fdf6-02ee-47ce-9146-4ccdd06dd289">
     <MediaTemplate EmbedCab="yes" />
     <!-- Major Upgrade Rule to disallow downgrades -->

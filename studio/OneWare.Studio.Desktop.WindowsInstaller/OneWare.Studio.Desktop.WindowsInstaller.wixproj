@@ -1,10 +1,12 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+﻿<Project Sdk="WixToolset.Sdk/4.0.4" InitialTargets="BeforeBuild">
 
   <PropertyGroup>
     <InstallerPlatform>x64</InstallerPlatform>
-    <OutputName>Test-1.0.0.0</OutputName>
+    <OutputName>OneWareStudio.WindowsInstaller</OutputName>
     <OutputType>Package</OutputType>
-    <OneWarePublish>../OneWare.Studio.Desktop/bin/Release/net8.0/win-x64/publish</OneWarePublish>
+    <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
+    <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
+    <StudioPublish>$(StudioFolder)/bin/Release/net8.0/win-x64/publish</StudioPublish>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,13 +15,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HarvestDirectory Include="$(OneWarePublish)">
+    <HarvestDirectory Include="$(StudioPublish)">
       <ComponentGroupName>HarvestedComponents</ComponentGroupName>
       <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRegistry>true</SuppressRegistry>
       <SuppressRootDirectory>true</SuppressRootDirectory>
     </HarvestDirectory>
 
-    <BindPath Include="$(OneWarePublish)" />
+    <BindPath Include="$(StudioPublish)" />
   </ItemGroup>
+  
+  <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
+    <!-- Clean previous build folder -->
+    <Exec Command="rd /s /q $(StudioPublish)" />
+    <!-- Publish Oneware Studio -->
+    <Exec Command="dotnet publish $(StudioProj) -f net8.0 -c Release -r win-x64 --self-contained" />
+    <!-- Get assembly version -->
+    <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
+      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+    </GetAssemblyIdentity>
+    <!-- Define some variables we need -->
+    <PropertyGroup>
+      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+    </PropertyGroup>
+  </Target>
 
 </Project>
