@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="res/**/**"/>
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
     <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
   </ItemGroup>
