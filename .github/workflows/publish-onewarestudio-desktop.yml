@@ -27,17 +27,21 @@ jobs:
         run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
-      - name: Make Version Dir
-        run: mkdir ./${{ steps.get-oneware-version.outputs.info }}
-      - name: Move .msi
-        run: move ./out/en-us/OneWareStudio.WindowsInstaller.msi ./${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+      - name: Create Button HTML
+        shell: pwsh
+        run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', ${{ steps.get-oneware-version.outputs.info }}) | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
       - name: Sign Installer (SKIP)
         run: echo "TODO"
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Create VersionInfo
+        run: echo ${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi > ./out/win-x64.txt
+      - uses: joutvhu/ftp-transfer@v1
+        name: Upload
         with:
-          server: w01ec151.kasserver.com
+          host: w01ec151.kasserver.com
           username: w01ec151
           password: ${{ secrets.ONEWARE_FTP }}
-          local-dir: ./${{ steps.get-oneware-version.outputs.info }}/
-          server-dir: ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/
+          commands: |
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+            put ./out/en-us/OneWareStudio.WindowsInstaller.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+            put ./out/WinDownload.htm ./cdn.one-ware.com/onewarestudio/WinDownload.htm
+            put ./out/win-x64.txt ./cdn.one-ware.com/onewarestudio/win-x64.txt
