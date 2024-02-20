@@ -26,10 +26,10 @@ jobs:
         run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
-      - name: Move
-        run: | 
-          mkdir ./${{ steps.get-oneware-version.outputs.info }}
-          move ./out/en-us/OneWareStudio.WindowsInstaller.msi ./${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+      - name: Make Version Dir
+        run: mkdir ./${{ steps.get-oneware-version.outputs.info }}
+      - name: Move .msi
+        run: move ./out/en-us/OneWareStudio.WindowsInstaller.msi ./${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
       - name: Sign Installer (SKIP)
         run: echo "TODO"
       - name: Sync files
@@ -38,5 +38,5 @@ jobs:
           server: w01e537f.kasserver.com
           username: w01e537f
           password: ${{ secrets.ONEWARE_FTP }}
-          local-dir: ./${{ steps.get-oneware-version.outputs.info }}
-          server-dir: ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+          local-dir: ./${{ steps.get-oneware-version.outputs.info }}/
+          server-dir: ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/
