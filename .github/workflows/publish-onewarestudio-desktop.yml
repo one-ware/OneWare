@@ -2,8 +2,6 @@ name: Deploy OneWare Studio Desktop
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
 
 jobs:
   # Build MSI and Upload to CDN
@@ -21,8 +19,14 @@ jobs:
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
-      - name: Makedir Out
-        run: mkdir ./out
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Install Wix
+        run: dotnet tool install --global wix
+      - name: Publish
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
       - name: Create Button HTML
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
@@ -38,5 +42,6 @@ jobs:
           password: ${{ secrets.ONEWARE_FTP }}
           commands: |
             mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+            put ./out/en-us/OneWareStudio.WindowsInstaller.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
             put ./out/WinDownload.htm ./cdn.one-ware.com/onewarestudio/WinDownload.htm
             put ./out/win-x64.txt ./cdn.one-ware.com/onewarestudio/win-x64.txt
