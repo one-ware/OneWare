@@ -21,12 +21,11 @@ jobs:
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
-      - run: mkdir ./out
+      - name: Makedir Out
+        run: mkdir ./out
       - name: Create Button HTML
         shell: pwsh
-        run: |
-          $version=${{ steps.get-oneware-version.outputs.info }}
-          ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', $version) | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
+        run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
       - name: Sign Installer (SKIP)
         run: echo "TODO"
       - name: Create VersionInfo
