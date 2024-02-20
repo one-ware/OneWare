@@ -1,0 +1,1 @@
+signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a bin\Release\en-us\OneWare.Studio.Desktop.WindowsInstaller.msi

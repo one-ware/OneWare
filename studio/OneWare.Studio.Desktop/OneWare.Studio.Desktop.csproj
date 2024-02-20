@@ -11,6 +11,7 @@
         <ApplicationIcon>..\OneWare.Studio\Assets\icon.ico</ApplicationIcon>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <AssemblyName>OneWareStudio</AssemblyName>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">

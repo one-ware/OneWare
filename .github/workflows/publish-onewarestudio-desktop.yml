@@ -1,0 +1,28 @@
+name: Deploy OneWare Studio Desktop
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # Build job
+  deploy-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x 
+      - name: Publish
+        run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r win-x64 -o ./out
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: w01e537f.kasserver.com
+          username: w01e537f
+          password: ${{ secrets.ONEWARE_STUDIO_FTP }}
+          local-dir: ./out
+          server-dir: demo.oneware.studio/

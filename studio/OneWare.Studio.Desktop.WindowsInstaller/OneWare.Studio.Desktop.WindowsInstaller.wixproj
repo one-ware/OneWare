@@ -1,0 +1,25 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <OutputName>Test-1.0.0.0</OutputName>
+    <OutputType>Package</OutputType>
+    <OneWarePublish>../OneWare.Studio.Desktop/bin/Release/net8.0/win-x64/publish</OneWarePublish>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HarvestDirectory Include="$(OneWarePublish)">
+      <ComponentGroupName>HarvestedComponents</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+    </HarvestDirectory>
+
+    <BindPath Include="$(OneWarePublish)" />
+  </ItemGroup>
+
+</Project>
