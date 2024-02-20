@@ -12,6 +12,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
+      - uses: mavrosxristoforos/get-xml-info@1.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: './build/props/Base.props'
+          xpath: '/Project/PropertyGroup/Version/text()'
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -20,12 +26,6 @@ jobs:
         run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
-      - uses: mavrosxristoforos/get-xml-info@1.0
-        name: Get Version
-        id: get-oneware-version
-        with:
-          xml-file: './build/props/Base.props'
-          xpath: '/Project/PropertyGroup/Version/text()'
       - name: Sign Installer (SKIP)
         run: echo "test"
       - uses: joutvhu/ftp-transfer@v1
