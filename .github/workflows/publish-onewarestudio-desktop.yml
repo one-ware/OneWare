@@ -18,6 +18,15 @@ jobs:
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
+      - uses: joutvhu/ftp-transfer@v1
+        name: FTP Upload
+        with:
+          host: w01e537f.kasserver.com
+          port: 21
+          username: w01e537f
+          password: ${{ secrets.ONEWARE_FTP }}
+          commands: |
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
