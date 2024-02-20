@@ -21,6 +21,7 @@ jobs:
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
+      - run: mkdir ./out
       - name: Create Button HTML
         shell: pwsh
         run: |
