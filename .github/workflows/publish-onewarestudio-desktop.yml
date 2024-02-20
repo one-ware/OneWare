@@ -37,6 +37,6 @@ jobs:
         with:
           server: w01e537f.kasserver.com
           username: w01e537f
-          password: ${{ secrets.ONEWARE_STUDIO_FTP }}
+          password: ${{ secrets.ONEWARE_FTP }}
           local-dir: ./${{ steps.get-oneware-version.outputs.info }}
           server-dir: ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
