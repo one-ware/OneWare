@@ -75,7 +75,8 @@ jobs:
       - name: Make Out Dir
         run: mkdir ./out
       - name: Create Bundles
-        run: ./studio/OneWare.Studio.Desktop.MacOSInstaller/CreateAppBundle.sh
+        working-directory: ./studio/OneWare.Studio.Desktop.MacOSInstaller
+        run: ./CreateAppBundle.sh
       - name: Create Button HTML x64
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.MacOSInstaller/MacOSDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/MacOSDownload-x64.htm -Encoding UTF8
