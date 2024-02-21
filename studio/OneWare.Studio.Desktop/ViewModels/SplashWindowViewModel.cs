@@ -12,6 +12,6 @@ public class SplashWindowViewModel
 
     public SplashWindowViewModel(IPaths paths)
     {
-        SplashScreen = new Bitmap(AssetLoader.Open(new Uri("avares://OneWare.Studio.Desktop/Assets/Startup.jpg")));
+        SplashScreen = new Bitmap(AssetLoader.Open(new Uri("avares://OneWareStudio/Assets/Startup.jpg")));
     }
 }
