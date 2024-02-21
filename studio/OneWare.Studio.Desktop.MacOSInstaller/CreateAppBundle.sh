@@ -9,8 +9,8 @@ cp -r Contents source/OneWareStudio.app
 mkdir OneWareStudio.app/Contents/MacOS
 dotnet publish -c Release -f net8.0 -r osx-x64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o source/OneWareStudio.app/Contents/MacOS
 
-VERSION=$(strings source/OneWareStudio.app/Contents/MacOS/OneWareStudio.dll | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
-PACKAGENAME="publish/OneWareStudio-$VERSION-x64.dmg"
+#VERSION=$(strings source/OneWareStudio.app/Contents/MacOS/OneWareStudio.dll | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+PACKAGENAME="publish/OneWareStudio-x64.dmg"
 
 #codesign -f -s "Developer ID Application: hmennen@protop-solutions.com" -v "source/OneWareStudio.app"
 
@@ -32,8 +32,8 @@ cp -r Contents source/OneWareStudio.app
 mkdir OneWareStudio.app/Contents/MacOS
 dotnet publish -c Release -f net8.0 -r osx-arm64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o source/OneWareStudio.app/Contents/MacOS
 
-VERSION=$(strings source/OneWareStudio.app/Contents/MacOS/OneWareStudio.dll | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
-PACKAGENAME="publish/OneWareStudio-$VERSION-arm64.dmg"
+#VERSION=$(strings source/OneWareStudio.app/Contents/MacOS/OneWareStudio.dll | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
 create-dmg \
   --volname "Install OneWare Studio" \
