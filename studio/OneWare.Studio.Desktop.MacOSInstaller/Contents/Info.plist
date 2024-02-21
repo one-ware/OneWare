@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>x86_64</string>
+	</array>
+	<key>CFBundleIconFile</key>
+	<string>OneWare.icns</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.13.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>0.13.0.0</string>
+	<key>CFBundleExecutable</key>
+	<string>OneWareStudio</string>
+	<key>CFBundleName</key>
+	<string>OneWare Studio</string>
+	<key>CFBundleIdentifier</key>
+	<string>oneware.onewarestudio</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.development</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+</dict>
+</plist>
