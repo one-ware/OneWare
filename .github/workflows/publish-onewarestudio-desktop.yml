@@ -2,8 +2,6 @@ name: Deploy OneWare Studio Desktop
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
 
 jobs:
   # Build MSI and Upload to CDN
