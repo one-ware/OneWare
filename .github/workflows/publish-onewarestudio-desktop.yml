@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: mavrosxristoforos/get-xml-info@2.0
@@ -19,12 +19,12 @@ jobs:
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 8.0.x
-      - name: Install Wix
-        run: dotnet tool install --global wix
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v4
+#        with:
+#          dotnet-version: 8.0.x
+#      - name: Install Wix
+#        run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
       - name: Create Button HTML
@@ -51,6 +51,7 @@ jobs:
   deploy-macos:
     name: Deploy for MacOS
     runs-on: macos-latest
+    needs: deploy-windows
     steps:
       - name: Checkout
         uses: actions/checkout@v3

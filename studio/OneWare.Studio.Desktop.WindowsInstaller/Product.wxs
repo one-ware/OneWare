@@ -1,6 +1,6 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="OneWare Studio" Language="1033" Version="$(var.BuildVersion)" Manufacturer="!(loc.Company)"
-    UpgradeCode="4791fdf6-02ee-47ce-9146-4ccdd06dd289">
+    UpgradeCode="5a012316-d68c-4fb9-94f3-bb504a21b77c">
     <MediaTemplate EmbedCab="yes" />
     <!-- Major Upgrade Rule to disallow downgrades -->
     <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
