@@ -7,7 +7,7 @@ jobs:
   # Build MSI and Upload to CDN
   deploy-windows:
     name: Deploy for Windows
-    runs-on: windows-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -30,8 +30,9 @@ jobs:
       - name: Create Button HTML
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
-      - name: Sign Installer (SKIP)
-        run: echo "TODO"
+      - name: Sign Installer
+        shell: pwsh
+        run: signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ./out/en-us/OneWareStudio.WindowsInstaller.msi
       - name: Create VersionInfo
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi" > ./out/win-x64.txt
       - uses: joutvhu/ftp-transfer@v1
