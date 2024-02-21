@@ -25,7 +25,7 @@ public class Paths : IPaths
     public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
     public string NativeToolsDirectory => Path.Combine(PackagesDirectory, "NativeTools");
     public string PluginsDirectory => Path.Combine(PackagesDirectory, "Plugins");
-    public string ChangelogUrl => "https://raw.githubusercontent.com/ProtopSolutions/OneWareStudioWebsite/main/docs/studio/changelog.md";
+    public string ChangelogUrl => "https://raw.githubusercontent.com/one-ware/one-ware.com/main/docs/studio/02-changelog.md";
 
     private FileStream? _fileStreamLock;
     

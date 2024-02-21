@@ -21,7 +21,7 @@
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
             <TextBlock Text="Home Page: " />
-            <controls:HyperLink Label="https://oneware.studio" Url="https://oneware.studio" />
+            <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" />
         </StackPanel>
         
         <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" />
