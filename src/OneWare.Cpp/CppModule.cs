@@ -24,6 +24,9 @@ public class CppModule : IModule
         nativeTool.AddPlatform(PlatformId.WinX64, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-windows-17.0.3.zip")
             .WithShortcut("LSP", Path.Combine("clangd_17.0.3", "bin", "clangd.exe"), LspPathSetting);
 
+        nativeTool.AddPlatform(PlatformId.LinuxX64, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-linux-17.0.3.zip")
+            .WithShortcut("LSP", "clangd_17.0.3/bin/clangd", LspPathSetting);
+        
         nativeTool.AddPlatform(PlatformId.OsxX64, "https://github.com/clangd/clangd/releases/download/17.0.3/clangd-mac-17.0.3.zip")
             .WithShortcut("LSP", "clangd_17.0.3/bin/clangd", LspPathSetting);
         
