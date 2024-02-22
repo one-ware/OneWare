@@ -106,3 +106,24 @@ jobs:
             put ./out/MacOSDownload-arm64.htm ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
             put ./out/osx-x64.txt ./cdn.one-ware.com/onewarestudio/osx-x64.txt
             put ./out/osx-arm64.txt ./cdn.one-ware.com/onewarestudio/osx-arm64.txt
+
+  finish:
+    name: finish
+    runs-on: ubuntu-latest
+    needs: [deploy-windows, deploy-macos]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: './build/props/Base.props'
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']"
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get-oneware-version.outputs.info }}
+          allowUpdates: true
+          generateReleaseNotes: true
