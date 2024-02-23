@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "OneWare.Demo.Browser": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "workingDirectory": "$(ProjectDir)",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:5000",
+      "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/debug?browser={browserInspectUri}"
+    }
+  }
+}

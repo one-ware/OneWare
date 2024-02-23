@@ -7,7 +7,7 @@ on:
 jobs:
   # Build job
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,12 +21,12 @@ jobs:
       - name: Install Wasm-Tools
         run: dotnet workload install wasm-tools
       - name: Publish
-        run: dotnet publish ./demo/OneWare.Demo.Browser/OneWare.Demo.Browser.csproj -c Release
+        run: dotnet publish ./studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj -c Release
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: w01e537f.kasserver.com
-          username: w01e537f
-          password: ${{ secrets.ONEWARE_STUDIO_FTP }}
-          local-dir: ./demo/OneWare.Demo.Browser/bin/Release/net8.0/browser-wasm/AppBundle/
-          server-dir: demo.oneware.studio/
+          server: w01ec151.kasserver.com
+          username: w01ec151
+          password: ${{ secrets.ONEWARE_FTP }}
+          local-dir: ./studio/OneWare.Studio.Browser/bin/Release/net8.0/browser-wasm/AppBundle/
+          server-dir: studio.one-ware.com/

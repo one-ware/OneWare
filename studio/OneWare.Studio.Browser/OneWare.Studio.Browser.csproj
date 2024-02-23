@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\props\Avalonia.Browser.props" />
+    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
+    <Import Project="..\..\build\props\Base.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+        <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
+        <OutputType>Exe</OutputType>
+        <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
+        <!--Enable Multithread-->
+        <WasmEnableThreads>true</WasmEnableThreads>
+        <_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
+        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <RunAOTCompilation>false</RunAOTCompilation>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>full</TrimMode>
+        <WasmBuildNative>true</WasmBuildNative>
+        <InvariantGlobalization>true</InvariantGlobalization>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <WasmExtraFilesToDeploy Include="AppBundle\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0" />
+        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.56" />
+    </ItemGroup>
+</Project>
