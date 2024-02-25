@@ -27,6 +27,9 @@ public class VhdlModule : IModule
         nativeTool.AddPlatform(PlatformId.WinX64, "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.77.0/vhdl_ls-x86_64-pc-windows-msvc.zip")
             .WithShortcut("LSP", Path.Combine("vhdl_ls-x86_64-pc-windows-msvc", "bin" , "vhdl_ls.exe"), LspPathSetting);
         
+        nativeTool.AddPlatform(PlatformId.LinuxX64, "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.77.0/vhdl_ls-x86_64-unknown-linux-gnu.zip")
+            .WithShortcut("LSP", Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin" , "vhdl_ls"), LspPathSetting);
+        
         containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "VHDL", LspPathSetting, "RustHDL Path", "Path for RustHDL executable", 
             nativeToolService.Get(LspName)!.GetShortcutPathOrEmpty("LSP"),
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
