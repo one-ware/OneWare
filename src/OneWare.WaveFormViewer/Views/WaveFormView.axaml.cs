@@ -42,8 +42,8 @@ namespace OneWare.WaveFormViewer.Views
                     var plus = (long)(_viewModel.Max / _viewModel.ZoomMultiply / 10 * args.Delta.X * -1);
                     _viewModel.Offset += plus;
                 }
-                else if(args.Delta.Y == 1) _viewModel.ZoomIn();
-                else if(args.Delta.Y == -1) _viewModel.ZoomOut();
+                //else if(args.Delta.Y == 1) _viewModel.ZoomIn();
+                //else if(args.Delta.Y == -1) _viewModel.ZoomOut();
             }, RoutingStrategies.Bubble | RoutingStrategies.Direct | RoutingStrategies.Tunnel, false);
         }
         

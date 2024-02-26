@@ -126,7 +126,7 @@ namespace OneWare.WaveFormViewer.Controls
 
             if (mz == 0) return;
 
-            for (var i = 0; i < Bounds.Width;)
+            for (var i = 0d; i < Bounds.Width;)
             {
                 var searchOffset = (long)((i + 2) * mz + Offset);
                 var index = model.Signal.FindIndex(searchOffset);
@@ -261,8 +261,8 @@ namespace OneWare.WaveFormViewer.Controls
 
                 if (nextChangeTime == LoadingOffset) break;
 
-                i += (int)sWidth;
-                if (x + sWidth > i) i = (int)(x + sWidth);
+                i += sWidth;
+                if (x + sWidth > i) i = x + sWidth;
 
                 lastEndPoint = endPoint;
                 lastPen = currentPen;
