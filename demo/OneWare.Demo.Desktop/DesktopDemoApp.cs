@@ -8,12 +8,9 @@ using ImTools;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;
-using OneWare.Cpp;
 using OneWare.Demo.Desktop.ViewModels;
 using OneWare.Demo.Desktop.Views;
-using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
-using OneWare.SerialMonitor;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl;
@@ -32,9 +29,6 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<PackageManagerModule>();
         moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
-        moduleCatalog.AddModule<SerialMonitorModule>();
-        moduleCatalog.AddModule<CppModule>();
-        moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
 
         try
         {

@@ -3,15 +3,8 @@ using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
-using OneWare.IceBreaker;
-using OneWare.Json;
 using OneWare.Settings;
 using OneWare.Essentials.Services;
-using OneWare.Toml;
-using OneWare.UniversalFpgaProjectSystem;
-using OneWare.Vcd.Viewer;
-using OneWare.Verilog;
-using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -57,12 +50,5 @@ public class DemoApp : App
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
-        moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
-        // moduleCatalog.AddModule<VhdlModule>();
-        // moduleCatalog.AddModule<VerilogModule>();
-        // moduleCatalog.AddModule<JsonModule>();
-        // moduleCatalog.AddModule<TomlModule>();
-        moduleCatalog.AddModule<VcdViewerModule>();
-        moduleCatalog.AddModule<IceBreakerModule>();
     }
 }
