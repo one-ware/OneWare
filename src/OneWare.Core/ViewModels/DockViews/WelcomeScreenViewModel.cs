@@ -18,7 +18,7 @@ namespace OneWare.Core.ViewModels.DockViews
         public string Platform => "Platform: " + RuntimeInformation.OSDescription;
 
         public string License => $"{_paths.AppName} Preview\n" +
-                                 $"© {DateTime.Now.Year} Protop Solutions UG\n";
+                                 $"© {DateTime.Now.Year} One Ware\n";
         
         public WelcomeScreenViewModel(IPaths paths)
         {

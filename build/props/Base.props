@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <Version>0.13.2.0</Version>
+        <Version>0.13.3.0</Version>
         <Authors>Hendrik Mennen</Authors>
-        <Company>Protop Solutions UG</Company>
+        <Company>One Ware</Company>
         <Description>The FPGA Programming Revolution</Description>
-        <Copyright>Copyright © Protop Solutions UG 2020-2023</Copyright>
+        <Copyright>Copyright © One Ware 2024</Copyright>
     </PropertyGroup>
 </Project>

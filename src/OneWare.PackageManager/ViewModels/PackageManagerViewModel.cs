@@ -186,7 +186,7 @@ public class PackageManagerViewModel : ObservableObject
         await LoadInstalledPackagesDatabaseAsync(_cancellationTokenSource.Token);
         
         await LoadPackageRepositoryAsync(
-            "https://raw.githubusercontent.com/ProtopSolutions/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
+            "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json", _cancellationTokenSource.Token);
         
         FilterPackages();
         IsLoading = false;
