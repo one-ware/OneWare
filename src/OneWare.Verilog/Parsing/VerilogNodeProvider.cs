@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using OneWare.SDK.Models;
+using OneWare.Essentials.Models;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Prism.Ioc;
 
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.Windows
 {

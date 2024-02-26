@@ -1,13 +1,13 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
-using IFile = OneWare.SDK.Models.IFile;
+using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Verilog
 {

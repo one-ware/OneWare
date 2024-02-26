@@ -4,11 +4,11 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.SDK;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ProjectSystem.Models;
 

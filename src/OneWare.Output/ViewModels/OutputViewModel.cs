@@ -1,4 +1,4 @@
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Output.ViewModels;
 

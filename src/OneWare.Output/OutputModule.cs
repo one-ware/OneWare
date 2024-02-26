@@ -4,10 +4,10 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.Output.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Output;
 

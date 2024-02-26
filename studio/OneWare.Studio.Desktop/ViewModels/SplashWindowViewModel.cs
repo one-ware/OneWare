@@ -2,7 +2,7 @@ using System;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Studio.Desktop.ViewModels;
 

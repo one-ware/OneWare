@@ -1,7 +1,7 @@
 ﻿using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
-using OneWare.SDK.EditorExtensions;
+using OneWare.Essentials.EditorExtensions;
 
 namespace OneWare.Vhdl.Indentation
 {

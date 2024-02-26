@@ -8,9 +8,9 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Windows;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Converters;
-using OneWare.SDK.Enums;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Converters;
+using OneWare.Essentials.Enums;
 
 namespace OneWare.Core.Views.Windows
 {

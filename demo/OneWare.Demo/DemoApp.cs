@@ -6,7 +6,7 @@ using OneWare.Core.Services;
 using OneWare.IceBreaker;
 using OneWare.Json;
 using OneWare.Settings;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using OneWare.Toml;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer;

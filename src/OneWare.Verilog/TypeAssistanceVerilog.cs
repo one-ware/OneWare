@@ -1,9 +1,9 @@
 ﻿using System.Text.RegularExpressions;
 using Avalonia.Input;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.SDK.EditorExtensions;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.ViewModels;
 using OneWare.Verilog.Folding;
 
 namespace OneWare.Verilog

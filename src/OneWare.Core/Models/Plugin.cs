@@ -1,4 +1,4 @@
-using OneWare.SDK.Models;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Core.Models;
 

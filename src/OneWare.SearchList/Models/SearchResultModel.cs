@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.SDK.Models;
+using OneWare.Essentials.Models;
 
 namespace OneWare.SearchList.Models
 {

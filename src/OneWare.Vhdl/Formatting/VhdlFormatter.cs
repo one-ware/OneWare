@@ -1,8 +1,8 @@
 using Avalonia.Platform;
 using AvaloniaEdit.Document;
 using Jint;
-using OneWare.SDK.EditorExtensions;
-using OneWare.SDK.Services;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.Vhdl.Formatting;

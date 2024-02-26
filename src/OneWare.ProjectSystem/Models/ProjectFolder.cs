@@ -2,11 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData.Binding;
-using OneWare.SDK;
-using OneWare.SDK.Extensions;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
+using OneWare.Essentials;
+using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;

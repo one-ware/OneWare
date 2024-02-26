@@ -7,11 +7,11 @@ using Avalonia.Media;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Enums;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using Prism.Ioc;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 
 namespace OneWare.Core.Services;

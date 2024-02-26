@@ -1,9 +1,9 @@
 ﻿using Avalonia.Media;
 using OneWare.Settings.ViewModels.SettingTypes;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Settings.ViewModels
 {

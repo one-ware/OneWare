@@ -1,6 +1,6 @@
 using System.Globalization;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Services;
 using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic;

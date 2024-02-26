@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Avalonia.Media.Imaging;
 using OneWare.Core.Extensions;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 

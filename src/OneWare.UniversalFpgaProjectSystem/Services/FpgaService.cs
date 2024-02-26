@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using NodeEditor.Controls;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;

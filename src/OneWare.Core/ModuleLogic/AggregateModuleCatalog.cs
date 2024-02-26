@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 

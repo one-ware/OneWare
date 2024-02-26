@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;

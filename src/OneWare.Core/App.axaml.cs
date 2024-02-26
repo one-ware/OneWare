@@ -29,12 +29,12 @@ using OneWare.Settings.Views;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.SDK;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using TextMateSharp.Grammars;
 
 namespace OneWare.Core

@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Cpp

@@ -1,7 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
-        xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK">
+        xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials">
 
     <Styles.Resources>
         <ControlTheme x:Key="{x:Type CaptionButtons}"

@@ -24,13 +24,13 @@ using Prism.Ioc;
 using OneWare.Core.Extensions;
 using OneWare.Core.Views.Controls;
 using OneWare.ErrorList.ViewModels;
-using OneWare.SDK.EditorExtensions;
-using OneWare.SDK.Extensions;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.Views.DockViews
 {

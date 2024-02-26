@@ -4,7 +4,7 @@
     <Import Project="..\..\build\props\Prism.Avalonia.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.SDK\OneWare.SDK.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
         <ProjectReference Include="..\OneWare.Terminal\OneWare.Terminal.csproj" />
     </ItemGroup>
     

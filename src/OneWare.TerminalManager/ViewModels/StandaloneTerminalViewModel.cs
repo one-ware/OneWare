@@ -1,4 +1,4 @@
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.ViewModels;
 using OneWare.Terminal.ViewModels;
 
 namespace OneWare.TerminalManager.ViewModels;

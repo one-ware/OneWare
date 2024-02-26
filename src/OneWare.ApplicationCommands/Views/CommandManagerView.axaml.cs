@@ -4,7 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using OneWare.ApplicationCommands.ViewModels;
-using OneWare.SDK.Controls;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.ApplicationCommands.Views;
 

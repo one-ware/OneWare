@@ -1,5 +1,5 @@
-﻿using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+﻿using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
 

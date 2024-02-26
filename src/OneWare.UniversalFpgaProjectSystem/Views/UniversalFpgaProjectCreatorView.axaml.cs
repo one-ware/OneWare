@@ -1,4 +1,4 @@
-﻿using OneWare.SDK.Controls;
+﻿using OneWare.Essentials.Controls;
 
 namespace OneWare.UniversalFpgaProjectSystem.Views;
 

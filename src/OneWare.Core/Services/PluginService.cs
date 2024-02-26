@@ -1,9 +1,9 @@
 using System.Text.Json;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 

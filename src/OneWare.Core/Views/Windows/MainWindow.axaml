@@ -15,13 +15,13 @@
                        Title="{Binding Title}"
                        WindowStartupLocation="CenterScreen"
                        Background="{DynamicResource ThemeBackgroundBrush}"
-                       xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
+                       xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
                        xmlns:coreControls="clr-namespace:OneWare.Core.ViewModels.Controls"
-                       xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
+                       xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
                        xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
                        xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
-                       xmlns:sdkControls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
-                       xmlns:enums="clr-namespace:OneWare.SDK.Enums;assembly=OneWare.SDK"
+                       xmlns:sdkControls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                       xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
                        x:DataType="viewmodels:MainWindowViewModel">
     
     <Window.DataTemplates>

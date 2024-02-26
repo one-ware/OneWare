@@ -1,5 +1,5 @@
-﻿using OneWare.SDK.Models;
-using OneWare.SDK.Services;
+﻿using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.OssCadSuiteIntegration.Yosys;

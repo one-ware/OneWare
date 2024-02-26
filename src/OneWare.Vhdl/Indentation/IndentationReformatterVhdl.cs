@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
-using OneWare.SDK.EditorExtensions;
+using OneWare.Essentials.EditorExtensions;
 
 namespace OneWare.Vhdl.Indentation
 {

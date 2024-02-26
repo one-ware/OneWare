@@ -10,13 +10,13 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ProjectExplorer.Services;
 using Prism.Ioc;
-using OneWare.SDK;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Extensions;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 

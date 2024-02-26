@@ -3,10 +3,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using OneWare.SDK.Converters;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Converters;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;

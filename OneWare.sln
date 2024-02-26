@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Core", "src\OneWare.Core\OneWare.Core.csproj", "{142377AB-78D8-429E-8403-C89CC8988C09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.SDK", "src\OneWare.SDK\OneWare.SDK.csproj", "{94FD4E60-346F-4B14-AB6D-A1B78DD39501}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF-2990-4B2C-907F-12739A839A3C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{B99724E4-1AA2-46D9-B982-6A3B381C5258}"
@@ -132,13 +130,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{BD761CED
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.OssCadSuiteIntegration", "src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj", "{4E2FD886-862B-4DE9-A69E-AE82E52979B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.SDK.UnitTests", "tests\OneWare.SDK.UnitTests\OneWare.SDK.UnitTests.csproj", "{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Essentials.UnitTests", "tests\OneWare.Essentials.UnitTests\OneWare.Essentials.UnitTests.csproj", "{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Studio", "studio\OneWare.Studio\OneWare.Studio.csproj", "{D63F3BD0-1104-4B4C-BE82-17D3D1F71077}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Studio.Desktop", "studio\OneWare.Studio.Desktop\OneWare.Studio.Desktop.csproj", "{65B0D047-7C49-4AD7-92E4-92E1A2B8C3D8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Studio.Browser", "studio\OneWare.Studio.Browser\OneWare.Studio.Browser.csproj", "{C40A6131-E59E-4E3D-91EC-8EC66F6BBC17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Essentials", "src\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj", "{87209569-62C2-4323-946D-170CBBCC5861}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -150,10 +150,6 @@ Global
 		{142377AB-78D8-429E-8403-C89CC8988C09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{142377AB-78D8-429E-8403-C89CC8988C09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{142377AB-78D8-429E-8403-C89CC8988C09}.Release|Any CPU.Build.0 = Release|Any CPU
-		{94FD4E60-346F-4B14-AB6D-A1B78DD39501}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{94FD4E60-346F-4B14-AB6D-A1B78DD39501}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{94FD4E60-346F-4B14-AB6D-A1B78DD39501}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{94FD4E60-346F-4B14-AB6D-A1B78DD39501}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -306,6 +302,10 @@ Global
 		{C40A6131-E59E-4E3D-91EC-8EC66F6BBC17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C40A6131-E59E-4E3D-91EC-8EC66F6BBC17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C40A6131-E59E-4E3D-91EC-8EC66F6BBC17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87209569-62C2-4323-946D-170CBBCC5861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87209569-62C2-4323-946D-170CBBCC5861}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87209569-62C2-4323-946D-170CBBCC5861}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87209569-62C2-4323-946D-170CBBCC5861}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390} = {0761690C-7DA0-4554-9F6B-211088412DCD}

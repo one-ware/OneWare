@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="250"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
-             xmlns:behaviours="clr-namespace:OneWare.SDK.Behaviours;assembly=OneWare.SDK"
+             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
              xmlns:viewModels="clr-namespace:OneWare.SerialMonitor.ViewModels"
              x:Class="OneWare.SerialMonitor.Views.SerialMonitorView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:SerialMonitorBaseViewModel">

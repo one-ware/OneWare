@@ -2,7 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.ViewModels;
 
 
 namespace OneWare.Output.ViewModels

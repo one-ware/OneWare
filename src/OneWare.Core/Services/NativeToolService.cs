@@ -1,8 +1,8 @@
 ﻿using Avalonia.Media;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.NativeTools;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.NativeTools;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 

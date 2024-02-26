@@ -5,7 +5,7 @@
              xmlns:vt100="clr-namespace:VtNetCore.Avalonia;assembly=VtNetCore.Avalonia"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Terminal.ViewModels"
-             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200" x:DataType="viewModels:TerminalViewModel">
     
     <UserControl.Styles>

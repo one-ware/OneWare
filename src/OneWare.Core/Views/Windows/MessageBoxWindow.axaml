@@ -4,7 +4,7 @@
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         mc:Ignorable="d"
                         xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
-                        xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+                        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                         x:Class="OneWare.Core.Views.Windows.MessageBoxWindow"
                         SizeToContent="Height"
                         MinHeight="100"

@@ -3,8 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using OneWare.ApplicationCommands.Serialization;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 
 namespace OneWare.ApplicationCommands.Services;
 

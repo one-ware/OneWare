@@ -14,16 +14,16 @@ using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
-using OneWare.SDK.Commands;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Extensions;
-using OneWare.SDK.Helpers;
+using OneWare.Essentials.Commands;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using Prism.Ioc;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows
 {

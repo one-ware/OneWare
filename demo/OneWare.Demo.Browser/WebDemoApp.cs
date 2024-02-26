@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;

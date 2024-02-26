@@ -2,7 +2,7 @@
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Settings.ViewModels;
-using OneWare.SDK.Controls;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Settings.Views
 {

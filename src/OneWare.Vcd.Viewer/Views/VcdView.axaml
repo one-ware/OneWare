@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Vcd.Viewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
-             xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"

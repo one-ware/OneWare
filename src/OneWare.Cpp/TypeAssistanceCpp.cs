@@ -2,10 +2,10 @@
 using AvaloniaEdit.Indentation.CSharp;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Cpp.Folding;
-using OneWare.SDK.EditorExtensions;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Cpp

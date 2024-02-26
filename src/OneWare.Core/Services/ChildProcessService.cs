@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using Avalonia.Media;
 using Avalonia.Threading;
-using OneWare.SDK.Enums;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 

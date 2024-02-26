@@ -1,6 +1,6 @@
-﻿using OneWare.SDK.Helpers;
-using OneWare.SDK.NativeTools;
-using OneWare.SDK.Services;
+﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.NativeTools;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Verilog.Parsing;
 using Prism.Ioc;

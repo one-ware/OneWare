@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using OneWare.WaveFormViewer.Enums;
 using Prism.Ioc;
 

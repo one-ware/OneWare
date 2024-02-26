@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using OneWare.SDK.Controls;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.ApplicationCommands.Views;
 

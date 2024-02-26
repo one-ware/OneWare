@@ -1,5 +1,5 @@
 ﻿using OneWare.ImageViewer.ViewModels;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 

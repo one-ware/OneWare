@@ -8,8 +8,8 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Serializer;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.ViewModels;
 

@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.Studio.Desktop;

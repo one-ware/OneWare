@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Yosys;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;

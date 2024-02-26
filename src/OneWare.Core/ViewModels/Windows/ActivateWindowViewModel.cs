@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DeviceId;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.Windows
 {

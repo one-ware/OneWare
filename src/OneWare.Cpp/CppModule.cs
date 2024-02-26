@@ -1,5 +1,5 @@
-﻿using OneWare.SDK.Helpers;
-using OneWare.SDK.Services;
+﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 

@@ -3,9 +3,9 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 

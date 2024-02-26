@@ -2,13 +2,13 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.SDK.Helpers;
+using OneWare.Essentials.Helpers;
 using OneWare.SearchList.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.SearchList;
 

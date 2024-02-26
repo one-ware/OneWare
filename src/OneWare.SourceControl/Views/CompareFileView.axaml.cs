@@ -4,7 +4,7 @@ using Avalonia.LogicalTree;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using DynamicData.Binding;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.ViewModels;
 using Prism.Ioc;

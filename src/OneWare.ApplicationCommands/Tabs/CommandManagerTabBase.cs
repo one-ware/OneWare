@@ -4,8 +4,8 @@ using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.Models;
-using OneWare.SDK.Commands;
-using OneWare.SDK.Models;
+using OneWare.Essentials.Commands;
+using OneWare.Essentials.Models;
 
 namespace OneWare.ApplicationCommands.Tabs;
 

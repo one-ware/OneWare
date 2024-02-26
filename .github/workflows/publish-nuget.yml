@@ -24,14 +24,12 @@ jobs:
       with:
         submodules: recursive
 
-    # Install the .NET SDK indicated in the global.json file
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8.0.x 
 
     # Create the NuGet packages in the folder from the environment variable NuGetDirectory
-    - run: dotnet pack ./src/OneWare.SDK/OneWare.SDK.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}

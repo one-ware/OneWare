@@ -5,12 +5,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Tabs;
 using OneWare.ApplicationCommands.Views;
-using OneWare.SDK.Commands;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.Models;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Commands;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ApplicationCommands.ViewModels;
 

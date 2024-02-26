@@ -3,7 +3,7 @@
         xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
         xmlns:views="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views"
         xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
-        xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK">
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials">
 
     <Styles.Resources>
         <SolidColorBrush x:Key="SelectionColorPin" Opacity="1" Color="{DynamicResource ThemeForegroundColor}" />

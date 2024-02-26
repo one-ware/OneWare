@@ -2,9 +2,9 @@
 using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
-using OneWare.SDK.Controls;
-using OneWare.SDK.Services;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

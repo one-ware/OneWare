@@ -2,10 +2,10 @@
 using Avalonia.Input;
 using Avalonia.Media;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.SDK.EditorExtensions;
-using OneWare.SDK.Helpers;
-using OneWare.SDK.LanguageService;
-using OneWare.SDK.ViewModels;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.ViewModels;
 using OneWare.Vhdl.Folding;
 using OneWare.Vhdl.Formatting;
 using OneWare.Vhdl.Indentation;

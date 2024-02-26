@@ -1,10 +1,10 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:layout="clr-namespace:Avalonia.Layout;assembly=Avalonia.Base"
-        xmlns:shared="clr-namespace:OneWare.SDK;assembly=OneWare.SDK"
-        xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
-        xmlns:helpers="clr-namespace:OneWare.SDK.Helpers;assembly=OneWare.SDK"
-        xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK">
+        xmlns:shared="clr-namespace:OneWare.Essentials;assembly=OneWare.Essentials"
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+        xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
 
     <Style Selector="controls|AdvancedWindow">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>

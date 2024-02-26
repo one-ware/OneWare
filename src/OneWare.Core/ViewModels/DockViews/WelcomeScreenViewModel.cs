@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Data;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.DockViews
 {

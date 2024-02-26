@@ -1,6 +1,6 @@
 ﻿using OneWare.Core.ViewModels.Windows;
 using Prism.Ioc;
-using OneWare.SDK.Controls;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Core.Views.Windows
 {

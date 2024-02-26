@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
-             xmlns:converters="clr-namespace:OneWare.SDK.Converters;assembly=OneWare.SDK"
-             xmlns:controls="clr-namespace:OneWare.SDK.Controls;assembly=OneWare.SDK"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">

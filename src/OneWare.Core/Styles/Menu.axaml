@@ -1,7 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:models="clr-namespace:OneWare.SDK.Models;assembly=OneWare.SDK"
-        xmlns:viewModels="clr-namespace:OneWare.SDK.ViewModels;assembly=OneWare.SDK">
+        xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+        xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">

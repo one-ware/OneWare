@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Core;
-using OneWare.SDK.Services;
+using OneWare.Essentials.Services;
 using Prism.Ioc;
 
 namespace OneWare.Core

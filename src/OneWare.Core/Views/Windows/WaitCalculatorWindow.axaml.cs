@@ -1,5 +1,5 @@
 ﻿using OneWare.Core.ViewModels.Windows;
-using OneWare.SDK.Controls;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Core.Views.Windows
 {

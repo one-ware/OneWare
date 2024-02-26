@@ -1,7 +1,7 @@
-﻿using OneWare.SDK.Helpers;
+﻿using OneWare.Essentials.Helpers;
 using Xunit;
 
-namespace OneWare.SDK.UnitTests;
+namespace OneWare.Essentials.UnitTests;
 
 public class ProjectHelperTests
 {

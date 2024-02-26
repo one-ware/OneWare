@@ -6,7 +6,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Utils;
-using OneWare.SDK.EditorExtensions;
+using OneWare.Essentials.EditorExtensions;
 using ReactiveUI;
 using Pair = System.Collections.Generic.KeyValuePair<int, Avalonia.Controls.Control>;
 
