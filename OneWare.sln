@@ -44,30 +44,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 	ProjectSection(SolutionItems) = preProject
 		build\props\Avalonia.Desktop.props = build\props\Avalonia.Desktop.props
 		build\props\Avalonia.Diagnostics.props = build\props\Avalonia.Diagnostics.props
-		build\props\Avalonia.props = build\props\Avalonia.props
 		build\props\Base.props = build\props\Base.props
 		build\props\OneWare.Module.props = build\props\OneWare.Module.props
-		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
-		build\props\Avalonia.Xaml.Interactions.props = build\props\Avalonia.Xaml.Interactions.props
-		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
 		build\props\RestSharp.props = build\props\RestSharp.props
 		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
-		build\props\Dock.Avalonia.props = build\props\Dock.Avalonia.props
-		build\props\Avalonia.Controls.DataGrid.props = build\props\Avalonia.Controls.DataGrid.props
-		build\props\Avalonia.Controls.ColorPicker.props = build\props\Avalonia.Controls.ColorPicker.props
 		build\props\Avalonia.Themes.Simple.props = build\props\Avalonia.Themes.Simple.props
 		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
-		build\props\Avalonia.Controls.TreeDataGrid.props = build\props\Avalonia.Controls.TreeDataGrid.props
 		build\props\XUnit.props = build\props\XUnit.props
-		build\props\CommunityToolkit.Mvvm.props = build\props\CommunityToolkit.Mvvm.props
-		build\props\Avalonia.Svg.props = build\props\Avalonia.Svg.props
-		build\props\Avalonia.Controls.PanAndZoom.props = build\props\Avalonia.Controls.PanAndZoom.props
-		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
-		build\props\AvaloniaEdit.TextMate.props = build\props\AvaloniaEdit.TextMate.props
 		build\props\MsBuildUncompressTask.props = build\props\MsBuildUncompressTask.props
-		build\props\Asmichi.ChildProcess.props = build\props\Asmichi.ChildProcess.props
 		build\props\NodeEditorAvalonia.props = build\props\NodeEditorAvalonia.props
-		build\props\Jint.props = build\props\Jint.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorTextBlock.Avalonia", "src\Markdown.Avalonia\ColorTextBlock.Avalonia\ColorTextBlock.Avalonia.csproj", "{0B2AD173-5342-46AB-B766-E6899216A9AB}"
@@ -129,8 +114,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{BD761CED-3D61-4D9E-A2A1-494584F2ED5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.OssCadSuiteIntegration", "src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj", "{4E2FD886-862B-4DE9-A69E-AE82E52979B5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Essentials.UnitTests", "tests\OneWare.Essentials.UnitTests\OneWare.Essentials.UnitTests.csproj", "{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Studio", "studio\OneWare.Studio\OneWare.Studio.csproj", "{D63F3BD0-1104-4B4C-BE82-17D3D1F71077}"
 EndProject
@@ -286,10 +269,6 @@ Global
 		{4E2FD886-862B-4DE9-A69E-AE82E52979B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E2FD886-862B-4DE9-A69E-AE82E52979B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E2FD886-862B-4DE9-A69E-AE82E52979B5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9E38EA6E-615C-487C-AF6D-502E07AE3B4D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D63F3BD0-1104-4B4C-BE82-17D3D1F71077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D63F3BD0-1104-4B4C-BE82-17D3D1F71077}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D63F3BD0-1104-4B4C-BE82-17D3D1F71077}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -347,6 +326,5 @@ Global
 		{60A1DF89-0129-42B7-A509-D717A887667C} = {3782EFDF-2990-4B2C-907F-12739A839A3C}
 		{BD761CED-3D61-4D9E-A2A1-494584F2ED5F} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{4E2FD886-862B-4DE9-A69E-AE82E52979B5} = {BD761CED-3D61-4D9E-A2A1-494584F2ED5F}
-		{9E38EA6E-615C-487C-AF6D-502E07AE3B4D} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 	EndGlobalSection
 EndGlobal

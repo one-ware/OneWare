@@ -1,13 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
-    <Import Project="..\..\build\props\Prism.Avalonia.props"/>
-    <Import Project="..\..\build\props\Jint.props"/>
-    <Import Project="..\..\build\props\MsBuildUncompressTask.props"/>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
-        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
 
     <ItemGroup>

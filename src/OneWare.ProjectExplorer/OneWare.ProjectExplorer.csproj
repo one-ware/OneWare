@@ -1,20 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Prism.Avalonia.props" />
-
+    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="ViewModels\Views\ProjectExplorerMainWindowToolBarExtension.axaml.cs">
-        <DependentUpon>ProjectExplorerMainWindowToolBarExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="ViewModels\Views\ProjectExplorerView.axaml.cs">
-        <DependentUpon>ProjectExplorerView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
     </ItemGroup>
 </Project>
