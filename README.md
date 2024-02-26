@@ -1,4 +1,4 @@
-![OneWare Banner](Banner.jpg?raw=true "OneWare Banner")
+![OneWare Banner](Banner.png?raw=true "OneWare Banner")
 
 # Extensible Cross-Platform IDE optimized for FPGA Development
 
