@@ -81,10 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.ImageViewer", "src\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{60A1DF89-0129-42B7-A509-D717A887667C}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\publish-onewarestudio-web.yml = .github\workflows\publish-onewarestudio-web.yml
 		.github\workflows\test.yml = .github\workflows\test.yml
 		.github\workflows\publish-nuget.yml = .github\workflows\publish-nuget.yml
-		.github\workflows\publish-onewarestudio-desktop.yml = .github\workflows\publish-onewarestudio-desktop.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Essentials", "src\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj", "{87209569-62C2-4323-946D-170CBBCC5861}"
