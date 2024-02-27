@@ -35,6 +35,8 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.Json;
+using OneWare.Toml;
 using TextMateSharp.Grammars;
 
 namespace OneWare.Core
@@ -267,6 +269,8 @@ namespace OneWare.Core
             moduleCatalog.AddModule<ProjectExplorerModule>();
             moduleCatalog.AddModule<FolderProjectSystemModule>();
             moduleCatalog.AddModule<ImageViewerModule>();
+            moduleCatalog.AddModule<JsonModule>();
+            moduleCatalog.AddModule<TomlModule>();
 
             base.ConfigureModuleCatalog(moduleCatalog);
         }

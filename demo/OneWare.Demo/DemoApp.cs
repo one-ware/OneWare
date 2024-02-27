@@ -46,9 +46,4 @@ public class DemoApp : App
             Source = new Uri("avares://OneWare.Demo/Styles/Theme.axaml")
         });
     }
-
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-    {
-        base.ConfigureModuleCatalog(moduleCatalog);
-    }
 }

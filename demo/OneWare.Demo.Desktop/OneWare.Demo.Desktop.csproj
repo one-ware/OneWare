@@ -32,9 +32,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj" />
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
         <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
         <ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
         <ProjectReference Include="..\OneWare.Demo\OneWare.Demo.csproj" />

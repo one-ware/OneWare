@@ -15,14 +15,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.IceBreaker\OneWare.IceBreaker.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Json\OneWare.Json.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Toml\OneWare.Toml.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
     </ItemGroup>
 
 </Project>
