@@ -10,6 +10,10 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
 {
     private readonly Dictionary<string, NativeToolContainer> _nativeTools = new();
     
+    private readonly Dictionary<NativeToolContainer, Task<bool>> _activeInstalls = new();
+    
+    private readonly object _lock = new();
+    
     public NativeToolContainer Register(string key)
     {
         _nativeTools[key] = new NativeToolContainer(key, Path.Combine(paths.NativeToolsDirectory, key));
@@ -21,7 +25,23 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
         return _nativeTools.GetValueOrDefault(key);
     }
 
-    public async Task<bool> InstallAsync(NativeToolContainer container)
+    public Task<bool> InstallAsync(NativeToolContainer container)
+    {
+        lock (_lock)
+        {
+            if (_activeInstalls.TryGetValue(container, out var task))
+            {
+                if (!task.IsCompleted)
+                    return task;
+                _activeInstalls.Remove(container);
+            }
+            var newTask = PerformInstallAsync(container);
+            _activeInstalls.Add(container, newTask);
+            return newTask;
+        }
+    }
+    
+    private async Task<bool> PerformInstallAsync(NativeToolContainer container)
     {
         var tool = container.GetPlatform();
 
