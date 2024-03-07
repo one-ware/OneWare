@@ -2,7 +2,6 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
@@ -38,14 +37,11 @@ public class SourceControlModule : IModule
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<SourceControlViewModel>())),
-            IconObservable = Application.Current?.GetResourceObservable(SourceControlViewModel.IconKey) ,
+            IconObservable = Application.Current!.GetResourceObservable(SourceControlViewModel.IconKey) ,
         });
         
         if (containerProvider.Resolve<SourceControlViewModel>() is not { } vm) return;
 
-        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new SourceControlMainWindowBottomRightExtension()
-        {
-            DataContext = vm
-        });
+        windowService.RegisterUiExtension<SourceControlMainWindowBottomRightExtension>("MainWindow_BottomRightExtension", vm);
     }
 }

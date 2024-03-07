@@ -9,36 +9,38 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using Prism.Ioc;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
+using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
-    private readonly Dictionary<string, ObservableCollection<Control>> _uiExtensions = new();
+    private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
 
     public event EventHandler<MenuItemViewModel>? MenuItemAdded;
     
-    public void RegisterUiExtension(string key, Control control)
+    public void RegisterUiExtension<T>(string key, object? dataContext = null)
     {
-        _uiExtensions.TryAdd(key, new ObservableCollection<Control>());
-        _uiExtensions[key].Add(control);
+        _uiExtensions.TryAdd(key, []);
+        _uiExtensions[key].Add(new UiExtension(typeof(T), dataContext));
     }
 
-    public ObservableCollection<Control> GetUiExtensions(string key)
+    public ObservableCollection<UiExtension> GetUiExtensions(string key)
     { 
-        _uiExtensions.TryAdd(key, new ObservableCollection<Control>());
+        _uiExtensions.TryAdd(key, []);
         return _uiExtensions[key];
     }
 
     public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems)
     {
         var parts = key.Split('/');
-        _menuItems.TryAdd(parts[0], new ObservableCollection<MenuItemViewModel>());
+        _menuItems.TryAdd(parts[0], []);
         ObservableCollection<MenuItemViewModel> activeCollection = _menuItems[parts[0]];
         
         if(parts.Length > 1)
@@ -159,8 +161,10 @@ public class WindowService : IWindowService
     public async Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue, Window? owner = null)
     {
         var msg = new MessageBoxWindow(title, message,
-            MessageBoxMode.Input, icon);
-        msg.Input = defaultValue;
+            MessageBoxMode.Input, icon)
+        {
+            Input = defaultValue
+        };
         await ShowDialogAsync(msg, owner);
         if (msg.BoxStatus == MessageBoxStatus.Canceled) return null;
         return msg.Input;

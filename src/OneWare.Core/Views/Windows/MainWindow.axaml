@@ -48,13 +48,7 @@
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}">
 
                     <StackPanel Orientation="Horizontal">
-                        <ItemsControl ItemsSource="{Binding RoundToolBarExtension}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                        <sdkControls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}"/>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
                             <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
@@ -65,13 +59,7 @@
                     
                 </Border>
                 
-                <ItemsControl ItemsSource="{Binding LeftToolBarExtension}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
+               <sdkControls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}"/>
                 
             </StackPanel>
             
@@ -119,13 +107,7 @@
                     </StackPanel.Styles>
 
 
-                    <ItemsControl ItemsSource="{Binding BottomRightExtension}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
+                    <sdkControls:UiExtensionCollection Extensions="{Binding BottomRightExtension}"/>
                     
                     <Menu Classes="BindMenu">
                         <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">

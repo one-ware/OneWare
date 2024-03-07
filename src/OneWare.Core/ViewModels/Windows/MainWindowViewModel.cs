@@ -24,6 +24,7 @@ using Prism.Ioc;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.ViewModels.Windows
 {
@@ -55,9 +56,9 @@ namespace OneWare.Core.ViewModels.Windows
             private set => SetProperty(ref _currentEditor, value);
         }
         
-        public ObservableCollection<Control> RoundToolBarExtension { get; }
-        public ObservableCollection<Control> LeftToolBarExtension { get; }
-        public ObservableCollection<Control> BottomRightExtension { get; }
+        public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
+        public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
+        public ObservableCollection<UiExtension> BottomRightExtension { get; }
         public ObservableCollection<MenuItemViewModel> MainMenu { get; }
         
         public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService, IWindowService windowService, IDockService dockService,
