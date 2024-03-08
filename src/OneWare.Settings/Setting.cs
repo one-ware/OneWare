@@ -56,6 +56,22 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
+public class SliderSetting : TitledSetting
+{
+    public int Min { get; }
+    
+    public int Max { get; }
+    
+    public int Step { get; }
+    
+    public SliderSetting(string title, string description, object defaultValue, int min, int max, int step) : base(title, description, defaultValue)
+    {
+        Min = min;
+        Max = max;
+        Step = step;
+    }
+}
+
 public abstract class PathSetting : TextBoxSetting
 {
     public string? StartDirectory { get; }

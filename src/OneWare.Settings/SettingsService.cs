@@ -52,6 +52,12 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key, new FolderPathSetting(title, description, defaultValue, watermark,startDir, validate));
     }
 
+    public void RegisterTitledSlider(string category, string subCategory, string key, string title, string description,
+        int defaultValue, int min, int max, int step)
+    {
+        AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
+    }
+
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title, string description, T defaultValue, params T[] options)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));

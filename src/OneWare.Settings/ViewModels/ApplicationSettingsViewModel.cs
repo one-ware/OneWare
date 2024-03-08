@@ -69,6 +69,9 @@ namespace OneWare.Settings.ViewModels
                             case ComboBoxSetting cS:
                                 subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
                                 break;
+                            case SliderSetting ss:
+                                subCategoryModel.SettingModels.Add(new SliderSettingViewModel(ss));
+                                break;
                             case FolderPathSetting pS:
                                 subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
                                 break;
