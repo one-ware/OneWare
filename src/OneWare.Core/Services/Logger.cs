@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
+using OneWare.Core.Data;
 using Prism.Ioc;
 using OneWare.Essentials;
 using OneWare.Essentials.Enums;
@@ -23,6 +24,7 @@ public class Logger : ILogger
     public Logger(IPaths paths)
     {
         _paths = paths;
+        Init();
     }
     
     public void WriteLogFile(string value)
@@ -96,13 +98,15 @@ public class Logger : ILogger
         }
     }
 
-    public void Init()
+    private void Init()
     {
         try
         {
             Directory.CreateDirectory(_paths.DocumentsDirectory);
             _log = File.CreateText(LogFilePath);
             PlatformHelper.ChmodFile(LogFilePath);
+            
+            this.Log($"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
         }
         catch
         {
