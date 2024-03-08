@@ -31,7 +31,7 @@ public class ChildProcessService : IChildProcessService
         };
     }
     
-    public async Task<(bool success, string output)> ExecuteShellAsync(string path, string arguments, string workingDirectory, string status, AppState state = AppState.Loading)
+    public async Task<(bool success, string output)> ExecuteShellAsync(string path, string arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = true, Action<string>? outputAction = null, Func<string, bool>? errorAction = null)
     {
         var success = true;
         
@@ -45,15 +45,40 @@ public class ChildProcessService : IChildProcessService
         activeProcess.StartInfo = startInfo;
         var key = _applicationStateService.AddState(status, state, () => activeProcess?.Kill());
 
+        var start = DateTime.Now;
+        
+        var dispatcherTimer = new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
+            (sender, args) =>
+            {
+                var time = DateTime.Now - start;
+                key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
+            });
+        
+        if(showTimer) dispatcherTimer.Start();
+        
         activeProcess.OutputDataReceived += (o, i) =>
         {
             if (string.IsNullOrEmpty(i.Data)) return;
+
+            if (outputAction != null)
+            {
+                outputAction(i.Data);
+                return;
+            }
+            
             Dispatcher.UIThread.Post(() => _logger.Log(i.Data, ConsoleColor.Black, true));
             output += i.Data + '\n';
         };
         activeProcess.ErrorDataReceived += (o, i) =>
         {
             if (string.IsNullOrEmpty(i.Data)) return;
+            
+            if (errorAction != null)
+            {
+                success = errorAction(i.Data);
+                return;
+            }
+            
             success = false;
             Dispatcher.UIThread.Post(() => _logger.Warning(i.Data, null, true));
             output += i.Data + '\n';
@@ -72,6 +97,8 @@ public class ChildProcessService : IChildProcessService
             _logger.Error(e.Message, e);
             success = false;
         }
+
+        dispatcherTimer.Stop();
 
         if (key.Terminated) success = false;
         _applicationStateService.RemoveState(key);

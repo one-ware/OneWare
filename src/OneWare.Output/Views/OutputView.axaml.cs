@@ -5,5 +5,7 @@ public partial class OutputView : OutputBaseView
     public OutputView()
     {
         InitializeComponent();
+
+        Output.Options.AllowScrollBelowDocument = false;
     }
 }
