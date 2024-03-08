@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using OneWare.Core.Data;
+using OneWare.Essentials.Converters;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -15,7 +17,9 @@ namespace OneWare.Core.ViewModels.Windows
         
         public string VersionInfo => $"{_paths.AppName} {DateTime.Now.Year} Preview\nVersion {Global.VersionCode} " +
                                      RuntimeInformation.ProcessArchitecture;
-
+        public string VersionInfoBase => $"OneWare.Core {Assembly.GetAssembly(typeof(App))?.GetName().Version?.ToString() ?? "-"}" +
+                                         $"\nOneWare.Essentials {Assembly.GetAssembly(typeof(SharedConverters))?.GetName().Version?.ToString() ?? "-"}";
+        
         public string Platform => "Platform: " + RuntimeInformation.OSDescription;
 
         public string License => $"{_paths.AppName} Preview\n" +
