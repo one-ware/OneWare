@@ -69,18 +69,15 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<BackupService>();
             containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
 
-            //ViewModels - Windows
+            //ViewModels - Singletons
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
-            containerRegistry.RegisterSingleton<ApplicationSettingsViewModel>();
-            containerRegistry.RegisterSingleton<ChangelogViewModel>();
-            containerRegistry.RegisterSingleton<AboutViewModel>();
-
-            //ViewModels - Dock
-            containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
             containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
 
-            //ViewModels Documents
+            //ViewModels Transients
+            containerRegistry.Register<WelcomeScreenViewModel>();
             containerRegistry.Register<EditViewModel>();
+            containerRegistry.Register<ChangelogViewModel>();
+            containerRegistry.Register<AboutViewModel>();
 
             //Windows
             containerRegistry.RegisterSingleton<MainWindow>();

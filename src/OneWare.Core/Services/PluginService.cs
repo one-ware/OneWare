@@ -61,6 +61,8 @@ public class PluginService : IPluginService
                 _moduleCatalog.AddModule(module);
                 if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
                     _moduleManager.LoadModule(module.ModuleName);
+                
+                ContainerLocator.Container.Resolve<ILogger>().Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
         }
         catch (Exception e)
