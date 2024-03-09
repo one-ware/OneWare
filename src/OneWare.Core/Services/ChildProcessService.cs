@@ -80,7 +80,7 @@ public class ChildProcessService : IChildProcessService
             }
             
             success = false;
-            Dispatcher.UIThread.Post(() => _logger.Warning(i.Data, null, true));
+            Dispatcher.UIThread.Post(() => _logger.Error(i.Data, null, true));
             output += i.Data + '\n';
         };
 
