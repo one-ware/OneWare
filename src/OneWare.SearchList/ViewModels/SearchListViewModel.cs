@@ -105,11 +105,11 @@ namespace OneWare.SearchList.ViewModels
             switch (SearchListFilterMode)
             {
                 case 0:
-                    await SearchFolderRecursiveAsync(_projectExplorerService.Items, searchText,
+                    await SearchFolderRecursiveAsync(_projectExplorerService.Projects, searchText,
                         _lastCancellationToken.Token);
                     break;
                 case 1 when _projectExplorerService.ActiveProject != null:
-                    await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Items, searchText,
+                    await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
                         _lastCancellationToken.Token);
                     break;
                 case 2 when _dockService.CurrentDocument is IEditor {CurrentFile: not null} editor:
@@ -148,7 +148,7 @@ namespace OneWare.SearchList.ViewModels
                         break;
                     }
                     case IProjectFolder folder:
-                        await SearchFolderRecursiveAsync(folder.Items, searchText, cancel);
+                        await SearchFolderRecursiveAsync(folder.Entities, searchText, cancel);
                         break;
                 }
         }

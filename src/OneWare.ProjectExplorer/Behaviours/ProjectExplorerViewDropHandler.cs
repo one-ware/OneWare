@@ -10,7 +10,7 @@ namespace OneWare.ProjectExplorer.Behaviours;
 
 public class ProjectExplorerViewDropHandler : DropHandlerBase
 {
-    private bool Validate<T>(TreeView treeView, DragEventArgs e, object? sourceContext, object? targetContext, bool bExecute) where T : IProjectEntry
+    private bool Validate<T>(TreeView treeView, DragEventArgs e, object? sourceContext, object? targetContext, bool bExecute) where T : IProjectExplorerNode
     {
         if (targetContext is not ProjectExplorerViewModel vm
             || treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
@@ -18,7 +18,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             return false;
         }
 
-        var targetParent = targetNode as IProjectFolder ?? targetNode.TopFolder;
+        var targetParent = targetNode as IProjectFolder ?? targetNode.Parent as IProjectFolder;
 
         if (targetParent == null) return false;
         
@@ -39,15 +39,19 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             }
             return false;
         }
+
+        if (!sourceNodes.All(x => x is IProjectEntry)) return false;
+
+        var sourceEntities = sourceNodes.Cast<IProjectEntry>().ToArray();
         
-        foreach (var sourceNode in sourceNodes)
+        foreach (var sourceNode in sourceEntities)
         {
-            if (targetParent == sourceNode.TopFolder) return false;
+            if (targetParent == sourceNode.Parent) return false;
                 
             if (sourceNode.FullPath == targetParent.FullPath) 
                 return false;
 
-            if (sourceNode is IProjectFolder && targetParent.FullPath.StartsWith(sourceNode.FullPath))
+            if (sourceNode is IProjectFolder sourceFolder && targetParent.FullPath.StartsWith(sourceFolder.FullPath))
                 return false;
         }
 
@@ -57,7 +61,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    _ = vm.DropAsync(targetParent, true, true, sourceNodes.Select(x => x.FullPath).ToArray());
+                    _ = vm.DropAsync(targetParent, true, true, sourceEntities.Select(x => x.FullPath).ToArray());
                 }
 
                 return true;
@@ -66,7 +70,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             {
                 if (bExecute)
                 {
-                    _ = vm.DropAsync(targetParent, true, false,sourceNodes.Select(x => x.FullPath).ToArray());
+                    _ = vm.DropAsync(targetParent, true, false,sourceEntities.Select(x => x.FullPath).ToArray());
                 }
 
                 return true;
@@ -84,7 +88,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
     {
         if (e.Source is Control && sender is TreeView treeView)
         {
-            return Validate<IProjectEntry>(treeView, e, sourceContext, targetContext, false);
+            return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
         }
         return false;
     }
@@ -93,7 +97,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
     {
         if (e.Source is Control && sender is TreeView treeView)
         {
-            return Validate<IProjectEntry>(treeView, e, sourceContext, targetContext, true);
+            return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, true);
         }
         return false;
     }

@@ -308,7 +308,7 @@ namespace OneWare.Core.ViewModels.DockViews
             }
 
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Log($"Saved {CurrentFile.Header}!", ConsoleColor.Green);
+                ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
             
             IsDirty = false;
             CurrentFile.LastSaveTime = DateTime.Now;

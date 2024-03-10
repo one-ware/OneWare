@@ -23,15 +23,28 @@ public class FolderProjectManager : IProjectManager
         }
         
         var root = new FolderProjectRoot(path);
-        try
-        {
-            ProjectHelper.ImportEntries(path, root);
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-        }
+
         return Task.FromResult<IProjectRoot?>(root);
+    }
+    
+    public static void LoadFolder(IProjectFolder folder)
+    {
+        var matches = Directory.EnumerateFileSystemEntries(folder.FullPath);
+        
+        foreach (var match in matches)
+        {
+            var relativePath = Path.GetRelativePath(folder.FullPath, match);
+            var attributes = File.GetAttributes(match);
+            if (attributes.HasFlag(FileAttributes.Hidden)) continue;
+            if (attributes.HasFlag(FileAttributes.Directory))
+            {
+                folder.AddFolder(relativePath);
+            }
+            else
+            {
+                folder.AddFile(relativePath);
+            }
+        }
     }
 
     public Task<bool> SaveProjectAsync(IProjectRoot root)

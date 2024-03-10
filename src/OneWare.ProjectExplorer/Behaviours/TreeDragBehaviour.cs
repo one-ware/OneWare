@@ -87,16 +87,6 @@ public class TreeDragBehaviour : Behavior<Control>
     {
         var data = new DataObject();
         data.Set(ContextDropBehavior.DataFormat, value!);
-        
-        // var entries = value is IEnumerable<IProjectEntry> e
-        //     ? e
-        //     : (value is IProjectEntry en ? new[] { en } : new IProjectEntry[] { });
-        // var projectEntries = entries as IProjectEntry[] ?? entries.ToArray();
-        //
-        // if (projectEntries.Any() && TopLevel.GetTopLevel(AssociatedObject) is {} topLevel)
-        // {
-        //     data = await ProjectExplorerViewModel.GetDataObjectFromItemsAsync(topLevel, projectEntries) ?? data;
-        // }
 
         var effect = DragDropEffects.None;
 

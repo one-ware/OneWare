@@ -54,20 +54,9 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     private ObservableCollection<IApplicationCommand> GetOpenFileCommands()
     {
         var collection = new ObservableCollection<IApplicationCommand>();
-        foreach (var entry in _projectExplorerService.Items)
+        foreach (var project in _projectExplorerService.Projects)
         {
-            switch (entry)
-            {
-                case IProjectRoot root:
-                    collection.AddRange(root.Files.Select(x => new OpenFileApplicationCommand(x)));
-                    break;
-                case IProjectFile file:
-                    collection.Add(new OpenFileApplicationCommand(file));
-                    break;
-                case IProjectFolder folder:
-                    //Cant happen atm
-                    break;
-            }   
+            collection.AddRange(project.Files.Select(x => new OpenFileApplicationCommand(x)));
         }
         return collection;
     }

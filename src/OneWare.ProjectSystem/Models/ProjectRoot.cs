@@ -40,4 +40,5 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 
     public abstract bool IsPathIncluded(string path);
     public abstract void IncludePath(string path);
+    public abstract void OnExternalEntryAdded(string path, FileAttributes attributes);
 }

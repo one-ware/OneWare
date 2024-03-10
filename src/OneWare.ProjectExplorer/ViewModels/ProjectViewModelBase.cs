@@ -23,20 +23,20 @@ public abstract class ProjectViewModelBase : ExtendedTool
         set => SetProperty(ref _searchString, value);
     }
     
-    public ObservableCollection<IProjectEntry> Items { get; } = new();
+    public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
-    public ObservableCollection<IProjectEntry> SelectedItems { get; } = new();
+    public ObservableCollection<IProjectExplorerNode> SelectedItems { get; } = new();
 
-    public ObservableCollection<IProjectEntry> SearchResult { get; } = new();
+    public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
 
     protected ProjectViewModelBase(string iconKey) : base(iconKey)
     {
         
     }
     
-    public virtual void Insert(IProjectEntry entry)
+    public virtual void Insert(IProjectRoot entry)
     {
-        if (Items.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
+        if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
             return;
@@ -45,17 +45,17 @@ public abstract class ProjectViewModelBase : ExtendedTool
         //TODO
         var inserted = false;
         //FIND CORRECT INDEX IN ITEMS FOR INSERTION
-        for (var i = 0; i < Items.Count; i++)
-            if (entry is IProjectFolder || Items[i] is not IProjectFolder)
-                if (entry is IProjectFolder && Items[i] is not IProjectFolder ||
-                    string.CompareOrdinal(entry.Header, Items[i].Header) <= 0)
+        for (var i = 0; i < Projects.Count; i++)
+            if (Projects[i] is not IProjectFolder)
+                if (Projects[i] is not IProjectFolder ||
+                    string.CompareOrdinal(entry.Header, Projects[i].Header) <= 0)
                 {
-                    Items.Insert(i, entry);
+                    Projects.Insert(i, entry);
                     inserted = true;
                     break;
                 }
 
-        if (!inserted) Items.Add(entry);
+        if (!inserted) Projects.Add(entry);
     }
 
     #region Searching, Sort and Binding
@@ -78,7 +78,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
         SearchResult.AddRange(DeepSearchName(SearchString));
         
-        CollapseAll(Items);
+        CollapseAll(Projects);
 
         foreach (var r in SearchResult)
         {
@@ -87,16 +87,16 @@ public abstract class ProjectViewModelBase : ExtendedTool
         }
     }
 
-    public void ExpandToRoot(IProjectEntry entry)
+    public void ExpandToRoot(IProjectExplorerNode node)
     {
-        if (entry.TopFolder == null || entry is IProjectRoot) return;
-        entry.TopFolder.IsExpanded = true;
-        ExpandToRoot(entry.TopFolder);
+        if (node.Parent == null || node is IProjectRoot) return;
+        node.Parent.IsExpanded = true;
+        ExpandToRoot(node.Parent);
     }
 
     public IProjectEntry? DeepSearch(string path)
     {
-        foreach (var i in Items)
+        foreach (var i in Projects)
         {
             if (path.IndexOf(i.RelativePath, StringComparison.OrdinalIgnoreCase) >= 0 &&
                 path.Length == i.RelativePath.Length) return i;
@@ -113,7 +113,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public IProjectEntry? Search(string path, bool recursive = true)
     {
-        foreach (var i in Items)
+        foreach (var i in Projects)
         {
             if (Path.GetFullPath(path).Equals(Path.GetFullPath(i.Header),
                     StringComparison.OrdinalIgnoreCase) //Search for name equality
@@ -135,7 +135,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public List<IProjectEntry> DeepSearchName(string name)
     {
         var results = new List<IProjectEntry>();
-        foreach (var entry in Items)
+        foreach (var entry in Projects)
         {
             if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
             if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
@@ -146,7 +146,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     private void DeepSearchName(IProjectFolder pf, string name, List<IProjectEntry> results)
     {
-        var folderItems = pf.Items;
+        var folderItems = pf.Entities;
         foreach (var entry in folderItems)
         {
             if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
@@ -154,12 +154,12 @@ public abstract class ProjectViewModelBase : ExtendedTool
         }
     }
 
-    public void CollapseAll(IEnumerable<IProjectEntry> list)
+    public void CollapseAll(IEnumerable<IProjectExplorerNode> list)
     {
-        foreach (var f in list.Where(x => x is IProjectFolder).Cast<IProjectFolder>())
+        foreach (var f in list)
         {
             f.IsExpanded = false;
-            CollapseAll(f.Items);
+            CollapseAll(f.Children);
         }
     }
 

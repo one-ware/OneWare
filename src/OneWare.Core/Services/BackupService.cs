@@ -187,7 +187,7 @@ namespace OneWare.Core.Services
                         if(dockable is not EditViewModel evm) continue;
                         
                         var result = await _windowService.ShowYesNoAsync("Warning",
-                            $"There is a more recent version of {file.Header} stored in backups! Do you  want to restore it?", 
+                            $"There is a more recent version of {file.Name} stored in backups! Do you  want to restore it?", 
                             MessageBoxIcon.Warning, _dockService.GetWindowOwner(dockable));
 
                         if (result == MessageBoxStatus.Yes)
@@ -198,13 +198,13 @@ namespace OneWare.Core.Services
 
                                 evm.CurrentDocument.Text = backupText;
 
-                                _logger.Log("File " + file.Header + " restored from backup!",
+                                _logger.Log("File " + file.Name + " restored from backup!",
                                     ConsoleColor.Green, true, Brushes.Green);
                             }
                             catch (Exception e)
                             {
                                 _logger.Error(
-                                    "Restoring file " + file.Header +
+                                    "Restoring file " + file.Name +
                                     " failed! More information can be found in the program log", e, true, true);
                             }
 

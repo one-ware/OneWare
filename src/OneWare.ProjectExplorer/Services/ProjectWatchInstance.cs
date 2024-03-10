@@ -133,8 +133,8 @@ public class ProjectWatchInstance : IDisposable
                     if (parentPath != null && !_root.IsPathIncluded(parentPath)) return;
                 }
                 
-                if (_projectExplorerService.Items.FirstOrDefault(x =>
-                        x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is IProjectRoot root and ISavable savable)
+                if (_projectExplorerService.Projects.FirstOrDefault(x =>
+                        x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is { } root and ISavable savable)
                 {
                     if (File.GetLastWriteTime(savable.FullPath) > savable.LastSaveTime)
                         await _projectExplorerService.ReloadAsync(root);
@@ -151,21 +151,21 @@ public class ProjectWatchInstance : IDisposable
                                 _dockService.OpenFiles.TryGetValue(file, out var tab);
                                 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
-                                AddNew(path, attributes);
+                                _root.OnExternalEntryAdded(path, attributes);
                                 
                                 //TODO dont remove tab and Initialize Current Tab
                             }
                             else
                             {
                                 await _projectExplorerService.RemoveAsync(oldEntry);
-                                AddNew(path, attributes);
+                                _root.OnExternalEntryAdded(path, attributes);
                             }
                         }
 
                         return;
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
-                        AddNew(path, attributes);
+                        _root.OnExternalEntryAdded(path, attributes);
                         return;
                     case WatcherChangeTypes.Deleted:
                         if(_root.Search(path) is {} deletedEntry)
@@ -178,23 +178,6 @@ public class ProjectWatchInstance : IDisposable
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
         }
-    }
-
-    private void AddNew(string path, FileAttributes attributes)
-    {
-        var relativePath = Path.GetRelativePath(_root.FullPath, path);
-        
-        if (attributes.HasFlag(FileAttributes.Directory))
-        {
-            var folder = _root.AddFolder(relativePath);
-            ProjectHelper.ImportEntries(path, folder);
-            if(folder.Items.Count == 0) folder.TopFolder!.Remove(folder);
-            return;
-        }
-        
-        if (!_root.IsPathIncluded(relativePath)) return;
-        
-        _root.AddFile(relativePath);
     }
 
     public void Dispose()

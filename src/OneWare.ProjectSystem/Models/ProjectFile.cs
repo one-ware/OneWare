@@ -3,6 +3,8 @@ using Avalonia.Media;
 using DynamicData.Binding;
 using OneWare.Essentials.Converters;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;
 
@@ -15,13 +17,13 @@ public class ProjectFile : ProjectEntry, IProjectFile
     {
         IDisposable? fileSubscription = null;
 
-        this.WhenValueChanged(x => x.Header).Subscribe(x =>
+        this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
         {
             fileSubscription?.Dispose();
-            var observable = SharedConverters.FileExtensionIconConverterObservable.Convert(Extension, typeof(IImage), null, CultureInfo.CurrentCulture) as IObservable<object?>;
-            fileSubscription = observable?.Subscribe(x =>
+            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
+            fileSubscription = observable?.Subscribe(icon =>
             {
-                Icon = x as IImage;
+                Icon = icon;
             });
         });
     }

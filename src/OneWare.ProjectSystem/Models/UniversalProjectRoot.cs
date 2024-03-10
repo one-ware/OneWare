@@ -45,4 +45,21 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         
         Properties["Include"]!.AsArray().Add(path);
     }
+    
+    public override void OnExternalEntryAdded(string path, FileAttributes attributes)
+    {
+        var relativePath = Path.GetRelativePath(FullPath, path);
+        
+        if (attributes.HasFlag(FileAttributes.Directory))
+        {
+            var folder = AddFolder(relativePath);
+            ProjectHelper.ImportEntries(path, folder);
+            if(folder.Children.Count == 0) folder.TopFolder!.Remove(folder);
+            return;
+        }
+        
+        if (!IsPathIncluded(relativePath)) return;
+        
+        AddFile(relativePath);
+    }
 }

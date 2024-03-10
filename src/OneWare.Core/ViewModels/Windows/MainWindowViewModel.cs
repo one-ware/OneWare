@@ -83,7 +83,7 @@ namespace OneWare.Core.ViewModels.Windows
             {
                 if (x != null)
                 {
-                    Title = $"{paths.AppName} - {x.CurrentFile?.Header}";
+                    Title = $"{paths.AppName} - {x.CurrentFile?.Name}";
                     
                     if (x is IEditor editor)
                     {

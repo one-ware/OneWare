@@ -46,7 +46,7 @@
         </Border>
         <TreeView AutoScrollToSelectedItem="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
-                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Items}">
+                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree" ItemsSource="{Binding Projects}">
             <Interaction.Behaviors>
                 <ContextDropBehavior  Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviours:CommandOnPasteBehaviour Command="{Binding PasteAsync}"/>
@@ -57,7 +57,7 @@
                              ItemsSource="{Binding TreeViewContextMenu}" />
             </TreeView.ContextMenu>
             <TreeView.Styles>
-                <Style Selector="TreeViewItem" x:DataType="models:IProjectEntry">
+                <Style Selector="TreeViewItem" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
                     <Setter Property="Background" Value="{Binding Background}" />
                     <Setter Property="Interaction.Behaviors">
@@ -70,7 +70,7 @@
                 </Style>
             </TreeView.Styles>
             <TreeView.DataTemplates>
-                <TreeDataTemplate DataType="models:IProjectEntry" ItemsSource="{Binding Items}">
+                <TreeDataTemplate DataType="models:IProjectExplorerNode" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal" Spacing="4" Background="Transparent">
                         <Interaction.Behaviors>
                             <behaviours:CommandOnDoubleTapBehaviour Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, 
@@ -92,9 +92,6 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Image Height="16" Width="16"
-                                   Source="{DynamicResource VsImageLib.StatusCriticalErrorOverlayExp16X}"
-                                   IsVisible="{Binding LoadingFailed}" />
                         </Grid>
 
                         <!--
@@ -108,7 +105,7 @@
 
                         <controls:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}" VerticalAlignment="Center"
                                                  IsEnabled="False" x:Name="RenamingTextBox"
-                                                 Text="{Binding Header, Mode=OneWay}" RenameAction="{Binding RequestRename}"
+                                                 Text="{Binding Header, Mode=OneWay}" RenameAction="{Binding (models:IProjectEntry).RequestRename}"
                                                  Opacity="{Binding TextOpacity}" />
                     </StackPanel>
                 </TreeDataTemplate>

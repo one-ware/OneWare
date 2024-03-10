@@ -14,10 +14,17 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
-    public ObservableCollection<IProjectEntry> Items { get; init; } = new();
+    public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
+    
+    protected readonly ObservableCollection<IProjectEntry> _entities = new();
+    public ReadOnlyObservableCollection<IProjectEntry> Entities { get; }
 
+    public IProjectExplorerNode? Parent => TopFolder;
+    
     public IProjectFolder? TopFolder { get; set; }
-
+    
+    public ObservableCollection<IImage> IconOverlays { get; } = new();
+    
     private IBrush _background = Brushes.Transparent;
     public IBrush Background
     {
@@ -41,15 +48,15 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set => SetProperty(ref _icon, value);
     }
 
-    public ObservableCollection<IImage> IconOverlays { get; } = new();
+    public string Header => Name;
     
-    private string _header;
-    public string Header
+    private string _name;
+    public string Name
     {
-        get => _header;
+        get => _name;
         set
         {
-            SetProperty(ref _header, value);
+            SetProperty(ref _name, value);
             OnPropertyChanged(nameof(FullPath));
             OnPropertyChanged(nameof(RelativePath));
         }
@@ -81,7 +88,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         {
             if (value != _isExpanded)
             {
-                if (this is IProjectFolder { Items.Count: 0 }) value = false;
+                if (this is IProjectFolder { Children.Count: 0 }) value = false;
                 SetProperty(ref _isExpanded, value);
             }
         }
@@ -122,10 +129,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     
     public Action<Action<string>>? RequestRename { get; set; }
 
-    protected ProjectEntry(string header, IProjectFolder? topFolder)
+    protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
-        _header = header;
+        _name = name;
         TopFolder = topFolder;
+        
+        Entities = new ReadOnlyObservableCollection<IProjectEntry>(_entities);
     }
     
     public virtual IEnumerable<MenuItemViewModel> GetContextMenu(IProjectExplorerService projectExplorerService)

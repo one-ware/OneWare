@@ -127,7 +127,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
                             <TextBlock Padding="5 0" VerticalAlignment="Center"
-                                       Text="{Binding File.Header, FallbackValue={x:Null}}" />
+                                       Text="{Binding File.Name, FallbackValue={x:Null}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>

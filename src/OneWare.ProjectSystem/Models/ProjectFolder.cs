@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials;
 using OneWare.Essentials.Extensions;
@@ -43,22 +44,24 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         //Insert in correct posiion
         var inserted = false;
-        for (var i = 0; i < Items.Count; i++)
+        for (var i = 0; i < Children.Count; i++)
         {
-            if (entry is ProjectFolder && Items[i] is not ProjectFolder ||
-                entry is ProjectFolder && Items[i] is ProjectFolder &&
-                string.CompareOrdinal(entry.Header, Items[i].Header) <= 0 || //Insert if both are folders
-                entry is not ProjectFolder && Items[i] is not ProjectFolder &&
-                string.CompareOrdinal(entry.Header, Items[i].Header) <= 0) //Insert if both are files
+            if (Children[i] is IProjectEntry && (entry is ProjectFolder && Children[i] is not ProjectFolder ||
+                entry is ProjectFolder && Children[i] is ProjectFolder &&
+                string.CompareOrdinal(entry.Header, Children[i].Header) <= 0 || //Insert if both are folders
+                entry is not ProjectFolder && Children[i] is not ProjectFolder &&
+                string.CompareOrdinal(entry.Header, Children[i].Header) <= 0)) //Insert if both are files
             {
-                Items.Insert(i, entry);
+                Children.Insert(i, entry);
                 inserted = true;
                 break;
             }
         }
             
-        if (!inserted) Items.Add(entry);
+        if (!inserted) Children.Add(entry);
         entry.TopFolder = this;
+        
+        _entities.Add(entry);
         (entry.Root as ProjectRoot)?.RegisterEntry(entry);
     }
 
@@ -72,18 +75,19 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         if (entry is ProjectFolder folder)
         {
-            for (int i = 0; i < folder.Items.Count; i++)
+            for (int i = 0; i < folder.Entities.Count; i++)
             {
-                folder.Remove(folder.Items[i]);
+                folder.Remove(folder.Entities[i]);
                 i--;
             }
         }
 
         (entry.Root as ProjectRoot)?.UnregisterEntry(entry);
-        Items.Remove(entry);
+        Children.Remove(entry);
+        _entities.Remove(entry);
 
         //Collapse folder if empty
-        if (Items.Count == 0) IsExpanded = false;
+        if (Children.Count == 0) IsExpanded = false;
     }
 
     public IProjectFile? ImportFile(string path, bool overwrite)
@@ -203,9 +207,12 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     
     public IProjectEntry? Search(string path, bool recursive = true) //TODO Optimize
     {
-        foreach (var i in Items)
+        if (path.EqualPaths(FullPath))
+            return this;
+        
+        foreach (var i in Entities)
         {
-            if (path.Equals(i.Header, StringComparison.OrdinalIgnoreCase) //Search for name equality
+            if (path.Equals(i.Name, StringComparison.OrdinalIgnoreCase) //Search for name equality
                 || path.EqualPaths(i.RelativePath)
                 || path.EqualPaths(i.FullPath))
                 return i;
