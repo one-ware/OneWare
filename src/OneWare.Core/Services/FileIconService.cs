@@ -31,7 +31,7 @@ public class FileIconService : IFileIconService
         RegisterFileIcon("VsImageLib.HeaderFile16X", ".h", ".hpp");
         RegisterFileIcon("VsImageLib.Cpp16X", ".cpp");
         RegisterFileIcon("VSImageLib.MarkdownFile_16x", ".md");
-        RegisterFileIcon("Codeicons.Json", ".json", ".fpgaproj");
+        RegisterFileIcon("VSImageLib2019.JSONScript_16x", ".json");
     }
 
     public void RegisterFileIcon(IObservable<IImage> icon, params string[] extensions)
