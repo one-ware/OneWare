@@ -61,7 +61,8 @@
 
     <DockPanel>
         
-        <controls:DocumentUiExtensionCollection DockPanel.Dock="Top" HorizontalAlignment="Stretch" Orientation="Vertical" Extensions="{Binding TopExtensions}" File="{Binding CurrentFile}"/>
+        <controls:DocumentUiExtensionCollection DockPanel.Dock="Top" HorizontalAlignment="Stretch" Extensions="{Binding TopExtensions}" File="{Binding CurrentFile}"/>
+        <controls:DocumentUiExtensionCollection DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Extensions="{Binding BottomExtensions}" File="{Binding CurrentFile}"/>
         
         <Grid DockPanel.Dock="Top">
             <ContentControl Name="EditorWrapper" Content="{Binding Editor}">

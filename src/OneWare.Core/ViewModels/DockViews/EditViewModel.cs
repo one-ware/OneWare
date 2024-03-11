@@ -62,6 +62,7 @@ namespace OneWare.Core.ViewModels.DockViews
         }
         
         public ObservableCollection<DocumentUiExtension> TopExtensions { get; }
+        public ObservableCollection<DocumentUiExtension> BottomExtensions { get; }
 
         public event EventHandler? FileSaved;
 
@@ -77,7 +78,8 @@ namespace OneWare.Core.ViewModels.DockViews
             _errorService = errorService;
             _backupService = backupService;
             
-            TopExtensions = dockService.GetDocumentViewExtensions("EditView");
+            TopExtensions = dockService.GetDocumentViewExtensions("EditView_Top");
+            BottomExtensions = dockService.GetDocumentViewExtensions("EditView_Bottom");
             
             Title = $"Loading {Path.GetFileName(fullPath)}";
 
