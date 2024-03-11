@@ -14,9 +14,9 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string header, IProjectFolder? topFolder) : base(header, topFolder)
+    public ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header, topFolder)
     {
-        if (GetType() == typeof(ProjectFolder))
+        if (defaultFolderAnimation)
         {
             IDisposable? iconDisposable = null;
             this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
@@ -125,7 +125,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             return pf.AddFile(path.Substring(split + 1, path.Length - split - 1), createNew);
         }
             
-        if (!createNew && Search(Path.Combine(RelativePath, path), false) is ProjectFile file)
+        if (!createNew && SearchName(path, false) is ProjectFile file)
         {
             return file;
         }
@@ -138,7 +138,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             path = Path.GetFileName(fullPath);
         }
             
-        var projFile = new ProjectFile(path, this); 
+        var projFile = ConstructNewProjectFile(path, this); 
             
         if (!File.Exists(fullPath))
         {
@@ -162,20 +162,30 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         Insert(projFile);
         return projFile;
     }
-        
+
+    protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
+    {
+        return new ProjectFolder(path, topFolder);
+    }
+    
+    protected virtual IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)
+    {
+        return new ProjectFile(path, topFolder);
+    }
+    
     public IProjectFolder AddFolder(string path, bool createNew = false)
     {
         var folderParts = path.Split(Path.DirectorySeparatorChar);
         if (folderParts.Length > 1)
         {
-            if (Search(folderParts[0]) is ProjectFolder existing)
+            if (SearchName(folderParts[0], false) is ProjectFolder existing)
                 return existing.AddFolder(path.Remove(0, folderParts[0].Length + 1), createNew);
 
             var created = AddFolder(folderParts[0], createNew);
             return created.AddFolder(path.Remove(0, folderParts[0].Length + 1), createNew);
         }
 
-        if (!createNew && Search(path, false) is ProjectFolder existingFolder)
+        if (!createNew && SearchRelativePath(path, false) is ProjectFolder existingFolder)
         {
             return existingFolder;
         }
@@ -199,26 +209,59 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
         }
 
-        var pf = new ProjectFolder(path, this);
+        var pf = ConstructNewProjectFolder(path, this);
         
         Insert(pf);
         return pf;
     }
-    
-    public IProjectEntry? Search(string path, bool recursive = true) //TODO Optimize
+
+    public IProjectEntry? SearchName(string path, bool recursive = true)
+    {
+        if (path.EqualPaths(Name))
+            return this;
+        
+        foreach (var i in Entities)
+        {
+            if (path.Equals(i.Name, StringComparison.OrdinalIgnoreCase)) return i;
+            if (recursive && i is ProjectFolder folder)
+            {
+                var pe = folder.SearchName(path);
+                if (pe != null) return pe;
+            }
+        }
+
+        return null;
+    }
+
+    public IProjectEntry? SearchRelativePath(string path, bool recursive = true)
+    {
+        if (path.EqualPaths(RelativePath))
+            return this;
+        
+        foreach (var i in Entities)
+        {
+            if (path.EqualPaths(i.RelativePath)) return i;
+            if (recursive && i is ProjectFolder folder)
+            {
+                var pe = folder.SearchRelativePath(path);
+                if (pe != null) return pe;
+            }
+        }
+
+        return null;
+    }
+
+    public IProjectEntry? SearchFullPath(string path, bool recursive = true)
     {
         if (path.EqualPaths(FullPath))
             return this;
         
         foreach (var i in Entities)
         {
-            if (path.Equals(i.Name, StringComparison.OrdinalIgnoreCase) //Search for name equality
-                || path.EqualPaths(i.RelativePath)
-                || path.EqualPaths(i.FullPath))
-                return i;
+            if (path.EqualPaths(i.FullPath)) return i;
             if (recursive && i is ProjectFolder folder)
             {
-                var pe = folder.Search(path);
+                var pe = folder.SearchFullPath(path);
                 if (pe != null) return pe;
             }
         }

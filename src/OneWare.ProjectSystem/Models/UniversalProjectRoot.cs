@@ -18,7 +18,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     public string ProjectFilePath { get; }
     public JsonObject Properties { get; }
     
-    public UniversalProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
+    public UniversalProjectRoot(string projectFilePath, JsonObject properties) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"), false)
     {
         ProjectFilePath = projectFilePath;
         Properties = properties;
@@ -28,10 +28,8 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
     public override bool IsPathIncluded(string relativePath)
     {
-        Properties.TryGetPropertyValue("Include", out var includeNode);
-        var includes = includeNode?.AsArray().GetValues<string>();
-        Properties.TryGetPropertyValue("Exclude", out var excludeNode);
-        var excludes = excludeNode?.AsArray().GetValues<string>();
+        var includes = GetProjectPropertyArray("Include");
+        var excludes = GetProjectPropertyArray("Exclude");
         
         if (includes == null && excludes == null) return true;
         
@@ -43,7 +41,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         if(!Properties.ContainsKey("Include")) 
             Properties.Add("Include", new JsonArray());
         
-        Properties["Include"]!.AsArray().Add(path);
+        AddToProjectPropertyArray("Include", path);
     }
     
     public override void OnExternalEntryAdded(string path, FileAttributes attributes)
@@ -61,5 +59,41 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         if (!IsPathIncluded(relativePath)) return;
         
         AddFile(relativePath);
+    }
+
+    public string? GetProjectProperty(string name)
+    {
+        return Properties[name]?.ToString();
+    }
+
+    public IEnumerable<string>? GetProjectPropertyArray(string name)
+    {
+        return Properties[name]?.AsArray()
+            .Where(x => x is not null)
+            .Select(x => x!.ToString());
+    }
+    
+    public void SetProjectProperty(string name, string value)
+    {
+        Properties[name] = value;
+    }
+    
+    public void SetProjectPropertyArray(string name, IEnumerable<string> values)
+    {
+        Properties[name] = new JsonArray(values.Select(x => JsonValue.Create(x)).ToArray());
+    }
+
+    protected void AddToProjectPropertyArray(string name, params string[] newItems)
+    {
+        Properties.TryAdd(name, new JsonArray());
+        foreach (var item in newItems)
+        {
+            Properties[name]!.AsArray().Add(item);
+        }
+    }
+    
+    public void RemoveProjectProperty(string name)
+    {
+        Properties.Remove(name);
     }
 }

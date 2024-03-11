@@ -92,7 +92,7 @@ public class ProjectWatchInstance : IDisposable
                 attributes = File.GetAttributes(path);
             }
             
-            var entry = _root.Search(path);
+            var entry = _root.SearchFullPath(path);
 
             var lastArg = changes.Last();
 
@@ -144,7 +144,7 @@ public class ProjectWatchInstance : IDisposable
                 {
                     case WatcherChangeTypes.Renamed:
                         if (lastArg is RenamedEventArgs { Name: not null, OldFullPath: not null } renamedEventArgs &&
-                            _root.Search(renamedEventArgs.OldFullPath) is { } oldEntry)
+                            _root.SearchFullPath(renamedEventArgs.OldFullPath) is { } oldEntry)
                         {
                             if (oldEntry is IProjectFile file)
                             {
@@ -168,7 +168,7 @@ public class ProjectWatchInstance : IDisposable
                         _root.OnExternalEntryAdded(path, attributes);
                         return;
                     case WatcherChangeTypes.Deleted:
-                        if(_root.Search(path) is {} deletedEntry)
+                        if(_root.SearchFullPath(path) is {} deletedEntry)
                             await _projectExplorerService.RemoveAsync(deletedEntry);
                         return;
                 }

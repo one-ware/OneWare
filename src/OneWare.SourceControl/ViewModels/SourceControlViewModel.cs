@@ -317,7 +317,7 @@ namespace OneWare.SourceControl.ViewModels
                         foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
                         {
                             var smodel = new SourceControlModel(this, item,
-                                ProjectExplorerService.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                                ProjectExplorerService.SearchFullPath(Path.Combine(CurrentRepo.Info.WorkingDirectory,
                                         item.FilePath))
                                     as IProjectFile);
 
@@ -917,7 +917,7 @@ namespace OneWare.SourceControl.ViewModels
                     try
                     {
                         File.Delete(path);
-                        if (ProjectExplorerService.ActiveProject?.Search(Path.Combine(CurrentRepo.Info.WorkingDirectory,
+                        if (ProjectExplorerService.ActiveProject?.SearchFullPath(Path.Combine(CurrentRepo.Info.WorkingDirectory,
                                 path)) is IProjectFile file)
                             _ = ProjectExplorerService.RemoveAsync(file);
                     }
@@ -956,7 +956,7 @@ namespace OneWare.SourceControl.ViewModels
                         if (result is MessageBoxStatus.Yes)
                             foreach (var f in deleteFiles)
                             {
-                                var projFile = ProjectExplorerService.Search(f);
+                                var projFile = ProjectExplorerService.SearchFullPath(f);
                                 if (projFile != null) await ProjectExplorerService.DeleteAsync(projFile);
                                 else File.Delete(f);
                             }
@@ -981,7 +981,7 @@ namespace OneWare.SourceControl.ViewModels
             
             if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
 
-            if (!(ProjectExplorerService.ActiveProject?.Search(path) is IFile file))
+            if (!(ProjectExplorerService.ActiveProject?.SearchFullPath(path) is IFile file))
                 file = ProjectExplorerService.GetTemporaryFile(path);
 
             await _dockService.OpenFileAsync(file);

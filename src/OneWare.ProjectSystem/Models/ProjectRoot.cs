@@ -22,7 +22,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
         }
     }
 
-    protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath), null)
+    protected ProjectRoot(string rootFolderPath, bool defaultFolderAnimation) : base(Path.GetFileName(rootFolderPath), null, defaultFolderAnimation)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;

@@ -20,28 +20,8 @@ public class FolderProjectRoot : ProjectRoot
     
     private readonly Dictionary<IProjectFolder, IDisposable> _registeredFolders = new();
 
-    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath)
+    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
     {
-        IDisposable? iconDisposable = null;
-        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
-        {
-            iconDisposable?.Dispose();
-            if (!x)
-            {
-                iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X").Subscribe(y =>
-                {
-                    Icon = y as IImage;
-                });
-            }
-            else
-            {
-                iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X").Subscribe(y =>
-                {
-                    Icon = y as IImage;
-                });
-            }
-        });
-        
         WatchDirectory(this);
     }
 
@@ -118,7 +98,7 @@ public class FolderProjectRoot : ProjectRoot
     {
         var parentPath = Path.GetDirectoryName(path);
 
-        if (parentPath != null && Search(parentPath) is IProjectFolder parent)
+        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder parent)
         {
             var relativePath = Path.GetRelativePath(FullPath, path);
         

@@ -17,5 +17,5 @@ public class LoadingDummyNode : IProjectExplorerNode
     public bool IsExpanded { get; set; }
     public IBrush Background { get; set; } = Brushes.Transparent;
     public FontWeight FontWeight { get; set; }
-    public float TextOpacity { get; } = 1f;
+    public float TextOpacity { get; set; } = 1f;
 }

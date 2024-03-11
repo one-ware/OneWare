@@ -39,7 +39,13 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set => SetProperty(ref _fontWeight, value);
     }
 
-    public float TextOpacity { get; } = 1f;
+    private float _textOpacity = 1f;
+    
+    public float TextOpacity
+    {
+        get => _textOpacity;
+        set => SetProperty(ref _textOpacity, value);
+    }
 
     private IImage? _icon;
     public IImage? Icon
@@ -60,13 +66,6 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
             OnPropertyChanged(nameof(FullPath));
             OnPropertyChanged(nameof(RelativePath));
         }
-    }
-
-    private bool _excludeCompilation;
-    public bool ExcludeCompilation
-    {
-        get => _excludeCompilation;
-        set => SetProperty(ref _excludeCompilation, value);
     }
 
     private bool _loadingFailed;

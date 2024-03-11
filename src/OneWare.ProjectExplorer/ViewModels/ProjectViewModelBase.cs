@@ -103,7 +103,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
             if (i is IProjectFolder folder)
             {
-                var pe = folder.Search(path);
+                var pe = folder.SearchName(path);
                 if (pe != null) return pe;
             }
         }
@@ -111,24 +111,32 @@ public abstract class ProjectViewModelBase : ExtendedTool
         return null;
     }
 
-    public IProjectEntry? Search(string path, bool recursive = true)
+    public IProjectEntry? SearchName(string path, bool recursive = true)
     {
         foreach (var i in Projects)
         {
-            if (Path.GetFullPath(path).Equals(Path.GetFullPath(i.Header),
-                    StringComparison.OrdinalIgnoreCase) //Search for name equality
-                || Path.GetFullPath(path).Equals(Path.GetFullPath(i.RelativePath),
-                    StringComparison.OrdinalIgnoreCase) //Search for relative path equality
-                || Path.GetFullPath(path).Equals(Path.GetFullPath(i.FullPath),
-                    StringComparison.OrdinalIgnoreCase)) //Search for full path equality
-                return i;
+            if (path.Equals(Path.GetFullPath(i.Header), StringComparison.OrdinalIgnoreCase)) return i;
             if (recursive && i is IProjectFolder folder)
             {
-                var pe = folder.Search(path);
+                var pe = folder.SearchName(path);
                 if (pe != null) return pe;
             }
         }
-
+        return null;
+    }
+    
+    public IProjectEntry? SearchFullPath(string path, bool recursive = true)
+    {
+        foreach (var i in Projects)
+        {
+            if (path.EqualPaths(i.FullPath)) //Search for name equality
+                return i;
+            if (recursive && i is IProjectFolder folder)
+            {
+                var pe = folder.SearchFullPath(path);
+                if (pe != null) return pe;
+            }
+        }
         return null;
     }
 

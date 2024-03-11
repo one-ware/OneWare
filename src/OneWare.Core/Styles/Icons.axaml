@@ -1,6 +1,28 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <DrawingImage x:Key="VSImageLib.RemoveSingleDriverTest_16x">
+  <DrawingGroup   >
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+          <GeometryDrawing Brush="{StaticResource IconColor}" Geometry="F1M7.2764,10L9.0004,7.291 9.0004,5 10.0004,5 10.0004,7.291 11.7234,10z M14.5094,12.459L12.2884,9.004 11.2334,7.362 11.0004,7 11.0004,5 12.0004,5 12.0004,4 7.0004,4 7.0004,4.525 7.4744,5 8.0004,5 8.0004,5.525 8.4744,6 8.0004,6.475 8.0004,7 7.7674,7.362 6.7124,9.004 4.4904,12.459C4.1164,13.042 4.4354,13.784 5.0504,13.961 5.1384,13.986 5.2334,14 5.3314,14L13.6684,14C13.7674,14 13.8614,13.986 13.9494,13.961 14.5644,13.784 14.8834,13.042 14.5094,12.459" />
+          <GeometryDrawing Brush="#FFA1260D" Geometry="F1M5.0908,4.0303L7.0608,6.0003 5.9998,7.0603 4.0298,5.0913 2.0608,7.0603 0.9998,6.0003 2.9698,4.0303 0.9998,2.0603 2.0608,1.0003 4.0298,2.9693 5.9998,1.0003 7.0608,2.0603z" />
+        </DrawingGroup>
+</DrawingImage>
+<DrawingImage x:Key="VSImageLib.AddTest_16x">
+  <DrawingGroup   >
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+          <GeometryDrawing Brush="{StaticResource IconColor}" Geometry="F1M13.6683,14L5.3313,14C4.5403,14,4.0623,13.125,4.4903,12.459L8.0003,7 8.0003,6 9.0003,6 9.0003,7.291 7.2763,10 11.7233,10 10.0003,7.291 10.0003,5 9.0003,5 9.0003,4 12.0003,4 12.0003,5 11.0003,5 11.0003,7 14.5093,12.459C14.9373,13.125,14.4593,14,13.6683,14" />
+          <GeometryDrawing Brush="#FF388A34" Geometry="F1M4,5L2,5 2,3 4,3 4,1 6,1 6,3 8,3 8,5 6,5 6,7 4,7z" />
+        </DrawingGroup>
+</DrawingImage>
+    
+    <DrawingImage x:Key="TestBenchOverlay">
+        <DrawingGroup   >
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="#FF388A34" Geometry="F1M3.0322,12L4.0002,10.303 4.0002,8 5.0002,8 5.0002,10.303 5.9682,12z M8.0912,13.485L6.0002,10 6.0002,8 7.0002,8 7.0002,7 2.0002,7 2.0002,8 3.0002,8 3.0002,10 0.9082,13.485C0.5092,14.152,0.9892,15,1.7662,15L7.2342,15C8.0112,15,8.4912,14.152,8.0912,13.485" />
+        </DrawingGroup>
+    </DrawingImage>
+    
     <DrawingImage x:Key="UniversalProject">
         <DrawingGroup>
             <GeometryDrawing Brush="#00000000" Geometry="F1M16,16L0,16 0,0 16,0z" />
