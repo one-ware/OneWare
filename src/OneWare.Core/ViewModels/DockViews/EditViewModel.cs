@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -59,6 +60,8 @@ namespace OneWare.Core.ViewModels.DockViews
             get => _diagnostics;
             set => SetProperty(ref _diagnostics, value);
         }
+        
+        public ObservableCollection<DocumentUiExtension> TopExtensions { get; }
 
         public event EventHandler? FileSaved;
 
@@ -73,6 +76,8 @@ namespace OneWare.Core.ViewModels.DockViews
             _languageManager = languageManager;
             _errorService = errorService;
             _backupService = backupService;
+            
+            TopExtensions = dockService.GetDocumentViewExtensions("EditView");
             
             Title = $"Loading {Path.GetFileName(fullPath)}";
 

@@ -8,7 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.DockViews.EditView" x:DataType="dockViews1:EditViewModel"
              Background="{DynamicResource ThemeControlLowBrush}" Name="EditViewView">
-    
+
     <UserControl.Styles>
         <Style Selector="Button.MergeButton">
             <Setter Property="Padding" Value="0, 0, 0, -3" />
@@ -27,7 +27,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         </Style>
-        
+
         <Style Selector="ScrollBar:vertical">
             <Setter Property="Cursor" Value="Arrow" />
             <Setter Property="Template">
@@ -40,7 +40,7 @@
                                                         IsHitTestVisible="False" Grid.Row="0"
                                                         Name="SimulatorRenderer" VerticalAlignment="Stretch"
                                                         HorizontalAlignment="Stretch" />
-                            <Track 
+                            <Track
                                 Minimum="{TemplateBinding Minimum}"
                                 Maximum="{TemplateBinding Maximum}"
                                 Value="{TemplateBinding Value, Mode=TwoWay}"
@@ -59,32 +59,38 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid>
-        <ContentControl Name="EditorWrapper" Content="{Binding Editor}">
-            <ContentControl.Styles>
-                <Style Selector="avaloniaEdit|TextEditor">
-                    <Setter Property="ShowLineNumbers" Value="True"/>
-                    <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
-                    <Setter Property="VerticalScrollBarVisibility" Value="Visible"/>
-                </Style>
-            </ContentControl.Styles>
-        </ContentControl>
-
-        <Popup Name="HoverBox" IsLightDismissEnabled="False" MaxWidth="700">
-            <Grid>
-            <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            Background="{DynamicResource ThemeBackgroundBrush}">
+    <DockPanel>
+        
+        <controls:DocumentUiExtensionCollection DockPanel.Dock="Top" HorizontalAlignment="Stretch" Orientation="Vertical" Extensions="{Binding TopExtensions}" File="{Binding CurrentFile}"/>
+        
+        <Grid DockPanel.Dock="Top">
+            <ContentControl Name="EditorWrapper" Content="{Binding Editor}">
                 <ContentControl.Styles>
                     <Style Selector="avaloniaEdit|TextEditor">
-                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                        <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}"/>
-                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="ShowLineNumbers" Value="True" />
+                        <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />
+                        <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
                     </Style>
                 </ContentControl.Styles>
             </ContentControl>
-            </Grid>
-        </Popup>
-    </Grid>
-    
+
+            <Popup Name="HoverBox" IsLightDismissEnabled="False" MaxWidth="700">
+                <Grid>
+                    <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="1" BorderThickness="1"
+                                    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                    Background="{DynamicResource ThemeBackgroundBrush}">
+                        <ContentControl.Styles>
+                            <Style Selector="avaloniaEdit|TextEditor">
+                                <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                        </ContentControl.Styles>
+                    </ContentControl>
+                </Grid>
+            </Popup>
+        </Grid>
+    </DockPanel>
+
 </UserControl>
