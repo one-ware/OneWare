@@ -97,6 +97,8 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     {
         get
         {
+            if (this is IProjectRoot) return string.Empty;
+            
             var relativePath = Header;
             var tFolder = TopFolder;
             while (tFolder is not (IProjectRoot or null))
