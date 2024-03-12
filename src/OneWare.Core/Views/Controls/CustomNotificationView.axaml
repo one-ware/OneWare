@@ -4,22 +4,28 @@
              x:Class="OneWare.Core.Views.Controls.CustomNotificationView"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:OneWare.Core.ViewModels.Controls"
-             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="100" x:DataType="controls:CustomNotificationViewModel">
-    <Border Padding="12" MinHeight="20" Background="{Binding Background}" UseLayoutRounding="False" BorderThickness="0">
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="100"
+             x:DataType="controls:CustomNotificationViewModel">
+    
+    <Border Padding="12" MinHeight="20" Background="{DynamicResource ThemeBackgroundBrush}" UseLayoutRounding="False" BorderThickness="0">
         <Grid ColumnDefinitions="Auto,*">
             <Panel Margin="0,0,12,0" Width="25" Height="25" VerticalAlignment="Top">
                 <Image Source="{Binding Icon}" VerticalAlignment="Center" />
             </Panel>
             <DockPanel Grid.Column="1" LastChildFill="false">
-                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Title}" TextWrapping="Wrap" FontWeight="Medium" />
-                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Message}" TextWrapping="Wrap" Opacity=".8"
+                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Title}" TextWrapping="Wrap"
+                           FontWeight="Medium" />
+                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Message}" TextWrapping="Wrap"
+                           Opacity=".8"
                            Margin="0,8,0,0" />
 
                 <StackPanel Margin="0,5, 0, 0" DockPanel.Dock="Bottom" Spacing="0" Orientation="Horizontal">
                     <Border>
-                        <Button Classes="BorderButton" Cursor="Hand" Background="{DynamicResource ThemeBackgroundBrush}"
+                        <Button NotificationCard.CloseOnClick="True" Classes="BorderButton" CornerRadius="3" Cursor="Hand"
+                                Background="{DynamicResource ThemeBackgroundBrush}" Padding="2"
                                 Command="{Binding ExecuteButton}">
-                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Text="{Binding ButtonText}" FontSize="13" Margin="4" />
+                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Text="{Binding ButtonText}"
+                                       FontSize="13" Margin="4" />
                         </Button>
                     </Border>
                 </StackPanel>

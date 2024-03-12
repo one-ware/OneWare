@@ -2,15 +2,14 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using Avalonia.Styling;
+using Avalonia.VisualTree;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Core;
-using OneWare.ApplicationCommands;
-using OneWare.ApplicationCommands.Models;
 using OneWare.ApplicationCommands.Services;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -29,10 +28,8 @@ using OneWare.Settings.Views;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.Essentials;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Json;
@@ -277,6 +274,15 @@ namespace OneWare.Core
 
         public override void OnFrameworkInitializationCompleted()
         {
+            var mainWindow = Container.Resolve<MainWindow>();
+            mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
+            {
+                Position = NotificationPosition.TopRight,
+                Margin = new Thickness(0, 55, 5, 0),
+                BorderThickness = new Thickness(0),
+                MaxItems = 3
+            };
+            
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
             Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
             

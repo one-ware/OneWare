@@ -3,8 +3,10 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using DynamicData.Binding;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Extensions;
@@ -16,20 +18,13 @@ namespace OneWare.Core.Views.Windows
 {
     public partial class MainWindow : AdvancedWindow
     {
-        public INotificationManager NotificationManager { get; }
+        public WindowNotificationManager? NotificationManager { get; set; }
 
         private NativeMenu? _nativeMenu;
         
         public MainWindow()
         {
             InitializeComponent();
-
-            NotificationManager = new WindowNotificationManager(this)
-            {
-                Position = NotificationPosition.TopRight,
-                Margin = new Thickness(0, 55, 5, 0),
-                BorderThickness = new Thickness(0),
-            };
 
             this.WhenValueChanged(x => x.DataContext).Subscribe(x =>
             {

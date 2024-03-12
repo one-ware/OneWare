@@ -6,6 +6,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using OneWare.Core.ViewModels.Controls;
 using OneWare.Core.ViewModels.Windows;
+using OneWare.Core.Views.Controls;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
@@ -192,13 +193,16 @@ public class WindowService : IWindowService
 
     public void ShowNotification(string title, string message, NotificationType type)
     {
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(new Notification(title, message, type));
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new Notification(title, message, type));
     }
 
     public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)
     {
         var model = new CustomNotificationViewModel(title, message, buttonText, buttonAction, icon);
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager.Show(model);
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new CustomNotificationView()
+        {
+            DataContext = model
+        });
     }
 }
