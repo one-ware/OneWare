@@ -24,11 +24,10 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
             StdOutputRedirection = OutputRedirection.OutputPipe,
             StdInputRedirection = InputRedirection.NullDevice,
             StdErrorRedirection = OutputRedirection.ErrorPipe,
-            
         };
     }
     
-    public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Action<string>? outputAction = null, Func<string, bool>? errorAction = null)
+    public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Func<string, bool>? outputAction = null, Func<string, bool>? errorAction = null)
     {
         var success = true;
 
