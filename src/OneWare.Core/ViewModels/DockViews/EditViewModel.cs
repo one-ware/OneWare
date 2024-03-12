@@ -61,8 +61,8 @@ namespace OneWare.Core.ViewModels.DockViews
             set => SetProperty(ref _diagnostics, value);
         }
         
-        public ObservableCollection<DocumentUiExtension> TopExtensions { get; }
-        public ObservableCollection<DocumentUiExtension> BottomExtensions { get; }
+        public ObservableCollection<UiExtension> TopExtensions { get; }
+        public ObservableCollection<UiExtension> BottomExtensions { get; }
 
         public event EventHandler? FileSaved;
 
@@ -78,8 +78,8 @@ namespace OneWare.Core.ViewModels.DockViews
             _errorService = errorService;
             _backupService = backupService;
             
-            TopExtensions = dockService.GetDocumentViewExtensions("EditView_Top");
-            BottomExtensions = dockService.GetDocumentViewExtensions("EditView_Bottom");
+            TopExtensions = windowService.GetUiExtensions("EditView_Top");
+            BottomExtensions = windowService.GetUiExtensions("EditView_Bottom");
             
             Title = $"Loading {Path.GetFileName(fullPath)}";
 

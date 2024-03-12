@@ -31,7 +31,10 @@ public class ProjectExplorerModule : IModule
         
         dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);
 
-        windowService.RegisterUiExtension<ProjectExplorerMainWindowToolBarExtension>("MainWindow_RoundToolBarExtension", vm);
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new UiExtension(x => new ProjectExplorerMainWindowToolBarExtension
+        {
+            DataContext = vm
+        }));
         
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("File")
         {

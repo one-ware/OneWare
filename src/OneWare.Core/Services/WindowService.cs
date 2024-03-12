@@ -25,10 +25,10 @@ public class WindowService : IWindowService
 
     public event EventHandler<MenuItemViewModel>? MenuItemAdded;
     
-    public void RegisterUiExtension<T>(string key, object? dataContext = null)
+    public void RegisterUiExtension(string key, UiExtension extension)
     {
         _uiExtensions.TryAdd(key, []);
-        _uiExtensions[key].Add(new UiExtension(typeof(T), dataContext));
+        _uiExtensions[key].Add(extension);
     }
 
     public ObservableCollection<UiExtension> GetUiExtensions(string key)

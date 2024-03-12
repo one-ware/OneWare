@@ -28,7 +28,7 @@ namespace OneWare.Core.Services
 
         public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new ();
         private readonly Dictionary<string, Type> _documentViewRegistrations = new ();
-        private readonly Dictionary<string, ObservableCollection<DocumentUiExtension>> _editViewExtensions = new();
+        private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
         
         private readonly IPaths _paths;
         private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
@@ -82,18 +82,6 @@ namespace OneWare.Core.Services
             {
                 _documentViewRegistrations.TryAdd(extension, typeof(T));
             }
-        }
-
-        public ObservableCollection<DocumentUiExtension> GetDocumentViewExtensions(string key)
-        {
-            _editViewExtensions.TryAdd(key, []);
-            return _editViewExtensions[key];
-        }
-
-        public void RegisterDocumentViewExtension<T>(string key, Func<IFile, object?> createDataContext)
-        {
-            _editViewExtensions.TryAdd(key, []);
-            _editViewExtensions[key].Add(new DocumentUiExtension(typeof(T), createDataContext));
         }
 
         public void RegisterLayoutExtension<T>(DockShowLocation location)

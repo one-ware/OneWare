@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
@@ -42,6 +43,9 @@ public class SourceControlModule : IModule
         
         if (containerProvider.Resolve<SourceControlViewModel>() is not { } vm) return;
 
-        windowService.RegisterUiExtension<SourceControlMainWindowBottomRightExtension>("MainWindow_BottomRightExtension", vm);
+        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x => new SourceControlMainWindowBottomRightExtension()
+        {
+            DataContext = vm
+        }));
     }
 }
