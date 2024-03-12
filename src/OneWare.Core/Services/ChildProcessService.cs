@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
@@ -17,80 +19,79 @@ public class ChildProcessService : IChildProcessService
         _applicationStateService = applicationStateService;
     }
     
-    private static ProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, string arguments)
+    private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, IReadOnlyCollection<string> arguments)
     {
-        return new ProcessStartInfo
+        return new ChildProcessStartInfo()
         {
             FileName = path,
-            Arguments = $"{arguments}",
-            CreateNoWindow = true,
+            Arguments = arguments,
             WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
+            StdOutputRedirection = OutputRedirection.OutputPipe,
+            StdInputRedirection = InputRedirection.NullDevice,
+            StdErrorRedirection = OutputRedirection.ErrorPipe,
         };
     }
     
-    public async Task<(bool success, string output)> ExecuteShellAsync(string path, string arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = true, Action<string>? outputAction = null, Func<string, bool>? errorAction = null)
+    public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Action<string>? outputAction = null, Func<string, bool>? errorAction = null)
     {
         var success = true;
-        
-        _logger.Log($"{Path.GetFileNameWithoutExtension(path)} {arguments}", ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
+
+        var argumentString = string.Join(' ', arguments.Select(x =>
+        {
+            if (x.Contains(' ')) return $"\"{x}\"";
+            return x;
+        }));
+        _logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
 
         var output = string.Empty;
         
         var startInfo = GetProcessStartInfo(path, workingDirectory, arguments);
 
-        using var activeProcess = new Process();
-        activeProcess.StartInfo = startInfo;
-        var key = _applicationStateService.AddState(status, state, () => activeProcess?.Kill());
-
-        var start = DateTime.Now;
-        
-        var dispatcherTimer = new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
-            (sender, args) =>
-            {
-                var time = DateTime.Now - start;
-                key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
-            });
-        
-        if(showTimer) dispatcherTimer.Start();
-        
-        activeProcess.OutputDataReceived += (o, i) =>
-        {
-            if (string.IsNullOrEmpty(i.Data)) return;
-
-            if (outputAction != null)
-            {
-                outputAction(i.Data);
-                return;
-            }
-            
-            Dispatcher.UIThread.Post(() => _logger.Log(i.Data, ConsoleColor.Black, true));
-            output += i.Data + '\n';
-        };
-        activeProcess.ErrorDataReceived += (o, i) =>
-        {
-            if (string.IsNullOrEmpty(i.Data)) return;
-            
-            if (errorAction != null)
-            {
-                success = errorAction(i.Data);
-                return;
-            }
-            
-            success = false;
-            Dispatcher.UIThread.Post(() => _logger.Error(i.Data, null, true));
-            output += i.Data + '\n';
-        };
-
+        ApplicationProcess? key = null;
         try
         {
-            activeProcess.Start();
-            activeProcess.BeginOutputReadLine();
-            activeProcess.BeginErrorReadLine();
+            using var childProcess = ChildProcess.Start(startInfo);
+        
+            key = _applicationStateService.AddState(status, state, () => childProcess?.Kill());
+            
+            var start = DateTime.Now;
+        
+            var dispatcherTimer = showTimer ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
+                (sender, args) =>
+                {
+                    var time = DateTime.Now - start;
+                    key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
+                }) : null;
+        
+            dispatcherTimer?.Start();
 
-            await Task.Run(() => activeProcess.WaitForExit());
+            _ = ReadStreamAsync(childProcess.StandardOutput, line =>
+            {
+                if (outputAction != null)
+                {
+                    outputAction(line);
+                    return;
+                }
+                
+                Dispatcher.UIThread.Post(() => _logger.Log(line, ConsoleColor.Black, true));
+                output += line + '\n';
+            });
+            
+            _ = ReadStreamAsync(childProcess.StandardError, line =>
+            {
+                if (errorAction != null)
+                {
+                    errorAction(line);
+                    return;
+                }
+                
+                Dispatcher.UIThread.Post(() => _logger.Error(line));
+                output += line + '\n';
+            });
+            
+            await childProcess.WaitForExitAsync();
+            
+            dispatcherTimer?.Stop();
         }
         catch (Exception e)
         {
@@ -98,11 +99,32 @@ public class ChildProcessService : IChildProcessService
             success = false;
         }
 
-        dispatcherTimer.Stop();
-
-        if (key.Terminated) success = false;
-        _applicationStateService.RemoveState(key);
+        if (key != null)
+        {
+            if (key.Terminated) success = false;
+            _applicationStateService.RemoveState(key);
+        }
 
         return (success,output);
+    }
+
+    private static async Task ReadStreamAsync(Stream stream, Action<string> outputAction)
+    {
+        try
+        {
+            using var reader = new StreamReader(stream);
+            await Task.Run(() =>
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    if (!string.IsNullOrEmpty(line)) outputAction(line);
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }

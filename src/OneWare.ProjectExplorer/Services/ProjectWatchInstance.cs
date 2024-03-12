@@ -126,13 +126,6 @@ public class ProjectWatchInstance : IDisposable
 
             if (entry is null)
             {
-                //Ignore change if parent folder is not included
-                if (attributes.HasFlag(FileAttributes.Directory))
-                {
-                    var parentPath = Path.GetDirectoryName(path);
-                    if (parentPath != null && !_root.IsPathIncluded(parentPath)) return;
-                }
-                
                 if (_projectExplorerService.Projects.FirstOrDefault(x =>
                         x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is { } root and ISavable savable)
                 {

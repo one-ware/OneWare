@@ -56,9 +56,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
             return;
         }
         
-        if (!IsPathIncluded(relativePath)) return;
-        
-        AddFile(relativePath);
+        if (IsPathIncluded(relativePath)) AddFile(relativePath);
     }
 
     public string? GetProjectProperty(string name)

@@ -11,7 +11,7 @@ using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
-public abstract class ProjectViewModelBase : ExtendedTool
+public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKey)
 {
     public bool EnableDragDrop = true;
 
@@ -29,11 +29,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
 
-    protected ProjectViewModelBase(string iconKey) : base(iconKey)
-    {
-        
-    }
-    
     public virtual void Insert(IProjectRoot entry)
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
@@ -41,21 +36,17 @@ public abstract class ProjectViewModelBase : ExtendedTool
             ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
             return;
         }
-            
-        //TODO
-        var inserted = false;
-        //FIND CORRECT INDEX IN ITEMS FOR INSERTION
+        
         for (var i = 0; i < Projects.Count; i++)
-            if (Projects[i] is not IProjectFolder)
-                if (Projects[i] is not IProjectFolder ||
-                    string.CompareOrdinal(entry.Header, Projects[i].Header) <= 0)
-                {
-                    Projects.Insert(i, entry);
-                    inserted = true;
-                    break;
-                }
+        {
+            if (string.CompareOrdinal(entry.Header, Projects[i].Header) <= 0)
+            {
+                Projects.Insert(i, entry);
+                return;
+            }
+        }
 
-        if (!inserted) Projects.Add(entry);
+        Projects.Add(entry);
     }
 
     #region Searching, Sort and Binding
