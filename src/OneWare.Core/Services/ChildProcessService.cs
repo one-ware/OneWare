@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
 using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -8,17 +8,12 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
-public class ChildProcessService : IChildProcessService
+public class ChildProcessService(ILogger logger, IApplicationStateService applicationStateService)
+    : IChildProcessService
 {
-    private readonly ILogger _logger;
-    private readonly IApplicationStateService _applicationStateService;
-    
-    public ChildProcessService(ILogger logger, IApplicationStateService applicationStateService)
-    {
-        _logger = logger;
-        _applicationStateService = applicationStateService;
-    }
-    
+    private const int OutputSpeed = 10;
+    private readonly TimeSpan _outputInterval = TimeSpan.FromMilliseconds(1);
+
     private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, IReadOnlyCollection<string> arguments)
     {
         return new ChildProcessStartInfo()
@@ -29,6 +24,7 @@ public class ChildProcessService : IChildProcessService
             StdOutputRedirection = OutputRedirection.OutputPipe,
             StdInputRedirection = InputRedirection.NullDevice,
             StdErrorRedirection = OutputRedirection.ErrorPipe,
+            
         };
     }
     
@@ -41,7 +37,7 @@ public class ChildProcessService : IChildProcessService
             if (x.Contains(' ')) return $"\"{x}\"";
             return x;
         }));
-        _logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
+        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
 
         var output = string.Empty;
         
@@ -50,65 +46,96 @@ public class ChildProcessService : IChildProcessService
         ApplicationProcess? key = null;
         try
         {
+            ConcurrentQueue<string?> errorCollector = new();
+            ConcurrentQueue<string?> outputCollector = new();
+            
+            var tokenSource = new CancellationTokenSource();
+            
             using var childProcess = ChildProcess.Start(startInfo);
         
-            key = _applicationStateService.AddState(status, state, () => childProcess?.Kill());
+            key = applicationStateService.AddState(status, state, () => tokenSource.Cancel());
             
             var start = DateTime.Now;
         
-            var dispatcherTimer = showTimer ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
-                (sender, args) =>
+            var statusTimer = showTimer ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
+                (_, _) =>
                 {
                     var time = DateTime.Now - start;
                     key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
                 }) : null;
         
-            dispatcherTimer?.Start();
+            statusTimer?.Start();
+            
+            var collectorTimer = new DispatcherTimer(_outputInterval, DispatcherPriority.Default,
+                (_, _) =>
+                {
+                    for (var i = 0; i < OutputSpeed; i++)
+                    {
+                        if (outputCollector.TryDequeue(out var outputLine))
+                        {
+                            if (outputLine == null) return;
+                        
+                            if (outputAction != null)
+                            {
+                                outputAction(outputLine);
+                                return;
+                            }
 
-            _ = ReadStreamAsync(childProcess.StandardOutput, line =>
+                            logger.Log(outputLine, ConsoleColor.Black, true);
+                            output += outputLine + '\n';
+                        }
+                    
+                        if (errorCollector.TryDequeue(out var errorLine))
+                        {
+                            if (errorLine == null) return;
+                        
+                            if (errorAction != null)
+                            {
+                                errorAction(errorLine);
+                                return;
+                            }
+
+                            logger.Error(errorLine);
+                            output += errorLine + '\n';
+                        }
+                    }
+                });
+
+            collectorTimer.Start();
+
+            _ = CollectOutputFromStreamAsync(childProcess.StandardOutput, outputCollector);
+            _ = CollectOutputFromStreamAsync(childProcess.StandardError, errorCollector);
+            
+            await childProcess.WaitForExitAsync(tokenSource.Token);
+            
+            if(tokenSource.IsCancellationRequested)
+                childProcess.Kill();
+
+            //Delay until collector empty
+            while (!outputCollector.IsEmpty || !errorCollector.IsEmpty)
             {
-                if (outputAction != null)
-                {
-                    outputAction(line);
-                    return;
-                }
-                
-                Dispatcher.UIThread.Post(() => _logger.Log(line, ConsoleColor.Black, true));
-                output += line + '\n';
-            });
+                await Task.Delay(50);
+            }
             
-            _ = ReadStreamAsync(childProcess.StandardError, line =>
-            {
-                if (errorAction != null)
-                {
-                    errorAction(line);
-                    return;
-                }
-                
-                Dispatcher.UIThread.Post(() => _logger.Error(line));
-                output += line + '\n';
-            });
-            
-            await childProcess.WaitForExitAsync();
-            
-            dispatcherTimer?.Stop();
+            collectorTimer.Stop();
+            statusTimer?.Stop();
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            logger.Error(e.Message, e);
             success = false;
         }
 
         if (key != null)
         {
             if (key.Terminated) success = false;
-            _applicationStateService.RemoveState(key);
+            applicationStateService.RemoveState(key);
         }
 
         return (success,output);
     }
 
-    private static async Task ReadStreamAsync(Stream stream, Action<string> outputAction)
+    private static async Task CollectOutputFromStreamAsync(Stream stream, ConcurrentQueue<string?> collector)
     {
         try
         {
@@ -118,7 +145,7 @@ public class ChildProcessService : IChildProcessService
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
-                    if (!string.IsNullOrEmpty(line)) outputAction(line);
+                    collector.Enqueue(line);
                 }
             });
         }
