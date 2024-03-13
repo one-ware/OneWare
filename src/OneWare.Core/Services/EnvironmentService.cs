@@ -37,9 +37,7 @@ public class EnvironmentService : IEnvironmentService
             _ => ':'
         };
         
-        var paths = string.Join(pathSeparator, _paths);
-        
-        Console.WriteLine(InitialPath);
+        var paths = string.Join(pathSeparator, _paths.Select(x => x.Value));
         
         Environment.SetEnvironmentVariable("PATH", $"{paths}{pathSeparator}{InitialPath}");
     }
