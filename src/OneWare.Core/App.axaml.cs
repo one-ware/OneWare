@@ -66,6 +66,7 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<BackupService>();
             containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
             containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
+            containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
 
             //ViewModels - Singletons
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
