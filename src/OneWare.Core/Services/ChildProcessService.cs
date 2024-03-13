@@ -3,6 +3,7 @@ using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -30,6 +31,10 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
     public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Func<string, bool>? outputAction = null, Func<string, bool>? errorAction = null)
     {
         var success = true;
+
+        //var fullPath = PlatformHelper.GetFullPath(path);
+        //if(fullPath != null) 
+        //    PlatformHelper.ChmodFile(fullPath);
 
         var argumentString = string.Join(' ', arguments.Select(x =>
         {

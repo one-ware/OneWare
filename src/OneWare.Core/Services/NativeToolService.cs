@@ -89,8 +89,11 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
         return false;
     }
     
-    private Task<bool> DownloadNativeToolAsync(NativeTool tool, IProgress<float> progress)
+    private async Task<bool> DownloadNativeToolAsync(NativeTool tool, IProgress<float> progress)
     {
-        return httpService.DownloadAndExtractArchiveAsync(tool.Url, tool.FullPath, progress);
+        var result = await httpService.DownloadAndExtractArchiveAsync(tool.Url, tool.FullPath, progress);
+        if (!result) return false;
+        PlatformHelper.ChmodFolder(tool.FullPath);
+        return result;
     }
 }
