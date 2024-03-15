@@ -1,8 +1,10 @@
 ﻿namespace OneWare.Core.Extensions.TextMate;
 
-public class TextMateLanguage
+public class TextMateLanguage(string id, string grammarPath, params string[] extensions)
 {
-    public IEnumerable<string> Extensions { get; set; }
-    public string GrammarPath { get; set; }
-    public string Id { get; set; }
+    public string Id { get; } = id;
+    
+    public string GrammarPath { get; } = grammarPath;
+    
+    public IEnumerable<string> Extensions { get; } = extensions;
 }

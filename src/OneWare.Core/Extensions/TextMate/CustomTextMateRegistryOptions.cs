@@ -17,12 +17,7 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 
     public void RegisterLanguage(string id, string grammarPath, params string[] extensions)
     {
-        _availableLanguages.Add(new TextMateLanguage()
-        {
-            Id = id,
-            GrammarPath = grammarPath,
-            Extensions = extensions
-        });
+        _availableLanguages.Add(new TextMateLanguage(id, grammarPath, extensions));
     }
 
     public void RegisterExtensionLink(string source, string target)
