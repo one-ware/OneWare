@@ -39,7 +39,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     private IProjectRoot? _activeProject;
 
-    private readonly List<Func<IList<IProjectExplorerNode>, IEnumerable<MenuItemViewModel>?>> _registerContextMenu =
+    private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
         new();
 
     private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
@@ -165,7 +165,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             foreach (var reg in _registerContextMenu)
             {
-                if (reg.Invoke(SelectedItems) is { } items) menuItems.AddRange(items);
+                reg.Invoke(SelectedItems, menuItems);
             }
 
             if (item is IProjectRoot root)
@@ -261,7 +261,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             foreach (var reg in _registerContextMenu)
             {
-                if (reg.Invoke(SelectedItems) is { } items) menuItems.AddRange(items);
+                reg.Invoke(SelectedItems, menuItems);
             }
         }
 
@@ -859,8 +859,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
 
-    public void RegisterConstructContextMenu(
-        Func<IList<IProjectExplorerNode>, IEnumerable<MenuItemViewModel>?> construct)
+    public void RegisterConstructContextMenu(Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct)
     {
         _registerContextMenu.Add(construct);
     }
