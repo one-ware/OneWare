@@ -216,7 +216,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public IProjectEntry? SearchName(string path)
     {
-        if (path == "") return this;
+        if (path is "" or ".") return this;
         
         foreach (var i in Entities)
         {
