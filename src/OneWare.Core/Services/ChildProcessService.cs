@@ -82,6 +82,7 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
                             if (outputAction != null)
                             {
                                 outputAction(outputLine);
+                                output += outputLine + '\n';
                                 return;
                             }
 
@@ -96,6 +97,7 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
                             if (errorAction != null)
                             {
                                 errorAction(errorLine);
+                                output += errorLine + '\n';
                                 return;
                             }
 
