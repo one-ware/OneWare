@@ -3,13 +3,12 @@ using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
-public class ChildProcessService(ILogger logger, IApplicationStateService applicationStateService)
+public class ChildProcessService(ILogger logger, IApplicationStateService applicationStateService, IOutputService outputService)
     : IChildProcessService
 {
     private const int OutputSpeed = 10;
@@ -86,7 +85,7 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
                                 return;
                             }
 
-                            logger.Log(outputLine, ConsoleColor.Black, true);
+                            outputService.WriteLine(outputLine);
                             output += outputLine + '\n';
                         }
                     
