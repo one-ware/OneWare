@@ -73,7 +73,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
 
         foreach (var r in SearchResult)
         {
-            r.Background = Application.Current?.FindResource(ThemeVariant.Dark,"HighlightBrush") as IBrush ?? Brushes.Transparent;
+            r.Background = Application.Current?.FindResource(ThemeVariant.Dark,"SearchResultBrush") as IBrush ?? Brushes.Transparent;
             ExpandToRoot(r);
         }
     }
@@ -83,23 +83,6 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
         if (node.Parent == null || node is IProjectRoot) return;
         node.Parent.IsExpanded = true;
         ExpandToRoot(node.Parent);
-    }
-
-    public IProjectEntry? DeepSearch(string path)
-    {
-        foreach (var i in Projects)
-        {
-            if (path.IndexOf(i.RelativePath, StringComparison.OrdinalIgnoreCase) >= 0 &&
-                path.Length == i.RelativePath.Length) return i;
-
-            if (i is IProjectFolder folder)
-            {
-                var pe = folder.SearchName(path);
-                if (pe != null) return pe;
-            }
-        }
-
-        return null;
     }
 
     public IProjectEntry? SearchName(string path, bool recursive = true)
