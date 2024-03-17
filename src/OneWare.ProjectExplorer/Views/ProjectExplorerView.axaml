@@ -108,7 +108,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Image Source="{Binding }" />
+                                            <Image Source="{Binding }" Height="16" Width="16" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
