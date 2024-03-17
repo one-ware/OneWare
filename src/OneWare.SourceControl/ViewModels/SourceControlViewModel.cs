@@ -148,7 +148,10 @@ namespace OneWare.SourceControl.ViewModels
             SetUserIdentityAsyncCommand = new AsyncRelayCommand<bool>(SetUserIdentityAsync);
 
             settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay")
-                .Subscribe(SetupTimer);
+                .Subscribe(SetupFetchTimer);
+            
+            settingsService.GetSettingObservable<int>("SourceControl_PollChangesDelay")
+                .Subscribe(SetupPollTimer);
 
             projectExplorerService
                 .WhenValueChanged(x => x.ActiveProject)
@@ -194,7 +197,7 @@ namespace OneWare.SourceControl.ViewModels
 
             await Task.Delay(200);
 
-            var startFilePath = await StorageProviderHelper.SelectFilesAsync(_dockService.GetWindowOwner(this),
+            var startFilePath = await StorageProviderHelper.SelectFilesAsync(_dockService.GetWindowOwner(this)!,
                 "Open Project from cloned repository",
                 folder);
 
@@ -356,17 +359,30 @@ namespace OneWare.SourceControl.ViewModels
 
         #region General
 
-        public void SetupTimer(int seconds)
+        private void SetupFetchTimer(int seconds)
         {
             if (_timer != null && Math.Abs(_timer.Interval.TotalSeconds - seconds) < 1) return;
             _timer?.Stop();
-            _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, TimerCallback);
+            _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, FetchTimerCallback);
             _timer.Start();
         }
 
-        private void TimerCallback(object? sender, EventArgs args)
+        private void FetchTimerCallback(object? sender, EventArgs args)
         {
             if (_settingsService.GetSettingValue<bool>("SourceControl_AutoFetchEnable")) _ = FetchAsync();
+        }
+        
+        private void SetupPollTimer(int seconds)
+        {
+            if (_timer != null && Math.Abs(_timer.Interval.TotalSeconds - seconds) < 1) return;
+            _timer?.Stop();
+            _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, PollTimerCallback);
+            _timer.Start();
+        }
+
+        private void PollTimerCallback(object? sender, EventArgs args)
+        {
+            if (_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) _ = RefreshAsync();
         }
 
         public void ViewInProjectExplorer(IProjectEntry entry)

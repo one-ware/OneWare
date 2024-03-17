@@ -14,6 +14,7 @@ public class LoadingDummyNode : IProjectExplorerNode
     public IProjectExplorerNode? Parent { get; } = null;
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
     public ObservableCollection<IImage> IconOverlays { get; } = new();
+    public ObservableCollection<IImage> RightIcons { get; } = new();
     public bool IsExpanded { get; set; }
     public IBrush Background { get; set; } = Brushes.Transparent;
     public FontWeight FontWeight { get; set; }

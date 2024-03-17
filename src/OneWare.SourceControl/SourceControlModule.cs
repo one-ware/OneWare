@@ -28,8 +28,12 @@ public class SourceControlModule : IModule
         settingsService.RegisterSettingCategory("Team Explorer", 10, "VsImageLib.Team16X");
         settingsService.RegisterTitled("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable", 
             "Auto fetch", "Fetch for changed automatically", true);
-        settingsService.RegisterTitledCombo("Team Explorer", "Fetch", "SourceControl_AutoFetchDelay", 
-            "Auto fetch interval", "Interval in seconds", 60, 5, 10, 15, 30, 60);
+        settingsService.RegisterTitledSlider("Team Explorer", "Fetch", "SourceControl_AutoFetchDelay", 
+            "Auto fetch interval", "Interval in seconds", 60, 5, 60, 5);
+        settingsService.RegisterTitled("Team Explorer", "Polling", "SourceControl_PollChangesEnable", 
+            "Poll for changes", "Fetch for changed files automatically", true);
+        settingsService.RegisterTitledSlider("Team Explorer", "Polling", "SourceControl_PollChangesDelay", 
+            "Poll changes interval", "Interval in seconds", 5, 1, 60, 1);
         
         var dockService = containerProvider.Resolve<IDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);

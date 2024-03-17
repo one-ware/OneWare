@@ -50,9 +50,15 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         
         if (attributes.HasFlag(FileAttributes.Directory))
         {
-            var folder = AddFolder(relativePath);
-            ProjectHelper.ImportEntries(path, folder);
-            if(folder.Children.Count == 0) folder.TopFolder!.Remove(folder);
+            var relativePathParent = Path.GetDirectoryName(relativePath);
+            while (relativePathParent != null)
+            {
+                if (SearchRelativePath(relativePathParent) is ProjectFolder existingFolder)
+                {
+                    ProjectHelper.ImportEntries(path, existingFolder);
+                }
+                relativePathParent = Path.GetDirectoryName(relativePathParent);
+            }
             return;
         }
         
@@ -81,7 +87,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         Properties[name] = new JsonArray(values.Select(x => JsonValue.Create(x)).ToArray());
     }
 
-    protected void AddToProjectPropertyArray(string name, params string[] newItems)
+    public void AddToProjectPropertyArray(string name, params string[] newItems)
     {
         Properties.TryAdd(name, new JsonArray());
         foreach (var item in newItems)

@@ -565,7 +565,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         foreach (var path in paths)
         {
-            if (path == destination.FullPath) continue;
+            if (!copy && path == destination.FullPath) continue;
 
             try
             {
@@ -573,10 +573,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
                     var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameDirectory();
-                    if (askForInclude)
-                        if (!await AskForIncludeDialogAsync(destination.Root,
-                                Path.GetRelativePath(destination.Root.FullPath, destPath)))
-                            return;
+                    // if (askForInclude)
+                    //     if (!await AskForIncludeDialogAsync(destination.Root,
+                    //             Path.GetRelativePath(destination.Root.FullPath, destPath)))
+                    //         return;
                     if (copy) PlatformHelper.CopyDirectory(path, destPath);
                     else Directory.Move(path, destPath);
                 }
@@ -584,9 +584,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 {
                     var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameFile();
                     if (askForInclude)
-                        if (!await AskForIncludeDialogAsync(destination.Root,
-                                Path.GetRelativePath(destination.Root.FullPath, destPath)))
-                            return;
+                        await AskForIncludeDialogAsync(destination.Root,
+                            Path.GetRelativePath(destination.Root.FullPath, destPath));
                     if (copy) PlatformHelper.CopyFile(path, destPath);
                     else File.Move(path, destPath);
                 }
@@ -744,17 +743,25 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            var files = (await items
+            var storageItems = (await items
                     .Where(x => x is IProjectEntry)
                     .Cast<IProjectEntry>()
-                    .SelectAsync(async x => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath)))
+                    .SelectAsync<IProjectEntry, IStorageItem?>(async x =>
+                    {
+                        return x switch
+                        {
+                            IProjectFile => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath),
+                            IProjectFolder => await topLevel.StorageProvider.TryGetFolderFromPathAsync(x.FullPath),
+                            _ => null
+                        };
+                    }))
                 .Where(x => x != null)
-                .Cast<IStorageFile>()
+                .Cast<IStorageItem>()
                 .ToArray();
 
-            if (!files.Any()) return null;
+            if (!storageItems.Any()) return null;
 
-            dataObject.Set(DataFormats.Files, files);
+            dataObject.Set(DataFormats.Files, storageItems);
         }
         else
         {

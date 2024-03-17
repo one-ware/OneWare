@@ -15,16 +15,16 @@ namespace OneWare.ProjectSystem.Models;
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
-    
-    protected readonly ObservableCollection<IProjectEntry> _entities = new();
-    public ReadOnlyObservableCollection<IProjectEntry> Entities { get; }
+    public ObservableCollection<IProjectEntry> Entities { get; } = new();
 
     public IProjectExplorerNode? Parent => TopFolder;
     
     public IProjectFolder? TopFolder { get; set; }
     
     public ObservableCollection<IImage> IconOverlays { get; } = new();
-    
+
+    public ObservableCollection<IImage> RightIcons { get; } = new();
+
     private IBrush _background = Brushes.Transparent;
     public IBrush Background
     {
@@ -134,8 +134,6 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     {
         _name = name;
         TopFolder = topFolder;
-        
-        Entities = new ReadOnlyObservableCollection<IProjectEntry>(_entities);
     }
     
     public virtual IEnumerable<MenuItemViewModel> GetContextMenu(IProjectExplorerService projectExplorerService)
@@ -144,7 +142,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         {
             Header = "Open in File Viewer",
             Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(FullPath)),
-            IconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
+            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
             Priority = 1000
         };
     }

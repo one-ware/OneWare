@@ -61,7 +61,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (!inserted) Children.Add(entry);
         entry.TopFolder = this;
         
-        _entities.Add(entry);
+        Entities.Add(entry);
         (entry.Root as ProjectRoot)?.RegisterEntry(entry);
     }
 
@@ -84,7 +84,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         (entry.Root as ProjectRoot)?.UnregisterEntry(entry);
         Children.Remove(entry);
-        _entities.Remove(entry);
+        Entities.Remove(entry);
 
         //Collapse folder if empty
         if (Children.Count == 0) IsExpanded = false;
@@ -185,7 +185,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             return created.AddFolder(path.Remove(0, folderParts[0].Length + 1), createNew);
         }
 
-        if (!createNew && SearchRelativePath(path, false) is ProjectFolder existingFolder)
+        if (!createNew && SearchName(path, false) is ProjectFolder existingFolder)
         {
             return existingFolder;
         }
@@ -217,9 +217,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public IProjectEntry? SearchName(string path, bool recursive = true)
     {
-        if (path.EqualPaths(Name))
-            return this;
-        
         foreach (var i in Entities)
         {
             if (path.Equals(i.Name, StringComparison.OrdinalIgnoreCase)) return i;
@@ -235,9 +232,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public IProjectEntry? SearchRelativePath(string path, bool recursive = true)
     {
-        if (path.EqualPaths(RelativePath))
-            return this;
-        
         foreach (var i in Entities)
         {
             if (path.EqualPaths(i.RelativePath)) return i;
@@ -253,9 +247,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public IProjectEntry? SearchFullPath(string path, bool recursive = true)
     {
-        if (path.EqualPaths(FullPath))
-            return this;
-        
         foreach (var i in Entities)
         {
             if (path.EqualPaths(i.FullPath)) return i;
