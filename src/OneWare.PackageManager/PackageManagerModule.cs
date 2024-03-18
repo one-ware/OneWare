@@ -6,6 +6,7 @@ using OneWare.PackageManager.Views;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.PackageManager.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -15,6 +16,7 @@ public class PackageManagerModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
+        containerRegistry.RegisterSingleton<IPackageService, PackageService>();
         containerRegistry.RegisterSingleton<PackageManagerViewModel>();
     }
 

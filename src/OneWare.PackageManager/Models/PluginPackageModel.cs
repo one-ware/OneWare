@@ -1,11 +1,11 @@
+﻿using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using OneWare.PackageManager.Enums;
 using OneWare.PackageManager.Serializer;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
 
-namespace OneWare.PackageManager.ViewModels;
+namespace OneWare.PackageManager.Models;
 
-public class PluginPackageViewModel : PackageViewModel
+public class PluginPackageModel : PackageModel
 {
     private readonly IPluginService _pluginService;
     
@@ -33,14 +33,14 @@ public class PluginPackageViewModel : PackageViewModel
 
     private bool _needRestart;
     
-    public PluginPackageViewModel(Package package, IHttpService httpService, IPaths paths, ILogger logger, IPluginService pluginService) : 
-        base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger)
+    public PluginPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths, IPluginService pluginService) 
+        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger)
     {
         _pluginService = pluginService;
         
         Plugin = _pluginService.InstalledPlugins.FirstOrDefault(x => x.Id == package.Id);
     }
-    
+
     protected override void Install()
     {
         //Load Plugin

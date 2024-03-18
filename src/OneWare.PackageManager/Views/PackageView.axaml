@@ -15,7 +15,7 @@
 
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="12">
-            <TextBlock Text="{Binding Package.Name}" FontSize="18" FontWeight="Bold" />
+            <TextBlock Text="{Binding PackageModel.Package.Name}" FontSize="18" FontWeight="Bold" />
             <ItemsControl ItemsSource="{Binding Links}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -31,10 +31,10 @@
             </ItemsControl>
 
             <StackPanel Orientation="Horizontal" Spacing="10">
-                
+
                 <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
                     <StackPanel Orientation="Horizontal">
-                        <ComboBox ItemsSource="{Binding Package.Versions}"
+                        <ComboBox ItemsSource="{Binding PackageModel.Package.Versions}"
                                   SelectedItem="{Binding SelectedVersion}"
                                   BorderThickness="0">
                             <ComboBox.ItemTemplate>
@@ -44,30 +44,30 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
-                   
+
                 </Border>
 
-       
-                <StackPanel Orientation="Horizontal" >
-                    <Button Content="{Binding PrimaryButtonText}" IsEnabled="{Binding PrimaryButtonEnabled}"
-                            Classes="RoundButton" Command="{Binding ExecuteMainButtonAsync }"
-                            Background="{Binding PrimaryButtonBrush}"/>
-                        
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="{Binding PrimaryButtonText}"
+                            Classes="RoundButton" Command="{Binding MainButtonCommand}"
+                            Background="{Binding PrimaryButtonBrush}" />
                     <Button>
                         <Button.Flyout>
                             <MenuFlyout>
-                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}"/>
+                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
                             </MenuFlyout>
                         </Button.Flyout>
-                        <Image Source="{DynamicResource Octicons.KebabVertical}" Width="12" Height="12"/>
+                        <Image Source="{DynamicResource Octicons.KebabVertical}" Width="12" Height="12" />
                     </Button>
                 </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding WarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Image Source="{DynamicResource VsImageLib.StatusWarning16X}" 
+
+                <StackPanel Orientation="Horizontal" Spacing="10"
+                            IsVisible="{Binding PackageModel.WarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                            Height="12" VerticalAlignment="Center"
-                           ToolTip.Tip="{Binding WarningText}"/>
-                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Incompatible"/>
+                           ToolTip.Tip="{Binding PackageModel.WarningText}" />
+                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Incompatible" />
                 </StackPanel>
             </StackPanel>
 
@@ -84,13 +84,14 @@
                 </ItemsControl.DataTemplates>
             </ItemsControl>
 
-            <ProgressBar IsIndeterminate="False" Value="{Binding Progress}" ShowProgressText="True" Maximum="1.0"
+            <ProgressBar IsIndeterminate="False" Value="{Binding PackageModel.Progress}" ShowProgressText="True"
+                         Maximum="1.0"
                          Height="24"
-                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
+                         IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>
 
-        <TabControl IsVisible="{Binding IsTabsResolved}" 
+        <TabControl IsVisible="{Binding IsTabsResolved}"
                     Margin="0 10 0 0" DockPanel.Dock="Top" ItemsSource="{Binding Tabs}">
             <TabControl.ItemTemplate>
                 <DataTemplate DataType="models:TabModel">
@@ -103,7 +104,7 @@
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>
-        
+
         <controls:Spinner Height="40" Width="40" IsVisible="{Binding !IsTabsResolved}" />
     </DockPanel>
 

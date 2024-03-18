@@ -14,9 +14,9 @@ public class NativeToolService(IHttpService httpService, ISettingsService settin
     
     private readonly object _lock = new();
     
-    public NativeToolContainer Register(string key)
+    public NativeToolContainer Register(string key, Version version)
     {
-        _nativeTools[key] = new NativeToolContainer(key, Path.Combine(paths.NativeToolsDirectory, key));
+        _nativeTools[key] = new NativeToolContainer(key, Path.Combine(paths.NativeToolsDirectory, key), version);
         return _nativeTools[key];
     }
 

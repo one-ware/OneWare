@@ -98,11 +98,11 @@ public class HttpService : IHttpService
     {
         var tempPath = Path.Combine(_paths.TempDirectory, Path.GetFileName(url));
         
-        if (Directory.Exists(location))
-        {
-            _logger.Error("Destination dir already exists");
-            return false;
-        }
+        //if (Directory.Exists(location))
+        //{
+        //    _logger.Error("Destination dir already exists");
+        //    return false;
+        //}
         
         try
         {
