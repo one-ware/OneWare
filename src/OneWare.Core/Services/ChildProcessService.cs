@@ -65,7 +65,7 @@ public class ChildProcessService(
     
     private async Task WaitForExitAsync(string path, IChildProcess childProcess)
     {
-        await childProcess.WaitForExitAsync();
+        await Task.Run(childProcess.WaitForExit);
         if (_childProcesses.TryGetValue(path, out var list))
         {
             list.Remove(childProcess);
