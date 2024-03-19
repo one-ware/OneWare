@@ -7,10 +7,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using ImTools;
-using OneWare.PackageManager.Enums;
+using OneWare.Essentials.Enums;
 using OneWare.PackageManager.Models;
-using OneWare.PackageManager.Serializer;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Packages;
 using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.ViewModels;
@@ -18,7 +19,6 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    private readonly ILogger _logger;
     
     private bool _resolveTabsStarted;
     private bool _resolveImageStarted;
@@ -93,11 +93,10 @@ public class PackageViewModel : ObservableObject
     
     public AsyncRelayCommand UpdateCommand { get; }
 
-    protected PackageViewModel(PackageModel packageModel, IHttpService httpService, ILogger logger)
+    protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
     {
         _packageModel = packageModel;
         _httpService = httpService;
-        _logger = logger;
 
         RemoveCommand = new AsyncRelayCommand(PackageModel.RemoveAsync, () => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
         
@@ -175,7 +174,15 @@ public class PackageViewModel : ObservableObject
        ? await _httpService.DownloadImageAsync(PackageModel.Package.IconUrl)
        : null;
 
-        Image = icon;
+        if (icon == null)
+        {
+            var iconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularExtension");
+            iconObservable.Subscribe(x =>
+            {
+                Image = x as IImage;
+            });
+        }
+        else Image = icon;
     }
 
     public async Task ResolveTabsAsync()

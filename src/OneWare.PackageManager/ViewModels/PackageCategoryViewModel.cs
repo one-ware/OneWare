@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.PackageManager.Enums;
+using OneWare.Essentials.Enums;
+using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
@@ -34,6 +35,6 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
         if (!showAvailable) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Available);
 
         VisiblePackages.Clear();
-        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageModel.Package.Name));
+        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageModel is NativeToolPackageModel).ThenBy(x => x.PackageModel.Package.Name));
     }
 }

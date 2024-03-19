@@ -7,9 +7,9 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:views="clr-namespace:OneWare.PackageManager.Views"
-             xmlns:serializer="clr-namespace:OneWare.PackageManager.Serializer"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:enums="clr-namespace:OneWare.PackageManager.Enums"
+             xmlns:packages="clr-namespace:OneWare.Essentials.Packages;assembly=OneWare.Essentials"
+             xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
@@ -38,15 +38,13 @@
                                   SelectedItem="{Binding SelectedVersion}"
                                   BorderThickness="0">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="serializer:PackageVersion">
+                                <DataTemplate x:DataType="packages:PackageVersion">
                                     <TextBlock Text="{Binding Version}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
-
                 </Border>
-
 
                 <StackPanel Orientation="Horizontal">
                     <Button Content="{Binding PrimaryButtonText}"
@@ -78,7 +76,7 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.DataTemplates>
-                    <DataTemplate x:DataType="serializer:PackageTarget">
+                    <DataTemplate x:DataType="packages:PackageTarget">
                         <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     </DataTemplate>
                 </ItemsControl.DataTemplates>

@@ -1,7 +1,7 @@
-﻿using OneWare.Essentials.Models;
+﻿using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Packages;
 using OneWare.Essentials.Services;
-using OneWare.PackageManager.Enums;
-using OneWare.PackageManager.Serializer;
 
 namespace OneWare.PackageManager.Models;
 
@@ -33,15 +33,15 @@ public class PluginPackageModel : PackageModel
 
     private bool _needRestart;
     
-    public PluginPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths, IPluginService pluginService) 
-        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger)
+    public PluginPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths, IApplicationStateService applicationStateService, IPluginService pluginService) 
+        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger, applicationStateService)
     {
         _pluginService = pluginService;
         
         Plugin = _pluginService.InstalledPlugins.FirstOrDefault(x => x.Id == package.Id);
     }
 
-    protected override void Install()
+    protected override void Install(PackageTarget target)
     {
         //Load Plugin
         if (!_needRestart)

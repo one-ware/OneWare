@@ -9,7 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using OneWare.Core.Services;
 using Prism.Ioc;
-using OneWare.Essentials;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -25,7 +24,7 @@ namespace OneWare.Core.ViewModels.DockViews
         private static readonly IBrush ErrorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
         private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
         private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
-        
+
         private readonly IDockService _dockService;
         private readonly ILanguageManager _languageManager;
         private readonly ISettingsService _settingsService;
@@ -35,9 +34,9 @@ namespace OneWare.Core.ViewModels.DockViews
         private readonly BackupService _backupService;
 
         public bool DisableEditViewEvents { get; private set; }
-        
+
         private CompositeDisposable _composite = new();
-        
+
         public ExtendedTextEditor Editor { get; } = new();
 
         private ITypeAssistance? _typeAssistance;
@@ -51,16 +50,16 @@ namespace OneWare.Core.ViewModels.DockViews
         public TextDocument CurrentDocument => Editor.Document;
 
         public ScrollInfoContext ScrollInfo { get; } = new();
-        
+
 
         private IEnumerable<ErrorListItem>? _diagnostics;
-        
+
         public IEnumerable<ErrorListItem>? Diagnostics
         {
             get => _diagnostics;
             set => SetProperty(ref _diagnostics, value);
         }
-        
+
         public ObservableCollection<UiExtension> TopExtensions { get; }
         public ObservableCollection<UiExtension> BottomExtensions { get; }
 
@@ -68,7 +67,8 @@ namespace OneWare.Core.ViewModels.DockViews
 
         public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
             IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-            IProjectExplorerService projectExplorerService, IErrorService errorService, BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
+            IProjectExplorerService projectExplorerService, IErrorService errorService,
+            BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
         {
             _settingsService = settingsService;
             _dockService = dockService;
@@ -77,14 +77,14 @@ namespace OneWare.Core.ViewModels.DockViews
             _languageManager = languageManager;
             _errorService = errorService;
             _backupService = backupService;
-            
+
             TopExtensions = windowService.GetUiExtensions("EditView_Top");
             BottomExtensions = windowService.GetUiExtensions("EditView_Bottom");
-            
+
             Title = $"Loading {Path.GetFileName(fullPath)}";
 
             logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
-            
+
             Undo = new RelayCommand(() => Editor.Undo());
             Redo = new RelayCommand(() => Editor.Redo());
 
@@ -93,7 +93,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (CurrentFile?.Extension == s)
                     Dispatcher.UIThread.Post(() => UpdateCurrentFile(CurrentFile));
             };
-            
+
             this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
             {
                 List<ScrollInfoLine> scrollInfo = new();
@@ -101,7 +101,7 @@ namespace OneWare.Core.ViewModels.DockViews
                 if (_diagnostics != null)
                 {
                     Editor.MarkerService.SetDiagnostics(_diagnostics);
-                    
+
                     // Editor.ModificationService.SetModification("Errors", _diagnostics.Where(x => x.Type == ErrorType.Error).Select(b =>
                     // {
                     //     var off = b.GetOffset(Editor.Document);
@@ -110,7 +110,7 @@ namespace OneWare.Core.ViewModels.DockViews
                     //         Brush = _errorBrushText
                     //     };
                     // }).ToArray());
-                    
+
                     var errorLines = _diagnostics
                         .Where(b => b.Type is ErrorType.Error)
                         .Select(c => c.StartLine)
@@ -124,21 +124,21 @@ namespace OneWare.Core.ViewModels.DockViews
                     scrollInfo.AddRange(warningLines.Select(l => new ScrollInfoLine(l, WarningBrush)));
                     scrollInfo.AddRange(errorLines.Select(l => new ScrollInfoLine(l, ErrorBrush)));
                 }
-                
+
                 ScrollInfo.Refresh("ErrorContext", scrollInfo.ToArray());
                 Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
             });
-            
+
             _errorService.ErrorRefresh += (sender, o) =>
             {
-                if(CurrentFile != null && o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+                if (CurrentFile != null && o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
             };
         }
-        
+
         protected override void UpdateCurrentFile(IFile? oldFile)
         {
             Reset();
-            
+
             if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
 
             Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
@@ -150,14 +150,15 @@ namespace OneWare.Core.ViewModels.DockViews
                 DisableEditViewEvents = CurrentDocument.TextLength > 100000;
                 if (DisableEditViewEvents)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning("Some features are disabled for this large file to reduce performance loss");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        .Warning("Some features are disabled for this large file to reduce performance loss");
                 }
                 else
                 {
                     var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
                     if (scope != null)
                     {
-                        if(Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
+                        if (Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
                         Editor.TextMateInstallation?.SetGrammar(scope);
                         _languageManager.WhenValueChanged(x => x.CurrentEditorTheme).Subscribe(x =>
                         {
@@ -171,22 +172,23 @@ namespace OneWare.Core.ViewModels.DockViews
                             Editor.RemoveTextmate();
                         }
                     }
-                
+
                     Observable.FromEventPattern(
                             h => Editor.Document.TextChanged += h,
                             h => Editor.Document.TextChanged -= h)
                         .Subscribe(x => { IsDirty = true; }).DisposeWith(_composite);
-                
-                    if(result) InitTypeAssistance();
+
+                    if (result) InitTypeAssistance();
                 }
             }
+
             _ = OnInitialized();
         }
 
         private void InitTypeAssistance()
         {
-            if(CurrentFile == null) return;
-            
+            if (CurrentFile == null) return;
+
             TypeAssistance = _languageManager.GetTypeAssistance(this);
 
             if (TypeAssistance != null)
@@ -200,13 +202,13 @@ namespace OneWare.Core.ViewModels.DockViews
                         Editor.SetEnableFolding(x);
                         if (x) UpdateFolding();
                     }).DisposeWith(_composite);
-                    
+
                     Observable.FromEventPattern(
                             h => Editor.Document.LineCountChanged += h,
                             h => Editor.Document.LineCountChanged -= h)
                         .Subscribe(x => { UpdateFolding(); }).DisposeWith(_composite);
                 }
-                
+
                 // Observable.FromEventPattern(
                 //         h => TypeAssistance.AssistanceActivated += h,
                 //         h => TypeAssistance.AssistanceActivated -= h)
@@ -215,11 +217,14 @@ namespace OneWare.Core.ViewModels.DockViews
                 //         
                 //     });
                 //
-                // Observable.FromEventPattern(
-                //         h => TypeAssistance.AssistanceDeactivated += h,
-                //         h => TypeAssistance.AssistanceDeactivated -= h)
-                //     .Subscribe(x => {  });
-                
+                Observable.FromEventPattern(
+                        h => TypeAssistance.AssistanceDeactivated += h,
+                        h => TypeAssistance.AssistanceDeactivated -= h)
+                    .Subscribe(x =>
+                    {
+                        
+                    }).DisposeWith(_composite);
+
                 TypeAssistance.Open();
             }
         }
@@ -303,7 +308,7 @@ namespace OneWare.Core.ViewModels.DockViews
         public override async Task<bool> SaveAsync()
         {
             if (IsReadOnly || CurrentFile == null) return true;
-            
+
             try
             {
                 await PlatformHelper.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
@@ -316,14 +321,14 @@ namespace OneWare.Core.ViewModels.DockViews
 
             ContainerLocator.Container.Resolve<ILogger>()
                 ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
-            
+
             IsDirty = false;
             CurrentFile.LastSaveTime = DateTime.Now;
             CurrentFile.LoadingFailed = false;
             LoadingFailed = false;
-            
+
             FileSaved?.Invoke(this, EventArgs.Empty);
-            
+
             return true;
         }
 
@@ -332,13 +337,13 @@ namespace OneWare.Core.ViewModels.DockViews
             if (CurrentFile == null) return false;
 
             IsLoading = true;
-            
+
             var success = true;
             try
             {
                 await using var stream = File.OpenRead(CurrentFile.FullPath);
                 using var reader = new StreamReader(stream);
-                
+
                 var doc = await Task.Run(() =>
                 {
                     var d = new TextDocument(reader.ReadToEnd());
@@ -349,26 +354,26 @@ namespace OneWare.Core.ViewModels.DockViews
                 doc.SetOwnerThread(Thread.CurrentThread);
 
                 Editor.Document = doc;
-                
+
                 CurrentFile.LastSaveTime = File.GetLastWriteTime(CurrentFile.FullPath);
-                
+
                 CurrentDocument.UndoStack.ClearAll();
             }
             catch (Exception e)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
                     ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
-                
+
                 success = false;
             }
-            
+
             IsLoading = false;
             CurrentFile.LoadingFailed = !success;
             LoadingFailed = !success;
             IsDirty = false;
-            
+
             if (success) _ = _backupService.SearchForBackupAsync(CurrentFile);
-            
+
             return success;
         }
 
@@ -378,7 +383,7 @@ namespace OneWare.Core.ViewModels.DockViews
         {
             TypeAssistance?.AutoIndent();
         }
-        
+
         public void Format()
         {
             TypeAssistance?.Format();

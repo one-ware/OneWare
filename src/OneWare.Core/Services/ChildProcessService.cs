@@ -8,11 +8,16 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
-public class ChildProcessService(ILogger logger, IApplicationStateService applicationStateService, IOutputService outputService)
+public class ChildProcessService(
+    ILogger logger,
+    IApplicationStateService applicationStateService,
+    IOutputService outputService)
     : IChildProcessService
 {
     private const int OutputSpeed = 10;
     private readonly TimeSpan _outputInterval = TimeSpan.FromMilliseconds(1);
+
+    private readonly ConcurrentDictionary<string, List<IChildProcess>> _childProcesses = [];
 
     private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, IReadOnlyCollection<string> arguments)
     {
@@ -25,6 +30,47 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
             StdInputRedirection = InputRedirection.NullDevice,
             StdErrorRedirection = OutputRedirection.ErrorPipe,
         };
+    }
+
+    public IChildProcess StartChildProcess(ChildProcessStartInfo startInfo)
+    {
+        var process = ChildProcess.Start(startInfo);
+        var key = startInfo.FileName ?? "";
+        _childProcesses.TryAdd(key, []);
+        _childProcesses[key].Add(process);
+        _ = WaitForExitAsync(key, process);
+        return process;
+    }
+
+    public IEnumerable<IChildProcess> GetChildProcesses(string path)
+    {
+        if (_childProcesses.TryGetValue(path, out var list)) return list;
+        return Array.Empty<IChildProcess>();
+    }
+    
+    public void Kill(params IChildProcess[] childProcesses)
+    {
+        foreach (var childProcess in childProcesses)
+        {
+            try
+            {
+                childProcess.Kill();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message, e);
+            }
+        }
+    }
+    
+    private async Task WaitForExitAsync(string path, IChildProcess childProcess)
+    {
+        await childProcess.WaitForExitAsync();
+        if (_childProcesses.TryGetValue(path, out var list))
+        {
+            list.Remove(childProcess);
+            if (list.Count == 0) _childProcesses.Remove(path, out _);
+        }
     }
     
     public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Func<string, bool>? outputAction = null, Func<string, bool>? errorAction = null)
@@ -54,7 +100,7 @@ public class ChildProcessService(ILogger logger, IApplicationStateService applic
             
             var tokenSource = new CancellationTokenSource();
             
-            using var childProcess = ChildProcess.Start(startInfo);
+            var childProcess = StartChildProcess(startInfo);
         
             key = applicationStateService.AddState(status, state, () => tokenSource.Cancel());
             

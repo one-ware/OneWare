@@ -5,9 +5,8 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.PackageManager.Enums;
+using OneWare.Essentials.Models;
 using OneWare.PackageManager.Models;
-using OneWare.PackageManager.Serializer;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Services;
 using Prism.Ioc;
@@ -90,9 +89,11 @@ public class PackageManagerViewModel : ObservableObject
             Application.Current!.GetResourceObservable("NiosIcon")));
         RegisterPackageCategory(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
+        RegisterPackageCategory(new PackageCategoryViewModel("Binaries",
+            Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
         RegisterPackageCategory(new PackageCategoryViewModel("Misc",
             Application.Current!.GetResourceObservable("Module")));
-
+        
         ConstructPackageViewModels();
         
         packageService.UpdateStarted += (_, _) =>
@@ -127,7 +128,7 @@ public class PackageManagerViewModel : ObservableObject
                 category.Remove(pkg);
             }
         }
-        foreach (var (key, packageModel) in _packageService.Packages)
+        foreach (var (_, packageModel) in _packageService.Packages)
         {
             try
             {
