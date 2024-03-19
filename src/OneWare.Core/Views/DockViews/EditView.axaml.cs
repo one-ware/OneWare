@@ -129,9 +129,11 @@ namespace OneWare.Core.Views.DockViews
             {
                 if (i.KeyModifiers != PlatformHelper.ControlKey) return;
                 var fontSize = _settingsService.GetSettingValue<int>("Editor_FontSize");
-                if (i.Delta.Y > 0) _settingsService.SetSettingValue("Editor_FontSize", fontSize + 1);
-                else _settingsService.SetSettingValue("Editor_FontSize", fontSize - 1);
-                ;
+                var newFontSize = i.Delta.Y > 0 ? fontSize + 1 : fontSize - 1;
+                if (newFontSize < 5) newFontSize = 5;
+                if (newFontSize > 50) newFontSize = 50;
+                _settingsService.SetSettingValue("Editor_FontSize", newFontSize);
+                
                 i.Handled = true;
             }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
         }
