@@ -7,9 +7,18 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageCategoryViewModel(string header, IObservable<object?>? iconObservable = null) : ObservableObject
 {
+    private bool _isExpanded = true;
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetProperty(ref _isExpanded, value);
+    }
+    
     public List<PackageViewModel> Packages { get; } = [];
     
     public ObservableCollection<PackageViewModel> VisiblePackages { get; } = [];
+
+    public ObservableCollection<PackageCategoryViewModel> SubCategories { get; } = [];
     
     public IObservable<object?>? IconObservable { get; } = iconObservable;
     
@@ -30,11 +39,17 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
     {
         var filtered =
             Packages.Where(x => x.PackageModel.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
-
+        
         if (!showInstalled) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Installed);
         if (!showAvailable) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Available);
+        
+        foreach (var subCategory in SubCategories)
+        {
+            subCategory.Filter(filter, showInstalled, showAvailable);
+            filtered = filtered.Concat(subCategory.VisiblePackages);
+        }
 
         VisiblePackages.Clear();
-        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageModel is NativeToolPackageModel).ThenBy(x => x.PackageModel.Package.Name));
+        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageModel.Package.Name));
     }
 }

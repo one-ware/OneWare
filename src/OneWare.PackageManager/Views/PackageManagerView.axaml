@@ -45,12 +45,17 @@
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                     CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottomLeft}"
                     Background="{DynamicResource ThemeControlLowBrush}">
-                <ListBox Padding="3" BorderThickness="0" Background="Transparent"
+                <TreeView Padding="3" BorderThickness="0" Background="Transparent"
                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-                    <ListBox.DataTemplates>
-                        <DataTemplate DataType="viewModels:PackageCategoryViewModel">
-                            <Grid ColumnDefinitions="Auto, Auto, *">
+                    <TreeView.Styles>
+                        <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel" ItemsSource="{Binding SubCategories}">
+                            <Grid ColumnDefinitions="Auto, Auto, *" Margin="2 5">
                                 <Image
                                     IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     VerticalAlignment="Center" Width="18"
@@ -60,9 +65,9 @@
                                            TextAlignment="Center" Text="{Binding VisiblePackages.Count}"
                                            Foreground="{DynamicResource ThemeBorderHighBrush}" />
                             </Grid>
-                        </DataTemplate>
-                    </ListBox.DataTemplates>
-                </ListBox>
+                        </TreeDataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
             </Border>
 
             <DockPanel Grid.Row="1" Grid.Column="1" Background="{DynamicResource ThemeBackgroundBrush}">

@@ -70,24 +70,17 @@ public class PackageManagerViewModel : ObservableObject
     {
         _packageService = packageService;
         _logger = logger;
-
-        PackageCategories.Add(new PackageCategoryViewModel("All"));
+        
+        PackageCategories.Add(new PackageCategoryViewModel("Plugins", Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
+        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Languages", Application.Current!.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
+        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Toolchains", Application.Current!.GetResourceObservable("FeatherIcons.Tool")));
+        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators", Application.Current!.GetResourceObservable("Material.Pulse")));
+        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Boards", Application.Current!.GetResourceObservable("NiosIcon")));
+        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
+        PackageCategories.Add(new PackageCategoryViewModel("Libraries", Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
+        PackageCategories.Add(new PackageCategoryViewModel("Binaries", Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
+        
         SelectedCategory = PackageCategories.First();
-
-        RegisterPackageCategory(new PackageCategoryViewModel("Languages",
-            Application.Current!.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Toolchains",
-            Application.Current!.GetResourceObservable("FeatherIcons.Tool")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Simulators",
-            Application.Current!.GetResourceObservable("Material.Pulse")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Boards",
-            Application.Current!.GetResourceObservable("NiosIcon")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Libraries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Binaries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
-        RegisterPackageCategory(new PackageCategoryViewModel("Misc",
-            Application.Current!.GetResourceObservable("Module")));
         
         ConstructPackageViewModels();
         
@@ -102,11 +95,6 @@ public class PackageManagerViewModel : ObservableObject
             IsLoading = false;
             ConstructPackageViewModels();
         };
-    }
-
-    private void RegisterPackageCategory(PackageCategoryViewModel categoryView)
-    {
-        PackageCategories.Add(categoryView);
     }
 
     public async Task RefreshPackagesAsync()
@@ -129,13 +117,27 @@ public class PackageManagerViewModel : ObservableObject
             {
                 var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(PackageModel), packageModel));
 
-                var category = PackageCategories.FirstOrDefault(x =>
-                    x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase)) ?? PackageCategories.Last();
+                var category = packageModel.Package.Type switch
+                {
+                    "Plugin" => PackageCategories[0],
+                    "Library" => PackageCategories[1],
+                    "NativeTool" => PackageCategories[2],
+                    _ => null
+                };
 
-                if (category != PackageCategories.First())
-                    PackageCategories.First().Add(model);
+                if (category == null) continue;
+                
+                var subCategory = category.SubCategories.FirstOrDefault(x =>
+                    x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
 
-                category.Add(model);
+                if (subCategory != null)
+                {
+                    subCategory.Add(model);
+                }
+                else
+                {
+                    category.Add(model);
+                }
             }
             catch (Exception e)
             {
