@@ -1,17 +1,14 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using ImTools;
 using OneWare.Essentials.Enums;
 using OneWare.PackageManager.Models;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Packages;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.ViewModels;

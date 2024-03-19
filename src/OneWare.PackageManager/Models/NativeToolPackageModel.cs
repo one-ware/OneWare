@@ -1,6 +1,6 @@
 ﻿using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Packages;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.Models;

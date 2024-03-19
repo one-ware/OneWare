@@ -8,8 +8,8 @@
              xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:views="clr-namespace:OneWare.PackageManager.Views"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:packages="clr-namespace:OneWare.Essentials.Packages;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+             xmlns:packageManager="clr-namespace:OneWare.Essentials.PackageManager;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
@@ -38,7 +38,7 @@
                                   SelectedItem="{Binding SelectedVersion}"
                                   BorderThickness="0">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="packages:PackageVersion">
+                                <DataTemplate x:DataType="packageManager:PackageVersion">
                                     <TextBlock Text="{Binding Version}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -76,7 +76,7 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.DataTemplates>
-                    <DataTemplate x:DataType="packages:PackageTarget">
+                    <DataTemplate x:DataType="packageManager:PackageTarget">
                         <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     </DataTemplate>
                 </ItemsControl.DataTemplates>

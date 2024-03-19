@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;

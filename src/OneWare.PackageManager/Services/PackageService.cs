@@ -1,10 +1,9 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
-using DynamicData;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Packages;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 using Prism.Ioc;

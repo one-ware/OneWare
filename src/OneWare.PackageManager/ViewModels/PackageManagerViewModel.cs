@@ -1,14 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Models;
-using OneWare.PackageManager.Models;
 using OneWare.Essentials.Services;
-using OneWare.PackageManager.Services;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
