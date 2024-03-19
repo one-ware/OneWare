@@ -33,6 +33,7 @@ public class NativeToolPackageModel(Package package, IHttpService httpService, I
                 var fullPath = Path.Combine(ExtractionFolder, shortCut.RelativePath);
                 settingsService.SetSettingValue(shortCut.SettingKey, "");
                 settingsService.SetSettingValue(shortCut.SettingKey, fullPath);
+                settingsService.Save(paths.SettingsPath);
             }
         }
         Status = PackageStatus.Installed;
