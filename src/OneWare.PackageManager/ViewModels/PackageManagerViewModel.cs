@@ -110,6 +110,13 @@ public class PackageManagerViewModel : ObservableObject
             {
                 category.Remove(pkg);
             }
+            foreach (var sub in category.SubCategories)
+            {
+                foreach (var pkg in sub.Packages.ToArray())
+                {
+                    sub.Remove(pkg);
+                }
+            }
         }
         foreach (var (_, packageModel) in _packageService.Packages)
         {
