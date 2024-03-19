@@ -1,4 +1,6 @@
-﻿using OneWare.Essentials.Enums;
+﻿using Microsoft.CodeAnalysis;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -8,6 +10,19 @@ namespace OneWare.PackageManager.Models;
 public class NativeToolPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths, ISettingsService settingsService, IApplicationStateService applicationStateService, IChildProcessService childProcessService)
     : PackageModel(package, "NativeTool", Path.Combine(paths.NativeToolsDirectory, package.Id!), httpService, logger, applicationStateService)
 {
+    protected override PackageTarget? SelectTarget(PackageVersion version)
+    {
+        var target = base.SelectTarget(version);
+
+        //If OSX-ARM64 is not available, try to use OSX-X64 to use with Rosetta
+        if (target == null && PlatformHelper.Platform is PlatformId.OsxArm64)
+        {
+            target = version.Targets?.FirstOrDefault(x => x.Target == "osx-x64");
+        }
+
+        return target;
+    }
+
     protected override void Install(PackageTarget target)
     {
         if (target.AutoSetting == null) return;
