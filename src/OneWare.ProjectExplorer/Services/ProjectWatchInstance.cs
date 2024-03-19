@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -126,13 +127,6 @@ public class ProjectWatchInstance : IDisposable
 
             if (entry is null)
             {
-                if (_projectExplorerService.Projects.FirstOrDefault(x =>
-                        x is IProjectRootWithFile rootWithFile && rootWithFile.ProjectFilePath == path) is { } root and ISavable savable)
-                {
-                    if (File.GetLastWriteTime(savable.FullPath) > savable.LastSaveTime)
-                        await _projectExplorerService.ReloadAsync(root);
-                }
-
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Renamed:
@@ -159,6 +153,13 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
+                        return;
+                    case WatcherChangeTypes.Changed:
+                        if (_root is ISavable savable && _root.ProjectPath.EqualPaths(path))
+                        {
+                            if (File.GetLastWriteTime(_root.FullPath) > savable.LastSaveTime)
+                                await _projectExplorerService.ReloadAsync(_root);
+                        }
                         return;
                     case WatcherChangeTypes.Deleted:
                         if(_root.SearchFullPath(path) is {} deletedEntry)
