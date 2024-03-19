@@ -147,7 +147,9 @@ public class PackageViewModel : ObservableObject
                 PrimaryButtonText = "Unavailable";
                 break;
             case PackageStatus.NeedRestart:
-                PrimaryButtonText = "Restart IDE";
+                PrimaryButtonText = "Restart Required";
+                MainButtonCommand = new AsyncRelayCommand(() => Task.CompletedTask, () => false);
+                primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlLowBrush");
                 break;
         }
             
