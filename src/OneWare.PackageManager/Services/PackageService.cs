@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
+using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -56,6 +57,11 @@ public class PackageService : IPackageService
         PackageRepositories.Add(url);
     }
 
+    public PackageModel? GetPackageModel(Package package)
+    {
+        return Packages.GetValueOrDefault(package.Id!);
+    }
+
     public void RegisterPackage(Package package)
     {
         StandalonePackages.Add(package);
@@ -107,7 +113,7 @@ public class PackageService : IPackageService
     {
         //Wait until all installs complete
         Task<bool>[] activeInstallTasks;
-        lock (_activeInstalls)
+        lock (_lock)
         {
             activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
         }
@@ -125,7 +131,7 @@ public class PackageService : IPackageService
 
         await WaitForInstallsAsync();
 
-        UpdateStarted?.Invoke(this, EventArgs.Empty);
+        Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
 
         _packageRegistrationSubscription?.Dispose();
         _packageRegistrationSubscription = new CompositeDisposable();
@@ -140,7 +146,7 @@ public class PackageService : IPackageService
             result = result && result2;
         }
 
-        UpdateEnded?.Invoke(this, EventArgs.Empty);
+        Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
 
         return result;
     }
