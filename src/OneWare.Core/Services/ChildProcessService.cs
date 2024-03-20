@@ -156,11 +156,16 @@ public class ChildProcessService(
 
             _ = CollectOutputFromStreamAsync(childProcess.StandardOutput, outputCollector);
             _ = CollectOutputFromStreamAsync(childProcess.StandardError, errorCollector);
-            
-            await childProcess.WaitForExitAsync(tokenSource.Token);
-            
-            if(tokenSource.IsCancellationRequested)
+
+            try
+            {
+                await childProcess.WaitForExitAsync(tokenSource.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!", ConsoleColor.DarkYellow, true, Brushes.DarkOrange);
                 childProcess.Kill();
+            }
 
             //Delay until collector empty
             while (!outputCollector.IsEmpty || !errorCollector.IsEmpty)
