@@ -66,7 +66,7 @@ public class PackageManagerViewModel : ObservableObject
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IPaths paths)
+    public PackageManagerViewModel(IPackageService packageService, ILogger logger)
     {
         _packageService = packageService;
         _logger = logger;

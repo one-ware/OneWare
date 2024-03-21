@@ -73,7 +73,9 @@ public class PackageService : IPackageService
         }
         else
         {
+            Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
             AddPackage(package);
+            Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
         }
     }
 
