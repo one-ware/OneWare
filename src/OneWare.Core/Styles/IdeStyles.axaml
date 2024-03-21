@@ -14,7 +14,8 @@
             <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="0" />
+            <Setter Property="Padding" Value="1" />
+            <Setter Property="CornerRadius" Value="3" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="Template">
@@ -72,7 +73,11 @@
         <Setter Property="Padding" Value="3 1" />
     </Style>
 
-    <Style Selector="CheckBox, ComboBox, TextBox, ComboBoxItem">
+    <Style Selector="ComboBox /template/ Popup > Border">
+        <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+    
+    <Style Selector="CheckBox, ComboBox, TextBox">
         <Setter Property="CornerRadius" Value="3" />
     </Style>
 
@@ -123,7 +128,7 @@
 
     <Style Selector="StackPanel.WindowButtons > Button, Button.RoundButton">
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="Height" Value="25" />
         <Setter Property="MinWidth" Value="60" />

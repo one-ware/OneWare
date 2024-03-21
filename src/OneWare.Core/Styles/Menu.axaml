@@ -46,6 +46,7 @@
 
     <Style Selector="Menu > MenuItem Border">
         <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
     </Style>
     
     <Style Selector="Menu > MenuItem AccessText">
@@ -85,4 +86,8 @@
         </Setter>
     </Style>
     
+    <Style Selector="ContextMenu">
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="3"/>
+    </Style>
 </Styles>

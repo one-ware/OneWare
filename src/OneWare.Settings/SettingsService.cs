@@ -36,7 +36,7 @@ public class SettingsService : ISettingsService
     public IObservable<T> Bind<T>(string key, IObservable<T> observable)
     {
         if(!Settings.TryGetValue(key, out var setting)) throw new ArgumentException($"Setting {key} is not registered!");;
-        observable.Subscribe(x => setting.Value = x!);
+        observable.Skip(1).Subscribe(x => setting.Value = x!);
         return GetSettingObservable<T>(key);
     }
 
@@ -103,9 +103,9 @@ public class SettingsService : ISettingsService
     public IObservable<T> GetSettingObservable<T>(string key)
     {
         Settings.TryGetValue(key, out var value);
-        if (value is Setting {Value: T} setting)
+        if (value != null)
         {
-            return setting.WhenValueChanged(x => x.Value)!.Cast<T>();
+            return value.WhenValueChanged(x => x.Value)!.Cast<T>();
         }
         throw new ArgumentException($"Setting {key} is not registered!");
     }
