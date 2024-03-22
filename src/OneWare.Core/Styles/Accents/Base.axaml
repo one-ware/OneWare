@@ -115,7 +115,6 @@
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
-            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
@@ -164,7 +163,6 @@
             
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
-            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#FFFFFF" />
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
@@ -214,7 +212,6 @@
             
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
             
-            <SolidColorBrush x:Key="IconColor" Opacity="1" Color="#424040" />
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
