@@ -39,6 +39,9 @@
                     <Border Height="20" Classes="SplitterBorder" Width="1" />
                     <TextBlock Text="Available" />
                     <CheckBox IsChecked="{Binding ShowAvailable}" />
+                    <Border Height="20" Classes="SplitterBorder" Width="1" />
+                    <TextBlock Text="Update" />
+                    <CheckBox IsChecked="{Binding ShowUpdate}" />
                 </StackPanel>
             </Border>
             <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" BorderThickness="0, 0, 1, 0"

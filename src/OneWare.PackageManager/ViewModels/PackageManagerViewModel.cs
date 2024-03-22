@@ -26,6 +26,18 @@ public class PackageManagerViewModel : ObservableObject
         }
     }
 
+    private bool _showUpdate = true;
+
+    public bool ShowUpdate
+    {
+        get => _showUpdate;
+        set
+        {
+            SetProperty(ref _showUpdate, value);
+            FilterPackages();
+        }
+    }
+    
     private bool _showAvailable = true;
 
     public bool ShowAvailable
@@ -158,7 +170,7 @@ public class PackageManagerViewModel : ObservableObject
     {
         foreach (var categoryModel in PackageCategories)
         {
-            categoryModel.Filter(Filter, _showInstalled, _showAvailable);
+            categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
         }
     }
 }
