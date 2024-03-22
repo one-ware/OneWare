@@ -29,7 +29,7 @@
     <Style Selector="cc|CompletionList">
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="1" Padding="1"
+                <Border Background="{DynamicResource ThemeBackgroundBrush}" CornerRadius="3" BorderThickness="1" Padding="1"
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}" IsVisible="{Binding $parent[cc:CompletionWindow].IsVisible}">
                     <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           VerticalAlignment="Stretch" Margin="0" Padding="0"
@@ -80,10 +80,11 @@
         <Setter Property="Padding" Value="2" />
         <Setter Property="MaxHeight" Value="350" />
         <Setter Property="MaxWidth" Value="700" />
+        <Setter Property="CornerRadius" Value="3"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Padding="{TemplateBinding Padding}" CornerRadius="1" BorderThickness="1"
+                    <Border Padding="{TemplateBinding Padding}" CornerRadius="{TemplateBinding CornerRadius}" BorderThickness="1"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             Background="{TemplateBinding Background}">
                         <md:MarkdownScrollViewer Markdown="{TemplateBinding Content}">
