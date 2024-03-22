@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Assets\SIGINT.exe" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Mono.Posix" Version="7.1.0-final.1.21458.1" />
+    </ItemGroup>
+    
+</Project>
