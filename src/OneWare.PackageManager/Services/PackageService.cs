@@ -89,17 +89,9 @@ public class PackageService : IPackageService
             "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
             _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
         };
-
-        if (installedVersion != null)
-        {
-            model.InstalledVersion = package.Versions!.First(x => x.Version == installedVersion);
-            model.Status = PackageStatus.Installed;
-        }
-        else
-        {
-            model.Status = PackageStatus.Available;
-        }
-
+        
+        model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
+        
         Packages.Add(package.Id, model);
 
         Observable.FromEventPattern(model, nameof(model.Installed))

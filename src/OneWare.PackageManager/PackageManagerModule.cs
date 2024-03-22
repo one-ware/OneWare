@@ -30,7 +30,7 @@ public class PackageManagerModule : IModule
             {
                 DataContext = containerProvider.Resolve<PackageManagerViewModel>()
             })),
-            IconObservable = Application.Current?.GetResourceObservable("PackageManager"),
+            IconObservable = Application.Current!.GetResourceObservable("PackageManager"),
         });
     }
 }

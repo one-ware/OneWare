@@ -35,17 +35,18 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
         VisiblePackages.Remove(model);
     }
 
-    public void Filter(string filter, bool showInstalled, bool showAvailable)
+    public void Filter(string filter, bool showInstalled, bool showAvailable, bool showUpdate)
     {
         var filtered =
             Packages.Where(x => x.PackageModel.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
         
         if (!showInstalled) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Installed);
         if (!showAvailable) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Available);
+        if (!showUpdate) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.UpdateAvailable);
         
         foreach (var subCategory in SubCategories)
         {
-            subCategory.Filter(filter, showInstalled, showAvailable);
+            subCategory.Filter(filter, showInstalled, showAvailable, showUpdate);
             filtered = filtered.Concat(subCategory.VisiblePackages);
         }
 
