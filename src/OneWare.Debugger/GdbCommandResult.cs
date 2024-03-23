@@ -53,7 +53,7 @@ namespace OneWare.Debugger
             }
         }
 
-        public CommandStatus Status { get; set; }
+        public CommandStatus Status { get; init; }
         public string? ErrorMessage { get; set; }
     }
 }

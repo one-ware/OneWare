@@ -47,7 +47,7 @@ public class ProjectExplorerModule : IModule
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
-                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X") 
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X") 
             });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
@@ -55,14 +55,14 @@ public class ProjectExplorerModule : IModule
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
-                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.NewFileCollection16X")
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
             });
         
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Project Explorer")
         {
             Header = "Project Explorer",
             Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
-            IconObservable = Application.Current?.GetResourceObservable(ProjectExplorerViewModel.IconKey),
+            IconObservable = Application.Current!.GetResourceObservable(ProjectExplorerViewModel.IconKey),
         });
     }
 }

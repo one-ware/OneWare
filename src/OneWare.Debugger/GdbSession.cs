@@ -24,12 +24,10 @@
 // THE SOFTWARE.
 
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Avalonia.Threading;
 using OneWare.Debugger.Helpers;
 using OneWare.Essentials.EditorExtensions;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -43,14 +41,11 @@ namespace OneWare.Debugger
         private readonly object _eventLock = new();
         private readonly object _gdbLock = new();
         private readonly object _syncLock = new();
-
-        protected int FreePort;
+        private readonly GdbCommandResult _timeout = new("") { Status = CommandStatus.Timeout };
 
         private Process? _process;
-        private Process? _serverProcess;
 
         private bool _running;
-        private bool _serverReady;
         private bool _clientReady;
 
         private CancellationTokenSource? _closeTokenSource;
@@ -58,8 +53,6 @@ namespace OneWare.Debugger
 
         private StreamWriter? _sIn;
         private StreamReader? _sOut;
-
-        private readonly bool _useServer = false;
         
         public event EventHandler<GdbEventArgs>? EventFired;
 
@@ -77,20 +70,10 @@ namespace OneWare.Debugger
             return true;
         }
 
-        protected virtual async Task<bool> ConnectAsync(bool download)
-        {
-            // var connect = await RunCommandAsync("-target-select", "remote",
-            //     (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"\\.\" : "") +
-            //     Global.Options.SelectedSerialPort);
-            return false; //connect.Status != CommandStatus.Timeout;
-        }
-
         public async Task<bool> RunAsync(bool download)
         {
             try
             {
-                FreePort = PlatformHelper.GetAvailablePort();
-
                 _closeTokenSource = new CancellationTokenSource();
 
                 if (!StartProcess() || _process == null) return false;
@@ -108,35 +91,19 @@ namespace OneWare.Debugger
                     return false;
                 }
 
-                _process.ErrorDataReceived += (o, i) => ProcessOutput(i.Data);
+                _process.ErrorDataReceived += (_, i) => ProcessOutput(i.Data);
 
-                if (_useServer)
-                {
-                    _serverProcess.OutputDataReceived += (o, i) =>
-                    {
-                        _serverReady = true;
-                        logger.Log(i.Data ?? "", ConsoleColor.Yellow);
-                    };
-                    _serverProcess.ErrorDataReceived +=
-                        (o, i) => OutputReceived?.Invoke(this, i.Data);
-                    _serverProcess.Exited += (o, i) => { _serverReady = false; };
-                }
-                else
-                {
-                    _serverReady = true;
-                }
-
-                _process.Exited += (o, i) =>
+                _process.Exited += (_, _) =>
                 {
                     _clientReady = false;
                     Dispatcher.UIThread.Post(() => { Exited?.Invoke(this, EventArgs.Empty); });
                 };
 
-                var timeout = 5000;
+                const int timeout = 5000;
 
                 async Task WhenReadyAsync()
                 {
-                    while (!_serverReady && !_clientReady) await Task.Delay(100);
+                    while (!_clientReady) await Task.Delay(100);
                 }
 
                 var task = WhenReadyAsync();
@@ -156,7 +123,7 @@ namespace OneWare.Debugger
 
                 await SetupSettingsAsync();
 
-                return await ConnectAsync(download);
+                return true;
             }
             catch (Exception e)
             {
@@ -165,7 +132,7 @@ namespace OneWare.Debugger
             }
         }
 
-        public virtual Task SetupSettingsAsync()
+        protected virtual Task SetupSettingsAsync()
         {
             return Task.CompletedTask;
         }
@@ -205,7 +172,7 @@ namespace OneWare.Debugger
 
         public void Stop()
         {
-            if (_process != null && !_process.HasExited)
+            if (_process is { HasExited: false })
             {
                 if (_running) Pause();
                 RunCommand("-gdb-exit", 500);
@@ -213,7 +180,6 @@ namespace OneWare.Debugger
 
             _closeTokenSource?.Cancel();
             _sIn?.Close();
-            _serverProcess?.Kill();
             _process?.Kill();
         }
 
@@ -274,7 +240,7 @@ namespace OneWare.Debugger
                     break;
 
                 case '*':
-                    GdbEvent? ev = null;
+                    GdbEvent? ev;
                     lock (_eventLock)
                     {
                         _running = line.StartsWith("*running");
@@ -342,7 +308,7 @@ namespace OneWare.Debugger
         }
 
 
-        private Task<GdbCommandResult?> RunCommandAsync(string command, params string[] args)
+        private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
         {
             return Task.Run(() => RunCommand(command, 10000, args));
         }
@@ -387,7 +353,7 @@ namespace OneWare.Debugger
                                 OutputReceived?.Invoke(this, "^error, GDB timed out");
                             }
 
-                            return _lastResult;
+                            return _lastResult ?? _timeout;
                         }
                         catch (Exception e)
                         {
@@ -397,10 +363,10 @@ namespace OneWare.Debugger
                             logger.Error(e.Message, e);
                         }
 
-                        return _lastResult;
+                        return _lastResult ?? _timeout;
                     }
 
-                    return null;
+                    return _timeout;
                 }
             }
         }

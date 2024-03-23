@@ -14,6 +14,7 @@ using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
+using OneWare.Debugger;
 using OneWare.ErrorList;
 using OneWare.FolderProjectSystem;
 using OneWare.ImageViewer;
@@ -264,7 +265,8 @@ namespace OneWare.Core
             moduleCatalog.AddModule<ImageViewerModule>();
             moduleCatalog.AddModule<JsonModule>();
             moduleCatalog.AddModule<TomlModule>();
-
+            moduleCatalog.AddModule<DebuggerModule>();
+            
             base.ConfigureModuleCatalog(moduleCatalog);
         }
 
