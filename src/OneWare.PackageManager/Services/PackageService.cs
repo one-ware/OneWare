@@ -148,11 +148,10 @@ public class PackageService : IPackageService
     private async Task<bool> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
         var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(1), cancellationToken);
-
+        if (repositoryString == null) return false;
+        
         try
         {
-            if (repositoryString == null) throw new NullReferenceException(nameof(repositoryString));
-
             var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
 
             if (repository is { Packages: not null })

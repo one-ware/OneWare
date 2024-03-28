@@ -625,11 +625,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (File.Exists(newPath)) throw new Exception($"File {newPath} does already exist!");
                 File.Move(oldPath, newPath);
                 file.LastSaveTime = DateTime.Now;
+                file.Name = newName;
             }
             else if (entry is IProjectFolder folder)
             {
                 if (Directory.Exists(newPath)) throw new Exception($"Folder {newPath} does already exist!");
                 Directory.Move(oldPath, newPath);
+                folder.Name = newName;
             }
         }
         catch (Exception e)

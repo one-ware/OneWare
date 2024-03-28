@@ -108,15 +108,15 @@ public class PluginService : IPluginService
                     }
 
                     if (coreDep.Version < minVersion)
-                        compatibilityIssues += $"{dep.Name} v{coreDep.Version} is older than min required v{minVersion}\n";
+                        compatibilityIssues += $"Studio {dep.Name} v{coreDep.Version} is older than min Plugin v{minVersion}\n";
                     if (coreDep.Version > maxVersion)
-                        compatibilityIssues += $"{dep.Name} v{coreDep.Version} is newer than max required v{maxVersion}\n";
+                        compatibilityIssues += $"Studio {dep.Name} v{coreDep.Version} is newer than max Plugin v{maxVersion}\n";
                 }
             }
 
             if (compatibilityIssues.Length > 0)
             {
-                compatibilityIssues = $"Extension {pluginName} incompatible:\n\n" + compatibilityIssues;
+                compatibilityIssues = $"Extension {pluginName} incompatible:\n" + compatibilityIssues;
                 return (false,compatibilityIssues);
             }
         }

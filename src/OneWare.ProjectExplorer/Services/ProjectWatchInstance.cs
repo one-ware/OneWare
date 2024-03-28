@@ -104,6 +104,10 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Renamed:
                     case WatcherChangeTypes.Changed:
+                        if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) && _root.SearchFullPath(rea.OldFullPath) is {} deleted)
+                        {
+                            await _projectExplorerService.RemoveAsync(deleted);
+                        }
                         if (entry is ISavable savable)
                         {
                             var lastWriteTime = File.GetLastWriteTime(savable.FullPath);

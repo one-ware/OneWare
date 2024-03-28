@@ -134,9 +134,9 @@ namespace OneWare.Core
                 "Interval the IDE uses to save files for backup", 30, 5, 10, 15, 30, 60, 120);
 
             settingsService.RegisterTitled("Editor", "External Changes", "Editor_DetectExternalChanges",
-                "Detect external changes", "", true);
+                "Detect external changes", "Detects changes that happen outside of the IDE", true);
             settingsService.RegisterTitled("Editor", "External Changes", "Editor_NotifyExternalChanges",
-                "Notify external changes", "", false);
+                "Notify external changes", "Notifies the user when external happen and ask for reload", false);
 
             //TypeAssistance
             settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",

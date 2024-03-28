@@ -74,6 +74,10 @@ public class HttpService : IHttpService
                     return new Bitmap(await download.Content.ReadAsStreamAsync(cancellationToken));
             }
         }
+        catch (HttpRequestException e)
+        {
+            _logger.Log(e, ConsoleColor.Yellow);
+        }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
@@ -96,6 +100,10 @@ public class HttpService : IHttpService
 
             return await download.Content.ReadAsStringAsync(cancellationToken);
         }
+        catch (HttpRequestException e)
+        {
+            _logger.Log(e, ConsoleColor.Yellow);
+        }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
@@ -112,11 +120,15 @@ public class HttpService : IHttpService
             await using var file = new FileStream(location, FileMode.Create, FileAccess.Write, FileShare.None);
             return await DownloadFileAsync(url, file, progress, timeout, cancellationToken);
         }
+        catch (HttpRequestException e)
+        {
+            _logger.Log(e, ConsoleColor.Yellow);
+        }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
-            return false;
         }
+        return false;
     }
 
     public async Task<bool> DownloadAndExtractArchiveAsync(string url, string location,
@@ -156,7 +168,9 @@ public class HttpService : IHttpService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            if(e is not HttpRequestException)
+                _logger.Error(e.Message, e);
+            else _logger.Log(e.Message, ConsoleColor.Yellow);
             try
             {
                 Directory.Delete(location);

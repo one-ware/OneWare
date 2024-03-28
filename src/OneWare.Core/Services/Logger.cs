@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using OneWare.Core.Data;
 using Prism.Ioc;
 using OneWare.Essentials;
@@ -66,17 +67,23 @@ public class Logger : ILogger
         bool showDialog = false, Window? dialogOwner = null)
     {
         Log(message + "\n" + exception, ConsoleColor.Red);
-
+        
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine("[Error]: " + message, Brushes.Red);
-            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            Dispatcher.UIThread.Post(() =>
+            {
+                ContainerLocator.Current.Resolve<IOutputService>().WriteLine("[Error]: " + message, Brushes.Red);
+                ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            });
         }
 
         if (showDialog)
         {
-            _ = ContainerLocator.Current.Resolve<IWindowService>()
-                .ShowMessageAsync("Error", message, MessageBoxIcon.Error, dialogOwner);
+            Dispatcher.UIThread.Post(() =>
+            {
+                _ = ContainerLocator.Current.Resolve<IWindowService>()
+                    .ShowMessageAsync("Error", message, MessageBoxIcon.Error, dialogOwner);
+            });
         }
     }
 

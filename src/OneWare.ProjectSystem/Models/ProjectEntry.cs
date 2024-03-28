@@ -51,7 +51,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     public IImage? Icon
     {
         get => _icon;
-        set => SetProperty(ref _icon, value);
+        protected set => SetProperty(ref _icon, value);
     }
 
     public string Header => Name;
@@ -63,6 +63,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set
         {
             SetProperty(ref _name, value);
+            OnPropertyChanged(nameof(Header));
             OnPropertyChanged(nameof(FullPath));
             OnPropertyChanged(nameof(RelativePath));
         }
