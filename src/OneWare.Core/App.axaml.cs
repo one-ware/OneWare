@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -274,15 +275,18 @@ namespace OneWare.Core
 
         public override void OnFrameworkInitializationCompleted()
         {
-            var mainWindow = Container.Resolve<MainWindow>();
-            mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                Position = NotificationPosition.TopRight,
-                Margin = new Thickness(0, 55, 5, 0),
-                BorderThickness = new Thickness(0),
-                MaxItems = 3
-            };
-            
+                var mainWindow = Container.Resolve<MainWindow>();
+                mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
+                {
+                    Position = NotificationPosition.TopRight,
+                    Margin = new Thickness(0, 55, 5, 0),
+                    BorderThickness = new Thickness(0),
+                    MaxItems = 3
+                };
+            }
+  
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
             Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
             
