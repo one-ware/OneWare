@@ -7,7 +7,7 @@ namespace OneWare.Core.Data
 {
     public static class Global
     {
-        public static string VersionCode => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
+        public static string VersionCode => Assembly.GetEntryAssembly()!.GetName().Version?.ToString() ?? "";
 
         #region FileDialogFilters
 
