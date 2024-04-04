@@ -30,7 +30,7 @@ public class FolderProjectSystemModule : IModule
             {
                 Header = "Folder",
                 Command = new RelayCommand(() => _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
-                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.OpenFolder16X")
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16X")
             });
     }
 }

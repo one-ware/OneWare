@@ -206,7 +206,7 @@ namespace OneWare.Core
             windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
             {
                 Command = new AsyncRelayCommand(
-                    () => Container.Resolve<IDockService>().CurrentDocument?.SaveAsync() ?? Task.FromResult(false), 
+                    () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(), 
                     () => Container.Resolve<IDockService>().CurrentDocument is not null),
                 Header = "Save Current",
                 InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),

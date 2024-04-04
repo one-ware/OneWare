@@ -17,7 +17,7 @@ namespace OneWare.ErrorList.Views
         
         private void Open_Error(object? sender, RoutedEventArgs e)
         {
-            (DataContext as ErrorListViewModel)?.GoToErrorAsync();
+            if(DataContext is ErrorListViewModel el) _ = el.GoToErrorAsync();
         }
     }
 }

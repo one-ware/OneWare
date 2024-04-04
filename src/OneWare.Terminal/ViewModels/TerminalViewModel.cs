@@ -95,7 +95,7 @@ namespace OneWare.Terminal.ViewModels
                             return;
                         }
                             
-                        Connection = new PsuedoTerminalConnection(terminal);
+                        Connection = new PseudoTerminalConnection(terminal);
 
                         Terminal = new VirtualTerminalController();
 

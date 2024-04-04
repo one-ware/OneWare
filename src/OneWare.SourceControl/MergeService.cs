@@ -34,7 +34,7 @@ namespace OneWare.SourceControl
 
             BorderPen = new Pen(Brushes.Transparent);
 
-            textEditor.TextChanged += (o, args) =>
+            textEditor.TextChanged += (_, _) =>
             {
                 Merges = GetMerges(textEditor.Document);
 
@@ -82,7 +82,7 @@ namespace OneWare.SourceControl
 
                     _textEditor.TextArea.TextView.Redraw();
 
-                    elementGenerator.Controls.Add(new Pair(merge.StartIndex + "<<<<<<< HEAD".Length, stack));
+                    elementGenerator.Controls.Add(new Pair(merge.StartIndex + "<<<<<<< HEAD".Length, stack)!);
                 }
             };
         }
@@ -182,14 +182,12 @@ namespace OneWare.SourceControl
         {
             var merges = new List<MergeEntry>();
 
-            if (document == null) return merges;
-
             //Search for merging
             var lastIndex = 0;
-            while (document.Text.IndexOf("<<<<<<< HEAD", lastIndex, StringComparison.Ordinal) is int sIndex &&
+            while (document.Text.IndexOf("<<<<<<< HEAD", lastIndex, StringComparison.Ordinal) is var sIndex &&
                    sIndex > 0 &&
-                   document.Text.IndexOf("=======", sIndex, StringComparison.Ordinal) is int mIndex && mIndex > 0 &&
-                   document.Text.IndexOf(">>>>>>>", mIndex, StringComparison.Ordinal) is int eIndex && eIndex > 0)
+                   document.Text.IndexOf("=======", sIndex, StringComparison.Ordinal) is var mIndex && mIndex > 0 &&
+                   document.Text.IndexOf(">>>>>>>", mIndex, StringComparison.Ordinal) is var eIndex && eIndex > 0)
             {
                 var sLine = document.GetLineByOffset(sIndex).LineNumber;
                 var mLine = document.GetLineByOffset(mIndex).LineNumber;

@@ -916,6 +916,8 @@ namespace OneWare.SourceControl.ViewModels
 
         public async Task DiscardAsync(string path)
         {
+            if (CurrentRepo == null) return;
+            
             var options = new CheckoutOptions { CheckoutModifiers = CheckoutModifiers.Force };
             CurrentRepo.CheckoutPaths(CurrentRepo.Head.FriendlyName, new[] { path }, options);
 
@@ -1008,8 +1010,11 @@ namespace OneWare.SourceControl.ViewModels
         {
             if (CurrentRepo == null) return;
 
-            var commitContent = "";
+            string commitContent;
             var blob = CurrentRepo.Head.Tip[path].Target as Blob;
+
+            if (blob == null) throw new NullReferenceException(nameof(blob));
+            
             using (var content = new StreamReader(blob.GetContentStream(), Encoding.UTF8))
             {
                 commitContent = await content.ReadToEndAsync();
@@ -1141,8 +1146,8 @@ namespace OneWare.SourceControl.ViewModels
                 await process.StandardInput.WriteLineAsync();
 
                 // Get user/pass from stdout
-                string username = null;
-                string password = null;
+                string? username = null;
+                string? password = null;
                 string? line;
 
                 var autoCredentialTimeout =
@@ -1194,7 +1199,7 @@ namespace OneWare.SourceControl.ViewModels
             return new DefaultCredentials();
         }
 
-        public async Task<Signature> GetSignatureAsync()
+        public async Task<Signature?> GetSignatureAsync()
         {
             if (CurrentRepo == null) return null;
 

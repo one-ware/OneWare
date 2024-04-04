@@ -25,7 +25,7 @@ public class TerminalManagerModule : IModule
         {
             Header = "Terminal",
             Command = new RelayCommand(() => containerProvider.Resolve<IDockService>().Show(containerProvider.Resolve<TerminalManagerViewModel>())),
-            IconObservable = Application.Current?.GetResourceObservable(TerminalManagerViewModel.IconKey),
+            IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey),
         });
     }
 }

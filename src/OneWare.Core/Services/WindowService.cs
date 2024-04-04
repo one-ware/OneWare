@@ -23,8 +23,6 @@ public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
-
-    public event EventHandler<MenuItemViewModel>? MenuItemAdded;
     
     public void RegisterUiExtension(string key, UiExtension extension)
     {

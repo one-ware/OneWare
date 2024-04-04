@@ -2,34 +2,28 @@ using VtNetCore.Avalonia;
 
 namespace OneWare.Terminal.Provider
 {
-    public class PsuedoTerminalConnection : IConnection, IDisposable
+    public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IDisposable
     {
-        private CancellationTokenSource _cancellationSource;
-        private bool _isConnected = false;
-        private IPseudoTerminal _terminal;
-
-        public PsuedoTerminalConnection(IPseudoTerminal terminal)
-        {
-            _terminal = terminal;
-        }
+        private CancellationTokenSource? _cancellationSource;
+        private bool _isConnected;
 
         public bool IsConnected => _isConnected;
 
-        public event EventHandler<DataReceivedEventArgs> DataReceived;
+        public event EventHandler<DataReceivedEventArgs>? DataReceived;
 
-        public event EventHandler<EventArgs> Closed;
+        public event EventHandler<EventArgs>? Closed;
 
         public bool Connect()
         {
             _cancellationSource = new CancellationTokenSource();
 
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 var data = new byte[4096];
 
                 while (!_cancellationSource.IsCancellationRequested)
                 {
-                    var bytesReceived = await _terminal.ReadAsync(data, 0, data.Length);
+                    var bytesReceived = await terminal.ReadAsync(data, 0, data.Length);
 
                     if (bytesReceived > 0)
                     {
@@ -46,15 +40,15 @@ namespace OneWare.Terminal.Provider
 
             _isConnected = true;
 
-            _terminal.Process.EnableRaisingEvents = true;
-            _terminal.Process.Exited += Process_Exited;
+            terminal.Process.EnableRaisingEvents = true;
+            terminal.Process.Exited += Process_Exited;
 
             return _isConnected;
         }
 
-        private void Process_Exited(object sender, EventArgs e)
+        private void Process_Exited(object? sender, EventArgs e)
         {
-            _terminal.Process.Exited -= Process_Exited;
+            terminal.Process.Exited -= Process_Exited;
 
             Closed?.Invoke(this, EventArgs.Empty);            
         }
@@ -62,17 +56,17 @@ namespace OneWare.Terminal.Provider
         public void Disconnect()
         {
             _cancellationSource?.Cancel();
-            _terminal?.Dispose();
+            terminal.Dispose();
         }
 
         public void SendData(byte[] data)
         {
-            _terminal.WriteAsync(data, 0, data.Length);
+            _ = terminal.WriteAsync(data, 0, data.Length);
         }
 
         public void SetTerminalWindowSize(int columns, int rows, int width, int height)
         {
-            _terminal?.SetSize(columns, rows);
+            terminal.SetSize(columns, rows);
         }
 
         public void Dispose()
