@@ -7,6 +7,13 @@ namespace OneWare.Settings;
 
 public class SettingsService : ISettingsService
 {
+    private static JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        WriteIndented = true,
+        AllowTrailingCommas = true,
+    };
+    
+    private Dictionary<string, object>? _loadedSettings;
     public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
     public Dictionary<string, Setting> Settings { get; } = new();
 
@@ -116,12 +123,9 @@ public class SettingsService : ISettingsService
         {
             if (!File.Exists(path)) return;
             using var stream = File.OpenRead(path);
-            var settings = JsonSerializer.Deserialize<Dictionary<string, object>>(stream, new JsonSerializerOptions()
-            {
-                AllowTrailingCommas = true
-            });
-            if (settings == null) return;
-            foreach (var setting in settings)
+            _loadedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(stream, _jsonSerializerOptions);
+            if (_loadedSettings == null) return;
+            foreach (var setting in _loadedSettings)
             {
                 try
                 {
@@ -151,8 +155,13 @@ public class SettingsService : ISettingsService
         try
         {
             var saveD = Settings.ToDictionary(s => s.Key, s => s.Value.Value);
+            if(_loadedSettings != null)
+                foreach (var (key, value) in _loadedSettings)
+                {
+                    saveD.TryAdd(key, value);
+                }
             using var stream = File.Create(path);
-            JsonSerializer.Serialize(stream, saveD, saveD.GetType(), new JsonSerializerOptions(){WriteIndented = true});
+            JsonSerializer.Serialize(stream, saveD, saveD.GetType(), _jsonSerializerOptions);
         }
         catch (Exception e)
         {
