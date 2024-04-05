@@ -44,7 +44,12 @@
       <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
-    <Style Selector="Menu > MenuItem Border">
+    <Style Selector="ContextMenu">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+    
+    <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border">
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
@@ -86,8 +91,4 @@
         </Setter>
     </Style>
     
-    <Style Selector="ContextMenu">
-        <Setter Property="CornerRadius" Value="3"/>
-        <Setter Property="Padding" Value="3"/>
-    </Style>
 </Styles>
