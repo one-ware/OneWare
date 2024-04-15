@@ -45,7 +45,7 @@
     </Style>
 
     <Style Selector="ContextMenu">
-        <Setter Property="Padding" Value="0" />
+        <Setter Property="Padding" Value="2" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
     
