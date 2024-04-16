@@ -19,6 +19,16 @@
         </DrawingGroup>
     </DrawingImage>
 
+    <DrawingImage x:Key="Cool.User">
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M2.526,4.211 C2.526,1.885 4.411,-1.542E-007 6.737,-1.542E-007 C9.062,-1.542E-007 10.95,1.885 10.95,4.211 C10.95,6.536 9.062,8.421 6.737,8.421 C4.411,8.421 2.526,6.536 2.526,4.211 z M6.737,6.737 C8.132,6.737 9.263,5.606 9.263,4.211 C9.263,2.815 8.132,1.684 6.737,1.684 C5.342,1.684 4.211,2.815 4.211,4.211 C4.211,5.606 5.342,6.737 6.737,6.737 z M1.973,11.24 C0.7098,12.5 -1.470E-007,14.21 -1.470E-007,16 L1.684,16 C1.684,14.66 2.217,13.37 3.164,12.43 C4.112,11.48 5.397,10.95 6.737,10.95 C8.077,10.95 9.362,11.48 10.31,12.43 C11.26,13.37 11.79,14.66 11.79,16 L13.47,16 C13.47,14.21 12.76,12.5 11.5,11.24 C10.24,9.973 8.524,9.263 6.737,9.263 C4.95,9.263 3.237,9.973 1.973,11.24 z" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="MaterialDesign.ChatBubbleOutline">
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M14.42,11.19 L14.42,1.577 L1.577,1.577 L1.577,12.81 L3.192,11.19 L14.42,11.19 z M14.42,0 C15.29,0 16,0.7136 16,1.577 L16,11.19 C16,12.06 15.29,12.81 14.42,12.81 L3.192,12.81 L0,16 L0,1.577 C0,0.7136 0.7136,0 1.577,0 L14.42,0 z" />
+    </DrawingImage>
+
     <DrawingImage x:Key="TestBenchOverlay">
         <DrawingGroup>
             <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
@@ -38,8 +48,8 @@
     </DrawingImage>
 
     <DrawingImage x:Key="Octicons.KebabVertical">
-        <GeometryDrawing  Brush="{StaticResource ThemeControlVeryHighBrush}"
-                          Geometry="M0,1.846 A1.846,1.846 0 1 0 3.692,1.846 A1.846,1.846 0 0 0 0,1.846 z M0,8 A1.846,1.846 0 1 0 3.692,8 A1.846,1.846 0 0 0 0,8 z M1.846,16 A1.846,1.846 0 1 1 1.846,12.31 A1.846,1.846 0 0 1 1.846,16 z" />
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M0,1.846 A1.846,1.846 0 1 0 3.692,1.846 A1.846,1.846 0 0 0 0,1.846 z M0,8 A1.846,1.846 0 1 0 3.692,8 A1.846,1.846 0 0 0 0,8 z M1.846,16 A1.846,1.846 0 1 1 1.846,12.31 A1.846,1.846 0 0 1 1.846,16 z" />
     </DrawingImage>
 
     <DrawingImage x:Key="MaterialDesign.KeyboardArrowDown">
@@ -921,10 +931,12 @@
                          Geometry="F1M171.309585571289,-831.992736816406C177.265106201172,-831.90380859375,183.243133544922,-830.569885253906,188.843002319336,-827.945983886719L914.176025390625,-486.613006591797 914.176025390625,-486.610992431641C929.109985351563,-479.571014404297 938.6669921875,-464.552001953125 938.6669921875,-447.997985839844 938.6669921875,-431.444000244141 929.109008789063,-416.424987792969 914.176025390625,-409.385009765625L188.843002319336,-68.052001953125C183.039993286133,-65.3219985961914 176.85400390625,-63.9990005493164 170.667007446289,-63.9990043640137 160.938995361328,-63.9990005493164 151.38200378418,-67.2839965820313 143.574005126953,-73.6839981079102 130.817001342773,-84.1380004882813 125.269996643066,-101.033996582031 129.281005859375,-116.991004943848L180.99299621582,-323.881988525391 512.0009765625,-447.998992919922 180.99299621582,-572.116027832031 129.281005859375,-779.007019042969C125.313003540039,-794.963989257813 130.817001342773,-811.817993164063 143.574005126953,-822.27099609375 151.520248413086,-828.830993652344 161.383682250977,-832.140991210938 171.309585571289,-831.992736816406z" />
     </DrawingImage>
     <DrawingImage x:Key="Entypo+.ArrowLongLeft">
-        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="M0.75,10L6,4.5V8h13v4H6v3.5L0.75,10z" />
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M0.75,10L6,4.5V8h13v4H6v3.5L0.75,10z" />
     </DrawingImage>
     <DrawingImage x:Key="Entypo+.ArrowLongRight">
-        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="M14,15.5V12H1V8h13V4.5l5.25,5.5L14,15.5z" />
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M14,15.5V12H1V8h13V4.5l5.25,5.5L14,15.5z" />
     </DrawingImage>
     <DrawingImage x:Key="BoxIcons.RegularCut">
         <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
@@ -1050,7 +1062,8 @@
         <DrawingGroup>
             <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
                              Geometry="M 1 1 L 1 4.5 L 4.5 4.5 L 4.5 1 L 1 1 z M 6.25 1 L 6.25 4.5 L 9.75 4.5 L 9.75 1 L 6.25 1 z M 11.5 1 L 11.5 4.5 L 15 4.5 L 15 1 L 11.5 1 z M 1 6.25 L 1 9.75 L 4.5 9.75 L 4.5 6.25 L 1 6.25 z M 6.25 6.25 L 6.25 9.75 L 9.75 9.75 L 9.75 6.25 L 6.25 6.25 z M 11.5 6.25 L 11.5 9.75 L 15 9.75 L 15 6.25 L 11.5 6.25 z M 0.99414062 11.5 L 0.99414062 15 L 4.4941406 15 L 4.4941406 11.5 L 0.99414062 11.5 z M 6.25 11.5 L 6.25 15 L 9.75 15 L 9.75 11.5 L 6.25 11.5 z M 11.5 11.5 L 11.5 15 L 15 15 L 15 11.5 L 11.5 11.5 z " />
-            <GeometryDrawing Brush="{StaticResource ThemeAccentBrush}" Geometry="M 15.78125,2.734375 8.03125,2.71875 V 8 H 0.203125 " />
+            <GeometryDrawing Brush="{StaticResource ThemeAccentBrush}"
+                             Geometry="M 15.78125,2.734375 8.03125,2.71875 V 8 H 0.203125 " />
         </DrawingGroup>
     </DrawingImage>
 
@@ -1220,7 +1233,8 @@
     </DrawingImage>
     <DrawingImage x:Key="Constant">
         <DrawingGroup>
-            <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="M4 6H12V7H4V6ZM12 9H4V10H12V9Z" />
+            <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                             Geometry="M4 6H12V7H4V6ZM12 9H4V10H12V9Z" />
             <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
                              Geometry="M1 4L2 3H14L15 4V12L14 13H2L1 12V4ZM2 4V12H14V4H2Z" />
         </DrawingGroup>
