@@ -666,48 +666,6 @@ namespace OneWare.Core.Views.DockViews
             
             if (e.Text is null) return;
             
-            // if (CodeBox.CaretOffset > 1 && CodeBox.CaretOffset <= CodeBox.Text.Length)
-            //     if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
-            //     {
-            //         if (e.Text[0] == '(')
-            //         {
-            //             e.Text += ')';
-            //             _caretDiff = -1;
-            //         }
-            //         else if (e.Text[0] == '{')
-            //         {
-            //             e.Text += '}';
-            //             _caretDiff = -1;
-            //         }
-            //         else if (e.Text[0] == ')' && CodeBox.CaretOffset > 1 &&
-            //                  CodeBox.CaretOffset < CodeBox.Document.TextLength &&
-            //                  CodeBox.Text[CodeBox.CaretOffset] == ')')
-            //         {
-            //             var br = 0;
-            //             for (var i = CodeBox.CaretOffset - 1; i >= 0; i--)
-            //             {
-            //                 if (CodeBox.Text[i] == '{') break;
-            //                 if (CodeBox.Text[i] == '(') br++;
-            //                 if (CodeBox.Text[i] == ')') br--;
-            //             }
-            //
-            //             if (br > 0)
-            //             {
-            //                 e.Text = "";
-            //                 _caretDiff = 1;
-            //                 return; //Dont continue without text           
-            //             }
-            //         }
-            //         else if (e.Text[0] == '}' && CodeBox.CaretOffset > 1 &&
-            //                  CodeBox.Text[CodeBox.CaretOffset - 1] == '{')
-            //         {
-            //             e.Text = "";
-            //             _caretDiff = 1;
-            //             return; //Dont continue without text
-            //         }
-            //     }
-
-            //Language Specific TypeAssistance
             _typeAssistance?.TextEntering(e);
         }
 
