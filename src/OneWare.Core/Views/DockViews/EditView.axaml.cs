@@ -17,6 +17,7 @@ using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Markdown.Avalonia;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Core.Data;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
@@ -31,6 +32,7 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Range = System.Range;
 
 namespace OneWare.Core.Views.DockViews
 {
@@ -40,6 +42,7 @@ namespace OneWare.Core.Views.DockViews
         private readonly IErrorService _errorService;
 
         private CompositeDisposable _compositeDisposable = new();
+
         private ExtendedTextEditor CodeBox =>
             this.ViewModel?.Editor ?? throw new NullReferenceException(nameof(CodeBox));
 
@@ -57,12 +60,12 @@ namespace OneWare.Core.Views.DockViews
             InitializeComponent();
 
             CompositeDisposable localComposite = new CompositeDisposable();
-            
+
             this.DataContextChanged += (_, _) =>
             {
                 localComposite.Dispose();
                 localComposite = new CompositeDisposable();
-                
+
                 if (DataContext is not EditViewModel evm) return;
                 ViewModel = evm;
 
@@ -89,13 +92,13 @@ namespace OneWare.Core.Views.DockViews
             _typeAssistance?.Detach();
             CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
             CodeBox.ModificationService.ClearModification("Control_Underline");
-            DetachEvents(); 
+            DetachEvents();
         }
-        
+
         private void Setup()
         {
             Reset();
-            
+
             //Attach Events
             AttachEvents();
 
@@ -107,7 +110,7 @@ namespace OneWare.Core.Views.DockViews
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
-            
+
             this.AddDisposableHandler(KeyDownEvent, (o, e) =>
             {
                 if (e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl) return;
@@ -123,7 +126,7 @@ namespace OneWare.Core.Views.DockViews
                     CodeBox.ModificationService.ClearModification("Control_Underline");
                 }
             }, RoutingStrategies.Bubble, true).DisposeWith(_compositeDisposable);
-            
+
             //Zoom in ctrl + wheel
             CodeBox.AddDisposableHandler(PointerWheelChangedEvent, (o, i) =>
             {
@@ -133,9 +136,16 @@ namespace OneWare.Core.Views.DockViews
                 if (newFontSize < 5) newFontSize = 5;
                 if (newFontSize > 50) newFontSize = 50;
                 _settingsService.SetSettingValue("Editor_FontSize", newFontSize);
-                
+
                 i.Handled = true;
             }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
+
+            (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsActive).Subscribe(
+                    x =>
+                    {
+                        if(!x) HoverBox.Close();
+                    })
+                .DisposeWith(_compositeDisposable);
         }
         //-------------------------General + Events------------------------------------------//
 
@@ -161,9 +171,8 @@ namespace OneWare.Core.Views.DockViews
 
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedBeforeCaretUpdate, RoutingStrategies.Tunnel);
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedAfterCaretUpdate, RoutingStrategies.Bubble, true);
-            
-            CodeBox.SearchPanel.OnSearch += Search_Updated;
 
+            CodeBox.SearchPanel.OnSearch += Search_Updated;
         }
 
         private void DetachEvents()
@@ -186,20 +195,20 @@ namespace OneWare.Core.Views.DockViews
 
         private void Search_Updated(object? sender, IEnumerable<SearchResult> results)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             try
             {
                 if (ViewModel == null) return;
-                
+
                 _lastSearchResultLines =
                     results.Select(x => CodeBox.Document.GetLineByOffset(x.StartOffset).LineNumber);
 
-                ViewModel.ScrollInfo.Refresh("searchResult",_lastSearchResultLines
+                ViewModel.ScrollInfo.Refresh("searchResult", _lastSearchResultLines
                     .Distinct()
                     .Select(x => new ScrollInfoLine(x, _searchResultScrollBrush))
                     .ToArray());
-                
+
                 CodeBox.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
             }
             catch (Exception e)
@@ -220,8 +229,8 @@ namespace OneWare.Core.Views.DockViews
 
         public void PointerPressedAfterCaretUpdate(object? sender, PointerPressedEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             _ = PointerPressedAfterCaretUpdateAsync(sender, e);
         }
 
@@ -245,7 +254,7 @@ namespace OneWare.Core.Views.DockViews
         }
 
         private string _enteredString = "";
-        
+
         private void TextBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.F && e.KeyModifiers == PlatformHelper.ControlKey && e.KeyModifiers == KeyModifiers.Shift)
@@ -272,8 +281,8 @@ namespace OneWare.Core.Views.DockViews
         /// </summary>
         private void PointerPressedBeforeCaretUpdate(object? sender, PointerEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             //Left Button
             if (e.GetCurrentPoint(null).Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed)
             {
@@ -357,23 +366,23 @@ namespace OneWare.Core.Views.DockViews
                 }
 
                 HoverBox.IsVisible = false;
-                
+
                 contextMenuList.Add(new MenuItemViewModel("Cut")
                 {
-                    Header = "Cut", 
-                    IconObservable = this.GetResourceObservable("BoxIcons.RegularCut") ,
+                    Header = "Cut",
+                    IconObservable = this.GetResourceObservable("BoxIcons.RegularCut"),
                     Command = new RelayCommand(CodeBox.Cut)
                 });
                 contextMenuList.Add(new MenuItemViewModel("Copy")
                 {
-                    Header = "Copy", 
-                    IconObservable = this.GetResourceObservable("BoxIcons.RegularCopy") ,
+                    Header = "Copy",
+                    IconObservable = this.GetResourceObservable("BoxIcons.RegularCopy"),
                     Command = new RelayCommand(CodeBox.Copy)
                 });
                 contextMenuList.Add(new MenuItemViewModel("Paste")
                 {
-                    Header = "Paste", 
-                    IconObservable = this.GetResourceObservable("BoxIcons.RegularPaste") ,
+                    Header = "Paste",
+                    IconObservable = this.GetResourceObservable("BoxIcons.RegularPaste"),
                     Command = new RelayCommand(CodeBox.Paste)
                 });
                 if (_typeAssistance != null)
@@ -381,14 +390,14 @@ namespace OneWare.Core.Views.DockViews
                     contextMenuList.Add(new Separator());
                     contextMenuList.Add(new MenuItemViewModel("Comment")
                     {
-                        Header = "Comment", 
-                        IconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X") ,
+                        Header = "Comment",
+                        IconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X"),
                         Command = new RelayCommand(_typeAssistance.Comment)
                     });
                     contextMenuList.Add(new MenuItemViewModel("Uncomment")
                     {
-                        Header = "Uncomment", 
-                        IconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X") ,
+                        Header = "Uncomment",
+                        IconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X"),
                         Command = new RelayCommand(_typeAssistance.Uncomment)
                     });
                 }
@@ -403,15 +412,15 @@ namespace OneWare.Core.Views.DockViews
                         {
                             (startLine, endLine) = (endLine, startLine);
                         }
+
                         contextMenuList.Add(new Separator());
                         contextMenuList.Add(new MenuItemViewModel("IndentSelection")
                         {
                             Header = "Auto-Indent Selection",
-                            IconObservable = this.GetResourceObservable("BoxIcons.RegularCode") ,
+                            IconObservable = this.GetResourceObservable("BoxIcons.RegularCode"),
                             Command = new RelayCommand(() => _typeAssistance.AutoIndent(startLine, endLine))
                         });
                     }
-                       
                 }
 
                 if (contextMenuList.Count > 0)
@@ -428,7 +437,7 @@ namespace OneWare.Core.Views.DockViews
         private ErrorListItem? GetErrorAtMousePos(PointerEventArgs e)
         {
             if (ViewModel?.CurrentFile == null) return null;
-            
+
             var pos = CodeBox.GetPositionFromPoint(e.GetPosition(CodeBox)); //gets position of mouse
             if (pos.HasValue)
             {
@@ -452,8 +461,8 @@ namespace OneWare.Core.Views.DockViews
 
         private void Pointer_Hover(object? sender, PointerEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             _ = TextEditorMouseHoverAsync(sender, e);
         }
 
@@ -462,8 +471,8 @@ namespace OneWare.Core.Views.DockViews
         /// </summary>
         private void Pointer_Moved(object? sender, PointerEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             var word = CodeBox.GetWordAtMousePos(e);
             if (word == "" || word != _lastHoverWord) HoverBox.Close();
 
@@ -507,8 +516,9 @@ namespace OneWare.Core.Views.DockViews
             if (_controlAction != null && _lastControlWordBounds.HasValue)
             {
                 CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationSegment(
-                    _lastControlWordBounds.Value.Start.Value,
-                    _lastControlWordBounds.Value.End.Value) { Decorations = TextDecorationCollection.Parse("Underline") });
+                        _lastControlWordBounds.Value.Start.Value,
+                        _lastControlWordBounds.Value.End.Value)
+                    { Decorations = TextDecorationCollection.Parse("Underline") });
             }
         }
 
@@ -518,7 +528,7 @@ namespace OneWare.Core.Views.DockViews
         private async Task TextEditorMouseHoverAsync(object? sender, PointerEventArgs e)
         {
             if (!Equals(e.Source, CodeBox.TextArea.TextView)) return;
-            
+
             var offset = CodeBox.GetOffsetFromPointerPosition(e);
 
             var word = CodeBox.GetWordAtMousePos(e);
@@ -546,7 +556,7 @@ namespace OneWare.Core.Views.DockViews
                             {
                                 DataContext = new ObjectValueModel
                                 {
-                                    Children = new ObservableCollection<ObjectValueModel> {vm},
+                                    Children = new ObservableCollection<ObjectValueModel> { vm },
                                     DisplayName = name
                                 }
                             };
@@ -561,7 +571,7 @@ namespace OneWare.Core.Views.DockViews
                         HoverBoxContent.Content = markdown;
                     }
                 }
-                
+
                 if (HoverBoxContent.Content != null && !(CodeBox.TextArea.ContextMenu?.IsOpen ?? false))
                 {
                     UpdatePopupPositionToCursor(HoverBox, e);
@@ -600,14 +610,13 @@ namespace OneWare.Core.Views.DockViews
         //-------------------------Highlighting----------------------------------------------//
 
         #region Highlighting
-        
 
         private void Caret_PositionChanged(object? sender, EventArgs e)
         {
             CodeBox.TextArea.ContextMenu?.Close();
             HoverBox.Close();
-            
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
+
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
 
             var searcher = new CBracketSearcher();
             CodeBox.BracketRenderer.SetHighlight(searcher.SearchBracket(CodeBox.Document, CodeBox.CaretOffset));
@@ -627,8 +636,8 @@ namespace OneWare.Core.Views.DockViews
         /// </summary>
         private void TextEditor_TextArea_TextEntered(object? sender, TextInputEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             // //Apply Caret difference
             // if (CodeBox.CaretOffset + _caretDiff < 0) CodeBox.CaretOffset = 0;
             // else if (CodeBox.CaretOffset + _caretDiff > CodeBox.Text.Length) CodeBox.CaretOffset = CodeBox.Text.Length;
@@ -662,10 +671,10 @@ namespace OneWare.Core.Views.DockViews
 
         private void TextEditor_TextArea_TextEntering(object? sender, TextInputEventArgs e)
         {
-            if(ViewModel?.DisableEditViewEvents ?? true) return;
-            
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
             if (e.Text is null) return;
-            
+
             _typeAssistance?.TextEntering(e);
         }
 
