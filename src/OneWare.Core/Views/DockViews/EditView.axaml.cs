@@ -139,8 +139,8 @@ namespace OneWare.Core.Views.DockViews
 
                 i.Handled = true;
             }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
-
-            (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsActive).Subscribe(
+            
+            (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(
                     x =>
                     {
                         if(!x) HoverBox.Close();
@@ -167,6 +167,7 @@ namespace OneWare.Core.Views.DockViews
             CodeBox.Document.TextChanged += Text_Changed;
             CodeBox.PointerHover += Pointer_Hover;
             CodeBox.PointerMoved += Pointer_Moved;
+            CodeBox.PointerExited += Pointer_Exited;
             CodeBox.AddHandler(KeyDownEvent, TextBox_KeyDown, RoutingStrategies.Bubble, true);
 
             CodeBox.AddHandler(PointerPressedEvent, PointerPressedBeforeCaretUpdate, RoutingStrategies.Tunnel);
@@ -184,6 +185,7 @@ namespace OneWare.Core.Views.DockViews
             CodeBox.Document.TextChanged -= Text_Changed;
             CodeBox.PointerHover -= Pointer_Hover;
             CodeBox.PointerMoved -= Pointer_Moved;
+            CodeBox.PointerExited -= Pointer_Exited;
             CodeBox.RemoveHandler(KeyDownEvent, TextBox_KeyDown);
 
             CodeBox.RemoveHandler(PointerPressedEvent, PointerPressedBeforeCaretUpdate);
@@ -480,6 +482,16 @@ namespace OneWare.Core.Views.DockViews
 
             if (e.KeyModifiers == PlatformHelper.ControlKey) _ = GetControlHoverActionAsync();
         }
+        
+        private void Pointer_Exited(object? sender, PointerEventArgs e)
+        {
+            if (ViewModel?.DisableEditViewEvents ?? true) return;
+
+            if (!HoverBox.IsPointerOverPopup)
+            { 
+                HoverBox.Close();
+            }
+        }
 
         private Action? _controlAction;
         private string? _lastHoverWord;
@@ -528,6 +540,8 @@ namespace OneWare.Core.Views.DockViews
         private async Task TextEditorMouseHoverAsync(object? sender, PointerEventArgs e)
         {
             if (!Equals(e.Source, CodeBox.TextArea.TextView)) return;
+
+            if (!(TopLevel.GetTopLevel(this)?.IsKeyboardFocusWithin ?? false)) return;
 
             var offset = CodeBox.GetOffsetFromPointerPosition(e);
 
