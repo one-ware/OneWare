@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
+using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
@@ -288,6 +289,8 @@ public class PackageService : IPackageService
     {
         if (!Packages.TryGetValue(package.Id!, out var model)) return Task.FromResult(false);
 
+        _logger.Log($"Downloading {package.Name}...", ConsoleColor.Magenta, true, Brushes.DarkCyan);
+        
         if (model.Status is PackageStatus.Available or PackageStatus.UpdateAvailable &&
             (package.Versions?.Any() ?? false))
         {
