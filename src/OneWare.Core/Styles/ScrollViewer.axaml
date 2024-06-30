@@ -14,6 +14,7 @@
                             Value="{TemplateBinding Value, Mode=TwoWay}"
                             ViewportSize="{TemplateBinding ViewportSize}"
                             Orientation="{TemplateBinding Orientation}"
+                            DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
                             IsDirectionReversed="True">
                             <Thumb Name="thumb"/>
                         </Track>
@@ -35,6 +36,7 @@
                             Value="{TemplateBinding Value, Mode=TwoWay}"
                             ViewportSize="{TemplateBinding ViewportSize}"
                             Orientation="{TemplateBinding Orientation}"
+                            DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
                             IsDirectionReversed="False">
                             <Thumb Name="thumb" />
                         </Track>
