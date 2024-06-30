@@ -126,7 +126,7 @@ public class ChildProcessService(
                         
                             if (outputAction != null)
                             {
-                                outputAction(outputLine);
+                                success = success && outputAction(outputLine);
                                 output += outputLine + '\n';
                                 return;
                             }
@@ -141,7 +141,7 @@ public class ChildProcessService(
                         
                             if (errorAction != null)
                             {
-                                errorAction(errorLine);
+                                success = success && errorAction(errorLine);
                                 output += errorLine + '\n';
                                 return;
                             }
