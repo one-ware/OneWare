@@ -376,7 +376,15 @@ namespace OneWare.Core
             //Save settings
             Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
 
+            //Execute ShutdownActions, like starting the updater
+            Container.Resolve<IApplicationStateService>().ExecuteShutdownActions();
+            
             Environment.Exit(0);
+        }
+
+        protected virtual void ShutdownComplete()
+        {
+            
         }
 
         private void About_Click(object? sender, EventArgs e)

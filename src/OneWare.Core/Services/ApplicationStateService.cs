@@ -1,10 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Net.Mime;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
@@ -15,6 +19,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private readonly object _activeLock = new();
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
+    
+    private readonly List<Action> _shutdownActions = new();
     
     private ApplicationProcess _activeProcess = new ApplicationProcess(){State = AppState.Idle, StatusMessage = "Ready"};
     public ApplicationProcess ActiveProcess
@@ -83,5 +89,23 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
             ActiveProcess.Terminate?.Invoke();
             RemoveState(ActiveProcess);
         }
+    }
+
+    public void RegisterShutdownAction(Action action)
+    {
+        _shutdownActions.Add(action);
+    }
+
+    public void ExecuteShutdownActions()
+    {
+        foreach (var action in _shutdownActions)
+        {
+            action.Invoke();
+        }
+    }
+
+    public void TryShutdown()
+    {
+        Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
     }
 }

@@ -1,0 +1,45 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
+                         xmlns:mvvm="http://prismlibrary.com/"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.Updater.ViewModels"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         PrefWidth="350" SizeToContent="Height" Padding="8"
+                         mc:Ignorable="d"
+                         x:Class="OneWare.Updater.Views.UpdaterView"
+                         CustomIcon="{DynamicResource VsImageLib.Download16X}"
+                         Title="Updater" Name="PackageManagerViewView"
+                         mvvm:ViewModelLocator.AutoWireViewModel="False"
+                         x:CompileBindings="True" x:DataType="viewModels:UpdaterViewModel"
+                         WindowStartupLocation="CenterOwner">
+    <DockPanel>
+
+        <Border DockPanel.Dock="Top" VerticalAlignment="Center" Padding="0 10">
+            <StackPanel Orientation="Vertical" Spacing="15">
+
+                <TextBlock Text="{Binding VersionInfo}" HorizontalAlignment="Center" />
+
+                <TextBlock Text="{Binding UpdateMessage}" FontSize="20" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
+
+                <ProgressBar DockPanel.Dock="Right" ShowProgressText="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.Installing}}" Minimum="0"
+                             Maximum="100" Value="{Binding Progress}" />
+
+                <Button DockPanel.Dock="Left" Classes="RoundButton" Content="Download Update"
+                        IsEnabled="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.UpdateAvailable}}"
+                        IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
+                        Background="{DynamicResource HighlightBrush}" Command="{Binding DownloadUpdateAsync}"
+                        HorizontalAlignment="Center" />
+
+                <Button DockPanel.Dock="Left" Classes="RoundButton" Content="Restart"
+                        IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
+                        Command="{Binding TryRestart}"
+                        HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+    </DockPanel>
+</controls:FlexibleWindow>
