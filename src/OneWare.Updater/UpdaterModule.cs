@@ -22,7 +22,7 @@ public class UpdaterModule : IModule
     {
         var windowService = containerProvider.Resolve<IWindowService>();
         
-        if(PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64)
+        if(PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64 or PlatformId.OsxArm64)
         {
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Update")
             {
@@ -31,7 +31,7 @@ public class UpdaterModule : IModule
                 {
                     DataContext = containerProvider.Resolve<UpdaterViewModel>()
                 })),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X"),
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X"),
             });
         }
     }

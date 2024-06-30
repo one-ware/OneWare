@@ -10,7 +10,7 @@
                          PrefWidth="350" SizeToContent="Height" Padding="8"
                          mc:Ignorable="d"
                          x:Class="OneWare.Updater.Views.UpdaterView"
-                         CustomIcon="{DynamicResource VsImageLib.Download16X}"
+                         CustomIcon="{DynamicResource VsImageLib.DownloadDefault16X}"
                          Title="Updater" Name="PackageManagerViewView"
                          mvvm:ViewModelLocator.AutoWireViewModel="False"
                          x:CompileBindings="True" x:DataType="viewModels:UpdaterViewModel"
