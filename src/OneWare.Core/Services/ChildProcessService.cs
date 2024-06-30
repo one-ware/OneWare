@@ -126,6 +126,7 @@ public class ChildProcessService(
                         
                             if (outputAction != null)
                             {
+                                // ReSharper disable once AccessToModifiedClosure
                                 success = success && outputAction(outputLine);
                                 output += outputLine + '\n';
                                 return;
@@ -146,6 +147,7 @@ public class ChildProcessService(
                                 return;
                             }
 
+                            success = false;
                             logger.Error(errorLine);
                             output += errorLine + '\n';
                         }
