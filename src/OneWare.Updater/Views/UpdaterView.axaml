@@ -23,7 +23,7 @@
                 <TextBlock Text="{Binding VersionInfo}" HorizontalAlignment="Center" />
 
                 <TextBlock Text="{Binding UpdateMessage}" FontSize="20" TextWrapping="Wrap"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
+                           HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" TextAlignment="Center" />
 
                 <ProgressBar DockPanel.Dock="Right" ShowProgressText="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.Installing}}" Minimum="0"
                              Maximum="100" Value="{Binding Progress}" />

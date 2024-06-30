@@ -72,7 +72,7 @@ public class UpdaterViewModel : ObservableObject
     {
         UpdaterStatus.UpdateAvailable => $"Update {NewVersion} available!",
         UpdaterStatus.Installing => "Downloading update...",
-        UpdaterStatus.RestartRequired => "Update downloaded",
+        UpdaterStatus.RestartRequired => "Download finished. Restart to install.",
         _ => "No updates available."
     };
 
