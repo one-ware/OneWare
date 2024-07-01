@@ -88,7 +88,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public void DoubleTab(IProjectEntry entry)
     {
-        Console.WriteLine("tab");
         if (entry is IProjectFile file)
         {
             _ = _dockService.OpenFileAsync(file);
