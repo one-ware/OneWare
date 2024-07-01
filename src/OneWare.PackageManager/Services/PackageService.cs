@@ -148,7 +148,7 @@ public class PackageService : IPackageService
 
     private async Task<bool> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
-        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(1), cancellationToken);
+        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
         if (repositoryString == null) return false;
         
         try
