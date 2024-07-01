@@ -26,14 +26,4 @@
         <StyleInclude Source="avares://OneWare.Essentials/Controls/SharedControls.axaml"/>
     </Application.Styles>
     
-    <NativeMenu.Menu>
-        <NativeMenu>
-            <NativeMenuItem Header="About OneWare.Core IDE"
-                            Click="About_Click" />
-            <NativeMenuItemSeparator />
-            <NativeMenuItem Header="Preferences"
-                            Click="Preferences_Click" />
-        </NativeMenu>
-    </NativeMenu.Menu>
-    
 </Application>

@@ -51,7 +51,7 @@ namespace OneWare.Core
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
-            
+
             //Services
             containerRegistry.RegisterSingleton<IPluginService, PluginService>();
             containerRegistry.RegisterSingleton<IHttpService, HttpService>();
@@ -90,14 +90,40 @@ namespace OneWare.Core
 
             Name = paths.AppName;
 
+            NativeMenu.SetMenu(this, new NativeMenu()
+            {
+                Items =
+                {
+                    new NativeMenuItem()
+                    {
+                        Header = $"About {Name}",
+                        Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                            new AboutView()
+                        {
+                            DataContext = Container.Resolve<AboutViewModel>()
+                        }))
+                    },
+                    new NativeMenuItemSeparator(),
+                    new NativeMenuItem()
+                    {
+                        Header = "Settings",
+                        Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                            new ApplicationSettingsView()
+                            {
+                                DataContext = Container.Resolve<ApplicationSettingsViewModel>()
+                            }))
+                    }
+                }
+            });
+
             //General
             settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");
 
             //Editor settings
             settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
-            
+
             settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
-            
+
             settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
 
             settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
@@ -151,7 +177,7 @@ namespace OneWare.Core
 
             var windowService = Container.Resolve<IWindowService>();
             var commandService = Container.Resolve<IApplicationCommandService>();
-            
+
             windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
             {
                 Header = "Help",
@@ -198,21 +224,21 @@ namespace OneWare.Core
                 Header = $"Format",
                 IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
                 Command = new RelayCommand(
-                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(), 
+                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
                     () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
                 InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt),
             });
-            
+
             windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
             {
                 Command = new AsyncRelayCommand(
-                    () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(), 
+                    () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
                     () => Container.Resolve<IDockService>().CurrentDocument is not null),
                 Header = "Save Current",
                 InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
                 IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
             });
-            
+
             windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
             {
                 Command = new RelayCommand(
@@ -267,7 +293,7 @@ namespace OneWare.Core
             moduleCatalog.AddModule<JsonModule>();
             moduleCatalog.AddModule<TomlModule>();
             moduleCatalog.AddModule<DebuggerModule>();
-            
+
             base.ConfigureModuleCatalog(moduleCatalog);
         }
 
@@ -286,10 +312,10 @@ namespace OneWare.Core
                     MaxItems = 3
                 };
             }
-  
+
             Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
             Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
-            
+
             Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
             {
                 TypeAssistanceIconStore.Instance.Load();
@@ -378,29 +404,8 @@ namespace OneWare.Core
 
             //Execute ShutdownActions, like starting the updater
             Container.Resolve<IApplicationStateService>().ExecuteShutdownActions();
-            
+
             Environment.Exit(0);
-        }
-
-        protected virtual void ShutdownComplete()
-        {
-            
-        }
-
-        private void About_Click(object? sender, EventArgs e)
-        {
-            Container.Resolve<IWindowService>().Show(new AboutView()
-            {
-                DataContext = Container.Resolve<AboutViewModel>()
-            });
-        }
-
-        private void Preferences_Click(object? sender, EventArgs e)
-        {
-            Container.Resolve<IWindowService>().Show(new ApplicationSettingsView()
-            {
-                DataContext = Container.Resolve<ApplicationSettingsViewModel>()
-            });
         }
     }
 }
