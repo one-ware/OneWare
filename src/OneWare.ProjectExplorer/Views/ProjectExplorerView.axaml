@@ -92,8 +92,7 @@
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
                             <Interaction.Behaviors>
                                 <behaviours:CommandOnDoubleTapBehaviour
-                                    Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, 
-                            FallbackValue={x:Null}}"
+                                    Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                     CommandParameter="{Binding}" />
                             </Interaction.Behaviors>
 

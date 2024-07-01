@@ -52,12 +52,21 @@ namespace OneWare.Core.Services
                 _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
                 {
                     if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
                 });
             }
         }
         
-        public IExtendedDocument? CurrentDocument { get; set; }
+        private IExtendedDocument? _currentDocument;
+        public IExtendedDocument? CurrentDocument
+        {
+            get => _currentDocument;
+            set
+            {
+                if (value == _currentDocument) return;
+                _currentDocument = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
+            }
+        }
 
         public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel, MainDocumentDockViewModel mainDocumentDockViewModel)
         {
@@ -128,6 +137,12 @@ namespace OneWare.Core.Services
                 CloseDockable(vm);
             }
             return true;
+        }
+
+        public override void OnDockableClosed(IDockable? dockable)
+        {
+            base.OnDockableClosed(dockable);
+            if (dockable == CurrentDocument) CurrentDocument = null;
         }
 
         public Window? GetWindowOwner(IDockable? dockable)

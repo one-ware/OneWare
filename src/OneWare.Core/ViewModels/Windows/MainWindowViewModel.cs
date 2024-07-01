@@ -83,15 +83,13 @@ namespace OneWare.Core.ViewModels.Windows
             {
                 if (x != null)
                 {
-                    Title = $"{paths.AppName} - {x.CurrentFile?.Name}";
+                    Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
                     
-                    if (x is IEditor editor)
-                    {
-                        CurrentEditor = editor;
-                        TypeAssistanceQuickOptions.Clear();
-                        var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
-                        if(quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
-                    }
+                    TypeAssistanceQuickOptions.Clear();
+                    CurrentEditor = x as IEditor;
+                    
+                    var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
+                    if(quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
                 }
                 else
                 {
