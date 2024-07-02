@@ -634,6 +634,8 @@ namespace OneWare.Core.Views.DockViews
 
             if (ViewModel?.DisableEditViewEvents ?? true) return;
 
+            _typeAssistance?.CaretPositionChanged(CodeBox.CaretOffset);
+            
             var searcher = new CBracketSearcher();
             CodeBox.BracketRenderer.SetHighlight(searcher.SearchBracket(CodeBox.Document, CodeBox.CaretOffset));
         }

@@ -110,7 +110,7 @@
                                    Text="{Binding HintCountVisible}" />
                     </StackPanel>
                 </ToggleButton>
-
+                
                 <Border CornerRadius="3" DockPanel.Dock="Right" Width="280" BorderThickness="1" HorizontalAlignment="Right" Height="24"
                         BorderBrush="{DynamicResource ThemeBorderMidBrush}">
                     <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}" 

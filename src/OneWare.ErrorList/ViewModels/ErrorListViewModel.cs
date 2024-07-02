@@ -175,6 +175,8 @@ namespace OneWare.ErrorList.ViewModels
             
             _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
                 .Subscribe(x => ErrorListFilterMode = x);
+            _settingsService.Bind(ErrorListModule.KeyErrorListShowExternalErrors, this.WhenValueChanged(x => x.ShowExternalErrors))
+                .Subscribe(x => ShowExternalErrors = x);
 
             _dockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
         }

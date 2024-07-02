@@ -39,7 +39,7 @@ public class ErrorListModule : IModule
         _dockService.RegisterLayoutExtension<IErrorService>(DockShowLocation.Bottom);
         
         _settingsService.Register(KeyErrorListFilterMode, 0);
-        _settingsService.Register(KeyErrorListShowExternalErrors, true);
+        _settingsService.RegisterTitled("Experimental", "Errors", KeyErrorListShowExternalErrors, "Show external errors", "Sets if errors from files outside of your project should be visible", false);
         _settingsService.Register(KeyErrorListVisibleSource, 0);
         
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Problems")

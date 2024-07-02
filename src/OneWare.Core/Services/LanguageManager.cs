@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
 using OneWare.Core.Extensions.TextMate;
@@ -10,6 +11,7 @@ using Prism.Ioc;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
+using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Core.Services;
 
@@ -32,8 +34,14 @@ internal class LanguageManager : ObservableObject, ILanguageManager
     public IRawTheme CurrentEditorTheme
     {
         get => _currentEditorTheme;
-        private set => SetProperty(ref _currentEditorTheme, value);
+        private set
+        {
+            SetProperty(ref _currentEditorTheme, value);
+            UpdateThemeColors();
+        }
     }
+
+    public Dictionary<string, IBrush> CurrentEditorThemeColors { get; } = new();
 
     public LanguageManager(ISettingsService settingsService)
     {
@@ -57,7 +65,42 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
     }
+    
+    private void UpdateThemeColors()
+    {
+        CurrentEditorThemeColors.Clear();
 
+        foreach (var tokenColor in CurrentEditorTheme.GetTokenColors())
+        {
+            if (tokenColor.GetScope() is IList<object> scopes)
+            {
+                foreach (var scopeObj in scopes)
+                {
+                    if(scopeObj is not string scope) continue;
+                    
+                    Console.WriteLine(scope + " " + tokenColor.GetSetting().GetForeground());
+                    
+                    var kind = scope switch
+                    {
+                        "entity.name.class" => "class",
+                        "entity.name.function" => "function",
+                        "entity.name.type" => "type",
+                        "entity.name.variable" => "variable",
+                        "entity.name.namespace" => "namespace",
+                        "entity.name.constant" => "constant",
+                        "entity.name.operator" => "operator",
+                        _ => null
+                    };
+
+                    if (kind != null)
+                    {
+                        CurrentEditorThemeColors[kind] = SolidColorBrush.Parse(tokenColor.GetSetting().GetForeground());
+                    }
+                }
+            }
+        }
+    }
+    
     public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions)
     {
         _textMateRegistryOptions.RegisterLanguage(id, grammarPath, extensions);
