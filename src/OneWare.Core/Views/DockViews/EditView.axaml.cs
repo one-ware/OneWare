@@ -111,21 +111,24 @@ namespace OneWare.Core.Views.DockViews
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
 
-            this.AddDisposableHandler(KeyDownEvent, (o, e) =>
+            TopLevel.GetTopLevel(this)?.AddDisposableHandler(KeyDownEvent, (o, e) =>
             {
-                if (e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl) return;
-                if (_controlAction != null) CodeBox.TextArea.TextView.Cursor = Cursor.Parse("Hand");
-                _ = GetControlHoverActionAsync();
-            }, RoutingStrategies.Bubble, true).DisposeWith(_compositeDisposable);
-
-            this.AddDisposableHandler(KeyUpEvent, (o, e) =>
-            {
-                if (e.Key is Key.LeftCtrl or Key.RightCtrl)
+                if (PlatformHelper.IsControl(e))
                 {
+                    if (_controlAction != null) CodeBox.TextArea.TextView.Cursor = Cursor.Parse("Hand");
+                    _ = GetControlHoverActionAsync();
+                }
+            },  RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
+
+            TopLevel.GetTopLevel(this)?.AddDisposableHandler(KeyUpEvent, (o, e) =>
+            {
+                if (PlatformHelper.IsControl(e))
+                {
+                    _controlAction = null;
                     CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
                     CodeBox.ModificationService.ClearModification("Control_Underline");
                 }
-            }, RoutingStrategies.Bubble, true).DisposeWith(_compositeDisposable);
+            }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
 
             //Zoom in ctrl + wheel
             CodeBox.AddDisposableHandler(PointerWheelChangedEvent, (o, i) =>
@@ -461,6 +464,10 @@ namespace OneWare.Core.Views.DockViews
 
         #region Hover info
 
+        private Action? _controlAction;
+        private Range? _lastWordBounds;
+        private PointerEventArgs? _lastMovedArgs;
+        
         private void Pointer_Hover(object? sender, PointerEventArgs e)
         {
             if (ViewModel?.DisableEditViewEvents ?? true) return;
@@ -475,12 +482,23 @@ namespace OneWare.Core.Views.DockViews
         {
             if (ViewModel?.DisableEditViewEvents ?? true) return;
 
-            var word = CodeBox.GetWordAtMousePos(e);
-            if (word == "" || word != _lastHoverWord) HoverBox.Close();
-
+            var wordBounds = CodeBox.GetWordRangeAtPointerPosition(e);
+            if (!wordBounds.Equals(_lastWordBounds))
+            {
+                HoverBox.Close();
+                _controlAction = null;
+                CodeBox.ModificationService.ClearModification("Control_Underline");
+            }
+                     
             _lastMovedArgs = e;
-
-            if (e.KeyModifiers == PlatformHelper.ControlKey) _ = GetControlHoverActionAsync();
+            _lastWordBounds = wordBounds;
+            
+            if (e.KeyModifiers == PlatformHelper.ControlKey && _controlAction == null)
+            {
+                _ = GetControlHoverActionAsync();
+            }
+            
+            if (_controlAction != null) CodeBox.TextArea.TextView.Cursor = Cursor.Parse("Hand");
         }
         
         private void Pointer_Exited(object? sender, PointerEventArgs e)
@@ -493,44 +511,30 @@ namespace OneWare.Core.Views.DockViews
             }
         }
 
-        private Action? _controlAction;
-        private string? _lastHoverWord;
-        private Range? _lastControlWordBounds;
-        private PointerEventArgs? _lastMovedArgs;
-
-        public async Task GetControlHoverActionAsync()
+        private async Task GetControlHoverActionAsync()
         {
             if (_lastMovedArgs == null) return;
-            var wordBounds = CodeBox.GetWordRangeAtPointerPosition(_lastMovedArgs);
             var word = CodeBox.GetWordAtPointerPosition(_lastMovedArgs);
 
-            if (word == null) return;
-
-            //if (!word.All(Char.IsLetterOrDigit)) return;
+            if (string.IsNullOrWhiteSpace(word)) return;
+            
             if (Regex.IsMatch(word, @"\W")) return;
 
-            if (string.IsNullOrWhiteSpace(word))
+            if (_typeAssistance != null)
             {
-                _controlAction = null;
-                _lastControlWordBounds = null;
-            }
-
-            if (_typeAssistance != null && !string.IsNullOrWhiteSpace(word) && wordBounds.HasValue &&
-                (_lastControlWordBounds == null || !wordBounds.Value.Equals(_lastControlWordBounds.Value)))
-            {
-                _lastControlWordBounds = wordBounds;
                 _controlAction =
                     await _typeAssistance.GetActionOnControlWordAsync(
                         CodeBox.GetOffsetFromPointerPosition(_lastMovedArgs));
-                if (_controlAction != null) CodeBox.TextArea.TextView.Cursor = Cursor.Parse("Hand");
-            }
 
-            if (_controlAction != null && _lastControlWordBounds.HasValue)
-            {
-                CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationSegment(
-                        _lastControlWordBounds.Value.Start.Value,
-                        _lastControlWordBounds.Value.End.Value)
-                    { Decorations = TextDecorationCollection.Parse("Underline") });
+                if (_controlAction != null && _lastWordBounds != null)
+                {
+                    CodeBox.TextArea.TextView.Cursor = Cursor.Parse("Hand");
+                    
+                    CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationSegment(
+                            _lastWordBounds.Value.Start.Value,
+                            _lastWordBounds.Value.End.Value)
+                        { Decorations = TextDecorationCollection.Parse("Underline") });
+                }
             }
         }
 
@@ -547,7 +551,7 @@ namespace OneWare.Core.Views.DockViews
 
             var word = CodeBox.GetWordAtMousePos(e);
 
-            if (offset <= 0 || word == _lastHoverWord && HoverBox.IsOpen) return;
+            if (offset <= 0 && HoverBox.IsOpen) return;
 
             //HoverTextBox.Markdown = "";
             HoverBoxContent.Content = null;
@@ -602,8 +606,6 @@ namespace OneWare.Core.Views.DockViews
             {
                 HoverBox.Close();
             }
-
-            _lastHoverWord = word;
         }
 
         private void UpdatePopupPositionToCursor(Popup popup, PointerEventArgs e)
