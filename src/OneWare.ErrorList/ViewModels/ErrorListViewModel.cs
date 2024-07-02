@@ -190,7 +190,7 @@ namespace OneWare.ErrorList.ViewModels
         {
             if (arg is not ErrorListItem error) return false;
             var f = FilterMode(error) && FilterErrorSource(error) &&
-                   FilterSearchString(error) && (ShowExternalErrors || error.File is IProjectFile || _dockService.OpenFiles.ContainsKey(error.File));
+                   FilterSearchString(error) && FilterExternal(error);
 
             return f && FilterEnabledType(error);
         }
@@ -209,6 +209,11 @@ namespace OneWare.ErrorList.ViewModels
                     break;
             }
             return false;
+        }
+
+        private bool FilterExternal(ErrorListItem error)
+        {
+            return ShowExternalErrors || error.File is IProjectFile || _dockService.OpenFiles.ContainsKey(error.File);
         }
 
         private bool FilterEnabledType(ErrorListItem error)
@@ -237,7 +242,7 @@ namespace OneWare.ErrorList.ViewModels
 
         private int CountToggle(ErrorType type)
         {
-            return _items.Count(error => error.Type == type && FilterMode(error) && FilterErrorSource(error) && FilterSearchString(error));
+            return _items.Count(error => error.Type == type && FilterMode(error) && FilterErrorSource(error) && FilterSearchString(error) && FilterExternal(error));
 
         }
         
