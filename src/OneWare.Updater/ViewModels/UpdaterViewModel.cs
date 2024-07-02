@@ -80,9 +80,9 @@ public class UpdaterViewModel : ObservableObject
 
     private string DownloadLocation => PlatformHelper.Platform switch
     {
-        PlatformId.WinX64 or PlatformId.WinArm64 => "update.msi",
-        PlatformId.OsxX64 or PlatformId.OsxArm64 => "update.dmg",
-        _ => "update.zip"
+        PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory, $"OneWareStudio_{NewVersion}.msi"),
+        PlatformId.OsxX64 or PlatformId.OsxArm64 => Path.Combine(_paths.TempDirectory,  $"OneWareStudio_{NewVersion}.dmg"),
+        _ => Path.Combine(_paths.TempDirectory,  $"OneWareStudio_{NewVersion}.zip"),
     };
 
     public async Task<bool> CheckForUpdateAsync()
