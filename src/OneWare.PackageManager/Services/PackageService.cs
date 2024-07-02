@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Formats.Asn1;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using Avalonia.Media;
@@ -90,10 +91,14 @@ public class PackageService : IPackageService
             "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
             _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
         };
-        
+
         model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
-        
+
         Packages.Add(package.Id, model);
+
+        Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
+            .Subscribe(x => ObserveInstall((x.Sender as PackageModel)!.Package, x.EventArgs))
+            .DisposeWith(_packageRegistrationSubscription);
 
         Observable.FromEventPattern(model, nameof(model.Installed))
             .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
@@ -150,7 +155,7 @@ public class PackageService : IPackageService
     {
         var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
         if (repositoryString == null) return false;
-        
+
         try
         {
             var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
@@ -267,36 +272,56 @@ public class PackageService : IPackageService
             _logger.Error(e.Message, e);
         }
     }
+    
 
+    /// <summary>
+    /// Will install the package if not already installed
+    /// Waits if another thread already started the installation
+    /// </summary>
     public Task<bool> InstallAsync(Package package)
     {
         lock (_lock)
         {
-            if (_activeInstalls.TryGetValue(package, out var task))
+            if (Packages.TryGetValue(package.Id!, out var model))
             {
-                if (!task.IsCompleted)
-                    return task;
-                _activeInstalls.Remove(package);
-            }
+                if (!(model.Package.Versions?.Any() ?? false)) return Task.FromResult(false);
 
-            var newTask = PerformInstallAsync(package);
-            _activeInstalls.Add(package, newTask);
-            return newTask;
+                switch (model.Status)
+                {
+                    case PackageStatus.Available or PackageStatus.UpdateAvailable:
+                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true, Brushes.DarkCyan);
+                        return model.DownloadAsync(model.Package.Versions.Last());
+                    case PackageStatus.Installing:
+                        if (_activeInstalls.TryGetValue(model.Package, out var task))
+                        {
+                            return task;
+                        }
+                        return Task.FromResult(model.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+                }
+            }
+        }
+        return Task.FromResult(false);
+    }
+    
+    private void ObserveInstall(Package package, Task<bool> installTask)
+    {
+        lock (_lock)
+        {
+            _activeInstalls.Add(package, installTask);
+            
+            _ = installTask.ContinueWith(t =>
+            {
+                t.Wait();
+                FinishInstall(package);
+            }, TaskScheduler.Default);
         }
     }
 
-    private Task<bool> PerformInstallAsync(Package package)
+    private void FinishInstall(Package package)
     {
-        if (!Packages.TryGetValue(package.Id!, out var model)) return Task.FromResult(false);
-
-        _logger.Log($"Downloading {package.Name}...", ConsoleColor.Magenta, true, Brushes.DarkCyan);
-        
-        if (model.Status is PackageStatus.Available or PackageStatus.UpdateAvailable &&
-            (package.Versions?.Any() ?? false))
+        lock (_lock)
         {
-            return model.DownloadAsync(package.Versions.Last());
+            _activeInstalls.Remove(package);
         }
-
-        return Task.FromResult(false);
     }
 }

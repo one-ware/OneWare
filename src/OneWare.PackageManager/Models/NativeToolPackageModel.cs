@@ -36,6 +36,7 @@ public class NativeToolPackageModel(Package package, IHttpService httpService, I
                 settingsService.Save(paths.SettingsPath);
             }
         }
+        
         Status = PackageStatus.Installed;
     }
     

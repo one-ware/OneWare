@@ -78,8 +78,6 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 {
                     if(scopeObj is not string scope) continue;
                     
-                    Console.WriteLine(scope + " " + tokenColor.GetSetting().GetForeground());
-                    
                     var kind = scope switch
                     {
                         "entity.name.class" => "class",
@@ -187,8 +185,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 throw new TypeLoadException(nameof(type) + " is not " + nameof(ITypeAssistance));
             return newInstance;
         }
-
-        ;
+        
         _ = service.ActivateAsync();
         return service.GetTypeAssistance(editor);
     }
