@@ -45,8 +45,16 @@
     </Style>
 
     <Style Selector="ContextMenu">
-        <Setter Property="Padding" Value="2" />
         <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="2"/>
+    </Style>
+    
+    <Style Selector="ContextMenu /template/ ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+    </Style>
+    
+    <Style Selector="Menu > MenuItem ScrollViewer, ContextMenu > MenuItem ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
     </Style>
     
     <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border">
