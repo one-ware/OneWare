@@ -80,8 +80,8 @@ public class UpdaterViewModel : ObservableObject
 
     private string DownloadLocation => PlatformHelper.Platform switch
     {
-        PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory, $"{_paths.AppName}_{NewVersion}.msi"),
-        PlatformId.OsxX64 or PlatformId.OsxArm64 => Path.Combine(_paths.TempDirectory,  $"{_paths.AppName}_{NewVersion}.dmg"),
+        PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory, $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.msi"),
+        PlatformId.OsxX64 or PlatformId.OsxArm64 => Path.Combine(_paths.TempDirectory,  $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.dmg"),
         _ => Path.Combine(_paths.TempDirectory,  $"{_paths.AppName}_{NewVersion}.zip"),
     };
 
@@ -168,7 +168,7 @@ public class UpdaterViewModel : ObservableObject
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "msiexec",
-                        Arguments = $"/i {DownloadLocation}",
+                        Arguments = $"/i \"{DownloadLocation}\"",
                         UseShellExecute = true
                     }
                 };
@@ -182,7 +182,7 @@ public class UpdaterViewModel : ObservableObject
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "open",
-                        Arguments = DownloadLocation,
+                        Arguments = $"\"{DownloadLocation}\"",
                         UseShellExecute = true
                     }
                 };
