@@ -49,10 +49,12 @@
         <Setter Property="Padding" Value="2"/>
     </Style>
     
+    <!-- Needed to fix contextmenu on 175% scaling -->
     <Style Selector="ContextMenu /template/ ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
     </Style>
     
+    <!-- Needed to fix contextmenu on 175% scaling -->
     <Style Selector="Menu > MenuItem ScrollViewer, ContextMenu > MenuItem ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
     </Style>
