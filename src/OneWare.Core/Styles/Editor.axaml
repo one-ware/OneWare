@@ -143,9 +143,9 @@
                         Padding="{TemplateBinding Padding}">
                     <Grid ColumnDefinitions="Auto,*"
                           RowDefinitions="Auto, Auto">
-                        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <StackPanel Orientation="Vertical" Spacing="3"
-                                        IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
+                        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
+                            <StackPanel Orientation="Vertical" Spacing="3">
                                 <Button Name="PART_UP">
                                     <Path Stroke="{TemplateBinding Foreground}" Height="6" Width="6"
                                           Fill="{TemplateBinding Foreground}"
