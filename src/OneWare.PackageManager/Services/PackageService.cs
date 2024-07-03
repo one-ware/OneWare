@@ -297,6 +297,8 @@ public class PackageService : IPackageService
                             return task;
                         }
                         return Task.FromResult(model.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+                    case PackageStatus.Installed:
+                        return Task.FromResult(true);
                 }
             }
         }
