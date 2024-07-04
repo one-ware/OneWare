@@ -145,14 +145,14 @@
                           RowDefinitions="Auto, Auto">
                         <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                 IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
-                            <StackPanel Orientation="Vertical" Spacing="3">
+                            <StackPanel Orientation="Vertical" Spacing="2">
                                 <Button Name="PART_UP">
                                     <Path Stroke="{TemplateBinding Foreground}" Height="6" Width="6"
                                           Fill="{TemplateBinding Foreground}"
                                           Data="M 0,0.866 L 1,0.866 L 0.5,0 Z"
                                           Stretch="UniformToFill" />
                                 </Button>
-                                <TextBlock VerticalAlignment="Center"
+                                <TextBlock VerticalAlignment="Center" FontSize="{DynamicResource EditorFontSize}"
                                            Text="{Binding Provider.CurrentIndexText, RelativeSource={RelativeSource TemplatedParent}}" />
                                 <Button Name="PART_DOWN">
                                     <Path Stroke="{TemplateBinding Foreground}" Height="6" Width="6"
@@ -163,20 +163,36 @@
                             </StackPanel>
                         </Border>
                        
-                        <Border Grid.Row="0" Grid.Column="1" Padding="5" BorderThickness="0 0 0 1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <md:MarkdownScrollViewer Classes="ToolTip" VerticalAlignment="Center"
+                        <Border Grid.Row="0" Grid.Column="1" Padding="5">
+                            <md:MarkdownScrollViewer VerticalAlignment="Center" MaxWidth="800" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                                 <md:MarkdownScrollViewer.Styles>
-                                    <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
+                                    <Style Selector="avaloniaEdit|TextEditor">
+                                        <Setter Property="WordWrap" Value="True"/>
+                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                    </Style>
+                                    <Style Selector="colorTextBlock|CTextBlock">
+                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                    </Style>
                                 </md:MarkdownScrollViewer.Styles>
                             </md:MarkdownScrollViewer>
                         </Border>
                         
-                        <Border Grid.Row="1" Grid.Column="1" Padding="5">
-                            <md:MarkdownScrollViewer Classes="ToolTip" VerticalAlignment="Center"
+                        <Border IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                            <md:MarkdownScrollViewer VerticalAlignment="Center"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                                 <md:MarkdownScrollViewer.Styles>
-                                    <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
+                                    <Style Selector="avaloniaEdit|TextEditor">
+                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                    </Style>
+                                    <Style Selector="colorTextBlock|CTextBlock">
+                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+                                    </Style>
                                 </md:MarkdownScrollViewer.Styles>
                             </md:MarkdownScrollViewer>
                         </Border>
