@@ -43,6 +43,8 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 OneWare is licensed under the [GPL 3.0 license](https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#)
 
-## Donate
-  
-Copyright © 2024 One Ware
+## Community
+
+**Join our growing community!**
+
+[![](https://dcbadge.limes.pink/api/server/NCN9VAh?style=flat)](https://discord.gg/NCN9VAh)
