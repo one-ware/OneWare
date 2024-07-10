@@ -29,6 +29,8 @@ These are a few of the current features:
 
 Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/oneware)
+
 ## Status
 
 [![Publish Studio Desktop for Linux in Snap Store](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux-snap.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux-snap.yml)<br/>
