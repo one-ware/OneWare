@@ -36,6 +36,13 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 [![Publish Studio Desktop for MacOS](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml)<br/>
 [![Publish Studio Web](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml)
 
+## Build
+
+1. Install [.NET SDK 8.0](https://dotnet.microsoft.com/en-us/download)
+2. Clone this repo
+3. `cd OneWare/studio/OneWare.Studio.Desktop`
+4. `dotnet run`
+   
 ## Contributing
 
 > Documentation Coming soon!
