@@ -1,6 +1,11 @@
 [![](https://dcbadge.limes.pink/api/server/NCN9VAh?style=flat)](https://discord.gg/NCN9VAh)
 [![Test](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml)
 
+[![Publish Studio Desktop for Linux in Snap Store](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux-snap.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux-snap.yml)<br/>
+[![Publish Studio Desktop for Windows](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-windows.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-windows.yml)<br/>
+[![Publish Studio Desktop for MacOS](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml)<br/>
+[![Publish Studio Web](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml)
+
 ## OneWare Studio - The Next Generation IDE for Electronics Development
 
 Using .NET 8.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
