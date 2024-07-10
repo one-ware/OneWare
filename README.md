@@ -7,6 +7,10 @@ Using .NET 8.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
 
 ![image](https://github.com/one-ware/OneWare/assets/25281882/584f637e-66b8-41a4-ae9d-7d5d31a281ff)
 
+![image](https://github.com/one-ware/OneWare/assets/25281882/af9fb9c4-ea35-4d28-a8d0-023ce2783258)
+
+
+
 ## About
 
 OneWare Studio is the next generation IDE for electronics development. It supports a broad
