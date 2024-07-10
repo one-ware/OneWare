@@ -30,6 +30,7 @@ jobs:
         dotnet-version: 8.0.x 
 
     # Create the NuGet packages in the folder from the environment variable NuGetDirectory
+    - run: dotnet pack ./src/OneWare.Essentials/OneWare.Essentials.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}

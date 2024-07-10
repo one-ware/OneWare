@@ -1,0 +1,14 @@
+name: Publish Studio Desktop for Linux in Flathub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-flathub:
+    name: Deploy in Flathub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive

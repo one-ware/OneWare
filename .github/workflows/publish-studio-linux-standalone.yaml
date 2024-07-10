@@ -1,4 +1,4 @@
-name: Publish Standalone Linux
+name: Publish Studio Desktop for Linux on CDN
 
 on:
   workflow_dispatch:

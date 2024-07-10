@@ -1,4 +1,4 @@
-name: Publish OneWare Studio Desktop
+name: Publish Studio Desktop
 
 on:
   workflow_dispatch:
