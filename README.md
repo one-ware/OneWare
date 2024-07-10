@@ -24,6 +24,9 @@ These are a few of the current features:
 - AI Generator for creating highly optimized neural networks effortlessly
 - Extensible architecture to unlock additional functionality and hardware support with custom extensions
 
+## Download
+
+Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 ## Status
 
