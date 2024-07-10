@@ -1,0 +1,50 @@
+# This workflow tests the run configuration and starts pipelines for all platforms
+name: Publish Studio for all platforms
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: "./build/props/Base.props"
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+      - name: Parse latest release version froim 
+        id: parse_version
+        run: |
+          # Extrahiere die neueste Version aus der XML-Datei
+          latest_version=$(xmllint --xpath 'string(//release[1]/@version)' /studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml
+          echo "Latest version from Metainfo: $latest_version"
+          echo "::set-output name=latest_version::$latest_version"
+      - name: Compare versions
+        run: |
+          # Definierte Version zum Vergleich
+          expected_version="4${{ steps.get-oneware-version.outputs.info }}"
+          latest_version="${{ steps.parse_version.outputs.latest_version }}"
+
+          echo "Expected version: $expected_version"
+          echo "Latest version: $latest_version"
+
+          if [ "$latest_version" != "$expected_version" ]; then
+            echo "Error: Versions do not match!"
+            exit 1
+          else
+            echo "Success: Versions match!"
+          fi
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get-oneware-version.outputs.info }}
+          allowUpdates: true
+          generateReleaseNotes: true
