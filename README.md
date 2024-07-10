@@ -48,6 +48,14 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 2. Clone this repo
 3. `cd OneWare/studio/OneWare.Studio.Desktop`
 4. `dotnet run`
+
+## Nuget
+
+| Package                             | Download                                                                            |
+|---|---|
+| OneWare.Essentials                  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Essentials)                 |
+| OneWare.UniversalFpgaProjectSystem  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.UniversalFpgaProjectSystem) |
+| OneWare.Templates                   |  ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Templates)                 |
    
 ## Contributing
 
