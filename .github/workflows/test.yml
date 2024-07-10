@@ -12,8 +12,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: false
-
+    
     steps:
     - uses: actions/checkout@v3
       with:
