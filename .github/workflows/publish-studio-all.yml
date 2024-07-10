@@ -1,5 +1,5 @@
 # This workflow tests the run configuration and starts pipelines for all platforms
-name: Publish Studio for all platforms
+name: Publish Studio Desktop 
 
 on:
   workflow_dispatch:
@@ -14,25 +14,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - uses: mavrosxristoforos/get-xml-info@2.0
-        name: Get Version
-        id: get-oneware-version
+        name: Get Version from Base.props
+        id: get-props-version
         with:
           xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-      - name: Install xmllint
-        run: sudo apt-get install -y libxml2-utils
-      - name: Parse latest release version froim 
-        id: parse_version
-        run: |
-          # Extrahiere die neueste Version aus der XML-Datei
-          latest_version=$(xmllint --xpath 'string(//release[1]/@version)' /studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml
-          echo "Latest version from Metainfo: $latest_version"
-          echo "::set-output name=latest_version::$latest_version"
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version from Metainfo
+        id: get-metainfo-version
+        with:
+          xml-file: "./studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml"
+          xpath: "//*[local-name()='component']/*[local-name()='releases']/*[local-name()='release'][1]/@version"
       - name: Compare versions
         run: |
           # Definierte Version zum Vergleich
-          expected_version="4${{ steps.get-oneware-version.outputs.info }}"
-          latest_version="${{ steps.parse_version.outputs.latest_version }}"
+          expected_version="4${{ steps.get-props-version.outputs.info }}"
+          latest_version="${{ steps.get-metainfo-version.outputs.info }}"
 
           echo "Expected version: $expected_version"
           echo "Latest version: $latest_version"
@@ -45,6 +42,6 @@ jobs:
           fi
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get-oneware-version.outputs.info }}
+          tag: ${{ steps.get-props-version.outputs.info }}
           allowUpdates: true
           generateReleaseNotes: true
