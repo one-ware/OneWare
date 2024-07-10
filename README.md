@@ -23,6 +23,7 @@ These are a few of the current features:
 - Integrated simulation tools with a high-speed, multithreaded VCD Viewer
 - AI Generator for creating highly optimized neural networks effortlessly
 - Extensible architecture to unlock additional functionality and hardware support with custom extensions
+- All the features you would expect from a modern IDE, with builtin GIT support
 
 ## Download
 
