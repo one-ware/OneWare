@@ -2,6 +2,10 @@ name: Publish Studio Desktop for Windows
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Publish Studio Desktop]
+    types:
+      - completed
 
 jobs:
   # Build MSI and Upload to CDN
@@ -9,6 +13,7 @@ jobs:
   deploy-windows:
     name: Deploy for Windows
     runs-on: self-hosted
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,14 +23,14 @@ jobs:
         name: Get Version
         id: get-oneware-version
         with:
-          xml-file: './build/props/Base.props'
+          xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-#      - name: Setup .NET
-#        uses: actions/setup-dotnet@v4
-#        with:
-#          dotnet-version: 8.0.x
-#      - name: Install Wix
-#        run: dotnet tool install --global wix
+      #      - name: Setup .NET
+      #        uses: actions/setup-dotnet@v4
+      #        with:
+      #          dotnet-version: 8.0.x
+      #      - name: Install Wix
+      #        run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
       - name: Create Button HTML

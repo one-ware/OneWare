@@ -2,11 +2,16 @@ name: Publish Studio Desktop for Linux in Flathub
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Publish Studio Desktop]
+    types:
+      - completed
 
 jobs:
   deploy-flathub:
     name: Deploy in Flathub
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

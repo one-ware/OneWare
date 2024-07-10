@@ -8,7 +8,6 @@ on:
       - completed
 
 jobs:
-
   # Build Tar GZ and upload
   deploy-linux:
     name: Deploy for Linux
