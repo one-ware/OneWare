@@ -28,7 +28,7 @@ jobs:
       - name: Compare versions
         run: |
           # Definierte Version zum Vergleich
-          expected_version="4${{ steps.get-props-version.outputs.info }}"
+          expected_version="${{ steps.get-props-version.outputs.info }}"
           latest_version="${{ steps.get-metainfo-version.outputs.info }}"
 
           echo "Expected version: $expected_version"

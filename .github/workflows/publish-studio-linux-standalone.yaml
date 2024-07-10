@@ -2,6 +2,10 @@ name: Publish Studio Desktop for Linux on CDN
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Publish Studio Desktop]
+    types:
+      - completed
 
 jobs:
 
