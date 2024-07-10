@@ -1,0 +1,51 @@
+﻿name: oneware
+base: core20
+
+confinement: classic
+
+adopt-info: oneware
+
+icon: ./studio/OneWare.Studio/Assets/com.one_ware.OneWare.svg
+
+apps:
+  oneware:
+    command: ./OneWareStudio
+    common-id: com.one_ware.OneWare
+    desktop: ./com.one_ware.OneWare.desktop
+    
+parts:
+  oneware:
+    plugin: dump
+    source: .
+    parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
+    build-packages: 
+      - wget
+      - patchelf
+    override-build: |
+      export TZ=Europe/Berlin
+      ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+      wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+      sudo dpkg -i packages-microsoft-prod.deb
+      rm packages-microsoft-prod.deb
+      sudo apt-get update; sudo apt-get install -y apt-transport-https && sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0
+      cd studio/OneWare.Studio.Desktop
+      dotnet publish -f net8.0 -r linux-x64 -c Release --self-contained true -o $SNAPCRAFT_PART_INSTALL
+      echo 'updating rpath...'
+      current_rpath="$(patchelf --print-rpath $SNAPCRAFT_PART_INSTALL/OneWareStudio)"
+      append_rpath='$ORIGIN:$ORIGIN/usr/lib/x86_64-linux-gnu'
+      new_rpath="${current_rpath}:${append_rpath}"
+      echo "set rpath: ${new_rpath}"
+      patchelf --force-rpath --set-rpath "${new_rpath}" $SNAPCRAFT_PART_INSTALL/OneWareStudio
+      echo 'new rpath'
+      patchelf --print-rpath $SNAPCRAFT_PART_INSTALL/OneWareStudio
+      echo 'fixed rpath'
+      chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
+      chmod +x $SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper
+
+      sed -i 's|^Icon=.*$|Icon=${SNAP}/meta/gui/com.one_ware.OneWare.svg|' $SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop
+    stage-packages:
+      - libgtk-3-0
+      - libx11-6
+      - libice6
+      - libsm6
+      - liblttng-ust0

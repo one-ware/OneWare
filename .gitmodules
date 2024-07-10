@@ -4,6 +4,3 @@
 [submodule "src/VtNetCore.Avalonia"]
 	path = src/VtNetCore.Avalonia
 	url = https://github.com/HendrikMennen/VtNetCore.Avalonia.git
-[submodule "src/OneWare.Essentials"]
-	path = src/OneWare.Essentials
-	url = https://github.com/one-ware/OneWare.Essentials

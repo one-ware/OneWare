@@ -1,0 +1,30 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Max10.ViewModels"
+             xmlns:views="clr-namespace:OneWare.Max10.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Max10.Views.Max10FpgaView">
+
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Orientation="Vertical" Margin="10 5 15 10">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <Rectangle Fill="Yellow" Height="10" Width="10" VerticalAlignment="Center" />
+                <TextBlock Text="Variable IO Voltage" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <Rectangle Fill="YellowGreen" Height="10" Width="10" VerticalAlignment="Center" />
+                <TextBlock Text="3.3V IO Voltage" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <Rectangle Fill="Cyan" Height="10" Width="10" VerticalAlignment="Center" />
+                <TextBlock Text="Analog Input" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <views:Max10Back Margin="5" />
+            <views:Max10Top Margin="5" />
+        </StackPanel>
+    </DockPanel>
+</UserControl>

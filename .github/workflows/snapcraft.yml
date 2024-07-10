@@ -1,0 +1,19 @@
+name: Test Snap
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  # Build Snap
+  snapcraft:
+    name: Build Snap
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build Snap  
+        uses: snapcore/action-build@v1  
+        id: build

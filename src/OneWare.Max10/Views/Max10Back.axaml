@@ -1,0 +1,202 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Max10.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="295" d:DesignHeight="220"
+             x:Class="OneWare.Max10.Views.Max10Back" x:DataType="viewModels:Max10FpgaViewModel" x:CompileBindings="True">
+        
+    <UserControl.Styles>
+            
+            <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0, -1, 0, 0" />
+        </Style>
+        <Style Selector="Button.YellowGreen">
+            <Setter Property="Background" Value="YellowGreen" />
+        </Style>
+        <Style Selector="Button.Cyan">
+            <Setter Property="Background" Value="Cyan" />
+        </Style>
+
+        <Style Selector="Button:disabled">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.Connectable:pointerover">
+            <Setter Property="Background" Value="#222222" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, *"
+          ColumnDefinitions="5, 40, 5, 12, 0, 12, 5, 30, *, 30, 5, 12, 0, 12, 5, 30, 20, 0"
+          Width="295" Height="220">
+
+        <Border Grid.Column="2" Grid.ColumnSpan="15" Grid.RowSpan="19" Background="#216101" />
+
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="5V" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="A0_N" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="A1_N" />
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="A2_N" />
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="A3_N" />
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="A4_N" />
+        <TextBlock Grid.Row="7" Grid.Column="1" Text="A5_N" />
+        <TextBlock Grid.Row="8" Grid.Column="1" Text="HS2" />
+        <TextBlock Grid.Row="9" Grid.Column="1" Text="VADJ" />
+        <TextBlock Grid.Row="10" Grid.Column="1" Text="LS19" />
+        <TextBlock Grid.Row="11" Grid.Column="1" Text="LS4" />
+        <TextBlock Grid.Row="12" Grid.Column="1" Text="LS5" />
+        <TextBlock Grid.Row="13" Grid.Column="1" Text="LS6" />
+        <TextBlock Grid.Row="14" Grid.Column="1" Text="LS7" />
+        <TextBlock Grid.Row="15" Grid.Column="1" Text="AN2" />
+        <TextBlock Grid.Row="16" Grid.Column="1" Text="AN3" />
+        <TextBlock Grid.Row="17" Grid.Column="1" Text="GND" />
+
+        <Button Grid.Row="1" Grid.Column="3" Background="#FF0033" IsEnabled="False" />
+        <Button Grid.Row="2" Grid.Column="3" DataContext="{Binding PinModels[L5]}" Classes="Connectable" />
+        <Button Grid.Row="3" Grid.Column="3" DataContext="{Binding PinModels[K5]}" Classes="Connectable" />
+        <Button Grid.Row="4" Grid.Column="3" DataContext="{Binding PinModels[J6]}" Classes="Connectable" />
+        <Button Grid.Row="5" Grid.Column="3" DataContext="{Binding PinModels[N6]}" Classes="Connectable" />
+        <Button Grid.Row="6" Grid.Column="3" DataContext="{Binding PinModels[M4]}" Classes="Connectable" />
+        <Button Grid.Row="7" Grid.Column="3" DataContext="{Binding PinModels[N4]}" Classes="Connectable" />
+        <Button Grid.Row="8" Grid.Column="3" DataContext="{Binding PinModels[M8]}" Classes="Connectable" />
+        <Button Grid.Row="9" Grid.Column="3" Background="#FF9D00" IsEnabled="False" />
+        <Button Grid.Row="10" Grid.Column="3" DataContext="{Binding PinModels[H2]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="11" Grid.Column="3" DataContext="{Binding PinModels[E6]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="12" Grid.Column="3" DataContext="{Binding PinModels[A3]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="13" Grid.Column="3" DataContext="{Binding PinModels[B6]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="14" Grid.Column="3" DataContext="{Binding PinModels[B5]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="15" Grid.Column="3" DataContext="{Binding PinModels[E4]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="16" Grid.Column="3" DataContext="{Binding PinModels[E3]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="17" Grid.Column="3" Background="#0094FF" IsEnabled="False" />
+
+        <Button Grid.Row="1" Grid.Column="5" Background="#0094FF" IsEnabled="False" />
+        <Button Grid.Row="2" Grid.Column="5" DataContext="{Binding PinModels[L4]}" Classes="Connectable" />
+        <Button Grid.Row="3" Grid.Column="5" DataContext="{Binding PinModels[J5]}" Classes="Connectable" />
+        <Button Grid.Row="4" Grid.Column="5" DataContext="{Binding PinModels[K6]}" Classes="Connectable" />
+        <Button Grid.Row="5" Grid.Column="5" DataContext="{Binding PinModels[M7]}" Classes="Connectable" />
+        <Button Grid.Row="6" Grid.Column="5" DataContext="{Binding PinModels[M5]}" Classes="Connectable" />
+        <Button Grid.Row="7" Grid.Column="5" DataContext="{Binding PinModels[N5]}" Classes="Connectable" />
+        <Button Grid.Row="8" Grid.Column="5" DataContext="{Binding PinModels[M9]}" Classes="Connectable" />
+        <Button Grid.Row="9" Grid.Column="5" Background="#FF4F75" IsEnabled="False" />
+        <Button Grid.Row="10" Grid.Column="5" DataContext="{Binding PinModels[H3]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="11" Grid.Column="5" DataContext="{Binding PinModels[G4]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="12" Grid.Column="5" DataContext="{Binding PinModels[F4]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="13" Grid.Column="5" DataContext="{Binding PinModels[A4]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="14" Grid.Column="5" DataContext="{Binding PinModels[B3]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="15" Grid.Column="5" DataContext="{Binding PinModels[F1]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="16" Grid.Column="5" DataContext="{Binding PinModels[E1]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="17" Grid.Column="5" Background="#FF0033" IsEnabled="False" />
+
+        <TextBlock Foreground="White" Grid.Row="1" Grid.Column="7" Text="GND" />
+        <TextBlock Foreground="White" Grid.Row="2" Grid.Column="7" Text="A0_P" />
+        <TextBlock Foreground="White" Grid.Row="3" Grid.Column="7" Text="A1_P" />
+        <TextBlock Foreground="White" Grid.Row="4" Grid.Column="7" Text="A2_P" />
+        <TextBlock Foreground="White" Grid.Row="5" Grid.Column="7" Text="A3_P" />
+        <TextBlock Foreground="White" Grid.Row="6" Grid.Column="7" Text="A4_P" />
+        <TextBlock Foreground="White" Grid.Row="7" Grid.Column="7" Text="A5_P" />
+        <TextBlock Foreground="White" Grid.Row="8" Grid.Column="7" Text="HS1" />
+        <TextBlock Foreground="White" Grid.Row="9" Grid.Column="7" Text="3.3V" />
+        <TextBlock Foreground="White" Grid.Row="10" Grid.Column="7" Text="LS18" />
+        <TextBlock Foreground="White" Grid.Row="11" Grid.Column="7" Text="LS0" />
+        <TextBlock Foreground="White" Grid.Row="12" Grid.Column="7" Text="LS1" />
+        <TextBlock Foreground="White" Grid.Row="13" Grid.Column="7" Text="LS2" />
+        <TextBlock Foreground="White" Grid.Row="14" Grid.Column="7" Text="LS3" />
+        <TextBlock Foreground="White" Grid.Row="15" Grid.Column="7" Text="AN0" />
+        <TextBlock Foreground="White" Grid.Row="16" Grid.Column="7" Text="AN1" />
+        <TextBlock Foreground="White" Grid.Row="17" Grid.Column="7" Text="VIN" />
+
+        <TextBlock Foreground="White" Grid.Row="1" Grid.Column="9" Text="5V" />
+        <TextBlock Foreground="White" Grid.Row="2" Grid.Column="9" Text="B0_N" />
+        <TextBlock Foreground="White" Grid.Row="3" Grid.Column="9" Text="B1_N" />
+        <TextBlock Foreground="White" Grid.Row="4" Grid.Column="9" Text="B2_N" />
+        <TextBlock Foreground="White" Grid.Row="5" Grid.Column="9" Text="B3_N" />
+        <TextBlock Foreground="White" Grid.Row="6" Grid.Column="9" Text="B4_N" />
+        <TextBlock Foreground="White" Grid.Row="7" Grid.Column="9" Text="B5_N" />
+        <TextBlock Foreground="White" Grid.Row="8" Grid.Column="9" Text="HS4" />
+        <TextBlock Foreground="White" Grid.Row="9" Grid.Column="9" Text="VADJ" />
+        <TextBlock Foreground="White" Grid.Row="10" Grid.Column="9" Text="LS17" />
+        <TextBlock Foreground="White" Grid.Row="11" Grid.Column="9" Text="LS12" />
+        <TextBlock Foreground="White" Grid.Row="12" Grid.Column="9" Text="LS13" />
+        <TextBlock Foreground="White" Grid.Row="13" Grid.Column="9" Text="LS14" />
+        <TextBlock Foreground="White" Grid.Row="14" Grid.Column="9" Text="LS15" />
+        <TextBlock Foreground="White" Grid.Row="15" Grid.Column="9" Text="AN6" />
+        <TextBlock Foreground="White" Grid.Row="16" Grid.Column="9" Text="AN7" />
+        <TextBlock Foreground="White" Grid.Row="17" Grid.Column="9" Text="GND" />
+
+        <Button Grid.Row="1" Grid.Column="11" Background="#FF0033" IsEnabled="False" />
+        <Button Grid.Row="2" Grid.Column="11" DataContext="{Binding PinModels[J7]}" Classes="Connectable" />
+        <Button Grid.Row="3" Grid.Column="11" DataContext="{Binding PinModels[M13]}" Classes="Connectable" />
+        <Button Grid.Row="4" Grid.Column="11" DataContext="{Binding PinModels[M11]}" Classes="Connectable" />
+        <Button Grid.Row="5" Grid.Column="11" DataContext="{Binding PinModels[J8]}" Classes="Connectable" />
+        <Button Grid.Row="6" Grid.Column="11" DataContext="{Binding PinModels[N7]}" Classes="Connectable" />
+        <Button Grid.Row="7" Grid.Column="11" DataContext="{Binding PinModels[M10]}" Classes="Connectable" />
+        <Button Grid.Row="8" Grid.Column="11" DataContext="{Binding PinModels[N10]}" Classes="Connectable" />
+        <Button Grid.Row="9" Grid.Column="11" Background="#FF9D00" IsEnabled="False" />
+        <Button Grid.Row="10" Grid.Column="11" DataContext="{Binding PinModels[E8]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="11" Grid.Column="11" DataContext="{Binding PinModels[A8]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="12" Grid.Column="11" DataContext="{Binding PinModels[A7]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="13" Grid.Column="11" DataContext="{Binding PinModels[A6]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="14" Grid.Column="11" DataContext="{Binding PinModels[D6]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="15" Grid.Column="11" DataContext="{Binding PinModels[C2]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="16" Grid.Column="11" DataContext="{Binding PinModels[D1]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="17" Grid.Column="11" Background="#0094FF" IsEnabled="False" />
+
+        <Button Grid.Row="1" Grid.Column="13" Background="#0094FF" IsEnabled="False" />
+        <Button Grid.Row="2" Grid.Column="13" DataContext="{Binding PinModels[K7]}" Classes="Connectable" />
+        <Button Grid.Row="3" Grid.Column="13" DataContext="{Binding PinModels[M12]}" Classes="Connectable" />
+        <Button Grid.Row="4" Grid.Column="13" DataContext="{Binding PinModels[L11]}" Classes="Connectable" />
+        <Button Grid.Row="5" Grid.Column="13" DataContext="{Binding PinModels[K8]}" Classes="Connectable" />
+        <Button Grid.Row="6" Grid.Column="13" DataContext="{Binding PinModels[N8]}" Classes="Connectable" />
+        <Button Grid.Row="7" Grid.Column="13" DataContext="{Binding PinModels[L10]}" Classes="Connectable" />
+        <Button Grid.Row="8" Grid.Column="13" DataContext="{Binding PinModels[N9]}" Classes="Connectable" />
+        <Button Grid.Row="9" Grid.Column="13" Background="#FF4F75" IsEnabled="False" />
+        <Button Grid.Row="10" Grid.Column="13" DataContext="{Binding PinModels[C10]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="11" Grid.Column="13" DataContext="{Binding PinModels[C9]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="12" Grid.Column="13" DataContext="{Binding PinModels[D8]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="13" Grid.Column="13" DataContext="{Binding PinModels[B9]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="14" Grid.Column="13" DataContext="{Binding PinModels[A9]}"
+                Classes="Connectable YellowGreen" />
+        <Button Grid.Row="15" Grid.Column="13" DataContext="{Binding PinModels[B1]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="16" Grid.Column="13" DataContext="{Binding PinModels[C1]}" Classes="Connectable Cyan" />
+        <Button Grid.Row="17" Grid.Column="13" Background="#FF0033" IsEnabled="False" />
+
+        <TextBlock Foreground="White" Grid.Row="1" Grid.Column="15" Text="GND" />
+        <TextBlock Foreground="White" Grid.Row="2" Grid.Column="15" Text="B0_P" />
+        <TextBlock Foreground="White" Grid.Row="3" Grid.Column="15" Text="B1_P" />
+        <TextBlock Foreground="White" Grid.Row="4" Grid.Column="15" Text="B2_P" />
+        <TextBlock Foreground="White" Grid.Row="5" Grid.Column="15" Text="B3_P" />
+        <TextBlock Foreground="White" Grid.Row="6" Grid.Column="15" Text="B4_P" />
+        <TextBlock Foreground="White" Grid.Row="7" Grid.Column="15" Text="B5_P" />
+        <TextBlock Foreground="White" Grid.Row="8" Grid.Column="15" Text="HS26" />
+        <TextBlock Foreground="White" Grid.Row="9" Grid.Column="15" Text="3.3V" />
+        <TextBlock Foreground="White" Grid.Row="10" Grid.Column="15" Text="LS16" />
+        <TextBlock Foreground="White" Grid.Row="11" Grid.Column="15" Text="LS8" />
+        <TextBlock Foreground="White" Grid.Row="12" Grid.Column="15" Text="LS9" />
+        <TextBlock Foreground="White" Grid.Row="13" Grid.Column="15" Text="LS10" />
+        <TextBlock Foreground="White" Grid.Row="14" Grid.Column="15" Text="LS11" />
+        <TextBlock Foreground="White" Grid.Row="15" Grid.Column="15" Text="AN4" />
+        <TextBlock Foreground="White" Grid.Row="16" Grid.Column="15" Text="AN5" />
+        <TextBlock Foreground="White" Grid.Row="17" Grid.Column="15" Text="VIN" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,45 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectTestBenchToolBarView"
+             x:DataType="viewModels:UniversalFpgaProjectTestBenchToolBarViewModel"
+             IsVisible="{Binding IsVisible}">
+
+    <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,0,0,1" Padding="2"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <DockPanel>
+            <Border Classes="RoundToolBar" DockPanel.Dock="Left">
+                <StackPanel Orientation="Horizontal">
+                    
+                    <ComboBox Width="100" SelectedItem="{Binding SelectedSimulator}" ItemsSource="{Binding Simulators}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <Border Classes="SplitterBorder" />
+                    
+                    <Button Command="{Binding SimulateCurrentAsync, FallbackValue={x:Null}}" 
+                            IsEnabled="{Binding SelectedSimulator, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{DynamicResource VsImageLib.StartWithoutDebug16X}" Height="13" />
+                            <TextBlock Text="Simulate" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    
+                </StackPanel>
+            </Border>
+            
+            <controls:UiExtensionControl Margin="5 0 0 0" DockPanel.Dock="Left" 
+                                         Context="{Binding TestBenchContext}"
+                                         UiExtension="{Binding SelectedSimulator.TestBenchToolbarTopUiExtension, FallbackValue={x:Null}}"/>
+        </DockPanel>
+    </Border>
+   
+</UserControl>

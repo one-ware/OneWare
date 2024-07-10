@@ -1,0 +1,959 @@
+{
+  "Name": "Core MAX10",
+  "Properties": {
+    "QuartusToolchain_Family": "MAX 10",
+    "QuartusToolchain_Device": "10M08SAU169C8G",
+    "QuartusProgrammer_ShortTerm_Mode": "JTAG",
+    "QuartusProgrammer_ShortTerm_Operation": "P",
+    "QuartusProgrammer_LongTerm_Mode": "JTAG",
+    "QuartusProgrammer_LongTerm_Format": "POF",
+    "QuartusProgrammer_LongTerm_Operation": "P"
+  },
+  "Pins": [
+    {
+      "Description": "CLK",
+      "Name": "H6"
+    },
+    {
+      "Description": "LED",
+      "Name": "D13"
+    },
+    {
+      "Description": "Button",
+      "Name": "D7"
+    },
+    {
+      "Description": "USB TX",
+      "Name": "J1"
+    },
+    {
+      "Description": "USB RX",
+      "Name": "H4"
+    },
+    {
+      "Description": "USB RTS",
+      "Name": "H5"
+    },
+    {
+      "Description": "USB CTS",
+      "Name": "G5"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "M1"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "N3"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "J2"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "M3"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "K1"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "L2"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "M2"
+    },
+    {
+      "Description": "CRUVI LS",
+      "Name": "K2"
+    },
+    {
+      "Description": "CRUVI HS SMB_ALERT",
+      "Name": "A10"
+    },
+    {
+      "Description": "CRUVI HS SMB_SDA",
+      "Name": "B10"
+    },
+    {
+      "Description": "CRUVI HS SMB_SCL",
+      "Name": "A11"
+    },
+    {
+      "Description": "CRUVI HS REFCLK",
+      "Name": "N2"
+    },
+    {
+      "Description": "CRUVI HS HSMIO",
+      "Name": "N12"
+    },
+    {
+      "Description": "CRUVI HS HSO",
+      "Name": "N9"
+    },
+    {
+      "Description": "CRUVI HS HSRST",
+      "Name": "N11"
+    },
+    {
+      "Description": "CRUVI HS HSI",
+      "Name": "N10"
+    },
+    {
+      "Description": "CRUVI HS Low Speed I/Os",
+      "Name": "C10"
+    },
+    {
+      "Description": "CRUVI HS Low Speed I/Os",
+      "Name": "E8"
+    },
+    {
+      "Description": "CRUVI HS Low Speed I/Os",
+      "Name": "H3"
+    },
+    {
+      "Description": "CRUVI HS Low Speed I/Os",
+      "Name": "E5"
+    },
+    {
+      "Description": "CRUVI HS Low Speed I/Os",
+      "Name": "H2"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "K7"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "J7"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M12"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M13"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "L11"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M11"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "K8"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "J8"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "N8"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "N7"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "L10"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M10"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "L4"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "L5"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "J5"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "K5"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M7"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "N6"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "K6"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "J6"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M5"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "M4"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "N5"
+    },
+    {
+      "Description": "CRUVI HS Differential I/Os",
+      "Name": "N4"
+    },
+    {
+      "Description": "Low Speed I/Os with variable IO voltage",
+      "Name": "M8"
+    },
+    {
+      "Description": "Low Speed I/Os with variable IO voltage",
+      "Name": "M9"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "G4"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "F4"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A4"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "B3"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "E6"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A3"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "B6"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "B5"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "C9"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "D8"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "B9"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A9"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A8"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A7"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "A6"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "D6"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "F1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E4"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E3"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "B1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "C1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "C2"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "D1"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "B4"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "A2"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "B2"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "A5"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "J9"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "J10"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "K10"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "K11"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "L12"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "K12"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "L13"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "J12"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "J13"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "G13"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "H9"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "H13"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "H10"
+    },
+    {
+      "Description": "SDRAM Bank Select",
+      "Name": "G12"
+    },
+    {
+      "Description": "SDRAM Bank Select",
+      "Name": "H8"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "A12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "B11"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "B12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "C11"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "C12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D9"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E9"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E10"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "C13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D11"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "B13"
+    },
+    {
+      "Description": "SDRAM I/O Mask",
+      "Name": "F9"
+    },
+    {
+      "Description": "SDRAM I/O Mask",
+      "Name": "F10"
+    },
+    {
+      "Description": "SDRAM Row Address Strobe",
+      "Name": "F8"
+    },
+    {
+      "Description": "SDRAM Column Address Strobe",
+      "Name": "G10"
+    },
+    {
+      "Description": "SDRAM Write Enable",
+      "Name": "G9"
+    },
+    {
+      "Description": "SDRAM Clock",
+      "Name": "L3"
+    },
+    {
+      "Description": "VS02-0",
+      "Name": "L1"
+    },
+    {
+      "Description": "VS02-0",
+      "Name": "B7"
+    },
+    {
+      "Description": "VS02-0",
+      "Name": "H1"
+    },
+    {
+      "Description": "Power Enable",
+      "Name": "K13"
+    }
+  ],
+  "Interfaces": [
+    {
+      "Name": "CRUVILS_1",
+      "Connector": "CruviLS",
+      "Pins": [
+        {
+          "Name": "LS_1",
+          "Pin": "M1"
+        },
+        {
+          "Name": "LS_2",
+          "Pin": "N3"
+        },
+        {
+          "Name": "LS_3",
+          "Pin": "J2"
+        },
+        {
+          "Name": "LS_4",
+          "Pin": "M3"
+        },
+        {
+          "Name": "LS_5",
+          "Pin": "K1"
+        },
+        {
+          "Name": "LS_6",
+          "Pin": "L2"
+        },
+        {
+          "Name": "LS_7",
+          "Pin": "M2"
+        },
+        {
+          "Name": "LS_8",
+          "Pin": "K2"
+        }
+      ]
+    },
+    {
+      "Name": "CRUVIHS_1",
+      "Connector": "CruviHS",
+      "Pins": [
+        {
+          "Name": "HS_Dif_1",
+          "Pin": "K7"
+        },
+        {
+          "Name": "HS_Dif_2",
+          "Pin": "J7"
+        },
+        {
+          "Name": "HS_Dif_3",
+          "Pin": "M12"
+        },
+        {
+          "Name": "HS_Dif_4",
+          "Pin": "M13"
+        },
+        {
+          "Name": "HS_Dif_5",
+          "Pin": "L11"
+        },
+        {
+          "Name": "HS_Dif_6",
+          "Pin": "M11"
+        },
+        {
+          "Name": "HS_Dif_7",
+          "Pin": "K8"
+        },
+        {
+          "Name": "HS_Dif_8",
+          "Pin": "J8"
+        },
+        {
+          "Name": "HS_Dif_9",
+          "Pin": "N8"
+        },
+        {
+          "Name": "HS_Dif_10",
+          "Pin": "N7"
+        },
+        {
+          "Name": "HS_Dif_11",
+          "Pin": "L10"
+        },
+        {
+          "Name": "HS_Dif_12",
+          "Pin": "M10"
+        },
+        {
+          "Name": "HS_Dif_13",
+          "Pin": "L4"
+        },
+        {
+          "Name": "HS_Dif_14",
+          "Pin": "L5"
+        },
+        {
+          "Name": "HS_Dif_15",
+          "Pin": "J5"
+        },
+        {
+          "Name": "HS_Dif_16",
+          "Pin": "K5"
+        },
+        {
+          "Name": "HS_Dif_17",
+          "Pin": "M7"
+        },
+        {
+          "Name": "HS_Dif_18",
+          "Pin": "N6"
+        },
+        {
+          "Name": "HS_Dif_19",
+          "Pin": "K6"
+        },
+        {
+          "Name": "HS_Dif_20",
+          "Pin": "J6"
+        },
+        {
+          "Name": "HS_Dif_21",
+          "Pin": "M5"
+        },
+        {
+          "Name": "HS_Dif_22",
+          "Pin": "M4"
+        },
+        {
+          "Name": "HS_Dif_23",
+          "Pin": "N5"
+        },
+        {
+          "Name": "HS_Dif_24",
+          "Pin": "N4"
+        },
+        {
+          "Name": "HS_Ale",
+          "Pin": "A10"
+        },
+        {
+          "Name": "HS_SDA",
+          "Pin": "B10"
+        },
+        {
+          "Name": "HS_SCL",
+          "Pin": "A11"
+        },
+        {
+          "Name": "HS_Ref",
+          "Pin": "N2"
+        },
+        {
+          "Name": "HS_HSM",
+          "Pin": "N12"
+        },
+        {
+          "Name": "HS_HSO",
+          "Pin": "N9"
+        },
+        {
+          "Name": "HS_HSR",
+          "Pin": "N11"
+        },
+        {
+          "Name": "HS_HSI",
+          "Pin": "N10"
+        },
+        {
+          "Name": "HS_LOW_1",
+          "Pin": "C10"
+        },
+        {
+          "Name": "HS_LOW_2",
+          "Pin": "E8"
+        },
+        {
+          "Name": "HS_LOW_3",
+          "Pin": "H3"
+        },
+        {
+          "Name": "HS_LOW_4",
+          "Pin": "E5"
+        },
+        {
+          "Name": "HS_LOW_5",
+          "Pin": "H2"
+        }
+      ]
+    },
+    {
+      "Name": "UART",
+      "Pins": [
+        {
+          "Name": "TXD",
+          "Pin": "J1"
+        },
+        {
+          "Name": "RXD",
+          "Pin": "H4"
+        },
+        {
+          "Name": "RTS",
+          "Pin": "H5"
+        },
+        {
+          "Name": "CTS",
+          "Pin": "G5"
+        }
+      ]
+    },
+    {
+      "Name": "SDRAM",
+      "Pins": [
+        {
+          "Name": "ADD_1",
+          "Pin": "J9"
+        },
+        {
+          "Name": "ADD_2",
+          "Pin": "J10"
+        },
+        {
+          "Name": "ADD_3",
+          "Pin": "K10"
+        },
+        {
+          "Name": "ADD_4",
+          "Pin": "K11"
+        },
+        {
+          "Name": "ADD_5",
+          "Pin": "L12"
+        },
+        {
+          "Name": "ADD_6",
+          "Pin": "K12"
+        },
+        {
+          "Name": "ADD_7",
+          "Pin": "L13"
+        },
+        {
+          "Name": "ADD_8",
+          "Pin": "J12"
+        },
+        {
+          "Name": "ADD_9",
+          "Pin": "J13"
+        },
+        {
+          "Name": "ADD_10",
+          "Pin": "G13"
+        },
+        {
+          "Name": "ADD_11",
+          "Pin": "H9"
+        },
+        {
+          "Name": "ADD_12",
+          "Pin": "H13"
+        },
+        {
+          "Name": "ADD_13",
+          "Pin": "H10"
+        },
+        {
+          "Name": "BAN_1",
+          "Pin": "G12"
+        },
+        {
+          "Name": "BAN_2",
+          "Pin": "H8"
+        },
+        {
+          "Name": "DAT_1",
+          "Pin": "A12"
+        },
+        {
+          "Name": "DAT_2",
+          "Pin": "B11"
+        },
+        {
+          "Name": "DAT_3",
+          "Pin": "B12"
+        },
+        {
+          "Name": "DAT_4",
+          "Pin": "C11"
+        },
+        {
+          "Name": "DAT_5",
+          "Pin": "C12"
+        },
+        {
+          "Name": "DAT_6",
+          "Pin": "D9"
+        },
+        {
+          "Name": "DAT_7",
+          "Pin": "E9"
+        },
+        {
+          "Name": "DAT_8",
+          "Pin": "E10"
+        },
+        {
+          "Name": "DAT_9",
+          "Pin": "F13"
+        },
+        {
+          "Name": "DAT_10",
+          "Pin": "F12"
+        },
+        {
+          "Name": "DAT_11",
+          "Pin": "E13"
+        },
+        {
+          "Name": "DAT_12",
+          "Pin": "E12"
+        },
+        {
+          "Name": "DAT_13",
+          "Pin": "D12"
+        },
+        {
+          "Name": "DAT_14",
+          "Pin": "C13"
+        },
+        {
+          "Name": "DAT_15",
+          "Pin": "D11"
+        },
+        {
+          "Name": "DAT_16",
+          "Pin": "B13"
+        },
+        {
+          "Name": "DQM_1",
+          "Pin": "F9"
+        },
+        {
+          "Name": "DQM_2",
+          "Pin": "F10"
+        },
+        {
+          "Name": "RAS",
+          "Pin": "F8"
+        },
+        {
+          "Name": "CAS",
+          "Pin": "G10"
+        },
+        {
+          "Name": "WEN",
+          "Pin": "G9"
+        },
+        {
+          "Name": "ClK",
+          "Pin": "L3"
+        }
+      ]
+    },
+    {
+      "Name": "FLASH",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "B4"
+        },
+        {
+          "Name": "2",
+          "Pin": "A2"
+        },
+        {
+          "Name": "3",
+          "Pin": "B2"
+        },
+        {
+          "Name": "4",
+          "Pin": "A5"
+        }
+      ]
+    },
+    {
+      "Name": "LED",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "D13"
+        }
+      ]
+    },
+    {
+      "Name": "BTN",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "D7"
+        }
+      ]
+    },
+    {
+      "Name": "CLK",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "H6"
+        }
+      ]
+    },
+    {
+      "Name": "ADC",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "F1"
+        },
+        {
+          "Name": "2",
+          "Pin": "E1"
+        },
+        {
+          "Name": "3",
+          "Pin": "E4"
+        },
+        {
+          "Name": "4",
+          "Pin": "E3"
+        },
+        {
+          "Name": "5",
+          "Pin": "B1"
+        },
+        {
+          "Name": "6",
+          "Pin": "C1"
+        },
+        {
+          "Name": "7",
+          "Pin": "C2"
+        },
+        {
+          "Name": "8",
+          "Pin": "D1"
+        }
+      ]
+    }
+  ]
+}

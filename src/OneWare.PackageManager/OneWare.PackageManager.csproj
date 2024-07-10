@@ -5,6 +5,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
-        <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
     </ItemGroup>
 </Project>

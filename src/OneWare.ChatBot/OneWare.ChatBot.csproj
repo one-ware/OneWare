@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\OneWare\src\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
+        <ProjectReference Include="..\..\OneWare\src\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**\*.*" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Assets\" />
+    </ItemGroup>
+    
+</Project>

@@ -1,0 +1,285 @@
+$date
+  Mon Apr  1 21:56:39 2024
+$end
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module textio $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module numeric_std $end
+$upscope $end
+$scope module fixed_float_types $end
+$upscope $end
+$scope module math_real $end
+$upscope $end
+$scope module common_pkg $end
+$upscope $end
+$scope module tb_scale_bias_correction $end
+$var reg 1 ! clk $end
+$var reg 1 " rst $end
+$var reg 1 # data_in_valid $end
+$var reg 32 $ x_in[15:-16] $end
+$var reg 32 % y_in[15:-16] $end
+$var reg 32 & z_in[15:-16] $end
+$var reg 32 ' x_bias[15:-16] $end
+$var reg 32 ( y_bias[15:-16] $end
+$var reg 32 ) z_bias[15:-16] $end
+$var reg 32 * x_scale[15:-16] $end
+$var reg 32 + y_scale[15:-16] $end
+$var reg 32 , z_scale[15:-16] $end
+$var reg 1 - data_out_valid $end
+$var reg 32 . x_out[15:-16] $end
+$var reg 32 / y_out[15:-16] $end
+$var reg 32 0 z_out[15:-16] $end
+$var real 64 1 test_input $end
+$var real 64 2 test_scale $end
+$var real 64 3 test_bias $end
+$var reg 1 4 tbclock $end
+$var reg 1 5 tbsimended $end
+$scope module uut $end
+$var reg 1 6 clk $end
+$var reg 1 7 rst $end
+$var reg 1 8 data_in_valid $end
+$var reg 32 9 x_in[15:-16] $end
+$var reg 32 : y_in[15:-16] $end
+$var reg 32 ; z_in[15:-16] $end
+$var reg 32 < x_bias[15:-16] $end
+$var reg 32 = y_bias[15:-16] $end
+$var reg 32 > z_bias[15:-16] $end
+$var reg 32 ? x_scale[15:-16] $end
+$var reg 32 @ y_scale[15:-16] $end
+$var reg 32 A z_scale[15:-16] $end
+$var reg 1 B data_out_valid $end
+$var reg 32 C x_out[15:-16] $end
+$var reg 32 D y_out[15:-16] $end
+$var reg 32 E z_out[15:-16] $end
+$comment selector is not handled $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU 0
+r-1.7976931348623157e308 1
+r1.5 2
+r2.5e-1 3
+04
+05
+06
+17
+08
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU 9
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU :
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU ;
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU <
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU =
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU >
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU ?
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU @
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU A
+0B
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU C
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU D
+bUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU E
+#18500000
+1!
+bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX .
+14
+16
+bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX C
+#37000000
+0!
+04
+06
+#55500000
+1!
+14
+16
+#74000000
+0!
+04
+06
+#92500000
+1!
+14
+16
+#100000000
+0"
+07
+#111000000
+0!
+04
+06
+#129500000
+1!
+14
+16
+#148000000
+0!
+04
+06
+#166500000
+1!
+14
+16
+#185000000
+0!
+04
+06
+#200000000
+r1.0 1
+#200001000
+1#
+b00000000000000011110000000000000 $
+b00000000000000110110000000000000 %
+b00000000000001001110000000000000 &
+b00000000000000000100000000000000 '
+b00000000000000000100000000000000 (
+b00000000000000000100000000000000 )
+b00000000000000011000000000000000 *
+b00000000000000011000000000000000 +
+b00000000000000011000000000000000 ,
+18
+b00000000000000011110000000000000 9
+b00000000000000110110000000000000 :
+b00000000000001001110000000000000 ;
+b00000000000000000100000000000000 <
+b00000000000000000100000000000000 =
+b00000000000000000100000000000000 >
+b00000000000000011000000000000000 ?
+b00000000000000011000000000000000 @
+b00000000000000011000000000000000 A
+#203500000
+1!
+14
+16
+#222000000
+0!
+04
+06
+#237001000
+#240500000
+1!
+b00000000000000110011000000000000 .
+14
+16
+b00000000000000110011000000000000 C
+#259000000
+0!
+04
+06
+#277500000
+1!
+b00000000000001010111000000000000 /
+14
+16
+b00000000000001010111000000000000 D
+#296000000
+0!
+04
+06
+#314500000
+1!
+1-
+b00000000000001111011000000000000 0
+14
+16
+1B
+b00000000000001111011000000000000 E
+#333000000
+0!
+04
+06
+#351500000
+1!
+0-
+14
+16
+0B
+#370000000
+0!
+04
+06
+#388500000
+1!
+14
+16
+#407000000
+0!
+04
+06
+#425500000
+1!
+14
+16
+#444000000
+0!
+04
+06
+#462500000
+1!
+1-
+14
+16
+1B
+#481000000
+0!
+04
+06
+#499500000
+1!
+0-
+14
+16
+0B
+#518000000
+0!
+04
+06
+#536500000
+1!
+14
+16
+#555000000
+0!
+04
+06
+#573500000
+1!
+14
+16
+#592000000
+0!
+04
+06
+#610500000
+1!
+1-
+14
+16
+1B
+#629000000
+0!
+04
+06
+#647500000
+1!
+0-
+14
+16
+0B
+#666000000
+0!
+04
+06
+#684500000
+0!
+04
+15
+06

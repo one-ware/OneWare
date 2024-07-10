@@ -1,0 +1,31 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Essentials.Controls.HyperLink" Name="HyperLinkView">
+    <Button Name="PartButton" Click="Open_Click" Padding="0">
+        <Button.Styles>
+            <Style Selector="Button">
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
+            </Style>
+            <Style Selector="Button:pressed  /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="Button:pointerover">
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            </Style>
+        </Button.Styles>
+        <Grid>
+            <TextBlock TextDecorations="{Binding #HyperLinkView.TextDecorations}" Name="Urltext"
+                       Foreground="{Binding #PartButton.Foreground}"
+                       Text="{Binding #HyperLinkView.Label}" />
+        </Grid>
+    </Button>
+</UserControl>

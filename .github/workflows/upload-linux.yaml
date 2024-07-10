@@ -1,0 +1,48 @@
+name: Publish Standalone Linux
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  # Build Tar GZ and upload
+  deploy-linux:
+    name: Deploy for Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: './build/props/Base.props'
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish
+        run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r linux-x64 -o ./out
+      - name: Compress
+        uses: a7ul/tar-action@v1.1.0
+        id: compress
+        with:
+          command: c
+          files: ./
+          cwd: ./out
+          outPath: ./out/onewarestudio.tar.gz
+      - name: Create VersionInfo x64
+        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz" > ./out/linux-x64.txt
+      - uses: joutvhu/ftp-transfer@v1
+        name: Upload
+        with:
+          host: w01ec151.kasserver.com
+          username: w01ec151
+          password: ${{ secrets.ONEWARE_FTP }}
+          commands: |
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+            put ./out/onewarestudio.tar.gz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz
+            put ./out/linux-x64.txt ./cdn.one-ware.com/onewarestudio/linux-x64.txt

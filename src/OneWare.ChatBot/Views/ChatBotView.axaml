@@ -1,0 +1,32 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.ChatBot.Views.ChatBotView" 
+             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
+    <Grid RowDefinitions="*, 30">
+        <ScrollViewer Background="{DynamicResource ThemeControlLowBrush}">
+            <Border Margin="0 10 0 0">
+                <ItemsControl ItemsSource="{Binding Messages}"/>
+            </Border>
+        </ScrollViewer>
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <DockPanel Margin="5 0" VerticalAlignment="Center">
+                <Button DockPanel.Dock="Right" Command="{Binding SendText}"
+                        Margin="5 0 0 0" CommandParameter="{Binding #CommandBox.Text}">
+                    <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
+                </Button>
+                <TextBox BorderThickness="0" Classes="ToolBar" DockPanel.Dock="Left" Name="CommandBox" Height="24" Watermark="Message OneAI..."
+                         HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding CurrentMessage, Mode=TwoWay}">
+                    <Interaction.Behaviors>
+                        <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
+                                                            CommandParameter="{Binding #CommandBox.Text}" />
+                    </Interaction.Behaviors>
+                </TextBox>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

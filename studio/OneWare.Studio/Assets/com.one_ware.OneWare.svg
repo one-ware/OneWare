@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="128.00002"
+   height="127.99999"
+   viewBox="0 0 33.866671 33.866665"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="com.one_ware.OneWare.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="currentColor"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="2"
+     inkscape:cx="-27.75"
+     inkscape:cy="154.25"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     showgrid="false">
+    <inkscape:grid
+       id="grid1"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="0.26458334"
+       spacingy="0.26458334"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       dotted="false"
+       gridanglex="30"
+       gridanglez="30"
+       visible="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-32.279167,-138.64166)">
+    <rect
+       ry="5.2916665"
+       rx="5.2916665"
+       y="141.02159"
+       x="34.659096"
+       height="29.106813"
+       width="29.106813"
+       id="rect2896"
+       style="display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:#272727;stroke-width:0.261937;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal;enable-background:new" />
+    <g
+       id="g6"
+       transform="matrix(0.07373432,0,0,0.07346136,38.753293,145.1545)">
+      <g
+         id="g2">
+        <rect
+           x="118.7"
+           y="124.5"
+           class="st3"
+           width="130.8"
+           height="34.400002"
+           id="rect1"
+           style="fill:#ffffff" />
+      </g>
+      <g
+         id="g3">
+        <polygon
+           class="st3"
+           points="34.2,67.8 34.2,88.1 68.5,88.1 68.5,67.8 249.5,67.8 249.5,33.8 68.5,33.8 34.2,33.8 "
+           id="polygon1"
+           style="fill:#ffffff" />
+      </g>
+      <g
+         id="g4">
+        <polygon
+           class="st3"
+           points="34.2,215.5 34.2,249.5 34.2,249.9 249.5,249.9 249.5,215.5 68.5,215.5 68.5,195.2 34.2,195.2 "
+           id="polygon2"
+           style="fill:#ffffff" />
+      </g>
+      <g
+         id="g5">
+        <rect
+           x="34.200001"
+           y="110.7"
+           class="st3"
+           width="61.900002"
+           height="61.900002"
+           id="rect3"
+           style="fill:#ffffff" />
+      </g>
+    </g>
+  </g>
+</svg>

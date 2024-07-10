@@ -1,0 +1,118 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Vcd.Viewer.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
+             xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
+             xmlns:behaviours1="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
+
+    <UserControl.Resources>
+        <behaviours:SignalListBoxDropHandler x:Key="SignalListBoxDropHandler" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="150" Width="150" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition MinWidth="150" Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid RowDefinitions="30, *, 5, *">
+            <Border BorderThickness="0 0 0 1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <StackPanel Height="26" Orientation="Horizontal" Margin="5 0" Spacing="5">
+                    <Button VerticalAlignment="Center" Command="{Binding Refresh}">
+                        <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                    </Button>
+                    <TextBlock VerticalAlignment="Center" Text="Threads" />
+                    <ComboBox MinWidth="50" ItemsSource="{Binding LoadingThreadOptions}"
+                              SelectedItem="{Binding LoadingThreads}" />
+                </StackPanel>
+            </Border>
+
+            <TreeView Grid.Row="1" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
+                      ItemsSource="{Binding Scopes, FallbackValue={x:Null}}"
+                      SelectedItem="{Binding SelectedScope}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:VcdScopeModel">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.DataTemplates>
+                    <TreeDataTemplate DataType="models:VcdScopeModel" ItemsSource="{Binding Scopes}">
+                        <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Name}" />
+                    </TreeDataTemplate>
+                </TreeView.DataTemplates>
+            </TreeView>
+
+            <GridSplitter Background="{DynamicResource ThemeBackgroundBrush}"
+                          Height="5" HorizontalAlignment="Stretch" BorderThickness="0 1"
+                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                          Grid.Row="2" />
+
+            <ListBox BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="3"
+                     SelectedItem="{Binding SelectedSignal}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ItemsSource="{Binding SelectedScope.Signals, FallbackValue={x:Null}}">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem" x:DataType="data:IVcdSignal">
+                        <Setter Property="ContextMenu">
+                            <ContextMenu>
+                                <MenuItem Header="Show"
+                                          Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}"
+                                          CommandParameter="{Binding}" />
+                            </ContextMenu>
+                        </Setter>
+                        <Setter Property="Interaction.Behaviors">
+                            <BehaviorCollectionTemplate>
+                                <BehaviorCollection>
+                                    <behaviours1:ContextDragBubbleBehavior />
+                                </BehaviorCollection>
+                            </BehaviorCollectionTemplate>
+                        </Setter>
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.DataTemplates>
+                    <DataTemplate DataType="data:IVcdSignal">
+                        <Grid ColumnDefinitions="*, 16">
+                            <Grid ColumnDefinitions="16, 5, *">
+                                <Panel VerticalAlignment="Center" >
+                                    <Image
+                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Wire}}"
+                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}" VerticalAlignment="Center" />
+                                    <Image
+                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Reg}}"
+                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}" VerticalAlignment="Center" />
+                                    <Image
+                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Integer}}"
+                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}" VerticalAlignment="Center" />
+                                    <Image
+                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Real}}"
+                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}" VerticalAlignment="Center" />
+                                </Panel>
+                                <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis" Text="{Binding Name}" ToolTip.Tip="{Binding Name}" VerticalAlignment="Center" />
+                            </Grid>
+                            <Button Grid.Column="1" Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}"
+                                    CommandParameter="{Binding}" Height="16">
+                                <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="10"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.DataTemplates>
+            </ListBox>
+        </Grid>
+
+        <GridSplitter BorderThickness="1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                      Background="{DynamicResource ThemeBackgroundBrush}" Width="5" VerticalAlignment="Stretch"
+                      Grid.Column="1" />
+
+        <ContentControl DragDrop.AllowDrop="True" Grid.Column="2" Content="{Binding WaveFormViewer}">
+            <Interaction.Behaviors>
+                <ContextDropBehavior Handler="{StaticResource SignalListBoxDropHandler}" />
+            </Interaction.Behaviors>
+        </ContentControl>
+    </Grid>
+</UserControl>

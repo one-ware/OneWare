@@ -1,0 +1,221 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefHeight="750" PrefWidth="900" Padding="4"
+                         WindowBackground="{DynamicResource ThemeBackgroundBrush}"
+                         WindowStartupLocation="CenterOwner"
+                         Title="{Binding Title}"
+                         CustomIcon="{DynamicResource CreateIcon}"
+                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCompileView"
+                         x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
+                         Name="UniversalFpgaProjectCompileViewView">
+    <Interaction.Behaviors>
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
+    </Interaction.Behaviors>
+
+    <Grid RowDefinitions="*, Auto">
+        <Border Padding="4">
+            <Grid RowDefinitions="Auto, *">
+                <DockPanel DockPanel.Dock="Top">
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="0 0 5 0">
+                        <TextBlock Text="FPGA:" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding FpgaModels}" MinWidth="150"
+                                  SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Fpga.Name}" Margin="5 0" VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <controls:UiExtensionCollection Context="{Binding}" Extensions="{Binding TopRightExtension}" HorizontalAlignment="Right" DockPanel.Dock="Right"/>
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right" Margin="0 0 5 0">
+                        <TextBlock Text="Hide Extensions"/>
+                        <CheckBox IsChecked="{Binding HideExtensions}"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <DockPanel Grid.Row="1" DataContext="{Binding SelectedFpgaModel}">
+
+                    <ContentControl Padding="0 10" DockPanel.Dock="Top"
+                                    IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
+                                    Content="{Binding }" />
+
+                    <Grid ColumnDefinitions="*, 90, *" RowDefinitions="20, *" DockPanel.Dock="Top">
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Pins:"></TextBlock>
+                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                            <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
+                                <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
+                                                    Background="{DynamicResource ThemeBackgroundBrush}"
+                                                    SearchText="{Binding SearchTextPins}"
+                                                    VerticalContentAlignment="Center" SearchButtonVisible="False">
+                                    <Interaction.Behaviors>
+                                        <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #VisiblePinDataGrid}"/>
+                                    </Interaction.Behaviors>
+                                </controls:SearchBox>
+                                <DataGrid Name="VisiblePinDataGrid" CanUserSortColumns="False"
+                                          CanUserReorderColumns="False" CanUserResizeColumns="True"
+                                          Background="{DynamicResource ThemeControlLowBrush}"
+                                          RowBackground="Transparent" IsReadOnly="True"
+                                          ItemsSource="{Binding VisiblePinModels}"
+                                          SelectedItem="{Binding SelectedPinModel}"
+                                          BorderThickness="0 1 0 0"
+                                          VerticalScrollBarVisibility="Visible">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Pin.Name}" />
+                                        <DataGridTextColumn Header="Description" Width="*"
+                                                            Binding="{Binding Pin.Description}" />
+                                        <DataGridTemplateColumn Header="Node" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right"
+                                                                Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
+                                                                CommandParameter="{Binding }"
+                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                Height="20" Width="20"
+                                                                ToolTip.Tip="Disconnect">
+                                                            <Image Source="{DynamicResource MaterialDesign.Close}" Height="10"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                        <TextBlock DockPanel.Dock="Left" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Padding="5 0" Text="{Binding Connection.Node.Name, FallbackValue={}}">
+                                                        </TextBlock>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}">
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="30">
+                                <Button Command="{Binding ConnectCommand}" Classes="BorderButton" Height="40"
+                                        ToolTip.Tip="Connect" Width="40" CornerRadius="3">
+                                    <Button.RenderTransform>
+                                        <RotateTransform Angle="45"></RotateTransform>
+                                    </Button.RenderTransform>
+                                    <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                                
+                                <!--
+                                <ContentControl Content="{Binding LastSelection}" HorizontalAlignment="Center">
+                                    <ContentControl.DataTemplates>
+                                        <DataTemplate DataType="models:FpgaPinModel">
+                                            <Grid ColumnDefinitions="*, 8, *">
+                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Pin.Name}"/>
+                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Connection.Node.Name, FallbackValue={x:Null}}"></TextBlock>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate DataType="models:FpgaNodeModel">
+                                            <Grid ColumnDefinitions="*, 8, *">
+                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Connection.Pin.Name, FallbackValue={x:Null}}"></TextBlock>
+                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Node.Name}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ContentControl.DataTemplates>
+                                </ContentControl>
+                                
+                                <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40"
+                                        ToolTip.Tip="Disconnect" Width="40" CornerRadius="3">
+                                    <Button.RenderTransform>
+                                        <RotateTransform Angle="45"></RotateTransform>
+                                    </Button.RenderTransform>
+                                    <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                                -->
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Nodes:"></TextBlock>
+                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                            <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
+                                <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
+                                                    Background="{DynamicResource ThemeBackgroundBrush}"
+                                                    VerticalContentAlignment="Center" SearchButtonVisible="False"
+                                                    SearchText="{Binding SearchTextNodes}">
+                                <Interaction.Behaviors>
+                                    <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #VisibleNodeDataGrid}"/>
+                                </Interaction.Behaviors>
+                                </controls:SearchBox>
+                                <DataGrid Name="VisibleNodeDataGrid" CanUserSortColumns="False" CanUserReorderColumns="False"
+                                          CanUserResizeColumns="True"
+                                          Background="{DynamicResource ThemeControlLowBrush}"
+                                          RowBackground="Transparent" IsReadOnly="True"
+                                          ItemsSource="{Binding VisibleNodeModels}"
+                                          SelectedItem="{Binding SelectedNodeModel}"
+                                          BorderThickness="0 1 0 0"
+                                          VerticalScrollBarVisibility="Visible">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Node.Name}" />
+                                        <DataGridTextColumn Header="Direction" Width="*" Binding="{Binding Node.Direction}" />
+                                        <DataGridTemplateColumn Header="Pin" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right"
+                                                                Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
+                                                                CommandParameter="{Binding Connection}"
+                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                Height="20" Width="20"
+                                                                ToolTip.Tip="Disconnect">
+                                                            <Image Source="{DynamicResource MaterialDesign.Close}" Height="10"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                        <TextBlock DockPanel.Dock="Left" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Padding="5 0" Text="{Binding Connection.Pin.Name, FallbackValue={}}">
+                                                        </TextBlock>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+
+                    </Grid>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="1" DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button Command="{Binding SaveAndClose}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                <TextBlock Text="Save and Close" Margin="5 0"/>
+            </Button>
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAndCompile}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
+                    IsEnabled="{Binding Project.Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Name="CompileButton">
+                <StackPanel Orientation="Horizontal" Margin="5 0" Spacing="2">
+                    <TextBlock Text="Save And Compile"/>
+                    <StackPanel Spacing="2" Orientation="Horizontal" IsVisible="{Binding #CompileButton.IsEnabled}">
+                        <TextBlock Text="with"/>
+                        <TextBlock Text="{Binding Project.Toolchain.Name, FallbackValue={x:Null}}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        
+    </Grid>
+</controls:FlexibleWindow>

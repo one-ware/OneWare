@@ -1,0 +1,802 @@
+{
+  "Name": "MAX1000",
+  "Properties": {
+    "QuartusToolchain_Family": "MAX 10",
+    "QuartusToolchain_Device": "10M08SAU169C8G",
+    "QuartusProgrammer_ShortTerm_Mode": "JTAG",
+    "QuartusProgrammer_ShortTerm_Operation": "P",
+    "QuartusProgrammer_LongTerm_Mode": "JTAG",
+    "QuartusProgrammer_LongTerm_Format": "POF",
+    "QuartusProgrammer_LongTerm_Operation": "P"
+  },
+  "Pins": [
+    {
+      "Description": "CLK",
+      "Name": "H6"
+    },
+    {
+      "Description": "LED",
+      "Name": "A8"
+    },
+    {
+      "Description": "LED",
+      "Name": "A9"
+    },
+    {
+      "Description": "LED",
+      "Name": "A11"
+    },
+    {
+      "Description": "LED",
+      "Name": "A10"
+    },
+    {
+      "Description": "LED",
+      "Name": "B10"
+    },
+    {
+      "Description": "LED",
+      "Name": "C9"
+    },
+    {
+      "Description": "LED",
+      "Name": "C10"
+    },
+    {
+      "Description": "LED",
+      "Name": "D8"
+    },
+    {
+      "Description": "Button",
+      "Name": "E6"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "J6"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "K5"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "J7"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "L5"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "J5"
+    },
+    {
+      "Description": "Accelerometer",
+      "Name": "L4"
+    },
+    {
+      "Description": "USB TX",
+      "Name": "A4"
+    },
+    {
+      "Description": "USB RX",
+      "Name": "B4"
+    },
+    {
+      "Description": "USB RTS",
+      "Name": "B5"
+    },
+    {
+      "Description": "USB CTS",
+      "Name": "A6"
+    },
+    {
+      "Description": "USB DTR",
+      "Name": "B6"
+    },
+    {
+      "Description": "USB DSR",
+      "Name": "A7"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "M3"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "L3"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "M2"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "M1"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "N3"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "N2"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "K2"
+    },
+    {
+      "Description": "PMOD",
+      "Name": "K1"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "H8"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "K10"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "H5"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "H4"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "J1"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "J2"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "L12"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "J12"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "J13"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "K11"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "K12"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "J10"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "H10"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "H13"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "G12"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "B11"
+    },
+    {
+      "Description": "Low Speed I/Os",
+      "Name": "G13"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "F1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E4"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "E3"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "B1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "C1"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "C2"
+    },
+    {
+      "Description": "ADC Inputs",
+      "Name": "D1"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "A3"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "B2"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "A2"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "B3"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "C4"
+    },
+    {
+      "Description": "SPI Flash",
+      "Name": "B9"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "K6"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "M5"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "N5"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "J8"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "N10"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "M11"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "N9"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "L10"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "M13"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "N8"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "N4"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "M10"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "L11"
+    },
+    {
+      "Description": "SDRAM Address",
+      "Name": "M12"
+    },
+    {
+      "Description": "SDRAM Bank Select",
+      "Name": "N6"
+    },
+    {
+      "Description": "SDRAM Bank Select",
+      "Name": "K8"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D11"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "G10"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F10"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F9"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E10"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D9"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "G9"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F8"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "F13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "E13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "D12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "C12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "B12"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "B13"
+    },
+    {
+      "Description": "SDRAM Data",
+      "Name": "A12"
+    },
+    {
+      "Description": "SDRAM I/O Mask",
+      "Name": "E9"
+    },
+    {
+      "Description": "SDRAM I/O Mask",
+      "Name": "F12"
+    },
+    {
+      "Description": "SDRAM Row Address Strobe",
+      "Name": "M7"
+    },
+    {
+      "Description": "SDRAM Column Address Strobe",
+      "Name": "N7"
+    },
+    {
+      "Description": "SDRAM Write Enable",
+      "Name": "K7"
+    },
+    {
+      "Description": "SDRAM Clock",
+      "Name": "M9"
+    },
+    {
+      "Description": "SDRAM Clock Enable",
+      "Name": "M8"
+    },
+    {
+      "Description": "SDRAM Chip Select",
+      "Name": "M4"
+    }
+  ],
+  "Interfaces": [
+    {
+      "Name": "PMOD_1",
+      "Connector": "PMOD",
+      "Pins": [
+        {
+          "Name": "PIO1",
+          "Pin": "M3"
+        },
+        {
+          "Name": "PIO2",
+          "Pin": "L3"
+        },
+        {
+          "Name": "PIO3",
+          "Pin": "M2"
+        },
+        {
+          "Name": "PIO4",
+          "Pin": "M1"
+        },
+        {
+          "Name": "PIO5",
+          "Pin": "N3"
+        },
+        {
+          "Name": "PIO6",
+          "Pin": "N2"
+        },
+        {
+          "Name": "PIO7",
+          "Pin": "K2"
+        },
+        {
+          "Name": "PIO8",
+          "Pin": "K1"
+        }
+      ]
+    },
+    {
+      "Name": "UART",
+      "Pins": [
+        {
+          "Name": "TXD",
+          "Pin": "A4"
+        },
+        {
+          "Name": "RXD",
+          "Pin": "B4"
+        },
+        {
+          "Name": "RTS",
+          "Pin": "B5"
+        },
+        {
+          "Name": "CTS",
+          "Pin": "A6"
+        },
+        {
+          "Name": "DTR",
+          "Pin": "B6"
+        },
+        {
+          "Name": "DSR",
+          "Pin": "A7"
+        }
+      ]
+    },
+    {
+      "Name": "SDRAM",
+      "Pins": [
+        {
+          "Name": "ADD_1",
+          "Pin": "K6"
+        },
+        {
+          "Name": "ADD_2",
+          "Pin": "M5"
+        },
+        {
+          "Name": "ADD_3",
+          "Pin": "N5"
+        },
+        {
+          "Name": "ADD_4",
+          "Pin": "J8"
+        },
+        {
+          "Name": "ADD_5",
+          "Pin": "N10"
+        },
+        {
+          "Name": "ADD_6",
+          "Pin": "M11"
+        },
+        {
+          "Name": "ADD_7",
+          "Pin": "N9"
+        },
+        {
+          "Name": "ADD_8",
+          "Pin": "L10"
+        },
+        {
+          "Name": "ADD_9",
+          "Pin": "M13"
+        },
+        {
+          "Name": "ADD_10",
+          "Pin": "N8"
+        },
+        {
+          "Name": "ADD_11",
+          "Pin": "N4"
+        },
+        {
+          "Name": "ADD_12",
+          "Pin": "M10"
+        },
+        {
+          "Name": "ADD_13",
+          "Pin": "L11"
+        },
+        {
+          "Name": "ADD_14",
+          "Pin": "M12"
+        },
+        {
+          "Name": "BAN_1",
+          "Pin": "N6"
+        },
+        {
+          "Name": "BAN_2",
+          "Pin": "K8"
+        },
+        {
+          "Name": "DAT_1",
+          "Pin": "D11"
+        },
+        {
+          "Name": "DAT_2",
+          "Pin": "G10"
+        },
+        {
+          "Name": "DAT_3",
+          "Pin": "F10"
+        },
+        {
+          "Name": "DAT_4",
+          "Pin": "F9"
+        },
+        {
+          "Name": "DAT_5",
+          "Pin": "E10"
+        },
+        {
+          "Name": "DAT_6",
+          "Pin": "D9"
+        },
+        {
+          "Name": "DAT_7",
+          "Pin": "G9"
+        },
+        {
+          "Name": "DAT_8",
+          "Pin": "F8"
+        },
+        {
+          "Name": "DAT_9",
+          "Pin": "F13"
+        },
+        {
+          "Name": "DAT_10",
+          "Pin": "E12"
+        },
+        {
+          "Name": "DAT_11",
+          "Pin": "E13"
+        },
+        {
+          "Name": "DAT_12",
+          "Pin": "D12"
+        },
+        {
+          "Name": "DAT_13",
+          "Pin": "C12"
+        },
+        {
+          "Name": "DAT_14",
+          "Pin": "B12"
+        },
+        {
+          "Name": "DAT_15",
+          "Pin": "B13"
+        },
+        {
+          "Name": "DAT_16",
+          "Pin": "A12"
+        },
+        {
+          "Name": "DQM_1",
+          "Pin": "E9"
+        },
+        {
+          "Name": "DQM_2",
+          "Pin": "F12"
+        },
+        {
+          "Name": "RAS",
+          "Pin": "M7"
+        },
+        {
+          "Name": "CAS",
+          "Pin": "N7"
+        },
+        {
+          "Name": "WEN",
+          "Pin": "K7"
+        },
+        {
+          "Name": "ClK",
+          "Pin": "M9"
+        },
+        {
+          "Name": "CKE",
+          "Pin": "M8"
+        },
+        {
+          "Name": "CSE",
+          "Pin": "M4"
+        }
+      ]
+    },
+    {
+      "Name": "FLASH",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "A3"
+        },
+        {
+          "Name": "2",
+          "Pin": "B2"
+        },
+        {
+          "Name": "3",
+          "Pin": "A2"
+        },
+        {
+          "Name": "4",
+          "Pin": "B3"
+        },
+        {
+          "Name": "5",
+          "Pin": "C4"
+        },
+        {
+          "Name": "6",
+          "Pin": "B9"
+        }
+      ]
+    },
+    {
+      "Name": "LED",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "A8"
+        },
+        {
+          "Name": "2",
+          "Pin": "A9"
+        },
+        {
+          "Name": "3",
+          "Pin": "A11"
+        },
+        {
+          "Name": "4",
+          "Pin": "A10"
+        },
+        {
+          "Name": "5",
+          "Pin": "B10"
+        },
+        {
+          "Name": "6",
+          "Pin": "C9"
+        },
+        {
+          "Name": "7",
+          "Pin": "C10"
+        },
+        {
+          "Name": "8",
+          "Pin": "D8"
+        }
+      ]
+    },
+    {
+      "Name": "BTN",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "E6"
+        }
+      ]
+    },
+    {
+      "Name": "CLK",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "H6"
+        }
+      ]
+    },
+    {
+      "Name": "ADC",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "F1"
+        },
+        {
+          "Name": "2",
+          "Pin": "E1"
+        },
+        {
+          "Name": "3",
+          "Pin": "E4"
+        },
+        {
+          "Name": "4",
+          "Pin": "E3"
+        },
+        {
+          "Name": "5",
+          "Pin": "B1"
+        },
+        {
+          "Name": "6",
+          "Pin": "C1"
+        },
+        {
+          "Name": "7",
+          "Pin": "C2"
+        },
+        {
+          "Name": "8",
+          "Pin": "D1"
+        }
+      ]
+    },
+    {
+      "Name": "ACCEL",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "J6"
+        },
+        {
+          "Name": "2",
+          "Pin": "K5"
+        },
+        {
+          "Name": "3",
+          "Pin": "J7"
+        },
+        {
+          "Name": "4",
+          "Pin": "L5"
+        },
+        {
+          "Name": "5",
+          "Pin": "J5"
+        },
+        {
+          "Name": "6",
+          "Pin": "L4"
+        }
+      ]
+    }
+  ]
+}

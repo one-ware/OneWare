@@ -3,6 +3,6 @@
     <Import Project="..\..\build\props\OneWare.Module.props" />
     
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
     </ItemGroup>
 </Project>

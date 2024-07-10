@@ -1,0 +1,21 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="22"
+             x:Class="OneWare.Essentials.Controls.FreqSelectorBox">
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>*,50</Grid.ColumnDefinitions>
+        <TextBox Margin="0 0 0 0" Padding="4 2 4 0" FontSize="12" Name="InputBox" x:CompileBindings="False"
+                 Watermark="{Binding Label, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                 Text="{Binding Input, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" />
+        <ComboBox Padding="3, 2, 1, 0" Grid.Column="1" x:CompileBindings="False"
+                  SelectedIndex="{Binding FreqUnit, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                  BorderThickness="0, 1, 1, 1" Name="ComboBoxFrequencyUnit">
+            <ComboBoxItem>Hz</ComboBoxItem>
+            <ComboBoxItem>KHz</ComboBoxItem>
+            <ComboBoxItem>MHz</ComboBoxItem>
+            <ComboBoxItem>GHz</ComboBoxItem>
+        </ComboBox>
+    </Grid>
+</UserControl>

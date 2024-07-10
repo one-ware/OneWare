@@ -1,0 +1,24 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:OneWare.Essentials.Controls"
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters"
+        xmlns:models="clr-namespace:OneWare.Essentials.Models">
+    <Design.PreviewWith>
+        <controls:UiExtensionCollection />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|UiExtensionCollection">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ItemsControl ItemsPanel="{TemplateBinding ItemsPanel}" ItemsSource="{TemplateBinding Extensions}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:UiExtension">
+                            <controls:UiExtensionControl Context="{Binding $parent[controls:UiExtensionCollection].Context, Mode=OneWay}" UiExtension="{Binding}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

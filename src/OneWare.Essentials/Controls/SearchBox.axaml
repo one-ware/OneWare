@@ -1,0 +1,31 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24" Focusable="True"
+             x:Class="OneWare.Essentials.Controls.SearchBox" Name="SearchBoxView">
+
+    <Grid VerticalAlignment="Center" RowDefinitions="Auto" ColumnDefinitions="*,Auto,Auto">
+        <Border Name="TextBoxBorder" Height="24" BorderBrush="{DynamicResource ThemeControlHighBrush}" Margin="0">
+            <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Right" Width="24" Name="ResetButton"
+                        Command="{Binding #SearchBoxView.Reset}">
+                    <Image Source="{DynamicResource Material.WindowClose}" Height="8" Width="8"  />
+                </Button>
+                <TextBox Watermark="{Binding #SearchBoxView.Label}" CaretBrush="{DynamicResource ThemeForegroundBrush}" Background="Transparent"
+                         DockPanel.Dock="Left" TextWrapping="NoWrap" AcceptsReturn="False" Name="SearchTextBox"
+                         BorderThickness="0" AcceptsTab="False" VerticalContentAlignment="Center"
+                         Padding="6, 0, 0, 0" VerticalAlignment="Center"
+                         HorizontalAlignment="Stretch" Text="{Binding #SearchBoxView.SearchText}" />
+            </DockPanel>
+        </Border>
+
+        <Border Name="SearchBorder" IsVisible="{Binding #SearchButton.IsVisible}" Grid.Column="1"
+                BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Height="24" />
+
+        <Button Name="SearchButton" Grid.Column="2" Width="24" Height="24" IsVisible="{Binding #SearchBoxView.SearchButtonVisible}"
+                Command="{Binding #SearchBoxView.StartSearch}">
+            <Image Source="{DynamicResource VsImageLib.Search16XMd}" Height="12" Width="12" />
+        </Button>
+    </Grid>
+</UserControl>

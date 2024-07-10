@@ -32,7 +32,8 @@ jobs:
     # Create the NuGet packages in the folder from the environment variable NuGetDirectory
     - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
     - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-        
+    - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      
     # Publish all NuGet packages to NuGet.org
     # Use --skip-duplicate to prevent errors if a package with the same version already exists.
     # If you retry a failed workflow, already published packages will be skipped without error.

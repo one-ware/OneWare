@@ -1,0 +1,259 @@
+{
+  "Name": "iCEBreaker V1.0e",
+  "Properties": {
+    "YosysToolchain_Yosys_SynthTool": "synth_ice40",
+    "YosysToolchain_Yosys_Flags": "",
+    "YosysToolchain_NextPnr_Tool": "nextpnr-ice40",
+    "YosysToolchain_NextPnr_Flags": "--package sg48 --up5k",
+    "YosysToolchain_Pack_Tool": "icepack",
+    "YosysToolchain_Pack_Flags": "",
+    "OpenFpgaLoader_Board": "ice40_generic",
+    "OpenFpgaLoader_ShortTerm_Flags": "",
+    "OpenFpgaLoader_LongTerm_Flags": ""
+  },
+  "Pins": [
+    {
+      "Description": "WP IO2",
+      "Name": "12"
+    },
+    {
+      "Description": "RST IO3",
+      "Name": "13"
+    },
+    {
+      "Description": "MISO IO3",
+      "Name": "14"
+    },
+    {
+      "Description": "SCK",
+      "Name": "15"
+    },
+    {
+      "Description": "CS",
+      "Name": "16"
+    },
+    {
+      "Description": "MOSI IO0",
+      "Name": "17"
+    },
+    {
+      "Description": "P1 A7",
+      "Name": "3"
+    },
+    {
+      "Description": "P1 A8",
+      "Name": "48"
+    },
+    {
+      "Description": "P1 A9",
+      "Name": "46"
+    },
+    {
+      "Description": "P1 A10",
+      "Name": "44"
+    },
+    {
+      "Description": "P1 A1",
+      "Name": "4"
+    },
+    {
+      "Description": "P1 A2",
+      "Name": "2"
+    },
+    {
+      "Description": "P1 A3",
+      "Name": "47"
+    },
+    {
+      "Description": "P1 A4",
+      "Name": "45"
+    },
+    {
+      "Description": "P1 B7",
+      "Name": "42"
+    },
+    {
+      "Description": "P1 B8",
+      "Name": "36"
+    },
+    {
+      "Description": "P1 B9",
+      "Name": "32"
+    },
+    {
+      "Description": "P1 B10",
+      "Name": "28"
+    },
+    {
+      "Description": "P1 B1",
+      "Name": "43"
+    },
+    {
+      "Description": "P1 B2",
+      "Name": "38"
+    },
+    {
+      "Description": "P1 B3",
+      "Name": "34"
+    },
+    {
+      "Description": "P1 B4",
+      "Name": "31"
+    },
+    {
+      "Description": "UART RX",
+      "Name": "6"
+    },
+    {
+      "Description": "UART TX",
+      "Name": "9"
+    },
+    {
+      "Description": "USER BUTTON",
+      "Name": "10"
+    },
+    {
+      "Description": "P2 10",
+      "Name": "18"
+    },
+    {
+      "Description": "P2 4",
+      "Name": "19"
+    },
+    {
+      "Description": "P2 9",
+      "Name": "20"
+    },
+    {
+      "Description": "P2 3",
+      "Name": "21"
+    },
+    {
+      "Description": "P2 8",
+      "Name": "23"
+    },
+    {
+      "Description": "P2 2",
+      "Name": "25"
+    },
+    {
+      "Description": "P2 7",
+      "Name": "26"
+    },
+    {
+      "Description": "P2 1",
+      "Name": "27"
+    },
+    {
+      "Description": "CLK",
+      "Name": "35"
+    },
+    {
+      "Description": "GREEN LED",
+      "Name": "37"
+    },
+    {
+      "Description": "RED LED",
+      "Name": "11"
+    },
+    {
+      "Description": "LED RED",
+      "Name": "39"
+    },
+    {
+      "Description": "LED GREEN",
+      "Name": "40"
+    },
+    {
+      "Description": "LED BLUE",
+      "Name": "41"
+    }
+  ],
+  "Interfaces": [
+    {
+      "Name": "PMOD_1",
+      "Connector": "PMOD",
+      "Pins": [
+        {
+          "Name": "LS_1",
+          "Pin": "3"
+        },
+        {
+          "Name": "LS_2",
+          "Pin": "48"
+        },
+        {
+          "Name": "LS_3",
+          "Pin": "46"
+        },
+        {
+          "Name": "LS_4",
+          "Pin": "44"
+        },
+        {
+          "Name": "LS_5",
+          "Pin": "4"
+        },
+        {
+          "Name": "LS_6",
+          "Pin": "2"
+        },
+        {
+          "Name": "LS_7",
+          "Pin": "47"
+        },
+        {
+          "Name": "LS_8",
+          "Pin": "45"
+        }
+      ]
+    },
+    {
+      "Name": "PMOD_2",
+      "Connector": "PMOD",
+      "Pins": [
+        {
+          "Name": "LS_1",
+          "Pin": "42"
+        },
+        {
+          "Name": "LS_2",
+          "Pin": "36"
+        },
+        {
+          "Name": "LS_3",
+          "Pin": "32"
+        },
+        {
+          "Name": "LS_4",
+          "Pin": "28"
+        },
+        {
+          "Name": "LS_5",
+          "Pin": "43"
+        },
+        {
+          "Name": "LS_6",
+          "Pin": "38"
+        },
+        {
+          "Name": "LS_7",
+          "Pin": "34"
+        },
+        {
+          "Name": "LS_8",
+          "Pin": "31"
+        }
+      ]
+    },
+    {
+      "Name": "CLK",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "35"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+                         xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefHeight="400" PrefWidth="600" Padding="4"
+                         WindowStartupLocation="CenterOwner"
+                         Title="New Universal FPGA Project" Name="UniversalFpgaProjectCreator"
+                         Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
+                         CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCreatorView"
+                         x:DataType="viewModels:UniversalFpgaProjectCreatorViewModel">
+    <Interaction.Behaviors>
+        <behaviours:CommandOnEnterBehaviour Command="{Binding SaveAsync}"
+                                            CommandParameter="{Binding #UniversalFpgaProjectCreator}" />
+    </Interaction.Behaviors>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCreator}">
+                <TextBlock Text="Save" />
+            </Button>
+        </StackPanel>
+        <ScrollViewer DockPanel.Dock="Top" >
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}"/>
+        </ScrollViewer>
+    </DockPanel>
+</controls:FlexibleWindow>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\vhdl.tmLanguage.json"/>
+        <AvaloniaResource Include="Assets\formatter.js"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Assets\Templates\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+    
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\props\XUnit.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <IsPackable>False</IsPackable>
+        <IsTestProject>True</IsTestProject>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+    </ItemGroup>
+
+</Project>

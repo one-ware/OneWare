@@ -29,7 +29,7 @@
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
-        <ProjectReference Include="..\OneWare.Essentials\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
         <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj" />
     </ItemGroup>
     

@@ -1,0 +1,11 @@
+# What standard to use. This is optional and defaults to VHDL2008.
+standard = "2008"
+
+[libraries]
+default.files = [
+    '**/*.vhd',
+    '**/*.vhdl'
+]
+
+# Add additional libraries here
+# A restart of the language server is required after changing this file.
