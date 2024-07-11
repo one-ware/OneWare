@@ -23,6 +23,8 @@ public class UniversalFpgaProjectManager : IProjectManager
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
 
+    public string Extension => UniversalFpgaProjectRoot.ProjectFileExtension;
+    
     public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService,
         IWindowService windowService, FpgaService fpgaService)
     {

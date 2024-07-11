@@ -15,7 +15,11 @@ public class ProjectManagerService : IProjectManagerService
     public IProjectManager? GetManager(string id)
     {
         _projectManagers.TryGetValue(id, out var manager);
-        //if (manager == null) throw new NullReferenceException($"Project Type {id} not registered!");
         return manager;
+    }
+
+    public IProjectManager? GetManagerByExtension(string extension)
+    {
+        return _projectManagers.Values.FirstOrDefault(x => x.Extension == extension);
     }
 }

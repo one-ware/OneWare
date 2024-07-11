@@ -10,6 +10,8 @@ public class FolderProjectManager : IProjectManager
 {
     private readonly ILogger _logger;
 
+    public string Extension => "";
+    
     public FolderProjectManager(ILogger logger)
     {
         _logger = logger;

@@ -42,6 +42,8 @@ namespace OneWare.Core
     {
         protected AggregateModuleCatalog ModuleCatalog { get; } = new();
 
+        protected bool _tempMode = false;
+
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -390,14 +392,14 @@ namespace OneWare.Core
 
             await Container.Resolve<LanguageManager>().CleanResourcesAsync();
 
-            await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
+            if(!_tempMode) await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
 
             //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
 
             Container.Resolve<ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
-
+            
             //Save active layout
-            Container.Resolve<IDockService>().SaveLayout();
+            if(!_tempMode) Container.Resolve<IDockService>().SaveLayout();
 
             //Save settings
             Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);

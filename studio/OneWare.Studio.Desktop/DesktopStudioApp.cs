@@ -8,6 +8,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Dock.Model.Controls;
+using Dock.Model.Core;
+using Dock.Model.Mvvm.Controls;
 using ImTools;
 using OneWare.Core;
 using OneWare.Core.Data;
@@ -18,6 +21,7 @@ using OneWare.PackageManager;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
 using OneWare.SerialMonitor;
@@ -106,14 +110,33 @@ public class DesktopStudioApp : StudioApp
             //Check file exists
             if (File.Exists(fileName))
             {
-                if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
+                _tempMode = true;
+                var dockService = Container.Resolve<IDockService>();
+                
+                var views = dockService.SearchView<Document>();
+
+                foreach (var view in views.ToArray())
+                {
+                    if(view is IDockable dockable)
+                        dockService.CloseDockable(dockable);
+                }
+                
+                var extension = Path.GetExtension(fileName);
+
+                var manager = Container.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
+
+                if (manager != null)
+                {
+                    await Container.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
+                }
+                else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
                 {
                     var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
                     _ = Container.Resolve<IDockService>().OpenFileAsync(file);
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
+                    Container.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
                 }
             }
         }

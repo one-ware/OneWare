@@ -2,7 +2,6 @@
 
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
-
     
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
@@ -29,19 +28,6 @@
         <ProjectReference Include="..\..\src\OneWare.TangNano9K\OneWare.TangNano9K.csproj" />
         <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Styles\Theme.axaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcd" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VerilogTest.v" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VhdlTest.vhd" />
     </ItemGroup>
 
 </Project>
