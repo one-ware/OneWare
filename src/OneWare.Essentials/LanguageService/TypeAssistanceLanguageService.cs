@@ -677,9 +677,7 @@ namespace OneWare.Essentials.LanguageService
                         Completion.Close();
                     }
                 }).DisposeWith(_completionDisposable);
-
-                Completion.CompletionList.CompletionData.AddRange(customCompletionItems);
-
+                
                 if (lspCompletionItems is not null)
                 {
                     if (triggerKind is CompletionTriggerKind.TriggerCharacter && triggerChar != null)
@@ -691,6 +689,18 @@ namespace OneWare.Essentials.LanguageService
                         completionOffset));
                 }
 
+                foreach (var customItem in customCompletionItems)
+                {
+                    for (var c = 0; c < Completion.CompletionList.CompletionData.Count; c++)
+                    {
+                        if (string.Compare(Completion.CompletionList.CompletionData[c].Text, customItem.Text, StringComparison.Ordinal) > 0)
+                        {
+                            Completion.CompletionList.CompletionData.Insert(c, customItem);
+                            break;
+                        }
+                    }
+                }
+                
                 //Calculate CompletionWindow width
                 var length = 0;
                 foreach (var data in Completion.CompletionList.CompletionData)

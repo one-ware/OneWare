@@ -1,16 +1,19 @@
 ﻿using System.Text.RegularExpressions;
 using Avalonia.Input;
+using Avalonia.Platform;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.ViewModels;
 using OneWare.Verilog.Folding;
+using Prism.DryIoc.Properties;
 
 namespace OneWare.Verilog
 {
     internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
     {
-        private readonly Regex _usedWordsRegex = new(@"\w{3,}");
+        private static List<TextMateSnippet>? _snippets;
         
         public TypeAssistanceVerilog(IEditor editor, LanguageServiceVerilog ls) : base(editor, ls)
         {
@@ -18,21 +21,20 @@ namespace OneWare.Verilog
             FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
 
             LineCommentSequence = "//";
+        
+            _snippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/verilog.json");
         }
 
-        public override async Task<List<CompletionData>> GetCustomCompletionItemsAsync()
+        public override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {
             var items = new List<CompletionData>();
 
-            var text = Editor.CurrentDocument.Text;
-            var usedWords = await Task.Run(() => _usedWordsRegex.Matches(text).Select(x => x.ToString()).Distinct());
-            
-            foreach (var word in usedWords)
+            if (_snippets != null)
             {
-                //items.Add(new CompletionData(word, word, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
+                items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null, snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset)));
             }
 
-            return items;
+            return Task.FromResult(items);
         }
 
         protected override void TextEnteredAutoFormat(TextInputEventArgs e)

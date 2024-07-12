@@ -10,6 +10,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\vhdl.tmLanguage.json"/>
         <AvaloniaResource Include="Assets\formatter.js"/>
+        <AvaloniaResource Include="Assets\vhdl.json"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
+        <AvaloniaResource Include="Assets\verilog.json" />
     </ItemGroup>
 
     <ItemGroup>
