@@ -89,7 +89,7 @@
     </sdkControls:AdvancedWindow.TitleBarContent>
 
     <sdkControls:AdvancedWindow.BottomContent>
-        <Border Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
+        <Border Name="BottomStatusRow" Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->

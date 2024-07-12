@@ -1,5 +1,6 @@
 ﻿using System.Reactive;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -11,6 +12,7 @@ using DynamicData.Binding;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Extensions;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
@@ -86,6 +88,21 @@ namespace OneWare.Core.Views.Windows
             */
         }
 
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+            if (change.Property == WindowStateProperty)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    //ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
+                    BottomStatusRow.CornerRadius = WindowState == WindowState.Maximized
+                        ? new CornerRadius(0)
+                        : PlatformHelper.WindowsCornerRadiusBottom;
+                }
+            }
+        }
+        
         private void RefreshNativeMenu()
         {
             if (DataContext is not MainWindowViewModel vm) return;
