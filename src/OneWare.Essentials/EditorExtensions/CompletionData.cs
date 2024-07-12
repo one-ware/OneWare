@@ -97,6 +97,7 @@ namespace OneWare.Essentials.EditorExtensions
             //Remove placeholders & caretstops
             var filteredText = placeHolder.Replace(newText, "");
             filteredText = caretStop.Replace(filteredText, "");
+            filteredText = filteredText.Replace("$0", "");
 
             textArea.Document.Replace(start.Offset, end.EndOffset - start.Offset, filteredText);
 
