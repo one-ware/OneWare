@@ -1,4 +1,4 @@
-name: Publish Studio Desktop for Windows
+name: Publish Studio Desktop for Windows in WinGet
 
 on:
   workflow_dispatch:
