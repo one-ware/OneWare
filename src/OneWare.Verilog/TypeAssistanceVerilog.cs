@@ -29,7 +29,7 @@ namespace OneWare.Verilog
             
             foreach (var word in usedWords)
             {
-                items.Add(new CompletionData(word, word, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
+                //items.Add(new CompletionData(word, word, "Used word in document", TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset));
             }
 
             return items;

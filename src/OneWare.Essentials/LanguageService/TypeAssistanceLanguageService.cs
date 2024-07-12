@@ -639,7 +639,10 @@ namespace OneWare.Essentials.LanguageService
         protected virtual async Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
         {
             //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
+            
             var completionOffset = CodeBox.CaretOffset;
+            if(triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
+            var completionEndOffset = CodeBox.CaretOffset;
 
             var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
@@ -659,9 +662,9 @@ namespace OneWare.Essentials.LanguageService
                     MaxHeight = 225,
                     CloseAutomatically = true,
                     StartOffset = completionOffset,
-                    EndOffset = completionOffset
+                    EndOffset = completionEndOffset
                 };
-
+                
                 Observable.FromEventPattern(Completion, nameof(Completion.Closed)).Take(1).Subscribe(x =>
                 {
                     _completionDisposable.Dispose();
@@ -691,8 +694,18 @@ namespace OneWare.Essentials.LanguageService
                 //Calculate CompletionWindow width
                 var length = 0;
                 foreach (var data in Completion.CompletionList.CompletionData)
-                    if (data.Content is string str && str.Length > length)
-                        length = str.Length;
+                {
+                    var contentLength = (data.Content as string)?.Length ?? 0;
+                    var detailLength = (data as CompletionData)?.Detail?.Length ?? 0;
+
+                    var visibleChars = contentLength + detailLength + 5;
+                    
+                    if (visibleChars > length)
+                    {
+                        length = visibleChars;
+                    }
+                }
+                 
                 var calculatedWith = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
 
                 Completion.Width = calculatedWith > 400 ? 500 : calculatedWith;
@@ -818,7 +831,7 @@ namespace OneWare.Essentials.LanguageService
                     : comp.Documentation.String)
                 : null;
 
-            return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, description, icon, 0,
+            return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, comp.Detail, description, icon, 0,
                 comp, offset, AfterComplete);
         }
 

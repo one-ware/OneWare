@@ -20,16 +20,19 @@ namespace OneWare.Essentials.EditorExtensions
         public string Text { get; private set; }
 
         public object Content { get; }
+        
+        public string? Detail { get; }
 
         public object? Description { get; }
 
         public double Priority { get; }
         
-        public CompletionData(string insertText, string label, string? description, IImage? icon, double priority,
+        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon, double priority,
             CompletionItem completionItem, int offset, Action? afterCompletion = null)
         {
             Text = insertText;
             Content = label;
+            Detail = detail;
             Description = description;
             Image = icon;
             Priority = priority;
@@ -38,10 +41,11 @@ namespace OneWare.Essentials.EditorExtensions
             CompletionOffset = offset;
         }
         
-        public CompletionData(string insertText, string label, string? description, IImage? icon, double priority, int offset, Action? afterCompletion = null)
+        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon, double priority, int offset, Action? afterCompletion = null)
         {
             Text = insertText;
             Content = label;
+            Detail = detail;
             Description = description;
             Image = icon;
             Priority = priority;

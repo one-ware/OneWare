@@ -34,20 +34,25 @@
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                         IsVisible="{Binding $parent[cc:CompletionWindow].IsVisible}">
                     <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                           VerticalAlignment="Stretch" Margin="0" Padding="0"
                                           Name="PART_ListBox" Background="{DynamicResource ThemeBackgroundBrush}"
                                           BorderThickness="0">
                         <cc:CompletionListBox.ItemTemplate>
-                            <DataTemplate DataType="cc:ICompletionData">
+                            <DataTemplate DataType="editorEx:CompletionData">
                                 <Border>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Image VerticalAlignment="Center" Source="{Binding Image}"
-                                               Width="{Binding #CompletionName.Bounds.Height}"
-                                               Height="{Binding #CompletionName.Bounds.Height}" />
-                                        <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
-                                                   Margin="8,0,0,0" Text="{Binding Content}"
-                                                   Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                    </StackPanel>
+                                    <Grid ColumnDefinitions="Auto, 5, *">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Image VerticalAlignment="Center" Source="{Binding Image}"
+                                                   Width="{Binding #CompletionName.Bounds.Height}"
+                                                   Height="{Binding #CompletionName.Bounds.Height}" />
+                                            <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
+                                                       Margin="8,0,0,0" Text="{Binding Content}"
+                                                       Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding Detail}" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" TextAlignment="Right" HorizontalAlignment="Right" />
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </cc:CompletionListBox.ItemTemplate>
@@ -145,7 +150,7 @@
                           RowDefinitions="Auto, Auto">
                         <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                 IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
-                            <StackPanel Orientation="Vertical" Spacing="2">
+                            <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                                 <Button Name="PART_UP">
                                     <Path Stroke="{TemplateBinding Foreground}" Height="6" Width="6"
                                           Fill="{TemplateBinding Foreground}"

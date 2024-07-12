@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Avalonia.Input;
 using Avalonia.Media;
+using AvaloniaEdit.CodeCompletion;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
@@ -14,8 +15,6 @@ namespace OneWare.Vhdl
 {
     internal partial class TypeAssistanceVhdl : TypeAssistanceLanguageService
     {
-        private readonly Regex _usedWordsRegex = new(@"\w{3,}");
-        
         public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
         {
             CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
@@ -32,8 +31,5 @@ namespace OneWare.Vhdl
                 AutoIndent(line, line);
             }
         }
-
-        [GeneratedRegex("^(.*?)\\s*'([^']*)'$", RegexOptions.Multiline)]
-        private static partial Regex SymbolNameRegex();
     }
 }
