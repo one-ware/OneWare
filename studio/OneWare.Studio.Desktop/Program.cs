@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
+using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -48,14 +49,16 @@ internal abstract class Program
         }
         catch (Exception ex)
         {
+            var crashReport = $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
+            
             if(ContainerLocator.Container.IsRegistered<ILogger>())
                 ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
-            else Console.WriteLine(ex.ToString());
+            else Console.WriteLine(crashReport);
 
             PlatformHelper.WriteTextFile(
                 Path.Combine(StudioApp.Paths.CrashReportsDirectory,
                     "crash_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", DateTimeFormatInfo.InvariantInfo) +
-                    ".txt"), ex.ToString());
+                    ".txt"), crashReport);
 #if DEBUG
             Console.ReadLine();
 #endif

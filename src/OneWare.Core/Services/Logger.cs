@@ -57,12 +57,6 @@ public class Logger : ILogger
         WriteLogFile(message?.ToString() ?? "");
     }
 
-    public static string CurrentTimeString()
-    {
-        var time = DateTime.Now;
-        return "[" + $"{time.Hour:D2}:{time.Minute:D2}:{time.Second:D2}" + "]";
-    }
-
     public void Error(string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
@@ -113,7 +107,7 @@ public class Logger : ILogger
             _log = File.CreateText(LogFilePath);
             PlatformHelper.ChmodFile(LogFilePath);
             
-            this.Log($"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
+            Log($"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
         }
         catch
         {
