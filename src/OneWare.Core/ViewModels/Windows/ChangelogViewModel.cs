@@ -7,9 +7,9 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
 {
     private readonly IHttpService _httpService;
     
-    private bool _isLoading = false;
+    private bool _isLoading;
     
-    private string _changelogUrl;
+    private readonly string _changelogUrl;
 
     public bool IsLoading
     {
