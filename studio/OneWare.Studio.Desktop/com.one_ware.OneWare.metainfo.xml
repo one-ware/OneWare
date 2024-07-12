@@ -9,23 +9,19 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>LicenseRef-proprietary</project_license>
   <description>
-    <p>OneWare Studio is the next generation IDE for electronics development. It supports a broad
-      range of development environments including VHDL, Verilog, C++, and more. It is designed to
-      streamline electronics development with features like an AI Generator for easy AI task
-      integration, high-speed simulation viewer, and advanced debugging tools. OneWare Studio also
-      offers extensive customization with an extensible architecture for custom tools and strong
-      support for digital twin technology, making it ideal for firmware and hardware development
-      across diverse applications.</p>
+    <p>OneWare Studio is the next generation IDE for electronics development. 
+      It supports a broad range of development languages including VHDL, Verilog, C++, and more. 
+      It is designed to streamline electronics development with features like a high-speed simulation viewer and advanced debugging tools. 
+      OneWare Studio also offers extensive customization with an extensible architecture for custom tools and strong support for digital twin technology, making it ideal for firmware and hardware development across diverse applications.</p>
     <p>These are a few of the current features:</p>
     <ul>
       <li>Comprehensive support for VHDL and Verilog for streamlined digital design</li>
-      <li>User-friendly multi-vendor support for FPGA development</li>
-      <li>Integrated simulation tools with a high-speed, multithreaded VCD Viewer</li>
-      <li>AI Generator for creating highly optimized neural networks effortlessly</li>
-      <li>Extensible architecture to unlock additional functionality and hardware support with
-        custom extensions</li>
+      <li>Vendor-independent support for FPGA development</li>
+      <li>Support for simulation tools like GHDL or IVerilog with a integrated high-speed, multithreaded VCD Viewer</li>
+      <li>Extensible architecture to unlock additional functionality and hardware support with custom extensions</li>
+      <li>All the features you would expect from a modern IDE, with built-in GIT support</li>
     </ul>
-    <p>Join our growing community!</p>
+    <p>Get started and join our growing community!</p>
   </description>
   <url type="homepage">https://one-ware.com/studio</url>
   <url type="bugtracker">https://github.com/one-ware/OneWare</url>
