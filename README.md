@@ -13,21 +13,17 @@ Using .NET 8.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
 
 ## About
 
-OneWare Studio is the next generation IDE for electronics development. It supports a broad
-range of development environments including VHDL, Verilog, C++, and more. It is designed to
-streamline electronics development with features like an [AI Generator](https://one-ware.com/one-ai) for easy AI task
-integration, high-speed simulation viewer, and advanced debugging tools. OneWare Studio also
-offers extensive customization with an extensible architecture for custom tools and strong
-support for digital twin technology, making it ideal for firmware and hardware development
-across diverse applications.
+OneWare Studio is the next generation IDE for electronics development. 
+It supports a broad range of development languages including VHDL, Verilog, C++, and more. 
+It is designed to streamline electronics development with features like a high-speed simulation viewer and advanced debugging tools. 
+OneWare Studio also offers extensive customization with an extensible architecture for custom tools and strong support for digital twin technology, making it ideal for firmware and hardware development across diverse applications.
 
 These are a few of the current features:
 - Comprehensive support for VHDL and Verilog for streamlined digital design
-- User-friendly multi-vendor support for FPGA development
-- Integrated simulation tools with a high-speed, multithreaded VCD Viewer
-- AI Generator for creating highly optimized neural networks effortlessly
+- Vendor-independent support for FPGA development
+- Support for simulation tools like [GHDL](https://github.com/ghdl/ghdl) or [IVerilog](https://github.com/steveicarus/iverilog) with a integrated high-speed, multithreaded VCD Viewer
 - Extensible architecture to unlock additional functionality and hardware support with custom extensions
-- All the features you would expect from a modern IDE, with builtin GIT support
+- All the features you would expect from a modern IDE, with built-in GIT support
 
 ## Download
 
