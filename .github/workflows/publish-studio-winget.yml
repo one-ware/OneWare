@@ -1,0 +1,27 @@
+name: Publish Studio Desktop for Windows
+
+on:
+  workflow_dispatch:
+#  workflow_run:
+#    workflows: [Publish Studio Desktop]
+#    types:
+#      - completed
+
+jobs:
+  deploy-windows:
+    name: Publish to WinGet
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: "./build/props/Base.props"
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
+      - name: Publish to Winget
+        run: wingetcreate update OneWare.OneWareStudio -u https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi -v ${{ steps.get-oneware-version.outputs.info }} -t ${{ secrets.HENDRIK_PERSONAL_TOKEN }} --submit
