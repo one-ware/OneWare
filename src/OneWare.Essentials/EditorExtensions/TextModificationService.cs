@@ -69,6 +69,7 @@ public class TextModificationService : DocumentColorizingTransformer
                 foreach (var overlap in overlaps)
                 {
                     if (overlap.EndOffset > line.EndOffset) overlap.EndOffset = line.EndOffset;
+                    if (overlap.StartOffset < line.Offset) overlap.StartOffset = line.Offset;
                     ChangeLinePart(overlap.StartOffset, overlap.EndOffset, (x) => ApplyChanges(x, overlap));
                 }
             }
