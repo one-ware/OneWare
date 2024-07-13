@@ -68,11 +68,6 @@ namespace OneWare.Verilog
                 return true;
             }
 
-            if (multiLineStart != -1 && multiLineEnd == -1 && multiLineStart < position)
-            {
-                return true;
-            }
-
             return false;
         }
     }

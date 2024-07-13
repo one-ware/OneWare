@@ -60,7 +60,7 @@ namespace OneWare.Essentials.EditorExtensions
         {
             var segmentLine = textArea.Document.GetLineByOffset(completionSegment.Offset);
 
-            var placeHolder = new Regex(@"\$\{\d+(?::([^}|]+))?(?:\|([^}]+)\|)?\}|\$0");
+            var placeHolder = new Regex(@"\$(\d+)|\$\{(\d+)(?::(<[^}|]+>))?(?:\|([^}]+)\|)?\}");
 
             var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
 
@@ -70,6 +70,8 @@ namespace OneWare.Essentials.EditorExtensions
             var filteredText = formattedText!;
 
             var snippet = new Snippet();
+
+            var placeHolders = new Dictionary<string, SnippetReplaceableTextElement>();
             
             while (placeHolder.Match(filteredText) is { Success: true } match)
             {
@@ -81,27 +83,43 @@ namespace OneWare.Essentials.EditorExtensions
                     {
                         Text = before
                     });
-                
-                var options = new List<string>();
 
-                if (match.Groups[1].Success)
+                if (match.Groups[2].Success)
                 {
-                    options.Add(match.Groups[1].Value);
-                    snippet.Elements.Add(new SnippetReplaceableTextElement()
+                    if (match.Groups[3].Success)
                     {
-                        Text = match.Groups[1].Value
-                    });
-                }
-                else if (match.Groups[2].Success)
-                {
-                    snippet.Elements.Add(new SnippetReplaceableTextElement()
+                        var element = new SnippetReplaceableTextElement()
+                        {
+                            Text = match.Groups[3].Value
+                        };
+                        
+                        snippet.Elements.Add(element);
+                        placeHolders.Add(match.Groups[2].Value, element);
+                    }
+                    else if (match.Groups[4].Success)
                     {
-                        Text = options.FirstOrDefault() ?? ""
-                    });
+                        var element = new SnippetReplaceableTextElement()
+                        {
+                            Text = match.Groups[4].Value
+                        };
+                        
+                        snippet.Elements.Add(element);
+                        placeHolders.Add(match.Groups[2].Value, element);
+                    }
                 }
-                else
+                else if (match.Groups[1].Success)
                 {
-                    snippet.Elements.Add(new SnippetCaretElement());
+                    if (placeHolders.TryGetValue(match.Groups[1].Value, out var boundElement))
+                    {
+                        snippet.Elements.Add(new SnippetBoundElement()
+                        {
+                            TargetElement = boundElement
+                        });
+                    }
+                    else
+                    {
+                        snippet.Elements.Add(new SnippetCaretElement());
+                    }
                 }
             }
 
