@@ -26,11 +26,18 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
         
         _snippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Vhdl/Assets/vhdl.json");
     }
+    
+    protected override Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
+    {
+        if (IsInComment(CodeBox.CaretOffset)) return Task.CompletedTask;
+        
+        return base.ShowCompletionAsync(triggerKind, triggerChar);
+    }
 
-    public override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
+    protected override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
     {
         var items = new List<CompletionData>();
-
+        
         if (_snippets != null)
         {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null, snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0, CodeBox.CaretOffset)));
@@ -38,7 +45,7 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
 
         return Task.FromResult(items);
     }
-
+    
     protected override void TextEnteredAutoFormat(TextInputEventArgs e)
     {
         if ((e.Text?.Contains(';') ?? false) && Service.IsLanguageServiceReady)
@@ -46,5 +53,19 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
             var line = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
             AutoIndent(line, line);
         }
+    }
+    
+    private bool IsInComment(int position)
+    {
+        if (position < 0 || position > CodeBox.Document.TextLength)
+        {
+            return false;
+        }
+        
+        var line = CodeBox.Document.GetLineByOffset(position);
+        var text = CodeBox.Document.GetText(line);
+        var index = CodeBox.CaretOffset - line.Offset;
+        var commentIndex = text.IndexOf(LineCommentSequence!, 0, index, StringComparison.Ordinal);
+        return commentIndex != -1;
     }
 }

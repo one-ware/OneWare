@@ -691,14 +691,17 @@ namespace OneWare.Essentials.LanguageService
 
                 foreach (var customItem in customCompletionItems)
                 {
+                    var insert = false;
                     for (var c = 0; c < Completion.CompletionList.CompletionData.Count; c++)
                     {
                         if (string.Compare(Completion.CompletionList.CompletionData[c].Text, customItem.Text, StringComparison.Ordinal) > 0)
                         {
                             Completion.CompletionList.CompletionData.Insert(c, customItem);
+                            insert = true;
                             break;
                         }
                     }
+                    if(!insert) Completion.CompletionList.CompletionData.Add(customItem);
                 }
                 
                 //Calculate CompletionWindow width
@@ -731,7 +734,7 @@ namespace OneWare.Essentials.LanguageService
             }
         }
 
-        public virtual Task<List<CompletionData>> GetCustomCompletionItemsAsync()
+        protected virtual Task<List<CompletionData>> GetCustomCompletionItemsAsync()
         {
             return Task.FromResult(new List<CompletionData>());
         }

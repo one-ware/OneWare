@@ -3,6 +3,7 @@ using Avalonia.Media;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Snippets;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace OneWare.Essentials.EditorExtensions
@@ -20,14 +21,15 @@ namespace OneWare.Essentials.EditorExtensions
         public string Text { get; private set; }
 
         public object Content { get; }
-        
+
         public string? Detail { get; }
 
         public object? Description { get; }
 
         public double Priority { get; }
-        
-        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon, double priority,
+
+        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
+            double priority,
             CompletionItem completionItem, int offset, Action? afterCompletion = null)
         {
             Text = insertText;
@@ -40,8 +42,9 @@ namespace OneWare.Essentials.EditorExtensions
             AfterCompletion = afterCompletion;
             CompletionOffset = offset;
         }
-        
-        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon, double priority, int offset, Action? afterCompletion = null)
+
+        public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
+            double priority, int offset, Action? afterCompletion = null)
         {
             Text = insertText;
             Content = label;
@@ -57,56 +60,122 @@ namespace OneWare.Essentials.EditorExtensions
         {
             var segmentLine = textArea.Document.GetLineByOffset(completionSegment.Offset);
 
-            var caretStop = new Regex(@"\$.");
-            var placeHolder = new Regex(@"\${.*?}");
+            var placeHolder = new Regex(@"\$\{\d+(?::([^}|]+))?(?:\|([^}]+)\|)?\}|\$0");
 
             var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
+
+            var formattedText = Text.Replace("\r", "").Replace("\n", newLine)
+                .Replace("\t", textArea.Options.IndentationString);
+
+            var filteredText = formattedText!;
+
+            var snippet = new Snippet();
             
-            var formatted = Text.Replace("\n", newLine);
+            while (placeHolder.Match(filteredText) is { Success: true } match)
+            {
+                var before = filteredText[..match.Index];
+                filteredText = filteredText.Remove(0, match.Index + match.Length);
+                
+                if(before.Length > 0)
+                    snippet.Elements.Add(new SnippetTextElement()
+                    {
+                        Text = before
+                    });
+                
+                var options = new List<string>();
 
-            if (!caretStop.Match(formatted).Success && !placeHolder.Match(formatted).Success) formatted += "${1}";
+                if (match.Groups[1].Success)
+                {
+                    options.Add(match.Groups[1].Value);
+                    snippet.Elements.Add(new SnippetReplaceableTextElement()
+                    {
+                        Text = match.Groups[1].Value
+                    });
+                }
+                else if (match.Groups[2].Success)
+                {
+                    snippet.Elements.Add(new SnippetReplaceableTextElement()
+                    {
+                        Text = options.FirstOrDefault() ?? ""
+                    });
+                }
+                else
+                {
+                    snippet.Elements.Add(new SnippetCaretElement());
+                }
+            }
 
-            var startLine = segmentLine.LineNumber;
-            var endLine = segmentLine.LineNumber + formatted.Split('\n').Length - 1;
-
+            if(filteredText.Length > 0)
+                snippet.Elements.Add(new SnippetTextElement()
+                {
+                    Text = filteredText
+                });
+            
             textArea.Document.BeginUpdate();
-            if (textArea.Caret.Offset > CompletionOffset - 1)
-                textArea.Document.Replace(CompletionOffset - 1, textArea.Caret.Offset - (CompletionOffset - 1),
-                    ""); //Remove async
-            textArea.Document.Replace(completionSegment, formatted);
-
-            var start = textArea.Document.GetLineByNumber(startLine);
-            var end = textArea.Document.GetLineByNumber(endLine);
-
-            textArea.IndentationStrategy?.IndentLines(textArea.Document, segmentLine.LineNumber, endLine);
-
-            var newText = textArea.Document.Text.Substring(start.Offset, end.EndOffset - start.Offset);
-
-            var newCaretOffset = -1;
-            //Set caret
-            var firstCaretStop = caretStop.Match(newText);
-            var firstPlaceHolderStop = placeHolder.Match(newText);
-
-            if (firstCaretStop.Success)
-                newCaretOffset = start.Offset + firstCaretStop.Index;
-            else if (firstPlaceHolderStop.Success)
-                newCaretOffset = start.Offset + firstPlaceHolderStop.Index;
-            else
-                newCaretOffset = start.Offset + newText.IndexOf(Text, StringComparison.Ordinal) + formatted.Length;
-
-            //Remove placeholders & caretstops
-            var filteredText = placeHolder.Replace(newText, "");
-            filteredText = caretStop.Replace(filteredText, "");
-            filteredText = filteredText.Replace("$0", "");
-
-            textArea.Document.Replace(start.Offset, end.EndOffset - start.Offset, filteredText);
-
-            textArea.Document.EndUpdate();
-
-            if (newCaretOffset >= 0) textArea.Caret.Offset = newCaretOffset;
             
-            textArea.Caret.BringCaretToView(50);
-
+            textArea.Document.Replace(completionSegment, "");
+            
+            // //Remove chars made within async delay
+            if (textArea.Caret.Offset > CompletionOffset - 1)
+            {
+                //textArea.Document.Replace(CompletionOffset - 1, textArea.Caret.Offset - (CompletionOffset - 1), ""); 
+            }
+            
+            snippet.Insert(textArea);
+            
+            textArea.Document.EndUpdate();
+            
+            // if (!placeHolder.Match(formattedText).Success && !placeHolder.Match(formattedText).Success) formattedText += "${1}";
+            //
+            // var startLine = segmentLine.LineNumber;
+            // var endLine = segmentLine.LineNumber + formattedText.Split('\n').Length - 1;
+            //
+            // textArea.Document.BeginUpdate();
+            //
+          
+            //
+            // textArea.Document.Replace(completionSegment, formattedText);
+            //
+            // var start = textArea.Document.GetLineByNumber(startLine);
+            // var end = textArea.Document.GetLineByNumber(endLine);
+            //
+            // textArea.IndentationStrategy?.IndentLines(textArea.Document, segmentLine.LineNumber, endLine);
+            //
+            // var indentedText = textArea.Document.Text.Substring(start.Offset, end.EndOffset - start.Offset);
+            //
+            // var snippetContext = new SnippetProcessingContext();
+            //
+            // var filteredText = indentedText;
+            //
+            // while(placeHolder.Match(filteredText) is {Success: true} match)
+            // {
+            //     filteredText = filteredText.Remove(match.Index, match.Length);
+            //     
+            //     var startOffset = start.Offset + match.Index;
+            //     var endOffset = start.Offset + match.Index + match.Length;
+            //     var options = new List<string>();
+            //
+            //     filteredText = filteredText.Remove(match.Index, match.Length);
+            //     
+            //     if (match.Groups[1].Success)
+            //     {
+            //         options.Add(match.Groups[1].Value);
+            //         filteredText = filteredText.Insert(match.Index, match.Groups[1].Value);
+            //     }
+            //     else if (match.Groups[2].Success)
+            //     {
+            //         options.AddRange(match.Groups[2].Value.Split(','));
+            //         filteredText = filteredText.Insert(match.Index, options.FirstOrDefault() ?? "");
+            //     }
+            //
+            //     snippetContext.PlaceHolders.Add(new SnippetPlaceHolder(startOffset, endOffset, options));
+            // }
+            //
+            // textArea.Document.Replace(start.Offset, end.EndOffset - start.Offset, filteredText);
+            //
+            // textArea.Document.EndUpdate();
+            //
+            
             AfterCompletion?.Invoke();
         }
     }
