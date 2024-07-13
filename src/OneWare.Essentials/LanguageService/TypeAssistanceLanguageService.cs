@@ -642,14 +642,13 @@ namespace OneWare.Essentials.LanguageService
             
             var completionOffset = CodeBox.CaretOffset;
             if(triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
-            var completionEndOffset = CodeBox.CaretOffset;
 
             var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
                 new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
                 triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
 
             var customCompletionItems = await GetCustomCompletionItemsAsync();
-
+            
             if ((lspCompletionItems is not null || customCompletionItems.Count > 0) && IsOpen)
             {
                 Completion?.Close();
@@ -662,7 +661,7 @@ namespace OneWare.Essentials.LanguageService
                     MaxHeight = 225,
                     CloseAutomatically = true,
                     StartOffset = completionOffset,
-                    EndOffset = completionEndOffset
+                    EndOffset = CodeBox.CaretOffset
                 };
                 
                 Observable.FromEventPattern(Completion, nameof(Completion.Closed)).Take(1).Subscribe(x =>

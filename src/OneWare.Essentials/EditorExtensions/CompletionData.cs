@@ -133,7 +133,7 @@ namespace OneWare.Essentials.EditorExtensions
             
             textArea.Document.Replace(completionSegment, "");
             
-            // //Remove chars made within async delay
+            // Remove chars made within async delay
             if (textArea.Caret.Offset > CompletionOffset - 1)
             {
                 //textArea.Document.Replace(CompletionOffset - 1, textArea.Caret.Offset - (CompletionOffset - 1), ""); 
