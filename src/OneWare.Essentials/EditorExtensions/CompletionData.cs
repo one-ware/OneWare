@@ -60,7 +60,7 @@ namespace OneWare.Essentials.EditorExtensions
         {
             var segmentLine = textArea.Document.GetLineByOffset(completionSegment.Offset);
 
-            var placeHolder = new Regex(@"\$(\d+)|\$\{(\d+)(?::(<[^}|]+>))?(?:\|([^}]+)\|)?\}");
+            var placeHolder = new Regex(@"\$(\d+)|\$\{(\d+)(?::([^}|]+))?(?:\|([^}]+)\|)?\}");
 
             var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
 
