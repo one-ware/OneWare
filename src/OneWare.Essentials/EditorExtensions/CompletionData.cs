@@ -133,66 +133,9 @@ namespace OneWare.Essentials.EditorExtensions
             
             textArea.Document.Replace(completionSegment, "");
             
-            // Remove chars made within async delay
-            if (textArea.Caret.Offset > CompletionOffset - 1)
-            {
-                //textArea.Document.Replace(CompletionOffset - 1, textArea.Caret.Offset - (CompletionOffset - 1), ""); 
-            }
-            
             snippet.Insert(textArea);
             
             textArea.Document.EndUpdate();
-            
-            // if (!placeHolder.Match(formattedText).Success && !placeHolder.Match(formattedText).Success) formattedText += "${1}";
-            //
-            // var startLine = segmentLine.LineNumber;
-            // var endLine = segmentLine.LineNumber + formattedText.Split('\n').Length - 1;
-            //
-            // textArea.Document.BeginUpdate();
-            //
-          
-            //
-            // textArea.Document.Replace(completionSegment, formattedText);
-            //
-            // var start = textArea.Document.GetLineByNumber(startLine);
-            // var end = textArea.Document.GetLineByNumber(endLine);
-            //
-            // textArea.IndentationStrategy?.IndentLines(textArea.Document, segmentLine.LineNumber, endLine);
-            //
-            // var indentedText = textArea.Document.Text.Substring(start.Offset, end.EndOffset - start.Offset);
-            //
-            // var snippetContext = new SnippetProcessingContext();
-            //
-            // var filteredText = indentedText;
-            //
-            // while(placeHolder.Match(filteredText) is {Success: true} match)
-            // {
-            //     filteredText = filteredText.Remove(match.Index, match.Length);
-            //     
-            //     var startOffset = start.Offset + match.Index;
-            //     var endOffset = start.Offset + match.Index + match.Length;
-            //     var options = new List<string>();
-            //
-            //     filteredText = filteredText.Remove(match.Index, match.Length);
-            //     
-            //     if (match.Groups[1].Success)
-            //     {
-            //         options.Add(match.Groups[1].Value);
-            //         filteredText = filteredText.Insert(match.Index, match.Groups[1].Value);
-            //     }
-            //     else if (match.Groups[2].Success)
-            //     {
-            //         options.AddRange(match.Groups[2].Value.Split(','));
-            //         filteredText = filteredText.Insert(match.Index, options.FirstOrDefault() ?? "");
-            //     }
-            //
-            //     snippetContext.PlaceHolders.Add(new SnippetPlaceHolder(startOffset, endOffset, options));
-            // }
-            //
-            // textArea.Document.Replace(start.Offset, end.EndOffset - start.Offset, filteredText);
-            //
-            // textArea.Document.EndUpdate();
-            //
             
             AfterCompletion?.Invoke();
         }
