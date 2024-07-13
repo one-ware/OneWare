@@ -14,6 +14,7 @@ using Dock.Model.Mvvm.Controls;
 using ImTools;
 using OneWare.Core;
 using OneWare.Core.Data;
+using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.OssCadSuiteIntegration;
@@ -161,14 +162,20 @@ public class DesktopStudioApp : StudioApp
             Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
 
             if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
-                lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
+                lastVersion <= Assembly.GetExecutingAssembly().GetName().Version)
             {
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
 
-                Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                    () => { Container.Resolve<IWindowService>().Show(new ChangelogView()); },
-                    App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
+                        $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
+                        () => { Container.Resolve<IWindowService>().Show(new ChangelogView()
+                        {
+                            DataContext = Container.Resolve<ChangelogViewModel>()
+                        }); },
+                        App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                });
             }
 
             await Task.Factory.StartNew(() =>
