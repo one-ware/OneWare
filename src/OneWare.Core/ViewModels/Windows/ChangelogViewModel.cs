@@ -36,8 +36,6 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
     private async Task LoadAsync()
     {
         IsLoading = true;
-        
-        Console.WriteLine("loading");
 
         var text = await _httpService.DownloadTextAsync(_changelogUrl);
 
