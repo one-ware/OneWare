@@ -32,416 +32,417 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.Debugger
+namespace OneWare.Debugger;
+
+public abstract class GdbSession(
+    string gdbExecutable,
+    string elfFile,
+    bool asyncMode,
+    ILogger logger,
+    IProjectExplorerService projectExplorerService,
+    IDockService dockService)
 {
-    public abstract class GdbSession(string gdbExecutable, string elfFile, bool asyncMode, ILogger logger, IProjectExplorerService projectExplorerService, IDockService dockService)
+    private readonly string _elfFile = Path.GetFileName(elfFile);
+    private readonly object _eventLock = new();
+    private readonly object _gdbLock = new();
+    private readonly object _syncLock = new();
+    private readonly GdbCommandResult _timeout = new("") { Status = CommandStatus.Timeout };
+    private readonly string _workingDir = Path.GetDirectoryName(elfFile) ?? throw new Exception(nameof(_workingDir));
+    private bool _clientReady;
+
+    private CancellationTokenSource? _closeTokenSource;
+    private GdbCommandResult? _lastResult;
+
+    private Process? _process;
+
+    private bool _running;
+
+    private StreamWriter? _sIn;
+    private StreamReader? _sOut;
+
+    public event EventHandler<GdbEventArgs>? EventFired;
+
+    public event EventHandler<string>? OutputReceived;
+
+    public event EventHandler<string>? CommandRun;
+
+    public event EventHandler? Exited;
+
+    protected virtual bool StartProcess()
     {
-        private readonly string _elfFile = Path.GetFileName(elfFile);
-        private readonly string _workingDir = Path.GetDirectoryName(elfFile) ?? throw new Exception(nameof(_workingDir));
-        private readonly object _eventLock = new();
-        private readonly object _gdbLock = new();
-        private readonly object _syncLock = new();
-        private readonly GdbCommandResult _timeout = new("") { Status = CommandStatus.Timeout };
+        if (!Directory.Exists(_workingDir)) return false;
 
-        private Process? _process;
+        _process = StartSession(_workingDir, gdbExecutable, $"--interpreter=mi {_elfFile}");
+        return true;
+    }
 
-        private bool _running;
-        private bool _clientReady;
-
-        private CancellationTokenSource? _closeTokenSource;
-        private GdbCommandResult? _lastResult;
-
-        private StreamWriter? _sIn;
-        private StreamReader? _sOut;
-        
-        public event EventHandler<GdbEventArgs>? EventFired;
-
-        public event EventHandler<string>? OutputReceived;
-
-        public event EventHandler<string>? CommandRun;
-
-        public event EventHandler? Exited;
-
-        protected virtual bool StartProcess()
+    public async Task<bool> RunAsync(bool download)
+    {
+        try
         {
-            if (!Directory.Exists(_workingDir)) return false;
+            _closeTokenSource = new CancellationTokenSource();
 
-            _process = StartSession(_workingDir, gdbExecutable, $"--interpreter=mi {_elfFile}");
-            return true;
-        }
+            if (!StartProcess() || _process == null) return false;
 
-        public async Task<bool> RunAsync(bool download)
-        {
-            try
+            //_asyncMode = !Global.Options.WslNios && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+            _sIn = _process.StandardInput;
+            _sOut = _process.StandardOutput;
+
+            _ = Task.Run(OutputInterpreter, _closeTokenSource.Token);
+
+            if (_process == null || _process.HasExited)
             {
-                _closeTokenSource = new CancellationTokenSource();
-
-                if (!StartProcess() || _process == null) return false;
-                
-                //_asyncMode = !Global.Options.WslNios && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-                _sIn = _process.StandardInput;
-                _sOut = _process.StandardOutput;
-
-                _ = Task.Run(OutputInterpreter, _closeTokenSource.Token);
-
-                if (_process == null || _process.HasExited)
-                {
-                    logger.Error("Debugging failed: process could not start");
-                    return false;
-                }
-
-                _process.ErrorDataReceived += (_, i) => ProcessOutput(i.Data);
-
-                _process.Exited += (_, _) =>
-                {
-                    _clientReady = false;
-                    Dispatcher.UIThread.Post(() => { Exited?.Invoke(this, EventArgs.Empty); });
-                };
-
-                const int timeout = 5000;
-
-                async Task WhenReadyAsync()
-                {
-                    while (!_clientReady) await Task.Delay(100);
-                }
-
-                var task = WhenReadyAsync();
-
-                if (await Task.WhenAny(task, Task.Delay(timeout)) != task)
-                {
-                    // task completed after timeout
-                    logger.Error("GDB timed out!");
-                    return false;
-                }
-
-                await RunCommandAsync("-enable-pretty-printing");
-
-                if (asyncMode) await RunCommandAsync("-gdb-set", "mi-async", "on"); //Async mode
-
-                await RunCommandAsync("-gdb-set", "pagination", "off");
-
-                await SetupSettingsAsync();
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                logger.Error(e.Message, e);
+                logger.Error("Debugging failed: process could not start");
                 return false;
             }
-        }
 
-        protected virtual Task SetupSettingsAsync()
-        {
-            return Task.CompletedTask;
-        }
+            _process.ErrorDataReceived += (_, i) => ProcessOutput(i.Data);
 
-        public async Task SetSettingsAsync(params string[] settings)
-        {
-            foreach (var setting in settings) await RunCommandAsync(setting);
-        }
-
-        protected Process StartSession(string workingDirectory, string executable, string arguments)
-        {
-            var startInfo = new ProcessStartInfo
+            _process.Exited += (_, _) =>
             {
-                FileName = executable,
-                WorkingDirectory = workingDirectory,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                CreateNoWindow = true,
+                _clientReady = false;
+                Dispatcher.UIThread.Post(() => { Exited?.Invoke(this, EventArgs.Empty); });
             };
 
-            var activeProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+            const int timeout = 5000;
 
+            async Task WhenReadyAsync()
+            {
+                while (!_clientReady) await Task.Delay(100);
+            }
+
+            var task = WhenReadyAsync();
+
+            if (await Task.WhenAny(task, Task.Delay(timeout)) != task)
+            {
+                // task completed after timeout
+                logger.Error("GDB timed out!");
+                return false;
+            }
+
+            await RunCommandAsync("-enable-pretty-printing");
+
+            if (asyncMode) await RunCommandAsync("-gdb-set", "mi-async", "on"); //Async mode
+
+            await RunCommandAsync("-gdb-set", "pagination", "off");
+
+            await SetupSettingsAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            logger.Error(e.Message, e);
+            return false;
+        }
+    }
+
+    protected virtual Task SetupSettingsAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task SetSettingsAsync(params string[] settings)
+    {
+        foreach (var setting in settings) await RunCommandAsync(setting);
+    }
+
+    protected Process StartSession(string workingDirectory, string executable, string arguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = executable,
+            WorkingDirectory = workingDirectory,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+            CreateNoWindow = true
+        };
+
+        var activeProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+
+        try
+        {
+            activeProcess.Start();
+            activeProcess.BeginErrorReadLine();
+        }
+        catch (Exception e)
+        {
+            logger.Error(e.Message, e);
+        }
+
+        return activeProcess;
+    }
+
+    public void Stop()
+    {
+        if (_process is { HasExited: false })
+        {
+            if (_running) Pause();
+            RunCommand("-gdb-exit", 500);
+        }
+
+        _closeTokenSource?.Cancel();
+        _sIn?.Close();
+        _process?.Kill();
+    }
+
+    private void OutputInterpreter()
+    {
+        while (_sOut?.ReadLine() is { } line)
+        {
+            _clientReady = true;
             try
             {
-                activeProcess.Start();
-                activeProcess.BeginErrorReadLine();
+                ProcessOutput(line);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                logger.Error(e.Message, e);
-            }
-
-            return activeProcess;
-        }
-
-        public void Stop()
-        {
-            if (_process is { HasExited: false })
-            {
-                if (_running) Pause();
-                RunCommand("-gdb-exit", 500);
-            }
-
-            _closeTokenSource?.Cancel();
-            _sIn?.Close();
-            _process?.Kill();
-        }
-
-        private void OutputInterpreter()
-        {
-            while (_sOut?.ReadLine() is { } line)
-            {
-                _clientReady = true;
-                try
-                {
-                    ProcessOutput(line);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex.Message, ex);
-                }
+                logger.Error(ex.Message, ex);
             }
         }
+    }
 
-        private void ProcessOutput(string? line)
+    private void ProcessOutput(string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line)) return;
+
+        OutputReceived?.Invoke(this, line);
+
+        line = line.TrimStart();
+
+        switch (line[0])
         {
-            if (string.IsNullOrWhiteSpace(line)) return;
-
-            OutputReceived?.Invoke(this, line);
-
-            line = line.TrimStart();
-
-            switch (line[0])
-            {
-                case '^':
-                    lock (_syncLock)
-                    {
-                        _lastResult = new GdbCommandResult(line);
-
-                        lock (_eventLock)
-                        {
-                            _running = _lastResult.Status == CommandStatus.Running;
-                        }
-
-                        Monitor.PulseAll(_syncLock);
-                    }
-
-                    break;
-
-                case '~':
-                case '&':
-
-                    if (line.Length > 3 && line[1] == '"') line = line.Substring(2, line.Length - 3);
-                    _ = Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        if (line.StartsWith("Quit", StringComparison.OrdinalIgnoreCase))
-                        {
-                            _running = false;
-                            //MainDock.DebuggerLocals.Refresh(await RunCommandAsync("-stack-list-locals 1"));
-                            //MainDock.DebuggerCallStack.Refresh(await RunCommandAsync("-stack-list-frames"));
-                        }
-                    });
-                    break;
-
-                case '*':
-                    GdbEvent? ev;
-                    lock (_eventLock)
-                    {
-                        _running = line.StartsWith("*running");
-                        ev = new GdbEvent(line);
-                        Monitor.PulseAll(_eventLock);
-                    }
-
-                    _ = Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        try
-                        {
-                            await HandleEventAsync(ev);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Error(ex.Message, ex);
-                        }
-                    }, DispatcherPriority.Input);
-                    
-                    break;
-                case '@':
-                    if (line.Length >= 4)
-                        //Serial output
-                        _ = Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            var lineS = Regex.Unescape(line[2..^1]);
-                            //MainDock.SerialMonitor.Write(lineS);
-                        });
-                    break;
-            }
-        }
-
-        private async Task HandleEventAsync(GdbEvent ev)
-        {
-            EventFired?.Invoke(this, new GdbEventArgs(ev));
-            if (ev.Name != "stopped") return;
-
-            var frame = ev.GetObject("frame");
-            var fullPath = frame.GetValue("fullname");
-            if(!int.TryParse(frame.GetValue("line"), out var lineNr)) return;
-            if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
-            {
-                var file = projectExplorerService.SearchFullPath(fullPath) as IFile ?? projectExplorerService.GetTemporaryFile(fullPath);
-
-                var evm = await dockService.OpenFileAsync(file) as IEditor;
-
-                evm?.JumpToLine(lineNr);
-
-                // Global.Breakpoints.CurrentBreakPoint =
-                //     Global.Breakpoints.Breakpoints.FirstOrDefault(x =>
-                //         x.File.EqualPaths(fullPath) && x.Line == lineNr) ?? new BreakPoint
-                //         { File = fullPath, Line = lineNr };
-                //
-                // //JUMP TO LINE
-                // if (Global.Options.DebuggerJumpToBreak)
-                //     if (lineNr > 0
-                //         && await MainDock.AddTabAsync(file) is EditViewModel evb
-                //         && lineNr <= evb.CurrentDocument.LineCount)
-                //         evb.JumpToLine(lineNr);
-                
-                
-                //MainDock.DebuggerLocals.Refresh(await RunCommandAsync("-stack-list-locals 1"));
-                //MainDock.DebuggerCallStack.Refresh(await RunCommandAsync("-stack-list-frames"));
-            }
-        }
-
-
-        private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
-        {
-            return Task.Run(() => RunCommand(command, 10000, args));
-        }
-
-        private GdbCommandResult RunCommand(string command, int timeout = 10000, params string[] args)
-        {
-            lock (_gdbLock)
-            {
+            case '^':
                 lock (_syncLock)
                 {
-                    _lastResult = null;
+                    _lastResult = new GdbCommandResult(line);
 
-                    if (_sIn != null)
+                    lock (_eventLock)
                     {
-                        if (!asyncMode)
-                        {
-                            lock (_eventLock)
-                            {
-                                if (_running)
-                                {
-                                    OutputReceived?.Invoke(this,
-                                        "Not possible to run commands while the target is running!");
-                                    return new GdbCommandResult("Not possible while the target is running")
-                                        { Status = CommandStatus.Running };
-                                }
+                        _running = _lastResult.Status == CommandStatus.Running;
+                    }
 
-                                _running = true;
+                    Monitor.PulseAll(_syncLock);
+                }
+
+                break;
+
+            case '~':
+            case '&':
+
+                if (line.Length > 3 && line[1] == '"') line = line.Substring(2, line.Length - 3);
+                _ = Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (line.StartsWith("Quit", StringComparison.OrdinalIgnoreCase)) _running = false;
+                    //MainDock.DebuggerLocals.Refresh(await RunCommandAsync("-stack-list-locals 1"));
+                    //MainDock.DebuggerCallStack.Refresh(await RunCommandAsync("-stack-list-frames"));
+                });
+                break;
+
+            case '*':
+                GdbEvent? ev;
+                lock (_eventLock)
+                {
+                    _running = line.StartsWith("*running");
+                    ev = new GdbEvent(line);
+                    Monitor.PulseAll(_eventLock);
+                }
+
+                _ = Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        await HandleEventAsync(ev);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex.Message, ex);
+                    }
+                }, DispatcherPriority.Input);
+
+                break;
+            case '@':
+                if (line.Length >= 4)
+                    //Serial output
+                    _ = Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        var lineS = Regex.Unescape(line[2..^1]);
+                        //MainDock.SerialMonitor.Write(lineS);
+                    });
+                break;
+        }
+    }
+
+    private async Task HandleEventAsync(GdbEvent ev)
+    {
+        EventFired?.Invoke(this, new GdbEventArgs(ev));
+        if (ev.Name != "stopped") return;
+
+        var frame = ev.GetObject("frame");
+        var fullPath = frame.GetValue("fullname");
+        if (!int.TryParse(frame.GetValue("line"), out var lineNr)) return;
+        if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
+        {
+            var file = projectExplorerService.SearchFullPath(fullPath) as IFile ??
+                       projectExplorerService.GetTemporaryFile(fullPath);
+
+            var evm = await dockService.OpenFileAsync(file) as IEditor;
+
+            evm?.JumpToLine(lineNr);
+
+            // Global.Breakpoints.CurrentBreakPoint =
+            //     Global.Breakpoints.Breakpoints.FirstOrDefault(x =>
+            //         x.File.EqualPaths(fullPath) && x.Line == lineNr) ?? new BreakPoint
+            //         { File = fullPath, Line = lineNr };
+            //
+            // //JUMP TO LINE
+            // if (Global.Options.DebuggerJumpToBreak)
+            //     if (lineNr > 0
+            //         && await MainDock.AddTabAsync(file) is EditViewModel evb
+            //         && lineNr <= evb.CurrentDocument.LineCount)
+            //         evb.JumpToLine(lineNr);
+
+
+            //MainDock.DebuggerLocals.Refresh(await RunCommandAsync("-stack-list-locals 1"));
+            //MainDock.DebuggerCallStack.Refresh(await RunCommandAsync("-stack-list-frames"));
+        }
+    }
+
+
+    private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
+    {
+        return Task.Run(() => RunCommand(command, 10000, args));
+    }
+
+    private GdbCommandResult RunCommand(string command, int timeout = 10000, params string[] args)
+    {
+        lock (_gdbLock)
+        {
+            lock (_syncLock)
+            {
+                _lastResult = null;
+
+                if (_sIn != null)
+                {
+                    if (!asyncMode)
+                        lock (_eventLock)
+                        {
+                            if (_running)
+                            {
+                                OutputReceived?.Invoke(this,
+                                    "Not possible to run commands while the target is running!");
+                                return new GdbCommandResult("Not possible while the target is running")
+                                    { Status = CommandStatus.Running };
                             }
+
+                            _running = true;
                         }
 
-                        try
-                        {
-                            var cmd = $" {command} {string.Join(" ", args)}";
-                            CommandRun?.Invoke(this, cmd);
-                            
-                            _sIn.WriteLine(cmd);
+                    try
+                    {
+                        var cmd = $" {command} {string.Join(" ", args)}";
+                        CommandRun?.Invoke(this, cmd);
 
-                            if (!Monitor.Wait(_syncLock, timeout))
-                            {
-                                _lastResult = new GdbCommandResult("") { Status = CommandStatus.Timeout };
-                                //Tools.ThrowError("GDB Timeout", new TimeoutException("GDB timed out"));
-                                OutputReceived?.Invoke(this, "^error, GDB timed out");
-                            }
+                        _sIn.WriteLine(cmd);
 
-                            return _lastResult ?? _timeout;
-                        }
-                        catch (Exception e)
+                        if (!Monitor.Wait(_syncLock, timeout))
                         {
-                            if (e is ObjectDisposedException)
-                                return new GdbCommandResult("") { Status = CommandStatus.Error };
-                            
-                            logger.Error(e.Message, e);
+                            _lastResult = new GdbCommandResult("") { Status = CommandStatus.Timeout };
+                            //Tools.ThrowError("GDB Timeout", new TimeoutException("GDB timed out"));
+                            OutputReceived?.Invoke(this, "^error, GDB timed out");
                         }
 
                         return _lastResult ?? _timeout;
                     }
+                    catch (Exception e)
+                    {
+                        if (e is ObjectDisposedException)
+                            return new GdbCommandResult("") { Status = CommandStatus.Error };
 
-                    return _timeout;
+                        logger.Error(e.Message, e);
+                    }
+
+                    return _lastResult ?? _timeout;
                 }
+
+                return _timeout;
             }
         }
+    }
 
-        private string FormatBreakPoint(BreakPoint bp)
-        {
-            return $"\"{bp.File.Replace('\\', '/')}:{bp.Line}\"";
-        }
+    private string FormatBreakPoint(BreakPoint bp)
+    {
+        return $"\"{bp.File.Replace('\\', '/')}:{bp.Line}\"";
+    }
 
-        public GdbCommandResult? Pause()
+    public GdbCommandResult? Pause()
+    {
+        if (asyncMode) return RunCommand("-exec-interrupt");
+        lock (_eventLock)
         {
-            if (asyncMode) return RunCommand("-exec-interrupt");
-            lock (_eventLock)
+            var c = 0;
+            const int maxTries = 3;
+            do
             {
-                var c = 0;
-                const int maxTries = 3;
-                do
-                {
-                    GdbHelper.SendCtrlC(_process!.Id);
-                    c++;
-                    if (c >= maxTries) break;
-                    if (!_running) return _lastResult;
-                } while (!Monitor.Wait(_eventLock, 500));
+                GdbHelper.SendCtrlC(_process!.Id);
+                c++;
+                if (c >= maxTries) break;
+                if (!_running) return _lastResult;
+            } while (!Monitor.Wait(_eventLock, 500));
 
-                //Failed
-                return new GdbCommandResult("") { Status = CommandStatus.Error };
-            }
+            //Failed
+            return new GdbCommandResult("") { Status = CommandStatus.Error };
         }
+    }
 
-        //Step
-        public GdbCommandResult? Step()
-        {
-            return RunCommand("-exec-step");
-        }
+    //Step
+    public GdbCommandResult? Step()
+    {
+        return RunCommand("-exec-step");
+    }
 
-        //Step out
-        public GdbCommandResult? Finish()
-        {
-            return RunCommand("-exec-finish");
-        }
+    //Step out
+    public GdbCommandResult? Finish()
+    {
+        return RunCommand("-exec-finish");
+    }
 
-        //Step Over
-        public GdbCommandResult? Next()
-        {
-            return RunCommand("-exec-next");
-        }
+    //Step Over
+    public GdbCommandResult? Next()
+    {
+        return RunCommand("-exec-next");
+    }
 
-        public GdbCommandResult? Continue()
-        {
-            return RunCommand("-exec-continue");
-        }
+    public GdbCommandResult? Continue()
+    {
+        return RunCommand("-exec-continue");
+    }
 
-        public GdbCommandResult? Run()
-        {
-            return RunCommand("-exec-run");
-        }
+    public GdbCommandResult? Run()
+    {
+        return RunCommand("-exec-run");
+    }
 
-        public GdbCommandResult? Print(string symbol)
-        {
-            return RunCommand("print " + symbol);
-        }
+    public GdbCommandResult? Print(string symbol)
+    {
+        return RunCommand("print " + symbol);
+    }
 
-        public GdbCommandResult? InsertBreakPoint(BreakPoint breakPoint)
-        {
-            return RunCommand("-break-insert " + FormatBreakPoint(breakPoint));
-        }
+    public GdbCommandResult? InsertBreakPoint(BreakPoint breakPoint)
+    {
+        return RunCommand("-break-insert " + FormatBreakPoint(breakPoint));
+    }
 
-        public GdbCommandResult? RemoveBreakPoint(BreakPoint breakPoint)
-        {
-            return RunCommand("clear " + FormatBreakPoint(breakPoint));
-        }
+    public GdbCommandResult? RemoveBreakPoint(BreakPoint breakPoint)
+    {
+        return RunCommand("clear " + FormatBreakPoint(breakPoint));
+    }
 
-        public GdbCommandResult? EvaluateExpression(string expression)
-        {
-            return RunCommand("-data-evaluate-expression " + expression);
-        }
+    public GdbCommandResult? EvaluateExpression(string expression)
+    {
+        return RunCommand("-data-evaluate-expression " + expression);
     }
 }

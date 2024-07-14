@@ -84,7 +84,7 @@
             </Style>
         </ControlTheme>
     </Styles.Resources>
-    
+
     <Style Selector="idc|HostWindow">
         <Setter Property="ExtendClientAreaToDecorationsHint" Value="True" />
         <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30" />

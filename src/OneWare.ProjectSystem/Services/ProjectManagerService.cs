@@ -11,7 +11,7 @@ public class ProjectManagerService : IProjectManagerService
     {
         _projectManagers.Add(id, manager);
     }
-    
+
     public IProjectManager? GetManager(string id)
     {
         _projectManagers.TryGetValue(id, out var manager);

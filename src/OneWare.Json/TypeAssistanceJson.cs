@@ -1,8 +1,8 @@
-﻿using OneWare.Json.Folding;
-using OneWare.Json.Formatting;
-using OneWare.Essentials.EditorExtensions;
+﻿using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.ViewModels;
+using OneWare.Json.Folding;
+using OneWare.Json.Formatting;
 
 namespace OneWare.Json;
 

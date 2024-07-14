@@ -8,7 +8,7 @@
     <UserControl.Styles>
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
-    
+
     <Grid HorizontalAlignment="Center" ColumnDefinitions="Auto, Auto, Auto" Height="220">
 
         <Border Grid.Column="1" Background="#2F6B11" Width="370" Height="120" CornerRadius="10">
@@ -225,14 +225,14 @@
 
         <TextBlock Grid.Column="2" Text="Power LED" VerticalAlignment="Center" Margin="3, 61, 0, 0" />
         <TextBlock Grid.Column="2" Text="Config LED" VerticalAlignment="Center" Margin="3, 0, 0, 61" />
-        
+
         <Border Grid.Column="0" ZIndex="10"
                 IsVisible="{Binding InterfaceModels[CRUVIHS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="244" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Center"
                 HorizontalAlignment="Left" Margin="0, 0, -70, 0">
-                <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding InterfaceModels[CRUVIHS_1].Connection}"
-                                  Content="{Binding}" Foreground="White"/>
+            <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding InterfaceModels[CRUVIHS_1].Connection}"
+                              Content="{Binding}" Foreground="White" />
         </Border>
     </Grid>
-        
+
 </UserControl>

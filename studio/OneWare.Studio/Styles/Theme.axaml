@@ -12,25 +12,29 @@
                         <DrawingGroup.Transform>
                             <MatrixTransform Matrix="1.3333333,0,0,-1.3333333,0,1189.2134" />
                         </DrawingGroup.Transform>
-                        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}" Geometry="F1 M856.391 380.671L356.837 380.671L356.837 511.839L856.391 511.839L856.391 380.671Z" />
+                        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                                         Geometry="F1 M856.391 380.671L356.837 380.671L356.837 511.839L856.391 511.839L856.391 380.671Z" />
                         <DrawingGroup>
                             <DrawingGroup.Transform>
                                 <MatrixTransform Matrix="1,0,0,1,856.39124,858.0688" />
                             </DrawingGroup.Transform>
-                            <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}" Geometry="F1 M0 0L-691.045 0L-822.214 0L-822.214 -129.755L-822.214 -207.266L-691.045 -207.266L-691.045 -129.755L0 -129.755L0 0Z" />
+                            <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                                             Geometry="F1 M0 0L-691.045 0L-822.214 0L-822.214 -129.755L-822.214 -207.266L-691.045 -207.266L-691.045 -129.755L0 -129.755L0 0Z" />
                         </DrawingGroup>
                         <DrawingGroup>
                             <DrawingGroup.Transform>
                                 <MatrixTransform Matrix="1,0,0,1,165.34601,164.32611" />
                             </DrawingGroup.Transform>
-                            <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}" Geometry="F1 M0 0L0 77.511L-131.168 77.511L-131.168 0L-131.168 -129.755L-131.168 -131.296L691.045 -131.296L691.045 0L0 0Z" />
+                            <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                                             Geometry="F1 M0 0L0 77.511L-131.168 77.511L-131.168 0L-131.168 -129.755L-131.168 -131.296L691.045 -131.296L691.045 0L0 0Z" />
                         </DrawingGroup>
-                        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}" Geometry="F1 M270.532 328.142L34.178 328.142L34.178 564.496L270.532 564.496L270.532 328.142Z" />
+                        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                                         Geometry="F1 M270.532 328.142L34.178 328.142L34.178 564.496L270.532 564.496L270.532 328.142Z" />
                     </DrawingGroup>
                 </DrawingGroup>
             </DrawingGroup>
         </DrawingImage>
-        
+
         <Color x:Key="ThemeAccentColor">#009688</Color>
     </Styles.Resources>
 </Styles>

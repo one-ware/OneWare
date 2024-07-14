@@ -13,24 +13,25 @@ namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
 {
-    private readonly IWindowService _windowService;
-    private readonly UniversalFpgaProjectRoot _projectRoot;
     private readonly IFpga? _fpga;
-    
-    public bool IsVisible { get; }
-    
-    public bool IsEnabled { get; }
+    private readonly UniversalFpgaProjectRoot _projectRoot;
+    private readonly IWindowService _windowService;
 
-    public OpenFpgaLoaderWindowExtensionViewModel(UniversalFpgaProjectRoot projectRoot, IWindowService windowService, FpgaService fpgaService)
+    public OpenFpgaLoaderWindowExtensionViewModel(UniversalFpgaProjectRoot projectRoot, IWindowService windowService,
+        FpgaService fpgaService)
     {
         _windowService = windowService;
         _projectRoot = projectRoot;
-        
+
         _fpga = fpgaService.Fpgas.FirstOrDefault(x => x.Name == projectRoot.GetProjectProperty("Fpga"));
 
         IsVisible = projectRoot.Loader is OpenFpgaLoader;
         IsEnabled = _fpga != null;
     }
+
+    public bool IsVisible { get; }
+
+    public bool IsEnabled { get; }
 
     public async Task OpenSettingsAsync(Control control)
     {
@@ -41,8 +42,9 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
         {
             try
             {
-                await _windowService.ShowDialogAsync(new OpenFpgaLoaderSettingsView()
-                    { DataContext = new OpenFpgaLoaderSettingsViewModel(_projectRoot, _fpga) }, ownerWindow);
+                await _windowService.ShowDialogAsync(
+                    new OpenFpgaLoaderSettingsView
+                        { DataContext = new OpenFpgaLoaderSettingsViewModel(_projectRoot, _fpga) }, ownerWindow);
             }
             catch (Exception e)
             {

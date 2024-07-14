@@ -1,18 +1,15 @@
 ﻿using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
 
-namespace OneWare.Core.Views.Windows
+namespace OneWare.Core.Views.Windows;
+
+public partial class StringConverterWindow : FlexibleWindow
 {
-    public partial class StringConverterWindow : FlexibleWindow
+    public StringConverterWindow()
     {
-        public StringConverterWindow()
-        {
-            InitializeComponent();
-            DataContext = new StringConverterWindowViewModel();
-            
-            ResultBox.SyntaxHighlighting = SourceBox.SyntaxHighlighting;
-        }
+        InitializeComponent();
+        DataContext = new StringConverterWindowViewModel();
 
-
+        ResultBox.SyntaxHighlighting = SourceBox.SyntaxHighlighting;
     }
 }

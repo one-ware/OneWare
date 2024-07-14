@@ -7,7 +7,7 @@ public interface IFpgaToolchain
     public string Name { get; }
 
     public void OnProjectCreated(UniversalFpgaProjectRoot project);
-    
+
     public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga);
 
     public void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga);

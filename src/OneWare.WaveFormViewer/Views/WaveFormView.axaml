@@ -8,7 +8,6 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls1="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums"
-             xmlns:views="clr-namespace:OneWare.WaveFormViewer.Views"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" x:DataType="viewModels:WaveFormViewModel"
              x:Class="OneWare.WaveFormViewer.Views.WaveFormView" Focusable="True">
 
@@ -70,7 +69,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
+
         <Border Grid.Row="0" Grid.Column="0" Height="30" Grid.ColumnSpan="3"
                 Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}"
@@ -79,7 +78,7 @@
                 <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
 
                     <Button Command="{Binding XOffsetMinus}"
-                            IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}" 
+                            IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}"
                             ToolTip.Tip="Moves offset to left">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronLeft}" />
                     </Button>
@@ -108,14 +107,14 @@
                             <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                                 <StackPanel Orientation="Vertical" Spacing="2" Margin="3">
                                     <StackPanel Orientation="Horizontal" Spacing="3">
-                                        <TextBlock Text="Zoom:"/>
+                                        <TextBlock Text="Zoom:" />
                                         <TextBlock Text="{Binding ZoomLevel}" />
                                     </StackPanel>
-                                    <Slider Width="200" TickFrequency="1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"
+                                    <Slider Width="200" TickFrequency="1" IsSnapToTickEnabled="True"
+                                            TickPlacement="BottomRight"
                                             Minimum="{Binding MinZoomLevel}"
                                             Maximum="{Binding MaxZoomLevel}"
-                                            Value="{Binding ZoomLevel}" >
-                                    </Slider>
+                                            Value="{Binding ZoomLevel}" />
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>
@@ -181,7 +180,8 @@
         <controls:WaveFormScale IsHitTestVisible="False" Margin="2,0,1,0" Name="SimulatorScaleRenderer"
                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="2" />
 
-        <ScrollViewer ClipToBounds="True" Name="SimPartScroll" Grid.Row="2" Grid.Column="2" Offset="{Binding #TextPartScroll.Offset, Mode=TwoWay}"
+        <ScrollViewer ClipToBounds="True" Name="SimPartScroll" Grid.Row="2" Grid.Column="2"
+                      Offset="{Binding #TextPartScroll.Offset, Mode=TwoWay}"
                       HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
             <ItemsControl ItemsSource="{Binding Signals}">
                 <ItemsControl.ItemTemplate>
@@ -203,13 +203,13 @@
         <controls:WaveFormEffects Name="SimulatorEffectsRenderer" VerticalAlignment="Stretch"
                                   IsHitTestVisible="False" Margin="0 0 1 0"
                                   HorizontalAlignment="Stretch" Grid.Row="2" Grid.Column="2" />
-        
+
         <Border Grid.Column="2" Grid.Row="3" Background="{DynamicResource ThemeBackgroundBrush}">
-            <ScrollBar AllowAutoHide="False" Orientation="Horizontal" 
-                       Minimum="0" 
-                       Maximum="{Binding MaxScroll}" 
-                       Value="{Binding Offset}" 
-                       ViewportSize="{Binding ViewPortWidth}"  />
+            <ScrollBar AllowAutoHide="False" Orientation="Horizontal"
+                       Minimum="0"
+                       Maximum="{Binding MaxScroll}"
+                       Value="{Binding Offset}"
+                       ViewportSize="{Binding ViewPortWidth}" />
         </Border>
     </Grid>
 </UserControl>

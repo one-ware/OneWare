@@ -2,7 +2,6 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ImTools;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -12,25 +11,26 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaInterfaceModel : ObservableObject
 {
+    private FpgaExtensionModel? _connection;
+
+    public FpgaInterfaceModel(FpgaInterface fpgaInterface, FpgaModel parent)
+    {
+        Interface = fpgaInterface;
+        Parent = parent;
+
+        UpdateMenu();
+    }
+
     public FpgaInterface Interface { get; }
-    
+
     public FpgaModel Parent { get; }
-    
+
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
 
-    private FpgaExtensionModel? _connection = null;
     public FpgaExtensionModel? Connection
     {
         get => _connection;
         set => SetProperty(ref _connection, value);
-    }
-
-    public FpgaInterfaceModel(FpgaInterface fpgaInterface, FpgaModel parent)
-    {
-        this.Interface = fpgaInterface;
-        this.Parent = parent;
-        
-        UpdateMenu();
     }
 
     private void UpdateMenu()
@@ -38,10 +38,10 @@ public class FpgaInterfaceModel : ObservableObject
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
 
         InterfaceMenu.Clear();
-        
+
         if (Connection != null)
         {
-            InterfaceMenu.Add(new MenuItemViewModel($"Disconnect")
+            InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
             {
                 Header = "Disconnect",
                 Command = new RelayCommand<IFpgaExtension>(SetExtension),
@@ -49,11 +49,11 @@ public class FpgaInterfaceModel : ObservableObject
             });
             return;
         }
-        
+
         foreach (var ext in fpgaService.FpgaExtensions)
         {
-            if(ext.Connector != Interface.Connector) continue;
-            
+            if (ext.Connector != Interface.Connector) continue;
+
             InterfaceMenu.Add(new MenuItemViewModel($"Connect {ext.Name}")
             {
                 Header = $"Connect {ext.Name}",
@@ -62,7 +62,7 @@ public class FpgaInterfaceModel : ObservableObject
             });
         }
     }
-    
+
     private void SetExtension(IFpgaExtension? extension)
     {
         if (extension == null)
@@ -87,7 +87,7 @@ public class FpgaInterfaceModel : ObservableObject
                 Connection.Parent = this;
             }
         }
-        
+
         Dispatcher.UIThread.Post(UpdateMenu);
     }
 }

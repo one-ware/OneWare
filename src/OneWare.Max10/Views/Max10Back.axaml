@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Max10.ViewModels"
              mc:Ignorable="d" d:DesignWidth="295" d:DesignHeight="220"
-             x:Class="OneWare.Max10.Views.Max10Back" x:DataType="viewModels:Max10FpgaViewModel" x:CompileBindings="True">
-        
+             x:Class="OneWare.Max10.Views.Max10Back" x:DataType="viewModels:Max10FpgaViewModel"
+             x:CompileBindings="True">
+
     <UserControl.Styles>
-            
-            <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
+
+        <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
         <Style Selector="TextBlock">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Margin" Value="0, -1, 0, 0" />

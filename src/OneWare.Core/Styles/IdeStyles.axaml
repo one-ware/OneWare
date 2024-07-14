@@ -41,7 +41,7 @@
             </Setter>
         </ControlTheme>
     </Styles.Resources>
-    
+
     <StyleInclude Source="avares://OneWare.Core/Styles/HostWindow.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Dock.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/TreeView.axaml" />
@@ -54,7 +54,7 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/ScrollViewer.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
-    
+
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
@@ -74,9 +74,9 @@
     </Style>
 
     <Style Selector="ComboBox /template/ Popup > Border">
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="3" />
     </Style>
-    
+
     <Style Selector="CheckBox, ComboBox, TextBox">
         <Setter Property="CornerRadius" Value="3" />
     </Style>

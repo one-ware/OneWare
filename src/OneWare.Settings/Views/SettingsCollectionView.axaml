@@ -4,21 +4,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Settings.Views.SettingsCollectionView" x:DataType="viewModels:SettingsCollectionViewModel">
+             x:Class="OneWare.Settings.Views.SettingsCollectionView"
+             x:DataType="viewModels:SettingsCollectionViewModel">
     <DockPanel HorizontalAlignment="Stretch">
         <DockPanel IsVisible="{Binding ShowTitle}" DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
             <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
                    Source="{Binding Icon}" Width="14" />
             <TextBlock Text="{Binding Header}" FontWeight="Bold" />
-                                
+
             <Border Background="{DynamicResource ThemeBorderLowBrush}" Margin="10 0"
                     Height="1" VerticalAlignment="Center" />
         </DockPanel>
 
-        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding SettingModels}" Background="Transparent" Padding="0">
+        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding SettingModels}" Background="Transparent"
+                      Padding="0">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="3"/>
+                    <StackPanel Spacing="3" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>

@@ -6,7 +6,7 @@
             <NotificationCard Content="Testing" />
         </Border>
     </Design.PreviewWith>
-    
+
     <Style Selector="NotificationCard">
         <Setter Property="Background" Value="{DynamicResource NotificationCardBackgroundBrush}" />
         <Setter Property="UseLayoutRounding" Value="True" />

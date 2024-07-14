@@ -9,18 +9,10 @@ namespace OneWare.Essentials.ViewModels;
 public abstract class ExtendedTool : Tool, IExtendedTool, ICanHaveIcon
 {
     private IImage? _icon;
-    public IImage? Icon
-    {
-        get => _icon;
-        private set => SetProperty(ref _icon, value);
-    }
 
     protected ExtendedTool(string iconKey)
     {
-        Application.Current?.GetResourceObservable(iconKey).Subscribe(x =>
-        {
-            Icon = x as IImage;
-        });
+        Application.Current?.GetResourceObservable(iconKey).Subscribe(x => { Icon = x as IImage; });
     }
 
     protected ExtendedTool(IImage icon)
@@ -28,9 +20,14 @@ public abstract class ExtendedTool : Tool, IExtendedTool, ICanHaveIcon
         _icon = icon;
     }
 
+    public IImage? Icon
+    {
+        get => _icon;
+        private set => SetProperty(ref _icon, value);
+    }
+
 
     public virtual void InitializeContent()
     {
-        
     }
 }

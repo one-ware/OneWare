@@ -10,17 +10,14 @@ namespace OneWare.Essentials.Commands;
 public class OpenFileApplicationCommand : ApplicationCommandBase
 {
     private readonly IProjectFile _file;
-    
+
     public OpenFileApplicationCommand(IProjectFile file) : base(Path.Combine(file.Root.Header, file.RelativePath))
     {
         _file = file;
 
-        if (file is INotifyPropertyChanged obs)
-        {
-            IconObservable = obs.WhenValueChanged(x => (x as IProjectFile)!.Icon);
-        }
+        if (file is INotifyPropertyChanged obs) IconObservable = obs.WhenValueChanged(x => (x as IProjectFile)!.Icon);
     }
-    
+
     public override bool Execute(ILogical source)
     {
         _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(_file);

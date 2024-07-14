@@ -6,21 +6,53 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using OneWare.Essentials.Enums;
-using OneWare.PackageManager.Models;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
+using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    
-    private bool _resolveTabsStarted;
-    private bool _resolveImageStarted;
+
+    private IImage? _image;
 
     private bool _isTabsResolved;
+
+    private AsyncRelayCommand? _mainButtonCommand;
+
+    private PackageModel _packageModel;
+
+    private IBrush? _primaryButtonBrush;
+
+    private IDisposable? _primaryButtonBrushSubscription;
+
+    private string _primaryButtonText = string.Empty;
+    private bool _resolveImageStarted;
+
+    private bool _resolveTabsStarted;
+
+    private PackageVersion? _selectedVersion;
+
+    protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
+    {
+        _packageModel = packageModel;
+        _httpService = httpService;
+
+        RemoveCommand = new AsyncRelayCommand(PackageModel.RemoveAsync,
+            () => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+
+        InstallCommand = new AsyncRelayCommand(() => PackageModel.DownloadAsync(SelectedVersion!),
+            () => PackageModel.Status is PackageStatus.Available);
+
+        UpdateCommand = new AsyncRelayCommand(() => PackageModel.UpdateAsync(SelectedVersion!),
+            () => PackageModel.Status is PackageStatus.UpdateAvailable);
+
+        PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+        InitPackage();
+    }
 
     public bool IsTabsResolved
     {
@@ -28,7 +60,6 @@ public class PackageViewModel : ObservableObject
         set => SetProperty(ref _isTabsResolved, value);
     }
 
-    private PackageModel _packageModel;
     public PackageModel PackageModel
     {
         get => _packageModel;
@@ -39,7 +70,6 @@ public class PackageViewModel : ObservableObject
         }
     }
 
-    private IImage? _image;
     public IImage? Image
     {
         get => _image;
@@ -49,7 +79,6 @@ public class PackageViewModel : ObservableObject
     public ObservableCollection<TabModel> Tabs { get; } = [];
     public ObservableCollection<LinkModel> Links { get; } = [];
 
-    private PackageVersion? _selectedVersion;
     public PackageVersion? SelectedVersion
     {
         get => _selectedVersion;
@@ -60,55 +89,35 @@ public class PackageViewModel : ObservableObject
         }
     }
 
-    private string _primaryButtonText = string.Empty;
     public string PrimaryButtonText
     {
         get => _primaryButtonText;
         private set => SetProperty(ref _primaryButtonText, value);
     }
 
-    private IDisposable? _primaryButtonBrushSubscription;
-    
-    private IBrush? _primaryButtonBrush;
     public IBrush? PrimaryButtonBrush
     {
         get => _primaryButtonBrush;
         private set => SetProperty(ref _primaryButtonBrush, value);
     }
 
-    private AsyncRelayCommand? _mainButtonCommand;
-
     public AsyncRelayCommand? MainButtonCommand
     {
         get => _mainButtonCommand;
         set => SetProperty(ref _mainButtonCommand, value);
     }
-    
+
     public AsyncRelayCommand RemoveCommand { get; }
 
     public AsyncRelayCommand InstallCommand { get; }
-    
+
     public AsyncRelayCommand UpdateCommand { get; }
-
-    protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
-    {
-        _packageModel = packageModel;
-        _httpService = httpService;
-
-        RemoveCommand = new AsyncRelayCommand(PackageModel.RemoveAsync, () => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
-        
-        InstallCommand = new AsyncRelayCommand(() => PackageModel.DownloadAsync(SelectedVersion!), () => PackageModel.Status is PackageStatus.Available);
-        
-        UpdateCommand = new AsyncRelayCommand(() => PackageModel.UpdateAsync(SelectedVersion!), () => PackageModel.Status is PackageStatus.UpdateAvailable);
-
-        PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
-        InitPackage();
-    }
 
     private void InitPackage()
     {
         Links.Clear();
-        if(PackageModel.Package.Links != null) Links.AddRange(PackageModel.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
+        if (PackageModel.Package.Links != null)
+            Links.AddRange(PackageModel.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
         SelectedVersion = PackageModel.Package.Versions?.LastOrDefault();
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
@@ -152,13 +161,13 @@ public class PackageViewModel : ObservableObject
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlLowBrush");
                 break;
         }
-            
+
         _primaryButtonBrushSubscription?.Dispose();
         _primaryButtonBrushSubscription = primaryButtonBrushObservable!.Subscribe(x =>
         {
             PrimaryButtonBrush = x as IBrush;
         });
-        
+
         RemoveCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
@@ -168,20 +177,20 @@ public class PackageViewModel : ObservableObject
     {
         if (_resolveImageStarted) return;
         _resolveImageStarted = true;
-        
+
         var icon = PackageModel.Package.IconUrl != null
-       ? await _httpService.DownloadImageAsync(PackageModel.Package.IconUrl)
-       : null;
+            ? await _httpService.DownloadImageAsync(PackageModel.Package.IconUrl)
+            : null;
 
         if (icon == null)
         {
             var iconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularExtension");
-            iconObservable.Subscribe(x =>
-            {
-                Image = x as IImage;
-            });
+            iconObservable.Subscribe(x => { Image = x as IImage; });
         }
-        else Image = icon;
+        else
+        {
+            Image = icon;
+        }
     }
 
     public async Task ResolveTabsAsync()
@@ -190,18 +199,16 @@ public class PackageViewModel : ObservableObject
         _resolveTabsStarted = true;
         IsTabsResolved = false;
         Tabs.Clear();
-        
+
         if (PackageModel.Package.Tabs != null)
-        {
             foreach (var tab in PackageModel.Package.Tabs)
             {
-                if(tab.ContentUrl == null) continue;
+                if (tab.ContentUrl == null) continue;
                 var content = await _httpService.DownloadTextAsync(tab.ContentUrl);
-                                
+
                 Tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
             }
-        }
-        
+
         IsTabsResolved = true;
     }
 }

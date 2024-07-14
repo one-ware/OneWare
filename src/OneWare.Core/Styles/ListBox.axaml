@@ -10,15 +10,15 @@
             </ListBox>
         </Border>
     </Design.PreviewWith>
-    
+
     <Style Selector="ListBox">
         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
-    
+
     <Style Selector="ListBoxItem">
         <Setter Property="Padding" Value="4" />
     </Style>
-    
+
     <Style Selector="ListBoxItem:disabled">
         <Setter Property="Opacity" Value="0.5" />
     </Style>
@@ -31,5 +31,5 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
 
-    
+
 </Styles>

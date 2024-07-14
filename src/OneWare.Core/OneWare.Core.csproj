@@ -1,36 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Avalonia.Themes.Simple.props" />
-    <Import Project="..\..\build\props\Avalonia.Diagnostics.props" />
-    <Import Project="..\..\build\props\RestSharp.props" />
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Avalonia.Themes.Simple.props"/>
+    <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
+    <Import Project="..\..\build\props\RestSharp.props"/>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**\*.*" />
+        <AvaloniaResource Include="Assets\**\*.*"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DeviceId" Version="6.2.0" />
-        <PackageReference Include="ExposedObject" Version="2.1.0" />
-        <PackageReference Include="SharpCompress" Version="0.33.0" />
+        <PackageReference Include="DeviceId" Version="6.2.0"/>
+        <PackageReference Include="SharpCompress" Version="0.33.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
-        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
-        <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj" />
-        <ProjectReference Include="..\OneWare.Debugger\OneWare.Debugger.csproj" />
-        <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj" />
-        <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
-        <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj" />
-        <ProjectReference Include="..\OneWare.Json\OneWare.Json.csproj" />
-        <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj" />
-        <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
-        <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
-        <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
-        <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-        <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj" />
+        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj"/>
+        <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj"/>
+        <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj"/>
+        <ProjectReference Include="..\OneWare.Debugger\OneWare.Debugger.csproj"/>
+        <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj"/>
+        <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj"/>
+        <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj"/>
+        <ProjectReference Include="..\OneWare.Json\OneWare.Json.csproj"/>
+        <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj"/>
+        <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj"/>
+        <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
+        <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj"/>
+        <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+        <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj"/>
     </ItemGroup>
-    
+
 </Project>

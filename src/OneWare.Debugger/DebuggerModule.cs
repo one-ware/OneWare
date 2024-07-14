@@ -14,19 +14,20 @@ public class DebuggerModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var dockService = containerProvider.Resolve<IDockService>();
         //dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
-        
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Debugger")
-        {
-            Header = "Debugger",
-            Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
-            IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey) ,
-        });
+
+        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+            new MenuItemViewModel("Debugger")
+            {
+                Header = "Debugger",
+                Command = new RelayCommand(() =>
+                    dockService.Show(containerProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
+                IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
+            });
     }
 }

@@ -1,23 +1,19 @@
 ﻿using Avalonia.Controls;
 using OneWare.Terminal.ViewModels;
 
-namespace OneWare.Terminal.Views
-{
-    public partial class TerminalView : UserControl
-    {
-        public TerminalView()
-        {
-            InitializeComponent();
-        }
+namespace OneWare.Terminal.Views;
 
-        protected override void OnDataContextChanged(EventArgs e)
-        {
-            base.OnDataContextChanged(e);
-            
-            if (DataContext is TerminalViewModel tvm)
-            {
-                tvm.StartCreate();
-            }
-        }
+public partial class TerminalView : UserControl
+{
+    public TerminalView()
+    {
+        InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (DataContext is TerminalViewModel tvm) tvm.StartCreate();
     }
 }

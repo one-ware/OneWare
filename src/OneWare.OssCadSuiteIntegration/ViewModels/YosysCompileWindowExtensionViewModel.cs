@@ -13,24 +13,19 @@ namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class YosysCompileWindowExtensionViewModel : ObservableObject
 {
-    private readonly IWindowService _windowService;
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly UniversalFpgaProjectCompileViewModel _compileViewModel;
-    
-    private bool _isVisible;
-    
-    public bool IsVisible
-    {
-        get => _isVisible;
-        set => SetProperty(ref _isVisible, value);
-    }
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IWindowService _windowService;
 
-    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectCompileViewModel compileViewModel, IWindowService windowService, IProjectExplorerService projectExplorerService)
+    private bool _isVisible;
+
+    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectCompileViewModel compileViewModel,
+        IWindowService windowService, IProjectExplorerService projectExplorerService)
     {
         _compileViewModel = compileViewModel;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
-        
+
         IDisposable? disposable = null;
         projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(x =>
         {
@@ -44,7 +39,13 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
             }
         });
     }
-    
+
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set => SetProperty(ref _isVisible, value);
+    }
+
     public async Task OpenCompileSettingsAsync(Control control)
     {
         var ownerWindow = TopLevel.GetTopLevel(control) as Window;
@@ -53,10 +54,10 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
             try
             {
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
-                {
-                    await _windowService.ShowDialogAsync(new YosysCompileSettingsView()
-                        { DataContext = new YosysCompileSettingsViewModel(_compileViewModel, fpgaProjectRoot) }, ownerWindow);
-                }
+                    await _windowService.ShowDialogAsync(
+                        new YosysCompileSettingsView
+                            { DataContext = new YosysCompileSettingsViewModel(_compileViewModel, fpgaProjectRoot) },
+                        ownerWindow);
             }
             catch (Exception e)
             {

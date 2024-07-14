@@ -27,6 +27,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Image Name="SpinnerPresenter" VerticalAlignment="Center" HorizontalAlignment="Center" Classes="AnimatingIntermediate"
+    <Image Name="SpinnerPresenter" VerticalAlignment="Center" HorizontalAlignment="Center"
+           Classes="AnimatingIntermediate"
            Source="{Binding #SpinnerView.CustomIcon}" />
 </UserControl>

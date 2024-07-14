@@ -1,12 +1,11 @@
 ﻿using Avalonia.Controls;
 
-namespace OneWare.TerminalManager.Views
+namespace OneWare.TerminalManager.Views;
+
+public partial class TerminalManagerView : UserControl
 {
-    public partial class TerminalManagerView : UserControl
+    public TerminalManagerView()
     {
-        public TerminalManagerView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

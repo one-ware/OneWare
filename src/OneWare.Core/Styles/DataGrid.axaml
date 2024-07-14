@@ -1,10 +1,10 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+
     <Styles.Resources>
         <Thickness x:Key="DataGridTextColumnCellTextBlockMargin">4 1</Thickness>
     </Styles.Resources>
-    
+
     <Style Selector="DataGridColumnHeader">
         <Setter Property="Template">
             <ControlTemplate>
@@ -19,8 +19,8 @@
                                    Grid.Column="0"
                                    Width="1"
                                    VerticalAlignment="Stretch"
-                                   Fill="{DynamicResource ThemeBorderLowBrush}"/>
-                        
+                                   Fill="{DynamicResource ThemeBorderLowBrush}" />
+
                         <Grid Grid.Column="1" Margin="4 0"
                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
@@ -43,27 +43,27 @@
                 </Border>
             </ControlTemplate>
         </Setter>
-        
+
         <Style Selector="^:nth-child(1) /template/ Rectangle#VerticalSeparator">
             <Setter Property="IsVisible" Value="False" />
         </Style>
     </Style>
-    
+
     <Style Selector="DataGridRow /template/ Rectangle#PART_BottomGridLine">
         <Setter Property="IsVisible" Value="False" />
     </Style>
-    
+
     <Style Selector="DataGridCell">
         <Setter Property="Height" Value="22" />
     </Style>
-    
+
     <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
         <Setter Property="IsVisible" Value="False" />
     </Style>
-    
+
     <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
         <Setter Property="IsVisible" Value="True" />
         <Setter Property="Fill" Value="{DynamicResource ThemeAccentBrush4}" />
     </Style>
-    
+
 </Styles>

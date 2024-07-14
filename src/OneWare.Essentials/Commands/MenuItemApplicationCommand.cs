@@ -6,21 +6,18 @@ namespace OneWare.Essentials.Commands;
 
 public class MenuItemApplicationCommand : ApplicationCommandBase
 {
-    public MenuItemViewModel MenuItem { get; }
-
-    public MenuItemApplicationCommand(MenuItemViewModel menuItem, string path) : base(($"{path}{menuItem.Header}"))
+    public MenuItemApplicationCommand(MenuItemViewModel menuItem, string path) : base($"{path}{menuItem.Header}")
     {
         MenuItem = menuItem;
         IconObservable = menuItem.WhenValueChanged(x => x.Icon);
 
         DefaultGesture = menuItem.InputGesture;
-        
-        this.WhenValueChanged(x => x.ActiveGesture).Subscribe(x =>
-        {
-            MenuItem.InputGesture = x;
-        });
+
+        this.WhenValueChanged(x => x.ActiveGesture).Subscribe(x => { MenuItem.InputGesture = x; });
     }
-    
+
+    public MenuItemViewModel MenuItem { get; }
+
     public override bool Execute(ILogical source)
     {
         if (!CanExecute(source)) return false;

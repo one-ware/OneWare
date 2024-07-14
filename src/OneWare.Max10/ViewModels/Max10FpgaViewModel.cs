@@ -7,6 +7,5 @@ public class Max10FpgaViewModel : FpgaModel
 {
     public Max10FpgaViewModel(FpgaBase fpga) : base(fpga)
     {
-        
     }
 }

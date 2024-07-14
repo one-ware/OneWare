@@ -6,15 +6,14 @@ namespace OneWare.Vcd.Viewer.Context;
 
 public static class VcdContextManager
 {
-    private static readonly JsonSerializerOptions Options = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true
     };
-    
+
     public static async Task<VcdContext?> LoadContextAsync(string path)
     {
         if (File.Exists(path))
-        {
             try
             {
                 await using var stream = File.OpenRead(path);
@@ -24,7 +23,7 @@ public static class VcdContextManager
             {
                 ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
             }
-        }
+
         return null;
     }
 

@@ -13,7 +13,8 @@ public static class TextEditorExtensions
             var element = "";
             var start = editor.Document.GetOffset(pos.Value.Location); //gets offset in text of mouse position
             for (;
-                 start > -1 && start < editor.Text.Length && (char.IsLetterOrDigit(editor.Text[start]) || editor.Text[start] == '_');
+                 start > -1 && start < editor.Text.Length &&
+                 (char.IsLetterOrDigit(editor.Text[start]) || editor.Text[start] == '_');
                  start--)
             {
             } //finds start of word
@@ -28,7 +29,7 @@ public static class TextEditorExtensions
 
             if (start > -1 && end < editor.Text.Length && start < end) element = editor.Text[start..end];
             var word = element;
-            
+
             return word;
         }
 

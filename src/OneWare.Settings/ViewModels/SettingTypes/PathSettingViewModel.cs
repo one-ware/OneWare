@@ -5,12 +5,12 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public class PathSettingViewModel : TextBoxSettingViewModel
 {
-    public PathSetting PathSetting { get; }
-    
     public PathSettingViewModel(PathSetting setting) : base(setting)
     {
         PathSetting = setting;
     }
+
+    public PathSetting PathSetting { get; }
 
     public Task SelectPathAsync(Visual visual)
     {

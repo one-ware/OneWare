@@ -11,14 +11,14 @@ public class TextDocumentHelperTests
     {
         var document = new TextDocument();
         document.Text = "Test\nTest\nTest";
-        
+
         var result = document.GetStartAndEndOffset(-1, -1, 1000, 1000);
-        
+
         Assert.Equal(0, result.startOffset);
         Assert.Equal(0, result.endOffset);
-        
+
         result = document.GetStartAndEndOffset(1, 1, 1000, 1000);
-        
+
         Assert.Equal(0, result.startOffset);
         Assert.Equal(document.TextLength, result.endOffset);
     }

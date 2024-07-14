@@ -5,19 +5,19 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
 
-namespace OneWare.Essentials.Behaviours;
+namespace OneWare.Essentials.Behaviors;
 
-public class ListBoxNavigationBehaviour : Behavior<Control>
+public class ListBoxNavigationBehavior : Behavior<Control>
 {
     public static readonly StyledProperty<ListBox?> AssociatedListBoxProperty =
-        AvaloniaProperty.Register<ListBoxNavigationBehaviour, ListBox?>(nameof(AssociatedListBox));
+        AvaloniaProperty.Register<ListBoxNavigationBehavior, ListBox?>(nameof(AssociatedListBox));
 
     public ListBox? AssociatedListBox
     {
         get => GetValue(AssociatedListBoxProperty);
         set => SetValue(AssociatedListBoxProperty, value);
     }
-    
+
     private CompositeDisposable? Disposables { get; set; }
 
     protected override void OnAttached()
@@ -32,17 +32,18 @@ public class ListBoxNavigationBehaviour : Behavior<Control>
             (sender, e) =>
             {
                 if (AssociatedListBox == null) return;
-                
+
                 if (e.Key == Key.Down)
                 {
-                    if(AssociatedListBox.SelectedIndex < AssociatedListBox.Items.Count - 1) AssociatedListBox.SelectedIndex++;
+                    if (AssociatedListBox.SelectedIndex < AssociatedListBox.Items.Count - 1)
+                        AssociatedListBox.SelectedIndex++;
                 }
                 else if (e.Key == Key.Up)
                 {
-                    if(AssociatedListBox.SelectedIndex > 0) AssociatedListBox.SelectedIndex--;
+                    if (AssociatedListBox.SelectedIndex > 0) AssociatedListBox.SelectedIndex--;
                 }
             },
-            RoutingStrategies.Tunnel, false));
+            RoutingStrategies.Tunnel));
     }
 
     protected override void OnDetaching()

@@ -8,11 +8,11 @@ public class JsonModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<ILanguageManager>().RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
+        containerProvider.Resolve<ILanguageManager>()
+            .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
     }
 }

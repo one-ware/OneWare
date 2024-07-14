@@ -7,8 +7,8 @@ public class ViewFoundConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (! value?.GetType().FullName?.Contains("ViewModel") ?? false) return false;
-        var name =  value?.GetType().AssemblyQualifiedName?.Replace("ViewModel", "View");
+        if (!value?.GetType().FullName?.Contains("ViewModel") ?? false) return false;
+        var name = value?.GetType().AssemblyQualifiedName?.Replace("ViewModel", "View");
         if (name == null) return false;
         var type = Type.GetType(name);
         return type != null;

@@ -5,14 +5,14 @@
              xmlns:viewModels="clr-namespace:OneWare.Vcd.Viewer.ViewModels"
              xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:behaviours="clr-namespace:OneWare.Vcd.Viewer.Behaviours"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
-             xmlns:behaviours1="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:behaviors1="clr-namespace:OneWare.Vcd.Viewer.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 
     <UserControl.Resources>
-        <behaviours:SignalListBoxDropHandler x:Key="SignalListBoxDropHandler" />
+        <behaviors1:SignalListBoxDropHandler x:Key="SignalListBoxDropHandler" />
     </UserControl.Resources>
 
     <Grid>
@@ -69,7 +69,7 @@
                         <Setter Property="Interaction.Behaviors">
                             <BehaviorCollectionTemplate>
                                 <BehaviorCollection>
-                                    <behaviours1:ContextDragBubbleBehavior />
+                                    <behaviors:ContextDragBubbleBehavior />
                                 </BehaviorCollection>
                             </BehaviorCollectionTemplate>
                         </Setter>
@@ -79,25 +79,31 @@
                     <DataTemplate DataType="data:IVcdSignal">
                         <Grid ColumnDefinitions="*, 16">
                             <Grid ColumnDefinitions="16, 5, *">
-                                <Panel VerticalAlignment="Center" >
+                                <Panel VerticalAlignment="Center">
                                     <Image
                                         IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Wire}}"
-                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}" VerticalAlignment="Center" />
+                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}"
+                                        VerticalAlignment="Center" />
                                     <Image
                                         IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Reg}}"
-                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}" VerticalAlignment="Center" />
+                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}"
+                                        VerticalAlignment="Center" />
                                     <Image
                                         IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Integer}}"
-                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}" VerticalAlignment="Center" />
+                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"
+                                        VerticalAlignment="Center" />
                                     <Image
                                         IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Real}}"
-                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}" VerticalAlignment="Center" />
+                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"
+                                        VerticalAlignment="Center" />
                                 </Panel>
-                                <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis" Text="{Binding Name}" ToolTip.Tip="{Binding Name}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis" Text="{Binding Name}"
+                                           ToolTip.Tip="{Binding Name}" VerticalAlignment="Center" />
                             </Grid>
-                            <Button Grid.Column="1" Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}"
+                            <Button Grid.Column="1"
+                                    Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}"
                                     CommandParameter="{Binding}" Height="16">
-                                <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="10"/>
+                                <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="10" />
                             </Button>
                         </Grid>
                     </DataTemplate>

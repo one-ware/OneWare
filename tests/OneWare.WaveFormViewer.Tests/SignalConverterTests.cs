@@ -8,11 +8,11 @@ public class SignalConverterTests
     [Fact]
     public void ConvertBitsToDecimalTests()
     {
-        Assert.Equal(-1000, SignalConverter.ConvertToSignedInt64( "11111111111111111111110000011000", 32));
+        Assert.Equal(-1000, SignalConverter.ConvertToSignedInt64("11111111111111111111110000011000", 32));
         Assert.Equal(16191, SignalConverter.ConvertToSignedInt64("11111100111111", 32));
         Assert.Equal(268434456, SignalConverter.ConvertToSignedInt64("00001111111111111111110000011000", 32));
     }
-    
+
     [Fact]
     public void ConvertBitsHexTests()
     {
@@ -22,14 +22,14 @@ public class SignalConverterTests
         Assert.Equal("XA", SignalConverter.ConvertToHexString("ZXZX1010"));
         Assert.Equal("-5", SignalConverter.ConvertToHexString("--0101"));
     }
-    
+
     [Fact]
     public void ConvertBitsAsciiTests()
     {
         Assert.Equal("Test", SignalConverter.ConvertToAsciiString("01010100011001010111001101110100"));
         Assert.Equal("XTest", SignalConverter.ConvertToAsciiString("XX01010100011001010111001101110100"));
     }
-    
+
     [Fact]
     public void FixedPointShiftTests()
     {
@@ -37,11 +37,11 @@ public class SignalConverterTests
         Assert.Equal(-20, SignalConverter.PerformFixedPointShift(-10, -1));
         Assert.Equal(8, SignalConverter.PerformFixedPointShift(2, -2));
         Assert.Equal(4095.9375, SignalConverter.PerformFixedPointShift(65535, 4));
-        
+
         const ulong test = 65535;
         Assert.Equal(4095.9375, SignalConverter.PerformFixedPointShift(test, 4));
     }
-    
+
     [Fact]
     public void AutomaticFixedPointShiftTests()
     {

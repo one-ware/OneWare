@@ -1,16 +1,15 @@
 ﻿using Avalonia.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ApplicationCommands.ViewModels;
 
-public partial class AssignGestureViewModel(IApplicationCommand command) : FlexibleWindowViewModelBase
+public class AssignGestureViewModel(IApplicationCommand command) : FlexibleWindowViewModelBase
 {
-    public IApplicationCommand ApplicationCommand { get; } = command;
-    
     private KeyGesture? _capturedKeyGesture = command.ActiveGesture;
+    public IApplicationCommand ApplicationCommand { get; } = command;
+
     public KeyGesture? CapturedKeyGesture
     {
         get => _capturedKeyGesture;
@@ -21,17 +20,17 @@ public partial class AssignGestureViewModel(IApplicationCommand command) : Flexi
     {
         CapturedKeyGesture = null;
     }
-    
+
     public void Reset()
     {
         CapturedKeyGesture = ApplicationCommand.DefaultGesture;
     }
-    
+
     public void Cancel(FlexibleWindow window)
     {
         window.Close();
     }
-    
+
     public void Save(FlexibleWindow window)
     {
         ApplicationCommand.ActiveGesture = CapturedKeyGesture;

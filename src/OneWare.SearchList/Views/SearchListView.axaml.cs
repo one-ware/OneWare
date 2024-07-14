@@ -1,21 +1,17 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Threading;
-using OneWare.SearchList.ViewModels;
 
-namespace OneWare.SearchList.Views
+namespace OneWare.SearchList.Views;
+
+public partial class SearchListView : UserControl
 {
-    public partial class SearchListView : UserControl
+    public SearchListView()
     {
-        public SearchListView()
+        InitializeComponent();
+
+        KeyDown += (o, i) =>
         {
-            InitializeComponent();
-            
-            KeyDown += (o, i) =>
-            {
-                if (i.Key == Key.Escape) (VisualRoot as Window)?.Close();
-            };
-        }
+            if (i.Key == Key.Escape) (VisualRoot as Window)?.Close();
+        };
     }
 }

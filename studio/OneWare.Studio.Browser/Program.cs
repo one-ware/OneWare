@@ -8,21 +8,23 @@ using Avalonia.Browser;
 
 namespace OneWare.Studio.Browser;
 
-internal partial class Program
+internal class Program
 {
     public static async Task Main(string[] args)
     {
-#if  DEBUG
+#if DEBUG
         Trace.Listeners.Add(new ConsoleTraceListener());
 #endif
 
         await BuildAvaloniaApp()
-            #if DEBUG
+#if DEBUG
             .LogToTrace()
-            #endif
+#endif
             .StartBrowserAppAsync("out");
     }
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<WebStudioApp>();
+    {
+        return AppBuilder.Configure<WebStudioApp>();
+    }
 }

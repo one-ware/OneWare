@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Settings.Views.SettingTypes.TextBoxSettingView" x:DataType="settingTypes:TextBoxSettingViewModel">
+             x:Class="OneWare.Settings.Views.SettingTypes.TextBoxSettingView"
+             x:DataType="settingTypes:TextBoxSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />

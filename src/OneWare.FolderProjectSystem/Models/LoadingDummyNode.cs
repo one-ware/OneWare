@@ -8,7 +8,7 @@ namespace OneWare.FolderProjectSystem.Models;
 public class LoadingDummyNode : IProjectExplorerNode
 {
     public IImage? Icon { get; } = null;
-    
+
     public event PropertyChangedEventHandler? PropertyChanged;
     public string Header => "Loading...";
     public IProjectExplorerNode? Parent { get; } = null;

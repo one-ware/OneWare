@@ -1,47 +1,50 @@
 ﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             PrefWidth="400" SizeToContent="Height"
-             Title="Assign Shortcut"
-             Name="AssignGestureViewView"
-             WindowStartupLocation="CenterOwner"
-             x:Class="OneWare.ApplicationCommands.Views.AssignGestureView" x:DataType="viewModels:AssignGestureViewModel">
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefWidth="400" SizeToContent="Height"
+                         Title="Assign Shortcut"
+                         Name="AssignGestureViewView"
+                         WindowStartupLocation="CenterOwner"
+                         x:Class="OneWare.ApplicationCommands.Views.AssignGestureView"
+                         x:DataType="viewModels:AssignGestureViewModel">
     <DockPanel Margin="8">
         <StackPanel DockPanel.Dock="Bottom" Classes="WindowButtons" HorizontalAlignment="Right">
             <Button Command="{Binding Reset}"
                     CommandParameter="{Binding #AssignGestureViewView}">
-                <TextBlock Text="Reset"/>
+                <TextBlock Text="Reset" />
             </Button>
             <Button Command="{Binding Cancel}" IsCancel="True"
                     CommandParameter="{Binding #AssignGestureViewView}">
-                <TextBlock Text="Cancel"></TextBlock>
+                <TextBlock Text="Cancel" />
             </Button>
             <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Save}"
                     CommandParameter="{Binding #AssignGestureViewView}">
                 <TextBlock Text="Save" />
             </Button>
         </StackPanel>
-        
+
         <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0 0 0 10">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding ApplicationCommand.Name}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding ApplicationCommand.Name}" FontWeight="Bold" />
             </StackPanel>
-        
+
             <Panel>
-                <controls:HotkeyTextBox Watermark="Press key combination" Background="{DynamicResource ThemeControlLowBrush}" CapturedKeyGesture="{Binding CapturedKeyGesture}">
+                <controls:HotkeyTextBox Watermark="Press key combination"
+                                        Background="{DynamicResource ThemeControlLowBrush}"
+                                        CapturedKeyGesture="{Binding CapturedKeyGesture}">
                     <Interaction.Behaviors>
                         <FocusOnAttachedToVisualTreeBehavior />
                     </Interaction.Behaviors>
                 </controls:HotkeyTextBox>
                 <Button HorizontalAlignment="Right" Padding="4" Margin="3" Command="{Binding Clear}">
-                    <Image Source="{DynamicResource MaterialDesign.Close}" Height="10"/>
+                    <Image Source="{DynamicResource MaterialDesign.Close}" Height="10" />
                 </Button>
             </Panel>
         </StackPanel>
-        
+
     </DockPanel>
 </controls:FlexibleWindow>

@@ -11,17 +11,15 @@ namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
-    private static JsonSerializerOptions _jsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
-        PropertyNameCaseInsensitive = true,
+        PropertyNameCaseInsensitive = true
     };
-    
+
     private readonly IModuleCatalog _moduleCatalog;
     private readonly IModuleManager _moduleManager;
 
     private readonly string _pluginDirectory;
-    
-    public List<IPlugin> InstalledPlugins { get; } = new();
 
     public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
     {
@@ -31,12 +29,14 @@ public class PluginService : IPluginService
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
         Directory.CreateDirectory(_pluginDirectory);
     }
-    
+
+    public List<IPlugin> InstalledPlugins { get; } = new();
+
     public IPlugin AddPlugin(string path)
     {
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
-        if (CheckCompatibility(path) is {compatible: false} test)
+        if (CheckCompatibility(path) is { compatible: false } test)
         {
             plugin.CompatibilityReport = test.report;
             ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.report}");
@@ -44,13 +44,13 @@ public class PluginService : IPluginService
         }
 
         plugin.IsCompatible = true;
-        
+
         try
         {
             var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
             PlatformHelper.CopyDirectory(path, realPath);
-        
-            var catalog = new DirectoryModuleCatalog()
+
+            var catalog = new DirectoryModuleCatalog
             {
                 ModulePath = realPath
             };
@@ -59,17 +59,32 @@ public class PluginService : IPluginService
             foreach (var module in catalog.Modules)
             {
                 _moduleCatalog.AddModule(module);
-                if(_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized) 
+                if (_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized)
                     _moduleManager.LoadModule(module.ModuleName);
-                
-                ContainerLocator.Container.Resolve<ILogger>().Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
+
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
+
         return plugin;
+    }
+
+    public void RemovePlugin(IPlugin plugin)
+    {
+        try
+        {
+            if (Directory.Exists(plugin.Path)) Directory.Delete(plugin.Path, true);
+            InstalledPlugins.Remove(plugin);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
     }
 
     private (bool compatible, string? report) CheckCompatibility(string path)
@@ -77,22 +92,23 @@ public class PluginService : IPluginService
         try
         {
             var pluginName = Path.GetFileName(path);
-            
+
             var compatibilityIssues = string.Empty;
-            
+
             //Dependency check
             var depFilePath = Path.Combine(path, "oneware.json");
 
             if (!File.Exists(depFilePath))
             {
-                compatibilityIssues += $"Extension {pluginName} incompatible:\n\noneware.json not found in plugin folder\n";
-                return (false,compatibilityIssues);
+                compatibilityIssues +=
+                    $"Extension {pluginName} incompatible:\n\noneware.json not found in plugin folder\n";
+                return (false, compatibilityIssues);
             }
 
-            var packageManifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath), _jsonSerializerOptions);
+            var packageManifest =
+                JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath), _jsonSerializerOptions);
 
             if (packageManifest?.Dependencies is { } deps)
-            {
                 foreach (var dep in deps)
                 {
                     var minVersion = Version.Parse(dep.MinVersion ?? "1000");
@@ -108,38 +124,24 @@ public class PluginService : IPluginService
                     }
 
                     if (coreDep.Version < minVersion)
-                        compatibilityIssues += $"Studio {dep.Name} v{coreDep.Version} is older than min Plugin v{minVersion}\n";
+                        compatibilityIssues +=
+                            $"Studio {dep.Name} v{coreDep.Version} is older than min Plugin v{minVersion}\n";
                     if (coreDep.Version > maxVersion)
-                        compatibilityIssues += $"Studio {dep.Name} v{coreDep.Version} is newer than max Plugin v{maxVersion}\n";
+                        compatibilityIssues +=
+                            $"Studio {dep.Name} v{coreDep.Version} is newer than max Plugin v{maxVersion}\n";
                 }
-            }
 
             if (compatibilityIssues.Length > 0)
             {
                 compatibilityIssues = $"Extension {pluginName} incompatible:\n" + compatibilityIssues;
-                return (false,compatibilityIssues);
+                return (false, compatibilityIssues);
             }
         }
         catch (Exception e)
         {
-            return (false,e.Message);
+            return (false, e.Message);
         }
-        return (true, null);
-    }
 
-    public void RemovePlugin(IPlugin plugin)
-    {
-        try
-        {
-            if (Directory.Exists(plugin.Path))
-            {
-                Directory.Delete(plugin.Path, true);
-            }
-            InstalledPlugins.Remove(plugin);
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
+        return (true, null);
     }
 }

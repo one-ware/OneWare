@@ -1,15 +1,15 @@
 using Avalonia;
 using Avalonia.Xaml.Interactivity;
 
-namespace OneWare.Essentials.Behaviours;
+namespace OneWare.Essentials.Behaviors;
 
-public class ActionTriggerBehaviour : Trigger
+public class ActionTriggerBehavior : Trigger
 {
     public static readonly StyledProperty<Action?> TriggerActionProperty =
-        AvaloniaProperty.Register<ActionTriggerBehaviour, Action?>(nameof(TriggerAction));
+        AvaloniaProperty.Register<ActionTriggerBehavior, Action?>(nameof(TriggerAction));
 
     /// <summary>
-    /// Gets or sets the name of the event to listen for. This is a avalonia property.
+    ///     Gets or sets the name of the event to listen for. This is a avalonia property.
     /// </summary>
     public Action? TriggerAction
     {
@@ -19,7 +19,7 @@ public class ActionTriggerBehaviour : Trigger
 
 
     /// <summary>
-    /// Called after the behavior is attached to the <see cref="Behavior.AssociatedObject"/>.
+    ///     Called after the behavior is attached to the <see cref="Behavior.AssociatedObject" />.
     /// </summary>
     protected override void OnAttached()
     {
@@ -28,7 +28,7 @@ public class ActionTriggerBehaviour : Trigger
     }
 
     /// <summary>
-    /// Called when the behavior is being detached from its <see cref="Behavior.AssociatedObject"/>.
+    ///     Called when the behavior is being detached from its <see cref="Behavior.AssociatedObject" />.
     /// </summary>
     protected override void OnDetaching()
     {

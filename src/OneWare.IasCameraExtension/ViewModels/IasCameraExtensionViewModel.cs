@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.UniversalFpgaProjectSystem.Fpga;
+﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.IasCameraExtension.ViewModels;

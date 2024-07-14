@@ -1,18 +1,20 @@
 ﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-        xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
-        xmlns:viewModels="clr-namespace:OneWare.OssCadSuiteIntegration.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" PrefHeight="370" PrefWidth="400"
-        CustomIcon="{DynamicResource Material.SettingsOutline}"
-        Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
-        x:Class="OneWare.OssCadSuiteIntegration.Views.YosysCompileSettingsView" Name="YosysCompileSettingsViewView"
-        WindowStartupLocation="CenterOwner" Title="Yosys Compile Settings" x:DataType="viewModels:YosysCompileSettingsViewModel">
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.OssCadSuiteIntegration.ViewModels"
+                         xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" PrefHeight="370" PrefWidth="400"
+                         CustomIcon="{DynamicResource Material.SettingsOutline}"
+                         Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
+                         x:Class="OneWare.OssCadSuiteIntegration.Views.YosysCompileSettingsView"
+                         Name="YosysCompileSettingsViewView"
+                         WindowStartupLocation="CenterOwner" Title="Yosys Compile Settings"
+                         x:DataType="viewModels:YosysCompileSettingsViewModel">
     <Interaction.Behaviors>
-        <behaviours:CommandOnEnterBehaviour Command="{Binding Save}"
-                                            CommandParameter="{Binding #YosysCompileSettingsViewView}" />
+        <behaviors:CommandOnEnterBehavior Command="{Binding Save}"
+                                          CommandParameter="{Binding #YosysCompileSettingsViewView}" />
     </Interaction.Behaviors>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
@@ -25,8 +27,8 @@
                 <TextBlock Text="Save" />
             </Button>
         </StackPanel>
-        <ScrollViewer DockPanel.Dock="Top" >
-            <ContentControl Padding="4" Content="{Binding SettingsCollection}"/>
+        <ScrollViewer DockPanel.Dock="Top">
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
         </ScrollViewer>
     </DockPanel>
 </controls:FlexibleWindow>

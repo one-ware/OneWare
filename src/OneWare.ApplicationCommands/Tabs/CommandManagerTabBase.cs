@@ -11,20 +11,11 @@ namespace OneWare.ApplicationCommands.Tabs;
 
 public abstract partial class CommandManagerTabBase : ObservableObject
 {
-    public string Title { get; }
+    [ObservableProperty] private string _searchText = string.Empty;
 
-    [ObservableProperty]
-    private string _searchText = string.Empty;
+    [ObservableProperty] private CommandManagerItemModel? _selectedItem;
 
-    public ObservableCollection<IApplicationCommand> Items { get; init; } = new();
-
-    [ObservableProperty]
-    private IList<CommandManagerItemModel> _visibleItems = [];
-
-    [ObservableProperty]
-    private CommandManagerItemModel? _selectedItem;
-    
-    public abstract string SearchBarText { get; }
+    [ObservableProperty] private IList<CommandManagerItemModel> _visibleItems = [];
 
     protected CommandManagerTabBase(string title, ILogical logical)
     {
@@ -33,24 +24,26 @@ public abstract partial class CommandManagerTabBase : ObservableObject
         this.WhenValueChanged(x => x.SearchText).Subscribe(x =>
         {
             List<CommandManagerItemModel> newList = [];
-            
+
             if (!string.IsNullOrWhiteSpace(x))
-            {
                 newList = Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
                     .Select(c => new CommandManagerItemModel(c, c.CanExecute(logical)))
                     .OrderByDescending(c => c.IsEnabled)
                     .ThenByDescending(c => c.Command.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
                     .ThenByDescending(c => c.Command.Name)
                     .ToList();
-            }
             //Add empty ListItem for Linux to avoid crash, TODO check with next Avalonia Update
             if (newList.Count == 0 && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
                 newList.Add(new CommandManagerItemModel(new DummyApplicationCommand(), false));
-            }
 
             VisibleItems = newList;
             SelectedItem = VisibleItems.FirstOrDefault();
         });
     }
+
+    public string Title { get; }
+
+    public ObservableCollection<IApplicationCommand> Items { get; init; } = new();
+
+    public abstract string SearchBarText { get; }
 }

@@ -6,12 +6,12 @@ public abstract class SettingViewModel : ObservableObject
 {
     private bool _isEnabled = true;
 
-    public TitledSetting Setting { get; }
-
     protected SettingViewModel(TitledSetting setting)
     {
         Setting = setting;
     }
+
+    public TitledSetting Setting { get; }
 
     public bool IsEnabled
     {

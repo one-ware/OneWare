@@ -1,6 +1,6 @@
 ﻿namespace OneWare.Vcd.Parser.Extensions;
 
-sealed class StreamReadLimitLengthWrapper : Stream
+internal sealed class StreamReadLimitLengthWrapper : Stream
 {
     private readonly Stream _mInnerStream;
 
@@ -18,17 +18,31 @@ sealed class StreamReadLimitLengthWrapper : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush()
-    {
-        _mInnerStream.Flush();
-    }
-
     public override long Length { get; }
 
     public override long Position
     {
         get => _mInnerStream.Position;
         set => _mInnerStream.Position = value;
+    }
+
+    public override bool CanTimeout => _mInnerStream.CanTimeout;
+
+    public override int ReadTimeout
+    {
+        get => _mInnerStream.ReadTimeout;
+        set => _mInnerStream.ReadTimeout = value;
+    }
+
+    public override int WriteTimeout
+    {
+        get => _mInnerStream.ReadTimeout;
+        set => _mInnerStream.ReadTimeout = value;
+    }
+
+    public override void Flush()
+    {
+        _mInnerStream.Flush();
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -52,27 +66,14 @@ sealed class StreamReadLimitLengthWrapper : Stream
         throw new NotSupportedException();
     }
 
-    public override bool CanTimeout => _mInnerStream.CanTimeout;
-
-    public override int ReadTimeout
-    {
-        get => _mInnerStream.ReadTimeout;
-        set => _mInnerStream.ReadTimeout = value;
-    }
-
-    public override int WriteTimeout
-    {
-        get => _mInnerStream.ReadTimeout;
-        set => _mInnerStream.ReadTimeout = value;
-    }
-
     public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
     {
         count = GetAllowedCount(count);
         return _mInnerStream.BeginRead(buffer, offset, count, callback, state);
     }
 
-    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback,
+        object? state)
     {
         throw new NotSupportedException();
     }

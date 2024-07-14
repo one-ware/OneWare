@@ -1,5 +1,4 @@
-﻿using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Services;
+﻿using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -9,7 +8,7 @@ namespace OneWare.Vhdl.Templates;
 public class VhdlBlinkTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
 {
     public string Name => "VHDL Blink";
-    
+
     public void FillTemplate(UniversalFpgaProjectRoot root)
     {
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Templates", "BlinkVhdl");
@@ -25,7 +24,7 @@ public class VhdlBlinkTemplate(ILogger logger, IDockService dockService) : IFpga
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);   
+            logger.Error(e.Message, e);
         }
     }
 }

@@ -11,7 +11,7 @@
         <Thickness x:Key="SelectedThickness">3</Thickness>
         <Thickness x:Key="NormalThickness">1</Thickness>
     </Styles.Resources>
-    
+
     <Style Selector="Button.YellowGreen">
         <Setter Property="Background" Value="YellowGreen" />
     </Style>
@@ -64,7 +64,8 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Name="PinBorder" Background="{TemplateBinding Background}"
-                        BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                     <Grid>
                         <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
                                           VerticalAlignment="Center" Margin="0,0,0,0" />
@@ -77,20 +78,21 @@
     <Style Selector="Menu.BindMenu > MenuItem > Panel > TextBlock">
         <Setter Property="Foreground" Value="White" />
     </Style>
-    
+
     <Style Selector="Menu.BindMenu > MenuItem:pointerover > Border#root">
         <Setter Property="Background" Value="Transparent" />
     </Style>
-    
+
     <Style Selector="Menu.BindMenu > MenuItem:selected > Border#root">
         <Setter Property="Background" Value="Transparent" />
     </Style>
-    
+
     <Style Selector="Border.CruviExtension">
         <Setter Property="Opacity"
                 Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, 
                 Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}}" />
-        <Setter Property="IsHitTestVisible" Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions}" />
+        <Setter Property="IsHitTestVisible"
+                Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions}" />
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
@@ -113,31 +115,33 @@
                                 <Interaction.Behaviors>
                                     <DataTriggerBehavior ComparisonCondition="Equal" Value="True">
                                         <DataTriggerBehavior.Binding>
-                                            <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                            <MultiBinding
+                                                Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
                                                 <Binding Path="Parent.SelectedPinModel" />
-                                                <Binding Path="#PinBorder.DataContext"/>
+                                                <Binding Path="#PinBorder.DataContext" />
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
                                         <ChangePropertyAction TargetObject="{Binding #PinBorder}"
-                                                                 PropertyName="BorderBrush"
-                                                                 Value="{StaticResource SelectionColorPin}" />
+                                                              PropertyName="BorderBrush"
+                                                              Value="{StaticResource SelectionColorPin}" />
                                         <ChangePropertyAction TargetObject="{Binding #PinBorder}"
-                                                                 PropertyName="BorderThickness"
-                                                                 Value="{StaticResource SelectedThickness}" />
+                                                              PropertyName="BorderThickness"
+                                                              Value="{StaticResource SelectedThickness}" />
                                     </DataTriggerBehavior>
                                     <DataTriggerBehavior ComparisonCondition="Equal" Value="False">
                                         <DataTriggerBehavior.Binding>
-                                            <MultiBinding Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                            <MultiBinding
+                                                Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
                                                 <Binding Path="Parent.SelectedPinModel" />
-                                                <Binding Path="#PinBorder.DataContext"/>
+                                                <Binding Path="#PinBorder.DataContext" />
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
                                         <ChangePropertyAction TargetObject="{Binding #PinBorder}"
-                                                                 PropertyName="BorderBrush"
-                                                                 Value="{StaticResource ThemeBorderLowBrush}" />
+                                                              PropertyName="BorderBrush"
+                                                              Value="{StaticResource ThemeBorderLowBrush}" />
                                         <ChangePropertyAction TargetObject="{Binding #PinBorder}"
-                                                                 PropertyName="BorderThickness"
-                                                                 Value="{StaticResource NormalThickness}" />
+                                                              PropertyName="BorderThickness"
+                                                              Value="{StaticResource NormalThickness}" />
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
                             </Grid>
@@ -149,7 +153,7 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Command" Value="{Binding Parent.SelectPin}"/>
+        <Setter Property="Command" Value="{Binding Parent.SelectPin}" />
         <Setter Property="CommandParameter" Value="{Binding}" />
         <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
     </Style>
@@ -161,21 +165,23 @@
     </Style>
 
 
-    <Style Selector="TextBlock.VertLeft, Image.VertLeft, Menu.VertLeft, Button.VertLeft, Grid.VertLeft, Panel.VertRight">
+    <Style
+        Selector="TextBlock.VertLeft, Image.VertLeft, Menu.VertLeft, Button.VertLeft, Grid.VertLeft, Panel.VertRight">
         <Setter Property="RenderTransform">
             <Setter.Value>
                 <RotateTransform Angle="90" />
             </Setter.Value>
         </Setter>
     </Style>
-    <Style Selector="TextBlock.VertRight, Image.VertRight, Menu.VertRight, Button.VertRight, Grid.VertRight, Panel.VertRight">
+    <Style
+        Selector="TextBlock.VertRight, Image.VertRight, Menu.VertRight, Button.VertRight, Grid.VertRight, Panel.VertRight">
         <Setter Property="RenderTransform">
             <Setter.Value>
                 <RotateTransform Angle="270" />
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style Selector="Rectangle.Diag, Button.Diag">
         <Setter Property="RenderTransform">
             <Setter.Value>

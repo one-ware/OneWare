@@ -2,9 +2,9 @@
 using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
 
-namespace OneWare.Essentials.Behaviours;
+namespace OneWare.Essentials.Behaviors;
 
-public class LostContolFocusTriggerBehaviour : Trigger<Control>
+public class LostContolFocusTriggerBehavior : Trigger<Control>
 {
     private CompositeDisposable? Disposables { get; set; }
 
@@ -14,7 +14,7 @@ public class LostContolFocusTriggerBehaviour : Trigger<Control>
         Disposables = new CompositeDisposable();
 
         base.OnAttached();
-        
+
         // Disposables.Add(AssociatedObject.AddDisposableHandler(
         //     InputElement.KeyDownEvent,
         //     (sender, e) =>

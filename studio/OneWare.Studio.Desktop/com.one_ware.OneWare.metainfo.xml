@@ -1,63 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.one_ware.OneWare</id>
-  <name>OneWare</name>
-  <summary>IDE for Electronics Development</summary>
-  <developer id="com.one_ware">
-    <name translatable="no">Hendrik Mennen</name>
-  </developer>
-  <metadata_license>CC0-1.0</metadata_license>
-  <project_license>LicenseRef-proprietary</project_license>
-  <description>
-    <p>OneWare Studio is the next generation IDE for electronics development. 
-      It supports a broad range of development languages including VHDL, Verilog, C++, and more. 
-      It is designed to streamline electronics development with features like a high-speed simulation viewer and advanced debugging tools. 
-      OneWare Studio also offers extensive customization with an extensible architecture for custom tools and strong support for digital twin technology, making it ideal for firmware and hardware development across diverse applications.</p>
-    <p>These are a few of the current features:</p>
-    <ul>
-      <li>Comprehensive support for VHDL and Verilog for streamlined digital design</li>
-      <li>Vendor-independent support for FPGA development</li>
-      <li>Support for simulation tools like GHDL or IVerilog with a integrated high-speed, multithreaded VCD Viewer</li>
-      <li>Extensible architecture to unlock additional functionality and hardware support with custom extensions</li>
-      <li>All the features you would expect from a modern IDE, with built-in GIT support</li>
-    </ul>
-    <p>Get started and join our growing community!</p>
-  </description>
-  <url type="homepage">https://one-ware.com/studio</url>
-  <url type="bugtracker">https://github.com/one-ware/OneWare</url>
-  <url type="contact">https://one-ware.com/docs/contact/</url>
-  <screenshots>
-    <screenshot type="default">
-      <image>https://one-ware.com/img/studio/slides2/completion.png</image>
-      <caption>Code Editor for HDL languages</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://one-ware.com/img/studio/slides2/hardware.png</image>
-      <caption>Support for a wide range of hardware</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://one-ware.com/img/studio/slides2/simulator.png</image>
-      <caption>Integrated support for simulation using the VCD format and all the popular
-        simulationtools</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://one-ware.com/img/studio/slides2/extensions.png</image>
-      <caption>A growing collection of useful extensions</caption>
-    </screenshot>
-  </screenshots>
-  <branding>
-    <color type="primary" scheme_preference="light">#00ffd1</color>
-    <color type="primary" scheme_preference="dark">#009688</color>
-  </branding>
-  <launchable type="desktop-id">com.one_ware.OneWare.desktop</launchable>
-  <provides>
-    <id>com.one_ware.OneWare.desktop</id>
-  </provides>
-  <content_rating type="oars-1.1" />
-  <releases>
-    <release version="0.18.2.0" date="2024-12-07" type="stable" />
-    <release version="0.18.1.0" date="2024-12-07" type="stable" />
-    <release version="0.18.0.0" date="2024-10-07" type="stable" />
-    <release version="0.17.7.0" date="2024-05-07" type="stable" />
-  </releases>
+    <id>com.one_ware.OneWare</id>
+    <name>OneWare</name>
+    <summary>IDE for Electronics Development</summary>
+    <developer id="com.one_ware">
+        <name translatable="no">Hendrik Mennen</name>
+    </developer>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>LicenseRef-proprietary</project_license>
+    <description>
+        <p>OneWare Studio is the next generation IDE for electronics development.
+            It supports a broad range of development languages including VHDL, Verilog, C++, and more.
+            It is designed to streamline electronics development with features like a high-speed simulation viewer and
+            advanced debugging tools.
+            OneWare Studio also offers extensive customization with an extensible architecture for custom tools and
+            strong support for digital twin technology, making it ideal for firmware and hardware development across
+            diverse applications.
+        </p>
+        <p>These are a few of the current features:</p>
+        <ul>
+            <li>Comprehensive support for VHDL and Verilog for streamlined digital design</li>
+            <li>Vendor-independent support for FPGA development</li>
+            <li>Support for simulation tools like GHDL or IVerilog with a integrated high-speed, multithreaded VCD
+                Viewer
+            </li>
+            <li>Extensible architecture to unlock additional functionality and hardware support with custom extensions
+            </li>
+            <li>All the features you would expect from a modern IDE, with built-in GIT support</li>
+        </ul>
+        <p>Get started and join our growing community!</p>
+    </description>
+    <url type="homepage">https://one-ware.com/studio</url>
+    <url type="bugtracker">https://github.com/one-ware/OneWare</url>
+    <url type="contact">https://one-ware.com/docs/contact/</url>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://one-ware.com/img/studio/slides2/completion.png</image>
+            <caption>Code Editor for HDL languages</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://one-ware.com/img/studio/slides2/hardware.png</image>
+            <caption>Support for a wide range of hardware</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://one-ware.com/img/studio/slides2/simulator.png</image>
+            <caption>Integrated support for simulation using the VCD format and all the popular
+                simulationtools
+            </caption>
+        </screenshot>
+        <screenshot>
+            <image>https://one-ware.com/img/studio/slides2/extensions.png</image>
+            <caption>A growing collection of useful extensions</caption>
+        </screenshot>
+    </screenshots>
+    <branding>
+        <color type="primary" scheme_preference="light">#00ffd1</color>
+        <color type="primary" scheme_preference="dark">#009688</color>
+    </branding>
+    <launchable type="desktop-id">com.one_ware.OneWare.desktop</launchable>
+    <provides>
+        <id>com.one_ware.OneWare.desktop</id>
+    </provides>
+    <content_rating type="oars-1.1"/>
+    <releases>
+        <release version="0.18.2.0" date="2024-12-07" type="stable"/>
+        <release version="0.18.1.0" date="2024-12-07" type="stable"/>
+        <release version="0.18.0.0" date="2024-10-07" type="stable"/>
+        <release version="0.17.7.0" date="2024-05-07" type="stable"/>
+    </releases>
 </component>

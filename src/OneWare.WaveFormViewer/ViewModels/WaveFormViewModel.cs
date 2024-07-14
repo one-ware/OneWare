@@ -10,18 +10,34 @@ namespace OneWare.WaveFormViewer.ViewModels;
 
 public class WaveFormViewModel : ObservableObject
 {
-    public int MinZoomLevel { get; } = -2;
-    public int MaxZoomLevel { get; } = 20;
-
     private static readonly IBrush[] WaveColors =
         [Brushes.Lime, Brushes.Cyan, Brushes.Magenta, Brushes.Yellow];
 
-    public ObservableCollection<WaveModel> Signals { get; } = [];
+    private long _cursorOffset;
+
+    private bool _extendSignals;
+
+    private long _loadingMarkerOffset = long.MaxValue;
+
+    private long _markerOffset = long.MaxValue;
+
+    private long _max;
+
+    private long _offset;
+
+    private long _secondMarkerOffset = long.MaxValue;
 
     private long _timeScale = 1;
 
+    private int _zoomLevel;
+    private double _zoomMultiply = 1;
+    public int MinZoomLevel { get; } = -2;
+    public int MaxZoomLevel { get; } = 20;
+
+    public ObservableCollection<WaveModel> Signals { get; } = [];
+
     /// <summary>
-    /// 1 = 1 fs
+    ///     1 = 1 fs
     /// </summary>
     public long TimeScale
     {
@@ -29,15 +45,11 @@ public class WaveFormViewModel : ObservableObject
         set => SetProperty(ref _timeScale, value);
     }
 
-    private bool _extendSignals;
-
     public bool ExtendSignals
     {
         get => _extendSignals;
         set => SetProperty(ref _extendSignals, value);
     }
-
-    private long _offset;
 
     public long Offset
     {
@@ -46,8 +58,6 @@ public class WaveFormViewModel : ObservableObject
     }
 
     public long ViewPortWidth => (long)(Max / ZoomMultiply);
-
-    private long _max;
 
     public long Max
     {
@@ -59,10 +69,8 @@ public class WaveFormViewModel : ObservableObject
             OnPropertyChanged(nameof(MaxScroll));
         }
     }
-    
-    public long MaxScroll => Max - ViewPortWidth;
 
-    private int _zoomLevel;
+    public long MaxScroll => Max - ViewPortWidth;
 
     public int ZoomLevel
     {
@@ -71,20 +79,19 @@ public class WaveFormViewModel : ObservableObject
         {
             if (value < MinZoomLevel) value = MinZoomLevel;
             if (value > MaxZoomLevel) value = MaxZoomLevel;
-            
+
             SetProperty(ref _zoomLevel, value);
 
             ZoomMultiply = Math.Pow(2, value);
-            
+
             if (ZoomMultiply >= 1)
             {
                 var currentOffsetWidth = Max / (long)ZoomMultiply;
-                if(MarkerOffset != long.MaxValue)
+                if (MarkerOffset != long.MaxValue)
                     Offset = MarkerOffset - currentOffsetWidth / 2;
             }
         }
     }
-    private double _zoomMultiply = 1;
 
     public double ZoomMultiply
     {
@@ -97,45 +104,37 @@ public class WaveFormViewModel : ObservableObject
         }
     }
 
-    private long _cursorOffset;
-
     public long CursorOffset
     {
         get => _cursorOffset;
         set
         {
             SetProperty(ref _cursorOffset, value >= 0 ? value : 0);
-            this.OnPropertyChanged(nameof(CursorText));
+            OnPropertyChanged(nameof(CursorText));
         }
     }
-
-    private long _markerOffset = long.MaxValue;
 
     public long MarkerOffset
     {
         get => _markerOffset;
         set
         {
-            this.SetProperty(ref _markerOffset, value >= 0 ? value : 0);
-            this.OnPropertyChanged(nameof(MarkerText));
+            SetProperty(ref _markerOffset, value >= 0 ? value : 0);
+            OnPropertyChanged(nameof(MarkerText));
             SetSignalMarkerValues(MarkerOffset);
         }
     }
-
-    private long _secondMarkerOffset = long.MaxValue;
 
     public long SecondMarkerOffset
     {
         get => _secondMarkerOffset;
         set
         {
-            this.SetProperty(ref _secondMarkerOffset, value >= 0 ? value : 0);
-            this.OnPropertyChanged(nameof(MarkerText));
+            SetProperty(ref _secondMarkerOffset, value >= 0 ? value : 0);
+            OnPropertyChanged(nameof(MarkerText));
             SetSignalMarkerValues(SecondMarkerOffset);
         }
     }
-
-    private long _loadingMarkerOffset = long.MaxValue;
 
     public long LoadingMarkerOffset
     {
@@ -175,10 +174,7 @@ public class WaveFormViewModel : ObservableObject
 
     private void SetSignalMarkerValues(long offset)
     {
-        foreach (var s in Signals)
-        {
-            SetSignalMarkerValue(s, offset);
-        }
+        foreach (var s in Signals) SetSignalMarkerValue(s, offset);
     }
 
     private void SetSignalMarkerValue(WaveModel model, long offset)
@@ -220,11 +216,8 @@ public class WaveFormViewModel : ObservableObject
         SetSignalMarkerValue(waveModel, MarkerOffset);
         Signals.Add(waveModel);
 
-        waveModel.WhenValueChanged(x => x.DataType).Subscribe(_ =>
-        {
-            SetSignalMarkerValue(waveModel, MarkerOffset);
-        });
-        
+        waveModel.WhenValueChanged(x => x.DataType).Subscribe(_ => { SetSignalMarkerValue(waveModel, MarkerOffset); });
+
         return waveModel;
     }
 

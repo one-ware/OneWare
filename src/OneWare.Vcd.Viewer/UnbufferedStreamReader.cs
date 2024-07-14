@@ -2,10 +2,8 @@
 
 namespace OneWare.Vcd.Viewer;
 
-class UnbufferedStreamReader: TextReader
+internal class UnbufferedStreamReader : TextReader
 {
-    public Stream BaseStream { get; }
-
     public UnbufferedStreamReader(string path)
     {
         BaseStream = new FileStream(path, FileMode.Open);
@@ -16,19 +14,22 @@ class UnbufferedStreamReader: TextReader
         BaseStream = stream;
     }
 
+    public Stream BaseStream { get; }
+
     // This method assumes lines end with a line feed.
     // You may need to modify this method if your stream
     // follows the Windows convention of \r\n or some other 
     // convention that isn't just \n
     public override string ReadLine()
     {
-        List<byte> bytes = new List<byte>();
+        var bytes = new List<byte>();
         int current;
-        while ((current = Read()) != -1 && current != (int)'\n')
+        while ((current = Read()) != -1 && current != '\n')
         {
-            byte b = (byte)current;
+            var b = (byte)current;
             bytes.Add(b);
         }
+
         return Encoding.ASCII.GetString(bytes.ToArray());
     }
 
@@ -43,6 +44,7 @@ class UnbufferedStreamReader: TextReader
     {
         BaseStream.Close();
     }
+
     protected override void Dispose(bool disposing)
     {
         BaseStream.Dispose();
@@ -61,7 +63,7 @@ class UnbufferedStreamReader: TextReader
     public override int ReadBlock(char[] buffer, int index, int count)
     {
         throw new NotImplementedException();
-    }       
+    }
 
     public override string ReadToEnd()
     {

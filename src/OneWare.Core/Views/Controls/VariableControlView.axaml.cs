@@ -1,14 +1,11 @@
 ﻿using Avalonia.Controls;
 
-namespace OneWare.Core.Views.Controls
+namespace OneWare.Core.Views.Controls;
+
+public partial class VariableControlView : UserControl
 {
-    public partial class VariableControlView : UserControl
+    public VariableControlView()
     {
-        public VariableControlView()
-        {
-            InitializeComponent();
-        }
-
-
+        InitializeComponent();
     }
 }

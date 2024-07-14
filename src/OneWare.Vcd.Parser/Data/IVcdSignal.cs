@@ -2,12 +2,12 @@
 
 public interface IVcdSignal
 {
-    public event EventHandler RequestRedraw;
     public Type ValueType { get; }
     public VcdLineType Type { get; }
     public string Name { get; }
     public string Id { get; }
     public int BitWidth { get; }
+    public event EventHandler RequestRedraw;
     public void AddChange(int timeIndex, dynamic change);
     public void AddChanges(IVcdSignal signal);
     public void RemoveChangeAtIndex(int changeTimeIndex);

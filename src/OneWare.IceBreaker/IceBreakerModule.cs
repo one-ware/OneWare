@@ -1,5 +1,4 @@
 ﻿using OneWare.IceBreaker.ViewModels;
-using OneWare.IceBreaker.Views;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -10,7 +9,6 @@ public class IceBreakerModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

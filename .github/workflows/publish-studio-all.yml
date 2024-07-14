@@ -1,5 +1,5 @@
 # This workflow tests the run configuration and starts pipelines for all platforms
-name: Publish Studio Desktop 
+name: Publish Studio Desktop
 
 on:
   workflow_dispatch:

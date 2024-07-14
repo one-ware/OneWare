@@ -60,22 +60,24 @@
     </UserControl.Styles>
 
     <DockPanel>
-        
-        <controls:UiExtensionCollection DockPanel.Dock="Top" Extensions="{Binding TopExtensions}" Context="{Binding CurrentFile}">
+
+        <controls:UiExtensionCollection DockPanel.Dock="Top" Extensions="{Binding TopExtensions}"
+                                        Context="{Binding CurrentFile}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel/>
+                    <DockPanel />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
-        <controls:UiExtensionCollection DockPanel.Dock="Bottom" Extensions="{Binding BottomExtensions}" Context="{Binding CurrentFile}">
+        <controls:UiExtensionCollection DockPanel.Dock="Bottom" Extensions="{Binding BottomExtensions}"
+                                        Context="{Binding CurrentFile}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel/>
+                    <DockPanel />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
-        
+
         <Grid DockPanel.Dock="Top">
             <ContentControl Name="EditorWrapper" Content="{Binding Editor}">
                 <ContentControl.Styles>

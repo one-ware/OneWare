@@ -1,26 +1,27 @@
 ﻿<controls1:FlexibleWindow xmlns="https://github.com/avaloniaui"
-                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                        xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
-                        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-                        xmlns:controls1="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
-                        x:Class="OneWare.Core.Views.Windows.AboutView"
-                        PrefWidth="400" PrefHeight="400" Padding="4"
-                        Title="About OneWare.Core"
-                        Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
-                        CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
-                        WindowStartupLocation="CenterScreen"
-                        x:DataType="windows1:AboutViewModel">
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:windows1="clr-namespace:OneWare.Core.ViewModels.Windows"
+                          xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                          xmlns:controls1="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                          mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
+                          x:Class="OneWare.Core.Views.Windows.AboutView"
+                          PrefWidth="400" PrefHeight="400" Padding="4"
+                          Title="About OneWare.Core"
+                          Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
+                          CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
+                          WindowStartupLocation="CenterScreen"
+                          x:DataType="windows1:AboutViewModel">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
-            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="70" Width="70" />
+            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                   Height="70" Width="70" />
             <TextBlock Text="{Binding AppName}" FontSize="30" Margin="10, 20, 10, 20" />
         </StackPanel>
-        
+
         <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfo}" />
-        
+
         <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfoBase}" />
 
         <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding Platform}" />
@@ -29,7 +30,8 @@
             <TextBlock Text="Home Page: " />
             <controls1:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" />
         </StackPanel>
-        
-        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True" Background="{DynamicResource ThemeControlLowBrush}" />
+
+        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True"
+                 Background="{DynamicResource ThemeControlLowBrush}" />
     </DockPanel>
 </controls1:FlexibleWindow>

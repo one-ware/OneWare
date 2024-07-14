@@ -13,9 +13,7 @@ namespace OneWare.Essentials.Controls;
 public class AdvancedHostWindow : HostWindow
 {
     private bool _cancelClose = true;
-    private IDockService _dockService;
-
-    protected override Type StyleKeyOverride => typeof(HostWindow);
+    private readonly IDockService _dockService;
 
     public AdvancedHostWindow(IDockService dockService)
     {
@@ -24,6 +22,8 @@ public class AdvancedHostWindow : HostWindow
 #endif
         _dockService = dockService;
     }
+
+    protected override Type StyleKeyOverride => typeof(HostWindow);
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
@@ -58,9 +58,8 @@ public class AdvancedHostWindow : HostWindow
         {
             _cancelClose = false;
             foreach (var file in unsavedFiles)
-            {
-                if(file.CurrentFile != null) _dockService.OpenFiles.Remove(file.CurrentFile);
-            }
+                if (file.CurrentFile != null)
+                    _dockService.OpenFiles.Remove(file.CurrentFile);
 
             Dispatcher.UIThread.Post(Close);
         }

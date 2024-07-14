@@ -1,10 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.PackageManager;
+﻿using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
-using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vhdl.Parsing;
 using OneWare.Vhdl.Templates;
@@ -15,6 +10,9 @@ namespace OneWare.Vhdl;
 
 public class VhdlModule : IModule
 {
+    public const string LspName = "RustHDL";
+    public const string LspPathSetting = "VhdlModule_RustHdlPath";
+
     public static readonly Package RustHdlPackage = new()
     {
         Category = "Binaries",
@@ -23,18 +21,19 @@ public class VhdlModule : IModule
         Name = "RustHDL",
         Description = "Used for VHDL Support",
         License = "MPL 2.0",
-        IconUrl = "https://raw.githubusercontent.com/VHDL-LS/rust_hdl/cae4e21054386b74937abfba0fa673a659e9a0ce/logo.svg",
-        Links = 
+        IconUrl =
+            "https://raw.githubusercontent.com/VHDL-LS/rust_hdl/cae4e21054386b74937abfba0fa673a659e9a0ce/logo.svg",
+        Links =
         [
-            new PackageLink()
+            new PackageLink
             {
                 Name = "GitHub",
                 Url = "https://github.com/VHDL-LS/rust_hdl"
             }
         ],
-        Tabs = 
+        Tabs =
         [
-            new PackageTab()
+            new PackageTab
             {
                 Title = "License",
                 ContentUrl = "https://raw.githubusercontent.com/VHDL-LS/rust_hdl/master/LICENSE.txt"
@@ -42,92 +41,98 @@ public class VhdlModule : IModule
         ],
         Versions =
         [
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.78.1",
                 Targets =
                 [
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
                                 RelativePath = Path.Combine("vhdl_ls-x86_64-pc-windows-msvc", "bin", "vhdl_ls.exe"),
                                 SettingKey = LspPathSetting
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-unknown-linux-gnu.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin" , "vhdl_ls"),
+                                RelativePath = Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin", "vhdl_ls"),
                                 SettingKey = LspPathSetting
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-aarch64-apple-darwin.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin" , "vhdl_ls"),
+                                RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin", "vhdl_ls"),
                                 SettingKey = LspPathSetting
                             }
                         ]
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.82.0",
                 Targets =
                 [
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
                                 RelativePath = Path.Combine("vhdl_ls-x86_64-pc-windows-msvc", "bin", "vhdl_ls.exe"),
                                 SettingKey = LspPathSetting
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin" , "vhdl_ls"),
+                                RelativePath = Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin", "vhdl_ls"),
                                 SettingKey = LspPathSetting
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-aarch64-apple-darwin.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
-                            new PackageAutoSetting()
+                            new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin" , "vhdl_ls"),
+                                RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin", "vhdl_ls"),
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -136,31 +141,30 @@ public class VhdlModule : IModule
             }
         ]
     };
-    
-    public const string LspName = "RustHDL";
-    public const string LspPathSetting = "VhdlModule_RustHdlPath";
-    
+
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
         containerProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
-        
-        containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "VHDL", LspPathSetting, "RustHDL Path", "Path for RustHDL executable", "",
+
+        containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "VHDL", LspPathSetting,
+            "RustHDL Path", "Path for RustHDL executable", "",
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
-        
+
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl", "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
-        containerProvider.Resolve<ILanguageManager>().RegisterService(typeof(LanguageServiceVhdl),true, ".vhd", ".vhdl");
-        
+        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
+            "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
+        containerProvider.Resolve<ILanguageManager>()
+            .RegisterService(typeof(LanguageServiceVhdl), true, ".vhd", ".vhdl");
+
         containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
 
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkSimulationTemplate>();
-        
+
         // containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
         // {
         //     if (x is [UniversalProjectRoot root])

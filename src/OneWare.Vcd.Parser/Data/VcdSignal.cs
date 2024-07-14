@@ -1,25 +1,16 @@
-using System.Collections;
 using OneWare.Vcd.Parser.Extensions;
 
 namespace OneWare.Vcd.Parser.Data;
 
 public class VcdSignal<T> : IVcdSignal
 {
-    public List<long> ChangeTimes { get; }
-    public Type ValueType => typeof(T);
-    public VcdLineType Type { get; }
-    public int BitWidth { get; }
-    public string Id { get; }
-    public string Name { get; }
-
     private readonly List<int> _changeTimeOffsets = new();
-    private readonly List<T> _values = new();
-
-    public event EventHandler? RequestRedraw;
 
     private readonly object _parseLock;
+    private readonly List<T> _values = new();
 
-    public VcdSignal(List<long> changeTimes, VcdLineType type, int bitWidth, string id, string name, object? parseLock = null)
+    public VcdSignal(List<long> changeTimes, VcdLineType type, int bitWidth, string id, string name,
+        object? parseLock = null)
     {
         ChangeTimes = changeTimes;
         Type = type;
@@ -28,30 +19,35 @@ public class VcdSignal<T> : IVcdSignal
         Name = name;
         _parseLock = parseLock ?? new object();
     }
-    
+
+    public List<long> ChangeTimes { get; }
+    public Type ValueType => typeof(T);
+    public VcdLineType Type { get; }
+    public int BitWidth { get; }
+    public string Id { get; }
+    public string Name { get; }
+
+    public event EventHandler? RequestRedraw;
+
     public void AddChange(int timeIndex, dynamic change)
     {
         lock (_parseLock)
         {
             if (typeof(T).IsArray && _values.Count > 0)
-            {
-                if(Enumerable.SequenceEqual(_values[^1], change)) return;
-            }
+                if (Enumerable.SequenceEqual(_values[^1], change))
+                    return;
             _changeTimeOffsets.Add(timeIndex);
             _values.Add((T)change);
         }
     }
-    
+
     public void AddChanges(IVcdSignal signal)
     {
         lock (_parseLock)
         {
             if (signal is not VcdSignal<T> s) return;
             var offset = ChangeTimes.Count;
-            foreach (var off in s._changeTimeOffsets)
-            {
-                _changeTimeOffsets.Add(off+offset);
-            }
+            foreach (var off in s._changeTimeOffsets) _changeTimeOffsets.Add(off + offset);
             _values.AddRange(s._values);
         }
     }
@@ -61,7 +57,7 @@ public class VcdSignal<T> : IVcdSignal
         lock (_parseLock)
         {
             var changeTimeOffsetIndex = _changeTimeOffsets.IndexOf(changeTimeIndex);
-            if(changeTimeOffsetIndex < 0) return;
+            if (changeTimeOffsetIndex < 0) return;
             _changeTimeOffsets.RemoveAt(changeTimeOffsetIndex);
             _values.RemoveAt(changeTimeOffsetIndex);
         }
@@ -77,7 +73,7 @@ public class VcdSignal<T> : IVcdSignal
             _values.TrimExcess();
         }
     }
-    
+
     public int FindIndex(long offset)
     {
         lock (_parseLock)
@@ -96,7 +92,7 @@ public class VcdSignal<T> : IVcdSignal
             {
                 if (_changeTimeOffsets.Count > 0 && ChangeTimes[_changeTimeOffsets.Last()] <= offset)
                     result = _changeTimeOffsets.Count - 1;
-                else if(_changeTimeOffsets.Count == 1 && ChangeTimes[_changeTimeOffsets[0]] == offset)
+                else if (_changeTimeOffsets.Count == 1 && ChangeTimes[_changeTimeOffsets[0]] == offset)
                     result = 0;
             }
 
@@ -104,13 +100,6 @@ public class VcdSignal<T> : IVcdSignal
         }
     }
 
-    private T? GetValue(long offset)
-    {
-        var index = FindIndex(offset);
-
-        return index >= 0 && index < _values.Count ? _values[index] : default;
-    }
-    
     public object? GetValueFromOffset(long offset)
     {
         return GetValue(offset);
@@ -123,7 +112,7 @@ public class VcdSignal<T> : IVcdSignal
             return index < _changeTimeOffsets.Count ? ChangeTimes[_changeTimeOffsets[index]] : long.MaxValue;
         }
     }
-    
+
     public object? GetValueFromIndex(int index)
     {
         return index < _values.Count ? _values[index] : null;
@@ -137,5 +126,12 @@ public class VcdSignal<T> : IVcdSignal
     public IVcdSignal CloneEmpty()
     {
         return new VcdSignal<T>(new List<long>(), Type, BitWidth, Id, Name);
+    }
+
+    private T? GetValue(long offset)
+    {
+        var index = FindIndex(offset);
+
+        return index >= 0 && index < _values.Count ? _values[index] : default;
     }
 }

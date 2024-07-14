@@ -107,11 +107,12 @@
                                 <CheckBox BorderThickness="0" IsChecked="{Binding LongTermProgramming}" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <controls:UiExtensionCollection Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}" 
-                                                        Extensions="{Binding DownloaderConfigurationExtension}">
+                        <controls:UiExtensionCollection
+                            Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
+                            Extensions="{Binding DownloaderConfigurationExtension}">
                             <controls:UiExtensionCollection.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical"/>
+                                    <StackPanel Orientation="Vertical" />
                                 </ItemsPanelTemplate>
                             </controls:UiExtensionCollection.ItemsPanel>
                         </controls:UiExtensionCollection>

@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Essentials;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
@@ -12,127 +11,132 @@ using Prism.Ioc;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
-namespace OneWare.Terminal.ViewModels
+namespace OneWare.Terminal.ViewModels;
+
+public class TerminalViewModel : ObservableObject
 {
-    public class TerminalViewModel : ObservableObject
+    private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? new Win32PseudoTerminalProvider()
+        : new UnixPseudoTerminalProvider();
+
+    private readonly object _createLock = new();
+
+    private IConnection? _connection;
+
+    private VirtualTerminalController? _terminal;
+
+    private bool _terminalLoading;
+
+    private bool _terminalVisible;
+
+    public TerminalViewModel(string workingDir, string? startArguments = null)
     {
-        private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? new Win32PseudoTerminalProvider()
-            : new UnixPseudoTerminalProvider();
+        WorkingDir = workingDir;
+        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
+            : null);
+    }
 
-        private readonly object _createLock = new();
+    public string? StartArguments { get; }
+    public string WorkingDir { get; }
 
-        public string? StartArguments { get; }
-        public string WorkingDir { get; }
-        
-        private IConnection? _connection;
-        public IConnection? Connection
-        {
-            get => _connection;
-            set => SetProperty(ref _connection, value);
-        }
-        
-        private VirtualTerminalController? _terminal;
-        public VirtualTerminalController? Terminal
-        {
-            get => _terminal;
-            set => SetProperty(ref _terminal, value);
-        }
-        
-        private bool _terminalVisible;
-        public bool TerminalVisible
-        {
-            get => _terminalVisible;
-            set => SetProperty(ref _terminalVisible, value);
-        }
-        
-        private bool _terminalLoading;
-        public bool TerminalLoading
-        {
-            get => _terminalLoading;
-            set => SetProperty(ref _terminalLoading, value);
-        }
+    public IConnection? Connection
+    {
+        get => _connection;
+        set => SetProperty(ref _connection, value);
+    }
 
-        public event EventHandler? TerminalReady;
-        
-        public TerminalViewModel(string workingDir, string? startArguments = null)
-        {
-            WorkingDir = workingDir;
-            StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'" : null);
-        }
+    public VirtualTerminalController? Terminal
+    {
+        get => _terminal;
+        set => SetProperty(ref _terminal, value);
+    }
 
-        public void Redraw()
+    public bool TerminalVisible
+    {
+        get => _terminalVisible;
+        set => SetProperty(ref _terminalVisible, value);
+    }
+
+    public bool TerminalLoading
+    {
+        get => _terminalLoading;
+        set => SetProperty(ref _terminalLoading, value);
+    }
+
+    public event EventHandler? TerminalReady;
+
+    public void Redraw()
+    {
+        if (TerminalVisible)
         {
-            if (TerminalVisible)
+            TerminalVisible = false;
+            TerminalVisible = true;
+        }
+    }
+
+    public void StartCreate()
+    {
+        Dispatcher.UIThread.Post(CreateConnection);
+    }
+
+    public void CreateConnection()
+    {
+        if (Connection is not { IsConnected: true })
+            lock (_createLock)
             {
-                TerminalVisible = false;
-                TerminalVisible = true;
-            }
-        }
+                CloseConnection();
 
-        public void StartCreate()
-        {
-            Dispatcher.UIThread.Post(CreateConnection);
-        }
+                var shellExecutable = PlatformHelper.GetFullPath(
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash");
 
-        public void CreateConnection()
-        {
-            if (Connection is not { IsConnected: true })
-                lock (_createLock)
+                if (!string.IsNullOrEmpty(shellExecutable))
                 {
-                    CloseConnection();
+                    var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
 
-                    var shellExecutable = PlatformHelper.GetFullPath(
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash"));
-
-                    if (!string.IsNullOrEmpty(shellExecutable))
+                    if (terminal == null)
                     {
-                        var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
-
-                        if (terminal == null)
-                        {
-                            ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
-                            return;
-                        }
-                            
-                        Connection = new PseudoTerminalConnection(terminal);
-
-                        Terminal = new VirtualTerminalController();
-
-                        TerminalVisible = true;
-                        TerminalLoading = true;
-
-                        Connection.Connect();
-                        
-                        TerminalReady += Terminal_Ready;
-
-                        TerminalReady?.Invoke(this, EventArgs.Empty);
+                        ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                        return;
                     }
+
+                    Connection = new PseudoTerminalConnection(terminal);
+
+                    Terminal = new VirtualTerminalController();
+
+                    TerminalVisible = true;
+                    TerminalLoading = true;
+
+                    Connection.Connect();
+
+                    TerminalReady += Terminal_Ready;
+
+                    TerminalReady?.Invoke(this, EventArgs.Empty);
                 }
-        }
-
-        public void Terminal_Ready(object? sender, EventArgs e)
-        {
-            TerminalLoading = false;
-        }
-
-        public void Send(string command)
-        {
-            if(Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
-        }
-
-        public void CloseConnection()
-        {
-            if (Connection != null)
-            {
-                Connection.Disconnect();
-                Connection = null;
             }
-        }
-        
-        public void Close()
+    }
+
+    public void Terminal_Ready(object? sender, EventArgs e)
+    {
+        TerminalLoading = false;
+    }
+
+    public void Send(string command)
+    {
+        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
+    }
+
+    public void CloseConnection()
+    {
+        if (Connection != null)
         {
-            CloseConnection();
+            Connection.Disconnect();
+            Connection = null;
         }
+    }
+
+    public void Close()
+    {
+        CloseConnection();
     }
 }

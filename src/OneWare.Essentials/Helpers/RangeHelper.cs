@@ -7,7 +7,8 @@ namespace OneWare.Essentials.Helpers;
 
 public static class RangeHelper
 {
-    public static TextModificationSegment GenerateTextModification(this Range range, TextDocument document, IBrush? foreground, IBrush? background = null, TextDecorationCollection? decorations = null)
+    public static TextModificationSegment GenerateTextModification(this Range range, TextDocument document,
+        IBrush? foreground, IBrush? background = null, TextDecorationCollection? decorations = null)
     {
         var offset = document.GetStartAndEndOffset(range);
         return new TextModificationSegment(offset.startOffset, offset.endOffset)

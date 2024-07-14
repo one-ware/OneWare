@@ -8,7 +8,7 @@
 
     <SolidColorBrush x:Key="GreenAccent" Opacity="1" Color="#57ad68" />
     <SolidColorBrush x:Key="DebuggerBreakLine" Opacity="0.3" Color="#c23f2f" />
-    
+
     <FontFamily x:Key="Noto Sans">avares://OneWare.Core/Assets/Fonts#Noto Sans</FontFamily>
     <FontFamily x:Key="IntelOne Mono">avares://OneWare.Core/Assets/Fonts#IntelOne Mono</FontFamily>
     <FontFamily x:Key="Fira Code">avares://OneWare.Core/Assets/Fonts#Fira Code</FontFamily>
@@ -27,11 +27,11 @@
     <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
     <SolidColorBrush x:Key="ThemeAccentBrush" Color="{DynamicResource ThemeAccentColor}" />
     <SolidColorBrush x:Key="ThemeAccentBrush2" Color="{DynamicResource ThemeAccentColor}" Opacity="0.5" />
-    <SolidColorBrush x:Key="ThemeAccentBrush3" Color="{DynamicResource ThemeAccentColor}" Opacity="0.4"/>
+    <SolidColorBrush x:Key="ThemeAccentBrush3" Color="{DynamicResource ThemeAccentColor}" Opacity="0.4" />
     <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor}" Opacity="0.3" />
     <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
     <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
-    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"></SolidColorBrush>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
     <SolidColorBrush
         x:Key="NotificationCardBackgroundBrush"
         Opacity="0.9"
@@ -76,9 +76,9 @@
 
     <SolidColorBrush x:Key="SelectionBrush">#606e6e6e</SolidColorBrush>
     <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
-    
+
     <ResourceDictionary.ThemeDictionaries>
-        
+
         <ResourceDictionary x:Key="Default">
             <Color x:Key="ThemeBackgroundColor">#FF303030</Color>
             <Color x:Key="ThemeBorderLowColor">#FF505050</Color>
@@ -114,13 +114,13 @@
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
-            
+
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-        
+
         <ResourceDictionary x:Key="Dark">
             <Color x:Key="ThemeBackgroundColor">#FF303030</Color>
             <Color x:Key="ThemeBorderLowColor">#FF505050</Color>
@@ -156,19 +156,19 @@
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
-            
+
             <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
             <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
-            
+
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
-            
+
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-        
+
         <ResourceDictionary x:Key="Light">
             <Color x:Key="ThemeBackgroundColor">#FFF5F5F5</Color>
             <Color x:Key="ThemeBorderLowColor">#FFAAAAAA</Color>
@@ -204,14 +204,14 @@
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.7" />
             <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
-            
+
             <!-- BaseResources for CaptionButtons.xaml -->
             <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
             <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
-            
+
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
-            
+
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />

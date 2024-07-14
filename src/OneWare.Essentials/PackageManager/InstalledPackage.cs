@@ -10,11 +10,11 @@ public class InstalledPackage(
     string installedVersion)
 {
     public string Id { get; } = id;
-    
+
     public string Type { get; } = type;
 
     public string Name { get; } = name;
-    
+
     public string? Category { get; } = category;
 
     public string? Description { get; } = description;

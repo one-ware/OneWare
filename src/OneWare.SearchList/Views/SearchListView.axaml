@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.SearchList.ViewModels"
              xmlns:models="clr-namespace:OneWare.SearchList.Models"
-             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="250"
              x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
@@ -70,11 +70,11 @@
                                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                         HorizontalAlignment="Stretch">
                         <Interaction.Behaviors>
-                            <FocusOnAttachedToVisualTreeBehavior/>
-                            <behaviours:DataGridNavigationBehaviour AssociatedDataGrid="{Binding #SearchList}" />
-                            <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False"
-                                                                     Command="{Binding OpenSelectedResult}" />
-                        </Interaction.Behaviors>    
+                            <FocusOnAttachedToVisualTreeBehavior />
+                            <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
+                            <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
+                                                                   Command="{Binding OpenSelectedResult}" />
+                        </Interaction.Behaviors>
                     </controls:SearchBox>
                 </Border>
             </DockPanel>
@@ -88,7 +88,7 @@
                   SelectedItem="{Binding SelectedItem}"
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <Interaction.Behaviors>
-                <behaviours:CommandOnDoubleTapBehaviour
+                <behaviors:CommandOnDoubleTapBehavior
                     Command="{Binding OpenSelectedResult}" />
             </Interaction.Behaviors>
             <DataGrid.Columns>
@@ -99,7 +99,8 @@
                                 <StackPanel Orientation="Horizontal" Height="18">
                                     <TextBlock Text="{Binding DescriptionLeft}"
                                                ToolTip.Tip="{Binding Description}" />
-                                    <TextBlock Background="{DynamicResource ThemeAccentBrush2}" Text="{Binding DescriptionMid}"
+                                    <TextBlock Background="{DynamicResource ThemeAccentBrush2}"
+                                               Text="{Binding DescriptionMid}"
                                                ToolTip.Tip="{Binding Description}" />
                                     <TextBlock Text="{Binding DescriptionRight}" ToolTip.Tip="{Binding Description}" />
                                 </StackPanel>

@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="250"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
-             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
              xmlns:viewModels="clr-namespace:OneWare.SerialMonitor.ViewModels"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              x:Class="OneWare.SerialMonitor.Views.SerialMonitorView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:SerialMonitorBaseViewModel">
-    
+
     <Grid RowDefinitions="*, 30">
         <avaloniaEdit:TextEditor Name="Output"
                                  DockPanel.Dock="Left"
@@ -28,8 +28,8 @@
 
         <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            
-            <DockPanel >
+
+            <DockPanel>
                 <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
                     <TextBlock Text="AutoScroll" />
                     <CheckBox IsChecked="{Binding AutoScroll}" />
@@ -37,13 +37,13 @@
                     <TextBlock Text="Line Ending" />
                     <Border Classes="RoundToolBar">
                         <ComboBox ItemsSource="{Binding AvailableLineEndings}" BorderThickness="0"
-                                  SelectedItem="{Binding SelectedLineEnding}"/>
+                                  SelectedItem="{Binding SelectedLineEnding}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Encoding" />
                     <Border Classes="RoundToolBar">
                         <ComboBox ItemsSource="{Binding AvailableEncodings}" BorderThickness="0"
-                                SelectedItem="{Binding SelectedLineEncoding}"/>
+                                  SelectedItem="{Binding SelectedLineEncoding}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
                 </StackPanel>
@@ -57,24 +57,24 @@
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
                     <Border Classes="RoundToolBar">
                         <ComboBox Width="100" ItemsSource="{Binding BaudOptions}" BorderThickness="0"
-                                SelectedItem="{Binding SelectedBaudRate}"/>
+                                  SelectedItem="{Binding SelectedBaudRate}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
 
                     <TextBlock Text="Serial Port:" />
                     <Border Classes="RoundToolBar">
                         <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                                ItemsSource="{Binding SerialPorts}" BorderThickness="0"
-                                SelectedItem="{Binding SelectedSerialPort}" />
+                                  ItemsSource="{Binding SerialPorts}" BorderThickness="0"
+                                  SelectedItem="{Binding SelectedSerialPort}" />
                     </Border>
                     <Button IsEnabled="{Binding AllowConnecting}"
                             Command="{Binding RefreshSerialPorts}"
                             ToolTip.Tip="Refresh serial ports">
-                        <Image Source="{DynamicResource Modern.Refresh}" Width="15"/>
+                        <Image Source="{DynamicResource Modern.Refresh}" Width="15" />
                     </Button>
                     <Button Command="{Binding Disconnect}"
                             IsEnabled="{Binding IsConnected}" ToolTip.Tip="Disconnect">
-                        <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="15"/>
+                        <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="15" />
                     </Button>
                     <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
                         <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" Width="15" />
@@ -86,36 +86,16 @@
                                 <MenuItem.Header>
                                     <Image Source="{DynamicResource BoxIcons.RegularMenu}" Width="14" />
                                 </MenuItem.Header>
-                                <MenuItem.Items>
-                                    <!--
-                                    <MenuItem Header="LogicAnalyzer" Command="{Binding LogicAnalyzer}">
-                                        <MenuItem.Icon>
-                                            <Image Source="{DynamicResource Material.Pulse}" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    
-                                    <MenuItem Header="Plot" Command="{Binding PlotWindow}">
-                                        <MenuItem.Icon>
-                                            <Image Source="{DynamicResource Plot}" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    
-                                    <MenuItem Header="ImageViewer" Command="{Binding ImageViewer}">
-                                        <MenuItem.Icon>
-                                            <Image Source="{DynamicResource BoxIcons.RegularImage}" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    -->
-                                </MenuItem.Items>
                             </MenuItem>
                         </Menu.Items>
                     </Menu>
                 </StackPanel>
-                
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Height="24" Watermark="Enter Message..."
+
+                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Height="24"
+                         Watermark="Enter Message..."
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
-                        <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
+                        <behaviors:CommandOnEnterBehavior Command="{Binding SendText}"
                                                           CommandParameter="{Binding #CommandBox.Text}" />
                     </Interaction.Behaviors>
                 </TextBox>

@@ -50,8 +50,10 @@
                                                        Margin="8,0,0,0" Text="{Binding Content}"
                                                        Foreground="{DynamicResource ThemeForegroundBrush}" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{Binding Detail}" Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" TextAlignment="Right" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                   TextAlignment="Right" HorizontalAlignment="Right" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -136,7 +138,7 @@
                 Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background"
                 Value="{DynamicResource ThemeBackgroundBrush}" />
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Template">
@@ -148,7 +150,8 @@
                         Padding="{TemplateBinding Padding}">
                     <Grid ColumnDefinitions="Auto,*"
                           RowDefinitions="Auto, Auto">
-                        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Padding="5" BorderThickness="0 0 1 0"
+                                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                 IsVisible="{Binding Provider.Count, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static cc:CollapseIfSingleOverloadConverter.Instance}}">
                             <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                                 <Button Name="PART_UP">
@@ -167,14 +170,15 @@
                                 </Button>
                             </StackPanel>
                         </Border>
-                       
+
                         <Border Grid.Row="0" Grid.Column="1" Padding="5">
-                            <md:MarkdownScrollViewer VerticalAlignment="Center" MaxWidth="800" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            <md:MarkdownScrollViewer VerticalAlignment="Center" MaxWidth="800"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                                 <md:MarkdownScrollViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">
-                                        <Setter Property="WordWrap" Value="True"/>
-                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+                                        <Setter Property="WordWrap" Value="True" />
+                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
                                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                     </Style>
@@ -185,8 +189,11 @@
                                 </md:MarkdownScrollViewer.Styles>
                             </md:MarkdownScrollViewer>
                         </Border>
-                        
-                        <Border IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+
+                        <Border
+                            IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                             <md:MarkdownScrollViewer VerticalAlignment="Center"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                                 <md:MarkdownScrollViewer.Styles>
@@ -252,8 +259,6 @@
                                     Grid.Row="0">
                             <TextBox Watermark="{x:Static avaloniaEdit:SR.SearchLabel}"
                                      Name="PART_searchTextBox"
-                                     Grid.Column="1"
-                                     Grid.Row="0"
                                      Width="265"
                                      Margin="0,0,0,0"
                                      Text="{Binding SearchPattern, RelativeSource={RelativeSource TemplatedParent}}">
@@ -367,8 +372,6 @@
                                     Grid.Row="1">
                             <TextBox Name="ReplaceBox" Watermark="{x:Static avaloniaEdit:SR.ReplaceLabel}"
                                      IsVisible="{Binding IsReplaceMode, RelativeSource={RelativeSource TemplatedParent}}"
-                                     Grid.Column="1"
-                                     Grid.Row="1"
                                      Width="265"
                                      Margin="0 0 0 0"
                                      Text="{Binding ReplacePattern, RelativeSource={RelativeSource TemplatedParent}}" />

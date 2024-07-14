@@ -8,11 +8,6 @@ namespace OneWare.Settings.ViewModels;
 
 public class SettingsCollectionViewModel : ObservableObject
 {
-    public bool ShowTitle { get; set; } = true;
-    public IImage? Icon { get; set; }
-
-    public List<SettingViewModel> SettingModels { get; } = new();
-
     public SettingsCollectionViewModel(string label, string? iconKey = null, string? toolTip = null)
     {
         Header = label;
@@ -22,12 +17,14 @@ public class SettingsCollectionViewModel : ObservableObject
         if (Application.Current == null) throw new NullReferenceException("Application.Current is null");
 
         if (iconKey == null) return;
-        
-        Application.Current.GetResourceObservable(iconKey).Subscribe(x =>
-        {
-            Icon = x as IImage;
-        });
+
+        Application.Current.GetResourceObservable(iconKey).Subscribe(x => { Icon = x as IImage; });
     }
+
+    public bool ShowTitle { get; set; } = true;
+    public IImage? Icon { get; set; }
+
+    public List<SettingViewModel> SettingModels { get; } = new();
 
     public string? IconKey { get; }
     public string Header { get; }

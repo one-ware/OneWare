@@ -1,28 +1,27 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 
-namespace OneWare.Essentials.EditorExtensions
+namespace OneWare.Essentials.EditorExtensions;
+
+public class TextInputControl : TemplatedControl
 {
-    public class TextInputControl : TemplatedControl
+    private readonly string _initValue;
+
+    public TextInputControl(string initValue)
     {
-        private readonly string _initValue;
+        _initValue = initValue;
+        InitializeIfNeeded();
+    }
 
-        public TextInputControl(string initValue)
-        {
-            this._initValue = initValue;
-            this.InitializeIfNeeded();
-        }
+    public TextBox? Input { get; private set; }
 
-        public TextBox? Input { get; private set; }
-
-        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-        {
-            base.OnApplyTemplate(e);
-            var input = e.NameScope.Find<TextBox>("inputBox");
-            Input = input ?? throw new NullReferenceException(nameof(input));
-            Input.Text = _initValue;
-            Input.Focus();
-            Input.SelectAll();
-        }
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        var input = e.NameScope.Find<TextBox>("inputBox");
+        Input = input ?? throw new NullReferenceException(nameof(input));
+        Input.Text = _initValue;
+        Input.Focus();
+        Input.SelectAll();
     }
 }

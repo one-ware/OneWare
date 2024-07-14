@@ -10,7 +10,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ErrorList.Views.ErrorListView" x:DataType="viewModels:ErrorListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
-    
+
     <UserControl.Styles>
         <Style Selector="Border.TopGrid">
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
@@ -45,14 +45,14 @@
                 </ControlTemplate>
             </Setter>
         </Style>
-        
+
         <Style Selector="ToggleButton.ErrorToggle">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         </Style>
-        
+
         <Style Selector="ToggleButton:checked /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
         </Style>
 
@@ -70,14 +70,14 @@
                         <ComboBoxItem>Current file</ComboBoxItem>
                     </ComboBox>
                 </Border>
-                
+
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                
+
                 <Border Classes="RoundToolBar">
                     <ComboBox BorderThickness="0"
-                        ItemsSource="{Binding ErrorListVisibleSources}"
-                        SelectedItem="{Binding ErrorListVisibleSource}"
-                        Width="140">
+                              ItemsSource="{Binding ErrorListVisibleSources}"
+                              SelectedItem="{Binding ErrorListVisibleSource}"
+                              Width="140">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}" />
@@ -85,9 +85,10 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </Border>
-                
+
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding ErrorEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding ErrorEnabled}"
+                              DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
                         <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
@@ -95,7 +96,8 @@
                     </StackPanel>
                 </ToggleButton>
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding WarningEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding WarningEnabled}"
+                              DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
                         <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
@@ -103,25 +105,28 @@
                     </StackPanel>
                 </ToggleButton>
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
-                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding HintEnabled}" DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
+                <ToggleButton CornerRadius="3" Classes="ErrorToggle" IsChecked="{Binding HintEnabled}"
+                              DockPanel.Dock="Left" HorizontalAlignment="Left" Height="24">
                     <StackPanel Orientation="Horizontal">
                         <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
                         <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
                                    Text="{Binding HintCountVisible}" />
                     </StackPanel>
                 </ToggleButton>
-                
-                <Border CornerRadius="3" DockPanel.Dock="Right" Width="280" BorderThickness="1" HorizontalAlignment="Right" Height="24"
+
+                <Border CornerRadius="3" DockPanel.Dock="Right" Width="280" BorderThickness="1"
+                        HorizontalAlignment="Right" Height="24"
                         BorderBrush="{DynamicResource ThemeBorderMidBrush}">
-                    <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}" 
-                                     Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
+                    <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
+                                        Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
                 </Border>
             </DockPanel>
 
         </Border>
 
         <DataGrid Padding="2, 0, 2, 2" BorderThickness="0"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent" ItemsSource="{Binding Collection}"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent"
+                  ItemsSource="{Binding Collection}"
                   RowBackground="Transparent" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>
@@ -147,17 +152,22 @@
                 <DataGridTemplateColumn Width="4*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItem">
-                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}" Text="{Binding Description}" />
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}"
+                                       Text="{Binding Description}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
                         <TextBlock Text="Description" />
                     </DataGridTemplateColumn.Header>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Source" Binding="{Binding Source}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Project" Binding="{Binding Root.Header}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="File" Binding="{Binding File.Name}" />
-                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItem" Header="Line" Binding="{Binding StartLine}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Source"
+                                    Binding="{Binding Source}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Project"
+                                    Binding="{Binding Root.Header}" />
+                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="File"
+                                    Binding="{Binding File.Name}" />
+                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItem" Header="Line"
+                                    Binding="{Binding StartLine}" />
             </DataGrid.Columns>
         </DataGrid>
 

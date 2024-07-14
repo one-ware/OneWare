@@ -10,21 +10,24 @@ namespace OneWare.Essentials.Controls;
 public class RenamingTextBox : TextBox
 {
     public static readonly StyledProperty<Action<Action<string>>?> RenameActionProperty =
-        AvaloniaProperty.Register<RenamingTextBox, Action<Action<string>>?>(nameof(RenameAction), null, false, BindingMode.OneWayToSource);
-    protected override Type StyleKeyOverride => typeof(TextBox);
+        AvaloniaProperty.Register<RenamingTextBox, Action<Action<string>>?>(nameof(RenameAction), null, false,
+            BindingMode.OneWayToSource);
+
+    private string? _backupText;
 
     private Action<string>? _callback;
-    private string? _backupText;
+
+    public RenamingTextBox()
+    {
+        RenameAction = StartRename;
+    }
+
+    protected override Type StyleKeyOverride => typeof(TextBox);
 
     public Action<Action<string>>? RenameAction
     {
         get => GetValue(RenameActionProperty);
         private set => SetValue(RenameActionProperty, value);
-    }
-
-    public RenamingTextBox()
-    {
-        RenameAction = StartRename;
     }
 
     public void StartRename(Action<string> callback)
@@ -60,10 +63,7 @@ public class RenamingTextBox : TextBox
             _callback?.Invoke(newText);
         }
 
-        if (e.Key is Key.Escape)
-        {
-            Reset();
-        }
+        if (e.Key is Key.Escape) Reset();
         base.OnKeyDown(e);
     }
 

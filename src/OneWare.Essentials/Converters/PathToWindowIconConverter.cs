@@ -28,8 +28,9 @@ public class PathToWindowIconConverter : IValueConverter
             var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
             uri = new Uri($"avares://{assemblyName}{rawUri}");
         }
-            
-        return new WindowIcon(new Bitmap(AssetLoader.Open(uri)));;
+
+        return new WindowIcon(new Bitmap(AssetLoader.Open(uri)));
+        ;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

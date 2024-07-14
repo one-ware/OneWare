@@ -8,34 +8,14 @@ namespace OneWare.Essentials.Commands;
 
 public abstract class ApplicationCommandBase(string name) : ObservableObject, IApplicationCommand
 {
-    public string Name { get; } = name;
+    private readonly KeyGesture? _defaultGesture;
 
     private KeyGesture? _activeGesture;
-    public KeyGesture? ActiveGesture
-    {
-        get => _activeGesture; 
-        set => SetProperty(ref _activeGesture, value);
-    }
 
-    private readonly KeyGesture? _defaultGesture;
-    public KeyGesture? DefaultGesture
-    {
-        get => _defaultGesture;
-        init
-        {
-            _defaultGesture = value;
-            _activeGesture = value;
-        } 
-    }
-    
     private IImage? _icon;
-    public IImage? Icon
-    {
-        get => _icon;
-        set => SetProperty(ref _icon, value);
-    }
 
     private IDisposable? _subscription;
+
     public IObservable<object?>? IconObservable
     {
         set
@@ -43,6 +23,30 @@ public abstract class ApplicationCommandBase(string name) : ObservableObject, IA
             _subscription?.Dispose();
             _subscription = value?.Subscribe(x => Icon = x as IImage);
         }
+    }
+
+    public string Name { get; } = name;
+
+    public KeyGesture? ActiveGesture
+    {
+        get => _activeGesture;
+        set => SetProperty(ref _activeGesture, value);
+    }
+
+    public KeyGesture? DefaultGesture
+    {
+        get => _defaultGesture;
+        init
+        {
+            _defaultGesture = value;
+            _activeGesture = value;
+        }
+    }
+
+    public IImage? Icon
+    {
+        get => _icon;
+        set => SetProperty(ref _icon, value);
     }
 
     public abstract bool Execute(ILogical source);

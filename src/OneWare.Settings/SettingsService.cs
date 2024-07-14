@@ -7,17 +7,17 @@ namespace OneWare.Settings;
 
 public class SettingsService : ISettingsService
 {
-    private static JsonSerializerOptions _jsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         WriteIndented = true,
-        AllowTrailingCommas = true,
+        AllowTrailingCommas = true
     };
-    
+
+    private readonly List<Action> _afterLoadingActions = new();
+
     private Dictionary<string, object>? _loadedSettings;
     public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
     public Dictionary<string, Setting> Settings { get; } = new();
-
-    private readonly List<Action> _afterLoadingActions = new();
 
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
     {
@@ -25,15 +25,16 @@ public class SettingsService : ISettingsService
         SettingCategories[category].IconKey = iconKey;
         SettingCategories[category].Priority = priority;
     }
-    
-    public void RegisterSettingSubCategory(string category, string subCategory, int priority = 0, string? iconKey = null)
+
+    public void RegisterSettingSubCategory(string category, string subCategory, int priority = 0,
+        string? iconKey = null)
     {
         SettingCategories.TryAdd(category, new SettingCategory());
         SettingCategories[category].SettingSubCategories.TryAdd(subCategory, new SettingSubCategory());
         SettingCategories[category].SettingSubCategories[subCategory].Priority = priority;
         SettingCategories[category].SettingSubCategories[subCategory].IconKey = iconKey;
     }
-    
+
     public void Register<T>(string key, T defaultValue)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
@@ -42,21 +43,25 @@ public class SettingsService : ISettingsService
 
     public IObservable<T> Bind<T>(string key, IObservable<T> observable)
     {
-        if(!Settings.TryGetValue(key, out var setting)) throw new ArgumentException($"Setting {key} is not registered!");;
+        if (!Settings.TryGetValue(key, out var setting))
+            throw new ArgumentException($"Setting {key} is not registered!");
+        ;
         observable.Skip(1).Subscribe(x => setting.Value = x!);
         return GetSettingObservable<T>(key);
     }
 
-    public void RegisterTitled<T>(string category, string subCategory, string key, string title, string description, T defaultValue)
+    public void RegisterTitled<T>(string category, string subCategory, string key, string title, string description,
+        T defaultValue)
     {
-         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
+        if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key, new TitledSetting(title, description, defaultValue));
     }
 
     public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
     {
-        AddSetting(category, subCategory, key, new FolderPathSetting(title, description, defaultValue, watermark,startDir, validate));
+        AddSetting(category, subCategory, key,
+            new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
     }
 
     public void RegisterTitledSlider(string category, string subCategory, string key, string title, string description,
@@ -65,26 +70,18 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
     }
 
-    public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title, string description, T defaultValue, params T[] options)
+    public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
+        string description, T defaultValue, params T[] options)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
-        AddSetting(category, subCategory, key, new ComboBoxSetting(title, description, defaultValue, options.Cast<object>()));
+        AddSetting(category, subCategory, key,
+            new ComboBoxSetting(title, description, defaultValue, options.Cast<object>()));
     }
 
-    private void AddSetting(string category, string subCategory, string key, TitledSetting setting)
-    {
-        Settings.Add(key, setting);
-        SettingCategories.TryAdd(category, new SettingCategory());
-        var cat = SettingCategories[category];
-        cat.SettingSubCategories.TryAdd(subCategory, new SettingSubCategory());
-        var sub = cat.SettingSubCategories[subCategory];
-        sub.Settings.Add(setting);
-    }
-    
     public T GetSettingValue<T>(string key)
     {
         Settings.TryGetValue(key, out var value);
-        if(value?.Value is T) return (T)Convert.ChangeType(value.Value, typeof(T));
+        if (value?.Value is T) return (T)Convert.ChangeType(value.Value, typeof(T));
         throw new ArgumentException($"Setting {key} is not registered!");
     }
 
@@ -97,6 +94,7 @@ public class SettingsService : ISettingsService
             Array.Copy(cs.Options, destinationArray, cs.Options.Length);
             return destinationArray;
         }
+
         throw new ArgumentException($"Setting {key} is not registered!");
     }
 
@@ -106,14 +104,11 @@ public class SettingsService : ISettingsService
         if (s == null) throw new Exception($"Error setting Setting: {key} does not exist!");
         s.Value = value;
     }
-    
+
     public IObservable<T> GetSettingObservable<T>(string key)
     {
         Settings.TryGetValue(key, out var value);
-        if (value != null)
-        {
-            return value.WhenValueChanged(x => x.Value)!.Cast<T>();
-        }
+        if (value != null) return value.WhenValueChanged(x => x.Value)!.Cast<T>();
         throw new ArgumentException($"Setting {key} is not registered!");
     }
 
@@ -126,7 +121,6 @@ public class SettingsService : ISettingsService
             _loadedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(stream, _jsonSerializerOptions);
             if (_loadedSettings == null) return;
             foreach (var setting in _loadedSettings)
-            {
                 try
                 {
                     if (Settings.TryGetValue(setting.Key, out var setting1))
@@ -140,8 +134,7 @@ public class SettingsService : ISettingsService
                 {
                     Console.WriteLine(e);
                 }
-            }
-        
+
             _afterLoadingActions.ForEach(x => x.Invoke());
         }
         catch (Exception e)
@@ -155,11 +148,9 @@ public class SettingsService : ISettingsService
         try
         {
             var saveD = Settings.ToDictionary(s => s.Key, s => s.Value.Value);
-            if(_loadedSettings != null)
+            if (_loadedSettings != null)
                 foreach (var (key, value) in _loadedSettings)
-                {
                     saveD.TryAdd(key, value);
-                }
             using var stream = File.Create(path);
             JsonSerializer.Serialize(stream, saveD, saveD.GetType(), _jsonSerializerOptions);
         }
@@ -171,22 +162,27 @@ public class SettingsService : ISettingsService
 
     public void Reset(string key)
     {
-        if (Settings.TryGetValue(key, out var setting))
-        {
-            setting.Value = setting.DefaultValue;
-        }
+        if (Settings.TryGetValue(key, out var setting)) setting.Value = setting.DefaultValue;
     }
-    
+
     public void ResetAll()
     {
         foreach (var setting in Settings.Where(x => x.Value is not PathSetting))
-        {
             setting.Value.Value = setting.Value.DefaultValue;
-        }
     }
 
     public void WhenLoaded(Action action)
     {
         _afterLoadingActions.Add(action);
+    }
+
+    private void AddSetting(string category, string subCategory, string key, TitledSetting setting)
+    {
+        Settings.Add(key, setting);
+        SettingCategories.TryAdd(category, new SettingCategory());
+        var cat = SettingCategories[category];
+        cat.SettingSubCategories.TryAdd(subCategory, new SettingSubCategory());
+        var sub = cat.SettingSubCategories[subCategory];
+        sub.Settings.Add(setting);
     }
 }

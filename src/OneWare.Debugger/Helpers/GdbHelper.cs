@@ -24,14 +24,8 @@ public class GdbHelper
                     Arguments = $"{pid}"
                 };
 
-                process.ErrorDataReceived += (o, i) =>
-                {
-                    Console.WriteLine(i.Data);
-                };
-                process.OutputDataReceived += (o, i) =>
-                {
-                    Console.WriteLine("CTRL+C: " +  i.Data);
-                };
+                process.ErrorDataReceived += (o, i) => { Console.WriteLine(i.Data); };
+                process.OutputDataReceived += (o, i) => { Console.WriteLine("CTRL+C: " + i.Data); };
 
                 process.Start();
                 process.BeginErrorReadLine();
@@ -45,6 +39,7 @@ public class GdbHelper
             default:
                 return Syscall.kill(pid, Signum.SIGINT);
         }
+
         return 0;
     }
 }

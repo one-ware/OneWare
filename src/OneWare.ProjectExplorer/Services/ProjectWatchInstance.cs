@@ -1,6 +1,5 @@
 ﻿using Avalonia.Threading;
 using OneWare.Essentials.Extensions;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -9,14 +8,14 @@ namespace OneWare.ProjectExplorer.Services;
 
 public class ProjectWatchInstance : IDisposable
 {
-    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
     private readonly IDockService _dockService;
-    private readonly IWindowService _windowService;
-    private readonly IProjectRoot _root;
     private readonly FileSystemWatcher _fileSystemWatcher;
     private readonly object _lock = new();
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IProjectRoot _root;
+    private readonly IWindowService _windowService;
     private DispatcherTimer? _timer;
-    private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
 
     public ProjectWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
         IDockService dockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
@@ -61,6 +60,12 @@ public class ProjectWatchInstance : IDisposable
         }
     }
 
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _fileSystemWatcher.Dispose();
+    }
+
     private void File_Changed(object source, FileSystemEventArgs e)
     {
         if (e.Name == null) return;
@@ -73,10 +78,7 @@ public class ProjectWatchInstance : IDisposable
 
     private void ProcessChanges()
     {
-        foreach (var change in _changes)
-        {
-            _ = ProcessAsync(change.Key, change.Value);
-        }
+        foreach (var change in _changes) _ = ProcessAsync(change.Key, change.Value);
 
         //Task.WhenAll(_changes.Select(x => ProcessAsync(x.Key, x.Value)));
         _changes.Clear();
@@ -86,28 +88,23 @@ public class ProjectWatchInstance : IDisposable
     {
         try
         {
-            FileAttributes attributes = FileAttributes.None;
-            
-            if (File.Exists(path) || Directory.Exists(path))
-            {
-                attributes = File.GetAttributes(path);
-            }
-            
+            var attributes = FileAttributes.None;
+
+            if (File.Exists(path) || Directory.Exists(path)) attributes = File.GetAttributes(path);
+
             var entry = _root.SearchFullPath(path);
 
             var lastArg = changes.Last();
 
             if (entry is not null)
-            {
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Renamed:
                     case WatcherChangeTypes.Changed:
-                        if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) && _root.SearchFullPath(rea.OldFullPath) is {} deleted)
-                        {
+                        if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
+                            _root.SearchFullPath(rea.OldFullPath) is { } deleted)
                             await _projectExplorerService.RemoveAsync(deleted);
-                        }
                         if (entry is ISavable savable)
                         {
                             var lastWriteTime = File.GetLastWriteTime(savable.FullPath);
@@ -115,22 +112,22 @@ public class ProjectWatchInstance : IDisposable
                                 await _projectExplorerService.ReloadAsync(entry);
 
                             if (savable is IProjectFile { Root: IProjectRootWithFile rootWithFile } &&
-                                rootWithFile.ProjectFilePath == savable.FullPath && lastWriteTime > rootWithFile.LastSaveTime)
-                            {
+                                rootWithFile.ProjectFilePath == savable.FullPath &&
+                                lastWriteTime > rootWithFile.LastSaveTime)
                                 await _projectExplorerService.ReloadAsync(rootWithFile);
-                            }
                         }
-                        else await _projectExplorerService.ReloadAsync(entry);
+                        else
+                        {
+                            await _projectExplorerService.ReloadAsync(entry);
+                        }
 
                         return;
                     case WatcherChangeTypes.Deleted:
                         await _projectExplorerService.RemoveAsync(entry);
                         return;
                 }
-            }
 
             if (entry is null)
-            {
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Renamed:
@@ -140,10 +137,9 @@ public class ProjectWatchInstance : IDisposable
                             if (oldEntry is IProjectFile file)
                             {
                                 _dockService.OpenFiles.TryGetValue(file, out var tab);
-                                
+
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
-                                
                                 //TODO dont remove tab and Initialize Current Tab
                             }
                             else
@@ -160,27 +156,18 @@ public class ProjectWatchInstance : IDisposable
                         return;
                     case WatcherChangeTypes.Changed:
                         if (_root is ISavable savable && _root.ProjectPath.EqualPaths(path))
-                        {
                             if (File.GetLastWriteTime(_root.FullPath) > savable.LastSaveTime)
                                 await _projectExplorerService.ReloadAsync(_root);
-                        }
                         return;
                     case WatcherChangeTypes.Deleted:
-                        if(_root.SearchFullPath(path) is {} deletedEntry)
+                        if (_root.SearchFullPath(path) is { } deletedEntry)
                             await _projectExplorerService.RemoveAsync(deletedEntry);
                         return;
                 }
-            }
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
         }
-    }
-
-    public void Dispose()
-    {
-        _timer?.Stop();
-        _fileSystemWatcher.Dispose();
     }
 }

@@ -1,17 +1,14 @@
 ﻿using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
 
-namespace OneWare.Core.Views.Windows
+namespace OneWare.Core.Views.Windows;
+
+public partial class LoginWindow : FlexibleWindow
 {
-    public partial class LoginWindow : FlexibleWindow
+    public LoginWindow()
     {
-        public LoginWindow()
-        {
-            DataContext = new LoginWindowViewModel();
+        DataContext = new LoginWindowViewModel();
 
-            InitializeComponent();
-        }
-
-
+        InitializeComponent();
     }
 }

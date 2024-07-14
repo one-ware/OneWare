@@ -1,3 +1,4 @@
+﻿using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -6,50 +7,34 @@ using Avalonia.LogicalTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using Avalonia.Xaml.Interactivity;
 
-namespace OneWare.Essentials.Behaviours;
+namespace OneWare.ProjectExplorer.Behaviors;
 
-public class ContextDragBubbleBehavior : Behavior<Control>
+/// <summary>
+/// </summary>
+public class TreeDragBehavior : Behavior<Control>
 {
-    private Point _dragStartPoint;
-    private PointerEventArgs? _triggerEvent;
-    private bool _lock;
-    private bool _captured;
-
     /// <summary>
-    /// 
-    /// </summary>
-    public static readonly StyledProperty<object?> ContextProperty =
-        AvaloniaProperty.Register<ContextDragBehavior, object?>(nameof(Context));
-
-    /// <summary>
-    /// 
     /// </summary>
     public static readonly StyledProperty<IDragHandler?> HandlerProperty =
         AvaloniaProperty.Register<ContextDragBehavior, IDragHandler?>(nameof(Handler));
 
     /// <summary>
-    /// 
     /// </summary>
-    public static readonly StyledProperty<double> HorizontalDragThresholdProperty = 
+    public static readonly StyledProperty<double> HorizontalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(HorizontalDragThreshold), 3);
 
     /// <summary>
-    /// 
     /// </summary>
     public static readonly StyledProperty<double> VerticalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(VerticalDragThreshold), 3);
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public object? Context
-    {
-        get => GetValue(ContextProperty);
-        set => SetValue(ContextProperty, value);
-    }
+    private bool _captured;
+    private Point _dragStartPoint;
+    private bool _lock;
+    private PointerEventArgs? _triggerEvent;
+
 
     /// <summary>
-    /// 
     /// </summary>
     public IDragHandler? Handler
     {
@@ -58,7 +43,6 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     }
 
     /// <summary>
-    /// 
     /// </summary>
     public double HorizontalDragThreshold
     {
@@ -67,7 +51,6 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     }
 
     /// <summary>
-    /// 
     /// </summary>
     public double VerticalDragThreshold
     {
@@ -78,10 +61,14 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     /// <inheritdoc />
     protected override void OnAttachedToVisualTree()
     {
-        AssociatedObject?.AddHandler(InputElement.PointerPressedEvent, AssociatedObject_PointerPressed, RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
-        AssociatedObject?.AddHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased, RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
-        AssociatedObject?.AddHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMoved, RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
-        AssociatedObject?.AddHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost, RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        AssociatedObject?.AddHandler(InputElement.PointerPressedEvent, AssociatedObject_PointerPressed,
+            RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        AssociatedObject?.AddHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased,
+            RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        AssociatedObject?.AddHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMovedAsync,
+            RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        AssociatedObject?.AddHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost,
+            RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
     }
 
     /// <inheritdoc />
@@ -89,11 +76,11 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     {
         AssociatedObject?.RemoveHandler(InputElement.PointerPressedEvent, AssociatedObject_PointerPressed);
         AssociatedObject?.RemoveHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased);
-        AssociatedObject?.RemoveHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMoved);
+        AssociatedObject?.RemoveHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMovedAsync);
         AssociatedObject?.RemoveHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost);
     }
 
-    private async Task DoDragDrop(PointerEventArgs triggerEvent, object? value)
+    private async Task DoDragDropAsync(PointerEventArgs triggerEvent, object? value)
     {
         var data = new DataObject();
         data.Set(ContextDropBehavior.DataFormat, value!);
@@ -101,23 +88,22 @@ public class ContextDragBubbleBehavior : Behavior<Control>
         var effect = DragDropEffects.None;
 
         if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Alt))
-        {
             effect |= DragDropEffects.Link;
-        }
         else if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
             effect |= DragDropEffects.Move;
-        }
         else if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
             effect |= DragDropEffects.Copy;
-        }
         else
-        {
             effect |= DragDropEffects.Move;
-        }
 
-        await DragDrop.DoDragDrop(triggerEvent, data, effect);
+        try
+        {
+            await DragDrop.DoDragDrop(triggerEvent, data, effect);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+        }
     }
 
     private void Released()
@@ -130,17 +116,18 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     {
         var properties = e.GetCurrentPoint(AssociatedObject).Properties;
         if (properties.IsLeftButtonPressed)
-        {
             if (e.Source is Control control
                 && AssociatedObject?.DataContext == control.DataContext)
             {
-                if ((control as ISelectable ?? control.Parent as ISelectable)?.IsSelected ?? false) e.Handled = true; //avoid deselection on drag
                 _dragStartPoint = e.GetPosition(null);
                 _triggerEvent = e;
                 _lock = true;
                 _captured = true;
+
+                //Manipulate selection behavior. Remove once fixed by avalonia
+                var treeView = control.FindLogicalAncestorOfType<TreeView>();
+                if (treeView?.SelectedItems.Count > 1 && e.KeyModifiers == KeyModifiers.None) e.Handled = true;
             }
-        }
     }
 
     private void AssociatedObject_PointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -150,13 +137,26 @@ public class ContextDragBubbleBehavior : Behavior<Control>
             if (e.InitialPressMouseButton == MouseButton.Left && _triggerEvent is not null)
             {
                 Released();
+                if (e.Source is Control control
+                    && AssociatedObject?.DataContext == control.DataContext)
+                {
+                    _dragStartPoint = e.GetPosition(null);
+                    _triggerEvent = e;
+                    _lock = true;
+                    _captured = true;
+
+                    //Manipulate selection behavior. Remove once fixed by avalonia
+                    var treeView = control.FindLogicalAncestorOfType<TreeView>();
+                    if (treeView != null && e.KeyModifiers == KeyModifiers.None)
+                        treeView.SelectedItem = AssociatedObject!.DataContext;
+                }
             }
 
             _captured = false;
         }
     }
 
-    private async void AssociatedObject_PointerMoved(object? sender, PointerEventArgs e)
+    private async Task AssociatedObject_PointerMovedAsync(object? sender, PointerEventArgs e)
     {
         var properties = e.GetCurrentPoint(AssociatedObject).Properties;
         if (_captured
@@ -171,19 +171,15 @@ public class ContextDragBubbleBehavior : Behavior<Control>
             if (Math.Abs(diff.X) > horizontalDragThreshold || Math.Abs(diff.Y) > verticalDragThreshold)
             {
                 if (_lock)
-                {
                     _lock = false;
-                }
                 else
-                {
                     return;
-                }
 
-                var context = Context ?? AssociatedObject?.DataContext;
-                    
+                var context = AssociatedObject.FindLogicalAncestorOfType<TreeView>()?.SelectedItems;
+
                 Handler?.BeforeDragDrop(sender, _triggerEvent, context);
 
-                await DoDragDrop(_triggerEvent, context);
+                await DoDragDropAsync(_triggerEvent, context);
 
                 Handler?.AfterDragDrop(sender, _triggerEvent, context);
 

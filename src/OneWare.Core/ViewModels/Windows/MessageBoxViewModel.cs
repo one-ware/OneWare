@@ -1,126 +1,127 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using OneWare.Essentials;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.Core.ViewModels.Windows
+namespace OneWare.Core.ViewModels.Windows;
+
+public enum MessageBoxMode
 {
-    public enum MessageBoxMode
+    AllButtons,
+    NoCancel,
+    OnlyOk,
+    Input,
+    PasswordInput,
+    SelectFolder,
+    SelectItem
+}
+
+public class MessageBoxViewModel : FlexibleWindowViewModelBase
+{
+    private string? _input;
+
+    private object? _selectedItem;
+
+    private ObservableCollection<object> _selectionItems = new();
+
+    public MessageBoxViewModel(string title, string message, MessageBoxMode mode)
     {
-        AllButtons,
-        NoCancel,
-        OnlyOk,
-        Input,
-        PasswordInput,
-        SelectFolder,
-        SelectItem
+        Title = title;
+        Message = message;
+        Id = "MessageBox...";
+
+        //TODO USE FLAGS
+
+        if (mode == MessageBoxMode.PasswordInput) PasswordChar = "*";
+        else if (mode == MessageBoxMode.SelectFolder) ShowFolderButton = true;
+
+        switch (mode)
+        {
+            case MessageBoxMode.NoCancel:
+                ShowCancel = false;
+                break;
+
+            case MessageBoxMode.Input:
+            case MessageBoxMode.PasswordInput:
+            case MessageBoxMode.SelectFolder:
+                ShowInput = true;
+                ShowOk = true;
+                ShowYes = false;
+                ShowNo = false;
+                break;
+
+            case MessageBoxMode.OnlyOk:
+                ShowInput = false;
+                ShowOk = true;
+                ShowYes = false;
+                ShowNo = false;
+                ShowCancel = false;
+                break;
+
+            case MessageBoxMode.SelectItem:
+                ShowSelection = true;
+                ShowOk = true;
+                ShowYes = false;
+                ShowNo = false;
+                break;
+        }
     }
 
-    public class MessageBoxViewModel : FlexibleWindowViewModelBase
+    public string? Input
     {
-        private string? _input;
-        public string? Input
-        {
-            get => _input;
-            set => SetProperty(ref _input, value);
-        }
+        get => _input;
+        set => SetProperty(ref _input, value);
+    }
 
-        private object? _selectedItem;
-        public object? SelectedItem
-        {
-            get => _selectedItem;
-            set => SetProperty(ref _selectedItem, value);
-        }
+    public object? SelectedItem
+    {
+        get => _selectedItem;
+        set => SetProperty(ref _selectedItem, value);
+    }
 
-        private ObservableCollection<object> _selectionItems = new();
-        public ObservableCollection<object> SelectionItems
-        {
-            get => _selectionItems;
-            set => SetProperty(ref _selectionItems, value);
-        }
-        
-        public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
-        public string Message { get; }
-        public bool ShowYes { get; } = true;
-        public bool ShowNo { get; } = true;
-        public bool ShowCancel { get; } = true;
-        public bool ShowOk { get; }
-        public bool ShowInput { get; }
-        public bool ShowFolderButton { get; }
-        public bool ShowSelection { get; }
-        public string PasswordChar { get; } = "";
-        
-        public MessageBoxViewModel(string title, string message, MessageBoxMode mode)
-        {
-            Title = title;
-            Message = message;
-            Id = "MessageBox...";
+    public ObservableCollection<object> SelectionItems
+    {
+        get => _selectionItems;
+        set => SetProperty(ref _selectionItems, value);
+    }
 
-            //TODO USE FLAGS
+    public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
+    public string Message { get; }
+    public bool ShowYes { get; } = true;
+    public bool ShowNo { get; } = true;
+    public bool ShowCancel { get; } = true;
+    public bool ShowOk { get; }
+    public bool ShowInput { get; }
+    public bool ShowFolderButton { get; }
+    public bool ShowSelection { get; }
+    public string PasswordChar { get; } = "";
 
-            if (mode == MessageBoxMode.PasswordInput) PasswordChar = "*";
-            else if (mode == MessageBoxMode.SelectFolder) ShowFolderButton = true;
+    public void No(FlexibleWindow window)
+    {
+        BoxStatus = MessageBoxStatus.No;
+        window.Close();
+    }
 
-            switch (mode)
-            {
-                case MessageBoxMode.NoCancel:
-                    ShowCancel = false;
-                    break;
+    public void Yes(FlexibleWindow window)
+    {
+        BoxStatus = MessageBoxStatus.Yes;
+        window.Close();
+    }
 
-                case MessageBoxMode.Input:
-                case MessageBoxMode.PasswordInput:
-                case MessageBoxMode.SelectFolder:
-                    ShowInput = true;
-                    ShowOk = true;
-                    ShowYes = false;
-                    ShowNo = false;
-                    break;
+    public void Cancel(FlexibleWindow window)
+    {
+        BoxStatus = MessageBoxStatus.Canceled;
+        window.Close();
+    }
 
-                case MessageBoxMode.OnlyOk:
-                    ShowInput = false;
-                    ShowOk = true;
-                    ShowYes = false;
-                    ShowNo = false;
-                    ShowCancel = false;
-                    break;
+    public async Task SelectPathAsync(FlexibleWindow window)
+    {
+        if (window.Host == null) throw new NullReferenceException(nameof(TopLevel));
 
-                case MessageBoxMode.SelectItem:
-                    ShowSelection = true;
-                    ShowOk = true;
-                    ShowYes = false;
-                    ShowNo = false;
-                    break;
-            }
-        }
+        var folder = await StorageProviderHelper.SelectFolderAsync(window.Host, "Select Directory", Input);
 
-        public void No(FlexibleWindow window)
-        {
-            BoxStatus = MessageBoxStatus.No;
-            window.Close();
-        }
-
-        public void Yes(FlexibleWindow window)
-        {
-            BoxStatus = MessageBoxStatus.Yes;
-            window.Close();
-        }
-
-        public void Cancel(FlexibleWindow window)
-        {
-            BoxStatus = MessageBoxStatus.Canceled;
-            window.Close();
-        }
-        
-        public async Task SelectPathAsync(FlexibleWindow window)
-        {
-            if (window.Host == null) throw new NullReferenceException(nameof(TopLevel));
-            
-            var folder = await StorageProviderHelper.SelectFolderAsync(window.Host, "Select Directory", Input);
-            
-            Input = folder ?? "";
-        }
+        Input = folder ?? "";
     }
 }

@@ -20,26 +20,26 @@ jobs:
   create_nuget:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x 
-
-    # Create the NuGet packages in the folder from the environment variable NuGetDirectory
-    - run: dotnet pack ./src/OneWare.Essentials/OneWare.Essentials.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-    - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-    - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-    - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
       
-    # Publish all NuGet packages to NuGet.org
-    # Use --skip-duplicate to prevent errors if a package with the same version already exists.
-    # If you retry a failed workflow, already published packages will be skipped without error.
-    - name: Publish NuGet package
-      run: |
-        foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-         dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-        }
+      # Create the NuGet packages in the folder from the environment variable NuGetDirectory
+      - run: dotnet pack ./src/OneWare.Essentials/OneWare.Essentials.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      
+      # Publish all NuGet packages to NuGet.org
+      # Use --skip-duplicate to prevent errors if a package with the same version already exists.
+      # If you retry a failed workflow, already published packages will be skipped without error.
+      - name: Publish NuGet package
+        run: |
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
+           dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }

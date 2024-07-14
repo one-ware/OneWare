@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
+    <Import Project="..\..\build\props\XUnit.props"/>
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -13,7 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
 </Project>

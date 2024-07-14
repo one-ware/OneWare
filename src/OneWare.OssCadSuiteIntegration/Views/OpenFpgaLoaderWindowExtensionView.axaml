@@ -4,12 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.OssCadSuiteIntegration.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" IsVisible="{Binding IsVisible}"
-             x:Class="OneWare.OssCadSuiteIntegration.Views.OpenFpgaLoaderWindowExtensionView" x:DataType="viewModels:OpenFpgaLoaderWindowExtensionViewModel">
-    <MenuItem Header="OpenFPGALoader Settings" 
+             x:Class="OneWare.OssCadSuiteIntegration.Views.OpenFpgaLoaderWindowExtensionView"
+             x:DataType="viewModels:OpenFpgaLoaderWindowExtensionViewModel">
+    <MenuItem Header="OpenFPGALoader Settings"
               Command="{Binding OpenSettingsAsync}"
               IsEnabled="{Binding IsEnabled}">
         <MenuItem.Icon>
-            <Image Source="{DynamicResource Material.SettingsOutline}"/>
+            <Image Source="{DynamicResource Material.SettingsOutline}" />
         </MenuItem.Icon>
     </MenuItem>
 </UserControl>

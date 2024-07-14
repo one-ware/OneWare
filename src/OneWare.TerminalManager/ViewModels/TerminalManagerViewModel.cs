@@ -2,8 +2,6 @@
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
-using OneWare.Essentials;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -16,37 +14,37 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.Console";
-
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
     private readonly IPaths _paths;
-    
-    public ObservableCollection<TerminalTabModel> Terminals { get; } = new();
+
+    private readonly IProjectExplorerService _projectExplorerService;
 
     private TerminalTabModel? _selectedTerminalTab;
-    public TerminalTabModel? SelectedTerminalTab
-    {
-        get => _selectedTerminalTab;
-        set => SetProperty(ref _selectedTerminalTab, value);
-    }
-    
-    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService, IProjectExplorerService projectExplorerService, IPaths paths) : base(IconKey)
+
+    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService,
+        IProjectExplorerService projectExplorerService, IPaths paths) : base(IconKey)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _paths = paths;
-        
+
         Title = "Terminal";
         Id = "Terminal";
-        
-        settingsService.GetSettingObservable<string>("General_SelectedTheme").Skip(1).Throttle(TimeSpan.FromMilliseconds(5))
+
+        settingsService.GetSettingObservable<string>("General_SelectedTheme").Skip(1)
+            .Throttle(TimeSpan.FromMilliseconds(5))
             .Subscribe(x => Dispatcher.UIThread.Post(() =>
             {
-                foreach (var t in Terminals)
-                {
-                    t.Terminal.Redraw();
-                } 
+                foreach (var t in Terminals) t.Terminal.Redraw();
             }));
+    }
+
+    public ObservableCollection<TerminalTabModel> Terminals { get; } = new();
+
+    public TerminalTabModel? SelectedTerminalTab
+    {
+        get => _selectedTerminalTab;
+        set => SetProperty(ref _selectedTerminalTab, value);
     }
 
     public override void InitializeContent()
@@ -58,7 +56,7 @@ public class TerminalManagerViewModel : ExtendedTool
     public override void OnSelected()
     {
         base.OnSelected();
-        if(!Terminals.Any()) NewTerminal();
+        if (!Terminals.Any()) NewTerminal();
     }
 
     public void CloseTab(TerminalTabModel tab)
@@ -70,13 +68,11 @@ public class TerminalManagerViewModel : ExtendedTool
             _dockService.CloseDockable(this);
             return;
         }
-        
+
         //Update Titles temporary
         for (var i = 0; i < Terminals.Count; i++)
-        {
             if (i == 0) Terminals[i].Title = "Local";
             else Terminals[i].Title = $"Local ({i})";
-        }
     }
 
     public void NewTerminal()
@@ -84,34 +80,29 @@ public class TerminalManagerViewModel : ExtendedTool
         var homeFolder = _projectExplorerService.ActiveProject?.FullPath;
 
         homeFolder ??= _paths.ProjectsDirectory;
-        
+
         Terminals.Add(new TerminalTabModel($"Local ({Terminals.Count})", new TerminalViewModel(homeFolder), this));
         SelectedTerminalTab = Terminals.Last();
     }
-    
+
     public void ExecScriptInTerminal(string scriptPath, bool elevated, string title)
     {
         try
         {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                PlatformHelper.ExecBash("chmod u+x " + scriptPath);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) throw new NotImplementedException();
 
-                var sudo = elevated ? "sudo " : "";
-                var terminal = new TerminalViewModel(_paths.DocumentsDirectory);
+            PlatformHelper.ExecBash("chmod u+x " + scriptPath);
 
-                var wrapper = new StandaloneTerminalViewModel(title, terminal);
+            var sudo = elevated ? "sudo " : "";
+            var terminal = new TerminalViewModel(_paths.DocumentsDirectory);
 
-                _dockService.Show(wrapper, DockShowLocation.Window);
+            var wrapper = new StandaloneTerminalViewModel(title, terminal);
 
-                Observable.FromEventPattern(terminal, nameof(terminal.TerminalReady)).Take(1)
-                    .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(
-                        x => { terminal.Send($"{sudo}{scriptPath}"); });
-            }
+            _dockService.Show(wrapper);
+
+            Observable.FromEventPattern(terminal, nameof(terminal.TerminalReady)).Take(1)
+                .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(
+                    x => { terminal.Send($"{sudo}{scriptPath}"); });
         }
         catch (Exception e)
         {

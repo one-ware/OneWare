@@ -4,24 +4,28 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Settings.Views.SettingTypes.PathSettingView" x:DataType="settingTypes:PathSettingViewModel">
+             x:Class="OneWare.Settings.Views.SettingTypes.PathSettingView"
+             x:DataType="settingTypes:PathSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />
         <Border Classes="RoundToolBar" BorderBrush="Gray">
             <DockPanel>
-                
+
                 <Button DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
-                    <Image Height="16" Width="16" VerticalAlignment="Center" Source="{DynamicResource VsImageLib.FolderOpen16X}"/>
+                    <Image Height="16" Width="16" VerticalAlignment="Center"
+                           Source="{DynamicResource VsImageLib.FolderOpen16X}" />
                 </Button>
-                
-                <Border DockPanel.Dock="Right"  Classes="SplitterBorder" Background="Gray"/>
-                
+
+                <Border DockPanel.Dock="Right" Classes="SplitterBorder" Background="Gray" />
+
                 <Grid DockPanel.Dock="Right" Margin="0 0 2 0" IsVisible="{Binding PathSetting.CanVerify}">
-                    <Image Height="10" ToolTip.Tip="Path is invalid!" IsVisible="{Binding !PathSetting.IsValid}" Source="{DynamicResource MaterialDesign.Close.Red}"/>
-                    <Image Height="10" ToolTip.Tip="Path is valid!" IsVisible="{Binding PathSetting.IsValid}" Source="{DynamicResource BoxIcons.RegularCheck.Green}"/>
+                    <Image Height="10" ToolTip.Tip="Path is invalid!" IsVisible="{Binding !PathSetting.IsValid}"
+                           Source="{DynamicResource MaterialDesign.Close.Red}" />
+                    <Image Height="10" ToolTip.Tip="Path is valid!" IsVisible="{Binding PathSetting.IsValid}"
+                           Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
                 </Grid>
-                
+
                 <TextBox DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
             </DockPanel>
         </Border>

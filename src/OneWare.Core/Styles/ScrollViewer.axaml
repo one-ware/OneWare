@@ -16,7 +16,7 @@
                             Orientation="{TemplateBinding Orientation}"
                             DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
                             IsDirectionReversed="True">
-                            <Thumb Name="thumb"/>
+                            <Thumb Name="thumb" />
                         </Track>
                     </Grid>
                 </Border>
@@ -45,7 +45,7 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="ScrollBar /template/ Thumb#thumb">
         <Setter Property="Opacity" Value="0.6" />
         <Setter Property="Template">

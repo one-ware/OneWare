@@ -8,21 +8,17 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using ImTools;
-using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
+using OneWare.Essentials.Enums;
+using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
-using OneWare.Essentials.Enums;
-using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
 using OneWare.SerialMonitor;
@@ -42,6 +38,8 @@ namespace OneWare.Studio.Desktop;
 
 public class DesktopStudioApp : StudioApp
 {
+    private Window? _splashWindow;
+
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
@@ -59,10 +57,7 @@ public class DesktopStudioApp : StudioApp
         try
         {
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins)
-            {
-                Container.Resolve<IPluginService>().AddPlugin(module);
-            }
+            foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
         }
         catch (Exception e)
         {
@@ -81,13 +76,11 @@ public class DesktopStudioApp : StudioApp
         }
     }
 
-    private Window? _splashWindow;
-
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            _splashWindow = new SplashWindow()
+            _splashWindow = new SplashWindow
             {
                 DataContext = Container.Resolve<SplashWindowViewModel>()
             };
@@ -113,15 +106,13 @@ public class DesktopStudioApp : StudioApp
             {
                 _tempMode = true;
                 var dockService = Container.Resolve<IDockService>();
-                
+
                 var views = dockService.SearchView<Document>();
 
                 foreach (var view in views.ToArray())
-                {
-                    if(view is IDockable dockable)
+                    if (view is IDockable dockable)
                         dockService.CloseDockable(dockable);
-                }
-                
+
                 var extension = Path.GetExtension(fileName);
 
                 var manager = Container.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
@@ -170,11 +161,14 @@ public class DesktopStudioApp : StudioApp
                 {
                     Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
                         $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                        () => { Container.Resolve<IWindowService>().Show(new ChangelogView()
+                        () =>
                         {
-                            DataContext = Container.Resolve<ChangelogViewModel>()
-                        }); },
-                        App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                            Container.Resolve<IWindowService>().Show(new ChangelogView
+                            {
+                                DataContext = Container.Resolve<ChangelogViewModel>()
+                            });
+                        },
+                        Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 });
             }
 
@@ -189,52 +183,46 @@ public class DesktopStudioApp : StudioApp
                     .ToList();
 
                 if (updatePackages.Count > 0)
-                {
                     Dispatcher.UIThread.Post(() =>
                     {
                         Container.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
                             $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
-                            "Download", () => Container.Resolve<IWindowService>().Show(new PackageManagerView()
+                            "Download", () => Container.Resolve<IWindowService>().Show(new PackageManagerView
                             {
                                 DataContext = Container.Resolve<PackageManagerViewModel>()
                             }),
                             Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                     });
-                }
 
                 var ideUpdater = Container.Resolve<UpdaterViewModel>();
 
                 var canUpdate = ideUpdater.CheckForUpdateAsync().GetAwaiter().GetResult();
 
                 if (canUpdate)
-                {
                     Dispatcher.UIThread.Post(() =>
                     {
                         Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
                             $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Container
-                                .Resolve<IWindowService>().Show(new UpdaterView()
+                                .Resolve<IWindowService>().Show(new UpdaterView
                                 {
                                     DataContext = Container.Resolve<UpdaterViewModel>()
                                 }),
                             Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                     });
-                    
-                    // if (PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
-                    // {
-                    //     
-                    // }
-                    // else
-                    // {
-                    //     Dispatcher.UIThread.Post(() =>
-                    //     {
-                    //         Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Available", $"OneWare Studio {ideUpdater.NewVersion} is available!", "Download", () => PlatformHelper.OpenHyperLink(ideUpdater.DownloadLink),
-                    //             App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-                    //         Container.Resolve<IOutputService>().WriteLine($"Version {ideUpdater.NewVersion} is available! Download: {ideUpdater.DownloadLink}");
-                    //         Container.Resolve<IOutputService>().WriteLine($"Make sure to update plugins before installing this update!", Brushes.Orange);
-                    //     });
-                    // }
-                }
-
+                // if (PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
+                // {
+                //     
+                // }
+                // else
+                // {
+                //     Dispatcher.UIThread.Post(() =>
+                //     {
+                //         Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Available", $"OneWare Studio {ideUpdater.NewVersion} is available!", "Download", () => PlatformHelper.OpenHyperLink(ideUpdater.DownloadLink),
+                //             App.Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                //         Container.Resolve<IOutputService>().WriteLine($"Version {ideUpdater.NewVersion} is available! Download: {ideUpdater.DownloadLink}");
+                //         Container.Resolve<IOutputService>().WriteLine($"Make sure to update plugins before installing this update!", Brushes.Orange);
+                //     });
+                // }
             }, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
         }
         catch (Exception e)

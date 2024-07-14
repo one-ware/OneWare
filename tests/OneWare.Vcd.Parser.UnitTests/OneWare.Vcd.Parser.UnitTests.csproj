@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
-    
+    <Import Project="..\..\build\props\XUnit.props"/>
+
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
@@ -11,15 +11,15 @@
         <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    
+
     <ItemGroup>
-      <ProjectReference Include="..\..\src\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <Content Include="Assets\**">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+        <Content Include="Assets\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>

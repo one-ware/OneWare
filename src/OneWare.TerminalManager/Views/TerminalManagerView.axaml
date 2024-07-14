@@ -7,7 +7,7 @@
              xmlns:models="clr-namespace:OneWare.TerminalManager.Models"
              Name="TerminalManagerViewView"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200" x:DataType="viewModels:TerminalManagerViewModel">
-    
+
     <Grid>
         <TabControl Padding="0" ItemsSource="{Binding Terminals}" SelectedItem="{Binding SelectedTerminalTab}">
             <TabControl.Styles>
@@ -25,8 +25,9 @@
                                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                                         <ItemsPresenter Name="PART_ItemsPresenter"
                                                         ItemsPanel="{TemplateBinding ItemsPanel}" />
-                                        <Button Command="{Binding NewTerminal}" Margin="5 0 5 1" Height="18" Width="18" CornerRadius="2">
-                                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8"/>
+                                        <Button Command="{Binding NewTerminal}" Margin="5 0 5 1" Height="18" Width="18"
+                                                CornerRadius="2">
+                                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8" />
                                         </Button>
                                     </StackPanel>
                                     <ContentPresenter DockPanel.Dock="Bottom" Name="PART_SelectedContentHost"
@@ -43,22 +44,22 @@
             </TabControl.Styles>
             <TabControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
+                    <StackPanel Orientation="Horizontal" />
                 </ItemsPanelTemplate>
             </TabControl.ItemsPanel>
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding Title}"/>
+                        <TextBlock Text="{Binding Title}" />
                         <Button Command="{Binding Close}">
-                            <Image Height="8" Width="8" Source="{DynamicResource Material.WindowClose}"/>
+                            <Image Height="8" Width="8" Source="{DynamicResource Material.WindowClose}" />
                         </Button>
                     </StackPanel>
                 </DataTemplate>
             </TabControl.ItemTemplate>
             <TabControl.ContentTemplate>
                 <DataTemplate x:DataType="models:TerminalTabModel">
-                    <ContentControl Content="{Binding Terminal}"/>
+                    <ContentControl Content="{Binding Terminal}" />
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>

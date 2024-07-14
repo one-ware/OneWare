@@ -6,13 +6,14 @@
         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
 
     <Styles.Resources>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8"  Color="{DynamicResource ThemeAccentColor}"/>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6" Color="{DynamicResource ThemeAccentColor}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6"
+                         Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
-        <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}"/>
+        <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}" />
     </Styles.Resources>
-    
+
     <Design.PreviewWith>
         <idc:DocumentControl Width="300" Height="400" />
     </Design.PreviewWith>
@@ -20,7 +21,7 @@
     <Style Selector="ToolTabStripItem:selected">
         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
-    
+
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
             <DataTemplate DataType="core:IDockable">
@@ -64,13 +65,13 @@
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="4 1 4 0" />
     </Style>
-    
+
     <Style Selector="StackPanel#HeaderContainer.LoadingFailed">
-        <Setter Property="ToolTip.Tip" Value="Loading failed"/>
+        <Setter Property="ToolTip.Tip" Value="Loading failed" />
     </Style>
-    
+
     <Style Selector="StackPanel#HeaderContainer.LoadingFailed > TextBlock">
-        <Setter Property="Foreground" Value="#FFBB0000"/>
+        <Setter Property="Foreground" Value="#FFBB0000" />
     </Style>
 
     <Style Selector="DocumentControl">
@@ -79,29 +80,31 @@
                 <ContentControl Content="{Binding}">
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="viewModels:IExtendedDocument">
-                            <StackPanel Name="HeaderContainer" Orientation="Horizontal" Margin="0 1" ToolTip.Tip="{Binding FullPath}">
+                            <StackPanel Name="HeaderContainer" Orientation="Horizontal" Margin="0 1"
+                                        ToolTip.Tip="{Binding FullPath}">
                                 <Interaction.Behaviors>
                                     <DataTriggerBehavior Binding="{Binding LoadingFailed}"
                                                          ComparisonCondition="Equal"
                                                          Value="true">
                                         <AddClassAction StyledElement="HeaderContainer"
-                                                        ClassName="LoadingFailed"/>
+                                                        ClassName="LoadingFailed" />
                                     </DataTriggerBehavior>
                                     <DataTriggerBehavior Binding="{Binding LoadingFailed}"
                                                          ComparisonCondition="Equal"
                                                          Value="false">
                                         <RemoveClassAction StyledElement="HeaderContainer"
-                                                           ClassName="LoadingFailed"/>
+                                                           ClassName="LoadingFailed" />
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
-                                
-                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15"/> 
-                                
+
+                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15" />
+
                                 <Image
                                     Height="17" Width="17"
                                     Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
-                                    VerticalAlignment="Center" IsVisible="{Binding !IsLoading}"/>
-                                <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Name="Title" Margin="3 0 0 0" 
+                                    VerticalAlignment="Center" IsVisible="{Binding !IsLoading}" />
+                                <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Name="Title"
+                                           Margin="3 0 0 0"
                                            Text="{Binding Title}" VerticalAlignment="Center" />
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
                             </StackPanel>
@@ -116,12 +119,13 @@
             </DataTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
             <DataTemplate DataType="viewModels:IExtendedTool">
-                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Image VerticalAlignment="Center" Source="{Binding Icon}" Height="12" Width="12"/>
+                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Image VerticalAlignment="Center" Source="{Binding Icon}" Height="12" Width="12" />
                     <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
                 </StackPanel>
             </DataTemplate>

@@ -10,28 +10,13 @@ namespace OneWare.Vcd.Parser;
 
 public static partial class VcdParser
 {
-    [GeneratedRegex("(\\d+)\\s?(s|ms|us|ns|ps|fs)")]
-    private static partial Regex TimeScaleRegex();
-
     private const int ThreadFixOffset = 1000;
-
-    private enum ParsingPosition
-    {
-        None,
-        Time,
-        Value,
-        Id,
-    }
-
-    private enum ParsingType
-    {
-        Logic,
-        Array,
-        Real
-    }
 
     private const int MaxDefinitionSize = 50000;
     private const int BufferSize = 1024;
+
+    [GeneratedRegex("(\\d+)\\s?(s|ms|us|ns|ps|fs)")]
+    private static partial Regex TimeScaleRegex();
 
     public static VcdFile ParseVcdDefinition(string path, object? parseLock = null)
     {
@@ -46,7 +31,8 @@ public static partial class VcdParser
     }
 
     public static async Task ReadSignalsAsync(string path, VcdFile vcdFile,
-        IProgress<(int thread, int progress)> progress, CancellationToken cancellationToken, int threads, object? parseLock = null)
+        IProgress<(int thread, int progress)> progress, CancellationToken cancellationToken, int threads,
+        object? parseLock = null)
     {
         //Use thread safe variant
         if (threads == 1)
@@ -58,7 +44,7 @@ public static partial class VcdParser
                 stream.Seek(vcdFile.DefinitionParseEndPosition + 1, SeekOrigin.Begin);
                 var reader = new StreamReader(stream);
 
-                await ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, parseLock, 
+                await ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, parseLock,
                     new Progress<int>(x => progress.Report((0, x))),
                     cancellationToken);
                 if (!cancellationToken.IsCancellationRequested &&
@@ -86,9 +72,10 @@ public static partial class VcdParser
                 begin -= threadFix;
                 length += threadFix;
             }
+
             if (begin < vcdFile.DefinitionParseEndPosition + 1) begin = vcdFile.DefinitionParseEndPosition + 1;
             if (begin + length > info.Length) length = info.Length - begin;
-            
+
             tasks.Add(ReadSignalsPart(path, begin, length, vcdFile, threadC, progress, cancellationToken));
             threadC++;
         }
@@ -104,17 +91,12 @@ public static partial class VcdParser
                    vcdFile.Definition.ChangeTimes.Last() >= r.times.FirstOrDefault())
             {
                 foreach (var signal in vcdFile.Definition.SignalRegister)
-                {
                     signal.Value.RemoveChangeAtIndex(vcdFile.Definition.ChangeTimes.Count - 1);
-                }
 
                 vcdFile.Definition.ChangeTimes.Remove(vcdFile.Definition.ChangeTimes.Last());
             }
 
-            foreach (var signal in r.signals)
-            {
-                vcdFile.Definition.SignalRegister[signal.Key].AddChanges(signal.Value);
-            }
+            foreach (var signal in r.signals) vcdFile.Definition.SignalRegister[signal.Key].AddChanges(signal.Value);
 
             vcdFile.Definition.ChangeTimes.AddRange(r.times);
             r.signals.Clear();
@@ -141,7 +123,8 @@ public static partial class VcdParser
 
             var changeTimes = new List<long>();
 
-            await ReadSignals(reader, signals, changeTimes, null, new Progress<int>(x => { progress.Report((threadId, x)); }), cancellationToken);
+            await ReadSignals(reader, signals, changeTimes, null,
+                new Progress<int>(x => { progress.Report((threadId, x)); }), cancellationToken);
 
             reader.Dispose();
             return (changeTimes, signals);
@@ -210,18 +193,22 @@ public static partial class VcdParser
                                         {
                                             VcdLineType.Real => bitWith switch
                                             {
-                                                32 => new VcdSignal<float>(definition.ChangeTimes, type, bitWith, id, name, parseLock),
-                                                64 => new VcdSignal<double>(definition.ChangeTimes, type, bitWith, id, name, parseLock),
+                                                32 => new VcdSignal<float>(definition.ChangeTimes, type, bitWith, id,
+                                                    name, parseLock),
+                                                64 => new VcdSignal<double>(definition.ChangeTimes, type, bitWith, id,
+                                                    name, parseLock),
                                                 _ => throw new Exception(
                                                     $"Invalid VCD Definition: BitWidth of REG {name} is not 32 or 64: {bitWith}")
                                             },
                                             _ => bitWith switch
                                             {
-                                                1 => new VcdSignal<StdLogic>(definition.ChangeTimes, type, bitWith, id, name, parseLock),
-                                                _ => new VcdSignal<StdLogic[]>(definition.ChangeTimes, type, bitWith, id, name, parseLock),
+                                                1 => new VcdSignal<StdLogic>(definition.ChangeTimes, type, bitWith, id,
+                                                    name, parseLock),
+                                                _ => new VcdSignal<StdLogic[]>(definition.ChangeTimes, type, bitWith,
+                                                    id, name, parseLock)
                                             }
                                         };
-                                        
+
                                         currentScope.Signals.Add(signal);
                                         definition.SignalRegister.TryAdd(signal.Id, signal);
                                     }
@@ -299,19 +286,18 @@ public static partial class VcdParser
         var lines = text.Split('\n');
         var lastTime = lines.LastOrDefault(x => x.StartsWith('#'));
         if (!string.IsNullOrWhiteSpace(lastTime))
-        {
-            if (long.TryParse(lastTime.Trim()[1..], out var time)) return time;
-        }
+            if (long.TryParse(lastTime.Trim()[1..], out var time))
+                return time;
 
         return null;
     }
 
     private static async Task ReadSignals(StreamReader reader, IReadOnlyDictionary<string, IVcdSignal> signalRegister,
-        ICollection<long> changeTimes, object? parseLock = null, 
+        ICollection<long> changeTimes, object? parseLock = null,
         IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
     {
         parseLock ??= new object();
-        
+
         var currentTime = 0L;
         var currentReal = string.Empty;
         var currentLogic = StdLogic.U;
@@ -337,19 +323,14 @@ public static partial class VcdParser
 
         while (!reader.EndOfStream)
         {
-            if (cancellationToken is { IsCancellationRequested: true })
-            {
-                return;
-            }
+            if (cancellationToken is { IsCancellationRequested: true }) return;
 
             var c = (char)reader.Read();
 
             if (reader.EndOfStream)
-            {
                 //Wait for new input from simulator
                 if (RuntimeInformation.OSArchitecture is not Architecture.Wasm)
                     await Task.Delay(50);
-            }
 
             if (progress != null)
             {
@@ -368,7 +349,6 @@ public static partial class VcdParser
                 case ParsingPosition.None:
 
                     if (lastC is '\n')
-                    {
                         switch (c)
                         {
                             case 'U':
@@ -389,7 +369,7 @@ public static partial class VcdParser
                                 parsingSignalType = ParsingType.Logic;
                                 parsingPos = ParsingPosition.Id;
                                 break;
-                            case '1':   
+                            case '1':
                                 if (!addedTime) break;
                                 currentLogic = StdLogic.Full;
                                 parsingSignalType = ParsingType.Logic;
@@ -443,7 +423,6 @@ public static partial class VcdParser
                                 emptyTime = true;
                                 break;
                         }
-                    }
 
                     break;
 
@@ -457,7 +436,7 @@ public static partial class VcdParser
                                 case 'U':
                                 case 'X':
                                 case '0':
-                                case '1':    
+                                case '1':
                                 case 'Z':
                                 case 'W':
                                 case 'L':
@@ -469,6 +448,7 @@ public static partial class VcdParser
                                     parsingPos = ParsingPosition.Id;
                                     break;
                             }
+
                             break;
                         case ParsingType.Real:
                             switch (c)
@@ -480,14 +460,15 @@ public static partial class VcdParser
                                     currentReal += c;
                                     break;
                             }
+
                             break;
                         case ParsingType.Logic:
-                            
+
                             break;
                     }
 
                     break;
-                
+
                 case ParsingPosition.Id:
                     switch (c)
                     {
@@ -496,7 +477,7 @@ public static partial class VcdParser
 
                             var id = idBuilder.ToString();
                             idBuilder.Clear();
-                            
+
                             switch (parsingSignalType)
                             {
                                 case ParsingType.Logic:
@@ -509,36 +490,33 @@ public static partial class VcdParser
                                     switch (signalRegister[id])
                                     {
                                         case VcdSignal<float>:
-                                            if (float.TryParse(currentReal, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
-                                            {
+                                            if (float.TryParse(currentReal, NumberStyles.Float,
+                                                    CultureInfo.InvariantCulture, out var result))
                                                 signalRegister[id].AddChange(changeTimes.Count - 1, result);
-                                            }
                                             else
-                                            {
                                                 throw new Exception("Parsing failed: " + currentReal);
-                                            }
                                             break;
                                         case VcdSignal<double>:
-                                            if (double.TryParse(currentReal, NumberStyles.Float, CultureInfo.InvariantCulture, out var result2))
-                                            {
+                                            if (double.TryParse(currentReal, NumberStyles.Float,
+                                                    CultureInfo.InvariantCulture, out var result2))
                                                 signalRegister[id].AddChange(changeTimes.Count - 1, result2);
-                                            }
                                             else
-                                            {
                                                 throw new Exception("Parsing failed: " + currentReal);
-                                            }
                                             break;
                                     }
+
                                     break;
                             }
+
                             parsingPos = ParsingPosition.None;
                             break;
                         default:
                             idBuilder.Append(c);
                             break;
                     }
+
                     break;
-                
+
                 case ParsingPosition.Time:
                     switch (c)
                     {
@@ -550,6 +528,7 @@ public static partial class VcdParser
                                 {
                                     changeTimes.Add(currentTime);
                                 }
+
                                 addedTime = true;
                             }
 
@@ -574,11 +553,23 @@ public static partial class VcdParser
 
     private static long AddNumber(long n, char c)
     {
-        if (c is >= '0' and <= '9')
-        {
-            return n * 10 + (c - '0');
-        }
+        if (c is >= '0' and <= '9') return n * 10 + (c - '0');
 
         throw new FormatException("Invalid time parsing");
+    }
+
+    private enum ParsingPosition
+    {
+        None,
+        Time,
+        Value,
+        Id
+    }
+
+    private enum ParsingType
+    {
+        Logic,
+        Array,
+        Real
     }
 }

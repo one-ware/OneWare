@@ -12,5 +12,5 @@ public enum DiscoveryMethod
     ConfigurationManifest,
 
     /// <summary>The module is discovered by examining the assemblies in a directory.</summary>
-    DirectorySweep,
+    DirectorySweep
 }

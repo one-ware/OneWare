@@ -23,23 +23,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace OneWare.Debugger
-{
-    public class GdbEvent : ResultData
-    {
-        public GdbEvent(string line)
-        {
-            var i = line.IndexOf(',');
-            if (i == -1)
-                i = line.Length;
-            Name = line.Substring(1, i - 1);
-            ReadResults(line, i + 1);
-            var reasons = GetAllValues("reason");
-            if (reasons.Length > 0)
-                Reason = (string)reasons[0];
-        }
+namespace OneWare.Debugger;
 
-        public string Name { get; set; }
-        public string? Reason { get; set; }
+public class GdbEvent : ResultData
+{
+    public GdbEvent(string line)
+    {
+        var i = line.IndexOf(',');
+        if (i == -1)
+            i = line.Length;
+        Name = line.Substring(1, i - 1);
+        ReadResults(line, i + 1);
+        var reasons = GetAllValues("reason");
+        if (reasons.Length > 0)
+            Reason = (string)reasons[0];
     }
+
+    public string Name { get; set; }
+    public string? Reason { get; set; }
 }

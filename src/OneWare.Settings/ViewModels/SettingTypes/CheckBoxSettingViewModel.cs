@@ -3,7 +3,7 @@
 public class CheckBoxSettingViewModel : SettingViewModel
 {
     public CheckBoxSettingViewModel(TitledSetting setting, IObservable<bool>? needEnabled = null) :
-        base(setting) 
+        base(setting)
     {
         needEnabled?.Subscribe(x =>
         {

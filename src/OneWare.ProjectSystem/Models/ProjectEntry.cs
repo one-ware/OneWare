@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -14,40 +13,55 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
+    private IBrush _background = Brushes.Transparent;
+
+    private FontWeight _fontWeight = FontWeight.Regular;
+
+    private IImage? _icon;
+
+    private bool _isExpanded;
+
+    private bool _loadingFailed;
+
+    private string _name;
+
+    private float _textOpacity = 1f;
+
+    protected ProjectEntry(string name, IProjectFolder? topFolder)
+    {
+        _name = name;
+        TopFolder = topFolder;
+    }
+
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
     public ObservableCollection<IProjectEntry> Entities { get; } = new();
 
     public IProjectExplorerNode? Parent => TopFolder;
-    
+
     public IProjectFolder? TopFolder { get; set; }
-    
+
     public ObservableCollection<IImage> IconOverlays { get; } = new();
 
     public ObservableCollection<IImage> RightIcons { get; } = new();
 
-    private IBrush _background = Brushes.Transparent;
     public IBrush Background
     {
         get => _background;
         set => SetProperty(ref _background, value);
     }
-    
-    private FontWeight _fontWeight = FontWeight.Regular;
+
     public FontWeight FontWeight
     {
         get => _fontWeight;
         set => SetProperty(ref _fontWeight, value);
     }
 
-    private float _textOpacity = 1f;
-    
     public float TextOpacity
     {
         get => _textOpacity;
         set => SetProperty(ref _textOpacity, value);
     }
 
-    private IImage? _icon;
     public IImage? Icon
     {
         get => _icon;
@@ -55,8 +69,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     }
 
     public string Header => Name;
-    
-    private string _name;
+
     public string Name
     {
         get => _name;
@@ -69,18 +82,16 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         }
     }
 
-    private bool _loadingFailed;
     public bool LoadingFailed
     {
         get => _loadingFailed;
         set
         {
             SetProperty(ref _loadingFailed, value);
-            if(value) IsExpanded = false;
+            if (value) IsExpanded = false;
         }
     }
-        
-    private bool _isExpanded;
+
     public bool IsExpanded
     {
         get => _isExpanded;
@@ -99,7 +110,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get
         {
             if (this is IProjectRoot) return string.Empty;
-            
+
             var relativePath = Header;
             var tFolder = TopFolder;
             while (tFolder is not (IProjectRoot or null))
@@ -113,7 +124,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     }
 
     public virtual string FullPath => Path.Combine(Root.RootFolderPath, RelativePath);
-    
+
     public IProjectRoot Root
     {
         get
@@ -128,15 +139,14 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
             throw new NullReferenceException(nameof(Root));
         }
     }
-    
+
     public Action<Action<string>>? RequestRename { get; set; }
 
-    protected ProjectEntry(string name, IProjectFolder? topFolder)
+    public bool IsValid()
     {
-        _name = name;
-        TopFolder = topFolder;
+        return true;
     }
-    
+
     public virtual IEnumerable<MenuItemViewModel> GetContextMenu(IProjectExplorerService projectExplorerService)
     {
         yield return new MenuItemViewModel("OpenFileViewer")
@@ -146,10 +156,5 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
             IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
             Priority = 1000
         };
-    }
-    
-    public bool IsValid()
-    {
-        return true;
     }
 }

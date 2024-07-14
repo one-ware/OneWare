@@ -6,7 +6,6 @@
              xmlns:models="clr-namespace:OneWare.PackageManager.Models"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
-             xmlns:views="clr-namespace:OneWare.PackageManager.Views"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:packageManager="clr-namespace:OneWare.Essentials.PackageManager;assembly=OneWare.Essentials"

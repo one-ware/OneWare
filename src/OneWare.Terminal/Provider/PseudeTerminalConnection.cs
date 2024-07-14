@@ -1,79 +1,77 @@
 using VtNetCore.Avalonia;
 
-namespace OneWare.Terminal.Provider
+namespace OneWare.Terminal.Provider;
+
+public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IDisposable
 {
-    public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IDisposable
+    private CancellationTokenSource? _cancellationSource;
+
+    public bool IsConnected { get; private set; }
+
+    public event EventHandler<DataReceivedEventArgs>? DataReceived;
+
+    public event EventHandler<EventArgs>? Closed;
+
+    public bool Connect()
     {
-        private CancellationTokenSource? _cancellationSource;
-        private bool _isConnected;
+        _cancellationSource = new CancellationTokenSource();
 
-        public bool IsConnected => _isConnected;
-
-        public event EventHandler<DataReceivedEventArgs>? DataReceived;
-
-        public event EventHandler<EventArgs>? Closed;
-
-        public bool Connect()
+        _ = Task.Run(async () =>
         {
-            _cancellationSource = new CancellationTokenSource();
+            var data = new byte[4096];
 
-            _ = Task.Run(async () =>
+            while (!_cancellationSource.IsCancellationRequested)
             {
-                var data = new byte[4096];
+                var bytesReceived = await terminal.ReadAsync(data, 0, data.Length);
 
-                while (!_cancellationSource.IsCancellationRequested)
+                if (bytesReceived > 0)
                 {
-                    var bytesReceived = await terminal.ReadAsync(data, 0, data.Length);
+                    var receviedData = new byte[bytesReceived];
 
-                    if (bytesReceived > 0)
-                    {
-                        var receviedData = new byte[bytesReceived];
+                    Buffer.BlockCopy(data, 0, receviedData, 0, bytesReceived);
 
-                        Buffer.BlockCopy(data, 0, receviedData, 0, bytesReceived);
-
-                        DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = receviedData });
-                    }
-
-                    await Task.Delay(5);
+                    DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = receviedData });
                 }
-            }, _cancellationSource.Token);
 
-            _isConnected = true;
+                await Task.Delay(5);
+            }
+        }, _cancellationSource.Token);
 
-            terminal.Process.EnableRaisingEvents = true;
-            terminal.Process.Exited += Process_Exited;
+        IsConnected = true;
 
-            return _isConnected;
-        }
+        terminal.Process.EnableRaisingEvents = true;
+        terminal.Process.Exited += Process_Exited;
 
-        private void Process_Exited(object? sender, EventArgs e)
-        {
-            terminal.Process.Exited -= Process_Exited;
+        return IsConnected;
+    }
 
-            Closed?.Invoke(this, EventArgs.Empty);            
-        }
+    public void Disconnect()
+    {
+        _cancellationSource?.Cancel();
+        terminal.Dispose();
+    }
 
-        public void Disconnect()
-        {
-            _cancellationSource?.Cancel();
-            terminal.Dispose();
-        }
+    public void SendData(byte[] data)
+    {
+        _ = terminal.WriteAsync(data, 0, data.Length);
+    }
 
-        public void SendData(byte[] data)
-        {
-            _ = terminal.WriteAsync(data, 0, data.Length);
-        }
+    public void SetTerminalWindowSize(int columns, int rows, int width, int height)
+    {
+        terminal.SetSize(columns, rows);
+    }
 
-        public void SetTerminalWindowSize(int columns, int rows, int width, int height)
-        {
-            terminal.SetSize(columns, rows);
-        }
+    public void Dispose()
+    {
+        _cancellationSource?.Cancel();
 
-        public void Dispose()
-        {
-            _cancellationSource?.Cancel();
+        Disconnect();
+    }
 
-            Disconnect();
-        }
+    private void Process_Exited(object? sender, EventArgs e)
+    {
+        terminal.Process.Exited -= Process_Exited;
+
+        Closed?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -1,17 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OneWare.Essentials.Converters;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using OneWare.Updater.Views;
-using Prism.Ioc;
 
 namespace OneWare.Updater.ViewModels;
 
@@ -19,18 +12,36 @@ public enum UpdaterStatus
 {
     UpdateUnavailable,
     UpdateAvailable,
+    UpdatingPackages,
     Installing,
     RestartRequired
 }
 
 public class UpdaterViewModel : ObservableObject
 {
-    private readonly IHttpService _httpService;
-    private readonly IPaths _paths;
-    private readonly ILogger _logger;
     private readonly IApplicationStateService _applicationStateService;
-    
+    private readonly IHttpService _httpService;
+    private readonly ILogger _logger;
+    private readonly IPackageService _packageService;
+    private readonly IPaths _paths;
+    private readonly IWindowService _windowService;
+
+    private int _progress;
+
     private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
+
+    public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
+        IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
+    {
+        _httpService = httpService;
+        _paths = paths;
+        _logger = logger;
+        _applicationStateService = applicationStateService;
+        _packageService = packageService;
+        _windowService = windowService;
+
+        applicationStateService.RegisterShutdownAction(PerformRestartAction);
+    }
 
 
     public Version CurrentVersion => Assembly.GetEntryAssembly()!.GetName().Version!;
@@ -39,24 +50,17 @@ public class UpdaterViewModel : ObservableObject
 
     public string VersionInfo => $"{_paths.AppName} {CurrentVersion.ToString()}";
 
-    private int _progress;
-
     public int Progress
     {
         get => _progress;
         set => SetProperty(ref _progress, value);
     }
 
-    public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
-        IApplicationStateService applicationStateService)
+    public bool IsIndeterminate => Status switch
     {
-        _httpService = httpService;
-        _paths = paths;
-        _logger = logger;
-        _applicationStateService = applicationStateService;
-        
-        applicationStateService.RegisterShutdownAction(PerformRestartAction);
-    }
+        UpdaterStatus.UpdatingPackages => true,
+        _ => false
+    };
 
     public UpdaterStatus Status
     {
@@ -65,6 +69,7 @@ public class UpdaterViewModel : ObservableObject
         {
             SetProperty(ref _status, value);
             OnPropertyChanged(nameof(UpdateMessage));
+            OnPropertyChanged(nameof(IsIndeterminate));
         }
     }
 
@@ -73,6 +78,7 @@ public class UpdaterViewModel : ObservableObject
         UpdaterStatus.UpdateAvailable => $"Update {NewVersion} available!",
         UpdaterStatus.Installing => "Downloading update...",
         UpdaterStatus.RestartRequired => "Download finished. Restart to install.",
+        UpdaterStatus.UpdatingPackages => "Updating packages...",
         _ => "No updates available."
     };
 
@@ -80,9 +86,11 @@ public class UpdaterViewModel : ObservableObject
 
     private string DownloadLocation => PlatformHelper.Platform switch
     {
-        PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory, $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.msi"),
-        PlatformId.OsxX64 or PlatformId.OsxArm64 => Path.Combine(_paths.TempDirectory,  $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.dmg"),
-        _ => Path.Combine(_paths.TempDirectory,  $"{_paths.AppName}_{NewVersion}.zip"),
+        PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory,
+            $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.msi"),
+        PlatformId.OsxX64 or PlatformId.OsxArm64 => Path.Combine(_paths.TempDirectory,
+            $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.dmg"),
+        _ => Path.Combine(_paths.TempDirectory, $"{_paths.AppName}_{NewVersion}.zip")
     };
 
     public async Task<bool> CheckForUpdateAsync()
@@ -115,20 +123,70 @@ public class UpdaterViewModel : ObservableObject
                     Status = UpdaterStatus.UpdateAvailable;
                     return true;
                 }
-                else
-                {
-                    NewVersion = null;
-                    Status = UpdaterStatus.UpdateUnavailable;
-                }
+
+                NewVersion = null;
+                Status = UpdaterStatus.UpdateUnavailable;
             }
         }
 
         return false;
     }
 
-    public async Task DownloadUpdateAsync()
+    public async Task DownloadUpdateAsync(Control owner)
     {
         if (DownloadLink == null) return;
+        var topLevelWindow = TopLevel.GetTopLevel(owner) as Window;
+
+        Status = UpdaterStatus.UpdatingPackages;
+
+        var loadPackages = await _packageService.LoadPackagesAsync();
+
+        if (!loadPackages)
+        {
+            var resultContinue = await _windowService.ShowYesNoAsync("Warning", "Loading package updates failed",
+                MessageBoxIcon.Warning, topLevelWindow);
+
+            if (resultContinue != MessageBoxStatus.Yes)
+            {
+                Status = UpdaterStatus.UpdateAvailable;
+                return;
+            }
+        }
+
+        var updatablePackages = _packageService.Packages
+            .Select(x => x.Value)
+            .Where(x => x.Status == PackageStatus.UpdateAvailable)
+            .ToArray();
+
+        if (updatablePackages.Length > 0)
+        {
+            var updateString = string.Join('\n',
+                updatablePackages.Select(x => x.Package.Name + " -> " + x.Package.Versions!.Last().Version).ToArray());
+
+            var resultContinue = await _windowService.ShowYesNoCancelAsync("Update Packages",
+                $"There are package updates available:\n{updateString}\nIt is recommended to install these for compatibility! Do you want to update them now?",
+                MessageBoxIcon.Warning, topLevelWindow);
+
+            if (resultContinue == MessageBoxStatus.Canceled)
+            {
+                Status = UpdaterStatus.UpdateAvailable;
+                return;
+            }
+
+            if (resultContinue == MessageBoxStatus.Yes)
+            {
+                var updateTasks = updatablePackages.Select(x => x.UpdateAsync(x.Package.Versions!.Last()));
+
+                var updateResult = await Task.WhenAll(updateTasks);
+
+                if (!updateResult.All(x => true))
+                {
+                    _logger.Error("At least one package update have failed", null, true, true, topLevelWindow);
+                    Status = UpdaterStatus.UpdateAvailable;
+                    return;
+                }
+            }
+        }
 
         Status = UpdaterStatus.Installing;
 

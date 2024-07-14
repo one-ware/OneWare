@@ -9,15 +9,36 @@ namespace OneWare.Essentials.ViewModels;
 
 public abstract class ExtendedDocument : Document, IExtendedDocument
 {
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
+    private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-    public IRelayCommand? Undo { get; protected set; }
-    public IRelayCommand? Redo { get; protected set; }
+
+    private IFile? _currentFile;
+
+    private string _fullPath;
+
+    private bool _isDirty;
+
+    private bool _isLoading = true;
+
+    private bool _isReadOnly;
+
+    private bool _loadingFailed;
+
+    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService,
+        IDockService dockService, IWindowService windowService)
+    {
+        _fullPath = fullPath;
+        _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
+        _windowService = windowService;
+    }
 
     public IAsyncRelayCommand? TryClose { get; protected set; }
 
-    private string _fullPath;
+    public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Name}?";
+    public IRelayCommand? Undo { get; protected set; }
+    public IRelayCommand? Redo { get; protected set; }
 
     [DataMember]
     public string FullPath
@@ -30,15 +51,11 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         }
     }
 
-    private IFile? _currentFile;
-
     public IFile? CurrentFile
     {
         get => _currentFile;
         private set => SetProperty(ref _currentFile, value);
     }
-
-    private bool _isLoading = true;
 
     public bool IsLoading
     {
@@ -46,15 +63,11 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set => SetProperty(ref _isLoading, value);
     }
 
-    private bool _loadingFailed;
-
     public bool LoadingFailed
     {
         get => _loadingFailed;
         set => SetProperty(ref _loadingFailed, value);
     }
-
-    private bool _isReadOnly;
 
     public bool IsReadOnly
     {
@@ -62,45 +75,26 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set => SetProperty(ref _isReadOnly, value);
     }
 
-    private bool _isDirty;
-
     public bool IsDirty
     {
         get => _isDirty;
         protected set => SetProperty(ref _isDirty, value);
     }
 
-    public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Name}?";
-
-    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService, IWindowService windowService)
-    {
-        _fullPath = fullPath;
-        _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
-        _windowService = windowService;
-    }
-    
     public override bool OnClose()
     {
         if (IsDirty)
         {
-            if(CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
+            if (CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
             return false;
         }
-        else
-        {
-            if(CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
-            if(CurrentFile is ExternalFile externalFile) 
-                _projectExplorerService.RemoveTemporaryFile(externalFile);
-        }
+
+        if (CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
+        if (CurrentFile is ExternalFile externalFile)
+            _projectExplorerService.RemoveTemporaryFile(externalFile);
 
         Reset();
         return true;
-    }
-
-    protected virtual void Reset()
-    {
-        
     }
 
     public virtual async Task<bool> TryCloseAsync()
@@ -109,7 +103,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
         var result = await _windowService.ShowYesNoCancelAsync("Warning", CloseWarningMessage, MessageBoxIcon.Warning,
             _dockService.GetWindowOwner(this));
-        
+
         if (result == MessageBoxStatus.Yes)
         {
             if (await SaveAsync()) return true;
@@ -133,11 +127,17 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         var oldCurrentFile = CurrentFile;
         if (CurrentFile?.FullPath != FullPath)
         {
-            CurrentFile = _projectExplorerService.SearchFullPath(FullPath) as IFile ?? _projectExplorerService.GetTemporaryFile(FullPath);
+            CurrentFile = _projectExplorerService.SearchFullPath(FullPath) as IFile ??
+                          _projectExplorerService.GetTemporaryFile(FullPath);
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile.Name;
         }
+
         _dockService.OpenFiles.TryAdd(CurrentFile, this);
         UpdateCurrentFile(oldCurrentFile);
+    }
+
+    protected virtual void Reset()
+    {
     }
 
     protected abstract void UpdateCurrentFile(IFile? oldFile);

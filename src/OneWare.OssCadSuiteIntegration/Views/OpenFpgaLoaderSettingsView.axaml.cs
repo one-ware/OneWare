@@ -1,7 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using OneWare.Essentials.Controls;
+﻿using OneWare.Essentials.Controls;
 
 namespace OneWare.OssCadSuiteIntegration.Views;
 

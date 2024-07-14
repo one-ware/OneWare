@@ -14,348 +14,328 @@ using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
-using Prism.Ioc;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Prism.Ioc;
 
-namespace OneWare.Core.Services
+namespace OneWare.Core.Services;
+
+public class DockService : Factory, IDockService
 {
-    public class DockService : Factory, IDockService
+    private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
+    private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
+    private readonly Dictionary<string, Type> _documentViewRegistrations = new();
+    private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
+
+    private readonly IPaths _paths;
+    private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
+
+    public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new();
+
+    private IExtendedDocument? _currentDocument;
+
+    private IDisposable? _lastSub;
+
+    private RootDock? _layout;
+
+    public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
+        MainDocumentDockViewModel mainDocumentDockViewModel)
     {
-        private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
+        _paths = paths;
+        _welcomeScreenViewModel = welcomeScreenViewModel;
+        _mainDocumentDockViewModel = mainDocumentDockViewModel;
 
-        public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new ();
-        private readonly Dictionary<string, Type> _documentViewRegistrations = new ();
-        private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
-        
-        private readonly IPaths _paths;
-        private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
-        private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
-        public Dictionary<IFile,IExtendedDocument> OpenFiles { get; } = new();
-        public event PropertyChangedEventHandler? PropertyChanged;
+        _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
-        private IDisposable? _lastSub = null;
-        
-        private RootDock? _layout;
-        public RootDock? Layout
-        {
-            get => _layout;
-            set
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View",
+            new MenuItemViewModel("ResetLayout")
             {
-                if (value == _layout) return;
-                _layout = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Layout)));
-
-                _lastSub?.Dispose();
-                _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
-                {
-                    if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
-                });
+                Header = "Reset Layout",
+                Command = new RelayCommand(ResetLayout)
             }
-        }
-        
-        private IExtendedDocument? _currentDocument;
-        public IExtendedDocument? CurrentDocument
+        );
+    }
+
+    public Dictionary<IFile, IExtendedDocument> OpenFiles { get; } = new();
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public RootDock? Layout
+    {
+        get => _layout;
+        set
         {
-            get => _currentDocument;
-            set
+            if (value == _layout) return;
+            _layout = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Layout)));
+
+            _lastSub?.Dispose();
+            _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
             {
-                if (value == _currentDocument) return;
-                _currentDocument = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
-            }
+                if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
+            });
+        }
+    }
+
+    public IExtendedDocument? CurrentDocument
+    {
+        get => _currentDocument;
+        set
+        {
+            if (value == _currentDocument) return;
+            _currentDocument = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
+        }
+    }
+
+    public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument
+    {
+        foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
+    }
+
+    public void RegisterLayoutExtension<T>(DockShowLocation location)
+    {
+        LayoutRegistrations.TryAdd(location, new List<Type>());
+        LayoutRegistrations[location].Add(typeof(T));
+    }
+
+    public async Task<IExtendedDocument> OpenFileAsync(IFile pf)
+    {
+        if (OpenFiles.ContainsKey(pf))
+        {
+            Show(OpenFiles[pf]);
+
+            return OpenFiles[pf];
         }
 
-        public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel, MainDocumentDockViewModel mainDocumentDockViewModel)
-        {
-            _paths = paths;
-            _welcomeScreenViewModel = welcomeScreenViewModel;
-            _mainDocumentDockViewModel = mainDocumentDockViewModel;
-            
-            _documentViewRegistrations.Add("*", typeof(EditViewModel));
+        _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
+        type ??= typeof(EditViewModel);
+        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
 
-            windowService.RegisterMenuItem("MainWindow_MainMenu/View", 
-                new MenuItemViewModel("ResetLayout")
-                {
-                    Header = "Reset Layout",
-                    Command = new RelayCommand(ResetLayout),
-                }
-            );
+        if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
+
+        Show(viewModel, DockShowLocation.Document);
+
+        if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false)
+            _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
+
+        if (viewModel is EditViewModel evm) await evm.WaitForEditorReadyAsync();
+
+        return viewModel;
+    }
+
+    public async Task<bool> CloseFileAsync(IFile pf)
+    {
+        if (OpenFiles.ContainsKey(pf))
+        {
+            var vm = OpenFiles[pf];
+            if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
+            OpenFiles.Remove(pf);
+            CloseDockable(vm);
         }
 
-        public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument
+        return true;
+    }
+
+    public Window? GetWindowOwner(IDockable? dockable)
+    {
+        while (dockable != null)
         {
-            foreach (var extension in extensions)
+            if (dockable is IRootDock { Window.Host: Window host }) return host;
+            dockable = dockable.Owner;
+        }
+
+        return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            ? ContainerLocator.Container.Resolve<MainWindow>()
+            : null;
+    }
+
+    public IDockable? SearchView(IDockable instance, IDockable? layout = null)
+    {
+        layout ??= Layout;
+
+        if (layout is IDock { VisibleDockables: not null } dock)
+            foreach (var dockable in dock.VisibleDockables)
             {
-                _documentViewRegistrations.TryAdd(extension, typeof(T));
-            }
-        }
-
-        public void RegisterLayoutExtension<T>(DockShowLocation location)
-        {
-            LayoutRegistrations.TryAdd(location, new List<Type>());
-            LayoutRegistrations[location].Add(typeof(T));
-        }
-        
-        public async Task<IExtendedDocument> OpenFileAsync(IFile pf)
-        {
-            if (OpenFiles.ContainsKey(pf))
-            {
-                Show(OpenFiles[pf]);
-
-                return OpenFiles[pf];
-            }
-
-            _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
-            type ??= typeof(EditViewModel);
-            var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
-            
-            if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
-
-            Show(viewModel, DockShowLocation.Document);
-            
-            if (_mainDocumentDockViewModel.VisibleDockables?.Contains(_welcomeScreenViewModel) ?? false) 
-                _mainDocumentDockViewModel.VisibleDockables.Remove(_welcomeScreenViewModel);
-            
-            if (viewModel is EditViewModel evm)
-            {
-                await evm.WaitForEditorReadyAsync();
-            }
-            
-            return viewModel;
-        }
-
-        public async Task<bool> CloseFileAsync(IFile pf)
-        {
-            if (OpenFiles.ContainsKey(pf))
-            {
-                var vm = OpenFiles[pf];
-                if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
-                OpenFiles.Remove(pf);
-                CloseDockable(vm);
-            }
-            return true;
-        }
-
-        public override void OnDockableClosed(IDockable? dockable)
-        {
-            base.OnDockableClosed(dockable);
-            if (dockable == CurrentDocument) CurrentDocument = null;
-        }
-
-        public Window? GetWindowOwner(IDockable? dockable)
-        {
-            while (dockable != null)
-            {
-                if (dockable is IRootDock { Window.Host: Window host }) return host;
-                dockable = dockable.Owner;
-            }
-            return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime ? ContainerLocator.Container.Resolve<MainWindow>() : null;
-        }
-
-        public void ResetLayout()
-        {
-            LoadLayout("Default", true);
-        }
-
-        public override void InitLayout(IDockable layout)
-        {
-            OpenFiles.Clear();
-
-            ContextLocator = new Dictionary<string, Func<object?>>();
-            HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
-            {
-                [nameof(IDockWindow)] = () => ContainerLocator.Container.Resolve<AdvancedHostWindow>()
-            };
-            DockableLocator = new Dictionary<string, Func<IDockable?>>();
-
-            base.InitLayout(layout);
-        }
-        
-        public IDockable? SearchView(IDockable instance, IDockable? layout = null)
-        {
-            layout ??= Layout;
-
-            if (layout is IDock {VisibleDockables: not null} dock)
-            {
-                foreach (var dockable in dock.VisibleDockables)
-                {
-                    if (dockable is IDock sub)
-                    {
-                        if (SearchView(instance, sub) is { } result) return result;
-                    }
-                    if (dockable == instance) return dockable;
-                }
+                if (dockable is IDock sub)
+                    if (SearchView(instance, sub) is { } result)
+                        return result;
+                if (dockable == instance) return dockable;
             }
 
-            if (layout is not IRootDock {Windows: not null} rootDock) return null;
-            foreach (var win in rootDock.Windows)
+        if (layout is not IRootDock { Windows: not null } rootDock) return null;
+        foreach (var win in rootDock.Windows)
+            if (SearchView(instance, win.Layout) is { } result)
+                return result;
+
+        return null;
+    }
+
+    public IEnumerable<T> SearchView<T>(IDockable? layout = null)
+    {
+        layout ??= Layout;
+
+        if (layout is IDock { VisibleDockables: not null } dock)
+            foreach (var dockable in dock.VisibleDockables)
             {
-                if (SearchView(instance, win.Layout) is { } result) return result;
-            }
-
-            return null;
-        }
-
-        public IEnumerable<T> SearchView<T>(IDockable? layout = null)
-        {
-            layout ??= Layout;
-
-            if (layout is IDock {VisibleDockables: not null} dock)
-            {
-                foreach (var dockable in dock.VisibleDockables)
-                {
-                    if (dockable is IDock sub)
-                    {
-                        foreach (var b in SearchView<T>(sub))
-                        {
-                            yield return b;
-                        }
-                    }
-                    if (dockable is T t)
-                        yield return t;
-                }
-            }
-
-            if (layout is not IRootDock { Windows: not null } rootDock) yield break;
-            foreach (var win in rootDock.Windows)
-            {
-                foreach (var c in  SearchView<T>(win.Layout))
-                {
-                    yield return c;
-                }
-                if (win is T t)
+                if (dockable is IDock sub)
+                    foreach (var b in SearchView<T>(sub))
+                        yield return b;
+                if (dockable is T t)
                     yield return t;
             }
-        }
 
-        #region ShowWindows
-
-        public void Show<T>(DockShowLocation location = DockShowLocation.Window) where T : IDockable
+        if (layout is not IRootDock { Windows: not null } rootDock) yield break;
+        foreach (var win in rootDock.Windows)
         {
-            Show(ContainerLocator.Container.Resolve<T>(), location);
+            foreach (var c in SearchView<T>(win.Layout)) yield return c;
+            if (win is T t)
+                yield return t;
         }
-        
-        public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
-        {
-            //Check if dockable already exists
-            if (SearchView(dockable) is { } result)
-            {
-                SetActiveDockable(result);
-                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-                {
-                    var ownerWindow = GetWindowOwner(dockable);
-                    if(ownerWindow != null) Dispatcher.UIThread.Post(ownerWindow.Activate);
-                }
-                return;
-            }
-            
-            if (location == DockShowLocation.Document)
-            {
-                _mainDocumentDockViewModel.VisibleDockables?.Add(dockable);
-                InitActiveDockable(dockable, _mainDocumentDockViewModel);
-                SetActiveDockable(dockable);
-            }
-            else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var window = CreateWindowFrom(dockable);
-
-                    if (Layout == null) throw new NullReferenceException(nameof(Layout));
-                
-                    if (window != null)
-                    {
-                        var mainWindow = ContainerLocator.Current.Resolve<MainWindow>();
-                        AddWindow(Layout, window);
-                        window.Height = 400;
-                        window.Width = 600;
-                        window.X = mainWindow.Position.X + mainWindow.Width / 2 - window.Width / 2;
-                        window.Y = mainWindow.Position.Y + mainWindow.Height / 2 - window.Height / 2;
-                        window.Topmost = false;
-                        window.Present(false);
-                        SetActiveDockable(dockable);
-                        if (window.Host is Window win)
-                        {
-                            win.Topmost = false;
-                        }
-                    }
-                });
-            }
-            if (dockable is IWaitForContent wC)
-            {
-                wC.InitializeContent();
-            }
-        }
-
-        #endregion
-        
-        
-        #region LayoutLoading
-
-        public void LoadLayout(string name, bool reset = false)
-        {
-            RootDock? layout = null;
-
-            if (!reset && layout == null) //Docking system load
-            {
-                try
-                {
-                    var layoutPath = Path.Combine(_paths.LayoutDirectory, name + ".json");
-                    if (File.Exists(layoutPath))
-                    {
-                        using var stream = File.OpenRead(layoutPath);
-                        layout = Serializer.Load<RootDock>(stream);
-                    }
-                }
-                catch(Exception e)
-                {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log("Could not load layout from file! Loading default layout..." + e , ConsoleColor.Red);
-                }
-            }
-
-            if (layout == null)
-            {
-                layout = name switch
-                {
-                    _ => DefaultLayout.GetDefaultLayout(this)
-                };
-                OpenFiles.Clear();
-                Show(_welcomeScreenViewModel, DockShowLocation.Document);
-            }
-
-            layout.Id = name;
-
-            InitLayout(layout);
-
-            Layout = layout;
-        }
-        
-        public void SaveLayout()
-        {
-            if (Layout == null) return;
-            
-            Directory.CreateDirectory(_paths.LayoutDirectory);
-            
-            using var stream = File.OpenWrite(Path.Combine(_paths.LayoutDirectory, Layout.Id + ".json"));
-            stream.SetLength(0);
-
-            Layout.FocusedDockable = null;
-            
-            Serializer.Save(stream, Layout);
-        }
-
-        public void InitializeContent()
-        {
-            var extendedDocs = SearchView<IWaitForContent>();
-            foreach (var extendedDocument in extendedDocs)
-            {
-                extendedDocument.InitializeContent();
-            }
-        }
-
-        #endregion
     }
+
+    public override void OnDockableClosed(IDockable? dockable)
+    {
+        base.OnDockableClosed(dockable);
+        if (dockable == CurrentDocument) CurrentDocument = null;
+    }
+
+    public void ResetLayout()
+    {
+        LoadLayout("Default", true);
+    }
+
+    public override void InitLayout(IDockable layout)
+    {
+        OpenFiles.Clear();
+
+        ContextLocator = new Dictionary<string, Func<object?>>();
+        HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
+        {
+            [nameof(IDockWindow)] = () => ContainerLocator.Container.Resolve<AdvancedHostWindow>()
+        };
+        DockableLocator = new Dictionary<string, Func<IDockable?>>();
+
+        base.InitLayout(layout);
+    }
+
+    #region ShowWindows
+
+    public void Show<T>(DockShowLocation location = DockShowLocation.Window) where T : IDockable
+    {
+        Show(ContainerLocator.Container.Resolve<T>(), location);
+    }
+
+    public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
+    {
+        //Check if dockable already exists
+        if (SearchView(dockable) is { } result)
+        {
+            SetActiveDockable(result);
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                var ownerWindow = GetWindowOwner(dockable);
+                if (ownerWindow != null) Dispatcher.UIThread.Post(ownerWindow.Activate);
+            }
+
+            return;
+        }
+
+        if (location == DockShowLocation.Document)
+        {
+            _mainDocumentDockViewModel.VisibleDockables?.Add(dockable);
+            InitActiveDockable(dockable, _mainDocumentDockViewModel);
+            SetActiveDockable(dockable);
+        }
+        else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var window = CreateWindowFrom(dockable);
+
+                if (Layout == null) throw new NullReferenceException(nameof(Layout));
+
+                if (window != null)
+                {
+                    var mainWindow = ContainerLocator.Current.Resolve<MainWindow>();
+                    AddWindow(Layout, window);
+                    window.Height = 400;
+                    window.Width = 600;
+                    window.X = mainWindow.Position.X + mainWindow.Width / 2 - window.Width / 2;
+                    window.Y = mainWindow.Position.Y + mainWindow.Height / 2 - window.Height / 2;
+                    window.Topmost = false;
+                    window.Present(false);
+                    SetActiveDockable(dockable);
+                    if (window.Host is Window win) win.Topmost = false;
+                }
+            });
+        }
+
+        if (dockable is IWaitForContent wC) wC.InitializeContent();
+    }
+
+    #endregion
+
+
+    #region LayoutLoading
+
+    public void LoadLayout(string name, bool reset = false)
+    {
+        RootDock? layout = null;
+
+        if (!reset && layout == null) //Docking system load
+            try
+            {
+                var layoutPath = Path.Combine(_paths.LayoutDirectory, name + ".json");
+                if (File.Exists(layoutPath))
+                {
+                    using var stream = File.OpenRead(layoutPath);
+                    layout = Serializer.Load<RootDock>(stream);
+                }
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    ?.Log("Could not load layout from file! Loading default layout..." + e, ConsoleColor.Red);
+            }
+
+        if (layout == null)
+        {
+            layout = name switch
+            {
+                _ => DefaultLayout.GetDefaultLayout(this)
+            };
+            OpenFiles.Clear();
+            Show(_welcomeScreenViewModel, DockShowLocation.Document);
+        }
+
+        layout.Id = name;
+
+        InitLayout(layout);
+
+        Layout = layout;
+    }
+
+    public void SaveLayout()
+    {
+        if (Layout == null) return;
+
+        Directory.CreateDirectory(_paths.LayoutDirectory);
+
+        using var stream = File.OpenWrite(Path.Combine(_paths.LayoutDirectory, Layout.Id + ".json"));
+        stream.SetLength(0);
+
+        Layout.FocusedDockable = null;
+
+        Serializer.Save(stream, Layout);
+    }
+
+    public void InitializeContent()
+    {
+        var extendedDocs = SearchView<IWaitForContent>();
+        foreach (var extendedDocument in extendedDocs) extendedDocument.InitializeContent();
+    }
+
+    #endregion
 }

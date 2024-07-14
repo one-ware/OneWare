@@ -5,24 +5,12 @@ namespace OneWare.Core.ViewModels.Windows;
 
 public class ChangelogViewModel : FlexibleWindowViewModelBase
 {
-    private readonly IHttpService _httpService;
-    
-    private bool _isLoading;
-    
     private readonly string _changelogUrl;
+    private readonly IHttpService _httpService;
 
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
-    
     private string? _changeLog;
-    public string? ChangeLog
-    {
-        get => _changeLog;
-        set => SetProperty(ref _changeLog, value);
-    }
+
+    private bool _isLoading;
 
     public ChangelogViewModel(IPaths paths, IHttpService httpService)
     {
@@ -31,6 +19,18 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
         Id = "Changelog";
         _changelogUrl = paths.ChangelogUrl;
         _ = LoadAsync();
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
+    }
+
+    public string? ChangeLog
+    {
+        get => _changeLog;
+        set => SetProperty(ref _changeLog, value);
     }
 
     private async Task LoadAsync()
@@ -43,12 +43,9 @@ public class ChangelogViewModel : FlexibleWindowViewModelBase
         {
             var split = text.Split("---");
 
-            if (split.Length > 0)
-            {
-                ChangeLog = split.Last();
-            }
+            if (split.Length > 0) ChangeLog = split.Last();
         }
-        
+
         IsLoading = false;
     }
 }

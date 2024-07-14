@@ -1,5 +1,4 @@
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.IceBreaker;
 

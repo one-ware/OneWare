@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Controls;
@@ -8,16 +7,16 @@ namespace OneWare.Essentials.Controls;
 public class UiExtensionControl : ContentControl
 {
     public static readonly StyledProperty<object?> ContextProperty =
-        AvaloniaProperty.Register<UiExtensionControl, object?>(nameof(Context), null, false, BindingMode.OneWay);
+        AvaloniaProperty.Register<UiExtensionControl, object?>(nameof(Context));
+
+    public static readonly StyledProperty<UiExtension?> UiExtensionProperty =
+        AvaloniaProperty.Register<UiExtensionControl, UiExtension?>(nameof(UiExtension));
 
     public object? Context
     {
         get => GetValue(ContextProperty);
         set => SetValue(ContextProperty, value);
     }
-
-    public static readonly StyledProperty<UiExtension?> UiExtensionProperty =
-        AvaloniaProperty.Register<UiExtensionControl, UiExtension?>(nameof(UiExtension));
 
     public UiExtension? UiExtension
     {
@@ -26,21 +25,15 @@ public class UiExtensionControl : ContentControl
     }
 
     protected override Type StyleKeyOverride => typeof(ContentControl);
-    
+
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        
-        if (change.Property == UiExtensionProperty)
-        {
-            ConstructContent();
-        }
 
-        if (change.Property == ContextProperty)
-        {
-            ConstructContent();
-        }
+        if (change.Property == UiExtensionProperty) ConstructContent();
+
+        if (change.Property == ContextProperty) ConstructContent();
     }
 
     protected override void OnInitialized()
@@ -58,10 +51,6 @@ public class UiExtensionControl : ContentControl
         }
 
         var extension = UiExtension.CreateUiExtension(Context);
-        if (extension != null)
-        {
-            Content = extension;
-        }
-           
+        if (extension != null) Content = extension;
     }
 }

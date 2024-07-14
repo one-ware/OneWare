@@ -11,8 +11,8 @@ public class FileWatchService : IFileWatchService
 
     public void Register(IFile file)
     {
-        if(RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
-        
+        if (RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
+
         if (_fileWatchInstances.ContainsKey(file)) return;
         _fileWatchInstances.Add(file, ContainerLocator.Container.Resolve<FileWatchInstance>((file.GetType(), file)));
     }
@@ -26,10 +26,11 @@ public class FileWatchService : IFileWatchService
 
     public void Register(IProjectRoot project)
     {
-        if(RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
-        
+        if (RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
+
         if (_projectFileWatcher.ContainsKey(project)) return;
-        _projectFileWatcher.Add(project, ContainerLocator.Container.Resolve<ProjectWatchInstance>((project.GetType(), project)));
+        _projectFileWatcher.Add(project,
+            ContainerLocator.Container.Resolve<ProjectWatchInstance>((project.GetType(), project)));
     }
 
     public void Unregister(IProjectRoot project)

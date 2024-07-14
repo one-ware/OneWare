@@ -25,8 +25,8 @@ internal abstract class Program
             .With(new Win32PlatformOptions
             {
                 WinUICompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                    ? (Environment.OSVersion.Version.Build >= 22000 ? 8 : 0)
-                    : 0,
+                    ? Environment.OSVersion.Version.Build >= 22000 ? 8 : 0
+                    : 0
             })
             //.WithInterFont()
             .With(new FontManagerOptions
@@ -35,7 +35,8 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog")) app.UseManagedSystemDialogs();
+        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
+            app.UseManagedSystemDialogs();
 
         return app;
     }
@@ -49,9 +50,10 @@ internal abstract class Program
         }
         catch (Exception ex)
         {
-            var crashReport = $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
-            
-            if(ContainerLocator.Container.IsRegistered<ILogger>())
+            var crashReport =
+                $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
+
+            if (ContainerLocator.Container.IsRegistered<ILogger>())
                 ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
             else Console.WriteLine(crashReport);
 

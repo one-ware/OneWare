@@ -12,7 +12,7 @@ public class TextModificationSegment : TextSegment
     }
 
     public IBrush? Foreground { get; set; }
-    
+
     public IBrush? Background { get; set; }
 
     public TextDecorationCollection? Decorations { get; set; }

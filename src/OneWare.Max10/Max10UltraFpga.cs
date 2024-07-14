@@ -1,6 +1,4 @@
-﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
-
-namespace OneWare.Max10;
+﻿namespace OneWare.Max10;
 
 public class Max10UltraFpga : Max10Fpga
 {

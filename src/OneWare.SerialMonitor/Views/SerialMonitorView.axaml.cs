@@ -1,24 +1,23 @@
 ﻿using Avalonia.Input;
 using Avalonia.Interactivity;
-using OneWare.SerialMonitor.ViewModels;
 using OneWare.Output.Views;
+using OneWare.SerialMonitor.ViewModels;
 
-namespace OneWare.SerialMonitor.Views
+namespace OneWare.SerialMonitor.Views;
+
+public partial class SerialMonitorView : OutputBaseView
 {
-    public partial class SerialMonitorView : OutputBaseView
+    public SerialMonitorView()
     {
-        public SerialMonitorView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            CommandBox.AddHandler(KeyDownEvent, (sender, args) =>
+        CommandBox.AddHandler(KeyDownEvent, (sender, args) =>
+        {
+            if (DataContext is SerialMonitorBaseViewModel vm)
             {
-                if (DataContext is SerialMonitorBaseViewModel vm)
-                {
-                    if (args.Key == Key.Up) vm.InsertUp();
-                    else if (args.Key == Key.Down) vm.InsertDown();
-                }
-            }, RoutingStrategies.Direct);
-        }
+                if (args.Key == Key.Up) vm.InsertUp();
+                else if (args.Key == Key.Down) vm.InsertDown();
+            }
+        }, RoutingStrategies.Direct);
     }
 }

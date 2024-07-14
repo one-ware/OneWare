@@ -11,7 +11,7 @@ public partial class UniversalFpgaProjectCompileView : FlexibleWindow
 
         VisiblePinDataGrid.WhenValueChanged(x => x.SelectedItem).Subscribe(x =>
         {
-            if(x is not null) VisiblePinDataGrid.ScrollIntoView(x, null);
+            if (x is not null) VisiblePinDataGrid.ScrollIntoView(x, null);
         });
     }
 }

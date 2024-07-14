@@ -9,7 +9,7 @@
     <UserControl.Styles>
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
-    
+
     <Grid ColumnDefinitions="*, 244">
         <Border Classes="CruviExtension" Grid.Column="1" Background="#303030" Width="244" HorizontalAlignment="Right">
             <Border.ContextMenu>

@@ -1,6 +1,4 @@
-﻿using DynamicData;
-using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Services;
+﻿using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -22,9 +20,9 @@ public class VhdlBlinkSimulationTemplate(ILogger logger, IDockService dockServic
             var file = root.AddFile(name + ".vhd");
 
             root.TopEntity = file;
-            
+
             var file2 = root.AddFile(name + "_tb.vhd");
-            
+
             root.RegisterTestBench(file2);
 
             _ = dockService.OpenFileAsync(file);

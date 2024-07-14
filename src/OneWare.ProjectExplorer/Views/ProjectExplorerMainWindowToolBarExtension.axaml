@@ -7,9 +7,11 @@
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="30"
-             x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerMainWindowToolBarExtension" x:DataType="viewModels:ProjectExplorerViewModel">
-    
-    <ComboBox Width="200" IsEnabled="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Idle}}"
+             x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerMainWindowToolBarExtension"
+             x:DataType="viewModels:ProjectExplorerViewModel">
+
+    <ComboBox Width="200"
+              IsEnabled="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Idle}}"
               BorderThickness="0"
               ItemsSource="{Binding Projects}"
               SelectedItem="{Binding ActiveProject}">

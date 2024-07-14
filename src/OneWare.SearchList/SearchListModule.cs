@@ -3,26 +3,25 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.SearchList;
 
 public class SearchListModule : IModule
 {
-    private readonly IWindowService _windowService;
     private readonly IDockService _dockService;
-    
+    private readonly IWindowService _windowService;
+
     public SearchListModule(IWindowService windowService, IDockService dockService)
     {
         _windowService = windowService;
         _dockService = dockService;
     }
-    
+
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<SearchListViewModel>();

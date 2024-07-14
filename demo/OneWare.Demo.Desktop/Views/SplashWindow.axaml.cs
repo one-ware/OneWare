@@ -1,12 +1,11 @@
 ﻿using Avalonia.Controls;
 
-namespace OneWare.Demo.Desktop.Views
+namespace OneWare.Demo.Desktop.Views;
+
+public partial class SplashWindow : Window
 {
-    public partial class SplashWindow : Window
+    public SplashWindow()
     {
-        public SplashWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -8,6 +8,6 @@
              x:DataType="viewModels:IcarusVerilogSimulatorToolbarViewModel">
     <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
         <TextBlock Text="IVerilog Arguments:" />
-        <TextBox Classes="ToolBar" Width="200" Text="{Binding IcarusVerilogArguments}"/>
+        <TextBox Classes="ToolBar" Width="200" Text="{Binding IcarusVerilogArguments}" />
     </StackPanel>
 </UserControl>

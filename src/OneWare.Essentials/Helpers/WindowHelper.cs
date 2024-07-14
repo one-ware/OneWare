@@ -15,8 +15,9 @@ public class WindowHelper
     {
         if (unsavedFiles.Count > 0)
         {
-            var status = await ContainerLocator.Container.Resolve<IWindowService>().ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning, dialogOwner);
-                
+            var status = await ContainerLocator.Container.Resolve<IWindowService>()
+                .ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning, dialogOwner);
+
             if (status == MessageBoxStatus.Yes)
             {
                 for (var i = 0; i < unsavedFiles.Count; i++)

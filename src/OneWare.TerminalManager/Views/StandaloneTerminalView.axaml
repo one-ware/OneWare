@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.TerminalManager.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.TerminalManager.Views.StandaloneTerminalView" x:DataType="viewModels:StandaloneTerminalViewModel">
-    <ContentControl Content="{Binding Terminal}"/>
+             x:Class="OneWare.TerminalManager.Views.StandaloneTerminalView"
+             x:DataType="viewModels:StandaloneTerminalViewModel">
+    <ContentControl Content="{Binding Terminal}" />
 </UserControl>

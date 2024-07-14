@@ -4,10 +4,10 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:viewModels="clr-namespace:OneWare.ApplicationCommands.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                         xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
                          xmlns:models="clr-namespace:OneWare.ApplicationCommands.Models"
                          xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
                          xmlns:tabs="clr-namespace:OneWare.ApplicationCommands.Tabs"
+                         xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          x:Class="OneWare.ApplicationCommands.Views.CommandManagerView"
                          x:DataType="viewModels:CommandManagerViewModel"
@@ -22,89 +22,91 @@
                          UseLayoutRounding="True">
     <controls:FlexibleWindow.Styles>
         <Style Selector="controls|AdvancedWindow.PlatformLinux Border#WindowBorder">
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         </Style>
     </controls:FlexibleWindow.Styles>
     <Interaction.Behaviors>
-        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Escape" HandledEventsToo="True"
-                                                 Command="{Binding Close}"
-                                                 CommandParameter="{Binding #CommandManagerViewView}" />
-        <behaviours:CommandOnKeyPressedBehaviour TriggerKey="Enter" HandledEventsToo="False"
-                                                 Command="{Binding ExecuteSelection}"
-                                                 CommandParameter="{Binding #CommandManagerViewView}" />
-        <behaviours:CommandOnGesturePressedBehaviour TriggerGesture="{Binding ChangeShortcutGesture}" HandledEventsToo="False"
-                                                 Command="{Binding ChangeShortcutCommand}"
-                                                 CommandParameter="{Binding #CommandManagerViewView}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Escape" HandledEventsToo="True"
+                                               Command="{Binding Close}"
+                                               CommandParameter="{Binding #CommandManagerViewView}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
+                                               Command="{Binding ExecuteSelection}"
+                                               CommandParameter="{Binding #CommandManagerViewView}" />
+        <behaviors:CommandOnGesturePressedBehavior TriggerGesture="{Binding ChangeShortcutGesture}"
+                                                   HandledEventsToo="False"
+                                                   Command="{Binding ChangeShortcutCommand}"
+                                                   CommandParameter="{Binding #CommandManagerViewView}" />
     </Interaction.Behaviors>
     <Border Name="WindowBorder">
         <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
-        <TabControl.ItemTemplate>
-            <DataTemplate DataType="tabs:CommandManagerTabBase">
-                <TextBlock Text="{Binding Title}" />
-            </DataTemplate>
-        </TabControl.ItemTemplate>
-        <TabControl.ContentTemplate>
-            <DataTemplate DataType="tabs:CommandManagerTabBase">
-                <StackPanel Orientation="Vertical">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding SearchBarText}" 
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                   VerticalAlignment="Center" Margin="0 0 5 0"/>
-                        <TextBox DockPanel.Dock="Left" Name="SearchBox" AcceptsReturn="False" Text="{Binding SearchText}"
-                                 BorderThickness="0" CornerRadius="0" Padding="7 0"
-                                 Watermark="Find..." Height="25" VerticalContentAlignment="Center">
-                            <Interaction.Behaviors>
-                                <FocusOnAttachedToVisualTreeBehavior />
-                                <behaviours:ListBoxNavigationBehaviour AssociatedListBox="{Binding #ItemList}" />
-                            </Interaction.Behaviors>
-                        </TextBox>
-                    </DockPanel>
+            <TabControl.ItemTemplate>
+                <DataTemplate DataType="tabs:CommandManagerTabBase">
+                    <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate DataType="tabs:CommandManagerTabBase">
+                    <StackPanel Orientation="Vertical">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding SearchBarText}"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                       VerticalAlignment="Center" Margin="0 0 5 0" />
+                            <TextBox DockPanel.Dock="Left" Name="SearchBox" AcceptsReturn="False"
+                                     Text="{Binding SearchText}"
+                                     BorderThickness="0" CornerRadius="0" Padding="7 0"
+                                     Watermark="Find..." Height="25" VerticalContentAlignment="Center">
+                                <Interaction.Behaviors>
+                                    <FocusOnAttachedToVisualTreeBehavior />
+                                    <behaviors:ListBoxNavigationBehavior AssociatedListBox="{Binding #ItemList}" />
+                                </Interaction.Behaviors>
+                            </TextBox>
+                        </DockPanel>
 
-                    <Border Background="{DynamicResource ThemeControlLowBrush}"
-                            BorderThickness="0"
-                            CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}">
-                        <ListBox BorderThickness="0 1 0 0"
-                                 BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                                 ItemsSource="{Binding VisibleItems}"
-                                 SelectedItem="{Binding SelectedItem}"
-                                 IsVisible="{Binding VisibleItems.Count}"
-                                 Margin="0" MaxHeight="500"
-                                 Name="ItemList" Padding="0">
-                            <ListBox.Styles>
-                                <Style Selector="ListBoxItem" x:DataType="models:CommandManagerItemModel">
-                                    <Setter Property="IsEnabled" Value="{Binding IsEnabled}"></Setter>
-                                </Style>
-                                <Style Selector="ListBox ScrollContentPresenter">
-                                    <Setter Property="CornerRadius"
-                                            Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
-                                </Style>
-                                <Style Selector="ListBoxItem:nth-last-child(1)">
-                                    <Setter Property="CornerRadius"
-                                            Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
-                                </Style>
-                            </ListBox.Styles>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="models:CommandManagerItemModel">
-                                    <DockPanel VerticalAlignment="Center" Margin="3 0">
-                                        <Image DockPanel.Dock="Left" VerticalAlignment="Center"
-                                               Source="{Binding Command.Icon}"
-                                               Width="{Binding #CompletionName.Bounds.Height}"
-                                               Height="{Binding #CompletionName.Bounds.Height}" />
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Command.ActiveGesture}"
-                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0"
-                                                   Name="CompletionName"
-                                                   Margin="4,0,0,0" Text="{Binding Command.Name}"
-                                                   Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Border>
-                </StackPanel>
-            </DataTemplate>
-        </TabControl.ContentTemplate>
-    </TabControl>
+                        <Border Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderThickness="0"
+                                CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}">
+                            <ListBox BorderThickness="0 1 0 0"
+                                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                     ItemsSource="{Binding VisibleItems}"
+                                     SelectedItem="{Binding SelectedItem}"
+                                     IsVisible="{Binding VisibleItems.Count}"
+                                     Margin="0" MaxHeight="500"
+                                     Name="ItemList" Padding="0">
+                                <ListBox.Styles>
+                                    <Style Selector="ListBoxItem" x:DataType="models:CommandManagerItemModel">
+                                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                                    </Style>
+                                    <Style Selector="ListBox ScrollContentPresenter">
+                                        <Setter Property="CornerRadius"
+                                                Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
+                                    </Style>
+                                    <Style Selector="ListBoxItem:nth-last-child(1)">
+                                        <Setter Property="CornerRadius"
+                                                Value="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}" />
+                                    </Style>
+                                </ListBox.Styles>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="models:CommandManagerItemModel">
+                                        <DockPanel VerticalAlignment="Center" Margin="3 0">
+                                            <Image DockPanel.Dock="Left" VerticalAlignment="Center"
+                                                   Source="{Binding Command.Icon}"
+                                                   Width="{Binding #CompletionName.Bounds.Height}"
+                                                   Height="{Binding #CompletionName.Bounds.Height}" />
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Command.ActiveGesture}"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Padding="0"
+                                                       Name="CompletionName"
+                                                       Margin="4,0,0,0" Text="{Binding Command.Name}"
+                                                       Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
     </Border>
 </controls:FlexibleWindow>

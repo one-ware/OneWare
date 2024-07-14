@@ -4,21 +4,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Settings.Views.SettingTypes.SliderSettingView" x:DataType="settingTypes:SliderSettingViewModel">
+             x:Class="OneWare.Settings.Views.SettingTypes.SliderSettingView"
+             x:DataType="settingTypes:SliderSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />
         <DockPanel>
-            <TextBox DockPanel.Dock="Right" 
+            <TextBox DockPanel.Dock="Right"
                      Width="100"
-                     Text="{Binding Setting.Value}"/>
+                     Text="{Binding Setting.Value}" />
             <Slider DockPanel.Dock="Left"
-                    Minimum="{Binding Setting.Min}" 
+                    Minimum="{Binding Setting.Min}"
                     Maximum="{Binding Setting.Max}"
                     Value="{Binding Setting.Value}"
                     TickFrequency="{Binding Setting.Step}"
                     IsSnapToTickEnabled="True"
-                    TickPlacement="None"/>
+                    TickPlacement="None" />
         </DockPanel>
     </StackPanel>
 </UserControl>

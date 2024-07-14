@@ -3,10 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
-             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
-             xmlns:behaviours1="clr-namespace:OneWare.ProjectExplorer.Behaviours"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -17,7 +17,7 @@
              BorderThickness="0">
 
     <UserControl.Resources>
-        <behaviours1:ProjectExplorerViewDropHandler x:Key="ProjectExplorerViewDropHandler" />
+        <behaviors1:ProjectExplorerViewDropHandler x:Key="ProjectExplorerViewDropHandler" />
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -51,8 +51,8 @@
                   ItemsSource="{Binding Projects}">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
-                <behaviours:CommandOnPasteBehaviour Command="{Binding PasteAsync}" />
-                <behaviours:CommandOnCopyBehaviour Command="{Binding CopyAsync}" />
+                <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
+                <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
             </Interaction.Behaviors>
             <TreeView.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
@@ -65,7 +65,7 @@
                     <Setter Property="Interaction.Behaviors">
                         <BehaviorCollectionTemplate>
                             <BehaviorCollection>
-                                <behaviours1:TreeDragBehaviour />
+                                <behaviors1:TreeDragBehavior />
                             </BehaviorCollection>
                         </BehaviorCollectionTemplate>
                     </Setter>
@@ -91,7 +91,7 @@
 
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
                             <Interaction.Behaviors>
-                                <behaviours:CommandOnDoubleTapBehaviour
+                                <behaviors:CommandOnDoubleTapBehavior
                                     Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                     CommandParameter="{Binding}" />
                             </Interaction.Behaviors>

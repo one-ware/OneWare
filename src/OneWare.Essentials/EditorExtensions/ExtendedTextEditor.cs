@@ -12,21 +12,6 @@ namespace OneWare.Essentials.EditorExtensions;
 
 public class ExtendedTextEditor : TextEditor
 {
-    protected override Type StyleKeyOverride => typeof(TextEditor);
-    
-    public TextMate.Installation? TextMateInstallation { get; private set; }
-    public BracketHighlightRenderer BracketRenderer { get; }
-    public LineHighlightRenderer LineRenderer { get; }
-    //public MergeService MergeService { get; }
-    public WordHighlightRenderer WordRenderer { get; }
-    public TextMarkerService MarkerService { get; }
-    
-    public TextModificationService ModificationService { get; }
-   // private ElementGenerator ElementGenerator { get; }
-    public FoldingManager? FoldingManager { get; private set; }
-    
-    public InlayHintGenerator InlayHintGenerator { get; }
-    
     public ExtendedTextEditor()
     {
         // //Avoid Styles to improve performance
@@ -40,7 +25,7 @@ public class ExtendedTextEditor : TextEditor
         Options.AllowScrollBelowDocument = true;
         Options.ConvertTabsToSpaces = true;
         Options.AllowToggleOverstrikeMode = true;
-        
+
         TextArea.TextView.LinkTextUnderline = true;
         TextArea.RightClickMovesCaret = true;
 
@@ -52,7 +37,7 @@ public class ExtendedTextEditor : TextEditor
         MarkerService = new TextMarkerService(Document);
         ModificationService = new TextModificationService(TextArea.TextView);
         InlayHintGenerator = new InlayHintGenerator(this);
-        
+
         TextArea.TextView.BackgroundRenderers.Add(BracketRenderer);
         TextArea.TextView.BackgroundRenderers.Add(LineRenderer);
         //TextArea.TextView.BackgroundRenderers.Add(MergeService);
@@ -64,13 +49,28 @@ public class ExtendedTextEditor : TextEditor
         TextArea.TextView.ElementGenerators.Add(InlayHintGenerator);
     }
 
+    protected override Type StyleKeyOverride => typeof(TextEditor);
+
+    public TextMate.Installation? TextMateInstallation { get; private set; }
+    public BracketHighlightRenderer BracketRenderer { get; }
+
+    public LineHighlightRenderer LineRenderer { get; }
+
+    //public MergeService MergeService { get; }
+    public WordHighlightRenderer WordRenderer { get; }
+    public TextMarkerService MarkerService { get; }
+
+    public TextModificationService ModificationService { get; }
+
+    // private ElementGenerator ElementGenerator { get; }
+    public FoldingManager? FoldingManager { get; private set; }
+
+    public InlayHintGenerator InlayHintGenerator { get; }
+
     protected override void OnDocumentChanged(DocumentChangedEventArgs e)
     {
         base.OnDocumentChanged(e);
-        if (e?.NewDocument != null)
-        {
-            MarkerService?.ChangeDocument(e.NewDocument);
-        }
+        if (e?.NewDocument != null) MarkerService?.ChangeDocument(e.NewDocument);
     }
 
     public void InitTextmate(IRegistryOptions options)
@@ -88,17 +88,14 @@ public class ExtendedTextEditor : TextEditor
     public void SetEnableBreakpoints(bool enable, IFile? file = null)
     {
         TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
-        if (enable && file != null)
-        {
-            TextArea.LeftMargins.Add(new BreakPointMargin(this, file, new BreakpointStore()));
-        }
+        if (enable && file != null) TextArea.LeftMargins.Add(new BreakPointMargin(this, file, new BreakpointStore()));
     }
-    
+
     public void SetEnableFolding(bool enable)
     {
         if (enable)
         {
-            if(FoldingManager == null) FoldingManager = FoldingManager.Install(TextArea);
+            if (FoldingManager == null) FoldingManager = FoldingManager.Install(TextArea);
         }
         else
         {

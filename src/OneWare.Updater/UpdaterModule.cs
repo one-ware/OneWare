@@ -21,18 +21,17 @@ public class UpdaterModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var windowService = containerProvider.Resolve<IWindowService>();
-        
-        if(PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64 or PlatformId.OsxArm64)
-        {
+
+        if (PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64
+            or PlatformId.OsxArm64)
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Update")
             {
                 Header = "Studio Update",
-                Command = new RelayCommand(() => windowService.Show(new UpdaterView()
+                Command = new RelayCommand(() => windowService.Show(new UpdaterView
                 {
                     DataContext = containerProvider.Resolve<UpdaterViewModel>()
                 })),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X"),
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
             });
-        }
     }
 }

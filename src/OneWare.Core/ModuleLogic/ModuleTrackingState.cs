@@ -1,74 +1,59 @@
+using OneWare.Essentials.Enums;
 using Prism.Modularity;
 using Prism.Mvvm;
-using OneWare.Essentials.Enums;
 
 namespace OneWare.Core.ModuleLogic;
 
-class ModuleTrackingState : BindableBase
+internal class ModuleTrackingState : BindableBase
+{
+    private string _configuredDependencies = "(none)";
+    private DiscoveryMethod _expectedDiscoveryMethod;
+    private InitializationMode _expectedInitializationMode;
+    private ModuleInitializationStatus _moduleInitializationStatus;
+    private string? _moduleName;
+
+    public string? ModuleName
     {
-        private string? _moduleName;
-        private string _configuredDependencies = "(none)";
-        private ModuleInitializationStatus _moduleInitializationStatus;
-        private InitializationMode _expectedInitializationMode;
-        private DiscoveryMethod _expectedDiscoveryMethod;
-
-        public string? ModuleName
+        get => _moduleName;
+        set
         {
-            get => this._moduleName;
-            set
-            {
-                if (this._moduleName != value)
-                {
-                    base.SetProperty(ref this._moduleName, value);
-                }
-            }
-        }
-
-        public ModuleInitializationStatus ModuleInitializationStatus
-        {
-            get { return this._moduleInitializationStatus; }
-            set
-            {
-                if (this._moduleInitializationStatus != value)
-                {
-                    base.SetProperty(ref this._moduleInitializationStatus, value);
-                }
-            }
-        }
-
-        public DiscoveryMethod ExpectedDiscoveryMethod
-        {
-            get { return this._expectedDiscoveryMethod; }
-            set
-            {
-                if (this._expectedDiscoveryMethod != value)
-                {
-                    base.SetProperty(ref this._expectedDiscoveryMethod, value);
-                }
-            }
-        }
-
-        public InitializationMode ExpectedInitializationMode
-        {
-            get { return this._expectedInitializationMode; }
-            set
-            {
-                if (this._expectedInitializationMode != value)
-                {
-                    base.SetProperty(ref this._expectedInitializationMode, value);
-                }
-            }
-        }
-
-        public string ConfiguredDependencies
-        {
-            get { return this._configuredDependencies; }
-            set
-            {
-                if (this._configuredDependencies != value)
-                {
-                    base.SetProperty(ref this._configuredDependencies, value);
-                }
-            }
+            if (_moduleName != value) base.SetProperty(ref _moduleName, value);
         }
     }
+
+    public ModuleInitializationStatus ModuleInitializationStatus
+    {
+        get => _moduleInitializationStatus;
+        set
+        {
+            if (_moduleInitializationStatus != value) base.SetProperty(ref _moduleInitializationStatus, value);
+        }
+    }
+
+    public DiscoveryMethod ExpectedDiscoveryMethod
+    {
+        get => _expectedDiscoveryMethod;
+        set
+        {
+            if (_expectedDiscoveryMethod != value) base.SetProperty(ref _expectedDiscoveryMethod, value);
+        }
+    }
+
+    public InitializationMode ExpectedInitializationMode
+    {
+        get => _expectedInitializationMode;
+        set
+        {
+            if (_expectedInitializationMode != value) base.SetProperty(ref _expectedInitializationMode, value);
+        }
+    }
+
+    public string ConfiguredDependencies
+    {
+        get => _configuredDependencies;
+        set
+        {
+            if (_configuredDependencies != value) base.SetProperty(ref _configuredDependencies, value);
+        }
+    }
+}

@@ -8,15 +8,53 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaModel : ObservableObject
 {
+    private object? _lastSelection;
+
+    private string _searchTextNodes = string.Empty;
+
+    private string _searchTextPins = string.Empty;
+
+    private FpgaNodeModel? _selectedNodeModel;
+
+    private FpgaPinModel? _selectedPinModel;
+
+    public FpgaModel(IFpga fpga)
+    {
+        Fpga = fpga;
+
+        foreach (var pin in fpga.Pins) AddPin(pin);
+
+        foreach (var fpgaInterface in fpga.Interfaces) AddInterface(fpgaInterface);
+
+        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNodeModel is { Connection: null }
+                                                                 && SelectedPinModel is { Connection : null });
+
+        DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPinModel is { Connection: not null });
+
+        this.WhenValueChanged(x => x.SelectedNodeModel).Subscribe(_ =>
+        {
+            ConnectCommand.NotifyCanExecuteChanged();
+            DisconnectCommand.NotifyCanExecuteChanged();
+        });
+
+        this.WhenValueChanged(x => x.SelectedPinModel).Subscribe(_ =>
+        {
+            ConnectCommand.NotifyCanExecuteChanged();
+            DisconnectCommand.NotifyCanExecuteChanged();
+        });
+
+        this.WhenValueChanged(x => x.SearchTextPins).Subscribe(SearchPins);
+        this.WhenValueChanged(x => x.SearchTextNodes).Subscribe(SearchNodes);
+    }
+
     public IFpga Fpga { get; }
-    
+
     public Dictionary<string, FpgaPinModel> PinModels { get; } = new();
     public ObservableCollection<FpgaPinModel> VisiblePinModels { get; } = new();
     public Dictionary<string, FpgaNodeModel> NodeModels { get; } = new();
     public ObservableCollection<FpgaNodeModel> VisibleNodeModels { get; } = new();
     public Dictionary<string, FpgaInterfaceModel> InterfaceModels { get; } = new();
-    
-    private FpgaPinModel? _selectedPinModel;
+
     public FpgaPinModel? SelectedPinModel
     {
         get => _selectedPinModel;
@@ -27,7 +65,6 @@ public class FpgaModel : ObservableObject
         }
     }
 
-    private FpgaNodeModel? _selectedNodeModel;
     public FpgaNodeModel? SelectedNodeModel
     {
         get => _selectedNodeModel;
@@ -38,8 +75,6 @@ public class FpgaModel : ObservableObject
         }
     }
 
-    private object? _lastSelection;
-
     public object? LastSelection
     {
         get => _lastSelection;
@@ -47,18 +82,14 @@ public class FpgaModel : ObservableObject
     }
 
     public RelayCommand ConnectCommand { get; }
-    
-    public RelayCommand DisconnectCommand { get; }
 
-    private string _searchTextPins = string.Empty;
+    public RelayCommand DisconnectCommand { get; }
 
     public string SearchTextPins
     {
         get => _searchTextPins;
         set => SetProperty(ref _searchTextPins, value);
     }
-    
-    private string _searchTextNodes = string.Empty;
 
     public string SearchTextNodes
     {
@@ -70,41 +101,6 @@ public class FpgaModel : ObservableObject
 
     public event EventHandler? NodeDisconnected;
 
-    public FpgaModel(IFpga fpga)
-    {
-        Fpga = fpga;
-
-        foreach (var pin in fpga.Pins)
-        {
-            AddPin(pin);
-        }
-        
-        foreach (var fpgaInterface in fpga.Interfaces)
-        {
-            AddInterface(fpgaInterface);
-        }
-        
-        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNodeModel is { Connection: null } 
-                                                                 && SelectedPinModel is { Connection :null });
-        
-        DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPinModel is {Connection: not null});
-
-        this.WhenValueChanged(x => x.SelectedNodeModel).Subscribe(_ =>
-        {
-            ConnectCommand.NotifyCanExecuteChanged();
-            DisconnectCommand.NotifyCanExecuteChanged();
-        });
-        
-        this.WhenValueChanged(x => x.SelectedPinModel).Subscribe(_ =>
-        {
-            ConnectCommand.NotifyCanExecuteChanged();
-            DisconnectCommand.NotifyCanExecuteChanged();
-        });
-
-        this.WhenValueChanged(x => x.SearchTextPins).Subscribe(SearchPins);
-        this.WhenValueChanged(x => x.SearchTextNodes).Subscribe(SearchNodes);
-    }
-
     private void SearchPins(string? search)
     {
         if (string.IsNullOrWhiteSpace(search))
@@ -113,8 +109,9 @@ public class FpgaModel : ObservableObject
             return;
         }
 
-        SelectedPinModel = VisiblePinModels.FirstOrDefault(x => x.Pin.Name.Contains(search, StringComparison.OrdinalIgnoreCase) 
-                                                      || (x.Pin.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+        SelectedPinModel = VisiblePinModels.FirstOrDefault(x =>
+            x.Pin.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (x.Pin.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
     }
 
     private void SearchNodes(string? search)
@@ -125,7 +122,8 @@ public class FpgaModel : ObservableObject
             return;
         }
 
-        SelectedNodeModel = VisibleNodeModels.FirstOrDefault(x => x.Node.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        SelectedNodeModel =
+            VisibleNodeModels.FirstOrDefault(x => x.Node.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
     public void Connect(FpgaPinModel pin, FpgaNodeModel fpgaNode)
@@ -145,7 +143,7 @@ public class FpgaModel : ObservableObject
         DisconnectCommand.NotifyCanExecuteChanged();
         NodeDisconnected?.Invoke(this, EventArgs.Empty);
     }
-    
+
     private void ConnectSelected()
     {
         if (SelectedPinModel is null || SelectedNodeModel is null) return;
@@ -169,14 +167,14 @@ public class FpgaModel : ObservableObject
         PinModels.Add(pin.Name, model);
         VisiblePinModels.Add(model);
     }
-    
+
     public void AddNode(FpgaNode node)
     {
         var model = new FpgaNodeModel(node);
         NodeModels.Add(node.Name, model);
         VisibleNodeModels.Add(model);
     }
-    
+
     private void AddInterface(FpgaInterface fpgaInterface)
     {
         var model = new FpgaInterfaceModel(fpgaInterface, this);

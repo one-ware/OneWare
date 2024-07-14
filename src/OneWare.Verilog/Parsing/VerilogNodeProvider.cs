@@ -9,41 +9,42 @@ public class VerilogNodeProvider : INodeProvider
 {
     public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
     {
-        string fileContent = File.ReadAllText(file.FullPath);
+        var fileContent = File.ReadAllText(file.FullPath);
 
         // Regex, um die Modul-Deklaration zu finden und die Ports zu extrahieren
-        string modulePattern = @"module\s+\w+\s*\((.*?)\);";
-        Match moduleMatch = Regex.Match(fileContent, modulePattern, RegexOptions.Singleline);
+        var modulePattern = @"module\s+\w+\s*\((.*?)\);";
+        var moduleMatch = Regex.Match(fileContent, modulePattern, RegexOptions.Singleline);
 
         if (moduleMatch.Success)
         {
             // Extrahieren der Ports innerhalb des Moduls
-            string portSection = moduleMatch.Groups[1].Value;
+            var portSection = moduleMatch.Groups[1].Value;
             return ExtractAndPrintPorts(portSection);
         }
+
         return new List<FpgaNode>();
     }
 
     private static IEnumerable<FpgaNode> ExtractAndPrintPorts(string portSection)
     {
         // Regex, um einzelne Port-Deklarationen zu identifizieren
-        string portPattern = @"(input|output|inout)(\s*\[\d+:\d+\])?\s+([^;,]+)";
-        MatchCollection portMatches = Regex.Matches(portSection, portPattern, RegexOptions.Singleline);
+        var portPattern = @"(input|output|inout)(\s*\[\d+:\d+\])?\s+([^;,]+)";
+        var portMatches = Regex.Matches(portSection, portPattern, RegexOptions.Singleline);
 
         foreach (Match match in portMatches)
         {
-            string portType = match.Groups[1].Value;
-            string vectorSize = match.Groups[2].Value.Trim();
-            string[] portNames = match.Groups[3].Value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var portType = match.Groups[1].Value;
+            var vectorSize = match.Groups[2].Value.Trim();
+            var portNames = match.Groups[3].Value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (string portName in portNames)
-            {
+            foreach (var portName in portNames)
                 if (!string.IsNullOrWhiteSpace(vectorSize))
                 {
-                    
                 }
-                else yield return new FpgaNode(portName.Trim(), portType);
-            }
+                else
+                {
+                    yield return new FpgaNode(portName.Trim(), portType);
+                }
         }
     }
 }

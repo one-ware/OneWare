@@ -11,7 +11,7 @@ public static class ProcessExtensions
         try
         {
             Process.GetProcessById(process.Id);
-            if(process.HasExited) return false;
+            if (process.HasExited) return false;
         }
         catch
         {

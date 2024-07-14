@@ -54,7 +54,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.Controls.TreeDataGrid.props = build\props\Avalonia.Controls.TreeDataGrid.props
 		build\props\Avalonia.props = build\props\Avalonia.props
 		build\props\Avalonia.Svg.props = build\props\Avalonia.Svg.props
-		build\props\Avalonia.Xaml.Interactions.props = build\props\Avalonia.Xaml.Interactions.props
 		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
 		build\props\AvaloniaEdit.TextMate.props = build\props\AvaloniaEdit.TextMate.props
 		build\props\CommunityToolkit.Mvvm.props = build\props\CommunityToolkit.Mvvm.props
@@ -62,6 +61,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Jint.props = build\props\Jint.props
 		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
 		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
+		build\props\Avalonia.Xaml.Behaviors.props = build\props\Avalonia.Xaml.Behaviors.props
+		build\props\DynamicData.props = build\props\DynamicData.props
+		build\props\Avalonia.ReactiveUI.props = build\props\Avalonia.ReactiveUI.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorTextBlock.Avalonia", "src\Markdown.Avalonia\ColorTextBlock.Avalonia\ColorTextBlock.Avalonia.csproj", "{0B2AD173-5342-46AB-B766-E6899216A9AB}"

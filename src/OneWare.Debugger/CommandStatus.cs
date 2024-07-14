@@ -23,14 +23,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace OneWare.Debugger
+namespace OneWare.Debugger;
+
+public enum CommandStatus
 {
-    public enum CommandStatus
-    {
-        Done,
-        Running,
-        Error,
-        Timeout,
-        Connected
-    }
+    Done,
+    Running,
+    Error,
+    Timeout,
+    Connected
 }

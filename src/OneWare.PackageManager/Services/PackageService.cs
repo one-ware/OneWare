@@ -1,5 +1,4 @@
-﻿using System.Formats.Asn1;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using Avalonia.Media;
@@ -22,26 +21,14 @@ public class PackageService : IPackageService
         WriteIndented = true
     };
 
+    private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
+
     private readonly IHttpService _httpService;
+
+    private readonly object _lock = new();
     private readonly ILogger _logger;
     private CancellationTokenSource? _cancellationTokenSource;
     private CompositeDisposable _packageRegistrationSubscription = new();
-
-    private string PackageDataBasePath { get; }
-
-    public List<string> PackageRepositories { get; } = [];
-
-    private List<Package> StandalonePackages { get; } = [];
-
-    public Dictionary<string, PackageModel> Packages { get; } = [];
-
-    private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
-
-    private readonly object _lock = new();
-
-    public event EventHandler? UpdateStarted;
-
-    public event EventHandler? UpdateEnded;
 
     public PackageService(IHttpService httpService, ILogger logger, IPaths paths)
     {
@@ -53,6 +40,18 @@ public class PackageService : IPackageService
 
         LoadInstalledPackagesDatabase();
     }
+
+    private string PackageDataBasePath { get; }
+
+    public List<string> PackageRepositories { get; } = [];
+
+    private List<Package> StandalonePackages { get; } = [];
+
+    public Dictionary<string, PackageModel> Packages { get; } = [];
+
+    public event EventHandler? UpdateStarted;
+
+    public event EventHandler? UpdateEnded;
 
     public void RegisterPackageRepository(string url)
     {
@@ -79,6 +78,65 @@ public class PackageService : IPackageService
             AddPackage(package);
             Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
         }
+    }
+
+    public async Task<bool> LoadPackagesAsync()
+    {
+        if (_cancellationTokenSource is not null) await _cancellationTokenSource.CancelAsync();
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        await WaitForInstallsAsync();
+
+        Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
+
+        _packageRegistrationSubscription?.Dispose();
+        _packageRegistrationSubscription = new CompositeDisposable();
+
+        Packages.Clear();
+
+        var result = LoadInstalledPackagesDatabase();
+
+        foreach (var repository in PackageRepositories)
+        {
+            var result2 = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
+            result = result && result2;
+        }
+
+        Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
+
+        return result;
+    }
+
+
+    /// <summary>
+    ///     Will install the package if not already installed
+    ///     Waits if another thread already started the installation
+    /// </summary>
+    public Task<bool> InstallAsync(Package package)
+    {
+        lock (_lock)
+        {
+            if (Packages.TryGetValue(package.Id!, out var model))
+            {
+                if (!(model.Package.Versions?.Any() ?? false)) return Task.FromResult(false);
+
+                switch (model.Status)
+                {
+                    case PackageStatus.Available or PackageStatus.UpdateAvailable:
+                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true,
+                            Brushes.DarkCyan);
+                        return model.DownloadAsync(model.Package.Versions.Last());
+                    case PackageStatus.Installing:
+                        if (_activeInstalls.TryGetValue(model.Package, out var task)) return task;
+                        return Task.FromResult(model.Status is PackageStatus.Installed
+                            or PackageStatus.UpdateAvailable);
+                    case PackageStatus.Installed:
+                        return Task.FromResult(true);
+                }
+            }
+        }
+
+        return Task.FromResult(false);
     }
 
     private void AddPackage(Package package, string? installedVersion = null)
@@ -118,37 +176,7 @@ public class PackageService : IPackageService
             activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
         }
 
-        if (activeInstallTasks.Length != 0)
-        {
-            await Task.WhenAll(activeInstallTasks.ToArray());
-        }
-    }
-
-    public async Task<bool> LoadPackagesAsync()
-    {
-        if (_cancellationTokenSource is not null) await _cancellationTokenSource.CancelAsync();
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        await WaitForInstallsAsync();
-
-        Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
-
-        _packageRegistrationSubscription?.Dispose();
-        _packageRegistrationSubscription = new CompositeDisposable();
-
-        Packages.Clear();
-
-        var result = LoadInstalledPackagesDatabase();
-
-        foreach (var repository in PackageRepositories)
-        {
-            var result2 = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
-            result = result && result2;
-        }
-
-        Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
-
-        return result;
+        if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
     }
 
     private async Task<bool> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
@@ -161,7 +189,6 @@ public class PackageService : IPackageService
             var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
 
             if (repository is { Packages: not null })
-            {
                 foreach (var manifest in repository.Packages)
                 {
                     if (manifest.ManifestUrl == null) continue;
@@ -182,7 +209,6 @@ public class PackageService : IPackageService
 
                     AddPackage(package);
                 }
-            }
             else throw new Exception("Packages empty");
         }
         catch (Exception e)
@@ -203,10 +229,9 @@ public class PackageService : IPackageService
                 using var file = File.OpenRead(PackageDataBasePath);
                 var installedPackages = JsonSerializer.Deserialize<InstalledPackage[]>(file, SerializerOptions);
                 if (installedPackages != null)
-                {
                     foreach (var installedPackage in installedPackages)
                     {
-                        var package = new Package()
+                        var package = new Package
                         {
                             Id = installedPackage.Id,
                             Type = installedPackage.Type,
@@ -214,7 +239,7 @@ public class PackageService : IPackageService
                             Category = installedPackage.Category,
                             Versions =
                             [
-                                new PackageVersion()
+                                new PackageVersion
                                 {
                                     Version = installedPackage.InstalledVersion
                                 }
@@ -225,11 +250,9 @@ public class PackageService : IPackageService
 
                         AddPackage(package, installedPackage.InstalledVersion);
                     }
-                }
             }
 
             foreach (var package in StandalonePackages)
-            {
                 if (Packages.TryGetValue(package.Id!, out var pkg))
                 {
                     pkg.Package = package;
@@ -240,7 +263,6 @@ public class PackageService : IPackageService
                 {
                     AddPackage(package);
                 }
-            }
         }
         catch (Exception e)
         {
@@ -272,45 +294,13 @@ public class PackageService : IPackageService
             _logger.Error(e.Message, e);
         }
     }
-    
 
-    /// <summary>
-    /// Will install the package if not already installed
-    /// Waits if another thread already started the installation
-    /// </summary>
-    public Task<bool> InstallAsync(Package package)
-    {
-        lock (_lock)
-        {
-            if (Packages.TryGetValue(package.Id!, out var model))
-            {
-                if (!(model.Package.Versions?.Any() ?? false)) return Task.FromResult(false);
-
-                switch (model.Status)
-                {
-                    case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true, Brushes.DarkCyan);
-                        return model.DownloadAsync(model.Package.Versions.Last());
-                    case PackageStatus.Installing:
-                        if (_activeInstalls.TryGetValue(model.Package, out var task))
-                        {
-                            return task;
-                        }
-                        return Task.FromResult(model.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
-                    case PackageStatus.Installed:
-                        return Task.FromResult(true);
-                }
-            }
-        }
-        return Task.FromResult(false);
-    }
-    
     private void ObserveInstall(Package package, Task<bool> installTask)
     {
         lock (_lock)
         {
             _activeInstalls.Add(package, installTask);
-            
+
             _ = installTask.ContinueWith(t =>
             {
                 t.Wait();

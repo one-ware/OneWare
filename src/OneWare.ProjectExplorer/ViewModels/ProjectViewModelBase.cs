@@ -13,16 +13,15 @@ namespace OneWare.ProjectExplorer.ViewModels;
 
 public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKey)
 {
+    private string _searchString = "";
     public bool EnableDragDrop = true;
 
-    private string _searchString = "";
-    
     public string SearchString
     {
         get => _searchString;
         set => SetProperty(ref _searchString, value);
     }
-    
+
     public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
     public ObservableCollection<IProjectExplorerNode> SelectedItems { get; } = new();
@@ -36,15 +35,13 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
             ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
             return;
         }
-        
+
         for (var i = 0; i < Projects.Count; i++)
-        {
             if (string.CompareOrdinal(entry.Header, Projects[i].Header) <= 0)
             {
                 Projects.Insert(i, entry);
                 return;
             }
-        }
 
         Projects.Add(entry);
     }
@@ -53,27 +50,24 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
 
     public void ResetSearch()
     {
-        
     }
 
     public void OnSearch()
     {
         SelectedItems.Clear();
         ResetSearch();
-        foreach (var s in SearchResult)
-        {
-            s.Background = Brushes.Transparent;
-        }
+        foreach (var s in SearchResult) s.Background = Brushes.Transparent;
         SearchResult.Clear();
         if (SearchString.Length < 3) return;
 
         SearchResult.AddRange(DeepSearchName(SearchString));
-        
+
         CollapseAll(Projects);
 
         foreach (var r in SearchResult)
         {
-            r.Background = Application.Current?.FindResource(ThemeVariant.Dark,"SearchResultBrush") as IBrush ?? Brushes.Transparent;
+            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
+                           Brushes.Transparent;
             ExpandToRoot(r);
         }
     }
@@ -96,9 +90,10 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
                 if (pe != null) return pe;
             }
         }
+
         return null;
     }
-    
+
     public IProjectEntry? SearchFullPath(string path, bool recursive = true)
     {
         foreach (var i in Projects)
@@ -111,6 +106,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
                 if (pe != null) return pe;
             }
         }
+
         return null;
     }
 

@@ -16,28 +16,25 @@ namespace OneWare.ApplicationCommands.ViewModels;
 
 public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 {
-    public static KeyGesture ChangeShortcutGesture => new(Key.Enter, PlatformHelper.ControlKey);
-    
+    private readonly IApplicationCommandService _applicationCommandService;
+
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-    private readonly IApplicationCommandService _applicationCommandService;
-    
-    public ILogical ActiveFocus { get; }
-    public ObservableCollection<CommandManagerTabBase> Tabs { get; } = new();
 
-    [ObservableProperty]
-    private CommandManagerTabBase _selectedTab;
-    
-    public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService, IProjectExplorerService projectExplorerService, IWindowService windowService)
+    [ObservableProperty] private CommandManagerTabBase _selectedTab;
+
+    public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService,
+        IProjectExplorerService projectExplorerService, IWindowService windowService)
     {
         ActiveFocus = logical;
         _projectExplorerService = projectExplorerService;
         _applicationCommandService = commandService;
         _windowService = windowService;
-        
+
         Tabs.Add(new CommandManagerAllTab(logical)
         {
-            Items = new ObservableCollection<IApplicationCommand>(GetOpenFileCommands().Concat(commandService.ApplicationCommands))
+            Items = new ObservableCollection<IApplicationCommand>(GetOpenFileCommands()
+                .Concat(commandService.ApplicationCommands))
         });
         Tabs.Add(new CommandManagerFilesTab(logical)
         {
@@ -51,19 +48,22 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         _selectedTab = Tabs.Last();
     }
 
+    public static KeyGesture ChangeShortcutGesture => new(Key.Enter, PlatformHelper.ControlKey);
+
+    public ILogical ActiveFocus { get; }
+    public ObservableCollection<CommandManagerTabBase> Tabs { get; } = new();
+
     private ObservableCollection<IApplicationCommand> GetOpenFileCommands()
     {
         var collection = new ObservableCollection<IApplicationCommand>();
         foreach (var project in _projectExplorerService.Projects)
-        {
             collection.AddRange(project.Files.Select(x => new OpenFileApplicationCommand(x)));
-        }
         return collection;
     }
-    
+
     public void ExecuteSelection(FlexibleWindow window)
     {
-        if(SelectedTab?.SelectedItem?.Command.Execute(ActiveFocus) ?? false)
+        if (SelectedTab?.SelectedItem?.Command.Execute(ActiveFocus) ?? false)
             Close(window);
     }
 
@@ -73,14 +73,14 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         if (SelectedTab is not CommandManagerActionsTab || SelectedTab.SelectedItem == null) return;
 
         window.CloseOnDeactivated = false;
-        
-        await _windowService.ShowDialogAsync(new AssignGestureView()
+
+        await _windowService.ShowDialogAsync(new AssignGestureView
         {
             DataContext = new AssignGestureViewModel(SelectedTab.SelectedItem.Command)
         }, window.Host);
 
         _applicationCommandService.SaveKeyConfiguration();
-        
+
         window.Host?.Activate();
         window.CloseOnDeactivated = true;
     }

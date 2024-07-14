@@ -4,5 +4,5 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Debugger.Views.DebuggerView" Background="{DynamicResource ThemeControlLowBrush}">
-    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Coming Soon!"/>
+    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Coming Soon!" />
 </UserControl>

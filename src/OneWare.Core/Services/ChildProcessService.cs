@@ -15,22 +15,9 @@ public class ChildProcessService(
     : IChildProcessService
 {
     private const int OutputSpeed = 10;
-    private readonly TimeSpan _outputInterval = TimeSpan.FromMilliseconds(1);
 
     private readonly ConcurrentDictionary<string, List<IChildProcess>> _childProcesses = [];
-
-    private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory, IReadOnlyCollection<string> arguments)
-    {
-        return new ChildProcessStartInfo()
-        {
-            FileName = path,
-            Arguments = arguments,
-            WorkingDirectory = workingDirectory,
-            StdOutputRedirection = OutputRedirection.OutputPipe,
-            StdInputRedirection = InputRedirection.NullDevice,
-            StdErrorRedirection = OutputRedirection.ErrorPipe,
-        };
-    }
+    private readonly TimeSpan _outputInterval = TimeSpan.FromMilliseconds(1);
 
     public IChildProcess StartChildProcess(ChildProcessStartInfo startInfo)
     {
@@ -47,11 +34,10 @@ public class ChildProcessService(
         if (_childProcesses.TryGetValue(path, out var list)) return list;
         return Array.Empty<IChildProcess>();
     }
-    
+
     public void Kill(params IChildProcess[] childProcesses)
     {
         foreach (var childProcess in childProcesses)
-        {
             try
             {
                 childProcess.Kill();
@@ -60,20 +46,12 @@ public class ChildProcessService(
             {
                 logger.Error(e.Message, e);
             }
-        }
     }
-    
-    private async Task WaitForExitAsync(string path, IChildProcess childProcess)
-    {
-        await Task.Run(childProcess.WaitForExit);
-        if (_childProcesses.TryGetValue(path, out var list))
-        {
-            list.Remove(childProcess);
-            if (list.Count == 0) _childProcesses.Remove(path, out _);
-        }
-    }
-    
-    public async Task<(bool success, string output)> ExecuteShellAsync(string path, IReadOnlyCollection<string> arguments, string workingDirectory, string status, AppState state = AppState.Loading, bool showTimer = false, Func<string, bool>? outputAction = null, Func<string, bool>? errorAction = null)
+
+    public async Task<(bool success, string output)> ExecuteShellAsync(string path,
+        IReadOnlyCollection<string> arguments, string workingDirectory, string status,
+        AppState state = AppState.Loading, bool showTimer = false, Func<string, bool>? outputAction = null,
+        Func<string, bool>? errorAction = null)
     {
         var success = true;
 
@@ -86,10 +64,11 @@ public class ChildProcessService(
             if (x.Contains(' ')) return $"\"{x}\"";
             return x;
         }));
-        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
+        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}",
+            ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
 
         var output = string.Empty;
-        
+
         var startInfo = GetProcessStartInfo(path, workingDirectory, arguments);
 
         ApplicationProcess? key = null;
@@ -97,24 +76,26 @@ public class ChildProcessService(
         {
             ConcurrentQueue<string?> errorCollector = new();
             ConcurrentQueue<string?> outputCollector = new();
-            
+
             var tokenSource = new CancellationTokenSource();
-            
+
             var childProcess = StartChildProcess(startInfo);
-        
+
             key = applicationStateService.AddState(status, state, () => tokenSource.Cancel());
-            
+
             var start = DateTime.Now;
-        
-            var statusTimer = showTimer ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
-                (_, _) =>
-                {
-                    var time = DateTime.Now - start;
-                    key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
-                }) : null;
-        
+
+            var statusTimer = showTimer
+                ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
+                    (_, _) =>
+                    {
+                        var time = DateTime.Now - start;
+                        key.StatusMessage = $"{status} {(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
+                    })
+                : null;
+
             statusTimer?.Start();
-            
+
             var collectorTimer = new DispatcherTimer(_outputInterval, DispatcherPriority.Default,
                 (_, _) =>
                 {
@@ -123,7 +104,7 @@ public class ChildProcessService(
                         if (outputCollector.TryDequeue(out var outputLine))
                         {
                             if (outputLine == null) return;
-                        
+
                             if (outputAction != null)
                             {
                                 // ReSharper disable once AccessToModifiedClosure
@@ -135,11 +116,11 @@ public class ChildProcessService(
                             outputService.WriteLine(outputLine);
                             output += outputLine + '\n';
                         }
-                    
+
                         if (errorCollector.TryDequeue(out var errorLine))
                         {
                             if (errorLine == null) return;
-                        
+
                             if (errorAction != null)
                             {
                                 success = success && errorAction(errorLine);
@@ -165,16 +146,15 @@ public class ChildProcessService(
             }
             catch (TaskCanceledException)
             {
-                logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!", ConsoleColor.DarkYellow, true, Brushes.DarkOrange);
+                logger.Log(
+                    $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!",
+                    ConsoleColor.DarkYellow, true, Brushes.DarkOrange);
                 childProcess.Kill();
             }
 
             //Delay until collector empty
-            while (!outputCollector.IsEmpty || !errorCollector.IsEmpty)
-            {
-                await Task.Delay(50);
-            }
-            
+            while (!outputCollector.IsEmpty || !errorCollector.IsEmpty) await Task.Delay(50);
+
             collectorTimer.Stop();
             statusTimer?.Stop();
         }
@@ -190,7 +170,31 @@ public class ChildProcessService(
             applicationStateService.RemoveState(key);
         }
 
-        return (success,output);
+        return (success, output);
+    }
+
+    private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory,
+        IReadOnlyCollection<string> arguments)
+    {
+        return new ChildProcessStartInfo
+        {
+            FileName = path,
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory,
+            StdOutputRedirection = OutputRedirection.OutputPipe,
+            StdInputRedirection = InputRedirection.NullDevice,
+            StdErrorRedirection = OutputRedirection.ErrorPipe
+        };
+    }
+
+    private async Task WaitForExitAsync(string path, IChildProcess childProcess)
+    {
+        await Task.Run(childProcess.WaitForExit);
+        if (_childProcesses.TryGetValue(path, out var list))
+        {
+            list.Remove(childProcess);
+            if (list.Count == 0) _childProcesses.Remove(path, out _);
+        }
     }
 
     private static async Task CollectOutputFromStreamAsync(Stream stream, ConcurrentQueue<string?> collector)

@@ -1,12 +1,11 @@
 ﻿using Avalonia.Controls;
 
-namespace OneWare.Core.Views.DockViews
+namespace OneWare.Core.Views.DockViews;
+
+public partial class WelcomeScreenView : UserControl
 {
-    public partial class WelcomeScreenView : UserControl
+    public WelcomeScreenView()
     {
-        public WelcomeScreenView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

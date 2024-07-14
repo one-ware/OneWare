@@ -11,11 +11,9 @@ namespace OneWare.Core.Services;
 
 public class HttpService : IHttpService
 {
-    private readonly IPaths _paths;
-    private readonly ILogger _logger;
-
     private readonly HttpClientHandler _handler;
-    public HttpClient HttpClient => new(_handler);
+    private readonly ILogger _logger;
+    private readonly IPaths _paths;
 
     public HttpService(ILogger logger, IPaths paths)
     {
@@ -23,6 +21,8 @@ public class HttpService : IHttpService
         _paths = paths;
         _handler = new HttpClientHandler();
     }
+
+    public HttpClient HttpClient => new(_handler);
 
     public async Task<bool> DownloadFileAsync(string url, Stream stream, IProgress<float>? progress = null,
         TimeSpan timeout = default, CancellationToken cancellationToken = default)
@@ -63,12 +63,10 @@ public class HttpService : IHttpService
                     var svg = new SvgSource();
                     var picture = svg.Load(await download.Content.ReadAsStreamAsync(cancellationToken));
                     if (picture is not null)
-                    {
-                        return new SvgImage()
+                        return new SvgImage
                         {
                             Source = svg
                         };
-                    }
                     break;
                 default:
                     return new Bitmap(await download.Content.ReadAsStreamAsync(cancellationToken));
@@ -128,6 +126,7 @@ public class HttpService : IHttpService
         {
             _logger.Error(e.Message, e);
         }
+
         return false;
     }
 
@@ -154,13 +153,9 @@ public class HttpService : IHttpService
                 using var stream = File.OpenRead(tempPath);
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
-                {
                     if (!reader.Entry.IsDirectory)
-                    {
                         reader.WriteEntryToDirectory(location,
-                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
-                    }
-                }
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
             }, cancellationToken);
 
             File.Delete(tempPath);
@@ -168,7 +163,7 @@ public class HttpService : IHttpService
         }
         catch (Exception e)
         {
-            if(e is not HttpRequestException)
+            if (e is not HttpRequestException)
                 _logger.Error(e.Message, e);
             else _logger.Log(e.Message, ConsoleColor.Yellow);
             try

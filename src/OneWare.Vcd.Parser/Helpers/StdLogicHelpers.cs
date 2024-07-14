@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using OneWare.Vcd.Parser.Data;
+﻿using OneWare.Vcd.Parser.Data;
 
 namespace OneWare.Vcd.Parser.Helpers;
 
@@ -21,7 +20,7 @@ public static class StdLogicHelpers
             _ => StdLogic.DontCare
         };
     }
-    
+
     public static string GetChar(StdLogic logic)
     {
         return logic switch

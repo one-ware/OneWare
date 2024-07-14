@@ -1,11 +1,11 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.PackageManager.ViewModels;
-using OneWare.PackageManager.Views;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;
+using OneWare.PackageManager.ViewModels;
+using OneWare.PackageManager.Views;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -22,15 +22,15 @@ public class PackageManagerModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var windowService = containerProvider.Resolve<IWindowService>();
-        
+
         windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
         {
             Header = "Extensions",
-            Command = new RelayCommand(() => windowService.Show(new PackageManagerView()
+            Command = new RelayCommand(() => windowService.Show(new PackageManagerView
             {
                 DataContext = containerProvider.Resolve<PackageManagerViewModel>()
             })),
-            IconObservable = Application.Current!.GetResourceObservable("PackageManager"),
+            IconObservable = Application.Current!.GetResourceObservable("PackageManager")
         });
     }
 }

@@ -3,7 +3,7 @@ name: Publish Studio Desktop for Linux in Snap Store
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [Publish Studio Desktop]
+    workflows: [ Publish Studio Desktop ]
     types:
       - completed
 
@@ -28,10 +28,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Build Snap  
-        uses: snapcore/action-build@v1  
+      - name: Build Snap
+        uses: snapcore/action-build@v1
         id: build
-      - name : Upload Snap
+      - name: Upload Snap
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_ONEWARE }}

@@ -1,7 +1,7 @@
-﻿namespace OneWare.Terminal.Provider
+﻿namespace OneWare.Terminal.Provider;
+
+public interface IPseudoTerminalProvider
 {
-    public interface IPseudoTerminalProvider
-    {
-        IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment, string? arguments);
-    }
+    IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment,
+        string? arguments);
 }

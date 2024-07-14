@@ -3,28 +3,28 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
-namespace OneWare.Essentials.Behaviours;
+namespace OneWare.Essentials.Behaviors;
 
-public class CommandOnGesturePressedBehaviour : CommandBasedBehaviour
+public class CommandOnKeyPressedBehavior : CommandBasedBehavior
 {
-    public static readonly StyledProperty<KeyGesture?> TriggerGestureProperty =
-        AvaloniaProperty.Register<CommandOnKeyPressedBehaviour, KeyGesture?>(nameof(TriggerGesture));
-    
+    public static readonly StyledProperty<Key?> TriggerKeyProperty =
+        AvaloniaProperty.Register<CommandOnKeyPressedBehavior, Key?>(nameof(TriggerKey));
+
     public static readonly StyledProperty<bool> HandledEventsTooProperty =
-        AvaloniaProperty.Register<CommandOnKeyPressedBehaviour, bool>(nameof(HandledEventsToo));
-    
-    public KeyGesture? TriggerGesture
+        AvaloniaProperty.Register<CommandOnKeyPressedBehavior, bool>(nameof(HandledEventsToo));
+
+    public Key? TriggerKey
     {
-        get => GetValue(TriggerGestureProperty);
-        set => SetValue(TriggerGestureProperty, value);
+        get => GetValue(TriggerKeyProperty);
+        set => SetValue(TriggerKeyProperty, value);
     }
-    
+
     public bool HandledEventsToo
     {
         get => GetValue(HandledEventsTooProperty);
         set => SetValue(HandledEventsTooProperty, value);
     }
-    
+
     private CompositeDisposable? Disposables { get; set; }
 
     protected override void OnAttached()
@@ -38,8 +38,7 @@ public class CommandOnGesturePressedBehaviour : CommandBasedBehaviour
             InputElement.KeyDownEvent,
             (sender, e) =>
             {
-                var gesture = new KeyGesture(e.Key, e.KeyModifiers);
-                if (gesture == TriggerGesture) e.Handled = ExecuteCommand();
+                if (e.Key == TriggerKey) e.Handled = ExecuteCommand();
             },
             RoutingStrategies.Tunnel, HandledEventsToo));
     }

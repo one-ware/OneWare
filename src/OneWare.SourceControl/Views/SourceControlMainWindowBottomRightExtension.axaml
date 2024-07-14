@@ -5,8 +5,9 @@
              xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.SourceControl.Views.SourceControlMainWindowBottomRightExtension" x:DataType="viewModels:SourceControlViewModel">
-    
+             x:Class="OneWare.SourceControl.Views.SourceControlMainWindowBottomRightExtension"
+             x:DataType="viewModels:SourceControlViewModel">
+
     <Button Cursor="Hand"
             IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
             Command="{Binding SyncAsync}"

@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -14,9 +14,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Json\OneWare.Json.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Toml\OneWare.Toml.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.Json\OneWare.Json.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.Toml\OneWare.Toml.csproj"/>
     </ItemGroup>
 
 </Project>

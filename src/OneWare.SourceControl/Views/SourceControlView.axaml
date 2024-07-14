@@ -20,8 +20,9 @@
                     <DataTemplate DataType="models:SourceControlModel">
                         <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
-                               <Image Margin="1, 0, 0, 0" Height="16" Width="16"
-                                       Source="{Binding File.Icon}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Image Margin="1, 0, 0, 0" Height="16" Width="16"
+                                       Source="{Binding File.Icon}" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
                             </Grid>
                             <Grid DockPanel.Dock="Right" Width="11">
                                 <TextBlock HorizontalAlignment="Center"
@@ -148,7 +149,8 @@
         <DockPanel Grid.Row="1">
             <TextBox IsEnabled="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                      Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                     Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,1" Watermark="Message for commit...">
+                     Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}"
+                     BorderThickness="0,1,0,1" Watermark="Message for commit...">
                 <TextBox.Styles>
                     <Style Selector="TextBox:focus /template/ Border#border">
                         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
@@ -201,7 +203,8 @@
             </StackPanel>
             <Grid DockPanel.Dock="Top" IsVisible="{Binding MergeChanges.Count}">
                 <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
+                    <ListBox ItemsSource="{Binding MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             BorderThickness="0"
                              Name="MergeChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
@@ -246,7 +249,8 @@
 
             <Grid DockPanel.Dock="Top" IsVisible="{Binding StagedChanges.Count}">
                 <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding StagedChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
+                    <ListBox ItemsSource="{Binding StagedChanges}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
                              Name="StagedChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
@@ -294,8 +298,9 @@
 
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Expander Background="{DynamicResource ThemeControlLowBrush}"  Header="Changes" IsExpanded="True">
-                    <ListBox ItemsSource="{Binding Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
+                <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
+                    <ListBox ItemsSource="{Binding Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             BorderThickness="0"
                              Name="ChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
@@ -345,7 +350,7 @@
                         </ListBox.Styles>
                     </ListBox>
                 </Expander>
-                <TextBlock Text="{Binding Changes.Count}" HorizontalAlignment="Right" Margin="3"/>
+                <TextBlock Text="{Binding Changes.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
         </DockPanel>
     </Grid>

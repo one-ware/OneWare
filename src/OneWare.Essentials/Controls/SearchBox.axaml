@@ -10,9 +10,10 @@
             <DockPanel LastChildFill="True">
                 <Button DockPanel.Dock="Right" Width="24" Name="ResetButton"
                         Command="{Binding #SearchBoxView.Reset}">
-                    <Image Source="{DynamicResource Material.WindowClose}" Height="8" Width="8"  />
+                    <Image Source="{DynamicResource Material.WindowClose}" Height="8" Width="8" />
                 </Button>
-                <TextBox Watermark="{Binding #SearchBoxView.Label}" CaretBrush="{DynamicResource ThemeForegroundBrush}" Background="Transparent"
+                <TextBox Watermark="{Binding #SearchBoxView.Label}" CaretBrush="{DynamicResource ThemeForegroundBrush}"
+                         Background="Transparent"
                          DockPanel.Dock="Left" TextWrapping="NoWrap" AcceptsReturn="False" Name="SearchTextBox"
                          BorderThickness="0" AcceptsTab="False" VerticalContentAlignment="Center"
                          Padding="6, 0, 0, 0" VerticalAlignment="Center"
@@ -23,7 +24,8 @@
         <Border Name="SearchBorder" IsVisible="{Binding #SearchButton.IsVisible}" Grid.Column="1"
                 BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Height="24" />
 
-        <Button Name="SearchButton" Grid.Column="2" Width="24" Height="24" IsVisible="{Binding #SearchBoxView.SearchButtonVisible}"
+        <Button Name="SearchButton" Grid.Column="2" Width="24" Height="24"
+                IsVisible="{Binding #SearchBoxView.SearchButtonVisible}"
                 Command="{Binding #SearchBoxView.StartSearch}">
             <Image Source="{DynamicResource VsImageLib.Search16XMd}" Height="12" Width="12" />
         </Button>

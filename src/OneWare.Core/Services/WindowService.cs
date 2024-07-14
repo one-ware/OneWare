@@ -10,10 +10,9 @@ using OneWare.Core.Views.Controls;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
-using Prism.Ioc;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Prism.Ioc;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 using UiExtension = OneWare.Essentials.Models.UiExtension;
 
@@ -23,7 +22,7 @@ public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
-    
+
     public void RegisterUiExtension(string key, UiExtension extension)
     {
         _uiExtensions.TryAdd(key, []);
@@ -31,7 +30,7 @@ public class WindowService : IWindowService
     }
 
     public ObservableCollection<UiExtension> GetUiExtensions(string key)
-    { 
+    {
         _uiExtensions.TryAdd(key, []);
         return _uiExtensions[key];
     }
@@ -40,11 +39,10 @@ public class WindowService : IWindowService
     {
         var parts = key.Split('/');
         _menuItems.TryAdd(parts[0], []);
-        ObservableCollection<MenuItemViewModel> activeCollection = _menuItems[parts[0]];
-        
-        if(parts.Length > 1)
+        var activeCollection = _menuItems[parts[0]];
+
+        if (parts.Length > 1)
             foreach (var part in parts.Skip(1))
-            {
                 if (activeCollection.FirstOrDefault(x => x.PartId == part) is { } mi)
                 {
                     activeCollection = mi.Items ?? new ObservableCollection<MenuItemViewModel>();
@@ -59,53 +57,33 @@ public class WindowService : IWindowService
                         Items = newItems
                     };
                     var insert = false;
-                    for(var i = 0; i < activeCollection.Count; i++)
-                    {
+                    for (var i = 0; i < activeCollection.Count; i++)
                         if (activeCollection[i].Priority >= 0)
                         {
                             activeCollection.Insert(i, newPart);
                             insert = true;
                             break;
                         }
-                    }
-                    if(!insert) activeCollection.Add(newPart);
+
+                    if (!insert) activeCollection.Add(newPart);
                     activeCollection = newItems;
                 }
-            }
 
         if (menuItems.Length == 0) return;
-        
+
         foreach (var a in menuItems)
         {
-            if (activeCollection.FirstOrDefault(x => x.PartId == a.PartId) is {} duplicate)
+            if (activeCollection.FirstOrDefault(x => x.PartId == a.PartId) is { } duplicate)
             {
                 activeCollection.Remove(duplicate);
-                
+
                 var newList = new ObservableCollection<MenuItemViewModel>();
-                if(duplicate.Items != null) Insert(newList, duplicate.Items.ToArray());
-                if(a.Items != null) Insert(newList, a.Items.ToArray());
+                if (duplicate.Items != null) Insert(newList, duplicate.Items.ToArray());
+                if (a.Items != null) Insert(newList, a.Items.ToArray());
                 a.Items = newList;
             }
-            
-            Insert(activeCollection, a);
-        }
-    }
 
-    private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
-    {
-        foreach (var item in items)
-        {
-            var insert = false;
-            for(var i = 0; i < collection.Count; i++)
-            {
-                if (item.Priority <= collection[i].Priority)
-                {
-                    collection.Insert(i, item);
-                    insert = true;
-                    break;
-                }
-            }
-            if(!insert) collection.Add(item);
+            Insert(activeCollection, a);
         }
     }
 
@@ -117,7 +95,9 @@ public class WindowService : IWindowService
 
     public void Show(FlexibleWindow window, Window? owner = null)
     {
-        owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime ? null : ContainerLocator.Container.Resolve<MainWindow>();
+        owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime
+            ? null
+            : ContainerLocator.Container.Resolve<MainWindow>();
         window.Show(owner);
     }
 
@@ -128,12 +108,13 @@ public class WindowService : IWindowService
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
             return window.ShowDialogAsync(owner);
         }
+
         return ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
     }
-    
+
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        return ShowDialogAsync(new MessageBoxWindow(title, message, MessageBoxMode.OnlyOk, MessageBoxIcon.Info),owner);
+        return ShowDialogAsync(new MessageBoxWindow(title, message, MessageBoxMode.OnlyOk, MessageBoxIcon.Info), owner);
     }
 
     public async Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon, Window? owner)
@@ -142,8 +123,9 @@ public class WindowService : IWindowService
         await ShowDialogAsync(msg, owner);
         return msg.BoxStatus;
     }
-    
-    public async Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon, Window? owner)
+
+    public async Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon,
+        Window? owner)
     {
         var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
         await ShowDialogAsync(msg, owner);
@@ -157,7 +139,8 @@ public class WindowService : IWindowService
         return msg.BoxStatus;
     }
 
-    public async Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue, Window? owner = null)
+    public async Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
+        Window? owner = null)
     {
         var msg = new MessageBoxWindow(title, message,
             MessageBoxMode.Input, icon)
@@ -169,7 +152,8 @@ public class WindowService : IWindowService
         return msg.Input;
     }
 
-    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, Window? owner = null)
+    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon,
+        Window? owner = null)
     {
         var msg = new MessageBoxWindow(title, message,
             MessageBoxMode.SelectFolder, icon);
@@ -178,7 +162,8 @@ public class WindowService : IWindowService
         return msg.Input;
     }
 
-    public async Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon, IEnumerable<object> options, object? defaultOption, Window? owner = null)
+    public async Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon,
+        IEnumerable<object> options, object? defaultOption, Window? owner = null)
     {
         var msg = new MessageBoxWindow(title, message,
             MessageBoxMode.SelectItem, MessageBoxIcon.Info);
@@ -191,16 +176,35 @@ public class WindowService : IWindowService
 
     public void ShowNotification(string title, string message, NotificationType type)
     {
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new Notification(title, message, type));
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager
+            ?.Show(new Notification(title, message, type));
     }
 
-    public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction, IImage? icon = null)
+    public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction,
+        IImage? icon = null)
     {
         var model = new CustomNotificationViewModel(title, message, buttonText, buttonAction, icon);
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new CustomNotificationView()
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new CustomNotificationView
         {
             DataContext = model
         });
+    }
+
+    private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
+    {
+        foreach (var item in items)
+        {
+            var insert = false;
+            for (var i = 0; i < collection.Count; i++)
+                if (item.Priority <= collection[i].Priority)
+                {
+                    collection.Insert(i, item);
+                    insert = true;
+                    break;
+                }
+
+            if (!insert) collection.Add(item);
+        }
     }
 }

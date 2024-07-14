@@ -10,12 +10,12 @@ public interface ILanguageService
     public bool IsActivated { get; }
     public bool IsLanguageServiceReady { get; }
     public string? Workspace { get; }
-    
+
     public event EventHandler? LanguageServiceActivated;
     public event EventHandler? LanguageServiceDeactivated;
-    
+
     public ITypeAssistance GetTypeAssistance(IEditor editor);
-    
+
     public Task ActivateAsync();
     public Task DeactivateAsync();
     public Task RestartAsync();
@@ -31,8 +31,10 @@ public interface ILanguageService
     public IEnumerable<string> GetSignatureHelpRetriggerChars();
     public IEnumerable<string> GetCompletionTriggerChars();
     public IEnumerable<string> GetCompletionCommitChars();
-    
-    public Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos, CompletionTriggerKind triggerKind, string? triggerChar);
+
+    public Task<CompletionList?> RequestCompletionAsync(string fullPath, Position pos,
+        CompletionTriggerKind triggerKind, string? triggerChar);
+
     public Task<CompletionItem?> ResolveCompletionItemAsync(CompletionItem completionItem);
     public Task<RangeOrPlaceholderRange?> PrepareRenameAsync(string fullPath, Position pos);
     public Task<WorkspaceEdit?> RequestRenameAsync(string fullPath, Position pos, string newName);
@@ -40,18 +42,24 @@ public interface ILanguageService
     public Task<SignatureHelp?> RequestSignatureHelpAsync(string fullPath, Position pos,
         SignatureHelpTriggerKind triggerKind, string? triggerChar, bool isRetrigger,
         SignatureHelp? activeSignatureHelp);
-    
-    public Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range, Diagnostic diagnostic);
+
+    public Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range,
+        Diagnostic diagnostic);
+
     public Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath);
     public Task<Hover?> RequestHoverAsync(string fullPath, Position pos);
     public Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos);
     public Task<Container<WorkspaceSymbol>?> RequestWorkspaceSymbolsAsync(string query);
+
     public Task<IEnumerable<LocationOrLocationLink>?> RequestTypeDefinitionAsync(string fullPath,
         Position pos);
+
     public Task<IEnumerable<LocationOrLocationLink>?> RequestDefinitionAsync(string fullPath, Position pos);
     public Task<LocationContainer?> RequestReferencesAsync(string fullPath, Position pos);
+
     public Task<IEnumerable<LocationOrLocationLink>?> RequestImplementationAsync(string fullPath,
         Position pos);
+
     public Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos);
     public Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath);
     public Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath);

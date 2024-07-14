@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
@@ -20,7 +19,7 @@ public class YosysService(
         try
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
-            
+
             var top = project.TopEntity?.Header ?? throw new Exception("TopEntity not set!");
 
             var includedFiles = project.Files
@@ -37,21 +36,25 @@ public class YosysService(
             var start = DateTime.Now;
             outputService.WriteLine("Compiling...\n==================");
 
-            var yosysSynthTool = properties.GetValueOrDefault("YosysToolchain_Yosys_SynthTool") ?? throw new Exception("Yosys Tool not set!");
-            
+            var yosysSynthTool = properties.GetValueOrDefault("YosysToolchain_Yosys_SynthTool") ??
+                                 throw new Exception("Yosys Tool not set!");
+
             List<string> yosysArguments =
                 ["-q", "-p", $"{yosysSynthTool} -json build/synth.json"];
             yosysArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_Yosys_Flags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
             yosysArguments.AddRange(includedFiles);
 
-            var nextPnrTool = properties.GetValueOrDefault("YosysToolchain_NextPnr_Tool") ?? throw new Exception("NextPnr Tool not set!");
+            var nextPnrTool = properties.GetValueOrDefault("YosysToolchain_NextPnr_Tool") ??
+                              throw new Exception("NextPnr Tool not set!");
             List<string> nextPnrArguments =
                 ["--json", "./build/synth.json", "--pcf", "project.pcf", "--asc", "./build/nextpnr.asc"];
             nextPnrArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_NextPnr_Flags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
 
-            var packTool = properties.GetValueOrDefault("YosysToolchain_Pack_Tool") ?? throw new Exception("Pack Tool not set!");;
+            var packTool = properties.GetValueOrDefault("YosysToolchain_Pack_Tool") ??
+                           throw new Exception("Pack Tool not set!");
+            ;
             List<string> packToolArguments = ["./build/nextpnr.asc", "./build/pack.bin"];
             packToolArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_Pack_Flags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
@@ -64,6 +67,7 @@ public class YosysService(
                         logger.Error(x);
                         return false;
                     }
+
                     outputService.WriteLine(x);
                     return true;
                 });

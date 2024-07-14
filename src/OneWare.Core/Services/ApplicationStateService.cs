@@ -1,11 +1,8 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Net.Mime;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -14,39 +11,39 @@ namespace OneWare.Core.Services;
 
 public class ApplicationStateService : ObservableObject, IApplicationStateService
 {
-    private readonly IWindowService _windowService;
-    
     private readonly object _activeLock = new();
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
-    
+
     private readonly List<Action> _shutdownActions = new();
-    
-    private ApplicationProcess _activeProcess = new ApplicationProcess(){State = AppState.Idle, StatusMessage = "Ready"};
-    public ApplicationProcess ActiveProcess
-    {
-        get => _activeProcess;
-        private set => SetProperty(ref _activeProcess, value);
-    }
-    
+    private readonly IWindowService _windowService;
+
+    private ApplicationProcess _activeProcess = new() { State = AppState.Idle, StatusMessage = "Ready" };
+
     public ApplicationStateService(IWindowService windowService)
     {
         _windowService = windowService;
-        
+
         _activeStates.CollectionChanged += (_, i) =>
         {
             if (_activeStates.Count > 0)
             {
                 //Check if active process is compiling
                 var withProcess = _activeStates.Where(x => x.Terminate != null).ToArray();
-                ActiveProcess = (withProcess.Any() ? withProcess.Last() : _activeStates.Last());
+                ActiveProcess = withProcess.Any() ? withProcess.Last() : _activeStates.Last();
             }
             else
             {
-                if (i.OldItems is {Count: > 0} && i.OldItems[0] is ApplicationProcess s)
-                    ActiveProcess = (new ApplicationProcess(){State = AppState.Idle, StatusMessage = s.FinishMessage});
+                if (i.OldItems is { Count: > 0 } && i.OldItems[0] is ApplicationProcess s)
+                    ActiveProcess = new ApplicationProcess { State = AppState.Idle, StatusMessage = s.FinishMessage };
             }
         };
+    }
+
+    public ApplicationProcess ActiveProcess
+    {
+        get => _activeProcess;
+        private set => SetProperty(ref _activeProcess, value);
     }
 
     /// <summary>
@@ -79,8 +76,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public async Task TerminateActiveDialogAsync()
     {
-        if(ActiveProcess.State == AppState.Idle) return;
-        
+        if (ActiveProcess.State == AppState.Idle) return;
+
         var result = await _windowService.ShowProceedWarningAsync("Are you sure you want to terminate the process?");
 
         if (result == MessageBoxStatus.Yes)
@@ -98,10 +95,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public void ExecuteShutdownActions()
     {
-        foreach (var action in _shutdownActions)
-        {
-            action.Invoke();
-        }
+        foreach (var action in _shutdownActions) action.Invoke();
     }
 
     public void TryShutdown()

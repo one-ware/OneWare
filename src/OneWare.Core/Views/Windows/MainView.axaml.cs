@@ -1,13 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using DynamicData;
-using DynamicData.Binding;
-using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Essentials.Controls;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
 
@@ -19,15 +14,16 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
     }
-    
+
     public async Task ShowVirtualDialogAsync(FlexibleWindow window)
     {
         var dialog = new VirtualDialogModel(window);
-        
+
         VirtualDialogModels.Add(dialog);
-        
+
         //Use Task.Run because of WASM Compatibility
-        await Task.Run(async () => await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h).Take(1).GetAwaiter()) ;
+        await Task.Run(async () => await Observable.FromEventPattern(h => window.Closed += h, h => window.Closed -= h)
+            .Take(1).GetAwaiter());
 
         VirtualDialogModels.Remove(dialog);
     }
@@ -39,13 +35,13 @@ public partial class MainView : UserControl
         DialogControl.Height = double.NaN;
         DialogControl.Width = double.NaN;
         DialogControl.Content = window;
-        
+
         if(!double.IsNaN(window.PrefWidth)) DialogControl.Width = window.PrefWidth < this.Bounds.Width ? window.PrefWidth : this.Bounds.Width;
         if(!double.IsNaN(window.PrefHeight)) DialogControl.Height = window.PrefHeight + 40 < this.Bounds.Height ? window.PrefHeight : this.Bounds.Height - 40;
 
         window.WhenValueChanged(x => x.Title).Subscribe(x => DialogTitle.Text = x);
         window.WhenValueChanged(x => x.Background).Subscribe(x => DialogControl.Background = x);
-        
+
         if (window.CustomIcon != null)
         {
             DialogIcon.Source = window.CustomIcon;
@@ -56,7 +52,7 @@ public partial class MainView : UserControl
             DialogIcon.IsVisible = false;
         }
     }
-    
+
     private void DialogCloseButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (_windowStack.Any())

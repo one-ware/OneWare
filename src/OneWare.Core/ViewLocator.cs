@@ -5,39 +5,38 @@ using Dock.Model.Core;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
-namespace OneWare.Core
-{
-    public class ViewLocator : IDataTemplate
-    {
-        public bool SupportsRecycling => false;
+namespace OneWare.Core;
 
-        public Control Build(object? data)
+public class ViewLocator : IDataTemplate
+{
+    public bool SupportsRecycling => false;
+
+    public Control Build(object? data)
+    {
+        var name = data?.GetType()?.AssemblyQualifiedName?.Replace("ViewModel", "View");
+        if (name == null) return new TextBlock { Text = "Invalid Data Type" };
+        var type = Type.GetType(name);
+        if (type != null && name.Split(",")[0].EndsWith("view", StringComparison.OrdinalIgnoreCase))
         {
-            var name = data?.GetType()?.AssemblyQualifiedName?.Replace("ViewModel", "View");
-            if (name == null) return new TextBlock { Text = "Invalid Data Type" };
-            var type = Type.GetType(name);
-            if (type != null && name.Split(",")[0].EndsWith("view", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                try
-                {
-                    var instance = ContainerLocator.Current.Resolve(type);
-                    if (instance != null)
-                        return (Control)instance;
-                }
-                catch (Exception e)
-                {
-                    ContainerLocator.Current.Resolve<ILogger>().Error(e.Message,e);
-                }
-              
-                return new TextBlock { Text = "Create Instance Failed: " + type.FullName };
+                var instance = ContainerLocator.Current.Resolve(type);
+                if (instance != null)
+                    return (Control)instance;
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Current.Resolve<ILogger>().Error(e.Message, e);
             }
 
-            return new TextBlock { Text = "Not Found: " + name };
+            return new TextBlock { Text = "Create Instance Failed: " + type.FullName };
         }
 
-        public bool Match(object? data)
-        {
-            return data is ObservableObject or IDockable;
-        }
+        return new TextBlock { Text = "Not Found: " + name };
+    }
+
+    public bool Match(object? data)
+    {
+        return data is ObservableObject or IDockable;
     }
 }

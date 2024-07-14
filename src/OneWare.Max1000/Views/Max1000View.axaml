@@ -6,10 +6,10 @@
              mc:Ignorable="d" d:DesignWidth="550" d:DesignHeight="220"
              x:Class="OneWare.Max1000.Views.Max1000View" x:DataType="viewModels:Max1000ViewModel">
 
-        <UserControl.Styles>
-                <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
-        </UserControl.Styles>
-        
+    <UserControl.Styles>
+        <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
+    </UserControl.Styles>
+
     <Grid HorizontalAlignment="Center" ColumnDefinitions="Auto, Auto, *" Height="220">
 
         <Border Background="#1c1c1c" Height="90" Width="60" HorizontalAlignment="Right">
@@ -17,16 +17,16 @@
                 <Menu Classes="VertLeft BindMenu" DragDrop.AllowDrop="True"
                       DataContext="{Binding InterfaceModels[PMOD_1]}" Margin="-14,0,0,0" HorizontalAlignment="Left"
                       VerticalAlignment="Center">
-                        <MenuItem Padding="0" Cursor="Hand"
-                                  ItemsSource="{Binding InterfaceMenu}">
-                                <MenuItem.Header>
-                                        <Grid>
-                                                <Rectangle Fill="#202020" Height="20" Width="60" HorizontalAlignment="Left" />
-                                                <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center" Height="15" TextAlignment="Center" Width="60" />
-                                        </Grid>
-                                </MenuItem.Header>
-                        </MenuItem>
+                    <MenuItem Padding="0" Cursor="Hand"
+                              ItemsSource="{Binding InterfaceMenu}">
+                        <MenuItem.Header>
+                            <Grid>
+                                <Rectangle Fill="#202020" Height="20" Width="60" HorizontalAlignment="Left" />
+                                <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" Height="15" TextAlignment="Center" Width="60" />
+                            </Grid>
+                        </MenuItem.Header>
+                    </MenuItem>
                 </Menu>
             </Grid>
         </Border>
@@ -57,18 +57,20 @@
                     <TextBlock Foreground="White" Text="SDRAM" FontSize="9" />
                 </Button>
                 <TextBlock Foreground="White" VerticalAlignment="Bottom" Padding="0" HorizontalAlignment="Right"
-                           Margin="0, 0, 93, 37" Text="CLK"/>
+                           Margin="0, 0, 93, 37" Text="CLK" />
                 <Button DataContext="{Binding PinModels[H6]}" Classes="Connectable" Background="Blue"
                         Width="10" Height="10" VerticalAlignment="Bottom" Padding="0" HorizontalAlignment="Right"
                         Margin="0, 0, 80, 40" />
 
                 <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12" VerticalAlignment="Top"
                          HorizontalAlignment="Left" Margin="5" />
-                <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12" VerticalAlignment="Bottom"
+                <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12"
+                         VerticalAlignment="Bottom"
                          HorizontalAlignment="Left" Margin="5" />
                 <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12" VerticalAlignment="Top"
                          HorizontalAlignment="Right" Margin="5" />
-                <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12" VerticalAlignment="Bottom"
+                <Ellipse Fill="{DynamicResource ThemeBackgroundBrush}" Height="12" Width="12"
+                         VerticalAlignment="Bottom"
                          HorizontalAlignment="Right" Margin="5" />
                 <Grid RowDefinitions="12, 12, 12, 12, 12, 12" ColumnDefinitions="30,12,12,30" Margin="-30, 24, 0, 24">
                     <TextBlock Grid.Column="0" Grid.Row="0" Text="3V3" Foreground="White" />
@@ -285,16 +287,18 @@
                Width="20" HorizontalAlignment="Left" VerticalAlignment="Center" />
         <Button Grid.Column="2" DataContext="{Binding PinModels[A4]}" Classes="Connectable"
                 HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Width="24" Background="Red"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 0, 0, 20" Content="RX"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 0, 0, 20"
+                Content="RX"
                 Foreground="White" />
         <Button Grid.Column="2" DataContext="{Binding PinModels[B4]}" Classes="Connectable"
                 HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Width="24" Background="Blue"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 20, 0, 0" Content="TX"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 20, 0, 0"
+                Content="TX"
                 Foreground="White" />
 
         <TextBlock Grid.Column="2" Text="Power LED" VerticalAlignment="Center" Margin="3, 61, 0, 0" />
         <TextBlock Grid.Column="2" Text="Config LED" VerticalAlignment="Center" Margin="3, 0, 0, 61" />
-        
+
         <Border Grid.Column="0" HorizontalAlignment="Right" Height="100">
             <Grid>
                 <Border ZIndex="10"
@@ -306,5 +310,5 @@
             </Grid>
         </Border>
     </Grid>
-        
+
 </UserControl>

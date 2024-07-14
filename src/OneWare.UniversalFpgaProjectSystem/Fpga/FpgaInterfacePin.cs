@@ -2,13 +2,13 @@
 
 public class FpgaInterfacePin
 {
-    public string Name { get; }
-    
-    public FpgaPin FpgaPin { get; }
-
     public FpgaInterfacePin(string name, FpgaPin pin)
     {
-        this.Name = name;
-        this.FpgaPin = pin;
+        Name = name;
+        FpgaPin = pin;
     }
+
+    public string Name { get; }
+
+    public FpgaPin FpgaPin { get; }
 }

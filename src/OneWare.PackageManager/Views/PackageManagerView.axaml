@@ -4,7 +4,6 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
                          xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
-                         xmlns:models="clr-namespace:OneWare.PackageManager.Models"
                          xmlns:mvvm="http://prismlibrary.com/"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          PrefWidth="1050" PrefHeight="600"
@@ -31,7 +30,8 @@
             <Border Grid.Column="1" Height="30" Grid.ColumnSpan="3" BorderThickness="0 0 0 1"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="5" Margin="5" HorizontalAlignment="Left">
-                    <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}" Command="{Binding RefreshPackagesAsync}">
+                    <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
+                            Command="{Binding RefreshPackagesAsync}">
                         <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
                     </Button>
                     <TextBlock Text="Installed" />
@@ -49,15 +49,16 @@
                     CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottomLeft}"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <TreeView Padding="3" BorderThickness="0" Background="Transparent"
-                         ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
-                         SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
+                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
                     <TreeView.Styles>
                         <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
                         </Style>
                     </TreeView.Styles>
                     <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel" ItemsSource="{Binding SubCategories}">
+                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
+                                          ItemsSource="{Binding SubCategories}">
                             <Grid ColumnDefinitions="Auto, Auto, *" Margin="2 5">
                                 <Image
                                     IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -85,7 +86,8 @@
                              ItemsSource="{Binding SelectedCategory.VisiblePackages, FallbackValue={x:Null}}">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="SelectionChanged">
-                                <InvokeCommandAction Command="{Binding #PluginList.((viewModels:PackageViewModel)SelectedItem).ResolveTabsAsync}" />
+                                <InvokeCommandAction
+                                    Command="{Binding #PluginList.((viewModels:PackageViewModel)SelectedItem).ResolveTabsAsync}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
                         <ListBox.ItemsPanel>
@@ -102,22 +104,27 @@
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             Source="{Binding Image}" Height="50" Width="50" />
                                         <controls:Spinner
-                                            Height="30" Width="30" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Height="30" Width="30" VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNull}}" />
                                     </Grid>
                                     <Grid DockPanel.Dock="Right" RowDefinitions="25, 25" Margin="10, 5, 0, 5"
                                           ColumnDefinitions="*, Auto">
                                         <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
-                                                   VerticalAlignment="Center" Text="{Binding PackageModel.Package.Name}" />
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding PackageModel.Package.Name}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
-                                                   VerticalAlignment="Center" Text="{Binding PackageModel.Package.Description}" TextWrapping="Wrap" />
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding PackageModel.Package.Description}"
+                                                   TextWrapping="Wrap" />
                                         <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal">
                                             <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                                                    Height="12"
                                                    IsVisible="{Binding PackageModel.WarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                    ToolTip.Tip="{Binding PackageModel.WarningText}" />
-                                            <TextBlock Text="{Binding PackageModel.InstalledVersion.Version, FallbackValue={}}"
-                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                            <TextBlock
+                                                Text="{Binding PackageModel.InstalledVersion.Version, FallbackValue={}}"
+                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                             <Button Content="{Binding PrimaryButtonText}"
                                                     Name="MainButton"
                                                     Background="{Binding PrimaryButtonBrush}"
@@ -141,8 +148,10 @@
                 </Grid>
             </DockPanel>
 
-            <GridSplitter Grid.Row="1" Grid.Column="2" Width="6" BorderThickness="1 0 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center"/>
-            
+            <GridSplitter Grid.Row="1" Grid.Column="2" Width="6" BorderThickness="1 0 0 0"
+                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                          Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
+
             <Border Grid.Row="1" Grid.Column="3" Padding="15"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                 <ContentPresenter Content="{Binding #PluginList.SelectedItem}" />

@@ -1,8 +1,5 @@
-﻿using OneWare.UniversalFpgaProjectSystem.Models;
-
-namespace OneWare.Vhdl.Parsing;
+﻿namespace OneWare.Vhdl.Parsing;
 
 public class VhdlParser
 {
-    
 }

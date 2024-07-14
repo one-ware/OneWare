@@ -1,29 +1,28 @@
 ﻿<sdkControls:AdvancedWindow xmlns="https://github.com/avaloniaui"
-                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                       xmlns:controls="clr-namespace:OneWare.Core.Views.Controls;assembly=OneWare.Core"
-                       mc:Ignorable="d" d:DesignWidth="1366" d:DesignHeight="768"
-                       x:Class="OneWare.Core.Views.Windows.MainWindow"
-                       Padding="5 0 5 5"
-                       Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
-                       CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
-                       Width="1366"
-                       Height="768"
-                       Name="MainWindowView"
-                       ExtendClientAreaToDecorationsHint="True"
-                       Title="{Binding Title}"
-                       WindowStartupLocation="CenterScreen"
-                       Background="{DynamicResource ThemeBackgroundBrush}"
-                       xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
-                       xmlns:coreControls="clr-namespace:OneWare.Core.ViewModels.Controls"
-                       xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-                       xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
-                       xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
-                       xmlns:sdkControls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                       xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
-                       x:DataType="viewmodels:MainWindowViewModel">
-    
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:controls="clr-namespace:OneWare.Core.Views.Controls;assembly=OneWare.Core"
+                            mc:Ignorable="d" d:DesignWidth="1366" d:DesignHeight="768"
+                            x:Class="OneWare.Core.Views.Windows.MainWindow"
+                            Padding="5 0 5 5"
+                            Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
+                            CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                            Width="1366"
+                            Height="768"
+                            Name="MainWindowView"
+                            ExtendClientAreaToDecorationsHint="True"
+                            Title="{Binding Title}"
+                            WindowStartupLocation="CenterScreen"
+                            Background="{DynamicResource ThemeBackgroundBrush}"
+                            xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
+                            xmlns:coreControls="clr-namespace:OneWare.Core.ViewModels.Controls"
+                            xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                            xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
+                            xmlns:sdkControls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                            xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+                            x:DataType="viewmodels:MainWindowViewModel">
+
     <Window.DataTemplates>
         <DataTemplate DataType="coreControls:CustomNotificationViewModel">
             <controls:CustomNotificationView />
@@ -37,32 +36,36 @@
 
             <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal" HorizontalAlignment="Left">
 
-                <Button ToolTip.Tip="Undo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Undo}">
+                <Button ToolTip.Tip="Undo" x:CompileBindings="False"
+                        Command="{Binding DockService.CurrentDocument.Undo}">
                     <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
                 </Button>
-                <Button ToolTip.Tip="Redo" x:CompileBindings="False" Command="{Binding DockService.CurrentDocument.Redo}">
+                <Button ToolTip.Tip="Redo" x:CompileBindings="False"
+                        Command="{Binding DockService.CurrentDocument.Redo}">
                     <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
                 </Button>
-                
+
                 <Border Classes="RoundToolBar" Margin="5 0 0 0"
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}">
 
                     <StackPanel Orientation="Horizontal">
-                        <sdkControls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}"/>
-                        <StackPanel Orientation="Horizontal" IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
+                        <sdkControls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
+                        <StackPanel Orientation="Horizontal"
+                                    IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
+                                       Height="24" />
                             <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
-                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}"></Image>
+                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
                             </Button>
                         </StackPanel>
                     </StackPanel>
-                    
+
                 </Border>
-                
-               <sdkControls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}"/>
-                
+
+                <sdkControls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}" />
+
             </StackPanel>
-            
+
             <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
                 <Button ToolTip.Tip="Settings" Command="{Binding OpenSettings}">
                     <Image Source="{DynamicResource Material.SettingsOutline}" />
@@ -75,9 +78,11 @@
 
     <sdkControls:AdvancedWindow.TitleBarContent>
         <StackPanel Orientation="Horizontal" Spacing="5">
-            <Image IsHitTestVisible="False" Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}" Height="20" Width="20"
+            <Image IsHitTestVisible="False"
+                   Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                   Height="20" Width="20"
                    IsVisible="{Binding $parent[Window].IsExtendedIntoWindowDecorations}" />
-            
+
             <Menu Height="30" Name="MainMenu" Classes="BindMainMenu" ItemsSource="{Binding MainMenu}">
                 <Menu.Styles>
                     <Style Selector="Menu > MenuItem AccessText">
@@ -89,14 +94,16 @@
     </sdkControls:AdvancedWindow.TitleBarContent>
 
     <sdkControls:AdvancedWindow.BottomContent>
-        <Border Name="BottomStatusRow" Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
+        <Border Name="BottomStatusRow" Padding="2"
+                CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
                 Background="{DynamicResource ThemeAccentBrush}">
             <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                 <!--Left elements-->
                 <sdkControls:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                  IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
+                                     IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
-                <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0" Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}" Foreground="White" />
+                <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0"
+                           Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}" Foreground="White" />
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
                             VerticalAlignment="Center" Margin="10 0">
@@ -107,19 +114,20 @@
                     </StackPanel.Styles>
 
 
-                    <sdkControls:UiExtensionCollection Extensions="{Binding BottomRightExtension}"/>
-                    
+                    <sdkControls:UiExtensionCollection Extensions="{Binding BottomRightExtension}" />
+
                     <Menu Classes="BindMenu">
                         <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
                             <MenuItem.Header>
                                 <StackPanel Cursor="Hand">
-                                    <TextBlock Text="{Binding CurrentEditor.CurrentFile.Extension, FallbackValue={x:Null}}"
-                                               Foreground="White" />
+                                    <TextBlock
+                                        Text="{Binding CurrentEditor.CurrentFile.Extension, FallbackValue={x:Null}}"
+                                        Foreground="White" />
                                 </StackPanel>
                             </MenuItem.Header>
                         </MenuItem>
                     </Menu>
-                    
+
                     <!--
                     <Menu IsVisible="{Binding States.ActiveArduinoProject^}">
                         <MenuItem>
@@ -143,7 +151,7 @@
                     </Menu>
                     -->
 
-                   
+
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
                         <TextBlock Foreground="White"

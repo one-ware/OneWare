@@ -15,18 +15,18 @@ namespace OneWare.Essentials.LanguageService;
 
 public abstract class LanguageServiceBase : ILanguageService
 {
-    public bool IsActivated { get; protected set; }
-    public string Name { get; }
-    public string? Workspace { get; }
-    public bool IsLanguageServiceReady { get; protected set; }
-    public event EventHandler? LanguageServiceActivated;
-    public event EventHandler? LanguageServiceDeactivated;
-
     protected LanguageServiceBase(string name, string? workspace = null)
     {
         Name = name;
         Workspace = workspace;
     }
+
+    public string Name { get; }
+    public bool IsActivated { get; protected set; }
+    public string? Workspace { get; }
+    public bool IsLanguageServiceReady { get; protected set; }
+    public event EventHandler? LanguageServiceActivated;
+    public event EventHandler? LanguageServiceDeactivated;
 
     public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
 
@@ -157,7 +157,7 @@ public abstract class LanguageServiceBase : ILanguageService
         return Task.FromResult<Container<ColorInformation>?>(null);
     }
 
-    public virtual Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath)     
+    public virtual Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath)
     {
         return Task.FromResult<IEnumerable<SemanticToken>?>(null);
     }
@@ -222,6 +222,26 @@ public abstract class LanguageServiceBase : ILanguageService
 
                     ApplyContainer(path, docChanges.TextDocumentEdit.Edits.AsEnumerable());
                 }
+    }
+
+    public virtual IEnumerable<string> GetSignatureHelpTriggerChars()
+    {
+        return [];
+    }
+
+    public virtual IEnumerable<string> GetSignatureHelpRetriggerChars()
+    {
+        return [];
+    }
+
+    public virtual IEnumerable<string> GetCompletionTriggerChars()
+    {
+        return [];
+    }
+
+    public virtual IEnumerable<string> GetCompletionCommitChars()
+    {
+        return [];
     }
 
     public virtual void ApplyContainer(string path, IEnumerable<TextEdit> con)
@@ -307,25 +327,5 @@ public abstract class LanguageServiceBase : ILanguageService
                 p.Range.Start.Character + 1, p.Range.End.Line + 1, p.Range.End.Character + 1,
                 p.Code?.String ?? p.Code?.Long.ToString() ?? "", p);
         }
-    }
-
-    public virtual IEnumerable<string> GetSignatureHelpTriggerChars()
-    {
-        return [];
-    }
-
-    public virtual IEnumerable<string> GetSignatureHelpRetriggerChars()
-    {
-        return [];
-    }
-
-    public virtual IEnumerable<string> GetCompletionTriggerChars()
-    {
-        return [];
-    }
-
-    public virtual IEnumerable<string> GetCompletionCommitChars()
-    {
-        return [];
     }
 }

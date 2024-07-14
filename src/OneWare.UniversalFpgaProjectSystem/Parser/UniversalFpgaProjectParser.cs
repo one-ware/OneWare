@@ -13,20 +13,20 @@ public static class UniversalFpgaProjectParser
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true,
+        AllowTrailingCommas = true
     };
-    
+
     public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path)
     {
         try
         {
             await using var stream = File.OpenRead(path);
-            
-            var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions()
+
+            var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
             {
-                AllowTrailingCommas = true,
+                AllowTrailingCommas = true
             });
-            
+
             var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
             return root;
         }
@@ -46,9 +46,9 @@ public static class UniversalFpgaProjectParser
                 stream.SetLength(0);
                 await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
             }
-            
+
             root.LastSaveTime = DateTime.Now;
-            
+
             return true;
         }
         catch (Exception e)

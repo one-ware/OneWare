@@ -1,12 +1,11 @@
 ﻿using OneWare.Essentials.Controls;
 
-namespace OneWare.PackageManager.Views
+namespace OneWare.PackageManager.Views;
+
+public partial class PackageManagerView : FlexibleWindow
 {
-    public partial class PackageManagerView : FlexibleWindow
+    public PackageManagerView()
     {
-        public PackageManagerView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

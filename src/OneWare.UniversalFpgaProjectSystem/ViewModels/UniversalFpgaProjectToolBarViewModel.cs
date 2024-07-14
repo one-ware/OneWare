@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Models;
@@ -13,45 +12,25 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 {
-    public FpgaService FpgaService { get; }
-    public IProjectExplorerService ProjectExplorerService { get; }
     private readonly IWindowService _windowService;
-    
+
+    private bool _isVisible;
+
     private bool _longTermProgramming;
 
-    public bool LongTermProgramming
-    {
-        get => _longTermProgramming;
-        set => SetProperty(ref _longTermProgramming, value);
-    }
-
-    private bool _isVisible = false;
-
-    public bool IsVisible
-    {
-        get => _isVisible;
-        set => SetProperty(ref _isVisible, value);
-    }
-
     private UniversalFpgaProjectRoot? _project;
-    
-    public UniversalFpgaProjectRoot? Project
-    {
-        get => _project;
-        set => SetProperty(ref _project, value);
-    }
-    
-    public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
 
-    public UniversalFpgaProjectToolBarViewModel(IWindowService windowService, IProjectExplorerService projectExplorerService, ISettingsService settingsService, FpgaService fpgaService)
+    public UniversalFpgaProjectToolBarViewModel(IWindowService windowService,
+        IProjectExplorerService projectExplorerService, ISettingsService settingsService, FpgaService fpgaService)
     {
         _windowService = windowService;
         ProjectExplorerService = projectExplorerService;
         FpgaService = fpgaService;
-        
-        DownloaderConfigurationExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_DownloaderConfigurationExtension");
-        
-        settingsService.Bind("UniversalFpgaProjectSystem_LongTermProgramming", 
+
+        DownloaderConfigurationExtension =
+            windowService.GetUiExtensions("UniversalFpgaToolBar_DownloaderConfigurationExtension");
+
+        settingsService.Bind("UniversalFpgaProjectSystem_LongTermProgramming",
             this.WhenValueChanged(x => x.LongTermProgramming)).Subscribe(x => LongTermProgramming = x);
 
         projectExplorerService
@@ -63,6 +42,29 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
             });
     }
 
+    public FpgaService FpgaService { get; }
+    public IProjectExplorerService ProjectExplorerService { get; }
+
+    public bool LongTermProgramming
+    {
+        get => _longTermProgramming;
+        set => SetProperty(ref _longTermProgramming, value);
+    }
+
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set => SetProperty(ref _isVisible, value);
+    }
+
+    public UniversalFpgaProjectRoot? Project
+    {
+        get => _project;
+        set => SetProperty(ref _project, value);
+    }
+
+    public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
+
     public void ToggleProjectToolchain(IFpgaToolchain toolchain)
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
@@ -72,12 +74,12 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
             _ = ProjectExplorerService.SaveProjectAsync(project);
         }
     }
-    
+
     public void ToggleLongTermProgramming()
     {
         LongTermProgramming = !LongTermProgramming;
     }
-    
+
     public void ToggleProjectLoader(IFpgaLoader loader)
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
@@ -87,21 +89,21 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
             _ = ProjectExplorerService.SaveProjectAsync(project);
         }
     }
-    
+
     public async Task CompileAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-        {
-            await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView()
+            await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView
             {
-                DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectCompileViewModel>((typeof(UniversalFpgaProjectRoot), project))
+                DataContext =
+                    ContainerLocator.Container.Resolve<UniversalFpgaProjectCompileViewModel>((
+                        typeof(UniversalFpgaProjectRoot), project))
             });
-        }
     }
 
     public async Task DownloadAsync()
     {
-        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project) 
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)
             await project.Loader.DownloadAsync(project);
     }
 }

@@ -29,72 +29,79 @@ public class UniversalFpgaProjectSystemModule : IModule
         var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
         var windowService = containerProvider.Resolve<IWindowService>();
         var settingsService = containerProvider.Resolve<ISettingsService>();
-        
+
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
-        
+
         containerProvider
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
-        
-        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
+
+        containerProvider.Resolve<ILanguageManager>()
+            .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemViewModel("FpgaProject")
             {
                 Header = "Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
-                Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                Icon = SharedConverters.PathToBitmapConverter.Convert(
+                    ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
-        
+
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemViewModel("FpgaProject")
             {
                 Header = "Project",
-                Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>().LoadProjectFileDialogAsync(manager, 
-                    new FilePickerFileType($"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
-                {
-                    Patterns = new[] { $"*{UniversalFpgaProjectRoot.ProjectFileExtension}" }
-                })),
-                Icon = SharedConverters.PathToBitmapConverter.Convert(ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>()
+                    .LoadProjectFileDialogAsync(manager,
+                        new FilePickerFileType(
+                            $"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
+                        {
+                            Patterns = new[] { $"*{UniversalFpgaProjectRoot.ProjectFileExtension}" }
+                        })),
+                Icon = SharedConverters.PathToBitmapConverter.Convert(
+                    ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
 
         var toolBarViewModel = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
-        
+
         windowService.RegisterMenuItem("MainWindow_MainMenu",
             new MenuItemViewModel("FPGA")
             {
                 Header = "FPGA",
-                Priority = 200,
+                Priority = 200
             });
-        
+
         windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
-            [
-                new MenuItemViewModel("Download")
-                {
-                    Header = "Download",
-                    Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-                    IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
-                },
-                new MenuItemViewModel("Compile")
-                {
-                    Header = "Compile",
-                    Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-                    IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
-                },
-            ]);
-        
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new UiExtension(x => new UniversalFpgaProjectToolBarView() { DataContext = toolBarViewModel }));
-        
+        [
+            new MenuItemViewModel("Download")
+            {
+                Header = "Download",
+                Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
+            },
+            new MenuItemViewModel("Compile")
+            {
+                Header = "Compile",
+                Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
+                IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+            }
+        ]);
+
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
+            new UiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
+
         windowService.RegisterUiExtension("EditView_Top", new UiExtension(x =>
         {
-            if(x is IFile)
-                return new UniversalFpgaProjectTestBenchToolBarView()
+            if (x is IFile)
+                return new UniversalFpgaProjectTestBenchToolBarView
                 {
-                    DataContext = containerProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
+                    DataContext =
+                        containerProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
                 };
             return null;
-        }) );
-        
+        }));
+
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
     }

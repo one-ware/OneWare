@@ -1,6 +1,5 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
         xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials">
 
     <Design.PreviewWith>
@@ -9,13 +8,13 @@
                 <MenuItem Header="File">
                     <MenuItem Header="Test" InputGesture="STRG + X" />
                     <MenuItem Header="Test" />
-                    <Separator/>
+                    <Separator />
                     <MenuItem Header="Test" />
                 </MenuItem>
             </Menu>
         </Border>
     </Design.PreviewWith>
-    
+
     <Style Selector="Expander.Invisible /template/ ToggleButton#PART_toggle">
         <Setter Property="Template">
             <ControlTemplate>
@@ -31,50 +30,50 @@
     </Style>
 
     <Style Selector="MenuItem:selected /template/ Border#root">
-      <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-      <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
-    
+
     <Style Selector="MenuItem:pointerover /template/ Border#root">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}"/>
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}" />
     </Style>
-    
+
     <Style Selector="MenuItem Image">
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="ContextMenu">
         <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Padding" Value="2"/>
+        <Setter Property="Padding" Value="2" />
     </Style>
-    
+
     <!-- Needed to fix contextmenu on 175% scaling -->
     <Style Selector="ContextMenu /template/ ScrollViewer">
-        <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
     </Style>
-    
+
     <!-- Needed to fix contextmenu on 175% scaling -->
     <Style Selector="Menu > MenuItem ScrollViewer, ContextMenu > MenuItem ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
     </Style>
-    
+
     <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border">
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
-    
+
     <Style Selector="Menu > MenuItem AccessText">
-      <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    
+
     <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="viewModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
         <Setter Property="Command" Value="{Binding Command}" />
         <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
-        <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="InputGesture" Value="{Binding InputGesture}" />
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
@@ -91,7 +90,7 @@
         <Setter Property="ItemsSource" Value="{Binding Items}" />
         <Setter Property="Command" Value="{Binding Command}" />
         <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
-        <Setter Property="InputGesture" Value="{Binding InputGesture}"/>
+        <Setter Property="InputGesture" Value="{Binding InputGesture}" />
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
@@ -100,5 +99,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
 </Styles>

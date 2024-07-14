@@ -23,37 +23,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace OneWare.Debugger
+namespace OneWare.Debugger;
+
+public class GdbCommandResult : ResultData
 {
-    public class GdbCommandResult : ResultData
+    public GdbCommandResult(string line)
     {
-        public GdbCommandResult(string line)
+        if (line.StartsWith("^done"))
         {
-            if (line.StartsWith("^done"))
+            Status = CommandStatus.Done;
+            ReadResults(line, 6);
+        }
+        else if (line.StartsWith("^error"))
+        {
+            Status = CommandStatus.Error;
+            if (line.Length > 7)
             {
-                Status = CommandStatus.Done;
-                ReadResults(line, 6);
-            }
-            else if (line.StartsWith("^error"))
-            {
-                Status = CommandStatus.Error;
-                if (line.Length > 7)
-                {
-                    ReadResults(line, 7);
-                    ErrorMessage = GetValue("msg");
-                }
-            }
-            else if (line.StartsWith("^running"))
-            {
-                Status = CommandStatus.Running;
-            }
-            else if (line.StartsWith("^connected"))
-            {
-                Status = CommandStatus.Connected;
+                ReadResults(line, 7);
+                ErrorMessage = GetValue("msg");
             }
         }
-
-        public CommandStatus Status { get; init; }
-        public string? ErrorMessage { get; set; }
+        else if (line.StartsWith("^running"))
+        {
+            Status = CommandStatus.Running;
+        }
+        else if (line.StartsWith("^connected"))
+        {
+            Status = CommandStatus.Connected;
+        }
     }
+
+    public CommandStatus Status { get; init; }
+    public string? ErrorMessage { get; set; }
 }

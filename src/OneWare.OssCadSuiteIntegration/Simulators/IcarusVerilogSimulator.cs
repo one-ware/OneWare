@@ -17,10 +17,6 @@ public class IcarusVerilogSimulator : IFpgaSimulator
     private readonly IDockService _dockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    public string Name => "IVerilog";
-
-    public UiExtension? TestBenchToolbarTopUiExtension { get; }
-
     public IcarusVerilogSimulator(IChildProcessService childProcessService, IDockService dockService,
         IProjectExplorerService projectExplorerService)
     {
@@ -30,13 +26,17 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         TestBenchToolbarTopUiExtension = new UiExtension(x =>
         {
             if (x is TestBenchContext tb)
-                return new IcarusVerilogSimulatorToolbarView()
+                return new IcarusVerilogSimulatorToolbarView
                 {
                     DataContext = new IcarusVerilogSimulatorToolbarViewModel(tb, this)
                 };
             return null;
         });
     }
+
+    public string Name => "IVerilog";
+
+    public UiExtension? TestBenchToolbarTopUiExtension { get; }
 
     public async Task<bool> SimulateAsync(IFile file)
     {
@@ -78,12 +78,9 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 
                 var doc = await _dockService.OpenFileAsync(vcdFile);
-                if (doc is IStreamableDocument vcd)
-                {
-                    vcd.PrepareLiveStream();
-                }
+                if (doc is IStreamableDocument vcd) vcd.PrepareLiveStream();
             }
-            
+
             return true;
         }
 

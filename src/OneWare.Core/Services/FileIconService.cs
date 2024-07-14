@@ -8,13 +8,13 @@ namespace OneWare.Core.Services;
 
 public class FileIconService : IFileIconService
 {
-    private readonly ILogger _logger;
     private readonly Dictionary<string, IObservable<IImage>> _iconStore = new();
-    
+    private readonly ILogger _logger;
+
     public FileIconService(ILogger logger)
     {
         _logger = logger;
-        
+
         RegisterFileIcon("VsImageLib.File16X", ".*");
         RegisterFileIcon("GhdpFileIcon", ".ghdp");
         RegisterFileIcon("VhdpFileIcon", ".vhdp");
@@ -36,12 +36,9 @@ public class FileIconService : IFileIconService
 
     public void RegisterFileIcon(IObservable<IImage> icon, params string[] extensions)
     {
-        foreach (var ext in extensions)
-        {
-            _iconStore[ext] = icon;
-        }
+        foreach (var ext in extensions) _iconStore[ext] = icon;
     }
-    
+
     public void RegisterFileIcon(string resourceName, params string[] extensions)
     {
         try
@@ -54,13 +51,10 @@ public class FileIconService : IFileIconService
             _logger.Error(e.Message, e);
         }
     }
-    
+
     public IObservable<IImage> GetFileIcon(string extension)
     {
-        if (_iconStore.TryGetValue(extension, out var observable))
-        {
-            return observable;
-        }
+        if (_iconStore.TryGetValue(extension, out var observable)) return observable;
         return _iconStore[".*"];
     }
 }

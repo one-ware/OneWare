@@ -1,27 +1,27 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Enums;
-using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageCategoryViewModel(string header, IObservable<object?>? iconObservable = null) : ObservableObject
 {
     private bool _isExpanded = true;
+
     public bool IsExpanded
     {
         get => _isExpanded;
         set => SetProperty(ref _isExpanded, value);
     }
-    
+
     public List<PackageViewModel> Packages { get; } = [];
-    
+
     public ObservableCollection<PackageViewModel> VisiblePackages { get; } = [];
 
     public ObservableCollection<PackageCategoryViewModel> SubCategories { get; } = [];
-    
+
     public IObservable<object?>? IconObservable { get; } = iconObservable;
-    
+
     public string Header { get; } = header;
 
     public void Add(PackageViewModel model)
@@ -38,12 +38,13 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
     public void Filter(string filter, bool showInstalled, bool showAvailable, bool showUpdate)
     {
         var filtered =
-            Packages.Where(x => x.PackageModel.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
-        
+            Packages.Where(x =>
+                x.PackageModel.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
+
         if (!showInstalled) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Installed);
         if (!showAvailable) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Available);
         if (!showUpdate) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.UpdateAvailable);
-        
+
         foreach (var subCategory in SubCategories)
         {
             subCategory.Filter(filter, showInstalled, showAvailable, showUpdate);

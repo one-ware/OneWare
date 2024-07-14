@@ -10,74 +10,91 @@ public class Setting : ObservableObject
 {
     private object _value;
 
-    public object Value
-    {
-        get => _value;
-        set => SetProperty(ref _value, value);
-    }
-    
-    public object DefaultValue { get; }
-
     public Setting(object defaultValue)
     {
         DefaultValue = defaultValue;
         _value = defaultValue;
     }
+
+    public object Value
+    {
+        get => _value;
+        set => SetProperty(ref _value, value);
+    }
+
+    public object DefaultValue { get; }
 }
 
 public class TitledSetting : Setting
 {
-    public string Title { get; }
-    
-    public string Description { get; }
-
     public TitledSetting(string title, string description, object defaultValue) : base(defaultValue)
     {
         Title = title;
         Description = description;
     }
+
+    public string Title { get; }
+
+    public string Description { get; }
 }
 
 public class TextBoxSetting : TitledSetting
 {
-    public string? Watermark { get; }
-    public TextBoxSetting(string title, string description, object defaultValue, string? watermark) : base(title, description, defaultValue)
+    public TextBoxSetting(string title, string description, object defaultValue, string? watermark) : base(title,
+        description, defaultValue)
     {
         Watermark = watermark;
     }
+
+    public string? Watermark { get; }
 }
 
 public class ComboBoxSetting : TitledSetting
 {
-    public object[] Options { get; }
-    public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options) : base(title, description, defaultValue)
+    public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options) : base(
+        title, description, defaultValue)
     {
         Options = options.ToArray();
     }
+
+    public object[] Options { get; }
 }
 
 public class SliderSetting : TitledSetting
 {
-    public int Min { get; }
-    
-    public int Max { get; }
-    
-    public int Step { get; }
-    
-    public SliderSetting(string title, string description, object defaultValue, int min, int max, int step) : base(title, description, defaultValue)
+    public SliderSetting(string title, string description, object defaultValue, int min, int max, int step) : base(
+        title, description, defaultValue)
     {
         Min = min;
         Max = max;
         Step = step;
     }
+
+    public int Min { get; }
+
+    public int Max { get; }
+
+    public int Step { get; }
 }
 
 public abstract class PathSetting : TextBoxSetting
 {
+    private bool _isValid = true;
+
+    protected PathSetting(string title, string description, object defaultValue, string? watermark,
+        string? startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
+    {
+        StartDirectory = startDirectory;
+
+        if (checkPath != null)
+        {
+            CanVerify = true;
+            this.WhenValueChanged(x => x.Value).Subscribe(x => { IsValid = checkPath.Invoke((x as string)!); });
+        }
+    }
+
     public string? StartDirectory { get; }
     public bool CanVerify { get; }
-    
-    private bool _isValid = true;
 
     public bool IsValid
     {
@@ -85,25 +102,13 @@ public abstract class PathSetting : TextBoxSetting
         set => SetProperty(ref _isValid, value);
     }
 
-    protected PathSetting(string title, string description, object defaultValue, string? watermark, string? startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
-    {
-        StartDirectory = startDirectory;
-
-        if (checkPath != null)
-        {
-            CanVerify = true;
-            this.WhenValueChanged(x => x.Value).Subscribe(x =>
-            {
-                IsValid = checkPath.Invoke((x as string)!);
-            });
-        }
-    }
-
     public abstract Task SelectPathAsync(TopLevel topLevel);
 }
+
 public class FolderPathSetting : PathSetting
 {
-    public FolderPathSetting(string title, string description, object defaultValue, string? watermark, string? startDirectory, Func<string, bool>? checkPath) 
+    public FolderPathSetting(string title, string description, object defaultValue, string? watermark,
+        string? startDirectory, Func<string, bool>? checkPath)
         : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
     }
@@ -117,13 +122,14 @@ public class FolderPathSetting : PathSetting
 
 public class FilePathSetting : PathSetting
 {
-    public FilePickerFileType[] Filters { get; }
-    
-    public FilePathSetting(string title, string description, object defaultValue, string? watermark, string startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters) 
+    public FilePathSetting(string title, string description, object defaultValue, string? watermark,
+        string startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters)
         : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
         Filters = filters;
     }
+
+    public FilePickerFileType[] Filters { get; }
 
     public override async Task SelectPathAsync(TopLevel topLevel)
     {

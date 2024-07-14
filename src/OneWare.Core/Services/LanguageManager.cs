@@ -18,30 +18,16 @@ namespace OneWare.Core.Services;
 internal class LanguageManager : ObservableObject, ILanguageManager
 {
     private readonly Dictionary<string, string> _extensionLinks = new();
-    private readonly Dictionary<string, Type> _singleInstanceServerTypes = new();
-    private readonly Dictionary<string, Type> _workspaceServerTypes = new();
     private readonly Dictionary<Type, ILanguageService> _singleInstanceServers = new();
-    private readonly Dictionary<Type, Dictionary<string, ILanguageService>> _workspaceServers = new();
+    private readonly Dictionary<string, Type> _singleInstanceServerTypes = new();
 
     private readonly Dictionary<string, Type> _standAloneTypeAssistance = new();
 
     private readonly CustomTextMateRegistryOptions _textMateRegistryOptions = new();
-    public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
-    public event EventHandler<string>? LanguageSupportAdded;
+    private readonly Dictionary<Type, Dictionary<string, ILanguageService>> _workspaceServers = new();
+    private readonly Dictionary<string, Type> _workspaceServerTypes = new();
 
     private IRawTheme _currentEditorTheme;
-
-    public IRawTheme CurrentEditorTheme
-    {
-        get => _currentEditorTheme;
-        private set
-        {
-            SetProperty(ref _currentEditorTheme, value);
-            UpdateThemeColors();
-        }
-    }
-
-    public Dictionary<string, IBrush> CurrentEditorThemeColors { get; } = new();
 
     public LanguageManager(ISettingsService settingsService)
     {
@@ -65,40 +51,22 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
     }
-    
-    private void UpdateThemeColors()
+
+    public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
+    public event EventHandler<string>? LanguageSupportAdded;
+
+    public IRawTheme CurrentEditorTheme
     {
-        CurrentEditorThemeColors.Clear();
-
-        foreach (var tokenColor in CurrentEditorTheme.GetTokenColors())
+        get => _currentEditorTheme;
+        private set
         {
-            if (tokenColor.GetScope() is IList<object> scopes)
-            {
-                foreach (var scopeObj in scopes)
-                {
-                    if(scopeObj is not string scope) continue;
-                    
-                    var kind = scope switch
-                    {
-                        "entity.name.class" => "class",
-                        "entity.name.function" => "function",
-                        "entity.name.type" => "type",
-                        "entity.name.variable" => "variable",
-                        "entity.name.namespace" => "namespace",
-                        "entity.name.constant" => "constant",
-                        "entity.name.operator" => "operator",
-                        _ => null
-                    };
-
-                    if (kind != null)
-                    {
-                        CurrentEditorThemeColors[kind] = SolidColorBrush.Parse(tokenColor.GetSetting().GetForeground());
-                    }
-                }
-            }
+            SetProperty(ref _currentEditorTheme, value);
+            UpdateThemeColors();
         }
     }
-    
+
+    public Dictionary<string, IBrush> CurrentEditorThemeColors { get; } = new();
+
     public void RegisterTextMateLanguage(string id, string grammarPath, params string[] extensions)
     {
         _textMateRegistryOptions.RegisterLanguage(id, grammarPath, extensions);
@@ -108,7 +76,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
     {
         _extensionLinks.TryAdd(source, target);
         _textMateRegistryOptions.RegisterExtensionLink(source, target);
-        
+
         LanguageSupportAdded?.Invoke(this, source);
     }
 
@@ -122,13 +90,16 @@ internal class LanguageManager : ObservableObject, ILanguageManager
     {
         foreach (var s in supportedFileTypes)
         {
-            if (!workspaceDependent) _singleInstanceServerTypes[s] = type;
+            if (!workspaceDependent)
+            {
+                _singleInstanceServerTypes[s] = type;
+            }
             else
             {
                 _workspaceServerTypes[s] = type;
                 _workspaceServers.TryAdd(type, new Dictionary<string, ILanguageService>());
             }
-            
+
             LanguageSupportAdded?.Invoke(this, s);
         }
     }
@@ -138,7 +109,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         foreach (var s in supportedFileTypes)
         {
             _standAloneTypeAssistance[s] = type;
-            
+
             LanguageSupportAdded?.Invoke(this, s);
         }
     }
@@ -148,7 +119,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _extensionLinks.TryGetValue(file.Extension, out var extensionLink);
         if (_workspaceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type2))
         {
-            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ?? "";
+            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ??
+                            "";
 
             if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
             if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not
@@ -180,24 +152,50 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         if (service == null)
         {
             _extensionLinks.TryGetValue(editor.CurrentFile.Extension, out var extensionLink);
-            if (!_standAloneTypeAssistance.TryGetValue(extensionLink ?? editor.CurrentFile.Extension, out var type)) return null;
+            if (!_standAloneTypeAssistance.TryGetValue(extensionLink ?? editor.CurrentFile.Extension, out var type))
+                return null;
             if (ContainerLocator.Container.Resolve(type, (typeof(IEditor), editor)) is not ITypeAssistance newInstance)
                 throw new TypeLoadException(nameof(type) + " is not " + nameof(ITypeAssistance));
             return newInstance;
         }
-        
+
         _ = service.ActivateAsync();
         return service.GetTypeAssistance(editor);
     }
 
     public void AddProject(IProjectRoot project)
     {
-        
     }
 
     public void RemoveProject(IProjectRoot project)
     {
-        
+    }
+
+    private void UpdateThemeColors()
+    {
+        CurrentEditorThemeColors.Clear();
+
+        foreach (var tokenColor in CurrentEditorTheme.GetTokenColors())
+            if (tokenColor.GetScope() is IList<object> scopes)
+                foreach (var scopeObj in scopes)
+                {
+                    if (scopeObj is not string scope) continue;
+
+                    var kind = scope switch
+                    {
+                        "entity.name.class" => "class",
+                        "entity.name.function" => "function",
+                        "entity.name.type" => "type",
+                        "entity.name.variable" => "variable",
+                        "entity.name.namespace" => "namespace",
+                        "entity.name.constant" => "constant",
+                        "entity.name.operator" => "operator",
+                        _ => null
+                    };
+
+                    if (kind != null)
+                        CurrentEditorThemeColors[kind] = SolidColorBrush.Parse(tokenColor.GetSetting().GetForeground());
+                }
     }
 
     public async Task CleanResourcesAsync()

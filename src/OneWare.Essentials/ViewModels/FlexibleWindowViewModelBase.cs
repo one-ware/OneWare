@@ -12,7 +12,7 @@ public class FlexibleWindowViewModelBase : Document
         get => _isDirty;
         set => SetProperty(ref _isDirty, value);
     }
-    
+
     public virtual void Close(FlexibleWindow window)
     {
         IsDirty = false;

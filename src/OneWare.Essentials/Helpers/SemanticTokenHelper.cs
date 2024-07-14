@@ -11,10 +11,10 @@ public static class SemanticTokenHelper
         var tokens = new List<SemanticToken>();
         var line = 0;
         var character = 0;
-        
+
         var types = legend.TokenTypes.ToArray();
         var modifiers = legend.TokenModifiers.ToArray();
-        
+
         for (var i = 0; i < data.Length; i += 5)
         {
             var deltaLine = data[i];
@@ -25,25 +25,17 @@ public static class SemanticTokenHelper
 
             line += deltaLine;
             if (deltaLine == 0)
-            {
                 character += deltaStartCharacter;
-            }
             else
-            {
                 character = deltaStartCharacter;
-            }
-            
-            if(tokenType < 0 || tokenType >= types!.Length)
+
+            if (tokenType < 0 || tokenType >= types!.Length)
                 throw new InvalidOperationException("Invalid token type");
-            
+
             var tokenModifiers = new List<SemanticTokenModifier>();
             for (var bit = 0; bit < modifiers.Length; bit++)
-            {
                 if ((tokenModifiersBitset & (1 << bit)) != 0)
-                {
                     tokenModifiers.Add(modifiers[bit]);
-                }
-            }
 
             tokens.Add(new SemanticToken
             {

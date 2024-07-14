@@ -7,6 +7,18 @@ namespace OneWare.Json.Formatting;
 
 public class JsonFormatter : IFormattingStrategy
 {
+    public void Format(TextDocument document)
+    {
+        try
+        {
+            document.Text = FormatJson(document.Text);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+    }
+
     public static string FormatJson(string json, string indent = "  ")
     {
         var indentation = 0;
@@ -20,26 +32,19 @@ public class JsonFormatter : IFormattingStrategy
             let unquoted = quotes % 2 == 0
             let colon = ch == ':' && unquoted ? ": " : null
             let nospace = char.IsWhiteSpace(ch) && unquoted ? string.Empty : null
-            let lineBreak = ch == ',' && unquoted ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, indentation)) : null
-            let openChar = (ch == '{' || ch == '[') && unquoted ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, ++indentation)) : ch.ToString()
-            let closeChar = (ch == '}' || ch == ']') && unquoted ? Environment.NewLine + string.Concat(Enumerable.Repeat(indent, --indentation)) + ch : ch.ToString()
+            let lineBreak = ch == ',' && unquoted
+                ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, indentation))
+                : null
+            let openChar = (ch == '{' || ch == '[') && unquoted
+                ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, ++indentation))
+                : ch.ToString()
+            let closeChar = (ch == '}' || ch == ']') && unquoted
+                ? Environment.NewLine + string.Concat(Enumerable.Repeat(indent, --indentation)) + ch
+                : ch.ToString()
             select colon ?? nospace ?? lineBreak ?? (
                 openChar.Length > 1 ? openChar : closeChar
             );
 
         return string.Concat(result);
-    }
-    
-    public void Format(TextDocument document)
-    {
-        try
-        {
-            document.Text = FormatJson(document.Text);
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
-        
     }
 }

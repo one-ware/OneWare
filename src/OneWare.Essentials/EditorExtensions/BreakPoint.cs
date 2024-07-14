@@ -1,9 +1,8 @@
-﻿namespace OneWare.Essentials.EditorExtensions
-{
-    public class BreakPoint
-    {
-        public string File { get; set; }
+﻿namespace OneWare.Essentials.EditorExtensions;
 
-        public int Line { get; set; }
-    }
+public class BreakPoint
+{
+    public string File { get; set; }
+
+    public int Line { get; set; }
 }

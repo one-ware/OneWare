@@ -19,46 +19,20 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 {
     private readonly ISettingsService _settingsService;
 
-    private bool _waitForLiveStream;
-    private bool _isLiveExecution;
-
     private CancellationTokenSource? _cancellationTokenSource;
     private CompositeDisposable _compositeDisposable = new();
+    private bool _isLiveExecution;
 
     private VcdContext? _lastContext;
-    private VcdFile? _vcdFile;
-    public ObservableCollection<VcdScopeModel> Scopes { get; } = new();
-
-    private VcdScopeModel? _selectedScope;
-
-    public VcdScopeModel? SelectedScope
-    {
-        get => _selectedScope;
-        set => SetProperty(ref _selectedScope, value);
-    }
-
-    private IVcdSignal? _selectedSignal;
-
-    public IVcdSignal? SelectedSignal
-    {
-        get => _selectedSignal;
-        set => SetProperty(ref _selectedSignal, value);
-    }
-
-    public int[] LoadingThreadOptions { get; }
 
     private int _loadingThreads;
 
-    public int LoadingThreads
-    {
-        get => _loadingThreads;
-        set => SetProperty(ref _loadingThreads, value);
-    }
+    private VcdScopeModel? _selectedScope;
 
-    public WaveFormViewModel WaveFormViewer { get; } = new();
+    private IVcdSignal? _selectedSignal;
+    private VcdFile? _vcdFile;
 
-    public override string CloseWarningMessage =>
-        $"Do you want to save the current view to the file {CurrentFile?.Name}? All added signals will be opened automatically next time!";
+    private bool _waitForLiveStream;
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
         ISettingsService settingsService, IWindowService windowService)
@@ -75,23 +49,47 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         LoadingThreadOptions = settingsService.GetComboOptions<int>("VcdViewer_LoadingThreads");
 
-        WaveFormViewer.SignalRemoved += (_, _) =>
-        {
-            MarkIfDirty();
-        };
+        WaveFormViewer.SignalRemoved += (_, _) => { MarkIfDirty(); };
     }
 
-    private static string GetSaveFilePath(string vcdPath)
+    public ObservableCollection<VcdScopeModel> Scopes { get; } = new();
+
+    public VcdScopeModel? SelectedScope
     {
-        return Path.Combine(Path.GetDirectoryName(vcdPath) ?? "",
-            Path.GetFileNameWithoutExtension(vcdPath) + ".vcdconf");
+        get => _selectedScope;
+        set => SetProperty(ref _selectedScope, value);
     }
+
+    public IVcdSignal? SelectedSignal
+    {
+        get => _selectedSignal;
+        set => SetProperty(ref _selectedSignal, value);
+    }
+
+    public int[] LoadingThreadOptions { get; }
+
+    public int LoadingThreads
+    {
+        get => _loadingThreads;
+        set => SetProperty(ref _loadingThreads, value);
+    }
+
+    public WaveFormViewModel WaveFormViewer { get; } = new();
+
+    public override string CloseWarningMessage =>
+        $"Do you want to save the current view to the file {CurrentFile?.Name}? All added signals will be opened automatically next time!";
 
     public void PrepareLiveStream()
     {
         Reset();
         _waitForLiveStream = true;
         _isLiveExecution = false;
+    }
+
+    private static string GetSaveFilePath(string vcdPath)
+    {
+        return Path.Combine(Path.GetDirectoryName(vcdPath) ?? "",
+            Path.GetFileNameWithoutExtension(vcdPath) + ".vcdconf");
     }
 
     protected override void UpdateCurrentFile(IFile? oldFile)
@@ -134,9 +132,9 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             if (_cancellationTokenSource.IsCancellationRequested) return false;
 
             var parseLock = LoadingThreads > 1 ? new object() : null;
-            
+
             _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
-            
+
             Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Count != 0 || x.Scopes.Count != 0)
                 .Select(x => new VcdScopeModel(x)));
 
@@ -151,18 +149,15 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 var currentSignals = WaveFormViewer.Signals.Select(x => x.Signal.Id).ToArray();
                 WaveFormViewer.Signals.Clear();
                 foreach (var signal in currentSignals)
-                {
                     if (_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
                     {
                         var model = WaveFormViewer.AddSignal(vcdSignal);
                         WatchWave(model);
                     }
-                }
             }
             else
             {
                 foreach (var signal in context.OpenSignals)
-                {
                     if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Id, out var vcdSignal))
                     {
                         var model = WaveFormViewer.AddSignal(vcdSignal);
@@ -171,7 +166,6 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                         model.FixedPointShift = signal.FixedPointShift;
                         WatchWave(model);
                     }
-                }
             }
 
             if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
@@ -195,13 +189,12 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 return true;
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
 
-            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads, parseLock);
+            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads,
+                parseLock);
 
             if (_vcdFile != null)
                 foreach (var (_, s) in _vcdFile.Definition.SignalRegister)
-                {
                     s.Invalidate();
-                }
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile!.Name;
@@ -279,7 +272,8 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public override async Task<bool> SaveAsync()
     {
         if (!_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) return true;
-        var context = new VcdContext(WaveFormViewer.Signals.Select(x => new VcdContextSignal(x.Signal.Id, x.DataType, x.AutomaticFixedPointShift, x.FixedPointShift)));
+        var context = new VcdContext(WaveFormViewer.Signals.Select(x =>
+            new VcdContextSignal(x.Signal.Id, x.DataType, x.AutomaticFixedPointShift, x.FixedPointShift)));
         var result = await VcdContextManager.SaveContextAsync(GetSaveFilePath(FullPath), context);
         if (result)
         {
@@ -300,15 +294,15 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     {
         if (_lastContext?.OpenSignals == null) return true;
         var openSignalsContext = _lastContext.OpenSignals.ToArray();
-        
-        if(openSignalsContext.Length != WaveFormViewer.Signals.Count) return true;
-        
+
+        if (openSignalsContext.Length != WaveFormViewer.Signals.Count) return true;
+
         for (var i = 0; i < openSignalsContext.Length; i++)
-        {
-            if(openSignalsContext[i].Id != WaveFormViewer.Signals[i].Signal.Id || openSignalsContext[i].DataType != WaveFormViewer.Signals[i].DataType 
-                                                                               || openSignalsContext[i].AutomaticFixedPointShift != WaveFormViewer.Signals[i].AutomaticFixedPointShift
-                                                                               || openSignalsContext[i].FixedPointShift != WaveFormViewer.Signals[i].FixedPointShift) return true;
-        }
+            if (openSignalsContext[i].Id != WaveFormViewer.Signals[i].Signal.Id ||
+                openSignalsContext[i].DataType != WaveFormViewer.Signals[i].DataType
+                || openSignalsContext[i].AutomaticFixedPointShift != WaveFormViewer.Signals[i].AutomaticFixedPointShift
+                || openSignalsContext[i].FixedPointShift != WaveFormViewer.Signals[i].FixedPointShift)
+                return true;
         return false;
     }
 }

@@ -9,7 +9,6 @@
                    xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
                    xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                    xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
-                   xmlns:models="clr-namespace:OneWare.Core.Models"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                    x:Class="OneWare.Core.Views.Windows.MainView"
                    mvvm:ViewModelLocator.AutoWireViewModel="False" Name="MainViewView"
@@ -53,11 +52,13 @@
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
 
                         <StackPanel Orientation="Horizontal">
-                            <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}"/>
-                            <StackPanel Orientation="Horizontal" IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
+                            <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
+                            <StackPanel Orientation="Horizontal"
+                                        IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
+                                           Height="24" />
                                 <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
-                                    <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}"></Image>
+                                    <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
                                 </Button>
                             </StackPanel>
                         </StackPanel>
@@ -79,7 +80,7 @@
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->
                     <controls:Spinner CustomIcon="{DynamicResource SpinnerWhite}" Height="15" Margin="3, 0, 0, 0"
-                                   IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
+                                      IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                     <TextBlock Margin="5, 2, 3, 2" Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}"
                                Foreground="White" />
@@ -93,7 +94,7 @@
                         </StackPanel.Styles>
 
 
-                        <controls:UiExtensionCollection Extensions="{Binding BottomRightExtension}"/>
+                        <controls:UiExtensionCollection Extensions="{Binding BottomRightExtension}" />
 
                         <Menu Classes="BindMenu">
                             <MenuItem ItemsSource="{Binding TypeAssistanceQuickOptions}">
@@ -149,38 +150,44 @@
                 </DockPanel>
             </Border>
         </Grid>
-         
+
         <Panel Name="DialogControlPanel" IsVisible="{Binding #VirtualDialogItemsControl.ItemCount}">
             <ItemsControl Name="VirtualDialogItemsControl" ItemsSource="{Binding #MainViewView.VirtualDialogModels}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Panel/>
+                        <Panel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Panel Background="#01000000">
-                        <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <Grid RowDefinitions="30, *">
-                                <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Image Height="16" Width="16" VerticalAlignment="Center" Source="{Binding Dialog.CustomIcon}"/>
-                                    <TextBlock Margin="8 0" Height="16" Text="{Binding Dialog.Title}"/>
-                                </StackPanel>
-                                <Button Grid.Row="0" HorizontalAlignment="Right" Margin="3" Command="{Binding Close}">
-                                    <Image Height="12" Source="{DynamicResource MaterialDesign.Close}"/>
-                                </Button>
-                                <ContentControl MaxHeight="{Binding #DialogControlPanel.Bounds.Height, Converter={x:Static converters:SharedConverters.AddConverter}, ConverterParameter=-35}" 
-                                                MaxWidth="{Binding #DialogControlPanel.Bounds.Width}"
-                                                Width="{Binding Dialog.PrefWidth}"
-                                                Height="{Binding Dialog.PrefHeight}" Grid.Row="1" 
-                                                Content="{Binding Dialog}" />
-                            </Grid>
-                        </Border>
+                            <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8"
+                                    BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                                <Grid RowDefinitions="30, *">
+                                    <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left"
+                                                VerticalAlignment="Center">
+                                        <Image Height="16" Width="16" VerticalAlignment="Center"
+                                               Source="{Binding Dialog.CustomIcon}" />
+                                        <TextBlock Margin="8 0" Height="16" Text="{Binding Dialog.Title}" />
+                                    </StackPanel>
+                                    <Button Grid.Row="0" HorizontalAlignment="Right" Margin="3"
+                                            Command="{Binding Close}">
+                                        <Image Height="12" Source="{DynamicResource MaterialDesign.Close}" />
+                                    </Button>
+                                    <ContentControl
+                                        MaxHeight="{Binding #DialogControlPanel.Bounds.Height, Converter={x:Static converters:SharedConverters.AddConverter}, ConverterParameter=-35}"
+                                        MaxWidth="{Binding #DialogControlPanel.Bounds.Width}"
+                                        Width="{Binding Dialog.PrefWidth}"
+                                        Height="{Binding Dialog.PrefHeight}" Grid.Row="1"
+                                        Content="{Binding Dialog}" />
+                                </Grid>
+                            </Border>
                         </Panel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Panel>
-        
+
     </Panel>
 </windows1:MainView>
