@@ -151,7 +151,6 @@ public static class SignalConverter
     private static string ToLiteral(string input)
     {
         var sb = new StringBuilder(input.Length + 2);
-        sb.Append("\"");
 
         foreach (var ch in input)
         {
@@ -199,8 +198,7 @@ public static class SignalConverter
                     break;
             }
         }
-
-        sb.Append("\"");
+        
         return sb.ToString();
     }
 }
