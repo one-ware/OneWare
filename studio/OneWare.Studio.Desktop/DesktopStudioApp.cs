@@ -162,7 +162,7 @@ public class DesktopStudioApp : StudioApp
             Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
 
             if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
-                lastVersion <= Assembly.GetExecutingAssembly().GetName().Version)
+                lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
             {
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
 
