@@ -64,9 +64,10 @@ public class SettingsService : ISettingsService
             new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
     }
 
-    public void RegisterTitledSlider(string category, string subCategory, string key, string title, string description,
-        int defaultValue, int min, int max, int step)
+    public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title, string description,
+        T defaultValue, double min, double max, double step)
     {
+        if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
     }
 

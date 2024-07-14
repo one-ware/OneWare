@@ -62,7 +62,7 @@ public class ComboBoxSetting : TitledSetting
 
 public class SliderSetting : TitledSetting
 {
-    public SliderSetting(string title, string description, object defaultValue, int min, int max, int step) : base(
+    public SliderSetting(string title, string description, object defaultValue, double min, double max, double step) : base(
         title, description, defaultValue)
     {
         Min = min;
@@ -70,11 +70,11 @@ public class SliderSetting : TitledSetting
         Step = step;
     }
 
-    public int Min { get; }
+    public double Min { get; }
 
-    public int Max { get; }
+    public double Max { get; }
 
-    public int Step { get; }
+    public double Step { get; }
 }
 
 public abstract class PathSetting : TextBoxSetting
