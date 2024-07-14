@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text;
-using Microsoft.CodeAnalysis.CSharp;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Parser.Helpers;
 using OneWare.WaveFormViewer.Enums;
@@ -149,8 +148,59 @@ public static class SignalConverter
         return value / Math.Pow(2, shift);
     }
 
-    private static string ToLiteral(string valueTextForCompiler)
+    private static string ToLiteral(string input)
     {
-        return SymbolDisplay.FormatLiteral(valueTextForCompiler, false);
+        var sb = new StringBuilder(input.Length + 2);
+        sb.Append("\"");
+
+        foreach (var ch in input)
+        {
+            switch (ch)
+            {
+                case '\"':
+                    sb.Append("\\\"");
+                    break;
+                case '\\':
+                    sb.Append("\\\\");
+                    break;
+                case '\0':
+                    sb.Append("\\0");
+                    break;
+                case '\a':
+                    sb.Append("\\a");
+                    break;
+                case '\b':
+                    sb.Append("\\b");
+                    break;
+                case '\f':
+                    sb.Append("\\f");
+                    break;
+                case '\n':
+                    sb.Append("\\n");
+                    break;
+                case '\r':
+                    sb.Append("\\r");
+                    break;
+                case '\t':
+                    sb.Append("\\t");
+                    break;
+                case '\v':
+                    sb.Append("\\v");
+                    break;
+                default:
+                    if (char.IsControl(ch))
+                    {
+                        sb.AppendFormat("\\u{0:X4}", (int)ch);
+                    }
+                    else
+                    {
+                        sb.Append(ch);
+                    }
+                    break;
+            }
+        }
+
+        sb.Append("\"");
+        return sb.ToString();
     }
 }
