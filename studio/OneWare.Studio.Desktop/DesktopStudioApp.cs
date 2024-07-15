@@ -57,23 +57,23 @@ public class DesktopStudioApp : StudioApp
 
         try
         {
+            var commandLineArgs = Environment.GetCommandLineArgs();
+            if (commandLineArgs.Length > 1)
+            {
+                var m = commandLineArgs.IndexOf(x => x == "--modules");
+                if (m >= 0 && m < commandLineArgs.Length - 1)
+                {
+                    var path = commandLineArgs[m + 1];
+                    Container.Resolve<IPluginService>().AddPlugin(path);
+                }
+            }
+            
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
             foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
         }
         catch (Exception e)
         {
             Container.Resolve<ILogger>().Error(e.Message, e);
-        }
-
-        var commandLineArgs = Environment.GetCommandLineArgs();
-        if (commandLineArgs.Length > 1)
-        {
-            var m = commandLineArgs.IndexOf(x => x == "--modules");
-            if (m >= 0 && m < commandLineArgs.Length - 1)
-            {
-                var path = commandLineArgs[m + 1];
-                Container.Resolve<IPluginService>().AddPlugin(path);
-            }
         }
     }
 

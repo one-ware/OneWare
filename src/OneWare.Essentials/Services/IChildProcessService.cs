@@ -1,4 +1,5 @@
-﻿using Asmichi.ProcessManagement;
+﻿using System.Diagnostics;
+using Asmichi.ProcessManagement;
 using OneWare.Essentials.Enums;
 
 namespace OneWare.Essentials.Services;
@@ -16,4 +17,6 @@ public interface IChildProcessService
         string status, AppState state = AppState.Loading, bool showTimer = false,
         Func<string, bool>? outputAction = null,
         Func<string, bool>? errorAction = null);
+    
+    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory);
 }

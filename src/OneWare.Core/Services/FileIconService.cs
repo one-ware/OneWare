@@ -23,7 +23,7 @@ public class FileIconService : IFileIconService
         RegisterFileIcon("QsysFileIcon", ".qsys");
         RegisterFileIcon("SystemVerilogFileIcon", ".sv");
         RegisterFileIcon("SimpleIcons.Arduino", ".ino");
-        RegisterFileIcon("Material.Pulse", ".vcd");
+        RegisterFileIcon("Material.Pulse", ".vcd", ".ghw", ".fst");
         RegisterFileIcon("Ionicons.LogoJavascript", ".js");
         RegisterFileIcon("FontAwesome.PythonBrands", ".py");
         RegisterFileIcon("VsImageLib.Cs16X", ".cs");

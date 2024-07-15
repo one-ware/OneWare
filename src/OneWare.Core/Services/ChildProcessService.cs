@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -171,6 +172,24 @@ public class ChildProcessService(
         }
 
         return (success, output);
+    }
+
+    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory)
+    {
+        var process = new Process()
+        {
+            StartInfo = new ProcessStartInfo(path, arguments)
+            {
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            }
+        };
+
+        process.Start();
+        process.EnableRaisingEvents = true;
+        
+        return new WeakReference<Process>(process);
     }
 
     private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory,

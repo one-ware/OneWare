@@ -17,6 +17,8 @@ public interface IDockService : INotifyPropertyChanged
     public IExtendedDocument? CurrentDocument { get; }
 
     public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument;
+    
+    public void RegisterFileOpenOverwrite(Func<IFile,bool> action, params string[] extensions);
 
     public void RegisterLayoutExtension<T>(DockShowLocation location);
 
@@ -26,7 +28,7 @@ public interface IDockService : INotifyPropertyChanged
 
     public void CloseDockable(IDockable dockable);
 
-    public Task<IExtendedDocument> OpenFileAsync(IFile pf);
+    public Task<IExtendedDocument?> OpenFileAsync(IFile pf);
 
     public Task<bool> CloseFileAsync(IFile pf);
 

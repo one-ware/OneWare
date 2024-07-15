@@ -27,6 +27,7 @@ public class DockService : Factory, IDockService
     private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
+    private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
 
     private readonly IPaths _paths;
@@ -94,14 +95,26 @@ public class DockService : Factory, IDockService
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
     }
 
+    public void RegisterFileOpenOverwrite(Func<IFile,bool> action, params string[] extensions)
+    {
+        foreach (var extension in extensions) _fileOpenOverwrites.TryAdd(extension, action);
+    }
+
     public void RegisterLayoutExtension<T>(DockShowLocation location)
     {
         LayoutRegistrations.TryAdd(location, new List<Type>());
         LayoutRegistrations[location].Add(typeof(T));
     }
 
-    public async Task<IExtendedDocument> OpenFileAsync(IFile pf)
+    public async Task<IExtendedDocument?> OpenFileAsync(IFile pf)
     {
+        if (_fileOpenOverwrites.TryGetValue(pf.Extension, out var overwrite))
+        {
+            // If overwrite executes successfully, return null
+            // This means that the file is open in an external program
+            if(overwrite.Invoke(pf)) return null;
+        }
+        
         if (OpenFiles.ContainsKey(pf))
         {
             Show(OpenFiles[pf]);

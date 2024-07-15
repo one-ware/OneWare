@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Dock.Model.Core;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -89,15 +90,21 @@ public class OssCadSuiteIntegrationModule : IModule
                     Header = "Generate Json Netlist",
                     Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
                 });
-            if (x is [IProjectFile { Extension: ".vcd" } vcd] &&
+            if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>("OssCadSuite_Path")))
                 l.Add(new MenuItemViewModel("GtkWaveOpen")
                 {
                     Header = "Open with GTKWave",
                     Command = new RelayCommand(() =>
-                        containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(vcd.FullPath))
+                        containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
                 });
         });
+        
+        containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
+        {
+            containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
+            return true;
+        }, ".ghw", ".fst");
     }
 
     private static bool IsOssPathValid(string path)

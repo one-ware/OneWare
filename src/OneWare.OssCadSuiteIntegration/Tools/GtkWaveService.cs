@@ -7,7 +7,6 @@ public class GtkWaveService(IChildProcessService childProcessService)
 {
     public void OpenInGtkWave(string path)
     {
-        _ = childProcessService.ExecuteShellAsync("gtkwave", [Path.GetFileName(path)],
-            Path.GetDirectoryName(path) ?? "", "Open in GtkWave...", AppState.Idle);
+        childProcessService.StartWeakProcess("gtkwave", [Path.GetFileName(path)], Path.GetDirectoryName(path) ?? "");
     }
 }
