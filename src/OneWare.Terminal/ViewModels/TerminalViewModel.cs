@@ -87,9 +87,15 @@ public class TerminalViewModel : ObservableObject
         lock (_createLock)
         {
             CloseConnection();
-
-            var shellExecutable = PlatformHelper.GetFullPath(
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash");
+            
+            var shellExecutable = PlatformHelper.Platform switch
+            {
+                PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
+                PlatformId.LinuxX64 or PlatformId.LinuxArm64 => PlatformHelper.GetFullPath("bash"),
+                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("zsh") ??
+                                                            PlatformHelper.GetFullPath("bash"),
+                _ => null
+            };
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
