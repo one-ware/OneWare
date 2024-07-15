@@ -88,10 +88,12 @@ public class FileWatchInstance : IDisposable
 
             _dockService.OpenFiles.TryGetValue(_file, out var tab);
 
+            //Can happen naturally if the file is opened in an external tool
             if (tab == null)
             {
                 Dispose();
-                throw new NullReferenceException(nameof(tab));
+                //throw new NullReferenceException(nameof(tab));
+                return;
             }
 
             switch (lastArg.ChangeType)
