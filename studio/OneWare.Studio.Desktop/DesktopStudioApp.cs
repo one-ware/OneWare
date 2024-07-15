@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -78,7 +79,7 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _splashWindow = new SplashWindow
             {
@@ -141,16 +142,17 @@ public class DesktopStudioApp : StudioApp
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
                 Container.Resolve<IDockService>().InitializeContent();
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
+                Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             }
         }
 
         await Task.Delay(1000);
+        
         _splashWindow?.Close();
 
         try
         {
             var settingsService = Container.Resolve<ISettingsService>();
-            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
 
             if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
                 lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
