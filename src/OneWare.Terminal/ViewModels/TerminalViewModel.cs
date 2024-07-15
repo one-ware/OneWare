@@ -82,38 +82,39 @@ public class TerminalViewModel : ObservableObject
 
     public void CreateConnection()
     {
-        if (Connection is not { IsConnected: true })
-            lock (_createLock)
+        if (Connection is { IsConnected: true }) return;
+        
+        lock (_createLock)
+        {
+            CloseConnection();
+
+            var shellExecutable = PlatformHelper.GetFullPath(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash");
+
+            if (!string.IsNullOrEmpty(shellExecutable))
             {
-                CloseConnection();
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
 
-                var shellExecutable = PlatformHelper.GetFullPath(
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell.exe" : "bash");
-
-                if (!string.IsNullOrEmpty(shellExecutable))
+                if (terminal == null)
                 {
-                    var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
-
-                    if (terminal == null)
-                    {
-                        ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
-                        return;
-                    }
-
-                    Connection = new PseudoTerminalConnection(terminal);
-
-                    Terminal = new VirtualTerminalController();
-
-                    TerminalVisible = true;
-                    TerminalLoading = true;
-
-                    Connection.Connect();
-
-                    TerminalReady += Terminal_Ready;
-
-                    TerminalReady?.Invoke(this, EventArgs.Empty);
+                    ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    return;
                 }
+
+                Connection = new PseudoTerminalConnection(terminal);
+
+                Terminal = new VirtualTerminalController();
+
+                TerminalVisible = true;
+                TerminalLoading = true;
+
+                Connection.Connect();
+
+                TerminalReady += Terminal_Ready;
+
+                TerminalReady?.Invoke(this, EventArgs.Empty);
             }
+        }
     }
 
     public void Terminal_Ready(object? sender, EventArgs e)
