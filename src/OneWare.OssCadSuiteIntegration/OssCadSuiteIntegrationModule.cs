@@ -80,6 +80,10 @@ public class OssCadSuiteIntegrationModule : IModule
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",
                 Path.Combine(x, "py3bin", $"python3{PlatformHelper.ExecutableExtension}"));
+            environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
+                Path.Combine(x, "share", $"verilator"));
+            environmentService.SetEnvironmentVariable("GHDL_PREFIX",
+                Path.Combine(x, "lib", $"ghdl"));
         });
 
         containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
