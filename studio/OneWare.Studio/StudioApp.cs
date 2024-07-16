@@ -32,7 +32,7 @@ public class StudioApp : App
         SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
             "Use Managed File Dialog (restart required)",
             "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!",
-            RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+            false);
         SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
             "Automatically download Binaries",
             "Automatically download binaries for features when possible", true);
