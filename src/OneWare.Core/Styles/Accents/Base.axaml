@@ -33,10 +33,6 @@
     <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
     <SolidColorBrush
-        x:Key="NotificationCardBackgroundBrush"
-        Opacity="0.9"
-        Color="#444444" />
-    <SolidColorBrush
         x:Key="NotificationCardInformationBackgroundBrush"
         Opacity="0.9"
         Color="#007ACC" />
@@ -115,6 +111,8 @@
             <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
+            <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
+            
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
@@ -164,6 +162,9 @@
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
+            
+            <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
+            
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -213,6 +214,9 @@
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
+            
+            <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#FFFFFF" />
+            
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -6,16 +6,15 @@
              xmlns:controls="clr-namespace:OneWare.Core.ViewModels.Controls"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="100"
              x:DataType="controls:CustomNotificationViewModel">
-    <Border Padding="12" MinHeight="20" Background="{DynamicResource ThemeBackgroundBrush}" UseLayoutRounding="False"
-            BorderThickness="0">
+    <Border Padding="12" MinHeight="20" UseLayoutRounding="False" BorderThickness="0">
         <Grid ColumnDefinitions="Auto,*">
             <Panel Margin="0,0,12,0" Width="25" Height="25" VerticalAlignment="Top">
                 <Image Source="{Binding Icon}" VerticalAlignment="Center" />
             </Panel>
             <DockPanel Grid.Column="1" LastChildFill="false">
-                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Title}" TextWrapping="Wrap"
+                <TextBlock DockPanel.Dock="Top" Text="{Binding Title}" TextWrapping="Wrap"
                            FontWeight="Medium" />
-                <TextBlock Foreground="White" DockPanel.Dock="Top" Text="{Binding Message}" TextWrapping="Wrap"
+                <TextBlock DockPanel.Dock="Top" Text="{Binding Message}" TextWrapping="Wrap"
                            Opacity=".8"
                            Margin="0,8,0,0" />
 
