@@ -123,13 +123,13 @@ public class FolderPathSetting : PathSetting
 public class FilePathSetting : PathSetting
 {
     public FilePathSetting(string title, string description, object defaultValue, string? watermark,
-        string startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters)
+        string? startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters)
         : base(title, description, defaultValue, watermark, startDirectory, checkPath)
     {
         Filters = filters;
     }
 
-    public FilePickerFileType[] Filters { get; }
+    private FilePickerFileType[] Filters { get; }
 
     public override async Task SelectPathAsync(TopLevel topLevel)
     {

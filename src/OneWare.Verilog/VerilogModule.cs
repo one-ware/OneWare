@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.PackageManager;
+﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Verilog.Parsing;
@@ -153,9 +154,9 @@ public class VerilogModule : IModule
     {
         containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "Verilog", LspPathSetting,
+        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
             "Verible Path", "Path for Verible executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
+            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
 
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",

@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.PackageManager;
+﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -140,9 +141,9 @@ public class CppModule : IModule
     {
         containerProvider.Resolve<IPackageService>().RegisterPackage(ClangdPackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "C++", LspPathSetting,
+        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "C++", LspPathSetting,
             "Clangd Path", "Path for clangd executable", "", null,
-            containerProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists);
+            containerProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile);
 
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
 

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -334,6 +335,25 @@ public static class PlatformHelper
                 return e.KeyModifiers.HasFlag(ControlKey) || e.Key is Key.LeftCtrl or Key.RightCtrl;
         }
     }
+
+    #endregion
+    
+    #region Common FileDialogFilters
+
+    public static readonly FilePickerFileType ExeFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? new FilePickerFileType("Executable (*.exe)")
+        {
+            Patterns = new[] { "*.exe" }
+        }
+        : new FilePickerFileType("Executable (*)")
+        {
+            Patterns = new[] { "*.*" }
+        };
+
+    public static readonly FilePickerFileType AllFiles = new("All files (*)")
+    {
+        Patterns = new[] { "*.*" }
+    };
 
     #endregion
 

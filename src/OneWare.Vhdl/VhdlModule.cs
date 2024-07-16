@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.PackageManager;
+﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vhdl.Parsing;
@@ -150,9 +151,9 @@ public class VhdlModule : IModule
     {
         containerProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledPath("Languages", "VHDL", LspPathSetting,
+        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "VHDL", LspPathSetting,
             "RustHDL Path", "Path for RustHDL executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists);
+            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
 
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",

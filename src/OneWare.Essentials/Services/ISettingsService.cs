@@ -1,3 +1,5 @@
+using Avalonia.Platform.Storage;
+
 namespace OneWare.Essentials.Services;
 
 public interface ISettingsService
@@ -14,8 +16,15 @@ public interface ISettingsService
     public void RegisterTitled<T>(string category, string subCategory, string key, string title, string description,
         T defaultValue);
 
+    [Obsolete("Use RegisterTitledFolderPath instead")]
     public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate);
+    
+    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate);
+    
+    public void RegisterTitledFilePath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate, params FilePickerFileType[] fileTypes);
 
     public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title, string description,
         T defaultValue, double min, double max, double step);

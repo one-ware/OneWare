@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using System.Text.Json;
+using Avalonia.Platform.Storage;
 using DynamicData.Binding;
 using OneWare.Essentials.Services;
 
@@ -65,6 +66,20 @@ public class SettingsService : ISettingsService
     {
         AddSetting(category, subCategory, key,
             new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
+    }
+
+    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
+    {
+        AddSetting(category, subCategory, key,
+            new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
+    }
+
+    public void RegisterTitledFilePath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate, params FilePickerFileType[] filters)
+    {
+        AddSetting(category, subCategory, key,
+            new FilePathSetting(title, description, defaultValue, watermark, startDir, validate, filters));
     }
 
     public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title, string description,

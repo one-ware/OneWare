@@ -60,7 +60,7 @@ public class OssCadSuiteIntegrationModule : IModule
         containerProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         containerProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
 
-        settingsService.RegisterTitledPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path",
+        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", "OssCadSuite_Path", "OSS CAD Suite Path",
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
 
         settingsService.GetSettingObservable<string>("OssCadSuite_Path").Subscribe(x =>
