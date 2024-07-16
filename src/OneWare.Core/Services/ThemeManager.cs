@@ -34,8 +34,6 @@ public class ThemeManager : ObservableObject
         //    if(Application.Current != null) Application.Current.Resources["ThemeAccentColor"] = x;
         //});
 
-        _settingsService.Load(paths.SettingsPath);
-
         _settingsService.GetSettingObservable<string>("General_SelectedTheme").Subscribe(ApplyTheme);
     }
 

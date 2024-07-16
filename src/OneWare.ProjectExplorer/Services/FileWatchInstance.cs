@@ -88,10 +88,11 @@ public class FileWatchInstance : IDisposable
 
             _dockService.OpenFiles.TryGetValue(_file, out var tab);
 
-            //Can happen naturally if the file is opened in an external tool
+            // Can happen naturally if the file is opened in an external tool
+            // Also when a temporary file is registered but not opened yet, we can ignore the changes
             if (tab == null)
             {
-                Dispose();
+                //Dispose();
                 //throw new NullReferenceException(nameof(tab));
                 return;
             }

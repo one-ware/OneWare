@@ -175,8 +175,6 @@ public class App : PrismApplication
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
             "Enable Auto Formatting", "Enable automatic formatting", true);
 
-        settingsService.Load(Container.Resolve<IPaths>().SettingsPath);
-
         var windowService = Container.Resolve<IWindowService>();
         var commandService = Container.Resolve<IApplicationCommandService>();
 
@@ -307,8 +305,7 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-
-        Container.Resolve<ISettingsService>().Load(Container.Resolve<IPaths>().SettingsPath);
+        
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>

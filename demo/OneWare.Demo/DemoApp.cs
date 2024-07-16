@@ -24,7 +24,6 @@ public class DemoApp : App
         SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
             "Use Managed File Dialog",
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-        SettingsService.Load(Paths.SettingsPath);
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
