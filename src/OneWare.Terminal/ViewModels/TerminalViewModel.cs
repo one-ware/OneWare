@@ -88,11 +88,12 @@ public class TerminalViewModel : ObservableObject
         {
             CloseConnection();
             
+            //TODO Fix zsh support
             var shellExecutable = PlatformHelper.Platform switch
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
                 PlatformId.LinuxX64 or PlatformId.LinuxArm64 => PlatformHelper.GetFullPath("bash"),
-                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("zsh") ??
+                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("bash") ??
                                                             PlatformHelper.GetFullPath("bash"),
                 _ => null
             };
