@@ -116,14 +116,11 @@ public class TerminalViewModel : ObservableObject
 
                 _ = Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await Task.Delay(100);
-
+                    TerminalVisible = true;
                     Connection.Connect();
                     
-                    await Task.Delay(100);
-                    
-                    TerminalVisible = true;
-                    
+                    await Task.Delay(500);
+            
                     TerminalLoading = false;
                     
                     TerminalReady?.Invoke(this, EventArgs.Empty);
