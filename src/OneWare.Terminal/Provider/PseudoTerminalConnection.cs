@@ -26,11 +26,11 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
                 if (bytesReceived > 0)
                 {
-                    var receviedData = new byte[bytesReceived];
+                    var receivedData = new byte[bytesReceived];
 
-                    Buffer.BlockCopy(data, 0, receviedData, 0, bytesReceived);
+                    Buffer.BlockCopy(data, 0, receivedData, 0, bytesReceived);
 
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = receviedData });
+                    DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = receivedData });
                 }
 
                 await Task.Delay(5);
