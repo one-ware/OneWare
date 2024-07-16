@@ -56,7 +56,7 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
         _ = terminal.WriteAsync(data, 0, data.Length);
     }
 
-    public void SetTerminalWindowSize(int columns, int rows, int width, int height)
+    public void SetTerminalWindowSize(int columns, int rows)
     {
         terminal.SetSize(columns, rows);
     }
