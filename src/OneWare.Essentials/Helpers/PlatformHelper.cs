@@ -347,12 +347,12 @@ public static class PlatformHelper
         }
         : new FilePickerFileType("Executable (*)")
         {
-            Patterns = new[] { "*.*" }
+            Patterns = new[] { "*" }
         };
 
     public static readonly FilePickerFileType AllFiles = new("All files (*)")
     {
-        Patterns = new[] { "*.*" }
+        Patterns = new[] { "*" }
     };
 
     #endregion
