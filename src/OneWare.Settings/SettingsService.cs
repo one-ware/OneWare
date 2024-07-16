@@ -186,6 +186,7 @@ public class SettingsService : ISettingsService
     {
         foreach (var setting in _settings.Where(x => x.Value is not PathSetting))
             setting.Value.Value = setting.Value.DefaultValue;
+        _unregisteredSettings.Clear();
     }
 
     public void WhenLoaded(Action action)
