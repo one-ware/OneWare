@@ -55,19 +55,15 @@ public class UnixPseudoTerminal : IPseudoTerminal
             ws_col = (ushort)(columns > 0 ? columns : 80)
         };
         
-        var ptr = Native.StructToPtr(size);
-        
         try
         {
+            var ptr = Native.StructToPtr(size);
             Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
+            Marshal.FreeHGlobal(ptr);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(ptr);
         }
     }
 }
