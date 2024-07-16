@@ -20,25 +20,11 @@ public class TerminalViewModel : ObservableObject
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();
-
-    private IConnection? _connection;
-
-    private VirtualTerminalController? _terminal;
-
-    private bool _terminalLoading;
-
-    private bool _terminalVisible;
-
-    public TerminalViewModel(string workingDir, string? startArguments = null)
-    {
-        WorkingDir = workingDir;
-        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
-            : null);
-    }
-
+    
     public string? StartArguments { get; }
     public string WorkingDir { get; }
+
+    private IConnection? _connection;
 
     public IConnection? Connection
     {
@@ -46,17 +32,24 @@ public class TerminalViewModel : ObservableObject
         set => SetProperty(ref _connection, value);
     }
 
+    private VirtualTerminalController? _terminal;
+
+    
     public VirtualTerminalController? Terminal
     {
         get => _terminal;
         set => SetProperty(ref _terminal, value);
     }
-
+    
+    private bool _terminalVisible;
+    
     public bool TerminalVisible
     {
         get => _terminalVisible;
         set => SetProperty(ref _terminalVisible, value);
     }
+
+    private bool _terminalLoading = true;
 
     public bool TerminalLoading
     {
@@ -65,7 +58,15 @@ public class TerminalViewModel : ObservableObject
     }
 
     public event EventHandler? TerminalReady;
-
+    
+    public TerminalViewModel(string workingDir, string? startArguments = null)
+    {
+        WorkingDir = workingDir;
+        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
+            : null);
+    }
+    
     public void Redraw()
     {
         if (TerminalVisible)
@@ -83,6 +84,7 @@ public class TerminalViewModel : ObservableObject
     public void CreateConnection()
     {
         if (Connection is { IsConnected: true }) return;
+        TerminalLoading = true;
         
         lock (_createLock)
         {
@@ -112,21 +114,22 @@ public class TerminalViewModel : ObservableObject
 
                 Terminal = new VirtualTerminalController();
 
-                TerminalVisible = true;
-                TerminalLoading = true;
+                _ = Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await Task.Delay(100);
 
-                Connection.Connect();
-
-                TerminalReady += Terminal_Ready;
-
-                TerminalReady?.Invoke(this, EventArgs.Empty);
+                    Connection.Connect();
+                    
+                    await Task.Delay(100);
+                    
+                    TerminalVisible = true;
+                    
+                    TerminalLoading = false;
+                    
+                    TerminalReady?.Invoke(this, EventArgs.Empty);
+                });
             }
         }
-    }
-
-    public void Terminal_Ready(object? sender, EventArgs e)
-    {
-        TerminalLoading = false;
     }
 
     public void Send(string command)

@@ -24,11 +24,9 @@
                                       Terminal="{Binding Terminal}" TextPadding="5"
                                       FontFamily="{DynamicResource EditorFont}"
                                       IsVisible="{Binding TerminalVisible}" />
-        <Border Margin="0, 10, 22, 0" Height="30" VerticalAlignment="Top">
-            <controls:Spinner HorizontalAlignment="Right"
-                              IsVisible="{Binding TerminalLoading}"
-                              Foreground="{DynamicResource DarkBlue}">
-                <Image Source="{DynamicResource Material.SettingsOutline}" />
+        <Border Margin="0, 10, 10, 0" Height="20" VerticalAlignment="Top">
+            <controls:Spinner HorizontalAlignment="Right" 
+                              IsVisible="{Binding TerminalLoading}">
             </controls:Spinner>
         </Border>
     </Panel>

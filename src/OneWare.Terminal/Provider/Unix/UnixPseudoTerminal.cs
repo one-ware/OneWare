@@ -56,7 +56,7 @@ public class UnixPseudoTerminal : IPseudoTerminal
         };
         
         var ptr = Native.StructToPtr(size);
-
+        
         try
         {
             Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
