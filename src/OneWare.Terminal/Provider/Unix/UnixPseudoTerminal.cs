@@ -54,8 +54,20 @@ public class UnixPseudoTerminal : IPseudoTerminal
             ws_row = (ushort)(rows > 0 ? rows : 24),
             ws_col = (ushort)(columns > 0 ? columns : 80)
         };
+        
         var ptr = Native.StructToPtr(size);
-        Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
-        Marshal.FreeHGlobal(ptr);
+
+        try
+        {
+            Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(ptr);
+        }
     }
 }
