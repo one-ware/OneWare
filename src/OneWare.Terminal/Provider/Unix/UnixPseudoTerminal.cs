@@ -61,9 +61,11 @@ public class UnixPseudoTerminal : IPseudoTerminal
         
         try
         {
-            ptr = Marshal.AllocHGlobal(Marshal.SizeOf<Native.winsize>());
-            Marshal.StructureToPtr(size, ptr, false);
+            ptr = Native.StructToPtr(size);
+            
             Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
+            
+            Native.kill(Process.Id, Native.SIGWINCH);
         }
         catch (Exception e)
         {

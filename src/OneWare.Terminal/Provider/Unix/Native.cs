@@ -120,7 +120,6 @@ internal static class Native
     
     public static readonly ulong TIOCSWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 0x80087467 : 0x5414;
     
-
     public static readonly ulong TIOCSCTTY =
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x20007484 : 0x540E;
 
@@ -152,10 +151,10 @@ internal static class Native
     public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();
     public static NativeDelegates.fork fork = NativeDelegates.GetProc<NativeDelegates.fork>();
 
-    public static IntPtr StructToPtr(object obj)
+    public static IntPtr StructToPtr<T>(T structure)
     {
-        var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(obj));
-        Marshal.StructureToPtr(obj, ptr, false);
+        var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+        Marshal.StructureToPtr(structure ?? throw new ArgumentNullException(nameof(structure)), ptr, false);
         return ptr;
     }
 
