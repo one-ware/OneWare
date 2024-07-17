@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace OneWare.Terminal.Provider.Unix;
@@ -47,6 +48,7 @@ public class UnixPseudoTerminal : IPseudoTerminal
         });
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void SetSize(int columns, int rows)
     {
         var size = new Native.winsize
@@ -55,15 +57,24 @@ public class UnixPseudoTerminal : IPseudoTerminal
             ws_col = (ushort)(columns > 0 ? columns : 80)
         };
         
+        var ptr = IntPtr.Zero;
+        
         try
         {
-            var ptr = Native.StructToPtr(size);
+            ptr = Marshal.AllocHGlobal(Marshal.SizeOf<Native.winsize>());
+            Marshal.StructureToPtr(size, ptr, false);
             Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
-            Marshal.FreeHGlobal(ptr);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+        }
+        finally
+        {
+            if (ptr != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
         }
     }
 }
