@@ -21,11 +21,6 @@
         <SelfContained>true</SelfContained>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
-
-    <!--Prevent MemoryAccessViolation with newer NET8 SDKs-->
-    <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
-        <PublishReadyToRun>false</PublishReadyToRun>
-    </PropertyGroup>
     
     <!--Not working in NET7 / Avalonia 11-->
     <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAOT'">
@@ -57,5 +52,9 @@
     <ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
     </ItemGroup>
 </Project>
