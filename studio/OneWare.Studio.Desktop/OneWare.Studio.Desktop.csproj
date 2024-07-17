@@ -22,6 +22,11 @@
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
 
+    <!--Prevent MemoryAccessViolation with newer NET8 SDKs-->
+    <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+        <PublishReadyToRun>false</PublishReadyToRun>
+    </PropertyGroup>
+    
     <!--Not working in NET7 / Avalonia 11-->
     <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAOT'">
         <TrimMode>partial</TrimMode>
