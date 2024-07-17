@@ -22,11 +22,12 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         var envVars = new List<string>();
         var env = Environment.GetEnvironmentVariables();
         foreach (var variable in env.Keys)
-            if (variable.ToString() != "TERM")
+            if (variable.ToString() is not ("TERM" or "VTE_VERSION"))
                 envVars.Add($"{variable}={env[variable]}");
+        
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);
-
+        
         //Duplicate current process
         var pid = Native.fork();
 
