@@ -60,6 +60,8 @@ public class UnixPseudoTerminal : IPseudoTerminal
             var ptr = Native.StructToPtr(size);
             Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
             Marshal.FreeHGlobal(ptr);
+            
+            Native.kill(Process.Id, Native.SIGWINCH);
         }
         catch (Exception e)
         {

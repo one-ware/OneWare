@@ -33,6 +33,8 @@ internal static class NativeDelegates
     public delegate int grantpt(int fd);
 
     public delegate int ioctl(int fd, ulong ctl, IntPtr arg);
+    
+    public delegate int kill(int pid, int sig);
 
     public delegate int open([MarshalAs(UnmanagedType.LPStr)] string file, int flags);
 
@@ -113,7 +115,11 @@ internal static class Native
     public const int EINTR = 4; /* Interrupted system call */
 
     public const int ENOENT = 2;
+    
+    public const int SIGWINCH = 28; 
+    
     public static readonly ulong TIOCSWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 0x80087467 : 0x5414;
+    
 
     public static readonly ulong TIOCSCTTY =
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x20007484 : 0x540E;
@@ -142,6 +148,7 @@ internal static class Native
     public static NativeDelegates.dup2 dup2 = NativeDelegates.GetProc<NativeDelegates.dup2>();
     public static NativeDelegates.setsid setsid = NativeDelegates.GetProc<NativeDelegates.setsid>();
     public static NativeDelegates.ioctl ioctl = NativeDelegates.GetProc<NativeDelegates.ioctl>();
+    public static NativeDelegates.kill kill = NativeDelegates.GetProc<NativeDelegates.kill>();
     public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();
     public static NativeDelegates.fork fork = NativeDelegates.GetProc<NativeDelegates.fork>();
 
