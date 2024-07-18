@@ -124,8 +124,6 @@ internal static class Native
     
     public static readonly ulong TIOCSWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 0x80087467 : 0x5414;
     
-    public static readonly ulong TIOCGWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x40087468 : 0x5414;
-    
     public static readonly ulong TIOCSCTTY =
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x20007484 : 0x540E;
 

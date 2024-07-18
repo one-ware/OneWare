@@ -46,7 +46,7 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
         
-        return new UnixPseudoTerminal(process, stdin, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
+        return new UnixPseudoTerminal(process, masterFd, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
             FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read));
     }
 }

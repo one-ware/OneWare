@@ -50,25 +50,47 @@ public class UnixPseudoTerminal : IPseudoTerminal
     
     public void SetSize(int columns, int rows)
     {
-        var size = new Native.winsize
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            ws_row = (ushort)(rows > 0 ? rows : 24),
-            ws_col = (ushort)(columns > 0 ? columns : 80)
-        };
-        
-        try
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    var namePtr = Native.ptsname(_cfg);
+                    var name = Marshal.PtrToStringAnsi(namePtr);
+            
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "/bin/bash",
+                        Arguments = $"-c \"stty rows {rows} cols {columns} < {name}\"",
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
+                    };
+
+                    using var process = Process.Start(psi);
+                    process?.WaitForExit();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            });
+        }
+        else
         {
+            var size = new Native.winsize
+            {
+                ws_row = (ushort)(rows > 0 ? rows : 24),
+                ws_col = (ushort)(columns > 0 ? columns : 80)
+            };
+            
             if (Native.ioctl(_cfg, Native.TIOCSWINSZ, ref size) == -1)
             {
                 var errno = Marshal.GetLastWin32Error();
                 var errorMessage = new System.ComponentModel.Win32Exception(errno).Message;
                 throw new Exception($"Failed to resize terminal: {errorMessage} (errno: {errno})");
             }
-            //Native.kill(Process.Id, Native.SIGWINCH);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
         }
     }
 }
