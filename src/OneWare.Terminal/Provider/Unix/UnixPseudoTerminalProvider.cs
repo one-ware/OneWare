@@ -9,14 +9,10 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
     public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment,
         string? arguments)
     {
-        //Create PseudoTerminal
-        var fdm = Native.open("/dev/ptmx", Native.O_RDWR | Native.O_NOCTTY);
-        Native.grantpt(fdm);
-        Native.unlockpt(fdm);
-
-        var namePtr = Native.ptsname(fdm);
-        var name = Marshal.PtrToStringAnsi(namePtr);
-        if (name == null) throw new NullReferenceException(nameof(name));
+        if (Native.openpty(out var masterFd, out var slaveFd, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero) == -1)
+        {
+            throw new Exception("Failed to open PTY");
+        }
 
         //Collect ENV Vars before fork to avoid EntryPointNotFoundException
         var envVars = new List<string>();
@@ -31,17 +27,15 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         //Duplicate current process
         var pid = Native.fork();
 
-        //Newly created child process will have PID = 0
+        //pid will be 0 on the forked process
         if (pid == 0)
         {
-            //Open Slave Process with ReadWrite Access
-            var slave = Native.open(name, Native.O_RDWR);
-            Native.dup2(slave, 0);
-            Native.dup2(slave, 1);
-            Native.dup2(slave, 2);
+            Native.dup2(slaveFd, 0);
+            Native.dup2(slaveFd, 1);
+            Native.dup2(slaveFd, 2);
 
             Native.setsid();
-            Native.ioctl(slave, Native.TIOCSCTTY, IntPtr.Zero);
+            Native.ioctl(slaveFd, Native.TIOCSCTTY, IntPtr.Zero);
             Native.chdir(initialDirectory);
 
             var argsArray = new List<string> { command };
@@ -52,9 +46,10 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             Native.execve(argsArray[0], argsArray.ToArray(), envVars.ToArray());
         }
 
-        var stdin = Native.dup(fdm);
+        var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
-        return new UnixPseudoTerminal(process, stdin, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
-            FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(fdm), true), FileAccess.Read));
+        
+        return new UnixPseudoTerminal(process, stdin, new FileStream(new SafeFileHandle(new IntPtr(stdin), false),
+            FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Read));
     }
 }

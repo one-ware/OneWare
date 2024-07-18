@@ -37,6 +37,8 @@ internal static class NativeDelegates
     public delegate int kill(int pid, int sig);
 
     public delegate int open([MarshalAs(UnmanagedType.LPStr)] string file, int flags);
+    
+    public delegate int openpty(out int amaster, out int aslave, IntPtr name, IntPtr termp, IntPtr winp);
 
     public delegate int pipe(IntPtr[] fds);
 
@@ -129,6 +131,7 @@ internal static class Native
     public static NativeDelegates.grantpt grantpt = NativeDelegates.GetProc<NativeDelegates.grantpt>();
     public static NativeDelegates.unlockpt unlockpt = NativeDelegates.GetProc<NativeDelegates.unlockpt>();
     public static NativeDelegates.ptsname ptsname = NativeDelegates.GetProc<NativeDelegates.ptsname>();
+    public static NativeDelegates.openpty openpty = NativeDelegates.GetProc<NativeDelegates.openpty>();
 
     public static NativeDelegates.posix_spawn_file_actions_init posix_spawn_file_actions_init =
         NativeDelegates.GetProc<NativeDelegates.posix_spawn_file_actions_init>();
