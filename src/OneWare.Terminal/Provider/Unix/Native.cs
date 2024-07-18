@@ -32,7 +32,7 @@ internal static class NativeDelegates
 
     public delegate int grantpt(int fd);
 
-    public delegate int ioctl(int fd, ulong ctl, IntPtr arg);
+    public delegate int ioctl(int fd, ulong request, ref Native.winsize winsize);
     
     public delegate int kill(int pid, int sig);
 
@@ -40,6 +40,8 @@ internal static class NativeDelegates
     
     public delegate int openpty(out int amaster, out int aslave, IntPtr name, IntPtr termp, IntPtr winp);
 
+    public delegate int forkpty(out int amaster, IntPtr name, IntPtr termp, ref Native.winsize winp);
+    
     public delegate int pipe(IntPtr[] fds);
 
     public delegate int posix_spawn_file_actions_addclose(IntPtr file_actions, int fildes);
@@ -122,6 +124,8 @@ internal static class Native
     
     public static readonly ulong TIOCSWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 0x80087467 : 0x5414;
     
+    public static readonly ulong TIOCGWINSZ = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x40087468 : 0x5414;
+    
     public static readonly ulong TIOCSCTTY =
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? (ulong)0x20007484 : 0x540E;
 
@@ -132,7 +136,8 @@ internal static class Native
     public static NativeDelegates.unlockpt unlockpt = NativeDelegates.GetProc<NativeDelegates.unlockpt>();
     public static NativeDelegates.ptsname ptsname = NativeDelegates.GetProc<NativeDelegates.ptsname>();
     public static NativeDelegates.openpty openpty = NativeDelegates.GetProc<NativeDelegates.openpty>();
-
+    public static NativeDelegates.forkpty forkpty = NativeDelegates.GetProc<NativeDelegates.forkpty>();
+    
     public static NativeDelegates.posix_spawn_file_actions_init posix_spawn_file_actions_init =
         NativeDelegates.GetProc<NativeDelegates.posix_spawn_file_actions_init>();
 
@@ -161,12 +166,25 @@ internal static class Native
         return ptr;
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [StructLayout(LayoutKind.Sequential, Pack = 0)]
     public struct winsize
     {
         public ushort ws_row; /* rows, in characters */
         public ushort ws_col; /* columns, in characters */
         public ushort ws_xpixel; /* horizontal size, pixels */
         public ushort ws_ypixel; /* vertical size, pixels */
+    }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct termios
+    {
+        public uint c_iflag;     // input modes
+        public uint c_oflag;     // output modes
+        public uint c_cflag;     // control modes
+        public uint c_lflag;     // local modes
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+        public byte[] c_cc;      // control characters
+        public uint c_ispeed;    // input speed
+        public uint c_ospeed;    // output speed
     }
 }

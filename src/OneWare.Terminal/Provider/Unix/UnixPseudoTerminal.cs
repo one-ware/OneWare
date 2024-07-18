@@ -56,26 +56,19 @@ public class UnixPseudoTerminal : IPseudoTerminal
             ws_col = (ushort)(columns > 0 ? columns : 80)
         };
         
-        var ptr = IntPtr.Zero;
-        
         try
         {
-            ptr = Native.StructToPtr(size);
-            
-            Native.ioctl(_cfg, Native.TIOCSWINSZ, ptr);
-            
-            Native.kill(Process.Id, Native.SIGWINCH);
+            if (Native.ioctl(_cfg, Native.TIOCSWINSZ, ref size) == -1)
+            {
+                var errno = Marshal.GetLastWin32Error();
+                var errorMessage = new System.ComponentModel.Win32Exception(errno).Message;
+                throw new Exception($"Failed to resize terminal: {errorMessage} (errno: {errno})");
+            }
+            //Native.kill(Process.Id, Native.SIGWINCH);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-        }
-        finally
-        {
-            if (ptr != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
         }
     }
 }

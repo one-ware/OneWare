@@ -9,11 +9,14 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
     public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment,
         string? arguments)
     {
-        if (Native.openpty(out var masterFd, out var slaveFd, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero) == -1)
+        var winsize = new Native.winsize
         {
-            throw new Exception("Failed to open PTY");
-        }
-
+            ws_row = (ushort)rows,
+            ws_col = (ushort)columns,
+            ws_xpixel = 0,
+            ws_ypixel = 0
+        };
+        
         //Collect ENV Vars before fork to avoid EntryPointNotFoundException
         var envVars = new List<string>();
         var env = Environment.GetEnvironmentVariables();
@@ -24,18 +27,11 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);
         
-        //Duplicate current process
-        var pid = Native.fork();
-
+        var pid = Native.forkpty(out var masterFd, IntPtr.Zero, IntPtr.Zero, ref winsize);
+        
         //pid will be 0 on the forked process
         if (pid == 0)
         {
-            Native.dup2(slaveFd, 0);
-            Native.dup2(slaveFd, 1);
-            Native.dup2(slaveFd, 2);
-
-            Native.setsid();
-            Native.ioctl(slaveFd, Native.TIOCSCTTY, IntPtr.Zero);
             Native.chdir(initialDirectory);
 
             var argsArray = new List<string> { command };
@@ -44,12 +40,13 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             argsArray.Add(null!);
 
             Native.execve(argsArray[0], argsArray.ToArray(), envVars.ToArray());
+            Environment.Exit(1);
         }
-
+        
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
         
-        return new UnixPseudoTerminal(process, stdin, new FileStream(new SafeFileHandle(new IntPtr(stdin), false),
-            FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Read));
+        return new UnixPseudoTerminal(process, stdin, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
+            FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read));
     }
 }
