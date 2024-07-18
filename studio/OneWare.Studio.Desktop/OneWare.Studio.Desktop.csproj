@@ -54,7 +54,8 @@
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
-    <ItemGroup>
+    <!--Exclude Terminal on Linux to stop crashes on SetWindowSize-->
+    <ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
     </ItemGroup>
 </Project>
