@@ -79,6 +79,8 @@ public class UnixPseudoTerminal : IPseudoTerminal
         }
         else
         {
+            // TODO Find out why this method doesnt work on macos
+            
             var size = new Native.winsize
             {
                 ws_row = (ushort)(rows > 0 ? rows : 24),
