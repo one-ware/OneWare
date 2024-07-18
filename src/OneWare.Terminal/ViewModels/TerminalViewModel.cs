@@ -95,7 +95,7 @@ public class TerminalViewModel : ObservableObject
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
                 PlatformId.LinuxX64 or PlatformId.LinuxArm64 => PlatformHelper.GetFullPath("bash"),
-                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("bash") ??
+                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("zsh") ??
                                                             PlatformHelper.GetFullPath("bash"),
                 _ => null
             };

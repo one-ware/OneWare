@@ -47,8 +47,7 @@ public class UnixPseudoTerminal : IPseudoTerminal
             Marshal.FreeHGlobal(buf);
         });
     }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    
     public void SetSize(int columns, int rows)
     {
         var size = new Native.winsize
