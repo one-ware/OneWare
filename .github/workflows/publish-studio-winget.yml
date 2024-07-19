@@ -17,6 +17,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install winget
+        uses: Cyberboss/install-winget@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
+      - name: Install wingetcreate
+        run: winget install wingetcreate --disable-interactivity --accept-source-agreements
       - uses: mavrosxristoforos/get-xml-info@2.0
         name: Get Version
         id: get-oneware-version
