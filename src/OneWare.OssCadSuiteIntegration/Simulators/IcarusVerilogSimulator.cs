@@ -6,7 +6,9 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
+using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Context;
+using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Simulators;
@@ -40,12 +42,14 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public async Task<bool> SimulateAsync(IFile file)
     {
-        if (file is IProjectFile projectFile)
+        if (file is IProjectFile {Root: UniversalFpgaProjectRoot root } projectFile)
         {
             var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
                 Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
 
-            var verilogFiles = projectFile.Root.Files.Where(x => x.Extension == ".v")
+            var verilogFiles = root.Files
+                .Where(x => x.Extension == ".v")
+                .Where(x => !root.CompileExcluded.Contains(x))
                 .Select(x => $"{x.RelativePath.ToUnixPath()}");
 
             _dockService.Show<IOutputService>();
