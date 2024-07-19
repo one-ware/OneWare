@@ -49,3 +49,4 @@ parts:
       - libice6
       - libsm6
       - liblttng-ust0
+      - libutil-linux
