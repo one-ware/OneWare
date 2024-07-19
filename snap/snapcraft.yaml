@@ -19,23 +19,12 @@ parts:
     source: .
     parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
     build-packages: 
-      - wget
-      - patchelf
+      - dotnet-sdk-8.0
     override-build: |
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-      sudo apt-get update; sudo apt-get install -y apt-transport-https && sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0
       cd studio/OneWare.Studio.Desktop
       dotnet publish -f net8.0 -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
-      echo 'updating rpath...'
-      current_rpath="$(patchelf --print-rpath $SNAPCRAFT_PART_INSTALL/OneWareStudio)"
-      append_rpath='$ORIGIN:$ORIGIN/usr/lib/x86_64-linux-gnu'
-      new_rpath="${current_rpath}:${append_rpath}"
-      echo "set rpath: ${new_rpath}"
-      patchelf --force-rpath --set-rpath "${new_rpath}" $SNAPCRAFT_PART_INSTALL/OneWareStudio
-      echo 'new rpath'
-      patchelf --print-rpath $SNAPCRAFT_PART_INSTALL/OneWareStudio
-      echo 'fixed rpath'
       chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
       chmod +x $SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper
 
