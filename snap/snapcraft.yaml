@@ -29,7 +29,7 @@ parts:
       rm packages-microsoft-prod.deb
       sudo apt-get update; sudo apt-get install -y apt-transport-https && sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0
       cd studio/OneWare.Studio.Desktop
-      dotnet publish -f net8.0 -r linux-x64 -c Release --self-contained true -o $SNAPCRAFT_PART_INSTALL
+      dotnet publish -f net8.0 -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
       echo 'updating rpath...'
       current_rpath="$(patchelf --print-rpath $SNAPCRAFT_PART_INSTALL/OneWareStudio)"
       append_rpath='$ORIGIN:$ORIGIN/usr/lib/x86_64-linux-gnu'
@@ -49,4 +49,3 @@ parts:
       - libice6
       - libsm6
       - liblttng-ust0
-      - libutil-linux
