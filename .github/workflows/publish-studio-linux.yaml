@@ -1,4 +1,4 @@
-name: Publish Studio Desktop for Linux in CDN
+name: Publish Studio Desktop for Linux
 
 on:
   workflow_dispatch:
