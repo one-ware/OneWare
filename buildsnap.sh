@@ -1,1 +1,1 @@
-docker run --rm -it --privileged -v $PWD:/data -w /data diddledani/snapcraft:core20
+docker run --rm -it --privileged -v $PWD:/data -w /data diddledani/snapcraft:core22
