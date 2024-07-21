@@ -103,12 +103,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{60A1
 		.github\workflows\snapcraft.yml = .github\workflows\snapcraft.yml
 		.github\workflows\publish-studio-linux-flathub.yml = .github\workflows\publish-studio-linux-flathub.yml
 		.github\workflows\publish-studio-linux-snap.yml = .github\workflows\publish-studio-linux-snap.yml
-		.github\workflows\publish-studio-linux-standalone.yaml = .github\workflows\publish-studio-linux-standalone.yaml
 		.github\workflows\publish-studio-macos.yml = .github\workflows\publish-studio-macos.yml
 		.github\workflows\publish-studio-windows.yml = .github\workflows\publish-studio-windows.yml
 		.github\workflows\publish-studio-all.yml = .github\workflows\publish-studio-all.yml
 		.github\workflows\publish-studio-web.yml = .github\workflows\publish-studio-web.yml
 		.github\workflows\publish-studio-winget.yml = .github\workflows\publish-studio-winget.yml
+		.github\workflows\publish-studio-linux.yaml = .github\workflows\publish-studio-linux.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Debugger", "src\OneWare.Debugger\OneWare.Debugger.csproj", "{3223BF61-BDAB-440D-9158-98C248B971A5}"
