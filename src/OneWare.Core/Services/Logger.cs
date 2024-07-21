@@ -59,7 +59,7 @@ public class Logger : ILogger
     public void Error(string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Log(message + "\n" + exception, ConsoleColor.Red);
+        Log(message + (exception != null ? $"\n{exception}" : ""), ConsoleColor.Red);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
             Dispatcher.UIThread.Post(() =>
@@ -80,7 +80,7 @@ public class Logger : ILogger
     public void Warning(string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Log(message + "\n" + exception, ConsoleColor.Yellow);
+        Log(message + (exception != null ? $"\n{exception}" : ""), ConsoleColor.Yellow);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {
