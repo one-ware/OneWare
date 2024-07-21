@@ -7,7 +7,7 @@
         <name translatable="no">Hendrik Mennen</name>
     </developer>
     <metadata_license>CC0-1.0</metadata_license>
-    <project_license>GPL-3.0+</project_license>
+    <project_license>GPL-3.0</project_license>
     <description>
         <p>OneWare Studio is the next generation IDE for electronics development.
             It supports a broad range of development languages including VHDL, Verilog, C++, and more.
