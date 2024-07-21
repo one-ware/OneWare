@@ -39,7 +39,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b release-${{ steps.get-oneware-version.outputs.info }}
           git add com.one_ware.OneWare.yml
           git commit -m "Update com.one_ware.OneWare.yml"
 
@@ -47,7 +46,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN}}
-          branch: main
+          branch: release-${{ steps.get-oneware-version.outputs.info }}
           title: "Update Version to ${{ steps.get-oneware-version.outputs.info }}"
           body: "This is an automated pull request to update the version."
           labels: |
