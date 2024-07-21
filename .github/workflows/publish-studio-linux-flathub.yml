@@ -11,40 +11,34 @@ jobs:
   deploy-flathub:
     name: Deploy in Flathub
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
-
       - name: Checkout the target repository
         uses: actions/checkout@v4
         with:
           repository: flathub/com.one_ware.OneWare
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
-        
       - name: Checkout this repository
         uses: actions/checkout@v4
         with:
-          path: source-repo
-          
+          path: source-repo   
       - uses: mavrosxristoforos/get-xml-info@2.0
         name: Get Version
         id: get-oneware-version
         with:
           xml-file: 'source-repo/build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-
       - name: Delete the source repository
-        run: rm -rf source-repo
-      
+        run: rm -rf source-repo 
       - name: Update Version
         run: |
           sed -i 's/tag: .*/tag: {{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
-
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add com.one_ware.OneWare.yml
           git commit -m "Update com.one_ware.OneWare.yml"
-
       - name: Push changes and create pull request
         uses: peter-evans/create-pull-request@v6
         with:
