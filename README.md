@@ -31,11 +31,13 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/oneware)
 
+[![Get it from Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/com.one_ware.OneWare)
+
 ## Status
 
 [![Publish Studio Desktop for Windows](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-windows.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-windows.yml)<br/>
-[![Publish Studio Desktop for Linux](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux.yaml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux.yaml)<br/>
 [![Publish Studio Desktop for MacOS](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-macos.yml)<br/>
+[![Publish Studio Desktop for Linux](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux.yaml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-linux.yaml)<br/>
 [![Publish Studio Web](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-web.yml)
 
 [![Publish Studio Desktop for Windows in WinGet](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-winget.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/publish-studio-winget.yml)<br/>
