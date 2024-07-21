@@ -32,7 +32,7 @@ jobs:
       - name: Make changes to the target repository
         run: |
           cd target-repo
-          sed -i 's/tag: .*/tag: ${{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
+          sed -i 's/tag: .*/tag: test/' com.one_ware.OneWare.yml
 
       - name: Commit changes
         run: |
