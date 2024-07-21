@@ -16,9 +16,9 @@ jobs:
       - name: Checkout the target repository
         uses: actions/checkout@v4
         with:
-          repository: one-ware/com.one_ware.OneWare
+          repository: flathub/com.one_ware.OneWare
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
-          
+        
       - name: Checkout this repository
         uses: actions/checkout@v4
         with:
@@ -31,9 +31,12 @@ jobs:
           xml-file: 'source-repo/build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
 
-      - name: Make changes to the target repository
+      - name: Delete the source repository
+        run: rm -rf source-repo
+      
+      - name: Update Version
         run: |
-          sed -i 's/tag: .*/tag: test/' com.one_ware.OneWare.yml
+          sed -i 's/tag: .*/tag: {{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
 
       - name: Commit changes
         run: |
@@ -48,7 +51,7 @@ jobs:
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN}}
           branch: release-${{ steps.get-oneware-version.outputs.info }}
           title: "Update Version to ${{ steps.get-oneware-version.outputs.info }}"
-          body: "This is an automated pull request to update the version."
+          body: "This is an automated pull request to update the version to ${{ steps.get-oneware-version.outputs.info }}"
           labels: |
             update
             automated pr
