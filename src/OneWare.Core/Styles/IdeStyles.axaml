@@ -1,5 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -64,20 +65,20 @@
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
-    <Style Selector="ComboBox:disabled">
+    <Style Selector="ComboBox:disabled controls|SearchComboBox">
         <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
     </Style>
 
-    <Style Selector="ComboBox">
+    <Style Selector="ComboBox, controls|SearchComboBox">
         <Setter Property="Height" Value="24" />
         <Setter Property="Padding" Value="3 1" />
     </Style>
 
-    <Style Selector="ComboBox /template/ Popup > Border">
+    <Style Selector="ComboBox /template/ Popup > Border, controls|SearchComboBox /template/ Popup > Border">
         <Setter Property="CornerRadius" Value="3" />
     </Style>
 
-    <Style Selector="CheckBox, ComboBox, TextBox">
+    <Style Selector="CheckBox, ComboBox, TextBox, controls|SearchComboBox">
         <Setter Property="CornerRadius" Value="3" />
     </Style>
 

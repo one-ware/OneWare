@@ -41,6 +41,9 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
                 foreach (var setting in subCategory.Value.Settings)
                     switch (setting)
                     {
+                        case ComboBoxSearchSetting csS:
+                            subCategoryModel.SettingModels.Add(new ComboBoxSearchSettingViewModel(csS));
+                            break;
                         case ComboBoxSetting cS:
                             subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
                             break;

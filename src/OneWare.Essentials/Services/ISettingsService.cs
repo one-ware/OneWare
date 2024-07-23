@@ -32,6 +32,10 @@ public interface ISettingsService
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
         string description,
         T defaultValue, params T[] options);
+    
+    public void RegisterTitledComboSearch<T>(string category, string subCategory, string key, string title,
+        string description,
+        T defaultValue, params T[] options);
 
     public T GetSettingValue<T>(string key);
 

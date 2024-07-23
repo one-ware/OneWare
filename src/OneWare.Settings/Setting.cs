@@ -51,14 +51,19 @@ public class TextBoxSetting : TitledSetting
 
 public class ComboBoxSetting : TitledSetting
 {
-    public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options) : base(
+    public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options, bool isSearchable = false) : base(
         title, description, defaultValue)
     {
         Options = options.ToArray();
+        IsSearchable = isSearchable;
     }
 
+    public bool IsSearchable { get; }
     public object[] Options { get; }
 }
+
+public class ComboBoxSearchSetting(string title, string description, object defaultValue, IEnumerable<object> options)
+    : ComboBoxSetting(title, description, defaultValue, options);
 
 public class SliderSetting : TitledSetting
 {

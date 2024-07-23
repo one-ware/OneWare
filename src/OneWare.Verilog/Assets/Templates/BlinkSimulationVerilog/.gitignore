@@ -1,0 +1,16 @@
+﻿# Quartus
+output_files/
+incremental_db/
+db/
+
+# MacOS
+.DS_Store
+
+# Python
+*__pycache__*
+
+# Clangd
+.clangd/
+.cache/
+obj/
+mem_init/

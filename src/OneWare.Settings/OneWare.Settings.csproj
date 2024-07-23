@@ -6,4 +6,11 @@
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Views\SettingTypes\ComboBoxSearchSettingView.axaml.cs">
+        <DependentUpon>ComboBoxSearchSettingView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
 </Project>

@@ -88,13 +88,21 @@ public class SettingsService : ISettingsService
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
     }
-
+    
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
         string description, T defaultValue, params T[] options)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
             new ComboBoxSetting(title, description, defaultValue, options.Cast<object>()));
+    }
+    
+    public void RegisterTitledComboSearch<T>(string category, string subCategory, string key, string title,
+        string description, T defaultValue, params T[] options)
+    {
+        if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
+        AddSetting(category, subCategory, key,
+            new ComboBoxSearchSetting(title, description, defaultValue, options.Cast<object>()));
     }
 
     public T GetSettingValue<T>(string key)

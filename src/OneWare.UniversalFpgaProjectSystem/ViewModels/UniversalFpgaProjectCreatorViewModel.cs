@@ -21,7 +21,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
     private readonly TextBoxSetting _nameSetting;
     private readonly IProjectExplorerService _projectExplorerService;
-    private readonly ComboBoxSetting _templateSetting;
+    private readonly ComboBoxSearchSetting _templateSetting;
     private readonly ComboBoxSetting _toolchainSetting;
 
     public UniversalFpgaProjectCreatorViewModel(IPaths paths, IProjectExplorerService projectExplorerService,
@@ -35,7 +35,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
         _nameSetting = new TextBoxSetting("Name", "Set the name for the project", "", "Enter name...");
 
-        _templateSetting = new ComboBoxSetting("Template", "Set the template used for this project", "Empty",
+        _templateSetting = new ComboBoxSearchSetting("Template", "Set the template used for this project", "Empty",
             new[] { "Empty" }.Concat(fpgaService.Templates.Select(x => x.Name)));
 
         _folderPathSetting = new FolderPathSetting("Location", "Set the location where the new project is created",
@@ -57,7 +57,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
                 .Select(x => x.Name)));
 
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_nameSetting));
-        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_templateSetting));
+        SettingsCollection.SettingModels.Add(new ComboBoxSearchSettingViewModel(_templateSetting));
         SettingsCollection.SettingModels.Add(new PathSettingViewModel(_folderPathSetting));
         SettingsCollection.SettingModels.Add(new CheckBoxSettingViewModel(_createNewFolderSetting));
         SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_toolchainSetting));
