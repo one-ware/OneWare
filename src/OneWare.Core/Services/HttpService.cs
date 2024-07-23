@@ -93,6 +93,11 @@ public class HttpService : IHttpService
             var client = HttpClient;
             if (timeout != default)
                 client.Timeout = timeout;
+            
+            client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+            {
+                NoCache = true
+            };
 
             using var download = await client.GetAsync(
                 url, cancellationToken);

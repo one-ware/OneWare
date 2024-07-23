@@ -19,12 +19,12 @@ jobs:
       - name: Install Wasm-Tools
         run: dotnet workload install wasm-tools
       - name: Publish
-        run: dotnet publish ./studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj -c Release
+        run: dotnet publish ./studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj -c Release -o ./out
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: w01ec151.kasserver.com
           username: w01ec151
           password: ${{ secrets.ONEWARE_FTP }}
-          local-dir: ./studio/OneWare.Studio.Browser/bin/Release/net8.0/browser-wasm/AppBundle/
+          local-dir: ./out/wwwroot/
           server-dir: studio.one-ware.com/
