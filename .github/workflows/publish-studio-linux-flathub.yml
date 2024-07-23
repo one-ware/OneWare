@@ -32,7 +32,7 @@ jobs:
         run: rm -rf source-repo 
       - name: Update Version
         run: |
-          sed -i 's/tag: .*/tag: {{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
+          sed -i 's/tag: .*/tag: ${{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
@@ -42,7 +42,7 @@ jobs:
       - name: Push changes and create pull request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.HENDRIK_PERSONAL_TOKEN}}
+          token: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
           branch: release-${{ steps.get-oneware-version.outputs.info }}
           title: "Update Version to ${{ steps.get-oneware-version.outputs.info }}"
           body: "This is an automated pull request to update the version to ${{ steps.get-oneware-version.outputs.info }}"
