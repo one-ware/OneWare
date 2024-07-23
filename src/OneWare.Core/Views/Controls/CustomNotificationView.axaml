@@ -18,7 +18,7 @@
                            Opacity=".8"
                            Margin="0,8,0,0" />
 
-                <StackPanel Margin="0,5, 0, 0" DockPanel.Dock="Bottom" Spacing="0" Orientation="Horizontal">
+                <StackPanel Margin="0,8, 0, 0" DockPanel.Dock="Bottom" Spacing="0" Orientation="Horizontal">
                     <Border>
                         <Button NotificationCard.CloseOnClick="True" Classes="BorderButton" CornerRadius="3"
                                 Cursor="Hand"

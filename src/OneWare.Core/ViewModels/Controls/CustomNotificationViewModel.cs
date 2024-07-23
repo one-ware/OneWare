@@ -17,6 +17,7 @@ public class CustomNotificationViewModel : Notification
 
     public Action? ButtonAction { get; set; }
     public string? ButtonText { get; set; }
+    
     public IBrush Background { get; set; } = Brushes.DodgerBlue;
     public IImage? Icon { get; set; }
 

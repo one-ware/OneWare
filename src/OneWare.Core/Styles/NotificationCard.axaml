@@ -13,24 +13,20 @@
         <Setter Property="Width" Value="350" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="RenderTransformOrigin" Value="50%,75%" />
         <Setter Property="Template">
             <ControlTemplate>
-                <LayoutTransformControl Name="PART_LayoutTransformControl"
-                                        UseRenderTransform="True">
-                    <Border CornerRadius="10" BoxShadow="0 6 8 0 #4F000000" Margin="5 5 5 10">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{DynamicResource ControlCornerRadius}" ClipToBounds="True">
-                            <DockPanel>
-                                <Panel Height="4" DockPanel.Dock="Top"
-                                       Background="{DynamicResource ThemeBorderLowBrush}" />
-                                <ContentControl Name="PART_Content" Content="{TemplateBinding Content}" />
-                            </DockPanel>
-                        </Border>
-                    </Border>
-                </LayoutTransformControl>
+                <Border Background="{TemplateBinding Background}" BorderThickness="1"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3"
+                        BoxShadow="0 3 4 0 #4F000000" Margin="5 5 5 10">
+                    <Panel>
+                        <!--
+                        <Button Command="{Binding $parent[NotificationCard].Close}" Margin="5" Height="15" Width="15"
+                                HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <Image Source="{DynamicResource MaterialDesign.Close}" />
+                        </Button>-->
+                        <ContentControl Content="{TemplateBinding Content}" />
+                    </Panel>
+                </Border>
             </ControlTemplate>
         </Setter>
     </Style>
