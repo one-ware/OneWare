@@ -214,6 +214,8 @@ public abstract class PackageModel : ObservableObject
 
     private void UpdateStatus()
     {
+        if(Status == PackageStatus.NeedRestart) return;
+        
         var lV = Version.TryParse(Package.Versions?.LastOrDefault()?.Version, out var lastVersion);
         var iV = Version.TryParse(InstalledVersion?.Version ?? "", out var installedVersion);
 
