@@ -8,24 +8,25 @@ namespace OneWare.Essentials.Controls;
 
 public class SearchComboBox : ComboBox
 {
+    private TextBox? _searchBox;
+    
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
 
-        var searchBox = e.NameScope.Find<TextBox>("PART_SearchBox");
+        _searchBox = e.NameScope.Find<TextBox>("PART_SearchBox")!;
 
-        searchBox!.TextChanged += (sender, args) =>
+        _searchBox!.TextChanged += (sender, args) =>
         {
             SelectedItem = Items.FirstOrDefault(x =>
-                x?.ToString()?.StartsWith(searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) ?? false);
-
-            searchBox.Focus();
+                x?.ToString()?.StartsWith(_searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) ?? false);
+            
+            _searchBox.Focus();
         };
-
-
+        
         this.DropDownOpened += (sender, args) =>
         {
-            searchBox.Focus();
+            _searchBox.Focus();
         };
     }
     
@@ -36,6 +37,8 @@ public class SearchComboBox : ComboBox
             if (SelectedIndex < Items.Count - 1)
                 SelectedIndex++;
             e.Handled = true;
+
+            _searchBox?.Focus();
             return;
         } 
         if (e.Key == Key.Up)
@@ -43,6 +46,8 @@ public class SearchComboBox : ComboBox
             if (SelectedIndex > 0)
                 SelectedIndex--;
             e.Handled = true;
+            
+            _searchBox?.Focus();
             return;
         }
 
