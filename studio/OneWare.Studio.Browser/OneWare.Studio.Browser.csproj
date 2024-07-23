@@ -8,10 +8,12 @@
         <Version>$(StudioVersion)</Version>
         <TargetFramework>net8.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
-        <!--Enable Multithread-->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <!--Enable Multithread
         <WasmEnableThreads>true</WasmEnableThreads>
         <_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
         <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
+        -->
     </PropertyGroup>
 
     <!--

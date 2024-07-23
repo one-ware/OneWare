@@ -35,9 +35,8 @@
                                             <CheckBox.IsChecked>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}"
-                                                             FallbackValue="{x:Null}"
-                                                             Path="((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain"/>
+                                                    <Binding FallbackValue="{x:Null}"
+                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain"/>
                                                     <Binding />
                                                 </MultiBinding>
                                             </CheckBox.IsChecked>
@@ -82,9 +81,8 @@
                                             <CheckBox.IsChecked>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}"
-                                                             FallbackValue="{x:Null}"
-                                                             Path="((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader"/>
+                                                    <Binding FallbackValue="{x:Null}"
+                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader"/>
                                                     <Binding />
                                                 </MultiBinding>
                                             </CheckBox.IsChecked>
