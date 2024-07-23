@@ -59,12 +59,13 @@ public class Logger : ILogger
     public void Error(string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Log(message + "\n" + exception, ConsoleColor.Red);
+        var output = message + (exception != null ? $"\n{exception}" : "");
+        Log(output, ConsoleColor.Red);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
             Dispatcher.UIThread.Post(() =>
             {
-                ContainerLocator.Current.Resolve<IOutputService>().WriteLine("[Error]: " + message, Brushes.Red);
+                ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Red);
                 ContainerLocator.Current.Resolve<IDockService>()
                     .Show(ContainerLocator.Current.Resolve<IOutputService>());
             });
@@ -73,24 +74,25 @@ public class Logger : ILogger
             Dispatcher.UIThread.Post(() =>
             {
                 _ = ContainerLocator.Current.Resolve<IWindowService>()
-                    .ShowMessageAsync("Error", message, MessageBoxIcon.Error, dialogOwner);
+                    .ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner);
             });
     }
 
     public void Warning(string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Log(message + "\n" + exception, ConsoleColor.Yellow);
+        var output = message + (exception != null ? $"\n{exception}" : "");
+        Log(output, ConsoleColor.Yellow);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine("[Warning]: " + message, Brushes.Orange);
+            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Orange);
             ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
         }
 
         if (showDialog)
             _ = ContainerLocator.Current.Resolve<IWindowService>()
-                .ShowMessageAsync("Warning", message, MessageBoxIcon.Warning, dialogOwner);
+                .ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner);
     }
 
     private void Init()
