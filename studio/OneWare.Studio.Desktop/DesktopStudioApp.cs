@@ -155,7 +155,7 @@ public class DesktopStudioApp : StudioApp
             var settingsService = Container.Resolve<ISettingsService>();
 
             if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
-                lastVersion <= Assembly.GetExecutingAssembly().GetName().Version)
+                lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
             {
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
 
