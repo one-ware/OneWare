@@ -447,18 +447,23 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task DeleteDialogAsync(params IProjectEntry[] entries)
     {
-        var message = "Are you sure you want to delete this file permanently?";
+        if(entries.Length < 1) return;
+        
+        var message = string.Empty;
+        
         if (entries.Length == 1)
         {
-            if (entries[0] is IProjectRoot)
-                message =
-                    "Are you sure you want to delete this project permanently? This will also delete all included files and folders";
-            else if (entries[0] is IProjectFolder)
-                message = "Are you sure you want to delete this folder permanently?";
+            message = entries[0] switch
+            {
+                IProjectRoot => $"Are you sure you want to delete the project {entries[0].Header} permanently? This will also delete all included files and folders",
+                IProjectFolder => $"Are you sure you want to delete the folder {entries[0].Header} permanently?",
+                IProjectFile => $"Are you sure you want to delete {entries[0].Header} permanently?",
+                _ => message
+            };
         }
         else
         {
-            message = "Are you sure you want to delete selected files?";
+            message = $"Are you sure you want to delete {entries.Length} objects permanently?";
         }
 
         var result = await _windowService.ShowYesNoAsync("Warning", message, MessageBoxIcon.Warning,
@@ -783,6 +788,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         target.IsExpanded = true;
     }
 
+    public Task DeleteSelectedDialog()
+    {
+        if (SelectedItems.Count == 0 || SelectedItems.Any(x => x is not IProjectEntry)) return Task.CompletedTask;
+        
+        return this.DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
+    }
+    
     #endregion
 
     #region LastProjectsFile
