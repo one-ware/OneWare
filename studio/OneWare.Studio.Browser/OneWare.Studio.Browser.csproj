@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
     <Import Project="..\..\build\props\Avalonia.Browser.props"/>
     <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props"/>
