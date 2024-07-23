@@ -111,8 +111,8 @@ public class PluginService : IPluginService
             if (packageManifest?.Dependencies is { } deps)
                 foreach (var dep in deps)
                 {
-                    var minVersion = Version.Parse(dep.MinVersion ?? "1000");
-                    var maxVersion = Version.Parse(dep.MaxVersion ?? "0");
+                    var minVersion = Version.Parse(dep.MinVersion ?? "0");
+                    var maxVersion = Version.Parse(dep.MaxVersion ?? "10000");
 
                     var coreDep = AppDomain.CurrentDomain.GetAssemblies()
                         .SingleOrDefault(x => x.GetName().Name == dep.Name)?.GetName();
