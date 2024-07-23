@@ -35,8 +35,8 @@
                                             <CheckBox.IsChecked>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding
-                                                        Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain, FallbackValue={x:Null}}" />
+                                                    <Binding FallbackValue="{x:Null}"
+                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain"/>
                                                     <Binding />
                                                 </MultiBinding>
                                             </CheckBox.IsChecked>
@@ -81,8 +81,8 @@
                                             <CheckBox.IsChecked>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding
-                                                        Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader, FallbackValue={x:Null}}" />
+                                                    <Binding FallbackValue="{x:Null}"
+                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader"/>
                                                     <Binding />
                                                 </MultiBinding>
                                             </CheckBox.IsChecked>

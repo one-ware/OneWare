@@ -75,14 +75,11 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             {
                 var vcdFileRelativePath = match.Groups[1].Value;
                 var vcdFileFullPath = Path.Combine(projectFile.Root!.FullPath, vcdFileRelativePath);
-
-                await Task.Delay(50);
-
+                
                 var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 
                 var doc = await _dockService.OpenFileAsync(vcdFile);
-                if (doc is IStreamableDocument vcd) vcd.PrepareLiveStream();
             }
 
             return true;

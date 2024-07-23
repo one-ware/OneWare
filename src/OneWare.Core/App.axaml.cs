@@ -332,7 +332,7 @@ public class App : PrismApplication
 
         Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
         {
-            Resources["EditorFontSize"] = x;
+            Resources["EditorFontSize"] = (double)x;
         });
 
         _ = LoadContentAsync();

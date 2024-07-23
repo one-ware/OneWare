@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
     <Import Project="..\..\build\props\Avalonia.Browser.props"/>
     <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props"/>
@@ -6,17 +6,17 @@
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
-        <TargetFramework>net8.0</TargetFramework>
-        <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
-        <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
+        <TargetFramework>net8.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
-        <!--Enable Multithread-->
+        <!--Enable Multithread
         <WasmEnableThreads>true</WasmEnableThreads>
         <_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
-        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
+        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>-->
     </PropertyGroup>
 
+    <!--
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <RunAOTCompilation>false</RunAOTCompilation>
         <PublishTrimmed>false</PublishTrimmed>
@@ -24,10 +24,7 @@
         <WasmBuildNative>true</WasmBuildNative>
         <InvariantGlobalization>true</InvariantGlobalization>
     </PropertyGroup>
-
-    <ItemGroup>
-        <WasmExtraFilesToDeploy Include="AppBundle\**"/>
-    </ItemGroup>
+    -->
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
@@ -35,7 +32,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0"/>
-        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.56"/>
+      <AvaloniaResource Include="Assets\**\*.*" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <!--<PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0"/>
+        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.58"/>-->
+    </ItemGroup>
+    
 </Project>

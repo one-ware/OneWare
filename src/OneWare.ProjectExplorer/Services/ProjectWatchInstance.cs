@@ -153,6 +153,9 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
+                        var openTab = _dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
+                        if (openTab.Key is not null)
+                            openTab.Value.InitializeContent();
                         return;
                     case WatcherChangeTypes.Changed:
                         if (_root is ISavable savable && _root.ProjectPath.EqualPaths(path))
