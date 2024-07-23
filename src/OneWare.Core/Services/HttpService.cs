@@ -57,19 +57,20 @@ public class HttpService : IHttpService
 
             var extension = Path.GetExtension(url);
 
+            await using var stream = await download.Content.ReadAsStreamAsync(cancellationToken);
+            
             switch (extension)
             {
                 case ".svg":
-                    var svg = new SvgSource();
-                    var picture = svg.Load(await download.Content.ReadAsStreamAsync(cancellationToken));
-                    if (picture is not null)
+                    var svg = SvgSource.LoadFromStream(stream);
+                    if (svg is not null)
                         return new SvgImage
                         {
                             Source = svg
                         };
                     break;
                 default:
-                    return new Bitmap(await download.Content.ReadAsStreamAsync(cancellationToken));
+                    return new Bitmap(stream);
             }
         }
         catch (HttpRequestException e)

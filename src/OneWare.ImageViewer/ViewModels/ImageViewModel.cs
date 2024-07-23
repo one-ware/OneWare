@@ -33,9 +33,7 @@ public class ImageViewModel : ExtendedDocument
             switch (CurrentFile.Extension.ToLower())
             {
                 case ".svg":
-                    var svg = new SvgSource();
-                    var picture = svg.Load(FullPath);
-                    if (picture is not null)
+                    var svg = new SvgSource(new Uri(FullPath));
                         Image = new SvgImage
                         {
                             Source = svg

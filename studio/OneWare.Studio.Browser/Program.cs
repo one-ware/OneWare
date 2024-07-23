@@ -15,7 +15,7 @@ internal class Program
 #if DEBUG
         Trace.Listeners.Add(new ConsoleTraceListener());
 #endif
-
+        
         await BuildAvaloniaApp()
 #if DEBUG
             .LogToTrace()
