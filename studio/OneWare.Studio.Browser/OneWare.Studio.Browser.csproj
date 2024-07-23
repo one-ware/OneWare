@@ -12,8 +12,7 @@
         <!--Enable Multithread
         <WasmEnableThreads>true</WasmEnableThreads>
         <_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
-        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>
-        -->
+        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>-->
     </PropertyGroup>
 
     <!--
@@ -31,11 +30,13 @@
         <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
     </ItemGroup>
 
-    <!--
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\**\*.*" />
+    </ItemGroup>
+    
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0"/>
         <PackageReference Include="TextMateSharp.Wasm" Version="1.0.58"/>
     </ItemGroup>
-    -->
     
 </Project>
