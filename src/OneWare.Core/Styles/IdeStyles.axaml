@@ -174,5 +174,21 @@
         <Setter Property="Width" Value="NaN" />
         <Setter Property="Padding" Value="5 0" />
     </Style>
+    
+    <Style Selector="ToolTip">
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
 
 </Styles>

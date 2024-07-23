@@ -19,30 +19,27 @@
             <Setter Property="Padding" Value="5" />
             <Setter Property="Height" Value="30" />
         </Style>
+        
         <Style Selector="Border.ChildBorder">
             <Setter Property="Padding" Value="5,0,1,0" />
             <Setter Property="Margin" Value="0,2,0,2" />
         </Style>
+        
         <Style Selector="TextBlock.ChildText">
             <Setter Property="Margin" Value="0,0,0,1" />
         </Style>
+        
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
         </Style>
-
+        
         <Style Selector="ToolTip">
             <Setter Property="MaxWidth" Value="300" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
-                        <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap" />
-                    </Border>
-                </ControlTemplate>
-            </Setter>
+        </Style>
+        
+        <Style Selector="ToolTip TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
         <Style Selector="ToggleButton.ErrorToggle">
