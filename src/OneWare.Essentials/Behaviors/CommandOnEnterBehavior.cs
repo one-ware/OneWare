@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 
 namespace OneWare.Essentials.Behaviors;
 
+[Obsolete("Use CommandOnKeyPressedBehavior instead.")]
 public class CommandOnEnterBehavior : CommandBasedBehavior
 {
     private CompositeDisposable? Disposables { get; set; }

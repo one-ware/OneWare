@@ -15,8 +15,9 @@
                          x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCreatorView"
                          x:DataType="viewModels:UniversalFpgaProjectCreatorViewModel">
     <Interaction.Behaviors>
-        <behaviors:CommandOnEnterBehavior Command="{Binding SaveAsync}"
-                                          CommandParameter="{Binding #UniversalFpgaProjectCreator}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SaveAsync}"
+                                               Routes="Bubble"
+                                               CommandParameter="{Binding #UniversalFpgaProjectCreator}" />
     </Interaction.Behaviors>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"

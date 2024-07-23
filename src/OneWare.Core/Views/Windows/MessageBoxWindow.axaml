@@ -10,6 +10,7 @@
                          MinHeight="100"
                          PrefWidth="350"
                          Padding="4"
+                         Focusable="True"
                          Foreground="{DynamicResource ThemeForegroundBrush}"
                          Name="MessageWindow" x:CompileBindings="True" x:DataType="windows:MessageBoxViewModel"
                          WindowStartupLocation="CenterOwner">

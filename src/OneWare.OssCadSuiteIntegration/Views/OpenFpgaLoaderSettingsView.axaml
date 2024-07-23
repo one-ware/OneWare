@@ -13,8 +13,8 @@
                          WindowStartupLocation="CenterOwner" Title="OpenFPGALoader Settings"
                          x:DataType="viewModels:OpenFpgaLoaderSettingsViewModel">
     <Interaction.Behaviors>
-        <behaviors:CommandOnEnterBehavior Command="{Binding Save}"
-                                          CommandParameter="{Binding #OpenFpgaLoaderSettingsViewView}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding Save}"
+                                               CommandParameter="{Binding #OpenFpgaLoaderSettingsViewView}" />
     </Interaction.Behaviors>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"

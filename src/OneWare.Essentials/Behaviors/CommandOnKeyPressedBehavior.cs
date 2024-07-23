@@ -12,11 +12,20 @@ public class CommandOnKeyPressedBehavior : CommandBasedBehavior
 
     public static readonly StyledProperty<bool> HandledEventsTooProperty =
         AvaloniaProperty.Register<CommandOnKeyPressedBehavior, bool>(nameof(HandledEventsToo));
+    
+    public static readonly StyledProperty<RoutingStrategies> RoutesProperty =
+        AvaloniaProperty.Register<CommandOnKeyPressedBehavior, RoutingStrategies>(nameof(Routes), RoutingStrategies.Bubble);
 
     public Key? TriggerKey
     {
         get => GetValue(TriggerKeyProperty);
         set => SetValue(TriggerKeyProperty, value);
+    }
+
+    public RoutingStrategies Routes
+    {
+        get => GetValue(RoutesProperty);
+        set => SetValue(RoutesProperty, value);
     }
 
     public bool HandledEventsToo
@@ -40,7 +49,7 @@ public class CommandOnKeyPressedBehavior : CommandBasedBehavior
             {
                 if (e.Key == TriggerKey) e.Handled = ExecuteCommand();
             },
-            RoutingStrategies.Tunnel, HandledEventsToo));
+            Routes, HandledEventsToo));
     }
 
     protected override void OnDetaching()

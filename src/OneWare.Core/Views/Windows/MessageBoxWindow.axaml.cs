@@ -59,17 +59,9 @@ public partial class MessageBoxWindow : FlexibleWindow
                 if (i.Key == Key.Enter && DataContext is MessageBoxViewModel mb)
                 {
                     mb.BoxStatus = MessageBoxStatus.Yes;
+                    i.Handled = true;
                     Close();
                 }
-            };
-
-            AttachedToVisualTree += (_, _) =>
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    InputBox.SelectAll();
-                    InputBox.Focus();
-                });
             };
         }
         else
@@ -79,10 +71,27 @@ public partial class MessageBoxWindow : FlexibleWindow
                 if (i.Key == Key.Enter && DataContext is MessageBoxViewModel mb)
                 {
                     mb.BoxStatus = MessageBoxStatus.Yes;
+                    i.Handled = true;
                     Close();
                 }
             };
         }
+        
+        AttachedToVisualTree += (_, _) =>
+        {
+            if (mode == MessageBoxMode.Input)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    InputBox.SelectAll();
+                    InputBox.Focus();
+                });
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() => this.Focus());
+            }
+        };
     }
 
     public MessageBoxStatus BoxStatus => (DataContext as MessageBoxViewModel)!.BoxStatus;

@@ -17,7 +17,7 @@
                          x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <Interaction.Behaviors>
-        <behaviors:CommandOnEnterBehavior Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
     </Interaction.Behaviors>
 
     <Grid RowDefinitions="*, Auto">

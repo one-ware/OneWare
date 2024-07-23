@@ -13,7 +13,7 @@
                          WindowStartupLocation="CenterOwner" Title="Yosys Compile Settings"
                          x:DataType="viewModels:YosysCompileSettingsViewModel">
     <Interaction.Behaviors>
-        <behaviors:CommandOnEnterBehavior Command="{Binding Save}"
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding Save}"
                                           CommandParameter="{Binding #YosysCompileSettingsViewView}" />
     </Interaction.Behaviors>
     <DockPanel>
