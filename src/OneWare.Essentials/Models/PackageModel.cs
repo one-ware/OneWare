@@ -94,7 +94,7 @@ public abstract class PackageModel : ObservableObject
     protected virtual PackageTarget? SelectTarget(PackageVersion version)
     {
         var currentTarget = PlatformHelper.Platform.ToString().ToLower();
-        var target = version.Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget);
+        var target = version.Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget) ?? version.Targets?.FirstOrDefault(x => x.Target == "all");
         return target;
     }
 

@@ -64,7 +64,7 @@
                                     IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     VerticalAlignment="Center" Width="18"
                                     Source="{Binding IconObservable^, FallbackValue={x:Null}}" />
-                                <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}" />
+                                <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}" TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="2" Margin="3 0" HorizontalAlignment="Right"
                                            TextAlignment="Center" Text="{Binding VisiblePackages.Count}"
                                            Foreground="{DynamicResource ThemeBorderHighBrush}" />
@@ -111,13 +111,13 @@
                                     <Grid DockPanel.Dock="Right" RowDefinitions="25, 25" Margin="10, 5, 0, 5"
                                           ColumnDefinitions="*, Auto">
                                         <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
-                                                   VerticalAlignment="Center"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" 
                                                    Text="{Binding PackageModel.Package.Name}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
                                                    VerticalAlignment="Center"
                                                    Text="{Binding PackageModel.Package.Description}"
                                                    TextWrapping="Wrap" />
-                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal">
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal" Margin="2 0 0 0">
                                             <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                                                    Height="12"
                                                    IsVisible="{Binding PackageModel.WarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
