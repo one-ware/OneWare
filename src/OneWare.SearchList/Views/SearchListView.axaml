@@ -9,19 +9,7 @@
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="250"
              x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
-    <UserControl.Styles>
-        
-        <Style Selector="ToolTip">
-            <Setter Property="MaxWidth" Value="300" />
-        </Style>
-        
-        <Style Selector="ToolTip TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
-
-    </UserControl.Styles>
-
-
+    
     <Grid RowDefinitions="30,*">
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">

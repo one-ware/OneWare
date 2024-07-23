@@ -178,17 +178,23 @@
     <Style Selector="ToolTip">
         <Setter Property="CornerRadius" Value="3"/>
         <Setter Property="Padding" Value="3" />
+        <Setter Property="MaxWidth" Value="600" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
+                        UseLayoutRounding="True"
                         Padding="{TemplateBinding Padding}">
                     <ContentPresenter Content="{TemplateBinding Content}" />
                 </Border>
             </ControlTemplate>
         </Setter>
+    </Style>
+    
+    <Style Selector="ToolTip TextBlock">
+        <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
     </Style>
 
 </Styles>

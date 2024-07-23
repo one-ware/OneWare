@@ -33,14 +33,6 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
         </Style>
-        
-        <Style Selector="ToolTip">
-            <Setter Property="MaxWidth" Value="300" />
-        </Style>
-        
-        <Style Selector="ToolTip TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
 
         <Style Selector="ToggleButton.ErrorToggle">
             <Setter Property="Background" Value="Transparent" />
