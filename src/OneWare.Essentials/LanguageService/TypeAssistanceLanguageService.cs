@@ -14,6 +14,7 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using ImTools;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
@@ -461,8 +462,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual async Task UpdateInlayHintsAsync()
     {
+        if (CodeBox.Document.LineCount == 0) return;
+        
         var inlayHintContainer =
-            await Service.RequestInlayHintsAsync(CurrentFile.FullPath, new Range(0, 0, CodeBox.Document.LineCount, 0));
+            await Service.RequestInlayHintsAsync(CurrentFile.FullPath, new Range(0, 0, CodeBox.Document.LineCount, CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
 
         if (inlayHintContainer is not null)
             Editor.Editor.InlayHintGenerator.SetInlineHints(inlayHintContainer.Select(x => new InlayHint
