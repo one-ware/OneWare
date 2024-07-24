@@ -16,13 +16,12 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
 
-
     private readonly ObservableCollection<IProjectEntry> _compileExcluded = [];
-
 
     private readonly ObservableCollection<IFpgaPreCompileStep> _preCompileSteps = [];
 
     private readonly ObservableCollection<IProjectFile> _testBenches = [];
+    
     private readonly IImage _testBenchOverlay;
 
     private readonly IImage _topEntityOverlay;

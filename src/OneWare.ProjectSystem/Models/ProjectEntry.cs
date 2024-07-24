@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Helpers;
@@ -26,11 +27,17 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     private string _name;
 
     private float _textOpacity = 1f;
+    
+    private readonly IImage _loadingFailedOverlay;
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
         _name = name;
         TopFolder = topFolder;
+        
+        _loadingFailedOverlay =
+            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.StatusCriticalErrorOverlayExp16X") as IImage
+            ?? throw new NullReferenceException(nameof(Application));
     }
 
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
@@ -88,7 +95,15 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set
         {
             SetProperty(ref _loadingFailed, value);
-            if (value) IsExpanded = false;
+            if (value)
+            {
+                IconOverlays.Add(_loadingFailedOverlay);
+                IsExpanded = false;
+            }
+            else
+            {
+                IconOverlays.Remove(_loadingFailedOverlay);
+            }
         }
     }
 

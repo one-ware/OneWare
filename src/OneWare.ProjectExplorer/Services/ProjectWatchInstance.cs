@@ -36,6 +36,11 @@ public class ProjectWatchInstance : IDisposable
         _fileSystemWatcher.Renamed += File_Changed;
         _fileSystemWatcher.Created += File_Changed;
 
+        _fileSystemWatcher.Error += (sender, args) =>
+        {
+            Console.WriteLine("Error");
+        };
+
         try
         {
             settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
@@ -163,8 +168,10 @@ public class ProjectWatchInstance : IDisposable
                                 await _projectExplorerService.ReloadAsync(_root);
                         return;
                     case WatcherChangeTypes.Deleted:
-                        if (_root.SearchFullPath(path) is { } deletedEntry)
-                            await _projectExplorerService.RemoveAsync(deletedEntry);
+                        if (_root.ProjectPath.EqualPaths(path))
+                        {
+                            _root.LoadingFailed = true;
+                        }
                         return;
                 }
         }
