@@ -148,6 +148,13 @@ public class FpgaModel : ObservableObject
     {
         if (SelectedPinModel is null || SelectedNodeModel is null) return;
         Connect(SelectedPinModel, SelectedNodeModel);
+
+        var index = VisibleNodeModels.IndexOf(SelectedNodeModel);
+        
+        if (index < VisibleNodeModels.Count - 1)
+        {
+            SelectedNodeModel = VisibleNodeModels[index + 1];
+        }
     }
 
     private void DisconnectSelected()
