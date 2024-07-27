@@ -48,9 +48,10 @@ jobs:
           tag: ${{ steps.get-props-version.outputs.info }}
           artifacts: "./out/en-us/*.msi"
           allowUpdates: true
-          omitBody: True
           omitBodyDuringUpdate: True
           omitNameDuringUpdate: True
+          omitPrereleaseDuringUpdate: True
+          omitDraftDuringUpdate: True
       - uses: joutvhu/ftp-transfer@v1
         name: Upload
         with:

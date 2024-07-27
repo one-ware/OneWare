@@ -43,9 +43,10 @@ jobs:
           tag: ${{ steps.get-props-version.outputs.info }}
           artifacts: "./out/*.tar.gz"
           allowUpdates: true
-          omitBody: True
           omitBodyDuringUpdate: True
           omitNameDuringUpdate: True
+          omitPrereleaseDuringUpdate: True
+          omitDraftDuringUpdate: True
       - name: Create VersionInfo x64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz" > ./out/linux-x64.txt
       - uses: joutvhu/ftp-transfer@v1
