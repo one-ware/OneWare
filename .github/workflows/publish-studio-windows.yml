@@ -46,8 +46,11 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get-props-version.outputs.info }}
-          artifacts: "./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi"
+          artifacts: "./out/en-us/*.msi"
           allowUpdates: true
+          omitBody: True
+          omitBodyDuringUpdate: True
+          omitNameDuringUpdate: True
       - uses: joutvhu/ftp-transfer@v1
         name: Upload
         with:
