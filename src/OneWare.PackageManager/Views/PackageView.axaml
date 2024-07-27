@@ -81,7 +81,7 @@
                 </ItemsControl.DataTemplates>
             </ItemsControl>
 
-            <ProgressBar IsIndeterminate="False" Value="{Binding PackageModel.Progress}" ShowProgressText="True"
+            <ProgressBar IsIndeterminate="{Binding PackageModel.IsIndeterminate}" Value="{Binding PackageModel.Progress}" ShowProgressText="True"
                          Maximum="1.0"
                          Height="24"
                          IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 

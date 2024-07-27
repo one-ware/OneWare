@@ -14,6 +14,7 @@ public abstract class PackageModel : ObservableObject
     private PackageVersion? _installedVersion;
     private Package _package;
 
+    private bool _isIndeterminate;
     private float _progress;
 
     private PackageStatus _status;
@@ -59,6 +60,12 @@ public abstract class PackageModel : ObservableObject
         protected set => SetProperty(ref _status, value);
     }
 
+    public bool IsIndeterminate
+    {
+        get => _isIndeterminate;
+        private set => SetProperty(ref _isIndeterminate, value);
+        
+    }
     public float Progress
     {
         get => _progress;
@@ -122,7 +129,12 @@ public abstract class PackageModel : ObservableObject
                 var progress = new Progress<float>(x =>
                 {
                     Progress = x;
-                    state.StatusMessage = $"Downloading {Package.Id} {(int)(x * 100)}%";
+                    if(x < 1) state.StatusMessage = $"Downloading {Package.Id} {(int)(x * 100)}%";
+                    else
+                    {
+                        state.StatusMessage = $"Extracting {Package.Id}...";
+                        IsIndeterminate = true;
+                    }
                 });
 
                 //Download
@@ -130,6 +142,8 @@ public abstract class PackageModel : ObservableObject
 
                 _applicationStateService.RemoveState(state);
 
+                IsIndeterminate = false;
+                
                 if (!result)
                 {
                     Status = PackageStatus.Available;
