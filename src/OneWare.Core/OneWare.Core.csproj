@@ -4,6 +4,7 @@
     <Import Project="..\..\build\props\Avalonia.Themes.Simple.props"/>
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
+    <Import Project="..\..\build\props\SharpCompress.props"/>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**\*.*"/>
@@ -11,7 +12,6 @@
 
     <ItemGroup>
         <PackageReference Include="DeviceId" Version="6.2.0"/>
-        <PackageReference Include="SharpCompress" Version="0.33.0"/>
     </ItemGroup>
 
     <ItemGroup>

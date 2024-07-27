@@ -37,7 +37,12 @@ jobs:
           command: c
           files: ./
           cwd: ./out
-          outPath: ./out/onewarestudio.tar.gz
+          outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get-props-version.outputs.info }}
+          artifacts: "./out/*.tar.gz"
+          allowUpdates: true
       - name: Create VersionInfo x64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz" > ./out/linux-x64.txt
       - uses: joutvhu/ftp-transfer@v1
@@ -48,5 +53,5 @@ jobs:
           password: ${{ secrets.ONEWARE_FTP }}
           commands: |
             mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./out/onewarestudio.tar.gz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz
+            put ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz
             put ./out/linux-x64.txt ./cdn.one-ware.com/onewarestudio/linux-x64.txt

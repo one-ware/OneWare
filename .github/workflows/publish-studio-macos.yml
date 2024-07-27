@@ -38,6 +38,15 @@ jobs:
       - name: Create Bundles
         working-directory: ./studio/OneWare.Studio.Desktop.MacOSInstaller
         run: ./CreateAppBundle.sh
+      - name: Rename Packages
+        run: |
+          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get-props-version.outputs.info }}
+          artifacts: "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/*.dmg"
+          allowUpdates: true
       - name: Create Button HTML x64
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.MacOSInstaller/MacOSDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/MacOSDownload-x64.htm -Encoding UTF8
@@ -56,8 +65,8 @@ jobs:
           password: ${{ secrets.ONEWARE_FTP }}
           commands: |
             mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.dmg
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-arm64.dmg
+            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.dmg
+            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-arm64.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-arm64.dmg
             put ./out/MacOSDownload-x64.htm ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
             put ./out/MacOSDownload-arm64.htm ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
             put ./out/osx-x64.txt ./cdn.one-ware.com/onewarestudio/osx-x64.txt
