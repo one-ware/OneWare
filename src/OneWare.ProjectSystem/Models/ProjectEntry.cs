@@ -161,15 +161,4 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     {
         return true;
     }
-
-    public virtual IEnumerable<MenuItemViewModel> GetContextMenu(IProjectExplorerService projectExplorerService)
-    {
-        yield return new MenuItemViewModel("OpenFileViewer")
-        {
-            Header = "Open in File Viewer",
-            Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(FullPath)),
-            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16Xc"),
-            Priority = 1000
-        };
-    }
 }

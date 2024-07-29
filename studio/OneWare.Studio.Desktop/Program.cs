@@ -21,7 +21,7 @@ internal abstract class Program
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true,
-                WmClass = "OneWare"
+                WmClass = "OneWare",
             })
             .With(new Win32PlatformOptions
             {

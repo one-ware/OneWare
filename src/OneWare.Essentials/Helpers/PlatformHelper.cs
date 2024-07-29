@@ -115,17 +115,28 @@ public static class PlatformHelper
     {
         try
         {
-            if (Path.HasExtension(path)) path = Path.GetDirectoryName(path) ?? "";
-            else path = Path.GetFullPath(path);
-
-            if (string.IsNullOrEmpty(path)) return;
-
-            Process.Start(new ProcessStartInfo
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                FileName = path,
-                UseShellExecute = true,
-                Verb = "open"
-            });
+                // On Windows, use "explorer /select," to open the folder and select the file
+                Process.Start(new ProcessStartInfo("explorer", $"/select,\"{path}\"") { UseShellExecute = true });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Process.Start("open", $"-R \"{path}\"");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Try opening the directory if the path is a file
+                if (System.IO.File.Exists(path))
+                {
+                    path = Path.GetDirectoryName(path) ?? throw new NullReferenceException(nameof(path));
+                }
+                Process.Start("xdg-open", $"\"{path}\"");
+            }
+            else
+            {
+                throw new NotSupportedException("Operating system not supported");
+            }
         }
         catch (Exception e)
         {

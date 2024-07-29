@@ -283,7 +283,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
                 menuItems.Add(new MenuItemViewModel("OpenFileViewer")
                 {
-                    Header = "Open in File Viewer",
+                    Header = "Open in File Manager",
                     Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
                     IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16Xc")
                 });
