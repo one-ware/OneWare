@@ -15,7 +15,7 @@ public class LanguageServiceVhdl(string workspace, ISettingsService settingsServ
 {
     public override ITypeAssistance GetTypeAssistance(IEditor editor)
     {
-        return new TypeAssistanceVhdl(editor, this);
+        return new TypeAssistanceVhdl(editor, this, settingsService);
     }
 
     protected override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)

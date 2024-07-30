@@ -13,6 +13,7 @@ public class VerilogModule : IModule
 {
     public const string LspName = "Verible";
     public const string LspPathSetting = "VerilogModule_VeriblePath";
+    public const string EnableSnippetsSetting = "VerilogModule_EnableSnippets";
 
     public static readonly Package VeriblePackage = new()
     {
@@ -157,6 +158,9 @@ public class VerilogModule : IModule
         containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
             "Verible Path", "Path for Verible executable", "",
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
+        
+        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
+            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
 
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",

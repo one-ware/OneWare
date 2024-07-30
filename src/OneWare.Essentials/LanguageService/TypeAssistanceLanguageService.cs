@@ -550,14 +550,24 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             {
                 var insert = false;
                 for (var c = 0; c < Completion.CompletionList.CompletionData.Count; c++)
-                    if (string.Compare(Completion.CompletionList.CompletionData[c].Text, customItem.Text,
-                            StringComparison.Ordinal) > 0)
+                {
+                    var compare = string.Compare(Completion.CompletionList.CompletionData[c].Label, customItem.Label,
+                        StringComparison.Ordinal);
+                    
+                    if (compare > 0)
                     {
                         Completion.CompletionList.CompletionData.Insert(c, customItem);
                         insert = true;
                         break;
                     }
-
+                    if (compare == 0)
+                    {
+                        //Do not insert duplicates
+                        insert = true;
+                        break;
+                    }
+                }
+                
                 if (!insert) Completion.CompletionList.CompletionData.Add(customItem);
             }
 
@@ -565,7 +575,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             var length = 0;
             foreach (var data in Completion.CompletionList.CompletionData)
             {
-                var contentLength = (data.Content as string)?.Length ?? 0;
+                var contentLength = data.Label.Length;
                 var detailLength = (data as CompletionData)?.Detail?.Length ?? 0;
 
                 var visibleChars = contentLength + detailLength + 5;

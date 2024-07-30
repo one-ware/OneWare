@@ -13,6 +13,7 @@ public class VhdlModule : IModule
 {
     public const string LspName = "RustHDL";
     public const string LspPathSetting = "VhdlModule_RustHdlPath";
+    public const string EnableSnippetsSetting = "VhdlModule_EnableSnippets";
 
     public static readonly Package RustHdlPackage = new()
     {
@@ -154,6 +155,9 @@ public class VhdlModule : IModule
         containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "VHDL", LspPathSetting,
             "RustHDL Path", "Path for RustHDL executable", "",
             null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
+        
+        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "VHDL", EnableSnippetsSetting,
+            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
 
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",

@@ -16,8 +16,8 @@ public class CompletionData : ICompletionData
         double priority,
         CompletionItem completionItem, int offset, Action? afterCompletion = null)
     {
-        Text = insertText;
-        Content = label;
+        InsertText = insertText;
+        Label = label;
         Detail = detail;
         Description = description;
         Image = icon;
@@ -30,8 +30,8 @@ public class CompletionData : ICompletionData
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
         double priority, int offset, Action? afterCompletion = null)
     {
-        Text = insertText;
-        Content = label;
+        InsertText = insertText;
+        Label = label;
         Detail = detail;
         Description = description;
         Image = icon;
@@ -48,9 +48,9 @@ public class CompletionData : ICompletionData
 
     public IImage? Image { get; }
 
-    public string Text { get; }
+    public string InsertText { get; }
 
-    public object Content { get; }
+    public string Label { get; }
 
     public object? Description { get; }
 
@@ -64,7 +64,7 @@ public class CompletionData : ICompletionData
 
         var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
 
-        var formattedText = Text.Replace("\r", "").Replace("\n", newLine)
+        var formattedText = InsertText.Replace("\r", "").Replace("\n", newLine)
             .Replace("\t", textArea.Options.IndentationString);
 
         var filteredText = formattedText!;

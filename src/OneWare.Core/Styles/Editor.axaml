@@ -47,7 +47,7 @@
                                                    Width="{Binding #CompletionName.Bounds.Height}"
                                                    Height="{Binding #CompletionName.Bounds.Height}" />
                                             <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
-                                                       Margin="8,0,0,0" Text="{Binding Content}"
+                                                       Margin="8,0,0,0" Text="{Binding Label}"
                                                        Foreground="{DynamicResource ThemeForegroundBrush}" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="2" Text="{Binding Detail}"

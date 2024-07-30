@@ -3,7 +3,9 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.Settings;
 using OneWare.Vhdl.Folding;
 using OneWare.Vhdl.Formatting;
 using OneWare.Vhdl.Indentation;
@@ -14,7 +16,10 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
 {
     private static List<TextMateSnippet>? _snippets;
 
-    public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls) : base(editor, ls)
+    private readonly ISettingsService _settingsService;
+
+    public TypeAssistanceVhdl(IEditor editor, LanguageServiceVhdl ls, ISettingsService settingsService) : base(editor,
+        ls)
     {
         CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new VhdlIndentationStrategy(CodeBox.Options);
         FormattingStrategy = new VhdlFormatter();
@@ -22,6 +27,8 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
         LineCommentSequence = "--";
 
         _snippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Vhdl/Assets/vhdl.json");
+
+        _settingsService = settingsService;
     }
 
     protected override Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
@@ -35,11 +42,13 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
     {
         var items = new List<CompletionData>();
 
-        if (_snippets != null)
+        if (_settingsService.GetSettingValue<bool>(VhdlModule.EnableSnippetsSetting) && _snippets != null)
+        {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
                 CodeBox.CaretOffset)));
-
+        }
+        
         return Task.FromResult(items);
     }
 

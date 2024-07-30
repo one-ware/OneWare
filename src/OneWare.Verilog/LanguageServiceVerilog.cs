@@ -15,7 +15,7 @@ public class LanguageServiceVerilog(string workspace, ISettingsService settingsS
 {
     public override ITypeAssistance GetTypeAssistance(IEditor editor)
     {
-        return new TypeAssistanceVerilog(editor, this);
+        return new TypeAssistanceVerilog(editor, this, settingsService);
     }
 
     protected override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
