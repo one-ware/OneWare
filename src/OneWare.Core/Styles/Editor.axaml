@@ -7,6 +7,7 @@
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
         xmlns:editorEx="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
+        xmlns:snippets="clr-namespace:AvaloniaEdit.Snippets;assembly=AvaloniaEdit"
         xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia">
 
     <Design.PreviewWith>
@@ -23,6 +24,8 @@
                 Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="folding:FoldingMargin.SelectedFoldingMarkerBackgroundBrush"
                 Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="snippets:ReplaceableActiveElement.ReplaceableActiveElementBackgroundBrush"
+                Value="{DynamicResource ThemeAccentBrush4}" />
     </Style>
 
     <!--Code completion-->

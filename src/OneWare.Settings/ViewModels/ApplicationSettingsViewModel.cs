@@ -119,10 +119,10 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
         _settingsService.Save(_paths.SettingsPath);
     }
 
-    public async Task ResetDialogAsync()
+    public async Task ResetDialogAsync(FlexibleWindow window)
     {
         var result = await _windowService.ShowYesNoCancelAsync("Warning",
-            "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning);
+            "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning, window.Host);
 
         if (result == MessageBoxStatus.Yes)
             _settingsService.ResetAll();
