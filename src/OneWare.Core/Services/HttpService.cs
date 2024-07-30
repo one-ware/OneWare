@@ -161,7 +161,11 @@ public class HttpService : IHttpService
                 while (reader.MoveToNextEntry())
                     if (!reader.Entry.IsDirectory)
                         reader.WriteEntryToDirectory(location,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true, WriteSymbolicLink = (
+                                (path, targetPath) =>
+                                {
+                                    File.CreateSymbolicLink(path, targetPath);
+                                })});
             }, cancellationToken);
 
             File.Delete(tempPath);

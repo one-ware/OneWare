@@ -45,6 +45,8 @@ public class PackageManagerViewModel : ObservableObject
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
         PackageCategories.Add(new PackageCategoryViewModel("Binaries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
+        PackageCategories.Add(new PackageCategoryViewModel("Drivers",
+            Application.Current!.GetResourceObservable("BoxIcons.RegularUsb")));
 
         SelectedCategory = PackageCategories.First();
 
