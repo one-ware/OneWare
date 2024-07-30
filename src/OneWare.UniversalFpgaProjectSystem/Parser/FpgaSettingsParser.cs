@@ -32,7 +32,7 @@ public static class FpgaSettingsParser
         {
             var settings = LoadSettings(project, fpga.Name);
             foreach (var (key, value) in fpga.Properties) settings.TryAdd(key, value);
-            SaveSettings(project, fpga.Name, fpga.Properties);
+            SaveSettings(project, fpga.Name, settings);
         }
     }
 

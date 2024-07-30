@@ -76,6 +76,8 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         get => _selectedFpgaModel;
         set
         {
+            if (_selectedFpgaModel != null && _selectedFpgaModel != value) IsDirty = true;
+            
             SetProperty(ref _selectedFpgaModel, value);
 
             _compositeDisposable?.Dispose();
