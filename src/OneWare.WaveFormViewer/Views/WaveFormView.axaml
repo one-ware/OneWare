@@ -139,7 +139,7 @@
                     <Border Classes="SplitterBorder" />
 
                     <TextBlock Text="Marker: " />
-                    <TextBlock Text="{Binding MarkerText}" />
+                    <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}"/>
                 </StackPanel>
 
             </DockPanel>

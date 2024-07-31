@@ -42,8 +42,14 @@ public class WaveFormViewModel : ObservableObject
     public long TimeScale
     {
         get => _timeScale;
-        set => SetProperty(ref _timeScale, value);
+        set
+        {
+            SetProperty(ref _timeScale, value);
+            TimeScaleUnit = TimeHelper.GetTimeScaleFromUnit(TimeScale);
+        }
     }
+
+    public string TimeScaleUnit { get; private set; } = string.Empty;
 
     public bool ExtendSignals
     {
@@ -121,6 +127,7 @@ public class WaveFormViewModel : ObservableObject
         {
             SetProperty(ref _markerOffset, value >= 0 ? value : 0);
             OnPropertyChanged(nameof(MarkerText));
+            OnPropertyChanged(nameof(MarkerTextOriginal));
             SetSignalMarkerValues(MarkerOffset);
         }
     }
@@ -132,6 +139,7 @@ public class WaveFormViewModel : ObservableObject
         {
             SetProperty(ref _secondMarkerOffset, value >= 0 ? value : 0);
             OnPropertyChanged(nameof(MarkerText));
+            OnPropertyChanged(nameof(MarkerTextOriginal));
             SetSignalMarkerValues(SecondMarkerOffset);
         }
     }
@@ -146,29 +154,51 @@ public class WaveFormViewModel : ObservableObject
         }
     }
 
+    public string MarkerTextOriginal
+    {
+        get
+        {
+            if (LoadingMarkerOffset != long.MaxValue)
+            {
+                if (MarkerOffset != long.MaxValue) return $"{MarkerOffset} {TimeScaleUnit}";
+                return "?";
+            }
+
+            if (SecondMarkerOffset == long.MaxValue)
+            {
+                if (MarkerOffset != long.MaxValue) return $"{MarkerOffset} {TimeScaleUnit}";
+                return "?";
+            }
+
+            if (MarkerOffset == long.MaxValue) return "?";
+            var dist = SecondMarkerOffset - MarkerOffset;
+            return (dist > 0 ? "+" : "") + $"{dist} {TimeScaleUnit}";
+        }
+    }
+    
     public string MarkerText
     {
         get
         {
             if (LoadingMarkerOffset != long.MaxValue)
             {
-                if (MarkerOffset != long.MaxValue) return TimeHelper.ConvertNumber(MarkerOffset, TimeScale);
+                if (MarkerOffset != long.MaxValue) return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
                 return "?";
             }
 
             if (SecondMarkerOffset == long.MaxValue)
             {
-                if (MarkerOffset != long.MaxValue) return TimeHelper.ConvertNumber(MarkerOffset, TimeScale);
+                if (MarkerOffset != long.MaxValue) return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
                 return "?";
             }
 
             if (MarkerOffset == long.MaxValue) return "?";
             var dist = SecondMarkerOffset - MarkerOffset;
-            return (dist > 0 ? "+" : "") + TimeHelper.ConvertNumber(dist, TimeScale);
+            return (dist > 0 ? "+" : "") + TimeHelper.FormatTime(dist, TimeScale, ViewPortWidth);
         }
     }
 
-    public string CursorText => TimeHelper.ConvertNumber(CursorOffset, TimeScale);
+    public string CursorText => TimeHelper.FormatTime(CursorOffset, TimeScale, ViewPortWidth);
 
     public event EventHandler? SignalRemoved;
 

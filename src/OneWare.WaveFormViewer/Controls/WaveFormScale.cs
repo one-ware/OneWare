@@ -11,11 +11,19 @@ using OneWare.WaveFormViewer.ViewModels;
 
 namespace OneWare.WaveFormViewer.Controls;
 
+public class Marker
+{
+    public long Position { get; set; }
+    public bool IsMainMarker { get; set; }
+}
+
 public class WaveFormScale : Control
 {
     private readonly IPen _markerBrushPen;
 
     private CompositeDisposable _disposableReg = new();
+    
+    private const int MinScaleNumberWidth = 150;
 
     public WaveFormScale()
     {
@@ -40,38 +48,66 @@ public class WaveFormScale : Control
         }
     }
 
-    /// <summary>
-    ///     Returns List of markers relevant for rendering (absolute values in FS!)
-    /// </summary>
-    private static List<long> CalculateMarkers(long offset, double multiplier, double zoom, double width, long max)
+    public static List<Marker> CalculateMarkers(long beginOffset, long endOffset, int maxMainMarkers)
+{
+    var markers = new List<Marker>();
+    
+    if (beginOffset >= endOffset || maxMainMarkers <= 0)
+        return markers;
+
+    var range = (double)(endOffset - beginOffset);
+    var mainStep = FindBeautifulStep(range, maxMainMarkers);
+    var intermediateStep = (long)(mainStep / 10);
+    
+    var firstMainMarker = Math.Ceiling(beginOffset / mainStep) * mainStep;
+    
+    for (var i = firstMainMarker; i >= beginOffset; i -= intermediateStep)
     {
-        var min = offset;
-        var dist = (long)(width * multiplier / zoom);
-
-        var maxR = FloorZero(max);
-
-        var distR = (long)(maxR / (4 * zoom));
-
-        var n = new List<long>();
-
-        if (distR == 0) return n;
-
-        long minR = 0;
-        for (long i = 0; i <= min; i += distR) minR = i;
-
-        for (var i = minR; i <= min + dist + distR; i += distR) n.Add(i);
-
-        return n;
+        markers.Insert(0, new Marker { Position = (long)i, IsMainMarker = false });
     }
 
-    private static long FloorZero(long number)
+    for (var mainMarker = (long)firstMainMarker; mainMarker <= endOffset; mainMarker += (long)mainStep)
     {
-        if (number == 0) return 0;
-        var pow = (int)Math.Log10(number);
-        var factor = (long)BigInteger.Pow(10, pow);
-        var temp = number / factor;
-        return temp * factor;
+        markers.Add(new Marker { Position = mainMarker, IsMainMarker = true });
+
+        // Add intermediate markers
+        for (var i = 1; i < 10; i++)
+        {
+            var intermediateMarker = mainMarker + i * intermediateStep;
+            if (intermediateMarker < endOffset && intermediateMarker > beginOffset)
+            {
+                markers.Add(new Marker { Position = intermediateMarker, IsMainMarker = false });
+            }
+        }
     }
+
+    return markers;
+}
+
+private static double FindBeautifulStep(double range, int maxMainMarkers)
+{
+    double[] beautifulNumbers = { 1, 2, 5, 10 };
+    var targetStepSize = range / (maxMainMarkers - 1);
+
+    var exponent = (int)Math.Floor(Math.Log10(targetStepSize));
+    var scale = Math.Pow(10, exponent);
+
+    var bestStep = scale;
+    var minDifference = double.MaxValue;
+
+    foreach (var factor in beautifulNumbers)
+    {
+        var currentStep = scale * factor;
+        var difference = Math.Abs(currentStep - targetStepSize);
+        if (difference < minDifference)
+        {
+            minDifference = difference;
+            bestStep = currentStep;
+        }
+    }
+
+    return bestStep;
+}
 
     #region Rendering
 
@@ -106,47 +142,42 @@ public class WaveFormScale : Control
 
         var yOffset = 22;
         var width = Bounds.Width;
+        
+        var endOffset = vm.Offset + (long)(width * zm);
 
-        var markerX = CalculateMarkers(vm.Offset, multiplier, zoom, width - TextAreaBounds.Width, vm.Max);
+        var markerX = CalculateMarkers(vm.Offset, endOffset, (int)Bounds.Width / MinScaleNumberWidth);
 
         //Draw background
         context.FillRectangle(Brushes.Black,
             new Rect(TextAreaBounds.Width, yOffset, Bounds.Width, Bounds.Height));
 
         if (multiplier == 0) return;
-
-        double lastXx = -1;
+        
         foreach (var mX in markerX)
         {
-            var xxx = (mX - vm.Offset) / zm;
-            var xx = xxx + TextAreaBounds.Width + 1;
+            var screenXPosition = (mX.Position - vm.Offset) / zm;
+            screenXPosition += TextAreaBounds.Width + 1;
 
-            //distance between marker one and two
-            var dist = xx - lastXx;
-            var mDist = dist / 5;
+            if (screenXPosition < TextAreaBounds.Width || screenXPosition > width) continue;
 
-            if (mDist > 0 && lastXx > -1) //Small markers
-                for (var x = lastXx + mDist; x < xx; x += mDist)
-                {
-                    if (x < TextAreaBounds.Width) continue;
-                    if (x > width) break;
-                    context.DrawLine(_markerBrushPen, new Point(x, yOffset - 4), new Point(x, yOffset));
-                }
+            if (!mX.IsMainMarker)
+            {
+                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 4), new Point(screenXPosition, yOffset));
+            }
+            else
+            {
+                var drawT = TimeHelper.FormatTime(mX.Position, vm.TimeScale, vm.ViewPortWidth);
 
-            lastXx = xx;
-            if (xx < TextAreaBounds.Width || xx > width) continue;
+                //Big marker
+                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 6), new Point(screenXPosition, Bounds.Height));
 
-            var drawT = TimeHelper.ConvertNumber(mX, vm.TimeScale);
+                var text = new FormattedText(drawT, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                    Typeface.Default,
+                    11, this.FindResource(Application.Current?.ActualThemeVariant, "ThemeForegroundBrush") as IBrush);
 
-            //Big marker
-            context.DrawLine(_markerBrushPen, new Point(xx, yOffset - 6), new Point(xx, Bounds.Height));
-
-            var text = new FormattedText(drawT, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                Typeface.Default,
-                11, this.FindResource(Application.Current?.ActualThemeVariant, "ThemeForegroundBrush") as IBrush);
-
-            //Text
-            context.DrawText(text, new Point(xx - text.Width / 2, 0));
+                //Text
+                context.DrawText(text, new Point(screenXPosition - text.Width / 2, 0));
+            }
         }
     }
 
