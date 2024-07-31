@@ -32,9 +32,6 @@ public abstract partial class CommandManagerTabBase : ObservableObject
                     .ThenByDescending(c => c.Command.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
                     .ThenByDescending(c => c.Command.Name)
                     .ToList();
-            //Add empty ListItem for Linux to avoid crash, TODO check with next Avalonia Update
-            if (newList.Count == 0 && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                newList.Add(new CommandManagerItemModel(new DummyApplicationCommand(), false));
 
             VisibleItems = newList;
             SelectedItem = VisibleItems.FirstOrDefault();
