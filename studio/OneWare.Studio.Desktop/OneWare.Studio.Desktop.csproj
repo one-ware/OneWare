@@ -13,9 +13,6 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <AssemblyName>OneWareStudio</AssemblyName>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <InvariantGlobalization>true</InvariantGlobalization>
         <PublishReadyToRun>true</PublishReadyToRun>
         <SelfContained>true</SelfContained>
