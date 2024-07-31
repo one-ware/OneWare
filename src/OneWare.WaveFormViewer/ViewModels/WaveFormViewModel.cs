@@ -218,8 +218,8 @@ public class WaveFormViewModel : ObservableObject
 
     public void ResetView()
     {
-        Offset = 0;
         ZoomLevel = 0;
+        Offset = 0;
     }
 
     public void XOffsetPlus()
