@@ -14,7 +14,7 @@
                          PrefWidth="500" SizeToContent="Height"
                          ShowTitle="False" Title="Application Commands"
                          Name="CommandManagerViewView"
-                         SystemDecorations="None"
+                         SystemDecorations="{OnPlatform BorderOnly, Windows=None}"
                          ExtendClientAreaToDecorationsHint="False"
                          CanResize="False"
                          WindowStartupLocation="CenterOwner"
