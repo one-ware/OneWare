@@ -65,10 +65,20 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
     {
         if (position < 0 || position > CodeBox.Document.TextLength) return false;
 
+        // Check for single line comments by searching backwards to the start of the line
         var line = CodeBox.Document.GetLineByOffset(position);
         var text = CodeBox.Document.GetText(line);
         var index = CodeBox.CaretOffset - line.Offset;
         var commentIndex = text.IndexOf(LineCommentSequence!, 0, index, StringComparison.Ordinal);
-        return commentIndex != -1;
+        if (commentIndex != -1) return true;
+
+        // Check for multiline comments by searching backwards and forwards
+        var multiLineStart = CodeBox.Document.Text.LastIndexOf("/*", position, StringComparison.Ordinal);
+        var multiLineEnd = CodeBox.Document.Text.IndexOf("*/", position, StringComparison.Ordinal);
+
+        if (multiLineStart != -1 && multiLineEnd != -1 && multiLineStart < position &&
+            position < multiLineEnd + 2) return true;
+
+        return false;
     }
 }
