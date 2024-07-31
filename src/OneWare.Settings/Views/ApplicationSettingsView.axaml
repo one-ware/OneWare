@@ -29,7 +29,6 @@
         <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
 
             <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
-                    CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottomLeft}"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <TreeView Padding="3" BorderThickness="0" Background="Transparent"
                           ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"

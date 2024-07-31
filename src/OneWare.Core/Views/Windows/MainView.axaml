@@ -75,7 +75,7 @@
             <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}"
                          UseLayoutRounding="False" />
 
-            <Border Grid.Row="3" Padding="2" CornerRadius="{x:Static helpers:PlatformHelper.WindowsCornerRadiusBottom}"
+            <Border Grid.Row="3" Padding="2"
                     Background="{DynamicResource ThemeAccentBrush}">
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->
