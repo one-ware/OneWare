@@ -10,7 +10,9 @@ public static class TimeHelper
         double[] scales = [1, 1e3, 1e6, 1e9, 1e12, 1e15];
         
         var unitIndex = 0;
-        double value = time * timeScale;
+
+        var invert = time < 0;
+        double value = Math.Abs(time * timeScale);
         
         // Find the appropriate unit
         while (unitIndex < units.Length - 1 && value >= 1000)
@@ -18,6 +20,8 @@ public static class TimeHelper
             value /= 1000;
             unitIndex++;
         }
+
+        if (invert) value *= -1;
         
         var precision = CalculatePrecision(range * timeScale, scales[unitIndex]);
         

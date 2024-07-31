@@ -180,19 +180,13 @@ public class WaveFormViewModel : ObservableObject
     {
         get
         {
-            if (LoadingMarkerOffset != long.MaxValue)
+            if (MarkerOffset != long.MaxValue && (LoadingMarkerOffset != long.MaxValue || SecondMarkerOffset == long.MaxValue))
             {
-                if (MarkerOffset != long.MaxValue) return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
-                return "?";
-            }
-
-            if (SecondMarkerOffset == long.MaxValue)
-            {
-                if (MarkerOffset != long.MaxValue) return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
-                return "?";
+                return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
             }
 
             if (MarkerOffset == long.MaxValue) return "?";
+            
             var dist = SecondMarkerOffset - MarkerOffset;
             return (dist > 0 ? "+" : "") + TimeHelper.FormatTime(dist, TimeScale, ViewPortWidth);
         }
