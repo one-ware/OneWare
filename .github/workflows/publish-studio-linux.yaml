@@ -59,5 +59,5 @@ jobs:
           password: ${{ secrets.ONEWARE_FTP }}
           commands: |
             mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tgz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
+            put ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
             put ./out/linux-x64.txt ./cdn.one-ware.com/onewarestudio/linux-x64.txt
