@@ -63,6 +63,7 @@
     </provides>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.19.2.0" date="2024-07-31" type="stable"/>
         <release version="0.19.1.0" date="2024-07-24" type="stable"/>
         <release version="0.19.0.0" date="2024-07-23" type="stable"/>
         <release version="0.18.5.0" date="2024-07-19" type="stable"/>

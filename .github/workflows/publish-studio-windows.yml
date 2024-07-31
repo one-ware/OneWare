@@ -14,6 +14,8 @@ jobs:
     name: Deploy for Windows
     runs-on: self-hosted
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,12 +42,12 @@ jobs:
         shell: powershell
         run: signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ./out/en-us/OneWareStudio.WindowsInstaller.msi
       - name: Create VersionInfo
-        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi" > ./out/win-x64.txt
+        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" > ./out/win-x64.txt
       - name: Rename Installer
-        run: mv ./out/en-us/OneWareStudio.WindowsInstaller.msi ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+        run: mv ./out/en-us/OneWareStudio.WindowsInstaller.msi ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get-props-version.outputs.info }}
+          tag: ${{ steps.get-oneware-version.outputs.info }}
           artifacts: "./out/en-us/*.msi"
           allowUpdates: true
           omitBodyDuringUpdate: True
@@ -60,6 +62,6 @@ jobs:
           password: ${{ secrets.ONEWARE_FTP }}
           commands: |
             mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
+            put ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
             put ./out/WinDownload.htm ./cdn.one-ware.com/onewarestudio/WinDownload.htm
             put ./out/win-x64.txt ./cdn.one-ware.com/onewarestudio/win-x64.txt
