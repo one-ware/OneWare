@@ -17,6 +17,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
+      - name: Install Flatpak
+        run: |
+          sudo apt-get install flatpak -y
       - name: Checkout the target repository
         uses: actions/checkout@v4
         with:
