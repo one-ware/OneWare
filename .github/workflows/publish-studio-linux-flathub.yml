@@ -20,8 +20,8 @@ jobs:
       - name: Install Flatpak and Flathub
         run: |
           sudo apt-get install flatpak -y
-          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          flatpak install flathub org.freedesktop.Sdk.Extension.dotnet8 -y
+          sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install flathub org.freedesktop.Sdk.Extension.dotnet8 -y
       - name: Checkout the target repository
         uses: actions/checkout@v4
         with:
