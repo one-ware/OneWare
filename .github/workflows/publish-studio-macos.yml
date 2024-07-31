@@ -44,7 +44,7 @@ jobs:
           mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get-props-version.outputs.info }}
+          tag: ${{ steps.get-oneware-version.outputs.info }}
           artifacts: "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/*.dmg"
           allowUpdates: true
           omitBodyDuringUpdate: True

@@ -40,7 +40,7 @@ jobs:
           outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.tar.gz
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get-props-version.outputs.info }}
+          tag: ${{ steps.get-oneware-version.outputs.info }}
           artifacts: "./out/*.tar.gz"
           allowUpdates: true
           omitBodyDuringUpdate: True

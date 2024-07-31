@@ -45,7 +45,7 @@ jobs:
         run: mv ./out/en-us/OneWareStudio.WindowsInstaller.msi ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-x64.msi
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get-props-version.outputs.info }}
+          tag: ${{ steps.get-oneware-version.outputs.info }}
           artifacts: "./out/en-us/*.msi"
           allowUpdates: true
           omitBodyDuringUpdate: True
