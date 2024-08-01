@@ -12,7 +12,7 @@ public class FpgaService
     private readonly ILogger _logger;
     public FpgaService(IPaths paths, ILogger logger)
     {
-        FpgaDirectory = Path.Combine(paths.DocumentsDirectory, "Hardware", "FPGA");
+        FpgaDirectory = Path.Combine(paths.PackagesDirectory, "Hardware", "FPGA");
         Directory.CreateDirectory(FpgaDirectory);
         
         _logger = logger;
