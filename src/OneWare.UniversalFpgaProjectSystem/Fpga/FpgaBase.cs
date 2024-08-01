@@ -8,13 +8,14 @@ public abstract class FpgaBase : IFpga
 {
     protected readonly Dictionary<string, string> InternalProperties;
 
-    protected FpgaBase(Dictionary<string, string>? properties = null)
+    protected FpgaBase(string name, Dictionary<string, string>? properties = null)
     {
+        Name = name;
         InternalProperties = properties ?? [];
         Properties = new ReadOnlyDictionary<string, string>(InternalProperties);
     }
 
-    public string Name { get; protected set; } = "Unknown";
+    public string Name { get; }
 
     public IList<FpgaPin> Pins { get; } = new List<FpgaPin>();
 
@@ -41,8 +42,6 @@ public abstract class FpgaBase : IFpga
         var properties = JsonNode.Parse(json);
 
         if (properties == null) return;
-
-        Name = properties[nameof(Name)]?.ToString() ?? "Unknown";
 
         foreach (var pin in properties[nameof(Pins)]?.AsArray() ?? [])
         {

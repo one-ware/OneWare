@@ -1,5 +1,6 @@
 ﻿using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.IceBreaker.ViewModels;
 
-public class IceBreakerFpgaViewModel(IceBreakerFpga fpga) : FpgaModel(fpga);
+public class IceBreakerFpgaViewModel(FpgaModel model) : FpgaViewModelBase(model);

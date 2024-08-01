@@ -30,10 +30,6 @@
         <Setter Property="BorderThickness" Value="1" />
     </Style>
 
-    <Style Selector="Button.Connectable:pointerover">
-        <Setter Property="Background" Value="#222222" />
-    </Style>
-
     <Style Selector="TextBlock">
         <Setter Property="Height" Value="15" />
         <Setter Property="FontSize" Value="12" />
@@ -157,8 +153,6 @@
         <Setter Property="CommandParameter" Value="{Binding}" />
         <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
     </Style>
-
-    <Style Selector="Button:pointerover" />
 
     <Style Selector="Button.Connectable:pointerover">
         <Setter Property="Background" Value="#353535" />

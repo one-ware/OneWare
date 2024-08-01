@@ -6,7 +6,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class FpgaModel : ObservableObject
+public sealed class FpgaModel : ObservableObject
 {
     private object? _lastSelection;
 

@@ -1,5 +1,4 @@
 {
-  "Name": "CYC5000",
   "Properties": {
     "QuartusToolchain_Family": "Cyclone V",
     "QuartusToolchain_Device": "5CEBA2U15C8",

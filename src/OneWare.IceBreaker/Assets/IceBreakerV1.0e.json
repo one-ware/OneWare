@@ -1,5 +1,4 @@
 {
-  "Name": "iCEBreaker V1.0e",
   "Properties": {
     "YosysToolchain_Yosys_SynthTool": "synth_ice40",
     "YosysToolchain_Yosys_Flags": "",

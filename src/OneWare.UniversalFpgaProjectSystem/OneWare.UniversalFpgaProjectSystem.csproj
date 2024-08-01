@@ -2,6 +2,10 @@
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
 
+    <PropertyGroup>
+        <Version>$(UniversalFpgaProjectSystemVersion)</Version>
+    </PropertyGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>

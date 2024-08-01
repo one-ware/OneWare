@@ -3,6 +3,7 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
@@ -20,15 +21,13 @@ public class FpgaService
 
     public string FpgaDirectory { get; }
     
-    public Dictionary<IFpga, Type> CustomFpgaViewModels { get; } = new();
-
-    public Dictionary<IFpgaExtension, Type> FpgaExtensionViewModels { get; } = new();
-
     public Dictionary<string, Type> NodeProviders { get; } = new();
 
-    public ObservableCollection<IFpga> Fpgas { get; } = new();
+    public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
 
     public ObservableCollection<IFpgaExtension> FpgaExtensions { get; } = new();
+    
+    public Dictionary<IFpgaExtension, Type> FpgaExtensionViewModels { get; } = new();
 
     public ObservableCollection<IFpgaToolchain> Toolchains { get; } = new();
 
@@ -40,9 +39,9 @@ public class FpgaService
 
     public ObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; } = new();
 
-    public void RegisterFpga(IFpga fpga)
+    public void RegisterFpgaPackage(IFpgaPackage fpga)
     {
-        Fpgas.InsertSorted(fpga, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
+        FpgaPackages.InsertSorted(fpga, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
     public void RegisterFpgaExtension(IFpgaExtension fpga)
@@ -53,11 +52,6 @@ public class FpgaService
     public void RegisterNodeProvider<T>(params string[] extensions) where T : INodeProvider
     {
         foreach (var ext in extensions) NodeProviders[ext] = typeof(T);
-    }
-
-    public void RegisterCustomFpgaViewModel<T>(IFpga fpga) where T : FpgaModel
-    {
-        CustomFpgaViewModels.Add(fpga, typeof(T));
     }
 
     public void RegisterFpgaExtensionViewModel<T>(IFpgaExtension fpgaExtension) where T : FpgaExtensionModel
@@ -104,12 +98,11 @@ public class FpgaService
 
     public void LoadGenericFpgas()
     {
-        foreach (var fpga in Fpgas.ToArray())
+        foreach (var fpga in FpgaPackages.ToArray())
         {
-            if (fpga is GenericFpga)
+            if (fpga is GenericFpgaPackage)
             {
-                Fpgas.Remove(fpga);
-                CustomFpgaViewModels.Remove(fpga);
+                FpgaPackages.Remove(fpga);
             }
         }
 
@@ -117,12 +110,7 @@ public class FpgaService
         {
             foreach (var directory in Directory.GetDirectories(FpgaDirectory))
             {
-                var fpgaFile = Path.Combine(directory, "fpga.json");
-                if (File.Exists(fpgaFile))
-                {
-                    var fpga = FpgaLoader.LoadFromPath(fpgaFile);
-                    RegisterFpga(fpga);
-                }
+                RegisterFpgaPackage(new GenericFpgaPackage(Path.GetFileName(directory), directory));
             }
         }
         catch (Exception e)

@@ -1,5 +1,4 @@
 {
-  "Name": "Core MAX10",
   "Properties": {
     "QuartusToolchain_Family": "MAX 10",
     "QuartusToolchain_Device": "10M08SAU169C8G",

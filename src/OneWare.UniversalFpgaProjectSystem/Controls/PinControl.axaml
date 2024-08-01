@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Controls.PinControl" x:DataType="models:FpgaPinModel">
+    
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SelectionColorPin" Opacity="1" Color="{DynamicResource ThemeForegroundColor}" />
+        <SolidColorBrush x:Key="SelectionColorConnected" Opacity="1" Color="#d4d4d4" />
+        <Thickness x:Key="SelectedThickness">3</Thickness>
+        <Thickness x:Key="NormalThickness">1</Thickness>
+    </UserControl.Resources>
+    
+    <UserControl.Styles>
+        <Style Selector="Button.Connectable:pointerover">
+            <Setter Property="Background" Value="#353535" />
+        </Style>
+        
+        <Style Selector="Button.Connectable" x:DataType="models:FpgaPinModel" x:CompileBindings="True">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Grid>
+                            <Border Name="PinBorder" Padding="0" Background="{TemplateBinding Background}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                                <Grid>
+                                    <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" Margin="0,0,0,0" />
+                                    <Interaction.Behaviors>
+                                        <DataTriggerBehavior ComparisonCondition="Equal" Value="True">
+                                            <DataTriggerBehavior.Binding>
+                                                <MultiBinding
+                                                    Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                                    <Binding Path="Parent.SelectedPinModel" />
+                                                    <Binding Path="#PinBorder.DataContext" />
+                                                </MultiBinding>
+                                            </DataTriggerBehavior.Binding>
+                                            <ChangePropertyAction TargetObject="{Binding #PinBorder}"
+                                                                  PropertyName="BorderBrush"
+                                                                  Value="{StaticResource SelectionColorPin}" />
+                                            <ChangePropertyAction TargetObject="{Binding #PinBorder}"
+                                                                  PropertyName="BorderThickness"
+                                                                  Value="{StaticResource SelectedThickness}" />
+                                        </DataTriggerBehavior>
+                                        <DataTriggerBehavior ComparisonCondition="Equal" Value="False">
+                                            <DataTriggerBehavior.Binding>
+                                                <MultiBinding
+                                                    Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                                                    <Binding Path="Parent.SelectedPinModel" />
+                                                    <Binding Path="#PinBorder.DataContext" />
+                                                </MultiBinding>
+                                            </DataTriggerBehavior.Binding>
+                                            <ChangePropertyAction TargetObject="{Binding #PinBorder}"
+                                                                  PropertyName="BorderBrush"
+                                                                  Value="{StaticResource ThemeBorderLowBrush}" />
+                                            <ChangePropertyAction TargetObject="{Binding #PinBorder}"
+                                                                  PropertyName="BorderThickness"
+                                                                  Value="{StaticResource NormalThickness}" />
+                                        </DataTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                </Grid>
+                            </Border>
+                            <Border Name="ConnectedRectangle"
+                                    IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    Background="Black" BorderBrush="Transparent" BorderThickness="2" Opacity="0.8" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Command" Value="{Binding Parent.SelectPin}" />
+            <Setter Property="CommandParameter" Value="{Binding}" />
+            <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
+        </Style>
+    </UserControl.Styles>
+    <Button Classes="Connectable"
+            HorizontalAlignment="Right" VerticalAlignment="Center" Height="17" Width="24" Background="Blue"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="0, 0, 22, 20"
+            Content="TX"
+            Foreground="White" />
+</UserControl>

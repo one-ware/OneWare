@@ -9,6 +9,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -19,18 +20,24 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
+    private readonly FpgaService _fpgaService;
 
     private CompositeDisposable? _compositeDisposable;
 
     private bool _hideExtensions;
 
-    private FpgaModel? _selectedFpgaModel;
+    private IFpgaPackage? _selectedPackage;
+    
+    private FpgaModel? _selectedModel;
+
+    private FpgaViewModelBase? _selectedViewModel;
 
     public UniversalFpgaProjectCompileViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
+        _fpgaService = fpgaService;
         Project = project;
 
         TopRightExtension = windowService.GetUiExtensions("CompileWindow_TopRightExtension");
@@ -39,53 +46,54 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         {
             Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
         });
-        
+
         //Load Fpgas from documents
         fpgaService.LoadGenericFpgas();
 
         //Construct FpgaModels
-        foreach (var fpga in fpgaService.Fpgas)
+        foreach (var package in fpgaService.FpgaPackages)
         {
-            fpgaService.CustomFpgaViewModels.TryGetValue(fpga, out var custom);
-            custom ??= typeof(FpgaModel);
-            var model = Activator.CreateInstance(custom, fpga) as FpgaModel;
-            if (model is null) throw new NullReferenceException(nameof(model));
-            FpgaModels.Add(model);
+            FpgaPackages.Add(package);
         }
+        
 
-        if (Project.TopEntity is IProjectFile file)
-        {
-            var provider = fpgaService.GetNodeProvider(file.Extension);
-            if (provider is not null)
-            {
-                var nodes = provider.ExtractNodes(file).ToArray();
-                foreach (var fpga in FpgaModels)
-                foreach (var nodeModel in nodes)
-                    fpga.AddNode(nodeModel);
-            }
-        }
-
-        SelectedFpgaModel = FpgaModels.FirstOrDefault(x => x.Fpga.Name == project.GetProjectProperty("Fpga")) ??
-                            FpgaModels.FirstOrDefault();
+        SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == project.GetProjectProperty("Fpga")) ??
+                                FpgaPackages.FirstOrDefault();
 
         IsDirty = false;
     }
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
-    
+
     public ObservableCollection<UiExtension> TopRightExtension { get; }
 
     public UniversalFpgaProjectRoot Project { get; }
-    public ObservableCollection<FpgaModel> FpgaModels { get; } = new();
+
+    public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
+    
+    public IFpgaPackage? SelectedFpgaPackage
+    {
+        get => _selectedPackage;
+        set
+        {
+            SetProperty(ref _selectedPackage, value);
+
+            if (value != null)
+            {
+                SelectedFpgaModel = new FpgaModel(value.LoadFpga());
+                SelectedFpgaViewModel = value.LoadFpgaViewModel(SelectedFpgaModel);
+            }
+        }
+    }
 
     public FpgaModel? SelectedFpgaModel
     {
-        get => _selectedFpgaModel;
-        set
+        get => _selectedModel;
+        private set
         {
-            if (_selectedFpgaModel != null && _selectedFpgaModel != value) IsDirty = true;
-            
-            SetProperty(ref _selectedFpgaModel, value);
+            if (_selectedModel != null && _selectedModel != value) IsDirty = true;
+
+            SetProperty(ref _selectedModel, value);
 
             _compositeDisposable?.Dispose();
             _compositeDisposable = new CompositeDisposable();
@@ -100,6 +108,12 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
                     .DisposeWith(_compositeDisposable);
             }
         }
+    }
+    
+    public FpgaViewModelBase? SelectedFpgaViewModel
+    {
+        get => _selectedViewModel;
+        private set => SetProperty(ref _selectedViewModel, value);
     }
 
     public bool HideExtensions
@@ -141,17 +155,17 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             Project.SetProjectProperty("Fpga", SelectedFpgaModel.Fpga.Name);
             Project.Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
-            
+
             IsDirty = false;
         }
     }
-    
+
     public void SaveAndClose(FlexibleWindow window)
     {
         Save();
         window.Close();
     }
-    
+
     public void SaveAndCompile(FlexibleWindow window)
     {
         SaveAndClose(window);

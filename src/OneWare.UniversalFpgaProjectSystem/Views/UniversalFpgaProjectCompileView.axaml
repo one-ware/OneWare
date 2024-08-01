@@ -32,11 +32,11 @@
                 <DockPanel DockPanel.Dock="Top">
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="0 0 5 0">
                         <TextBlock Text="FPGA:" VerticalAlignment="Center" />
-                        <controls:SearchComboBox IsInteractive="False" ItemsSource="{Binding FpgaModels}" MinWidth="150"
-                                  SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}">
+                        <controls:SearchComboBox IsInteractive="False" ItemsSource="{Binding FpgaPackages}" MinWidth="150"
+                                  SelectedItem="{Binding SelectedFpgaPackage, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Fpga.Name}" Margin="5 0" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </controls:SearchComboBox>
@@ -50,13 +50,13 @@
                     </StackPanel>
                 </DockPanel>
 
-                <DockPanel Grid.Row="1" DataContext="{Binding SelectedFpgaModel}">
+                <DockPanel Grid.Row="1">
 
                     <ContentControl Padding="0 10" DockPanel.Dock="Top"
-                                    IsVisible="{Binding Converter={x:Static converters:SharedConverters.ViewFoundConverter}}"
-                                    Content="{Binding }" />
+                                    IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    Content="{Binding SelectedFpgaViewModel}" />
 
-                    <Grid ColumnDefinitions="*, 90, *" RowDefinitions="20, *" DockPanel.Dock="Top">
+                    <Grid ColumnDefinitions="*, 90, *" RowDefinitions="20, *" DockPanel.Dock="Top" DataContext="{Binding SelectedFpgaModel}">
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Pins:" />
                         <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"

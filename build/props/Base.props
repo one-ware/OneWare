@@ -3,6 +3,7 @@
     <PropertyGroup>
         <StudioVersion>0.19.2.0</StudioVersion>
         <CoreVersion>0.21.0.0</CoreVersion>
+        <UniversalFpgaProjectSystemVersion>0.30.0.0</UniversalFpgaProjectSystemVersion>
         <EssentialsVersion>0.6.0</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>

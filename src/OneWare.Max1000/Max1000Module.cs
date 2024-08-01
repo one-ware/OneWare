@@ -13,11 +13,7 @@ public class Max1000Module : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var fpga = new Max1000Fpga();
-        var fpga2 = new Max100016KFpga();
-        containerProvider.Resolve<FpgaService>().RegisterFpga(fpga);
-        containerProvider.Resolve<FpgaService>().RegisterFpga(fpga2);
-        containerProvider.Resolve<FpgaService>().RegisterCustomFpgaViewModel<Max1000ViewModel>(fpga);
-        containerProvider.Resolve<FpgaService>().RegisterCustomFpgaViewModel<Max1000ViewModel>(fpga2);
+        containerProvider.Resolve<FpgaService>().RegisterFpgaPackage(new Max1000FpgaPackage());
+        containerProvider.Resolve<FpgaService>().RegisterFpgaPackage(new Max100016KFpgaPackage());
     }
 }
