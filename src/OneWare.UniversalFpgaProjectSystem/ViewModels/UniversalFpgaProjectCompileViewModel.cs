@@ -47,18 +47,10 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
         });
 
-        //Load Fpgas from documents
-        fpgaService.LoadGenericFpgas();
-
-        //Construct FpgaModels
-        foreach (var package in fpgaService.FpgaPackages)
-        {
-            FpgaPackages.Add(package);
-        }
+        RefreshFpgas();
         
-
         SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == project.GetProjectProperty("Fpga")) ??
-                                FpgaPackages.FirstOrDefault();
+                              FpgaPackages.FirstOrDefault();
 
         IsDirty = false;
     }
@@ -76,12 +68,19 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         get => _selectedPackage;
         set
         {
+            if (_selectedPackage?.Name != value?.Name) IsDirty = true;
+            
             SetProperty(ref _selectedPackage, value);
 
             if (value != null)
             {
                 SelectedFpgaModel = new FpgaModel(value.LoadFpga());
                 SelectedFpgaViewModel = value.LoadFpgaViewModel(SelectedFpgaModel);
+            }
+            else
+            {
+                SelectedFpgaModel = null;
+                SelectedFpgaViewModel = null;
             }
         }
     }
@@ -91,8 +90,6 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         get => _selectedModel;
         private set
         {
-            if (_selectedModel != null && _selectedModel != value) IsDirty = true;
-
             SetProperty(ref _selectedModel, value);
 
             _compositeDisposable?.Dispose();
@@ -122,6 +119,28 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _hideExtensions, value);
     }
 
+    public void RefreshFpgas()
+    {
+        FpgaPackages.Clear();
+        
+        var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
+        SelectedFpgaPackage = null;
+        
+        //Load Fpgas from documents
+        _fpgaService.LoadGenericFpgas();
+
+        //Construct FpgaModels
+        foreach (var package in _fpgaService.FpgaPackages)
+        {
+            FpgaPackages.Add(package);
+        }
+
+        if (oldSelectedFpgaPackageName != null)
+        {
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == oldSelectedFpgaPackageName);
+        }
+    }
+    
     public override void Close(FlexibleWindow window)
     {
         if (!IsDirty) window.Close();

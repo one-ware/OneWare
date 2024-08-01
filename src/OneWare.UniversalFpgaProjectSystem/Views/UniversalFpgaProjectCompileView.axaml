@@ -32,6 +32,7 @@
                 <DockPanel DockPanel.Dock="Top">
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="0 0 5 0">
                         <TextBlock Text="FPGA:" VerticalAlignment="Center" />
+                        
                         <controls:SearchComboBox IsInteractive="False" ItemsSource="{Binding FpgaPackages}" MinWidth="150"
                                   SelectedItem="{Binding SelectedFpgaPackage, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
@@ -40,6 +41,11 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </controls:SearchComboBox>
+                        
+                        <Button Command="{Binding RefreshFpgas}" ToolTip.Tip="Reload FPGAs">
+                            <Image Source="{DynamicResource Modern.Refresh}" Height="16" Width="16"/>
+                        </Button>
+                        
                     </StackPanel>
                     <controls:UiExtensionCollection Context="{Binding}" Extensions="{Binding TopRightExtension}"
                                                     HorizontalAlignment="Right" DockPanel.Dock="Right" />
