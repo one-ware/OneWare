@@ -176,6 +176,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Vhdl.UnitTests", "t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.WaveFormViewer.Tests", "tests\OneWare.WaveFormViewer.Tests\OneWare.WaveFormViewer.Tests.csproj", "{AAC4D6FA-4F94-4616-93B3-3BB47E4A0BB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.UniversalFpgaProjectSystem.Tests", "tests\OneWare.UniversalFpgaProjectSystem.Tests\OneWare.UniversalFpgaProjectSystem.Tests.csproj", "{484F3E48-EF14-4801-B896-41BDB67A54E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -378,6 +380,10 @@ Global
 		{AAC4D6FA-4F94-4616-93B3-3BB47E4A0BB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AAC4D6FA-4F94-4616-93B3-3BB47E4A0BB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAC4D6FA-4F94-4616-93B3-3BB47E4A0BB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{484F3E48-EF14-4801-B896-41BDB67A54E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{484F3E48-EF14-4801-B896-41BDB67A54E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{484F3E48-EF14-4801-B896-41BDB67A54E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{484F3E48-EF14-4801-B896-41BDB67A54E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390} = {0761690C-7DA0-4554-9F6B-211088412DCD}
@@ -437,5 +443,6 @@ Global
 		{3174F07C-F96E-4695-B05D-CE91845CF292} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 		{8EF6E36F-C63A-4F2A-99CF-8F3AE2A5C946} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 		{AAC4D6FA-4F94-4616-93B3-3BB47E4A0BB1} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
+		{484F3E48-EF14-4801-B896-41BDB67A54E6} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 	EndGlobalSection
 EndGlobal

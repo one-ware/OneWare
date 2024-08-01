@@ -22,11 +22,23 @@ public abstract class FpgaBase : IFpga
     
     public IReadOnlyDictionary<string, string> Properties { get; }
 
-    protected void LoadFromJson(string path)
+    protected void LoadFromJsonAsset(string path)
     {
-        var stream = AssetLoader.Open(new Uri(path));
+        using var stream = AssetLoader.Open(new Uri(path));
+        using var reader = new StreamReader(stream);
+        LoadFromJson(reader.ReadToEnd());
+    }
+    
+    protected void LoadFromJsonFile(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var reader = new StreamReader(stream);
+        LoadFromJson(reader.ReadToEnd());
+    }
 
-        var properties = JsonNode.Parse(stream);
+    private void LoadFromJson(string json)
+    {
+        var properties = JsonNode.Parse(json);
 
         if (properties == null) return;
 

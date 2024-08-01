@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
@@ -8,6 +9,17 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class FpgaService
 {
+    private readonly ILogger _logger;
+    public FpgaService(IPaths paths, ILogger logger)
+    {
+        FpgaDirectory = Path.Combine(paths.DocumentsDirectory, "Hardware", "FPGA");
+        Directory.CreateDirectory(FpgaDirectory);
+        
+        _logger = logger;
+    }
+
+    public string FpgaDirectory { get; }
+    
     public Dictionary<IFpga, Type> CustomFpgaViewModels { get; } = new();
 
     public Dictionary<IFpgaExtension, Type> FpgaExtensionViewModels { get; } = new();
@@ -88,5 +100,34 @@ public class FpgaService
         NodeProviders.TryGetValue(extension, out var provider);
         if (provider != null) return ContainerLocator.Container.Resolve(provider) as INodeProvider;
         return null;
+    }
+
+    public void LoadGenericFpgas()
+    {
+        foreach (var fpga in Fpgas.ToArray())
+        {
+            if (fpga is GenericFpga)
+            {
+                Fpgas.Remove(fpga);
+                CustomFpgaViewModels.Remove(fpga);
+            }
+        }
+
+        try
+        {
+            foreach (var directory in Directory.GetDirectories(FpgaDirectory))
+            {
+                var fpgaFile = Path.Combine(directory, "fpga.json");
+                if (File.Exists(fpgaFile))
+                {
+                    var fpga = FpgaLoader.LoadFromPath(fpgaFile);
+                    RegisterFpga(fpga);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
     }
 }

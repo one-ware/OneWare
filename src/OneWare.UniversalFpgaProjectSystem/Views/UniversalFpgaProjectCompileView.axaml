@@ -19,6 +19,11 @@
     <Interaction.Behaviors>
         <behaviors:CommandOnKeyPressedBehavior HandledEventsToo="True" TriggerKey="Enter" 
                                                Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Escape" 
+                                               Command="{Binding Close}"
+                                               CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"/>
+        <behaviors:CommandOnGesturePressedBehavior TriggerGesture="{x:Static viewModels:UniversalFpgaProjectCompileViewModel.SaveGesture}"
+                                               Command="{Binding Save}" />
     </Interaction.Behaviors>
 
     <Grid RowDefinitions="*, Auto">
@@ -27,14 +32,14 @@
                 <DockPanel DockPanel.Dock="Top">
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="0 0 5 0">
                         <TextBlock Text="FPGA:" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding FpgaModels}" MinWidth="150"
+                        <controls:SearchComboBox IsInteractive="False" ItemsSource="{Binding FpgaModels}" MinWidth="150"
                                   SelectedItem="{Binding SelectedFpgaModel, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Fpga.Name}" Margin="5 0" VerticalAlignment="Center" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        </controls:SearchComboBox>
                     </StackPanel>
                     <controls:UiExtensionCollection Context="{Binding}" Extensions="{Binding TopRightExtension}"
                                                     HorizontalAlignment="Right" DockPanel.Dock="Right" />

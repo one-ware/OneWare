@@ -6,6 +6,6 @@ public class IceBreakerFpga : FpgaBase
 {
     public IceBreakerFpga()
     {
-        LoadFromJson("avares://OneWare.IceBreaker/Assets/IceBreakerV1.0e.json");
+        LoadFromJsonAsset("avares://OneWare.IceBreaker/Assets/IceBreakerV1.0e.json");
     }
 }

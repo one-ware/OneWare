@@ -1,9 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Avalonia.Input;
 using DynamicData.Binding;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -37,6 +39,9 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         {
             Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
         });
+        
+        //Load Fpgas from documents
+        fpgaService.LoadGenericFpgas();
 
         //Construct FpgaModels
         foreach (var fpga in fpgaService.Fpgas)
@@ -66,6 +71,8 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         IsDirty = false;
     }
 
+    public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
+    
     public ObservableCollection<UiExtension> TopRightExtension { get; }
 
     public UniversalFpgaProjectRoot Project { get; }
@@ -126,13 +133,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         }
     }
 
-    public void SaveAndCompile(FlexibleWindow window)
-    {
-        SaveAndClose(window);
-        if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
-    }
-
-    public void SaveAndClose(FlexibleWindow window)
+    public void Save()
     {
         if (SelectedFpgaModel != null)
         {
@@ -140,9 +141,20 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             Project.SetProjectProperty("Fpga", SelectedFpgaModel.Fpga.Name);
             Project.Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
+            
+            IsDirty = false;
         }
-
-        IsDirty = false;
+    }
+    
+    public void SaveAndClose(FlexibleWindow window)
+    {
+        Save();
         window.Close();
+    }
+    
+    public void SaveAndCompile(FlexibleWindow window)
+    {
+        SaveAndClose(window);
+        if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
     }
 }

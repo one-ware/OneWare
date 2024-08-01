@@ -6,6 +6,6 @@ public class TangNano9KFpga : FpgaBase
 {
     public TangNano9KFpga()
     {
-        LoadFromJson("avares://OneWare.TangNano9K/Assets/TangNano9K.json");
+        LoadFromJsonAsset("avares://OneWare.TangNano9K/Assets/TangNano9K.json");
     }
 }

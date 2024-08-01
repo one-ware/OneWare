@@ -6,6 +6,6 @@ public class Max10Fpga : FpgaBase
 {
     public Max10Fpga()
     {
-        LoadFromJson("avares://OneWare.Max10/Assets/Max10.json");
+        LoadFromJsonAsset("avares://OneWare.Max10/Assets/Max10.json");
     }
 }

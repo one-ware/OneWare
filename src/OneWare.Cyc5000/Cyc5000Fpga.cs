@@ -6,6 +6,6 @@ public class Cyc5000Fpga : FpgaBase
 {
     public Cyc5000Fpga()
     {
-        LoadFromJson("avares://OneWare.Cyc5000/Assets/Cyc5000.json");
+        LoadFromJsonAsset("avares://OneWare.Cyc5000/Assets/Cyc5000.json");
     }
 }

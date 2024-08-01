@@ -187,4 +187,9 @@ public class FpgaModel : ObservableObject
         var model = new FpgaInterfaceModel(fpgaInterface, this);
         InterfaceModels.Add(fpgaInterface.Name, model);
     }
+
+    public override string ToString()
+    {
+        return Fpga.Name;
+    }
 }
