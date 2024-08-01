@@ -32,6 +32,11 @@ public class SearchComboBox : ComboBox
         set
         {
             _resultIndex = value;
+            if(value < 0)
+            {
+                ResultItem = null;
+                return;
+            }
             ResultItem = ContainerFromIndex(value) as SearchComboBoxItem;
             ScrollIntoView(value);
         }
@@ -62,21 +67,25 @@ public class SearchComboBox : ComboBox
 
         _searchBox!.TextChanged += (sender, args) =>
         {
-            var item = Items.FirstOrDefault(x =>
-                x?.ToString()?.StartsWith(_searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) 
-                ?? x?.ToString()?.Contains(_searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) 
-                ?? false);   
-            
+            object? item = null;
+            if (!string.IsNullOrWhiteSpace(_searchBox.Text))
+            {
+                item = Items.FirstOrDefault(x =>
+                    x?.ToString()?.StartsWith(_searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) ??
+                    false);
+
+                item ??= Items.FirstOrDefault(x =>
+                    x?.ToString()?.Contains(_searchBox.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase) ??
+                    false);
+            }
+
             if (IsInteractive)
             {
                 SelectedItem = item;
             }
             else
             {
-                if (item != null)
-                {
-                    ResultIndex = Items.IndexOf(item);
-                }
+                ResultIndex = Items.IndexOf(item);
             }
             
             _searchBox.Focus();

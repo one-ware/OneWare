@@ -87,9 +87,6 @@
         </ControlTheme>
     </Styles.Resources>
     
-    <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}"/>
-    </Style>
     <Style Selector="ComboBoxItem:searchResult /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush3}"/>
     </Style>
