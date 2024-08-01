@@ -17,10 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Assets\*.*" CopyToOutputDirectory="PreserveNewest" />
-      <Content Update="Assets\Cyc5000\fpga.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+      <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>
