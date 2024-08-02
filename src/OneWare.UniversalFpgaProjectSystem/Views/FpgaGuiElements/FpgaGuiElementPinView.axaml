@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
+    <Button Height="10" Width="10" BorderThickness="1" BorderBrush="Gray" Cursor="Hand"
+            Command="{Binding Model.SelectPin}"
+            CommandParameter="{Binding PinModel}">
+        <Interaction.Behaviors>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True">
+                <DataTriggerBehavior.Binding>
+                    <MultiBinding
+                        Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                        <Binding Path="Model.SelectedPinModel" />
+                        <Binding Path="PinModel" />
+                    </MultiBinding>
+                </DataTriggerBehavior.Binding>
+                <ChangePropertyAction PropertyName="Background"
+                                      Value="Red" />
+            </DataTriggerBehavior>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False">
+                <DataTriggerBehavior.Binding>
+                    <MultiBinding
+                        Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
+                        <Binding Path="Model.SelectedPinModel" />
+                        <Binding Path="PinModel" />
+                    </MultiBinding>
+                </DataTriggerBehavior.Binding>
+                <ChangePropertyAction PropertyName="Background"
+                                      Value="Blue" />
+            </DataTriggerBehavior>
+        </Interaction.Behaviors>
+    </Button>
+</UserControl>

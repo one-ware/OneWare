@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements;
 
-public partial class FpgaGuiElementButtonView : UserControl
+public partial class FpgaGuiElementPinView : UserControl
 {
-    public FpgaGuiElementButtonView()
+    public FpgaGuiElementPinView()
     {
         InitializeComponent();
     }

@@ -88,9 +88,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
             {
                 foreach (var element in gui.Elements)
                 {
-                    if (element.Type == "button")
+                    if (element.Type == "pin")
                     {
-                        Elements.Add(new FpgaGuiElementButtonViewModel(element));
+                        Elements.Add(new FpgaGuiElementPinViewModel(FpgaModel, element));
                     }
                 }
             }

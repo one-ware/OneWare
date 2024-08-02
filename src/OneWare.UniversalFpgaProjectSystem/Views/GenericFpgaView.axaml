@@ -31,9 +31,6 @@
                     </Style>
                 </ItemsControl.Styles>
             </ItemsControl>
-            <Canvas Background="Transparent">
-
-            </Canvas>
         </Panel>
     </Panel>
 </UserControl>
