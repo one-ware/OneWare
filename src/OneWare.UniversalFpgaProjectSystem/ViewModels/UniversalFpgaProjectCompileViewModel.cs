@@ -110,7 +110,11 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
         get => _selectedViewModel;
-        private set => SetProperty(ref _selectedViewModel, value);
+        private set
+        {
+            
+            SetProperty(ref _selectedViewModel, value);
+        }
     }
 
     public bool HideExtensions
@@ -121,9 +125,10 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
     public void RefreshFpgas()
     {
+        var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
+        
         FpgaPackages.Clear();
         
-        var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
         SelectedFpgaPackage = null;
         
         //Load Fpgas from documents
@@ -143,7 +148,11 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     
     public override void Close(FlexibleWindow window)
     {
-        if (!IsDirty) window.Close();
+        if (!IsDirty)
+        {
+            SelectedFpgaPackage = null;
+            window.Close();
+        }
         else _ = SafeQuitAsync(window);
     }
 

@@ -29,7 +29,8 @@ public class FileWatchInstance : IDisposable
             _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(file.FullPath)!)
             {
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-                IncludeSubdirectories = false
+                IncludeSubdirectories = false,
+                Filter = Path.GetFileName(file.FullPath)
             };
 
             _fileSystemWatcher.Changed += File_Changed;
