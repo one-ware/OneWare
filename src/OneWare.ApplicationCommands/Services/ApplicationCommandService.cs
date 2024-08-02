@@ -51,8 +51,6 @@ public class ApplicationCommandService : IApplicationCommandService
                 args.Handled = true;
                 return;
             }
-
-            ;
         }
     }
 }
