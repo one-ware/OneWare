@@ -1,18 +1,28 @@
+using System.Collections.ObjectModel;
 using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga.Gui;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class GenericFpgaViewModel : FpgaViewModelBase
 {
-    private FpgaGui? _fpgaGui;
     private readonly string _guiPath;
 
     private readonly IDisposable? _fileWatcher;
+
+    private bool _isLoading;
+    
+    private int _width;
+
+    private int _height;
+
+    private string? _image;
     
     public GenericFpgaViewModel(FpgaModel fpgaModel, string guiPath) : base(fpgaModel)
     {
@@ -23,27 +33,73 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         _fileWatcher = FileSystemWatcherHelper.WatchFile(guiPath, () => _ = LoadGuiAsync());
     }
 
-    public FpgaGui? FpgaGui
+    public bool IsLoading
     {
-        get => _fpgaGui;
-        set => SetProperty(ref _fpgaGui, value);
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
     }
+    
+    public int Width
+    {
+        get => _width;
+        set => SetProperty(ref _width, value);
+    }
+    
+    public int Height
+    {
+        get => _height;
+        set => SetProperty(ref _height, value);
+    }
+    
+    public string? Image
+    {
+        get => _image;
+        set => SetProperty(ref _image, value);
+    }
+
+    public ObservableCollection<FpgaGuiElementViewModelBase> Elements { get; } = new();
 
     private async Task LoadGuiAsync()
     {
-        Console.WriteLine("load");
+        IsLoading = true;
+        Width = 0;
+        Height = 0;
+        Image = null;
+        Elements.Clear();
+        
         try
         {
             await using var stream = File.OpenRead(_guiPath);
-            FpgaGui = await JsonSerializer.DeserializeAsync<FpgaGui>(stream, new JsonSerializerOptions()
+            var gui = await JsonSerializer.DeserializeAsync<FpgaGui>(stream, new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true
             });
+
+            if (gui == null)
+            {
+                return;
+            }
+            
+            Width = gui.Width;
+            Height = gui.Height;
+            Image = gui.Image != null ? Path.Combine(Path.GetDirectoryName(_guiPath)!, gui.Image) : null;
+            
+            if (gui.Elements != null)
+            {
+                foreach (var element in gui.Elements)
+                {
+                    if (element.Type == "button")
+                    {
+                        Elements.Add(new FpgaGuiElementButtonViewModel(element));
+                    }
+                }
+            }
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
+        IsLoading = false;
     }
 
     public override void Dispose()
