@@ -15,4 +15,10 @@ public class FpgaGuiElement
     public int Height { get; set; }
     
     public string? Color { get; set; }
+    
+    public string? Text { get; set; }
+    
+    public int FontSize { get; set; }
+    
+    public string? FontWeight { get; set; }
 }

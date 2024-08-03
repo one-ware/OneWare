@@ -9,16 +9,10 @@ public class FpgaGuiElementViewModelBase : ObservableObject
     public int X { get; }
     
     public int Y { get; }
-    
-    public int Width { get; }
-    
-    public int Height { get; }
 
-    public FpgaGuiElementViewModelBase(int x, int y, int width, int height)
+    public FpgaGuiElementViewModelBase(int x, int y)
     {
         X = x;
         Y = y;
-        Width = width;
-        Height = height;
     }
 }

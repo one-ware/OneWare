@@ -11,5 +11,12 @@
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementTextView.axaml.cs">
+        <DependentUpon>FpgaGuiElementTextView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 
 </Project>

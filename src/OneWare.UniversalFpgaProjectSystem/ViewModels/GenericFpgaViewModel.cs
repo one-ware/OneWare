@@ -3,6 +3,7 @@ using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -33,7 +34,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
         _ = LoadGuiAsync();
         
-        _fileWatcher = FileSystemWatcherHelper.WatchFile(guiPath, () => _ = LoadGuiAsync());
+        _fileWatcher = FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
     }
 
     public bool IsLoading
@@ -109,13 +110,30 @@ public class GenericFpgaViewModel : FpgaViewModelBase
             {
                 foreach (var element in gui.Elements)
                 {
-                    if (element.Type == "pin")
+                    switch (element.Type)
                     {
-                        FpgaModel.PinModels.TryGetValue(element.Bind ?? string.Empty, out var pinModel);
+                        case "pin":
+                        {
+                            FpgaModel.PinModels.TryGetValue(element.Bind ?? string.Empty, out var pinModel);
                         
-                        var color = element.Color != null ? new BrushConverter().ConvertFromString(element.Color ?? string.Empty) as IBrush : Brushes.YellowGreen;
+                            var color = element.Color != null ? new BrushConverter().ConvertFromString(element.Color ?? string.Empty) as IBrush : Brushes.YellowGreen;
                         
-                        Elements.Add(new FpgaGuiElementPinViewModel(element.X, element.Y, element.Width, element.Height, pinModel, color!));
+                            Elements.Add(new FpgaGuiElementPinViewModel(element.X, element.Y, element.Width, element.Height, pinModel, color!));
+                            break;
+                        }
+                        case "text":
+                        {
+                            var color = element.Color != null ? new BrushConverter().ConvertFromString(element.Color ?? string.Empty) as IBrush : null;
+
+                            if(!Enum.TryParse<FontWeight>(element.FontWeight ?? "Normal", true, out var fontWeight))
+                            {
+                                fontWeight = FontWeight.Normal;
+                            }
+                            
+                            if(element.Text != null)
+                                Elements.Add(new FpgaGuiElementTextViewModel(element.X, element.Y, element.Text, color, element.FontSize, fontWeight));
+                            break;
+                        }
                     }
                 }
             }
