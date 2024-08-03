@@ -7,31 +7,18 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView"
              x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
-    <Button Height="10" Width="10" BorderThickness="1" BorderBrush="Gray" Cursor="Hand"
-            Command="{Binding Model.SelectPin}"
+    <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" BorderBrush="Gray" Cursor="Hand"
+            Command="{Binding PinModel.Parent.SelectPin, FallbackValue={x:Null}}"
+            Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
             CommandParameter="{Binding PinModel}">
         <Interaction.Behaviors>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="True">
-                <DataTriggerBehavior.Binding>
-                    <MultiBinding
-                        Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                        <Binding Path="Model.SelectedPinModel" />
-                        <Binding Path="PinModel" />
-                    </MultiBinding>
-                </DataTriggerBehavior.Binding>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <ChangePropertyAction PropertyName="Background"
-                                      Value="Red" />
+                                      Value="White" />
             </DataTriggerBehavior>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="False">
-                <DataTriggerBehavior.Binding>
-                    <MultiBinding
-                        Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                        <Binding Path="Model.SelectedPinModel" />
-                        <Binding Path="PinModel" />
-                    </MultiBinding>
-                </DataTriggerBehavior.Binding>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <ChangePropertyAction PropertyName="Background"
-                                      Value="Blue" />
+                                      Value="{Binding Color}" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>
     </Button>

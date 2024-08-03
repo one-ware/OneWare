@@ -26,8 +26,8 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.Styles>
                     <Style Selector="ContentPresenter" x:DataType="fpgaGuiElements:FpgaGuiElementViewModelBase">
-                        <Setter Property="Canvas.Left" Value="{Binding Element.X}" />
-                        <Setter Property="Canvas.Top" Value="{Binding Element.Y}" />
+                        <Setter Property="Canvas.Left" Value="{Binding X}" />
+                        <Setter Property="Canvas.Top" Value="{Binding Y}" />
                     </Style>
                 </ItemsControl.Styles>
             </ItemsControl>

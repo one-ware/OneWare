@@ -13,7 +13,7 @@
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
 
-    <Grid HorizontalAlignment="Center" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto, Auto, 20,Auto, Auto">
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto, Auto, 20,Auto, Auto">
         <Border Grid.Row="0" Grid.Column="1" Background="#1c1c1c" Height="30" Width="90" Margin="44 0 0 -5"
                 HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <Grid>

@@ -9,6 +9,8 @@ public class FpgaPinModel : ObservableObject
 
     private string _toolTipText;
 
+    private bool _isSelected;
+
     public FpgaPinModel(FpgaPin pin, FpgaModel parent)
     {
         Pin = pin;
@@ -25,6 +27,12 @@ public class FpgaPinModel : ObservableObject
         set => SetProperty(ref _toolTipText, value);
     }
 
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+    
     public FpgaNodeModel? Connection
     {
         get => _connection;

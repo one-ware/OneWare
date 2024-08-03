@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -90,7 +91,11 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                 {
                     if (element.Type == "pin")
                     {
-                        Elements.Add(new FpgaGuiElementPinViewModel(FpgaModel, element));
+                        FpgaModel.PinModels.TryGetValue(element.Bind ?? string.Empty, out var pinModel);
+                        
+                        var color = element.Color != null ? new BrushConverter().ConvertFromString(element.Color ?? string.Empty) as IBrush : Brushes.YellowGreen;
+                        
+                        Elements.Add(new FpgaGuiElementPinViewModel(element.X, element.Y, element.Width, element.Height, pinModel, color!));
                     }
                 }
             }

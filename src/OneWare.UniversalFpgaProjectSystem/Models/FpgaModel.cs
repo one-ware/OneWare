@@ -8,8 +8,6 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public sealed class FpgaModel : ObservableObject
 {
-    private object? _lastSelection;
-
     private string _searchTextNodes = string.Empty;
 
     private string _searchTextPins = string.Empty;
@@ -60,25 +58,16 @@ public sealed class FpgaModel : ObservableObject
         get => _selectedPinModel;
         set
         {
+            if (_selectedPinModel != null) _selectedPinModel.IsSelected = false;
             SetProperty(ref _selectedPinModel, value);
-            LastSelection = value;
+            if (_selectedPinModel != null) _selectedPinModel.IsSelected = true;
         }
     }
 
     public FpgaNodeModel? SelectedNodeModel
     {
         get => _selectedNodeModel;
-        set
-        {
-            SetProperty(ref _selectedNodeModel, value);
-            LastSelection = value;
-        }
-    }
-
-    public object? LastSelection
-    {
-        get => _lastSelection;
-        set => SetProperty(ref _lastSelection, value);
+        set => SetProperty(ref _selectedNodeModel, value);
     }
 
     public RelayCommand ConnectCommand { get; }

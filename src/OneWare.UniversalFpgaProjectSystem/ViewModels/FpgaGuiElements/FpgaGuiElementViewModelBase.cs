@@ -6,12 +6,19 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementViewModelBase : ObservableObject
 {
-    public FpgaModel Model { get; }
-    public FpgaGuiElement Element { get; }
+    public int X { get; }
+    
+    public int Y { get; }
+    
+    public int Width { get; }
+    
+    public int Height { get; }
 
-    public FpgaGuiElementViewModelBase(FpgaModel model, FpgaGuiElement element)
+    public FpgaGuiElementViewModelBase(int x, int y, int width, int height)
     {
-        Model = model;
-        Element = element;
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
     }
 }
