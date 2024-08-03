@@ -7,10 +7,18 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView"
              x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
-    <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" BorderBrush="Gray" Cursor="Hand"
+    <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
             Command="{Binding PinModel.Parent.SelectPin, FallbackValue={x:Null}}"
             Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
             CommandParameter="{Binding PinModel}">
+        <Button.Styles>
+            <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="Gray"></Setter>
+            </Style>
+            <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="White"></Setter>
+            </Style>
+        </Button.Styles>
         <Interaction.Behaviors>
             <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <ChangePropertyAction PropertyName="Background"

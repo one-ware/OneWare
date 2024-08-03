@@ -14,7 +14,7 @@
 
         <Panel IsVisible="{Binding !IsLoading}">
             <Image Height="{Binding Height}" Width="{Binding Width}"
-                   Source="{Binding Image, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                   Source="{Binding Image}"
                    Stretch="Fill" />
 
             <ItemsControl ItemsSource="{Binding Elements}">

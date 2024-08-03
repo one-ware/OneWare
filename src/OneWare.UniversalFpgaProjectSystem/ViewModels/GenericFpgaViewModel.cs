@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Svg.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -23,7 +25,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
     private int _height;
 
-    private string? _image;
+    private IImage? _image;
     
     public GenericFpgaViewModel(FpgaModel fpgaModel, string guiPath) : base(fpgaModel)
     {
@@ -52,7 +54,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         set => SetProperty(ref _height, value);
     }
     
-    public string? Image
+    public IImage? Image
     {
         get => _image;
         set => SetProperty(ref _image, value);
@@ -83,7 +85,25 @@ public class GenericFpgaViewModel : FpgaViewModelBase
             
             Width = gui.Width;
             Height = gui.Height;
-            Image = gui.Image != null ? Path.Combine(Path.GetDirectoryName(_guiPath)!, gui.Image) : null;
+
+            if (gui.Image != null)
+            {
+                var fullPath = Path.Combine(Path.GetDirectoryName(_guiPath)!, gui.Image);
+                switch (Path.GetExtension(fullPath).ToLower())
+                {
+                    case ".svg":
+                        var svg = SvgSource.Load(fullPath);
+                        Image = new SvgImage
+                        {
+                            Source = svg
+                        };
+                        break;
+                    case ".jpg":
+                    case ".png":
+                        Image = new Bitmap(fullPath);
+                        break;
+                }
+            }
             
             if (gui.Elements != null)
             {
