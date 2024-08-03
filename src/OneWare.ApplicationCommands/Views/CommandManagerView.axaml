@@ -24,6 +24,7 @@
         <Style Selector="controls|AdvancedWindow.PlatformLinux Border#WindowBorder">
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="CornerRadius" Value="3" />
         </Style>
     </controls:FlexibleWindow.Styles>
     <Interaction.Behaviors>
@@ -38,7 +39,7 @@
                                                    Command="{Binding ChangeShortcutCommand}"
                                                    CommandParameter="{Binding #CommandManagerViewView}" />
     </Interaction.Behaviors>
-    <Border Name="WindowBorder">
+    <Border Name="WindowBorder" ClipToBounds="True">
         <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0">
             <TabControl.ItemTemplate>
                 <DataTemplate DataType="tabs:CommandManagerTabBase">
