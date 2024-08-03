@@ -299,9 +299,6 @@ public abstract class LanguageServiceBase : ILanguageService
         {
             var path = pdp.Uri.GetFileSystemPath();
             
-            Console.WriteLine(path);
-            Console.WriteLine(pdp.Uri.Path);
-            
             var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
