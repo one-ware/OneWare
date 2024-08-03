@@ -5,7 +5,9 @@
              xmlns:viewModels="clr-namespace:OneWare.ImageViewer.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ImageViewer.Views.ImageView" x:DataType="viewModels:ImageViewModel">
-    <ZoomBorder PanButton="Left" Background="{DynamicResource ThemeControlLowBrush}">
-        <Image Source="{Binding Image}" />
-    </ZoomBorder>
+    <Panel Background="{DynamicResource CheckerBoardBrush16}">
+        <ZoomBorder PanButton="Left">
+            <Image Source="{Binding Image}" />
+        </ZoomBorder>
+    </Panel>
 </UserControl>
