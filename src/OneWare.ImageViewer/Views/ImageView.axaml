@@ -3,11 +3,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ImageViewer.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ImageViewer.Views.ImageView" x:DataType="viewModels:ImageViewModel">
     <Panel Background="{DynamicResource CheckerBoardBrush16}">
-        <ZoomBorder PanButton="Left">
+        <controls:CustomZoomBorder PanButton="Left">
             <Image Source="{Binding Image}" />
-        </ZoomBorder>
+        </controls:CustomZoomBorder>
     </Panel>
 </UserControl>

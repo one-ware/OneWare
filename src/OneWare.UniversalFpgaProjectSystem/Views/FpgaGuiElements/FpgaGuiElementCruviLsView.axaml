@@ -14,7 +14,7 @@
     </UserControl.RenderTransform>
     <Panel>
         <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
-            <MenuItem BorderThickness="0" Padding="0" Cursor="Hand"
+            <MenuItem Padding="0" Cursor="Hand"
                       Classes="RootMenuItem"
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>

@@ -30,8 +30,11 @@
         
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
 
-        <Panel IsVisible="{Binding !IsLoading}">
+        <Button IsVisible="{Binding !IsLoading}" ClipToBounds="False">
+            <Button.Flyout>
+                <MenuFlyout Placement="Center" FlyoutPresenterClasses="BindMenu" ItemsSource="{Binding ExtensionModel.Parent.InterfaceMenu}" />
+            </Button.Flyout>
             <ContentControl Content="{Binding GuiViewModel}" ClipToBounds="False"/>
-        </Panel>
+        </Button>
     </Panel>
 </UserControl>

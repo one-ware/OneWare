@@ -10,21 +10,20 @@
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
 
-    <Border CornerRadius="3" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top" HorizontalAlignment="Center" Height="220">
-        <Border CornerRadius="3" Classes="CruviExtension" Background="#303030">
-            <Grid>
-                <TextBlock Text="VHDPlus" Margin="0, 0, 0, 20" VerticalAlignment="Center"
-                           HorizontalAlignment="Center" />
+    <Border BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top" HorizontalAlignment="Center" Height="220" CornerRadius="3" Classes="CruviExtension" Background="#303030">
+        <Grid>
+            <TextBlock Text="VHDPlus" Margin="0, 0, 0, 20" VerticalAlignment="Center"
+                       HorizontalAlignment="Center" />
 
-                <Rectangle Fill="#444444" Height="25" Width="100" HorizontalAlignment="Center"
-                           VerticalAlignment="Center" Margin="0 30 0 0" />
+            <Rectangle Fill="#444444" Height="25" Width="100" HorizontalAlignment="Center"
+                       VerticalAlignment="Center" Margin="0 30 0 0" />
 
-                <TextBlock Text="CSI Camera" VerticalAlignment="Center" Margin="0 80 0 0"
-                           HorizontalAlignment="Center" />
+            <TextBlock Text="CSI Camera" VerticalAlignment="Center" Margin="0 80 0 0"
+                       HorizontalAlignment="Center" />
 
-                <Rectangle Fill="#444444" Margin="0, -3, 0,0" Width="60" Height="30" HorizontalAlignment="Center"
-                           VerticalAlignment="Top" />
-            </Grid>
-        </Border>
+            <Rectangle Fill="#444444" Margin="0, -3, 0,0" Width="60" Height="30" HorizontalAlignment="Center"
+                       VerticalAlignment="Top" />
+        </Grid>
     </Border>
+    
 </UserControl>
