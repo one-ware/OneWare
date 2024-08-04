@@ -17,6 +17,14 @@
         <DependentUpon>FpgaGuiElementTextView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementRectView.axaml.cs">
+        <DependentUpon>FpgaGuiElementRectView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementEllipseView.axaml.cs">
+        <DependentUpon>FpgaGuiElementEllipseView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

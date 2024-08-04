@@ -77,10 +77,10 @@
         <Border Grid.Row="1" Grid.Column="1" Background="#2F4362" Width="300" Height="180" CornerRadius="10">
             <Grid>
                 <TextBlock FontSize="13" FontWeight="Bold" Text="iCEBreaker" Width="80" Margin="100 40 0 0"
-                           TextAlignment="Center"
+                           TextAlignment="Center" Foreground="White"
                            HorizontalAlignment="Left" VerticalAlignment="Top" />
                 <TextBlock FontSize="13" FontWeight="Bold" Text="v1.0e" Width="80" Margin="100 54 0 0"
-                           TextAlignment="Center"
+                           TextAlignment="Center" Foreground="White"
                            HorizontalAlignment="Left" VerticalAlignment="Top" />
                 <Button Classes="Diag" ToolTip.Tip="Lattice iCE40UP5k" Background="Black" Foreground="White" Width="45"
                         Height="45" VerticalAlignment="Center" Padding="0" HorizontalAlignment="Right"

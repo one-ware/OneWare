@@ -27,10 +27,12 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     private bool _hideExtensions;
 
     private IFpgaPackage? _selectedPackage;
-    
+
     private FpgaModel? _selectedModel;
 
     private FpgaViewModelBase? _selectedViewModel;
+
+    private FpgaNode[]? _nodes;
 
     public UniversalFpgaProjectCompileViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
@@ -47,8 +49,17 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
         });
 
+        if (Project.TopEntity is IProjectFile file)
+        {
+            var provider = fpgaService.GetNodeProvider(file.Extension);
+            if (provider is not null)
+            {
+                _nodes = provider.ExtractNodes(file).ToArray();
+            }
+        }
+
         RefreshFpgas();
-        
+
         SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == project.GetProjectProperty("Fpga")) ??
                               FpgaPackages.FirstOrDefault();
 
@@ -62,14 +73,14 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     public UniversalFpgaProjectRoot Project { get; }
 
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
-    
+
     public IFpgaPackage? SelectedFpgaPackage
     {
         get => _selectedPackage;
         set
         {
             if (_selectedPackage?.Name != value?.Name) IsDirty = true;
-            
+
             SetProperty(ref _selectedPackage, value);
 
             if (value != null)
@@ -97,6 +108,12 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
             if (value is not null)
             {
+                if (_nodes != null)
+                {
+                    foreach (var nodeModel in _nodes)
+                        value.AddNode(nodeModel);
+                }
+
                 Project.Toolchain?.LoadConnections(Project, value);
 
                 Observable.FromEventPattern(value, nameof(value.NodeConnected)).Subscribe(_ => { IsDirty = true; })
@@ -106,15 +123,11 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             }
         }
     }
-    
+
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
         get => _selectedViewModel;
-        private set
-        {
-            
-            SetProperty(ref _selectedViewModel, value);
-        }
+        private set { SetProperty(ref _selectedViewModel, value); }
     }
 
     public bool HideExtensions
@@ -126,11 +139,11 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
     public void RefreshFpgas()
     {
         var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
-        
+
         FpgaPackages.Clear();
-        
+
         SelectedFpgaPackage = null;
-        
+
         //Load Fpgas from documents
         _fpgaService.LoadGenericFpgas();
 
@@ -145,7 +158,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == oldSelectedFpgaPackageName);
         }
     }
-    
+
     public override void Close(FlexibleWindow window)
     {
         if (!IsDirty)

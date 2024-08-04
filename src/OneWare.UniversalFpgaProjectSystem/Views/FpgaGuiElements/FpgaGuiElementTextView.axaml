@@ -8,12 +8,16 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementTextView"
              x:DataType="fpgaGuiElements:FpgaGuiElementTextViewModel">
+    <UserControl.RenderTransform>
+        <RotateTransform Angle="{Binding Rotation}"/>
+    </UserControl.RenderTransform>
     <TextBlock Name="TextBlock" Text="{Binding Text}"
                Foreground="{Binding Color}"
                FontSize="{Binding FontSize}"
                FontWeight="{Binding FontWeight}">
         <Interaction.Behaviors>
-            <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Color}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+            <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Color}"
+                                                             AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
         </Interaction.Behaviors>
     </TextBlock>
 </UserControl>
