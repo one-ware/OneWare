@@ -11,8 +11,8 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
 
     public FpgaPinModel? PinModel { get; init; }
 
-    public FpgaGuiElementPinViewModel(int x, int y, int width, int height, IBrush color) : base(x, y,
-        width == 0 ? DefaultWidth : width, height == 0 ? DefaultHeight : height, color)
+    public FpgaGuiElementPinViewModel(int x, int y, int width, int height) : base(x, y,
+        width == 0 ? DefaultWidth : width, height == 0 ? DefaultHeight : height)
     {
     }
 }

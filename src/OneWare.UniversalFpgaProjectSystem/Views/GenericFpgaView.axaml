@@ -14,9 +14,6 @@
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
 
         <Panel IsVisible="{Binding !IsLoading}">
-            <Image Height="{Binding Height}" Width="{Binding Width}"
-                   Source="{Binding Image}"
-                   Stretch="Fill" />
 
             <ItemsControl ItemsSource="{Binding Elements}" ClipToBounds="False">
                 <ItemsControl.ItemsPanel>

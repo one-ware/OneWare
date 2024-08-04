@@ -16,21 +16,23 @@
             CommandParameter="{Binding PinModel}"
             CornerRadius="{Binding CornerRadius}">
         <Button.Styles>
-            <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="BorderBrush" Value="Gray"></Setter>
-            </Style>
             <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="BorderBrush" Value="White"></Setter>
+                <Setter Property="Background" Value="#1B1B1B" />
+            </Style>
+            <Style Selector="Button.PinSelected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="#DDDDDD" />
+                <Setter Property="BorderThickness" Value="2" />
+            </Style>
+            <Style Selector="Button.PinSelected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="#BBBBBB" />
             </Style>
         </Button.Styles>
         <Interaction.Behaviors>
             <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
-                <ChangePropertyAction PropertyName="Background"
-                                      Value="White" />
+                <AddClassAction ClassName="PinSelected" />
             </DataTriggerBehavior>
             <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
-                <ChangePropertyAction PropertyName="Background"
-                                      Value="{Binding Color}" />
+                <RemoveClassAction ClassName="PinSelected" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>
     </Button>

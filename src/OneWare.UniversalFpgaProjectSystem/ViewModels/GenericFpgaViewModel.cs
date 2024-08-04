@@ -27,8 +27,6 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
     private int _height;
 
-    private IImage? _image;
-
     public GenericFpgaViewModel(FpgaModel fpgaModel, string guiPath) : base(fpgaModel)
     {
         _guiPath = guiPath;
@@ -57,12 +55,6 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         set => SetProperty(ref _height, value);
     }
 
-    public IImage? Image
-    {
-        get => _image;
-        set => SetProperty(ref _image, value);
-    }
-
     public ObservableCollection<FpgaGuiElementViewModelBase> Elements { get; } = new();
 
     private async Task LoadGuiAsync()
@@ -70,7 +62,6 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         IsLoading = true;
         Width = 0;
         Height = 0;
-        Image = null;
         Elements.Clear();
 
         try
@@ -81,25 +72,6 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
             Width = gui.GetProperty("width").GetInt32();
             Height = gui.GetProperty("height").GetInt32();
-
-            if (gui.TryGetProperty("image", out var imageProperty) && imageProperty.GetString() is { } image)
-            {
-                var fullPath = Path.Combine(Path.GetDirectoryName(_guiPath)!, image);
-                switch (Path.GetExtension(fullPath).ToLower())
-                {
-                    case ".svg":
-                        var svg = SvgSource.Load(fullPath);
-                        Image = new SvgImage
-                        {
-                            Source = svg
-                        };
-                        break;
-                    case ".jpg":
-                    case ".png":
-                        Image = new Bitmap(fullPath);
-                        break;
-                }
-            }
 
             foreach (var element in gui.GetProperty("elements").EnumerateArray())
             {
@@ -120,6 +92,37 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
                 switch (element.GetProperty("type").GetString())
                 {
+                    case "image":
+                    {
+                        var path = element.GetProperty("src").GetString();
+                        
+                        var fullPath = Path.Combine(Path.GetDirectoryName(_guiPath)!, path);
+
+                        IImage? image = null;
+
+                        switch (Path.GetExtension(fullPath).ToLower())
+                        {
+                            case ".svg":
+                                var svg = SvgSource.Load(fullPath);
+                                image = new SvgImage
+                                {
+                                    Source = svg
+                                };
+                                break;
+                            case ".jpg":
+                            case ".png":
+                                image = new Bitmap(fullPath);
+                                break;
+                        }
+                        
+                        Elements.Add(new FpgaGuiElementImageViewModel(x, y, width, height)
+                        {
+                            Rotation = rotation,
+                            Image = image
+                        });
+
+                        break;
+                    }
                     case "ellipse":
                     {
                         Elements.Add(new FpgaGuiElementEllipseViewModel(x, y, width, height, color!)
@@ -130,8 +133,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                     }
                     case "rect":
                     {
-                        Elements.Add(new FpgaGuiElementRectViewModel(x, y, width, height, color!)
+                        Elements.Add(new FpgaGuiElementRectViewModel(x, y, width, height)
                         {
+                            Color = color,
                             Rotation = rotation,
                             CornerRadius = element.TryGetProperty("cornerRadius", out var cornerRadiusProperty)
                                 ? CornerRadius.Parse(cornerRadiusProperty.GetString()!)
@@ -145,8 +149,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                     case "pmod":
                     {
                         element.TryGetProperty("bind", out var bindProperty);
-                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
-                        
+                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
+                            out var interfaceModel);
+
                         Elements.Add(new FpgaGuiElementPmodViewModel(x, y)
                         {
                             Rotation = rotation,
@@ -157,8 +162,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                     case "cruvihs":
                     {
                         element.TryGetProperty("bind", out var bindProperty);
-                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
-                        
+                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
+                            out var interfaceModel);
+
                         Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y)
                         {
                             Rotation = rotation,
@@ -173,8 +179,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
                         color ??= Brushes.YellowGreen;
 
-                        Elements.Add(new FpgaGuiElementPinViewModel(x, y, width, height, color!)
+                        Elements.Add(new FpgaGuiElementPinViewModel(x, y, width, height)
                         {
+                            Color = color,
                             Rotation = rotation,
                             PinModel = pinModel,
                         });

@@ -10,16 +10,14 @@ public class FpgaGuiElementRectViewModel : FpgaGuiElementViewModelBase
     
     public int Height { get; }
     
-    public IBrush Color { get; }
+    public IBrush? Color { get; set; }
 
     public CornerRadius CornerRadius { get; init; }
 
     public BoxShadows BoxShadow { get; init; }
     
-    public FpgaGuiElementRectViewModel(int x, int y, int width, int height, IBrush color) : base(x, y) 
+    public FpgaGuiElementRectViewModel(int x, int y, int width, int height) : base(x, y) 
     {
-        Color = color;
-
         Width = width;
         Height = height;
     }
