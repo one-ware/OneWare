@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
-public class FpgaGuiElementViewModelBase : ObservableObject
+public abstract class FpgaGuiElementViewModelBase : ObservableObject
 {
     public int X { get; }
     

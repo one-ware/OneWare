@@ -6,22 +6,24 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPmodView"
              x:DataType="fpgaGuiElements:FpgaGuiElementPmodViewModel" ClipToBounds="False" 
-             Height="{Binding Height}"
-             Width="{Binding Width}">
+             Height="20"
+             Width="60">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Panel>
-        <Button Background="#101010">
-            <Button.Flyout>
-                <MenuFlyout FlyoutPresenterClasses="BindMenu" ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}" />
-            </Button.Flyout>
-            <Panel>
-                <Rectangle Fill="#202020" Height="20" Width="60" HorizontalAlignment="Center" />
-                <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center"
-                           VerticalAlignment="Center" Height="15" TextAlignment="Center" />
-            </Panel>
-        </Button>
+        <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
+            <MenuItem BorderThickness="0" Padding="0" Cursor="Hand"
+                      ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
+                <MenuItem.Header>
+                    <Panel>
+                        <Rectangle Fill="#202020" Height="20" Width="60" />
+                        <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center" FontSize="10"
+                                   VerticalAlignment="Center" TextAlignment="Center" />
+                    </Panel>
+                </MenuItem.Header>
+            </MenuItem>
+        </Menu>
         <Border
             IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">

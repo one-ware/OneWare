@@ -6,31 +6,36 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviHsView"
-             x:DataType="fpgaGuiElements:FpgaGuiElementCruviHsViewModel"
-             Height="{Binding Height}"
-             Width="{Binding Width}">
+             x:DataType="fpgaGuiElements:FpgaGuiElementCruviHsViewModel" ClipToBounds="False"
+             Height="20"
+             Width="60">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Panel>
         <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
-            <MenuItem BorderThickness="0" Padding="0" Cursor="Hand" Width="{Binding Width}"
+            <MenuItem BorderThickness="0" Padding="0" Cursor="Hand"
+                      Classes="RootMenuItem"
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>
                     <Panel>
-                        <Rectangle Fill="#202020" Height="20" Width="70" Margin="5 0 5 0" />
-                        <Rectangle Fill="#202020" Height="10" Width="80" />
-                        <TextBlock Text="CRUVI HS"
-                                   Height="15" TextAlignment="Center" Width="60" HorizontalAlignment="Center"/>
+                        <Rectangle Fill="#202020" Height="20" Width="54" Margin="3 0 3 0" />
+                        <Rectangle Fill="#202020" Height="10" Width="60" />
+                        <TextBlock Text="CRUVI HS" Foreground="White" FontSize="10" VerticalAlignment="Center"
+                                   TextAlignment="Center" Width="60" HorizontalAlignment="Center"/>
                     </Panel>
                 </MenuItem.Header>
+                <MenuItem.Styles>
+                    <Style Selector="MenuItem.RootMenuItem:pointerover /template/ Border#root">
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </MenuItem.Styles>
             </MenuItem>
         </Menu>
         <Border
             IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ContentPresenter DataContext="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}"
-                              Content="{Binding}" />
+            <ContentPresenter Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
         </Border>
     </Panel>
 </UserControl>

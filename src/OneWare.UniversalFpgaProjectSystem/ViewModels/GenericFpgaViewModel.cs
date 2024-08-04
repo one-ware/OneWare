@@ -147,7 +147,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                         element.TryGetProperty("bind", out var bindProperty);
                         FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
                         
-                        Elements.Add(new FpgaGuiElementPmodViewModel(x, y, width, height, color!)
+                        Elements.Add(new FpgaGuiElementPmodViewModel(x, y)
                         {
                             Rotation = rotation,
                             InterfaceModel = interfaceModel,
@@ -159,7 +159,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                         element.TryGetProperty("bind", out var bindProperty);
                         FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
                         
-                        Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y, width, height, color!)
+                        Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y)
                         {
                             Rotation = rotation,
                             InterfaceModel = interfaceModel,

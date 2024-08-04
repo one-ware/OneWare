@@ -5,22 +5,26 @@
              xmlns:viewModels="clr-namespace:OneWare.IasCameraExtension.ViewModels"
              mc:Ignorable="d"
              x:Class="OneWare.IasCameraExtension.Views.IasCameraExtensionView"
-             x:DataType="viewModels:IasCameraExtensionViewModel" Height="444" Width="105" ClipToBounds="False">
+             x:DataType="viewModels:IasCameraExtensionViewModel" Height="350" Width="88" ClipToBounds="False">
     <UserControl.Styles>
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
 
-    <Border CornerRadius="3" BoxShadow="0 0 5 5 #77000000" Classes="CruviExtension" Background="#303030" HorizontalAlignment="Center" VerticalAlignment="Top" Height="244">
-        <Grid>
-            <TextBlock Text="VHDPlus" Margin="0, 0, 0, 20" VerticalAlignment="Center"
-                       HorizontalAlignment="Center" />
-                
-            <Rectangle Fill="#444444" Height="25" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 30 0 0"/>
+    <Border CornerRadius="3" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top" HorizontalAlignment="Center" Height="220">
+        <Border CornerRadius="3" Classes="CruviExtension" Background="#303030">
+            <Grid>
+                <TextBlock Text="VHDPlus" Margin="0, 0, 0, 20" VerticalAlignment="Center"
+                           HorizontalAlignment="Center" />
 
-            <TextBlock Text="CSI Camera" VerticalAlignment="Center" Margin="0 80 0 0"
-                       HorizontalAlignment="Center" />
-                
-            <Rectangle Fill="#444444" Margin="0, -3, 0,0" Width="60" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" />
-        </Grid>
+                <Rectangle Fill="#444444" Height="25" Width="100" HorizontalAlignment="Center"
+                           VerticalAlignment="Center" Margin="0 30 0 0" />
+
+                <TextBlock Text="CSI Camera" VerticalAlignment="Center" Margin="0 80 0 0"
+                           HorizontalAlignment="Center" />
+
+                <Rectangle Fill="#444444" Margin="0, -3, 0,0" Width="60" Height="30" HorizontalAlignment="Center"
+                           VerticalAlignment="Top" />
+            </Grid>
+        </Border>
     </Border>
 </UserControl>

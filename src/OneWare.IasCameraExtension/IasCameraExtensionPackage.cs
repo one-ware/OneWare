@@ -8,7 +8,7 @@ namespace OneWare.IasCameraExtension;
 public class IasCameraExtensionPackage : IFpgaExtensionPackage
 {
     public string Name => "IAS Camera Extension";
-    public string Connector => "PMOD";
+    public string Connector => "CruviHS";
     
     public IFpgaExtension LoadExtension()
     {
