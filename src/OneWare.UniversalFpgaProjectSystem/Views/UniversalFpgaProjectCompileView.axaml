@@ -66,7 +66,7 @@
                     <Border Margin="0 10 0 0" IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Background="{DynamicResource CheckerBoardBrush16}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
                         <ZoomBorder Name="ZoomBorder" ClipToBounds="True" PanButton="Right">
-                            <ContentControl Content="{Binding SelectedFpgaViewModel}"/>
+                            <ContentControl ClipToBounds="False" Content="{Binding SelectedFpgaViewModel}"/>
                         </ZoomBorder>
                     </Border>
                     

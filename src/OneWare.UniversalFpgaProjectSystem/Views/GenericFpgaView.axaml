@@ -8,6 +8,7 @@
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView"
+             ClipToBounds="False"
              x:DataType="viewModels:GenericFpgaViewModel">
     <Panel MinHeight="100" MinWidth="100">
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
@@ -17,7 +18,7 @@
                    Source="{Binding Image}"
                    Stretch="Fill" />
 
-            <ItemsControl ItemsSource="{Binding Elements}">
+            <ItemsControl ItemsSource="{Binding Elements}" ClipToBounds="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas Height="{Binding Height}"

@@ -5,33 +5,22 @@
              xmlns:viewModels="clr-namespace:OneWare.IasCameraExtension.ViewModels"
              mc:Ignorable="d"
              x:Class="OneWare.IasCameraExtension.Views.IasCameraExtensionView"
-             x:DataType="viewModels:IasCameraExtensionViewModel" Height="105">
+             x:DataType="viewModels:IasCameraExtensionViewModel" Height="444" Width="105" ClipToBounds="False">
     <UserControl.Styles>
         <StyleInclude Source="avares://OneWare.UniversalFpgaProjectSystem/Styles/Components.axaml" />
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="*, 244">
-        <Border Classes="CruviExtension" Grid.Column="1" Background="#303030" Width="244" HorizontalAlignment="Right">
-            <Border.ContextMenu>
-                <ContextMenu Classes="BindMenu" ItemsSource="{Binding ExtensionModel.Parent.InterfaceMenu, FallbackValue={x:Null}}" />
-            </Border.ContextMenu>
-            <Grid>
-                <Grid.Styles>
-                    <Style Selector="TextBlock">
-                        <Setter Property="Margin" Value="1, 0, 0, 0" />
-                    </Style>
-                </Grid.Styles>
+    <Border CornerRadius="3" BoxShadow="0 0 5 5 #77000000" Classes="CruviExtension" Background="#303030" HorizontalAlignment="Center" VerticalAlignment="Top" Height="244">
+        <Grid>
+            <TextBlock Text="VHDPlus" Margin="0, 0, 0, 20" VerticalAlignment="Center"
+                       HorizontalAlignment="Center" />
+                
+            <Rectangle Fill="#444444" Height="25" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 30 0 0"/>
 
-                <TextBlock Text="CSI Camera" Classes="VertRight" Margin="0, 0, 30, 0" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-
-                <Rectangle Fill="#444444" Width="30" Margin="0, 5, 70, 5" HorizontalAlignment="Right" />
-
-                <TextBlock Text="VHDPlus" Classes="VertRight" Margin="0, 0, 90, 0" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-
-                <Rectangle Fill="#444444" Margin="-3, 0, 0,0" Width="30" Height="60" HorizontalAlignment="Left" />
-            </Grid>
-        </Border>
-    </Grid>
+            <TextBlock Text="CSI Camera" VerticalAlignment="Center" Margin="0 80 0 0"
+                       HorizontalAlignment="Center" />
+                
+            <Rectangle Fill="#444444" Margin="0, -3, 0,0" Width="60" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" />
+        </Grid>
+    </Border>
 </UserControl>

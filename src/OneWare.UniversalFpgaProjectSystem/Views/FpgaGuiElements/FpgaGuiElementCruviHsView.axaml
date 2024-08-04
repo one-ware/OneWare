@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviHsView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementCruviHsViewModel"
+             Height="{Binding Height}"
+             Width="{Binding Width}">
+    <UserControl.RenderTransform>
+        <RotateTransform Angle="{Binding Rotation}" />
+    </UserControl.RenderTransform>
+    <Panel>
+        <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
+            <MenuItem BorderThickness="0" Padding="0" Cursor="Hand" Width="{Binding Width}"
+                      ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
+                <MenuItem.Header>
+                    <Panel>
+                        <Rectangle Fill="#202020" Height="20" Width="70" Margin="5 0 5 0" />
+                        <Rectangle Fill="#202020" Height="10" Width="80" />
+                        <TextBlock Text="CRUVI HS"
+                                   Height="15" TextAlignment="Center" Width="60" HorizontalAlignment="Center"/>
+                    </Panel>
+                </MenuItem.Header>
+            </MenuItem>
+        </Menu>
+        <Border
+            IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
+            VerticalAlignment="Center" HorizontalAlignment="Center">
+            <ContentPresenter DataContext="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}"
+                              Content="{Binding}" />
+        </Border>
+    </Panel>
+</UserControl>

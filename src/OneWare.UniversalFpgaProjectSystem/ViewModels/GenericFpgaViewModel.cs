@@ -142,6 +142,30 @@ public class GenericFpgaViewModel : FpgaViewModelBase
                         });
                         break;
                     }
+                    case "pmod":
+                    {
+                        element.TryGetProperty("bind", out var bindProperty);
+                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
+                        
+                        Elements.Add(new FpgaGuiElementPmodViewModel(x, y, width, height, color!)
+                        {
+                            Rotation = rotation,
+                            InterfaceModel = interfaceModel,
+                        });
+                        break;
+                    }
+                    case "cruvihs":
+                    {
+                        element.TryGetProperty("bind", out var bindProperty);
+                        FpgaModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty, out var interfaceModel);
+                        
+                        Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y, width, height, color!)
+                        {
+                            Rotation = rotation,
+                            InterfaceModel = interfaceModel,
+                        });
+                        break;
+                    }
                     case "pin":
                     {
                         element.TryGetProperty("bind", out var bindProperty);

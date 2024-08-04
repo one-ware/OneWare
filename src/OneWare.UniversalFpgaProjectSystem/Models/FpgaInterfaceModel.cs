@@ -79,7 +79,7 @@ public class FpgaInterfaceModel : ObservableObject
             InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
             {
                 Header = "Disconnect",
-                Command = new RelayCommand<IFpgaExtensionPackage>(SetExtension),
+                Command = new RelayCommand<IFpgaExtensionPackage?>(SetExtension),
                 CommandParameter = null
             });
             return;
