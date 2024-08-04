@@ -17,9 +17,9 @@ public abstract class FpgaBase : IFpga
 
     public string Name { get; }
 
-    public IList<FpgaPin> Pins { get; } = new List<FpgaPin>();
+    public IList<HardwarePin> Pins { get; } = new List<HardwarePin>();
 
-    public IList<FpgaInterface> Interfaces { get; } = new List<FpgaInterface>();
+    public IList<HardwareInterface> Interfaces { get; } = new List<HardwareInterface>();
     
     public IReadOnlyDictionary<string, string> Properties { get; }
 
@@ -52,7 +52,7 @@ public abstract class FpgaBase : IFpga
 
             if (name == null) continue;
 
-            Pins.Add(new FpgaPin(name, description));
+            Pins.Add(new HardwarePin(name, description));
         }
 
         if (properties[nameof(Interfaces)]?.AsArray() is { } fpgaInterfaces)
@@ -64,7 +64,7 @@ public abstract class FpgaBase : IFpga
                 if (interfaceName == null) continue;
 
                 var connectorName = fpgaInterface["Connector"]?.ToString();
-                var newInterface = new FpgaInterface(interfaceName, connectorName);
+                var newInterface = new HardwareInterface(interfaceName, connectorName);
 
                 foreach (var pin in fpgaInterface["Pins"]?.AsArray() ?? [])
                 {
@@ -77,7 +77,7 @@ public abstract class FpgaBase : IFpga
 
                     if (pinObj == null || name == null) continue;
 
-                    newInterface.Pins.Add(new FpgaInterfacePin(name, pinObj));
+                    newInterface.Pins.Add(new HardwareInterfacePin(name, pinObj));
                 }
 
                 Interfaces.Add(newInterface);

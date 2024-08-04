@@ -1,21 +1,32 @@
+using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Svg.Skia;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
+using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public class GenericFpgaViewModel : FpgaViewModelBase
+public class GenericExtensionViewModel : ExtensionViewModelBase
 {
     private readonly string _guiPath;
 
     private readonly IDisposable? _fileWatcher;
 
     private bool _isLoading;
-
+    
     private HardwareGuiViewModel? _guiViewModel;
 
-    public GenericFpgaViewModel(FpgaModel fpgaModel, string guiPath) : base(fpgaModel)
+    public GenericExtensionViewModel(FpgaExtensionModel extensionModel, string guiPath) : base(extensionModel)
     {
         _guiPath = guiPath;
 
@@ -41,7 +52,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
     {
         IsLoading = true;
 
-        GuiViewModel = await HardwareGuiCreator.CreateGuiAsync(_guiPath, FpgaModel);
+        GuiViewModel = await HardwareGuiCreator.CreateGuiAsync(_guiPath, ExtensionModel);
         
         IsLoading = false;
     }

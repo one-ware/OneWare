@@ -5,7 +5,7 @@
              xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Controls.PinControl" x:DataType="models:FpgaPinModel">
+             x:Class="OneWare.UniversalFpgaProjectSystem.Controls.PinControl" x:DataType="models:HardwarePinModel">
     
     <UserControl.Resources>
         <SolidColorBrush x:Key="SelectionColorPin" Opacity="1" Color="{DynamicResource ThemeForegroundColor}" />
@@ -19,7 +19,7 @@
             <Setter Property="Background" Value="#353535" />
         </Style>
         
-        <Style Selector="Button.Connectable" x:DataType="models:FpgaPinModel" x:CompileBindings="True">
+        <Style Selector="Button.Connectable" x:DataType="models:HardwarePinModel" x:CompileBindings="True">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>

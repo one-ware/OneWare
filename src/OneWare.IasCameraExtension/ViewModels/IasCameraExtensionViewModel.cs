@@ -4,7 +4,7 @@ using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.IasCameraExtension.ViewModels;
 
-public class IasCameraExtensionViewModel : FpgaExtensionViewModelBase
+public class IasCameraExtensionViewModel : ExtensionViewModelBase
 {
     public IasCameraExtensionViewModel(FpgaExtensionModel fpgaExtension) : base(fpgaExtension)
     {

@@ -5,7 +5,7 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementPmodViewModel : FpgaGuiElementViewModelBase
 {
-    public FpgaInterfaceModel? InterfaceModel { get; init; }
+    public HardwareInterfaceModel? InterfaceModel { get; init; }
 
     public FpgaGuiElementPmodViewModel(int x, int y) : base(x, y)
     {

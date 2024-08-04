@@ -37,6 +37,14 @@
         <DependentUpon>FpgaGuiElementImageView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\GenericExtensionView.axaml.cs">
+        <DependentUpon>GenericFpgaExtensionView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementCruviLsView.axaml.cs">
+        <DependentUpon>FpgaGuiElementCruviLsView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

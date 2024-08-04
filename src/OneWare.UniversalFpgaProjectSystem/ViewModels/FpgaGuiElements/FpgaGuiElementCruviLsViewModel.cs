@@ -3,11 +3,11 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
-public class FpgaGuiElementCruviHsViewModel : FpgaGuiElementViewModelBase
+public class FpgaGuiElementCruviLsViewModel : FpgaGuiElementViewModelBase
 {
     public HardwareInterfaceModel? InterfaceModel { get; init; }
 
-    public FpgaGuiElementCruviHsViewModel(int x, int y) : base(x, y)
+    public FpgaGuiElementCruviLsViewModel(int x, int y) : base(x, y)
     {
     }
 }

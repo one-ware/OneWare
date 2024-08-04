@@ -3,7 +3,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class FpgaPinModel : ObservableObject
+public class HardwarePinModel : ObservableObject
 {
     private FpgaNodeModel? _connection;
 
@@ -11,14 +11,15 @@ public class FpgaPinModel : ObservableObject
 
     private bool _isSelected;
 
-    public FpgaPinModel(FpgaPin pin, FpgaModel parent)
+    public HardwarePinModel(HardwarePin pin, FpgaModel parent)
     {
         Pin = pin;
         _toolTipText = "Click to connect " + Pin.Name;
         Parent = parent;
     }
 
-    public FpgaPin Pin { get; }
+    public HardwarePin Pin { get; }
+    
     public FpgaModel Parent { get; }
 
     public string ToolTipText

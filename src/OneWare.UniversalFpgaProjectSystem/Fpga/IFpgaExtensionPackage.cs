@@ -11,5 +11,5 @@ public interface IFpgaExtensionPackage
     
     public IFpgaExtension LoadExtension();
     
-    public FpgaExtensionViewModelBase? LoadExtensionViewModel(FpgaExtensionModel fpgaExtensionModel);
+    public ExtensionViewModelBase? LoadExtensionViewModel(FpgaExtensionModel fpgaExtensionModel);
 }

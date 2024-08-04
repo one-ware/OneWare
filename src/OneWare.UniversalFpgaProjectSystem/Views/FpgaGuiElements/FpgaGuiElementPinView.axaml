@@ -13,11 +13,12 @@
     <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
             Command="{Binding PinModel.Parent.SelectPin, FallbackValue={x:Null}}"
             Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
-            CommandParameter="{Binding PinModel}"
+            CommandParameter="{Binding PinModel}" BorderBrush="Gray"
             CornerRadius="{Binding CornerRadius}">
         <Button.Styles>
             <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Background" Value="#1B1B1B" />
+                <Setter Property="Background" Value="#222222" />
+                <Setter Property="BorderBrush" Value="Gray" />
             </Style>
             <Style Selector="Button.PinSelected /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="BorderBrush" Value="#DDDDDD" />

@@ -10,25 +10,29 @@ using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class FpgaInterfaceModel : ObservableObject
+public class HardwareInterfaceModel : ObservableObject
 {
     private IFpgaExtensionPackage? _connectedPackage;
     
     private FpgaExtensionModel? _connection;
 
-    private FpgaExtensionViewModelBase? _connectionViewModel;
+    private ExtensionViewModelBase? _connectionViewModel;
 
-    public FpgaInterfaceModel(FpgaInterface fpgaInterface, FpgaModel parent)
+    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent)
     {
         Interface = fpgaInterface;
-        Parent = parent;
+
+        foreach (var pin in fpgaInterface.Pins)
+        {
+            PinModels.Add(pin.Name, parent.PinModels[pin.HardwarePin.Name]);
+        }
 
         UpdateMenu();
     }
 
-    public FpgaInterface Interface { get; }
-
-    public FpgaModel Parent { get; }
+    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
+    
+    public HardwareInterface Interface { get; }
 
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
     
@@ -41,7 +45,7 @@ public class FpgaInterfaceModel : ObservableObject
 
             if (_connectedPackage != null)
             {
-                Connection = new FpgaExtensionModel(_connectedPackage.LoadExtension());
+                Connection = new FpgaExtensionModel(_connectedPackage.LoadExtension(), this);
                 ConnectionViewModel = _connectedPackage.LoadExtensionViewModel(Connection);
             }
             else
@@ -55,17 +59,17 @@ public class FpgaInterfaceModel : ObservableObject
     public FpgaExtensionModel? Connection
     {
         get => _connection;
-        private set
-        {
-            if (_connection != null) _connection.Parent = null;
-            SetProperty(ref _connection, value);
-        }
+        private set => SetProperty(ref _connection, value);
     }
 
-    public FpgaExtensionViewModelBase? ConnectionViewModel
+    public ExtensionViewModelBase? ConnectionViewModel
     {
         get => _connectionViewModel;
-        private set => SetProperty(ref _connectionViewModel, value);
+        private set
+        {
+            _connectionViewModel?.Dispose();
+            SetProperty(ref _connectionViewModel, value);
+        }
     }
 
     private void UpdateMenu()

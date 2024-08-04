@@ -6,7 +6,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public sealed class FpgaModel : ObservableObject
+public sealed class FpgaModel : ObservableObject, IHardwareModel
 {
     private string _searchTextNodes = string.Empty;
 
@@ -14,7 +14,7 @@ public sealed class FpgaModel : ObservableObject
 
     private FpgaNodeModel? _selectedNodeModel;
 
-    private FpgaPinModel? _selectedPinModel;
+    private HardwarePinModel? _selectedPinModel;
 
     public FpgaModel(IFpga fpga)
     {
@@ -47,13 +47,13 @@ public sealed class FpgaModel : ObservableObject
 
     public IFpga Fpga { get; }
 
-    public Dictionary<string, FpgaPinModel> PinModels { get; } = new();
-    public ObservableCollection<FpgaPinModel> VisiblePinModels { get; } = new();
+    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
+    public ObservableCollection<HardwarePinModel> VisiblePinModels { get; } = new();
     public Dictionary<string, FpgaNodeModel> NodeModels { get; } = new();
     public ObservableCollection<FpgaNodeModel> VisibleNodeModels { get; } = new();
-    public Dictionary<string, FpgaInterfaceModel> InterfaceModels { get; } = new();
+    public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
 
-    public FpgaPinModel? SelectedPinModel
+    public HardwarePinModel? SelectedPinModel
     {
         get => _selectedPinModel;
         set
@@ -115,7 +115,7 @@ public sealed class FpgaModel : ObservableObject
             VisibleNodeModels.FirstOrDefault(x => x.Node.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
-    public void Connect(FpgaPinModel pin, FpgaNodeModel fpgaNode)
+    public void Connect(HardwarePinModel pin, FpgaNodeModel fpgaNode)
     {
         pin.Connection = fpgaNode;
         fpgaNode.Connection = pin;
@@ -124,7 +124,7 @@ public sealed class FpgaModel : ObservableObject
         NodeConnected?.Invoke(this, EventArgs.Empty);
     }
 
-    public void Disconnect(FpgaPinModel pin)
+    public void Disconnect(HardwarePinModel pin)
     {
         if (pin.Connection != null) pin.Connection.Connection = null;
         pin.Connection = null;
@@ -152,14 +152,14 @@ public sealed class FpgaModel : ObservableObject
         Disconnect(SelectedPinModel);
     }
 
-    public void SelectPin(FpgaPinModel pinModel)
+    public void SelectPin(HardwarePinModel pinModel)
     {
         SelectedPinModel = pinModel;
     }
 
-    private void AddPin(FpgaPin pin)
+    private void AddPin(HardwarePin pin)
     {
-        var model = new FpgaPinModel(pin, this);
+        var model = new HardwarePinModel(pin, this);
         PinModels.Add(pin.Name, model);
         VisiblePinModels.Add(model);
     }
@@ -171,9 +171,9 @@ public sealed class FpgaModel : ObservableObject
         VisibleNodeModels.Add(model);
     }
 
-    private void AddInterface(FpgaInterface fpgaInterface)
+    private void AddInterface(HardwareInterface fpgaInterface)
     {
-        var model = new FpgaInterfaceModel(fpgaInterface, this);
+        var model = new HardwareInterfaceModel(fpgaInterface, this);
         InterfaceModels.Add(fpgaInterface.Name, model);
     }
 

@@ -4,11 +4,11 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public abstract class FpgaExtensionViewModelBase : ObservableObject, IDisposable
+public abstract class ExtensionViewModelBase : ObservableObject, IDisposable
 {
     public FpgaExtensionModel ExtensionModel { get; }
     
-    public FpgaExtensionViewModelBase(FpgaExtensionModel extensionModel)
+    public ExtensionViewModelBase(FpgaExtensionModel extensionModel)
     {
         ExtensionModel = extensionModel;
     }

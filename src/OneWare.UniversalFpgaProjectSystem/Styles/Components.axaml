@@ -96,7 +96,7 @@
         </Setter>
     </Style>
 
-    <Style Selector="Button.Connectable" x:DataType="models:FpgaPinModel">
+    <Style Selector="Button.Connectable" x:DataType="models:HardwarePinModel">
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>

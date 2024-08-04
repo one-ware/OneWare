@@ -4,9 +4,9 @@ public interface IFpga
 {
     public string Name { get; }
 
-    public IList<FpgaPin> Pins { get; }
+    public IList<HardwarePin> Pins { get; }
 
-    public IList<FpgaInterface> Interfaces { get; }
+    public IList<HardwareInterface> Interfaces { get; }
 
     public IReadOnlyDictionary<string, string> Properties { get; }
 }

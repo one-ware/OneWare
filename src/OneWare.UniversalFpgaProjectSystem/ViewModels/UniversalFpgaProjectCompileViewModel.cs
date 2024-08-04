@@ -146,6 +146,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
         //Load Fpgas from documents
         _fpgaService.LoadGenericFpgas();
+        _fpgaService.LoadGenericFpgaExtensions();
 
         //Construct FpgaModels
         foreach (var package in _fpgaService.FpgaPackages)

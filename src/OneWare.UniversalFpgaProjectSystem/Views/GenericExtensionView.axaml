@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:views="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericExtensionView"
+             ClipToBounds="False"
+             x:DataType="viewModels:GenericExtensionViewModel">
+    <Panel Classes="HideExtensions">
+        
+        <Panel.Styles>
+            <Style Selector="Panel.HideExtensions">
+                <Setter Property="Opacity"
+                        Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, 
+                Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}}" />
+                <Setter Property="IsHitTestVisible"
+                        Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions}" />
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter>
+            </Style>
+        </Panel.Styles>
+        
+        <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
+
+        <Panel IsVisible="{Binding !IsLoading}">
+            <ContentControl Content="{Binding GuiViewModel}" ClipToBounds="False"/>
+        </Panel>
+    </Panel>
+</UserControl>

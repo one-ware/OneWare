@@ -5,10 +5,10 @@
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviHsView"
-             x:DataType="fpgaGuiElements:FpgaGuiElementCruviHsViewModel" ClipToBounds="False"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviLsView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementCruviLsViewModel" ClipToBounds="False"
              Height="20"
-             Width="60">
+             Width="50">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
@@ -19,10 +19,9 @@
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>
                     <Panel>
-                        <Rectangle Fill="#202020" Height="20" Width="54" Margin="3 0 3 0" />
-                        <Rectangle Fill="#202020" Height="10" Width="60" />
-                        <TextBlock Text="CRUVI HS" Foreground="White" FontSize="10" VerticalAlignment="Center"
-                                   TextAlignment="Center" Width="60" HorizontalAlignment="Center"/>
+                        <Rectangle Fill="#202020" Height="20" Width="50"/>
+                        <TextBlock Text="CRUVI LS" Foreground="White" FontSize="10" VerticalAlignment="Center"
+                                   TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>
                     </Panel>
                 </MenuItem.Header>
                 <MenuItem.Styles>

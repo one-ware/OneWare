@@ -2,8 +2,6 @@
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using OneWare.UniversalFpgaProjectSystem.Models;
-using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
@@ -14,12 +12,20 @@ public class FpgaService
     public FpgaService(IPaths paths, ILogger logger)
     {
         FpgaDirectory = Path.Combine(paths.PackagesDirectory, "Hardware", "FPGA");
+        ExtensionDirectory = Path.Combine(paths.PackagesDirectory, "Hardware", "Extensions");
         Directory.CreateDirectory(FpgaDirectory);
+        Directory.CreateDirectory(ExtensionDirectory);
+
+        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "PMOD"));
+        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CruviLS"));
+        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CruviHS"));
         
         _logger = logger;
     }
 
     public string FpgaDirectory { get; }
+    
+    public string ExtensionDirectory { get; }
     
     public Dictionary<string, Type> NodeProviders { get; } = new();
 
@@ -104,6 +110,34 @@ public class FpgaService
             foreach (var directory in Directory.GetDirectories(FpgaDirectory))
             {
                 RegisterFpgaPackage(new GenericFpgaPackage(Path.GetFileName(directory), directory));
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+    
+    public void LoadGenericFpgaExtensions()
+    {
+        foreach (var extension in FpgaExtensionPackages.ToArray())
+        {
+            if (extension is GenericFpgaExtensionPackage)
+            {
+                FpgaExtensionPackages.Remove(extension);
+            }
+        }
+
+        try
+        {
+            foreach (var directory in Directory.GetDirectories(ExtensionDirectory))
+            {
+                var connector = Path.GetFileName(directory);
+                
+                foreach (var subDirectory in Directory.GetDirectories(directory))
+                {
+                    RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage(Path.GetFileName(subDirectory), connector, subDirectory));
+                }
             }
         }
         catch (Exception e)

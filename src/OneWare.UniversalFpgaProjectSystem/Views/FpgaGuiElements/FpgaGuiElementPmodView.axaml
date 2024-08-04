@@ -27,7 +27,7 @@
         <Border
             IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ContentPresenter Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
+            <ContentControl ClipToBounds="False" Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
         </Border>
     </Panel>
 </UserControl>
