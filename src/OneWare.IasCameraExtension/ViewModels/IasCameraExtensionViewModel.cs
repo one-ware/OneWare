@@ -1,11 +1,12 @@
 ﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.IasCameraExtension.ViewModels;
 
-public class IasCameraExtensionViewModel : FpgaExtensionModel
+public class IasCameraExtensionViewModel : FpgaExtensionViewModelBase
 {
-    public IasCameraExtensionViewModel(IFpgaExtension fpgaExtension) : base(fpgaExtension)
+    public IasCameraExtensionViewModel(FpgaExtensionModel fpgaExtension) : base(fpgaExtension)
     {
     }
 }

@@ -25,9 +25,7 @@ public class FpgaService
 
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
 
-    public ObservableCollection<IFpgaExtension> FpgaExtensions { get; } = new();
-    
-    public Dictionary<IFpgaExtension, Type> FpgaExtensionViewModels { get; } = new();
+    public ObservableCollection<IFpgaExtensionPackage> FpgaExtensionPackages { get; } = new();
 
     public ObservableCollection<IFpgaToolchain> Toolchains { get; } = new();
 
@@ -44,19 +42,14 @@ public class FpgaService
         FpgaPackages.InsertSorted(fpga, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
-    public void RegisterFpgaExtension(IFpgaExtension fpga)
+    public void RegisterFpgaExtensionPackage(IFpgaExtensionPackage fpgaExtension)
     {
-        FpgaExtensions.InsertSorted(fpga, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
+        FpgaExtensionPackages.InsertSorted(fpgaExtension, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
     public void RegisterNodeProvider<T>(params string[] extensions) where T : INodeProvider
     {
         foreach (var ext in extensions) NodeProviders[ext] = typeof(T);
-    }
-
-    public void RegisterFpgaExtensionViewModel<T>(IFpgaExtension fpgaExtension) where T : FpgaExtensionModel
-    {
-        FpgaExtensionViewModels.Add(fpgaExtension, typeof(T));
     }
 
     public void RegisterToolchain<T>() where T : IFpgaToolchain

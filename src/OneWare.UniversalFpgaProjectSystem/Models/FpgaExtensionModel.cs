@@ -3,7 +3,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
-public class FpgaExtensionModel : ObservableObject
+public sealed class FpgaExtensionModel : ObservableObject
 {
     private FpgaInterfaceModel? _parent;
 

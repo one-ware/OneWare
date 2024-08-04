@@ -13,7 +13,7 @@
     <Grid ColumnDefinitions="*, 244">
         <Border Classes="CruviExtension" Grid.Column="1" Background="#303030" Width="244" HorizontalAlignment="Right">
             <Border.ContextMenu>
-                <ContextMenu Classes="BindMenu" ItemsSource="{Binding Parent.InterfaceMenu, FallbackValue={x:Null}}" />
+                <ContextMenu Classes="BindMenu" ItemsSource="{Binding ExtensionModel.Parent.InterfaceMenu, FallbackValue={x:Null}}" />
             </Border.ContextMenu>
             <Grid>
                 <Grid.Styles>

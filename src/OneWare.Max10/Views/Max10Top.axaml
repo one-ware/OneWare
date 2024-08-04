@@ -111,7 +111,7 @@
                     IsVisible="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
                     BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Bottom"
                     HorizontalAlignment="Right" Margin="3, 0, 0, 2">
-                <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].Connection}"
+                <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].ConnectionViewModel}"
                                   Content="{Binding}" />
             </Border>
 
@@ -119,7 +119,7 @@
                     IsVisible="{Binding FpgaModel.InterfaceModels[CRUVILS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
                     BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top"
                     HorizontalAlignment="Left" Margin="3, 2, 0, 0">
-                <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVILS_1].Connection}"
+                <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVILS_1].ConnectionViewModel}"
                                   Content="{Binding}" />
             </Border>
             <Ellipse ZIndex="11" Fill="{DynamicResource ThemeBackgroundBrush}" Height="24" Width="24"

@@ -13,9 +13,6 @@ public class IasCameraExtensionModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var extension = new IasCameraExtension();
-
-        containerProvider.Resolve<FpgaService>().RegisterFpgaExtension(extension);
-        containerProvider.Resolve<FpgaService>().RegisterFpgaExtensionViewModel<IasCameraExtensionViewModel>(extension);
+        containerProvider.Resolve<FpgaService>().RegisterFpgaExtensionPackage(new IasCameraExtensionPackage());
     }
 }
