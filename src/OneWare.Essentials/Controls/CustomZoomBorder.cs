@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 
@@ -21,19 +22,12 @@ public class CustomZoomBorder : ZoomBorder
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        
-        Observable.FromEventPattern<KeyEventArgs>(this, nameof(KeyDown))
-            .ObserveOn(AvaloniaScheduler.Instance).Subscribe(x =>
-            {
-                _keysDown.Add(x.EventArgs.Key);
-            }).DisposeWith(_disposables);
 
-        Observable.FromEventPattern<KeyEventArgs>(this, nameof(KeyUp))
-            .ObserveOn(AvaloniaScheduler.Instance).Subscribe(x =>
-            {
-                _keysDown.Remove(x.EventArgs.Key);
-            }).DisposeWith(_disposables);
-        
+        PointerEntered += (_, _) =>
+        {
+            this.Focus();
+        };
+            
         DispatcherTimer.Run(() =>
             {
                 if (_keysDown.Contains(Key.Down) || _keysDown.Contains(Key.S))
@@ -55,5 +49,23 @@ public class CustomZoomBorder : ZoomBorder
         base.OnDetachedFromVisualTree(e);
         _disposables.Dispose();
         _disposables = new CompositeDisposable();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        _keysDown.Add(e.Key);
+        base.OnKeyDown(e);
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        _keysDown.RemoveAll(x => x == e.Key);
+        base.OnKeyUp(e);
+    }
+
+    protected override void OnLostFocus(RoutedEventArgs e)
+    {
+        _keysDown.Clear();
+        base.OnLostFocus(e);
     }
 }
