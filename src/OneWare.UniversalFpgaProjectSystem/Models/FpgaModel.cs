@@ -26,10 +26,10 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
         foreach (var fpgaInterface in fpga.Interfaces) AddInterface(fpgaInterface);
 
-        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNodeModel is { Connection: null }
-                                                                 && SelectedPinModel is { Connection : null });
+        ConnectCommand = new RelayCommand(ConnectSelected, () => SelectedNodeModel is { ConnectedPin: null }
+                                                                 && SelectedPinModel is { ConnectedNode : null });
 
-        DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPinModel is { Connection: not null } || SelectedExtensionModel != null);
+        DisconnectCommand = new RelayCommand(DisconnectSelected, () => SelectedPinModel is { ConnectedNode: not null } || SelectedExtensionModel != null);
 
         this.WhenValueChanged(x => x.SelectedNodeModel).Subscribe(_ =>
         {
@@ -143,8 +143,8 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     public void Connect(HardwarePinModel pin, FpgaNodeModel fpgaNode)
     {
-        pin.Connection = fpgaNode;
-        fpgaNode.Connection = pin;
+        pin.ConnectedNode = fpgaNode;
+        fpgaNode.ConnectedPin = pin;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
         NodeConnected?.Invoke(this, EventArgs.Empty);
@@ -152,8 +152,8 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     public void Disconnect(HardwarePinModel pin)
     {
-        if (pin.Connection != null) pin.Connection.Connection = null;
-        pin.Connection = null;
+        if (pin.ConnectedNode != null) pin.ConnectedNode.ConnectedPin = null;
+        pin.ConnectedNode = null;
         ConnectCommand.NotifyCanExecuteChanged();
         DisconnectCommand.NotifyCanExecuteChanged();
         NodeDisconnected?.Invoke(this, EventArgs.Empty);

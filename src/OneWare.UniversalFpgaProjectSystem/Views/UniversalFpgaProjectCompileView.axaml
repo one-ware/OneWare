@@ -115,7 +115,7 @@
                                                         <Button DockPanel.Dock="Right"
                                                                 Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
                                                                 CommandParameter="{Binding }"
-                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                IsVisible="{Binding ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                                 Height="20" Width="20"
                                                                 ToolTip.Tip="Disconnect">
                                                             <Image Source="{DynamicResource MaterialDesign.Close}"
@@ -126,7 +126,7 @@
                                                         <TextBlock DockPanel.Dock="Left"
                                                                    VerticalAlignment="Center"
                                                                    Padding="5 0"
-                                                                   Text="{Binding Connection.Node.Name, FallbackValue={}}" />
+                                                                   Text="{Binding ConnectedNode.Node.Name, FallbackValue={}}" />
                                                     </DockPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -211,8 +211,8 @@
                                                     <DockPanel>
                                                         <Button DockPanel.Dock="Right"
                                                                 Command="{Binding $parent[DataGrid].((models:FpgaModel)DataContext).Disconnect, FallbackValue={x:Null}}"
-                                                                CommandParameter="{Binding Connection}"
-                                                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                                CommandParameter="{Binding ConnectedPin}"
+                                                                IsVisible="{Binding ConnectedPin, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                                 Height="20" Width="20"
                                                                 ToolTip.Tip="Disconnect">
                                                             <Image Source="{DynamicResource MaterialDesign.Close}"
@@ -223,7 +223,7 @@
                                                         <TextBlock DockPanel.Dock="Left"
                                                                    VerticalAlignment="Center"
                                                                    Padding="5 0"
-                                                                   Text="{Binding Connection.Pin.Name, FallbackValue={}}" />
+                                                                   Text="{Binding ConnectedPin.Pin.Name, FallbackValue={}}" />
                                                     </DockPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

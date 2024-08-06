@@ -5,7 +5,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class HardwarePinModel : ObservableObject
 {
-    private FpgaNodeModel? _connection;
+    private FpgaNodeModel? _connectedNode;
 
     private string _toolTipText;
 
@@ -34,19 +34,19 @@ public class HardwarePinModel : ObservableObject
         set => SetProperty(ref _isSelected, value);
     }
     
-    public FpgaNodeModel? Connection
+    public FpgaNodeModel? ConnectedNode
     {
-        get => _connection;
+        get => _connectedNode;
         set
         {
-            SetProperty(ref _connection, value);
-            if (_connection == null) ToolTipText = "Click to connect " + Pin.Name;
-            else ToolTipText = Pin.Name + " is connected with " + _connection.Node.Name;
+            SetProperty(ref _connectedNode, value);
+            if (_connectedNode == null) ToolTipText = "Click to connect " + Pin.Name;
+            else ToolTipText = Pin.Name + " is connected with " + _connectedNode.Node.Name;
         }
     }
 
     public override string ToString()
     {
-        return Connection is null ? Pin.Name : $"{Pin.Name} <-> {Connection.Node.Name}";
+        return ConnectedNode is null ? Pin.Name : $"{Pin.Name} <-> {ConnectedNode.Node.Name}";
     }
 }

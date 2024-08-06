@@ -66,7 +66,7 @@
                                 </Grid>
                             </Border>
                             <Border Name="ConnectedRectangle"
-                                    IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    IsVisible="{Binding ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     Background="Black" BorderBrush="Transparent" BorderThickness="2" Opacity="0.8" />
                         </Grid>
                     </ControlTemplate>

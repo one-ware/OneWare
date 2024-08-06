@@ -302,9 +302,9 @@
         <Border Grid.Column="0" HorizontalAlignment="Right" Height="100">
             <Grid>
                 <Border ZIndex="10"
-                        IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                         BoxShadow="0 0 5 5 #77000000" Margin="90,0,0,0">
-                    <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1].Connection}"
+                    <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension}"
                                       HorizontalAlignment="Right" Margin="-90, 0, 0,0" Content="{Binding}" />
                 </Border>
             </Grid>

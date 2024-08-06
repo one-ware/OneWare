@@ -371,26 +371,26 @@
         </Grid>
 
         <Border Grid.Row="0" Grid.Column="1"
-                IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="150" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top"
                 HorizontalAlignment="Left" Margin="13, 115, 0,-20">
             <Border.RenderTransform>
                 <RotateTransform Angle="90" />
             </Border.RenderTransform>
             <ContentPresenter Margin="-100, 0, 0,0"
-                              DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1].Connection}"
+                              DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension}"
                               Content="{Binding}" />
         </Border>
 
         <Border Grid.Row="0" Grid.Column="1"
-                IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_2].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_2].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="150" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top"
                 HorizontalAlignment="Right" Margin="0, 115, 14,-20">
             <Border.RenderTransform>
                 <RotateTransform Angle="90" />
             </Border.RenderTransform>
             <ContentPresenter Margin="-100, 0, 0,0"
-                              DataContext="{Binding FpgaModel.InterfaceModels[PMOD_2].Connection}"
+                              DataContext="{Binding FpgaModel.InterfaceModels[PMOD_2].ConnectedExtension}"
                               Content="{Binding}" />
         </Border>
     </Grid>

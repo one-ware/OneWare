@@ -65,8 +65,8 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
                 pcf = existingPcf.Trim();
             }
 
-            foreach (var conn in fpga.PinModels.Where(x => x.Value.Connection is not null))
-                pcf += $"\nset_io {conn.Value.Connection!.Node.Name} {conn.Value.Pin.Name}";
+            foreach (var conn in fpga.PinModels.Where(x => x.Value.ConnectedNode is not null))
+                pcf += $"\nset_io {conn.Value.ConnectedNode!.Node.Name} {conn.Value.Pin.Name}";
             pcf = pcf.Trim() + '\n';
 
             File.WriteAllText(pcfPath, pcf);

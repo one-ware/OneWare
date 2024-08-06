@@ -55,10 +55,10 @@
             </Menu>
         </Grid>
         <Border
-            IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
+            IsVisible="{Binding InterfaceModel.ConnectedExtensionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">
             <ContentControl ClipToBounds="False"
-                            Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
+                            Content="{Binding InterfaceModel.ConnectedExtensionViewModel, FallbackValue={x:Null}}" />
         </Border>
     </Panel>
 </UserControl>

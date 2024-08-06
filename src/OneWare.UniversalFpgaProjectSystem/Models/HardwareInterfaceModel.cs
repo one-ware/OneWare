@@ -33,13 +33,13 @@ public class HardwareInterfaceModel : ObservableObject
 
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
 
-    public ExtensionModel? Connection
+    public ExtensionModel? ConnectedExtension
     {
         get => _connectedExtension;
         private set => SetProperty(ref _connectedExtension, value);
     }
 
-    public ExtensionViewModelBase? ConnectionViewModel
+    public ExtensionViewModelBase? ConnectedExtensionViewModel
     {
         get => _connectedExtensionViewModel;
         private set
@@ -56,9 +56,9 @@ public class HardwareInterfaceModel : ObservableObject
             TranslatedPins[pin.Name] = Parent.PinModels[pin.BindPin!];
         }
                 
-        if (Connection != null)
+        if (ConnectedExtension != null)
         {
-            Connection.ParentInterfaceModel = this;
+            ConnectedExtension.ParentInterfaceModel = this;
         }
     }
     
@@ -68,7 +68,7 @@ public class HardwareInterfaceModel : ObservableObject
 
         InterfaceMenu.Clear();
 
-        if (Connection != null)
+        if (ConnectedExtension != null)
         {
             InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
             {
@@ -96,16 +96,16 @@ public class HardwareInterfaceModel : ObservableObject
     {
         if (extensionPackage != null)
         {
-            Connection = new ExtensionModel(extensionPackage.LoadExtension())
+            ConnectedExtension = new ExtensionModel(extensionPackage.LoadExtension())
             {
                 ParentInterfaceModel = this
             };
-            ConnectionViewModel = extensionPackage.LoadExtensionViewModel(Connection);
+            ConnectedExtensionViewModel = extensionPackage.LoadExtensionViewModel(ConnectedExtension);
         }
         else
         {
-            Connection = null;
-            ConnectionViewModel = null;
+            ConnectedExtension = null;
+            ConnectedExtensionViewModel = null;
         }
 
         Dispatcher.UIThread.Post(UpdateMenu);
@@ -113,10 +113,12 @@ public class HardwareInterfaceModel : ObservableObject
 
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
-        Connection = lastOwner.Connection;
-        Connection!.ParentInterfaceModel = this;
-        ConnectionViewModel = lastOwner.ConnectionViewModel;
-        ConnectionViewModel?.Initialize();
+        var connections = lastOwner.ConnectedExtension!.PinModels.Where(x => x.Value.ConnectedNode != null).ToList();
+        
+        ConnectedExtension = lastOwner.ConnectedExtension;
+        ConnectedExtension!.ParentInterfaceModel = this;
+        ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
+        ConnectedExtensionViewModel?.Initialize();
 
         lastOwner.SetExtension(null);
 
