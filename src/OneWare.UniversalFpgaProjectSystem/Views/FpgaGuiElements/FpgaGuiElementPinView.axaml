@@ -19,8 +19,11 @@
                 <Setter Property="Opacity" Value="1" />
                 <Setter Property="BorderThickness" Value="1" />
             </Style>
-            <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Style Selector="Button.PinConnected /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="#222222" />
+            </Style>
+            <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="#555555" />
                 <Setter Property="BorderBrush" Value="Gray" />
             </Style>
             <Style Selector="Button.PinSelected /template/ ContentPresenter#PART_ContentPresenter">
@@ -39,6 +42,14 @@
             <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
                                  Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <RemoveClassAction ClassName="PinSelected" />
+            </DataTriggerBehavior>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                 Binding="{Binding PinModel.ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                <AddClassAction ClassName="PinConnected" />
+            </DataTriggerBehavior>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                 Binding="{Binding PinModel.ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                <RemoveClassAction ClassName="PinConnected" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>
     </Button>

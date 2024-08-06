@@ -21,7 +21,7 @@ public class ExtensionModel : ObservableObject, IHardwareModel
         get => _isSelected;
         set => SetProperty(ref _isSelected, value);
     }
-
+    
     public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
     
     public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();

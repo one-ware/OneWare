@@ -16,16 +16,30 @@ public class HardwareInterfaceModel : ObservableObject
 
     private ExtensionViewModelBase? _connectedExtensionViewModel;
     
-    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent)
+    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner)
     {
         Interface = fpgaInterface;
-        Parent = parent;
+        Owner = owner;
 
         TranslatePins();
         UpdateMenu();
     }
     
-    public IHardwareModel Parent { get; }
+    public IHardwareModel Owner { get; }
+
+    public FpgaModel? FpgaModel
+    {
+        get
+        {
+            var parent = Owner;
+            while (parent != null)
+            {
+                if (parent is FpgaModel fpgaModel) return fpgaModel;
+                parent = (parent as ExtensionModel)?.ParentInterfaceModel?.Owner;
+            }
+            return null;
+        }
+    }
     
     public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
 
@@ -53,7 +67,7 @@ public class HardwareInterfaceModel : ObservableObject
     {
         foreach (var pin in Interface.Pins)
         {
-            TranslatedPins[pin.Name] = Parent.PinModels[pin.BindPin!];
+            TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
         }
                 
         if (ConnectedExtension != null)
@@ -113,13 +127,25 @@ public class HardwareInterfaceModel : ObservableObject
 
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
-        var connections = lastOwner.ConnectedExtension!.PinModels.Where(x => x.Value.ConnectedNode != null).ToList();
+        var connections = lastOwner.TranslatedPins!.Where(x => x.Value.ConnectedNode != null).ToList();
         
         ConnectedExtension = lastOwner.ConnectedExtension;
         ConnectedExtension!.ParentInterfaceModel = this;
         ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
         ConnectedExtensionViewModel?.Initialize();
 
+        // Autoconnect pins
+        if (FpgaModel is { } model)
+        {
+            foreach (var connection in connections)
+            {
+                var pin = TranslatedPins[connection.Key];
+                var node = connection.Value.ConnectedNode;
+                model.Disconnect(connection.Value);
+                model.Connect(pin, node!);
+            }
+        }
+        
         lastOwner.SetExtension(null);
 
         Dispatcher.UIThread.Post(UpdateMenu);

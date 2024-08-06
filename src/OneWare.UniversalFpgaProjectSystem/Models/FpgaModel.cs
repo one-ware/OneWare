@@ -53,7 +53,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     }
 
     public IFpga Fpga { get; }
-
+    
     public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
     public ObservableCollection<HardwarePinModel> VisiblePinModels { get; } = new();
     public Dictionary<string, FpgaNodeModel> NodeModels { get; } = new();
