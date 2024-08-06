@@ -36,11 +36,11 @@
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V]}"/>
                 </StackPanel>
             </StackPanel>
-            <Menu Grid.Row="1" Classes="BindMenu" DragDrop.AllowDrop="True">
+            <Menu Grid.Row="1" Classes="BindMenu">
                 <MenuItem Padding="0" BorderThickness="0"
                           ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                     <MenuItem.Header>
-                        <Panel>
+                        <Panel DragDrop.AllowDrop="True">
                             <Interaction.Behaviors>
                                 <ContextDropBehavior Context="{Binding InterfaceModel}"
                                                      Handler="{StaticResource ExtensionDropHandler}" />

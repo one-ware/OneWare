@@ -28,6 +28,8 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
                     Parent = Parent
                 });
                 PinViewModels[pin.Name].Initialize();
+
+                _interfaceModel.ConnectedExtensionViewModel?.Initialize();
             }
         } 
     }

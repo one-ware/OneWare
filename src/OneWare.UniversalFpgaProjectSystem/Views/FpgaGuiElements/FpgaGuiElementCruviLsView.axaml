@@ -17,11 +17,11 @@
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Panel>
-        <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
+        <Menu Classes="BindMenu">
             <MenuItem Padding="0" BorderThickness="0"
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>
-                    <Panel>
+                    <Panel DragDrop.AllowDrop="True">
                         <Interaction.Behaviors>
                             <ContextDropBehavior Context="{Binding InterfaceModel}" Handler="{StaticResource ExtensionDropHandler}"/>
                         </Interaction.Behaviors>
@@ -31,11 +31,6 @@
                                    TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>
                     </Panel>
                 </MenuItem.Header>
-                <MenuItem.Styles>
-                    <Style Selector="MenuItem.RootMenuItem:pointerover /template/ Border#root">
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Style>
-                </MenuItem.Styles>
             </MenuItem>
         </Menu>
         <Border
