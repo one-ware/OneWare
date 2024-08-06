@@ -7,11 +7,12 @@ public class GenericFpgaExtensionPackage(string name, string connector, string p
 {
     public string Name { get; } = name;
     public string Connector { get; } = connector;
+    public string PackagePath { get; } = packagePath;
     
     public IFpgaExtension LoadExtension()
     {
-        var extensionFile = Path.Combine(packagePath, "extension.json");
-        if (File.Exists(extensionFile))
+        var extensionFile = Path.Combine(PackagePath, "extension.json");
+        if (File.Exists(extensionFile) || extensionFile.StartsWith("avares://"))
         {
             return new GenericFpgaExtension(Name, Connector, extensionFile);
         }
@@ -20,7 +21,7 @@ public class GenericFpgaExtensionPackage(string name, string connector, string p
 
     public ExtensionViewModelBase? LoadExtensionViewModel(ExtensionModel extensionModel)
     {
-        var guiFile = Path.Combine(packagePath, "gui.json");
-        return File.Exists(guiFile) ? new GenericExtensionViewModel(extensionModel, guiFile) : null;
+        var guiFile = Path.Combine(PackagePath, "gui.json");
+        return File.Exists(guiFile) || guiFile.StartsWith("avares://") ? new GenericExtensionViewModel(extensionModel, guiFile) : null;
     }
 }

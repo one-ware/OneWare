@@ -504,8 +504,8 @@
   ],
   "Interfaces": [
     {
-      "Name": "CRUVILS_1",
-      "Connector": "CruviLS",
+      "Name": "CRUVI_LS_1",
+      "Connector": "CRUVI_LS",
       "Pins": [
         {
           "Name": "LS_1",
@@ -542,8 +542,8 @@
       ]
     },
     {
-      "Name": "CRUVIHS_1",
-      "Connector": "CruviHS",
+      "Name": "CRUVI_HS_1",
+      "Connector": "CRUVI_HS",
       "Pins": [
         {
           "Name": "HS_Dif_1",

@@ -21,8 +21,9 @@ public class GenericFpgaViewModel : FpgaViewModelBase
 
         _ = LoadGuiAsync();
 
-        _fileWatcher =
-            FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
+        if (!guiPath.StartsWith("avares://"))
+            _fileWatcher =
+                FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
     }
 
     public bool IsLoading
@@ -42,7 +43,7 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         IsLoading = true;
 
         GuiViewModel = await HardwareGuiCreator.CreateGuiAsync(_guiPath, FpgaModel);
-        
+
         IsLoading = false;
     }
 

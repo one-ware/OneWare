@@ -553,8 +553,8 @@
   ],
   "Interfaces": [
     {
-      "Name": "CRUVIHS_1",
-      "Connector": "CruviHS",
+      "Name": "CRUVI_HS_1",
+      "Connector": "CRUVI_HS",
       "Pins": [
         {
           "Name": "HS_Dif_1",

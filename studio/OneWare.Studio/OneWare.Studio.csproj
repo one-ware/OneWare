@@ -20,6 +20,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Cyc5000\OneWare.Cyc5000.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.IasCameraExtension\OneWare.IasCameraExtension.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.IceBreaker\OneWare.IceBreaker.csproj"/>

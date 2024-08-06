@@ -1,0 +1,76 @@
+{
+  "Pins": [
+    {
+      "Name": "LS_1",
+      "InterfacePin": "1"
+    },
+    {
+      "Name": "LS_2",
+      "InterfacePin": "2"
+    },
+    {
+      "Name": "LS_3",
+      "InterfacePin": "3"
+    },
+    {
+      "Name": "LS_4",
+      "InterfacePin": "4"
+    },
+    {
+      "Name": "LS_5",
+      "InterfacePin": "5"
+    },
+    {
+      "Name": "LS_6",
+      "InterfacePin": "6"
+    },
+    {
+      "Name": "LS_7",
+      "InterfacePin": "7"
+    },
+    {
+      "Name": "LS_8",
+      "InterfacePin": "8"
+    }
+  ],
+  "Interfaces": [
+    {
+      "Name": "CRUVI_LS_1",
+      "Connector": "CRUVI_LS",
+      "Pins": [
+        {
+          "Name": "LS_1",
+          "Pin": "LS_1"
+        },
+        {
+          "Name": "LS_2",
+          "Pin": "LS_2"
+        },
+        {
+          "Name": "LS_3",
+          "Pin": "LS_3"
+        },
+        {
+          "Name": "LS_4",
+          "Pin": "LS_4"
+        },
+        {
+          "Name": "LS_5",
+          "Pin": "LS_5"
+        },
+        {
+          "Name": "LS_6",
+          "Pin": "LS_6"
+        },
+        {
+          "Name": "LS_7",
+          "Pin": "LS_7"
+        },
+        {
+          "Name": "LS_8",
+          "Pin": "LS_8"
+        }
+      ]
+    }
+  ]
+}

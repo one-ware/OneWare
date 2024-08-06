@@ -17,8 +17,8 @@ public class FpgaService
         Directory.CreateDirectory(ExtensionDirectory);
 
         Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "PMOD"));
-        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CruviLS"));
-        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CruviHS"));
+        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CRUVI_LS"));
+        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CRUVI_HS"));
         
         _logger = logger;
     }
@@ -122,7 +122,7 @@ public class FpgaService
     {
         foreach (var extension in FpgaExtensionPackages.ToArray())
         {
-            if (extension is GenericFpgaExtensionPackage)
+            if (extension is GenericFpgaExtensionPackage gen && gen.PackagePath.StartsWith(ExtensionDirectory))
             {
                 FpgaExtensionPackages.Remove(extension);
             }

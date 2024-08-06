@@ -1,0 +1,76 @@
+{
+  "Pins": [
+    {
+      "Name": "1",
+      "InterfacePin": "LS_1"
+    },
+    {
+      "Name": "2",
+      "InterfacePin": "LS_2"
+    },
+    {
+      "Name": "3",
+      "InterfacePin": "LS_3"
+    },
+    {
+      "Name": "4",
+      "InterfacePin": "LS_4"
+    },
+    {
+      "Name": "5",
+      "InterfacePin": "LS_5"
+    },
+    {
+      "Name": "6",
+      "InterfacePin": "LS_6"
+    },
+    {
+      "Name": "7",
+      "InterfacePin": "LS_7"
+    },
+    {
+      "Name": "8",
+      "InterfacePin": "LS_8"
+    }
+  ],
+  "Interfaces": [
+    {
+      "Name": "PMOD_1",
+      "Connector": "PMOD",
+      "Pins": [
+        {
+          "Name": "1",
+          "Pin": "1"
+        },
+        {
+          "Name": "2",
+          "Pin": "2"
+        },
+        {
+          "Name": "3",
+          "Pin": "3"
+        },
+        {
+          "Name": "4",
+          "Pin": "4"
+        },
+        {
+          "Name": "5",
+          "Pin": "5"
+        },
+        {
+          "Name": "6",
+          "Pin": "6"
+        },
+        {
+          "Name": "7",
+          "Pin": "7"
+        },
+        {
+          "Name": "8",
+          "Pin": "8"
+        }
+      ]
+    }
+  ]
+}

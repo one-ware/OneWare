@@ -1,0 +1,40 @@
+{
+  "width": 88,
+  "height": 132,
+  "offset": "0 -60 0 0",
+  "elements": [
+    {
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 88,
+      "height": 132,
+      "color": "#206000",
+      "boxShadow": "0 0 5 5 #77000000"
+    },
+    {
+      "type": "cruvi_ls",
+      "x": 19,
+      "y": 0,
+      "bind": "CRUVI_LS_1"
+    },
+    {
+      "type": "text",
+      "x": 25,
+      "y": 55,
+      "text": "PMOD"
+    },
+    {
+      "type": "text",
+      "x": 36,
+      "y": 75,
+      "text": "to"
+    },
+    {
+      "type": "text",
+      "x": 25,
+      "y": 95,
+      "text": "CRUVI"
+    }
+  ]
+}

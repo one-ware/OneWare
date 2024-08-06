@@ -23,7 +23,7 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
     private readonly IDisposable? _fileWatcher;
 
     private bool _isLoading;
-    
+
     private HardwareGuiViewModel? _guiViewModel;
 
     public GenericExtensionViewModel(ExtensionModel extensionModel, string guiPath) : base(extensionModel)
@@ -32,8 +32,9 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
 
         _ = LoadGuiAsync();
 
-        _fileWatcher =
-            FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
+        if (!guiPath.StartsWith("avares://"))
+            _fileWatcher =
+                FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
     }
 
     public bool IsLoading
@@ -53,14 +54,14 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
         IsLoading = true;
 
         GuiViewModel = await HardwareGuiCreator.CreateGuiAsync(_guiPath, ExtensionModel);
-        
+
         IsLoading = false;
     }
 
     public override void Initialize()
     {
         base.Initialize();
-        
+
         GuiViewModel?.Initialize();
     }
 

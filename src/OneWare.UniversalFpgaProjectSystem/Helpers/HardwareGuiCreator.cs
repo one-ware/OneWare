@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Svg.Skia;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -19,7 +20,7 @@ public static class HardwareGuiCreator
         
         try
         {
-            await using var stream = File.OpenRead(guiPath);
+            await using var stream = guiPath.StartsWith("avares://") ? AssetLoader.Open(new Uri(guiPath)) : File.OpenRead(guiPath);
             using var document = await JsonDocument.ParseAsync(stream);
             var gui = document.RootElement;
 
@@ -52,7 +53,7 @@ public static class HardwareGuiCreator
                     ? bindProperty.GetString()
                     : null;
 
-                switch (element.GetProperty("type").GetString())
+                switch (element.GetProperty("type").GetString()?.ToLower())
                 {
                     case "image":
                     {
@@ -118,7 +119,7 @@ public static class HardwareGuiCreator
                         });
                         break;
                     }
-                    case "cruvils":
+                    case "cruvi_ls":
                     {
                         vm.AddElement(new FpgaGuiElementCruviLsViewModel(x, y)
                         {
@@ -128,7 +129,7 @@ public static class HardwareGuiCreator
                         });
                         break;
                     }
-                    case "cruvihs":
+                    case "cruvi_hs":
                     {
                         vm.AddElement(new FpgaGuiElementCruviHsViewModel(x, y)
                         {
