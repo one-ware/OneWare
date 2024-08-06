@@ -15,8 +15,8 @@ public class IasCameraExtensionPackage : IFpgaExtensionPackage
         return new GenericFpgaExtension(Name, Connector, "avares://OneWare.IasCameraExtension/Assets/IasCameraExtension.json");
     }
 
-    public ExtensionViewModelBase? LoadExtensionViewModel(FpgaExtensionModel fpgaExtensionModel)
+    public ExtensionViewModelBase? LoadExtensionViewModel(ExtensionModel extensionModel)
     {
-        return new IasCameraExtensionViewModel(fpgaExtensionModel);
+        return new IasCameraExtensionViewModel(extensionModel);
     }
 }

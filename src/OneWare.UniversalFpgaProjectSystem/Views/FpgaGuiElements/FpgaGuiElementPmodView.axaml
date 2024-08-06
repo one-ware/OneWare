@@ -3,31 +3,62 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:behaviors="clr-namespace:OneWare.UniversalFpgaProjectSystem.Behaviors"
+             xmlns:fpgaGuiElements1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPmodView"
-             x:DataType="fpgaGuiElements:FpgaGuiElementPmodViewModel" ClipToBounds="False" 
+             x:DataType="fpgaGuiElements:FpgaGuiElementPmodViewModel" ClipToBounds="False"
              Height="20"
              Width="60">
+    <UserControl.Resources>
+        <behaviors:ExtensionDropHandler x:Key="ExtensionDropHandler" />
+    </UserControl.Resources>
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Panel>
-        <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
-            <MenuItem Padding="0" Cursor="Hand"
-                      ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
-                <MenuItem.Header>
-                    <Panel>
-                        <Rectangle Fill="#202020" Height="20" Width="60" />
-                        <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center" FontSize="10"
-                                   VerticalAlignment="Center" TextAlignment="Center" />
-                    </Panel>
-                </MenuItem.Header>
-            </MenuItem>
-        </Menu>
+        <Grid RowDefinitions="Auto, Auto">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[5]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[6]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[7]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[8]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[GND]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V]}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[1]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[2]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[4]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[GND]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V]}"/>
+                </StackPanel>
+            </StackPanel>
+            <Menu Grid.Row="1" Classes="BindMenu" DragDrop.AllowDrop="True">
+                <MenuItem Padding="0" BorderThickness="0"
+                          ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
+                    <MenuItem.Header>
+                        <Panel>
+                            <Interaction.Behaviors>
+                                <ContextDropBehavior Context="{Binding InterfaceModel}"
+                                                     Handler="{StaticResource ExtensionDropHandler}" />
+                            </Interaction.Behaviors>
+
+                            <Rectangle Fill="#202020" Height="20" Width="60" />
+                            <TextBlock Text="PMOD" Foreground="White" HorizontalAlignment="Center" FontSize="10"
+                                       VerticalAlignment="Center" TextAlignment="Center" />
+                        </Panel>
+                    </MenuItem.Header>
+                </MenuItem>
+            </Menu>
+        </Grid>
         <Border
             IsVisible="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ContentControl ClipToBounds="False" Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
+            <ContentControl ClipToBounds="False"
+                            Content="{Binding InterfaceModel.ConnectionViewModel, FallbackValue={x:Null}}" />
         </Border>
     </Panel>
 </UserControl>

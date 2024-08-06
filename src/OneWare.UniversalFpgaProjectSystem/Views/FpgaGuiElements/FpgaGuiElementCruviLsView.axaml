@@ -4,21 +4,28 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.UniversalFpgaProjectSystem.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviLsView"
              x:DataType="fpgaGuiElements:FpgaGuiElementCruviLsViewModel" ClipToBounds="False"
              Height="20"
              Width="50">
+    <UserControl.Resources>
+        <behaviors:ExtensionDropHandler x:Key="ExtensionDropHandler" />
+    </UserControl.Resources>
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Panel>
         <Menu Classes="BindMenu" DragDrop.AllowDrop="True">
-            <MenuItem Padding="0" Cursor="Hand"
-                      Classes="RootMenuItem"
+            <MenuItem Padding="0" BorderThickness="0"
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>
                     <Panel>
+                        <Interaction.Behaviors>
+                            <ContextDropBehavior Context="{Binding InterfaceModel}" Handler="{StaticResource ExtensionDropHandler}"/>
+                        </Interaction.Behaviors>
+                        
                         <Rectangle Fill="#202020" Height="20" Width="50"/>
                         <TextBlock Text="CRUVI LS" Foreground="White" FontSize="10" VerticalAlignment="Center"
                                    TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>

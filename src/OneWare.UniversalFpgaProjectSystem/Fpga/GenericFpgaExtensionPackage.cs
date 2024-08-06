@@ -18,9 +18,9 @@ public class GenericFpgaExtensionPackage(string name, string connector, string p
         throw new Exception("fpga.json not found");
     }
 
-    public ExtensionViewModelBase? LoadExtensionViewModel(FpgaExtensionModel fpgaExtensionModel)
+    public ExtensionViewModelBase? LoadExtensionViewModel(ExtensionModel extensionModel)
     {
         var guiFile = Path.Combine(packagePath, "gui.json");
-        return File.Exists(guiFile) ? new GenericExtensionViewModel(fpgaExtensionModel, guiFile) : null;
+        return File.Exists(guiFile) ? new GenericExtensionViewModel(extensionModel, guiFile) : null;
     }
 }

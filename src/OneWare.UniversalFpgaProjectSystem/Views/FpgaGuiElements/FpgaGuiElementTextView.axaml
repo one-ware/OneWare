@@ -7,7 +7,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementTextView"
-             x:DataType="fpgaGuiElements:FpgaGuiElementTextViewModel">
+             x:DataType="fpgaGuiElements:FpgaGuiElementTextViewModel" IsHitTestVisible="False">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}"/>
     </UserControl.RenderTransform>

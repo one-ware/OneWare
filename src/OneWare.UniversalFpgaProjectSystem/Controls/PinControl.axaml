@@ -36,7 +36,7 @@
                                             <DataTriggerBehavior.Binding>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding Path="Parent.SelectedPinModel" />
+                                                    <Binding Path="FpgaModel.SelectedPinModel" />
                                                     <Binding Path="#PinBorder.DataContext" />
                                                 </MultiBinding>
                                             </DataTriggerBehavior.Binding>
@@ -51,7 +51,7 @@
                                             <DataTriggerBehavior.Binding>
                                                 <MultiBinding
                                                     Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding Path="Parent.SelectedPinModel" />
+                                                    <Binding Path="FpgaModel.SelectedPinModel" />
                                                     <Binding Path="#PinBorder.DataContext" />
                                                 </MultiBinding>
                                             </DataTriggerBehavior.Binding>
@@ -72,7 +72,7 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Command" Value="{Binding Parent.SelectPin}" />
+            <Setter Property="Command" Value="{Binding FpgaModel.SelectPin}" />
             <Setter Property="CommandParameter" Value="{Binding}" />
             <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
         </Style>

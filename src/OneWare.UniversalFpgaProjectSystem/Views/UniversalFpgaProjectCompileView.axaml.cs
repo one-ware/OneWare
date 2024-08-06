@@ -15,5 +15,21 @@ public partial class UniversalFpgaProjectCompileView : FlexibleWindow
     public UniversalFpgaProjectCompileView()
     {
         InitializeComponent();
+
+        VisiblePinDataGrid.SelectionChanged += (_, _) =>
+        {
+            if (VisiblePinDataGrid.SelectedItem != null)
+            {
+                VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
+            }
+        };
+        
+        VisiblePinDataGrid.SelectionChanged += (_, _) =>
+        {
+            if (VisiblePinDataGrid.SelectedItem != null)
+            {
+                VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
+            }
+        };
     }
 }

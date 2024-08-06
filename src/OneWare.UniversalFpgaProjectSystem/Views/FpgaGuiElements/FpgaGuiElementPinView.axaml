@@ -3,19 +3,22 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView"
              x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
-            Command="{Binding PinModel.Parent.SelectPin, FallbackValue={x:Null}}"
+            Command="{Binding PinModel.FpgaModel.SelectPin, FallbackValue={x:Null}}"
             Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
             CommandParameter="{Binding PinModel}" BorderBrush="Gray"
             CornerRadius="{Binding CornerRadius}">
         <Button.Styles>
+            <Style Selector="Button:disabled">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
             <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="#222222" />
                 <Setter Property="BorderBrush" Value="Gray" />
@@ -29,10 +32,12 @@
             </Style>
         </Button.Styles>
         <Interaction.Behaviors>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                 Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <AddClassAction ClassName="PinSelected" />
             </DataTriggerBehavior>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                 Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
                 <RemoveClassAction ClassName="PinSelected" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>

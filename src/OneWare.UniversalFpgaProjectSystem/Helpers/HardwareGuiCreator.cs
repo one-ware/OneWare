@@ -15,7 +15,7 @@ public static class HardwareGuiCreator
 {
     public static async Task<HardwareGuiViewModel> CreateGuiAsync(string guiPath, IHardwareModel hardwareModel)
     {
-        var vm = new HardwareGuiViewModel();
+        var vm = new HardwareGuiViewModel(hardwareModel);
         
         try
         {
@@ -25,6 +25,12 @@ public static class HardwareGuiCreator
 
             vm.Width = gui.GetProperty("width").GetInt32();
             vm.Height = gui.GetProperty("height").GetInt32();
+            
+            if (gui.TryGetProperty("offset", out var marginProperty))
+            {
+                var margin = marginProperty.GetString();
+                vm.Margin = Thickness.Parse(margin!);
+            }
 
             foreach (var element in gui.GetProperty("elements").EnumerateArray())
             {
@@ -41,6 +47,9 @@ public static class HardwareGuiCreator
                     : 0;
                 var color = element.TryGetProperty("color", out var colorProperty)
                     ? new BrushConverter().ConvertFromString(colorProperty.GetString() ?? string.Empty) as IBrush
+                    : null;
+                var bind = element.TryGetProperty("bind", out var bindProperty)
+                    ? bindProperty.GetString()
                     : null;
 
                 switch (element.GetProperty("type").GetString())
@@ -101,58 +110,44 @@ public static class HardwareGuiCreator
                     }
                     case "pmod":
                     {
-                        element.TryGetProperty("bind", out var bindProperty);
-                        hardwareModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
-                            out var interfaceModel);
-
                         vm.Elements.Add(new FpgaGuiElementPmodViewModel(x, y)
                         {
                             Rotation = rotation,
-                            InterfaceModel = interfaceModel,
+                            Bind = bind,
+                            Parent = hardwareModel,
                         });
                         break;
                     }
                     case "cruvils":
                     {
-                        element.TryGetProperty("bind", out var bindProperty);
-                        hardwareModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
-                            out var interfaceModel);
-
                         vm.Elements.Add(new FpgaGuiElementCruviLsViewModel(x, y)
                         {
                             Rotation = rotation,
-                            InterfaceModel = interfaceModel,
+                            Bind = bind,
+                            Parent = hardwareModel,
                         });
                         break;
                     }
                     case "cruvihs":
                     {
-                        element.TryGetProperty("bind", out var bindProperty);
-                        hardwareModel.InterfaceModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
-                            out var interfaceModel);
-
                         vm.Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y)
                         {
                             Rotation = rotation,
-                            InterfaceModel = interfaceModel,
+                            Bind = bind,
+                            Parent = hardwareModel
                         });
                         break;
                     }
                     case "pin":
                     {
-                        HardwarePinModel? pinModel = null;
-                        
-                        if(element.TryGetProperty("bind", out var bindProperty))
-                            hardwareModel.PinModels.TryGetValue(bindProperty.GetString() ?? string.Empty,
-                                out pinModel);
-
                         color ??= Brushes.Yellow;
 
                         vm.Elements.Add(new FpgaGuiElementPinViewModel(x, y, width, height)
                         {
                             Color = color,
                             Rotation = rotation,
-                            PinModel = pinModel,
+                            Bind = bind,
+                            Parent = hardwareModel
                         });
                         break;
                     }

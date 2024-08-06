@@ -26,7 +26,7 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
     
     private HardwareGuiViewModel? _guiViewModel;
 
-    public GenericExtensionViewModel(FpgaExtensionModel extensionModel, string guiPath) : base(extensionModel)
+    public GenericExtensionViewModel(ExtensionModel extensionModel, string guiPath) : base(extensionModel)
     {
         _guiPath = guiPath;
 

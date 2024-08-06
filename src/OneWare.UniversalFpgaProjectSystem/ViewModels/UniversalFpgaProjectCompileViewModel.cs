@@ -32,7 +32,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
     private FpgaViewModelBase? _selectedViewModel;
 
-    private FpgaNode[]? _nodes;
+    private readonly FpgaNode[]? _nodes;
 
     public UniversalFpgaProjectCompileViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)

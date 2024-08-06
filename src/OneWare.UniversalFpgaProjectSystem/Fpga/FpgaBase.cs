@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Avalonia.Platform;
+using OneWare.Essentials.Services;
+using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 
@@ -39,57 +41,65 @@ public abstract class FpgaBase : IFpga
 
     private void LoadFromJson(string json)
     {
-        var properties = JsonNode.Parse(json);
-
-        if (properties == null) return;
-
-        foreach (var pin in properties[nameof(Pins)]?.AsArray() ?? [])
+        try
         {
-            if (pin == null) continue;
+            var properties = JsonNode.Parse(json);
+            
+            if (properties == null) return;
 
-            var description = pin["Description"]?.ToString();
-            var name = pin["Name"]?.ToString();
-
-            if (name == null) continue;
-
-            Pins.Add(new HardwarePin(name, description));
-        }
-
-        if (properties[nameof(Interfaces)]?.AsArray() is { } fpgaInterfaces)
-            foreach (var fpgaInterface in fpgaInterfaces)
+            foreach (var pin in properties[nameof(Pins)]?.AsArray() ?? [])
             {
-                if (fpgaInterface == null) continue;
-                var interfaceName = fpgaInterface["Name"]?.ToString();
+                if (pin == null) continue;
 
-                if (interfaceName == null) continue;
+                var description = pin["Description"]?.ToString();
+                var name = pin["Name"]?.ToString();
 
-                var connectorName = fpgaInterface["Connector"]?.ToString();
-                var newInterface = new HardwareInterface(interfaceName, connectorName);
+                if (name == null) continue;
 
-                foreach (var pin in fpgaInterface["Pins"]?.AsArray() ?? [])
+                Pins.Add(new HardwarePin(name, description));
+            }
+
+            if (properties[nameof(Interfaces)]?.AsArray() is { } fpgaInterfaces)
+                foreach (var fpgaInterface in fpgaInterfaces)
                 {
-                    if (pin == null) continue;
+                    if (fpgaInterface == null) continue;
+                    var interfaceName = fpgaInterface["Name"]?.ToString();
 
-                    var name = pin["Name"]?.ToString();
-                    var pinName = pin["Pin"]?.ToString();
+                    if (interfaceName == null) continue;
 
-                    var pinObj = Pins.FirstOrDefault(x => x.Name == pinName);
+                    var connectorName = fpgaInterface["Connector"]?.ToString();
+                    var newInterface = new HardwareInterface(interfaceName, connectorName);
 
-                    if (pinObj == null || name == null) continue;
+                    foreach (var pin in fpgaInterface["Pins"]?.AsArray() ?? [])
+                    {
+                        if (pin == null) continue;
 
-                    newInterface.Pins.Add(new HardwareInterfacePin(name, pinObj));
+                        var name = pin["Name"]?.ToString();
+                        var pinName = pin["Pin"]?.ToString();
+
+                        var pinObj = Pins.FirstOrDefault(x => x.Name == pinName);
+
+                        if (name == null) throw new Exception($"interface name not defined");
+                        if (pinObj == null) throw new Exception($"{pinName} not found in interface {name}");
+
+                        newInterface.Pins.Add(new HardwareInterfacePin(name, pinObj));
+                    }
+
+                    Interfaces.Add(newInterface);
                 }
 
-                Interfaces.Add(newInterface);
-            }
+            if (properties[nameof(Properties)]?.AsObject() is { } fpgaSettings)
+                foreach (var (key, value) in fpgaSettings)
+                {
+                    var settingName = key;
+                    var settingValue = value!.ToString();
 
-        if (properties[nameof(Properties)]?.AsObject() is { } fpgaSettings)
-            foreach (var (key, value) in fpgaSettings)
-            {
-                var settingName = key;
-                var settingValue = value!.ToString();
-
-                InternalProperties.Add(settingName, settingValue);
-            }
+                    InternalProperties.Add(settingName, settingValue);
+                }
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message,e);
+        }
     }
 }

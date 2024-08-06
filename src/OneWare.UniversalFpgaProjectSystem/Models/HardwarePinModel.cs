@@ -11,16 +11,16 @@ public class HardwarePinModel : ObservableObject
 
     private bool _isSelected;
 
-    public HardwarePinModel(HardwarePin pin, FpgaModel parent)
+    public HardwarePinModel(HardwarePin pin, FpgaModel fpgaModel)
     {
         Pin = pin;
         _toolTipText = "Click to connect " + Pin.Name;
-        Parent = parent;
+        FpgaModel = fpgaModel;
     }
 
     public HardwarePin Pin { get; }
     
-    public FpgaModel Parent { get; }
+    public FpgaModel FpgaModel { get; }
 
     public string ToolTipText
     {

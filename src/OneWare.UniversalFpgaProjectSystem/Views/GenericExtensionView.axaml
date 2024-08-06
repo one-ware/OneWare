@@ -7,12 +7,14 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:views="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericExtensionView"
              ClipToBounds="False"
              x:DataType="viewModels:GenericExtensionViewModel">
     <Panel Classes="HideExtensions">
-        
+
         <Panel.Styles>
             <Style Selector="Panel.HideExtensions">
                 <Setter Property="Opacity"
@@ -27,14 +29,46 @@
                 </Setter>
             </Style>
         </Panel.Styles>
-        
+
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
 
-        <Button IsVisible="{Binding !IsLoading}" ClipToBounds="False">
-            <Button.Flyout>
-                <MenuFlyout Placement="Center" FlyoutPresenterClasses="BindMenu" ItemsSource="{Binding ExtensionModel.Parent.InterfaceMenu}" />
-            </Button.Flyout>
-            <ContentControl Content="{Binding GuiViewModel}" ClipToBounds="False"/>
-        </Button>
+        <Panel IsVisible="{Binding GuiViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Button Height="{Binding GuiViewModel.Height, FallbackValue=0}"
+                    Width="{Binding GuiViewModel.Width, FallbackValue=0}"
+                    Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}" ClipToBounds="False"
+                    Command="{Binding ExtensionModel.Parent.FpgaModel.ToggleSelectExtension}"
+                    CommandParameter="{Binding ExtensionModel}">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </Button.Styles>
+                <Interaction.Behaviors>
+                    <behaviors:ContextDragBubbleBehavior Context="{Binding ExtensionModel}" />
+                </Interaction.Behaviors>
+                <ContentControl Name="Gui" Content="{Binding GuiViewModel}" ClipToBounds="False" />
+            </Button>
+            <Border Name="SelectionLayer" IsHitTestVisible="False"
+                    Height="{Binding GuiViewModel.Height, FallbackValue=0}"
+                    Width="{Binding GuiViewModel.Width, FallbackValue=0}" Opacity="0.6"
+                    Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}"
+                    BorderBrush="White">
+                <Interaction.Behaviors>
+                    <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                         Binding="{Binding ExtensionModel.IsSelected, FallbackValue={x:False}}">
+                        <AddClassAction ClassName="ExtensionSelected" />
+                    </DataTriggerBehavior>
+                    <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                         Binding="{Binding ExtensionModel.IsSelected, FallbackValue={x:False}}">
+                        <RemoveClassAction ClassName="ExtensionSelected" />
+                    </DataTriggerBehavior>
+                </Interaction.Behaviors>
+                <Border.Styles>
+                    <Style Selector="Border.ExtensionSelected">
+                        <Setter Property="BorderThickness" Value="2" />
+                    </Style>
+                </Border.Styles>
+            </Border>
+        </Panel>
     </Panel>
 </UserControl>

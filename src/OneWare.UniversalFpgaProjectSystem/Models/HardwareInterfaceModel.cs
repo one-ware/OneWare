@@ -12,15 +12,14 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class HardwareInterfaceModel : ObservableObject
 {
-    private IFpgaExtensionPackage? _connectedPackage;
+    private ExtensionModel? _connectedExtension;
+
+    private ExtensionViewModelBase? _connectedExtensionViewModel;
     
-    private FpgaExtensionModel? _connection;
-
-    private ExtensionViewModelBase? _connectionViewModel;
-
-    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent)
+    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent, FpgaModel fpgaModel)
     {
         Interface = fpgaInterface;
+        FpgaModel = fpgaModel;
 
         foreach (var pin in fpgaInterface.Pins)
         {
@@ -29,46 +28,28 @@ public class HardwareInterfaceModel : ObservableObject
 
         UpdateMenu();
     }
+    
+    public FpgaModel FpgaModel { get; }
 
     public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
     
     public HardwareInterface Interface { get; }
 
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
-    
-    public IFpgaExtensionPackage? ConnectedPackage
-    {
-        get => _connectedPackage;
-        set
-        {
-            SetProperty(ref _connectedPackage, value);
 
-            if (_connectedPackage != null)
-            {
-                Connection = new FpgaExtensionModel(_connectedPackage.LoadExtension(), this);
-                ConnectionViewModel = _connectedPackage.LoadExtensionViewModel(Connection);
-            }
-            else
-            {
-                Connection = null;
-                ConnectionViewModel = null;
-            }
-        }
-    }
-
-    public FpgaExtensionModel? Connection
+    public ExtensionModel? Connection
     {
-        get => _connection;
-        private set => SetProperty(ref _connection, value);
+        get => _connectedExtension;
+        private set => SetProperty(ref _connectedExtension, value);
     }
 
     public ExtensionViewModelBase? ConnectionViewModel
     {
-        get => _connectionViewModel;
+        get => _connectedExtensionViewModel;
         private set
         {
-            _connectionViewModel?.Dispose();
-            SetProperty(ref _connectionViewModel, value);
+            _connectedExtensionViewModel?.Dispose();
+            SetProperty(ref _connectedExtensionViewModel, value);
         }
     }
 
@@ -102,10 +83,30 @@ public class HardwareInterfaceModel : ObservableObject
         }
     }
 
-    private void SetExtension(IFpgaExtensionPackage? extensionPackage)
+    public void SetExtension(IFpgaExtensionPackage? extensionPackage)
     {
-        ConnectedPackage = extensionPackage;
+        if (extensionPackage != null)
+        {
+            Connection = new ExtensionModel(extensionPackage.LoadExtension(), this, FpgaModel);
+            ConnectionViewModel = extensionPackage.LoadExtensionViewModel(Connection);
+        }
+        else
+        {
+            Connection = null;
+            ConnectionViewModel = null;
+        }
 
+        Dispatcher.UIThread.Post(UpdateMenu);
+    }
+    
+    public void DropExtension(HardwareInterfaceModel lastOwner)
+    {
+        Connection = lastOwner.Connection;
+        ConnectionViewModel = lastOwner.ConnectionViewModel;
+        Connection!.Parent = this;
+        
+        lastOwner.SetExtension(null);
+        
         Dispatcher.UIThread.Post(UpdateMenu);
     }
 }

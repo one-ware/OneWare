@@ -6,7 +6,7 @@ namespace OneWare.IasCameraExtension.ViewModels;
 
 public class IasCameraExtensionViewModel : ExtensionViewModelBase
 {
-    public IasCameraExtensionViewModel(FpgaExtensionModel fpgaExtension) : base(fpgaExtension)
+    public IasCameraExtensionViewModel(ExtensionModel extension) : base(extension)
     {
     }
 }
