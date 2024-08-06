@@ -6,26 +6,10 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewModelBase
 {
-    private IHardwareModel? _parent;
-
-    public IHardwareModel? Parent
-    {
-        get => _parent;
-        set
-        {
-            SetProperty(ref _parent, value);
-
-            if (Bind != null && _parent != null)
-            {
-                if(_parent.InterfaceModels.TryGetValue(Bind, out var model))
-                    InterfaceModel = model;
-            }
-        }
-    }
-    
     public string? Bind { get; init; }
-    
+
     private HardwareInterfaceModel? _interfaceModel;
+
     public HardwareInterfaceModel? InterfaceModel
     {
         get => _interfaceModel;
@@ -33,19 +17,19 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
         {
             SetProperty(ref _interfaceModel, value);
             
-            if(_interfaceModel == null)
-                return;
+            if (_interfaceModel == null) return;
 
             foreach (var pin in _interfaceModel.Interface.Pins)
             {
                 PinViewModels.TryAdd(pin.Name, new FpgaGuiElementPinViewModel(0, 0, 0, 0)
                 {
                     Color = Brushes.Yellow,
-                    Bind = pin.BindPin
+                    Bind = pin.BindPin,
+                    Parent = Parent
                 });
-                PinViewModels[pin.Name].Parent = Parent;
+                PinViewModels[pin.Name].Initialize();
             }
-        }
+        } 
     }
 
     public Dictionary<string, FpgaGuiElementPinViewModel> PinViewModels { get; } = new();
@@ -56,10 +40,21 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
         {
             Color = FpgaGuiElementPinViewModel.BrushGnd
         };
-        
+
         PinViewModels["3V"] = new FpgaGuiElementPinViewModel(0, 0, 0, 0)
         {
             Color = FpgaGuiElementPinViewModel.Brush3V
         };
+    }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        if (Bind != null && Parent != null)
+        {
+            if (Parent.InterfaceModels.TryGetValue(Bind, out var model))
+                InterfaceModel = model;
+        }
     }
 }

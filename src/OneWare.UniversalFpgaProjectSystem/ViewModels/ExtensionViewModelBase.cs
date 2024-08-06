@@ -13,6 +13,11 @@ public abstract class ExtensionViewModelBase : ObservableObject, IDisposable
         ExtensionModel = extensionModel;
     }
 
+    public virtual void Initialize()
+    {
+        
+    }
+    
     public virtual void Dispose()
     {
         

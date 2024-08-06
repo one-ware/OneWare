@@ -114,8 +114,9 @@ public class HardwareInterfaceModel : ObservableObject
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
         Connection = lastOwner.Connection;
-        ConnectionViewModel = lastOwner.ConnectionViewModel;
         Connection!.ParentInterfaceModel = this;
+        ConnectionViewModel = lastOwner.ConnectionViewModel;
+        ConnectionViewModel?.Initialize();
 
         lastOwner.SetExtension(null);
 

@@ -16,24 +16,6 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
     private const int DefaultWidth = 10;
 
     private const int DefaultHeight = 10;
-    
-    private IHardwareModel? _parent;
-
-    public IHardwareModel? Parent
-    {
-        get => _parent;
-        set
-        {
-            SetProperty(ref _parent, value);
-
-            if (Bind != null && _parent != null)
-            {
-                if(_parent.PinModels.TryGetValue(Bind, out var model))
-                    PinModel = model;
-                else ContainerLocator.Container.Resolve<ILogger>().Error("Pin not found: " + Bind);
-            }
-        }
-    }
 
     public string? Bind { get; init; }
     
@@ -48,5 +30,15 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
     public FpgaGuiElementPinViewModel(int x, int y, int width, int height) : base(x, y,
         width == 0 ? DefaultWidth : width, height == 0 ? DefaultHeight : height)
     {
+    }
+
+    public override void Initialize()
+    {
+        if (Bind != null && Parent != null)
+        {
+            if(Parent.PinModels.TryGetValue(Bind, out var model))
+                PinModel = model;
+            else ContainerLocator.Container.Resolve<ILogger>().Error("Pin not found: " + Bind);
+        }
     }
 }

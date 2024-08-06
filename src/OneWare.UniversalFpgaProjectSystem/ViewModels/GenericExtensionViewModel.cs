@@ -57,6 +57,13 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
         IsLoading = false;
     }
 
+    public override void Initialize()
+    {
+        base.Initialize();
+        
+        GuiViewModel?.Initialize();
+    }
+
     public override void Dispose()
     {
         _fileWatcher?.Dispose();

@@ -15,7 +15,7 @@ public static class HardwareGuiCreator
 {
     public static async Task<HardwareGuiViewModel> CreateGuiAsync(string guiPath, IHardwareModel hardwareModel)
     {
-        var vm = new HardwareGuiViewModel(hardwareModel);
+        var vm = new HardwareGuiViewModel();
         
         try
         {
@@ -77,7 +77,7 @@ public static class HardwareGuiCreator
                                 break;
                         }
 
-                        vm.Elements.Add(new FpgaGuiElementImageViewModel(x, y, width, height)
+                        vm.AddElement(new FpgaGuiElementImageViewModel(x, y, width, height)
                         {
                             Rotation = rotation,
                             Image = image
@@ -87,7 +87,7 @@ public static class HardwareGuiCreator
                     }
                     case "ellipse":
                     {
-                        vm.Elements.Add(new FpgaGuiElementEllipseViewModel(x, y, width, height, color!)
+                        vm.AddElement(new FpgaGuiElementEllipseViewModel(x, y, width, height, color!)
                         {
                             Rotation = rotation,
                         });
@@ -95,7 +95,7 @@ public static class HardwareGuiCreator
                     }
                     case "rect":
                     {
-                        vm.Elements.Add(new FpgaGuiElementRectViewModel(x, y, width, height)
+                        vm.AddElement(new FpgaGuiElementRectViewModel(x, y, width, height)
                         {
                             Color = color,
                             Rotation = rotation,
@@ -110,7 +110,7 @@ public static class HardwareGuiCreator
                     }
                     case "pmod":
                     {
-                        vm.Elements.Add(new FpgaGuiElementPmodViewModel(x, y)
+                        vm.AddElement(new FpgaGuiElementPmodViewModel(x, y)
                         {
                             Rotation = rotation,
                             Bind = bind,
@@ -120,7 +120,7 @@ public static class HardwareGuiCreator
                     }
                     case "cruvils":
                     {
-                        vm.Elements.Add(new FpgaGuiElementCruviLsViewModel(x, y)
+                        vm.AddElement(new FpgaGuiElementCruviLsViewModel(x, y)
                         {
                             Rotation = rotation,
                             Bind = bind,
@@ -130,7 +130,7 @@ public static class HardwareGuiCreator
                     }
                     case "cruvihs":
                     {
-                        vm.Elements.Add(new FpgaGuiElementCruviHsViewModel(x, y)
+                        vm.AddElement(new FpgaGuiElementCruviHsViewModel(x, y)
                         {
                             Rotation = rotation,
                             Bind = bind,
@@ -142,7 +142,7 @@ public static class HardwareGuiCreator
                     {
                         color ??= Brushes.Yellow;
 
-                        vm.Elements.Add(new FpgaGuiElementPinViewModel(x, y, width, height)
+                        vm.AddElement(new FpgaGuiElementPinViewModel(x, y, width, height)
                         {
                             Color = color,
                             Rotation = rotation,
@@ -168,7 +168,7 @@ public static class HardwareGuiCreator
                             ? fontSizeProperty.GetInt32()
                             : 12;
 
-                        vm.Elements.Add(new FpgaGuiElementTextViewModel(x, y, text!)
+                        vm.AddElement(new FpgaGuiElementTextViewModel(x, y, text!)
                         {
                             Rotation = rotation,
                             Color = color,
@@ -179,12 +179,14 @@ public static class HardwareGuiCreator
                     }
                 }
             }
+            
+            vm.Initialize();
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
-
+        
         return vm;
     }
 }
