@@ -36,7 +36,7 @@
             <Button Height="{Binding GuiViewModel.Height, FallbackValue=0}"
                     Width="{Binding GuiViewModel.Width, FallbackValue=0}"
                     Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}" ClipToBounds="False"
-                    Command="{Binding ExtensionModel.Parent.FpgaModel.ToggleSelectExtension}"
+                    Command="{Binding $parent[views:GenericFpgaView].((viewModels:GenericFpgaViewModel)DataContext).FpgaModel.ToggleSelectExtension, FallbackValue={x:Null}}"
                     CommandParameter="{Binding ExtensionModel}">
                 <Button.Styles>
                     <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">

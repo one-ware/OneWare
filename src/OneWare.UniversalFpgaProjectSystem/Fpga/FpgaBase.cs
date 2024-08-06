@@ -76,13 +76,11 @@ public abstract class FpgaBase : IFpga
 
                         var name = pin["Name"]?.ToString();
                         var pinName = pin["Pin"]?.ToString();
-
-                        var pinObj = Pins.FirstOrDefault(x => x.Name == pinName);
-
+                        
                         if (name == null) throw new Exception($"interface name not defined");
-                        if (pinObj == null) throw new Exception($"{pinName} not found in interface {name}");
+                        if (pinName == null) throw new Exception($"pinname not found in interface {name}");
 
-                        newInterface.Pins.Add(new HardwareInterfacePin(name, pinObj));
+                        newInterface.Pins.Add(new HardwareInterfacePin(name, pinName));
                     }
 
                     Interfaces.Add(newInterface);

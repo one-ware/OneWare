@@ -161,7 +161,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     
     public void DisconnectExtension(ExtensionModel model)
     {
-        model.Parent.SetExtension(null);
+        model.ParentInterfaceModel!.SetExtension(null);
         DisconnectCommand.NotifyCanExecuteChanged();
     }
 
@@ -212,7 +212,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     private void AddInterface(HardwareInterface fpgaInterface)
     {
-        var model = new HardwareInterfaceModel(fpgaInterface, this, this);
+        var model = new HardwareInterfaceModel(fpgaInterface, this);
         InterfaceModels.Add(fpgaInterface.Name, model);
     }
 

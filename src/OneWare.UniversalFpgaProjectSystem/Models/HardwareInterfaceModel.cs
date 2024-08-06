@@ -16,23 +16,19 @@ public class HardwareInterfaceModel : ObservableObject
 
     private ExtensionViewModelBase? _connectedExtensionViewModel;
     
-    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent, FpgaModel fpgaModel)
+    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel parent)
     {
         Interface = fpgaInterface;
-        FpgaModel = fpgaModel;
+        Parent = parent;
 
-        foreach (var pin in fpgaInterface.Pins)
-        {
-            PinModels.Add(pin.Name, parent.PinModels[pin.HardwarePin.Name]);
-        }
-
+        TranslatePins();
         UpdateMenu();
     }
     
-    public FpgaModel FpgaModel { get; }
-
-    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
+    public IHardwareModel Parent { get; }
     
+    public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
+
     public HardwareInterface Interface { get; }
 
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
@@ -53,6 +49,19 @@ public class HardwareInterfaceModel : ObservableObject
         }
     }
 
+    public void TranslatePins()
+    {
+        foreach (var pin in Interface.Pins)
+        {
+            TranslatedPins[pin.Name] = Parent.PinModels[pin.BindPin!];
+        }
+                
+        if (Connection != null)
+        {
+            Connection.ParentInterfaceModel = this;
+        }
+    }
+    
     private void UpdateMenu()
     {
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
@@ -87,7 +96,10 @@ public class HardwareInterfaceModel : ObservableObject
     {
         if (extensionPackage != null)
         {
-            Connection = new ExtensionModel(extensionPackage.LoadExtension(), this, FpgaModel);
+            Connection = new ExtensionModel(extensionPackage.LoadExtension())
+            {
+                ParentInterfaceModel = this
+            };
             ConnectionViewModel = extensionPackage.LoadExtensionViewModel(Connection);
         }
         else
@@ -98,15 +110,15 @@ public class HardwareInterfaceModel : ObservableObject
 
         Dispatcher.UIThread.Post(UpdateMenu);
     }
-    
+
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
         Connection = lastOwner.Connection;
         ConnectionViewModel = lastOwner.ConnectionViewModel;
-        Connection!.Parent = this;
-        
+        Connection!.ParentInterfaceModel = this;
+
         lastOwner.SetExtension(null);
-        
+
         Dispatcher.UIThread.Post(UpdateMenu);
     }
 }

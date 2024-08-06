@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Xaml.Interactions.DragAndDrop;
-using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.Behaviors;
@@ -11,12 +10,12 @@ public class ExtensionDropHandler : DropHandlerBase
     private static bool HandleDrop(Control control, DragEventArgs e, ExtensionModel sourceContext, HardwareInterfaceModel targetContext,
         bool bExecute)
     {
-        if(sourceContext.FpgaExtension.Connector != targetContext.Interface.Connector)
+        if(sourceContext.FpgaExtension.Connector != targetContext.Interface.Connector || sourceContext.ParentInterfaceModel == null)
             return false;
         
         if (bExecute)
         {
-            targetContext.DropExtension(sourceContext.Parent);
+            targetContext.DropExtension(sourceContext.ParentInterfaceModel);
         }
         
         return true;

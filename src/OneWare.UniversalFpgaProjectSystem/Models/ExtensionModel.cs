@@ -7,30 +7,14 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class ExtensionModel : ObservableObject, IHardwareModel
 {
-    private HardwareInterfaceModel _parent;
+    private HardwareInterfaceModel? _parentInterfaceModel;
 
     private bool _isSelected;
     
-    public ExtensionModel(IFpgaExtension fpgaExtension, HardwareInterfaceModel parent, FpgaModel fpgaModel)
+    public ExtensionModel(IFpgaExtension fpgaExtension)
     {
         FpgaExtension = fpgaExtension;
-        _parent = parent;
-
-        try
-        {
-            foreach (var pin in fpgaExtension.Pins) 
-                PinModels.Add(pin.Name, parent.PinModels[pin.InterfacePin!]);
-        
-            foreach (var fpgaInterface in fpgaExtension.Interfaces) 
-                InterfaceModels.Add(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this, fpgaModel));
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
     }
-    
-    public FpgaModel FpgaModel => _parent.FpgaModel;
 
     public bool IsSelected
     {
@@ -44,9 +28,32 @@ public class ExtensionModel : ObservableObject, IHardwareModel
     
     public IFpgaExtension FpgaExtension { get; }
 
-    public HardwareInterfaceModel Parent
+    public HardwareInterfaceModel? ParentInterfaceModel
     {
-        get => _parent;
-        set => SetProperty(ref _parent, value);
+        get => _parentInterfaceModel;
+        set
+        {
+            SetProperty(ref _parentInterfaceModel, value);
+
+            try
+            {
+                if (_parentInterfaceModel != null)
+                {
+                    foreach (var pin in FpgaExtension.Pins)
+                    {
+                        PinModels[pin.Name] = _parentInterfaceModel.TranslatedPins[pin.InterfacePin!];
+                    }
+                    foreach (var fpgaInterface in FpgaExtension.Interfaces)
+                    {
+                        InterfaceModels.TryAdd(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this));
+                        InterfaceModels[fpgaInterface.Name].TranslatePins();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            }
+        }
     }
 }

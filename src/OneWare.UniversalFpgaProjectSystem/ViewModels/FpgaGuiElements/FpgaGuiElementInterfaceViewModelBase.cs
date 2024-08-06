@@ -36,14 +36,14 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
             if(_interfaceModel == null)
                 return;
 
-            foreach (var (key, model) in _interfaceModel.PinModels)
+            foreach (var pin in _interfaceModel.Interface.Pins)
             {
-                PinViewModels.TryAdd(key, new FpgaGuiElementPinViewModel(0, 0, 0, 0)
+                PinViewModels.TryAdd(pin.Name, new FpgaGuiElementPinViewModel(0, 0, 0, 0)
                 {
                     Color = Brushes.Yellow,
-                    Bind = model.Pin.Name
+                    Bind = pin.BindPin
                 });
-                PinViewModels[key].Parent = Parent;
+                PinViewModels[pin.Name].Parent = Parent;
             }
         }
     }

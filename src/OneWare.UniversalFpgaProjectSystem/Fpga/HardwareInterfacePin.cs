@@ -2,13 +2,13 @@
 
 public class HardwareInterfacePin
 {
-    public HardwareInterfacePin(string name, HardwarePin pin)
+    public HardwareInterfacePin(string name, string bindPin)
     {
         Name = name;
-        HardwarePin = pin;
+        BindPin = bindPin;
     }
 
     public string Name { get; }
 
-    public HardwarePin HardwarePin { get; }
+    public string BindPin { get; }
 }
