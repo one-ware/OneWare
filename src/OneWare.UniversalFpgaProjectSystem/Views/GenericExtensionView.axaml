@@ -13,20 +13,28 @@
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericExtensionView"
              ClipToBounds="False"
              x:DataType="viewModels:GenericExtensionViewModel">
-    <Panel Classes="HideExtensions">
+    <Panel Name="ExtensionView">
 
+        <Interaction.Behaviors>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+                <AddClassAction ClassName="HideExtension" />
+            </DataTriggerBehavior>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+                <RemoveClassAction ClassName="HideExtension" />
+            </DataTriggerBehavior>
+        </Interaction.Behaviors>
+        
         <Panel.Styles>
-            <Style Selector="Panel.HideExtensions">
-                <Setter Property="Opacity"
-                        Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, 
-                Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}}" />
-                <Setter Property="IsHitTestVisible"
-                        Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions}" />
+            <Style Selector="Panel#ExtensionView">
                 <Setter Property="Transitions">
                     <Transitions>
                         <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
                     </Transitions>
                 </Setter>
+            </Style>
+            <Style Selector="Panel#ExtensionView.HideExtension">
+                <Setter Property="Opacity" Value="0.1" />
+                <Setter Property="IsHitTestVisible" Value="False"/>
             </Style>
         </Panel.Styles>
 

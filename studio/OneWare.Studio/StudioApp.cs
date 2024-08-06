@@ -6,7 +6,6 @@ using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
 using OneWare.Cyc5000;
 using OneWare.Essentials.Services;
-using OneWare.IasCameraExtension;
 using OneWare.IceBreaker;
 using OneWare.Max10;
 using OneWare.Max1000;

@@ -37,7 +37,8 @@
                 </StackPanel>
             </StackPanel>
             <Menu Grid.Row="1" Classes="BindMenu">
-                <MenuItem Padding="0" BorderThickness="0"
+                <MenuItem Padding="0"
+                          Classes="RootMenuItem" 
                           ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                     <MenuItem.Header>
                         <Panel DragDrop.AllowDrop="True">
@@ -51,6 +52,15 @@
                                        VerticalAlignment="Center" TextAlignment="Center" />
                         </Panel>
                     </MenuItem.Header>
+                    <MenuItem.Styles>
+                        <Style Selector="MenuItem.RootMenuItem /template/ Border#root">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                        <Style Selector="MenuItem.RootMenuItem:pointerover /template/ Border#root">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+                    </MenuItem.Styles>
                 </MenuItem>
             </Menu>
         </Grid>

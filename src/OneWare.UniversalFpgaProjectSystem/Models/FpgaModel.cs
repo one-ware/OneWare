@@ -161,7 +161,10 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     
     public void DisconnectExtension(ExtensionModel model)
     {
+        if(SelectedExtensionModel == model) SelectedExtensionModel = null;
+        
         model.ParentInterfaceModel!.SetExtension(null);
+        
         DisconnectCommand.NotifyCanExecuteChanged();
     }
 

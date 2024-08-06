@@ -421,35 +421,35 @@
       "Connector": "PMOD",
       "Pins": [
         {
-          "Name": "PIO1",
+          "Name": "1",
           "Pin": "M3"
         },
         {
-          "Name": "PIO2",
+          "Name": "2",
           "Pin": "L3"
         },
         {
-          "Name": "PIO3",
+          "Name": "3",
           "Pin": "M2"
         },
         {
-          "Name": "PIO4",
+          "Name": "4",
           "Pin": "M1"
         },
         {
-          "Name": "PIO5",
+          "Name": "5",
           "Pin": "N3"
         },
         {
-          "Name": "PIO6",
+          "Name": "6",
           "Pin": "N2"
         },
         {
-          "Name": "PIO7",
+          "Name": "7",
           "Pin": "K2"
         },
         {
-          "Name": "PIO8",
+          "Name": "8",
           "Pin": "K1"
         }
       ]
