@@ -444,7 +444,7 @@
     },
     {
       "Description": "SDRAM Address",
-      "Name": "R16,"
+      "Name": "R16"
     },
     {
       "Description": "SDRAM Bank Select",

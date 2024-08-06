@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -65,14 +66,21 @@ public class HardwareInterfaceModel : ObservableObject
 
     public void TranslatePins()
     {
-        foreach (var pin in Interface.Pins)
+        try
         {
-            TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
+            foreach (var pin in Interface.Pins)
+            {
+                TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
+            }
+
+            if (ConnectedExtension != null)
+            {
+                ConnectedExtension.ParentInterfaceModel = this;
+            }
         }
-                
-        if (ConnectedExtension != null)
+        catch (Exception e)
         {
-            ConnectedExtension.ParentInterfaceModel = this;
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
     

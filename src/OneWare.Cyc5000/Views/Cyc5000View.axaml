@@ -16,7 +16,7 @@
             <Grid>
 
                 <Menu Classes="BindMenu VertLeft" DragDrop.AllowDrop="True" Foreground="White"
-                      DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1]}" Margin="-13, 0, 0, 0"
+                      DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1]}" Margin="-13, 0, 0, 0"
                       VerticalAlignment="Center" HorizontalAlignment="Left">
 
                     <MenuItem Padding="0" Cursor="Hand"
@@ -227,10 +227,10 @@
         <TextBlock Grid.Column="2" Text="Config LED" VerticalAlignment="Center" Margin="3, 0, 0, 61" />
 
         <Border Grid.Column="0" ZIndex="10"
-                IsVisible="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
+                IsVisible="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="244" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Center"
                 HorizontalAlignment="Left" Margin="0, 0, -70, 0">
-            <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].ConnectedExtension}"
+            <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1].ConnectedExtension}"
                               Content="{Binding}" Foreground="White" />
         </Border>
     </Grid>
