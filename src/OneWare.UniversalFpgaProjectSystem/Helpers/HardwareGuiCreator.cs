@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Avalonia;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -63,10 +64,11 @@ public static class HardwareGuiCreator
                         ? ColorShortcuts[colorProperty.GetString()!]
                         : new BrushConverter().ConvertFromString(colorProperty.GetString() ?? string.Empty) as IBrush)
                     : null;
-                
+
                 var foreground = element.TryGetProperty("textColor", out var textColorProperty)
-                    ? new BrushConverter().ConvertFromString(textColorProperty.GetString() ?? string.Empty) as IBrush : null;
-                
+                    ? new BrushConverter().ConvertFromString(textColorProperty.GetString() ?? string.Empty) as IBrush
+                    : null;
+
                 var bind = element.TryGetProperty("bind", out var bindProperty)
                     ? bindProperty.GetString()
                     : null;
@@ -123,12 +125,14 @@ public static class HardwareGuiCreator
                             fontWeight = FontWeight.Normal;
                         }
 
-                        var text = element.TryGetProperty("text", out var textProperty) ? textProperty.GetString() : null;
+                        var text = element.TryGetProperty("text", out var textProperty)
+                            ? textProperty.GetString()
+                            : null;
 
                         var fontSize = element.TryGetProperty("fontSize", out var fontSizeProperty)
                             ? fontSizeProperty.GetInt32()
                             : 12;
-                        
+
                         vm.AddElement(new FpgaGuiElementRectViewModel(x, y, width, height)
                         {
                             Color = color,
@@ -156,6 +160,7 @@ public static class HardwareGuiCreator
                         });
                         break;
                     }
+                    case "cruvils":
                     case "cruvi_ls":
                     {
                         vm.AddElement(new FpgaGuiElementCruviLsViewModel(x, y)
@@ -166,6 +171,7 @@ public static class HardwareGuiCreator
                         });
                         break;
                     }
+                    case "cruvihs":
                     case "cruvi_hs":
                     {
                         vm.AddElement(new FpgaGuiElementCruviHsViewModel(x, y)
@@ -173,6 +179,62 @@ public static class HardwareGuiCreator
                             Rotation = rotation,
                             Bind = bind,
                             Parent = hardwareModel
+                        });
+                        break;
+                    }
+                    case "pinarray":
+                    {
+                        color ??= Brushes.YellowGreen;
+                        
+                        var pinWidth = element.TryGetProperty("pinWidth", out var pinWidthProperty)
+                            ? pinWidthProperty.GetInt32()
+                            : 10;
+                        var pinHeight = element.TryGetProperty("pinHeight", out var pinHeightProperty)
+                            ? pinHeightProperty.GetInt32()
+                            : 10;
+                        
+                        var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) &&
+                                        flipLabelProperty.GetBoolean();
+                        
+                        var isHorizontal = element.TryGetProperty("horizontal", out var horizontalProperty) &&
+                                           horizontalProperty.GetBoolean();
+                        
+                        var list = new List<FpgaGuiElementPinViewModel>();
+                        
+                        foreach (var pin in element.GetProperty("pins").EnumerateArray())
+                        {
+                            var bindPin = pin.TryGetProperty("bind", out var bindPinProperty)
+                                ? bindPinProperty.GetString()
+                                : null;
+                            
+                            var labelPin = pin.TryGetProperty("label", out var labelPinProperty)
+                                ? labelPinProperty.GetString()
+                                : null;
+                            
+                            var colorPin = pin.TryGetProperty("color", out var colorPinProperty)
+                                ? (ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
+                                    ? ColorShortcuts[colorPinProperty.GetString()!]
+                                    : new BrushConverter().ConvertFromString(colorPinProperty.GetString() ?? string.Empty) as IBrush)
+                                : null;
+                            
+                            list.Add(new FpgaGuiElementPinViewModel(0, 0, isHorizontal ? pinHeight : pinWidth, isHorizontal ? pinWidth : pinHeight)
+                            {
+                                Color = colorPin ?? color,
+                                Bind = bindPin,
+                                Text = labelPin,
+                                FlipLabel = flipLabel,
+                                Parent = hardwareModel,
+                                Foreground = foreground,
+                                Rotation = isHorizontal ? 90 : 0
+                            });
+                        }
+                        
+                        vm.AddElement(new FpgaGuiElementPinArrayViewModel(x, y)
+                        {
+                            Parent = hardwareModel,
+                            Pins = list.ToArray(),
+                            Rotation = rotation,
+                            Orientation = isHorizontal ? Orientation.Horizontal : Orientation.Vertical
                         });
                         break;
                     }

@@ -7,18 +7,15 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView" ClipToBounds="False"
-             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding Height}" Width="{Binding Width}">
+             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding ControlHeight}" Width="{Binding ControlWidth}">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
-        <TextBlock Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+        <TextBlock IsVisible="{Binding !FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
                 <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>
-            <TextBlock.RenderTransform>
-                <RotateTransform Angle="{Binding FlipLabelAngle}" />
-            </TextBlock.RenderTransform>
         </TextBlock>
         <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
                 Command="{Binding PinModel.FpgaModel.SelectPin, FallbackValue={x:Null}}"
@@ -64,6 +61,11 @@
                 </DataTriggerBehavior>
             </Interaction.Behaviors>
         </Button>
+        <TextBlock IsVisible="{Binding FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="FlippedLabel" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+            <Interaction.Behaviors>
+                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+            </Interaction.Behaviors>
+        </TextBlock>
     </StackPanel>
 
 </UserControl>

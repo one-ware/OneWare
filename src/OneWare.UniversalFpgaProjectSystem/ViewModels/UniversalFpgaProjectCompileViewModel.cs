@@ -181,6 +181,8 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         {
             SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == oldSelectedFpgaPackageName);
         }
+
+        IsDirty = false;
     }
 
     public override void Close(FlexibleWindow window)

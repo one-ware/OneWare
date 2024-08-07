@@ -14,10 +14,12 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
     public string? Bind { get; init; }
 
     public bool FlipLabel { get; init; }
-    
-    public int FlipLabelAngle => FlipLabel ? 180 : 0;
-    
 
+    public int ControlHeight => Math.Abs((int)Rotation) == 90 ? Width : Height;
+    
+    public int ControlWidth =>Math.Abs((int)Rotation) == 90 ? Height : Width;
+
+    
     private HardwarePinModel? _pinModel;
 
     public HardwarePinModel? PinModel
@@ -33,6 +35,8 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
 
     public override void Initialize()
     {
+        base.Initialize();
+        
         if (Bind != null && Parent != null)
         {
             if(Parent.PinModels.TryGetValue(Bind, out var model))

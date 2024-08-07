@@ -47,7 +47,8 @@
                             </ComboBox.ItemTemplate>
                         </controls:SearchComboBox>
 
-                        <Button Command="{Binding RefreshFpgasButtonAsync}" ToolTip.Tip="Reload FPGAs">
+                        <Button Command="{Binding RefreshFpgasButtonAsync}"
+                                CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}" ToolTip.Tip="Reload FPGAs">
                             <Image Source="{DynamicResource Modern.Refresh}" Height="16" Width="16" />
                         </Button>
 

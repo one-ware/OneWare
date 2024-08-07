@@ -21,11 +21,12 @@
     },
     {
       "type": "rect",
-      "x": 19,
+      "x": 0,
       "y": 60,
-      "width": 50,
+      "width": 88,
       "height": 50,
-      "text": "PMOD TO CRUVI"
+      "textColor": "white",
+      "text": "CRUVI_LS\n↑\nPMOD"
     }
   ]
 }
