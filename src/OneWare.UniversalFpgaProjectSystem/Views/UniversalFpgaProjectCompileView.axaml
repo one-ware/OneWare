@@ -7,6 +7,7 @@
                          xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
                          xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+                         xmlns:converters1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          PrefHeight="750" PrefWidth="900" Padding="4"
                          WindowBackground="{DynamicResource ThemeBackgroundBrush}"
@@ -50,7 +51,7 @@
                             <Image Source="{DynamicResource Modern.Refresh}" Height="16" Width="16" />
                         </Button>
 
-                        <Button Command="{Binding #ZoomBorder.ResetMatrix}"
+                        <Button Command="{Binding #ZoomBorder.AutoFit}"
                                 IsEnabled="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 ToolTip.Tip="Reset View">
                             <Image Source="{DynamicResource FluentIconsFilled.FullScreenZoomFilled}" Height="16"
@@ -73,19 +74,25 @@
                     </StackPanel>
                 </DockPanel>
 
-                <Grid Grid.Row="1" RowDefinitions="Auto, Auto, *">
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="{Binding SelectedFpgaViewModel, Converter={x:Static converters1:UniversalFpgaProjectSystemConverters.ObjectNotNullToStarGridLengthConverter}, ConverterParameter={x:Static GridLength.Auto}}"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
                     <Border Margin="0 10 0 0"
                             IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Background="{DynamicResource CheckerBoardBrush16}" BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
                         <controls:CustomZoomBorder Name="ZoomBorder" ClipToBounds="True" PanButton="Right">
-                            <ContentControl ClipToBounds="False" Content="{Binding SelectedFpgaViewModel}" />
+                            <ContentControl Name="ZoomContentControl" ClipToBounds="False" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                            Content="{Binding SelectedFpgaViewModel}" />
                         </controls:CustomZoomBorder>
                     </Border>
-
-                    <GridSplitter IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Height="5" Background="Transparent" />
-
+                    
+                    <GridSplitter IsEnabled="False" IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Background="Transparent" /> 
+                    
                     <Grid Margin="0 5 0 0" Grid.Row="2" ColumnDefinitions="*, 90, *" RowDefinitions="20, *"
                           DockPanel.Dock="Top" DataContext="{Binding SelectedFpgaModel}">
 

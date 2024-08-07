@@ -1,10 +1,4 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using Avalonia;
-using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.ReactiveUI;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Essentials.Controls;
 
@@ -31,5 +25,13 @@ public partial class UniversalFpgaProjectCompileView : FlexibleWindow
                 VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
             }
         };
+
+        ZoomContentControl.WhenValueChanged(x => x.Content).Subscribe(x =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                //ZoomBorder.Fill();
+            });
+        });
     }
 }

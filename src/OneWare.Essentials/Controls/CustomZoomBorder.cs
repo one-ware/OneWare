@@ -68,4 +68,9 @@ public class CustomZoomBorder : ZoomBorder
         _keysDown.Clear();
         base.OnLostFocus(e);
     }
+
+    public void AutoFit()
+    {
+        AutoFit(false);
+    }
 }

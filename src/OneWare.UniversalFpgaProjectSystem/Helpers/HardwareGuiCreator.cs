@@ -141,13 +141,21 @@ public static class HardwareGuiCreator
                     }
                     case "pin":
                     {
-                        color ??= Brushes.Yellow;
+                        color ??= Brushes.YellowGreen;
+                        
+                        var label = element.TryGetProperty("label", out var labelProperty)
+                            ? labelProperty.GetString()
+                            : null;
+                        
+                        var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) && flipLabelProperty.GetBoolean();
 
                         vm.AddElement(new FpgaGuiElementPinViewModel(x, y, width, height)
                         {
                             Color = color,
                             Rotation = rotation,
                             Bind = bind,
+                            Label = label,
+                            FlipLabel = flipLabel,
                             Parent = hardwareModel
                         });
                         break;

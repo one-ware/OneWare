@@ -19,6 +19,13 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
 
     public string? Bind { get; init; }
     
+    public string? Label { get; init; }
+
+    public bool FlipLabel { get; init; }
+    
+    public int FlipLabelAngle => FlipLabel ? 180 : 0;
+    
+
     private HardwarePinModel? _pinModel;
 
     public HardwarePinModel? PinModel
