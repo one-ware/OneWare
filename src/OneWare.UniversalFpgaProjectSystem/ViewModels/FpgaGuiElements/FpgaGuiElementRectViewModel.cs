@@ -3,9 +3,8 @@ using Avalonia.Media;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
-public class FpgaGuiElementRectViewModel : FpgaGuiElementViewModelBase
+public class FpgaGuiElementRectViewModel : FpgaGuiElementTextViewModel
 {
-    
     public int Width { get; }
     
     public int Height { get; }

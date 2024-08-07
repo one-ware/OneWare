@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementTextView"
@@ -12,11 +11,11 @@
         <RotateTransform Angle="{Binding Rotation}"/>
     </UserControl.RenderTransform>
     <TextBlock Name="TextBlock" Text="{Binding Text}"
-               Foreground="{Binding Color}"
+               Foreground="{Binding Foreground}"
                FontSize="{Binding FontSize}"
                FontWeight="{Binding FontWeight}">
         <Interaction.Behaviors>
-            <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Color}"
+            <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}"
                                                              AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
         </Interaction.Behaviors>
     </TextBlock>

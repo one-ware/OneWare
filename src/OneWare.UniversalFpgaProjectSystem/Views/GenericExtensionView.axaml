@@ -45,7 +45,8 @@
                     Width="{Binding GuiViewModel.Width, FallbackValue=0}"
                     Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}" ClipToBounds="False"
                     Command="{Binding $parent[views:GenericFpgaView].((viewModels:GenericFpgaViewModel)DataContext).FpgaModel.ToggleSelectExtension, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding ExtensionModel}">
+                    CommandParameter="{Binding ExtensionModel}"
+                    Background="Transparent">
                 <Button.Styles>
                     <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />

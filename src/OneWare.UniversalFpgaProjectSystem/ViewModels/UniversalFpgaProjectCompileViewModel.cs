@@ -58,7 +58,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
             }
         }
 
-        RefreshFpgas();
+        RefreshHardware();
 
         SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == project.GetProjectProperty("Fpga")) ??
                               FpgaPackages.FirstOrDefault();
@@ -136,7 +136,30 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _hideExtensions, value);
     }
 
-    public void RefreshFpgas()
+    public async Task RefreshFpgasButtonAsync(FlexibleWindow window)
+    {
+        if (IsDirty)
+        {
+            var result = await _windowService.ShowYesNoCancelAsync("Warning", "Do you want to save changes?",
+                MessageBoxIcon.Warning, window.Host);
+
+            switch (result)
+            {
+                case MessageBoxStatus.Yes:
+                    Save();
+                    break;
+                case MessageBoxStatus.No:
+                    IsDirty = false;
+                    break;
+                case MessageBoxStatus.Canceled:
+                    return;
+            }
+        }
+
+        RefreshHardware();
+    }
+
+    private void RefreshHardware()
     {
         var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
 

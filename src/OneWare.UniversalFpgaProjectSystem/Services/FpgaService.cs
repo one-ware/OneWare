@@ -50,6 +50,11 @@ public class FpgaService
 
     public void RegisterFpgaExtensionPackage(IFpgaExtensionPackage fpgaExtension)
     {
+        var existing = FpgaExtensionPackages.FirstOrDefault(x => x.Name == fpgaExtension.Name);
+
+        //Allow overwrite from folder
+        if (existing != null) FpgaExtensionPackages.Remove(existing);
+        
         FpgaExtensionPackages.InsertSorted(fpgaExtension, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 

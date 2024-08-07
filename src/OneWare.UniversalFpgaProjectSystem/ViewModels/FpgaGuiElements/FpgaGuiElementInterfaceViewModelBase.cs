@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Media;
+using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
@@ -40,12 +41,12 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
     {
         PinViewModels["GND"] = new FpgaGuiElementPinViewModel(0, 0, 0, 0)
         {
-            Color = FpgaGuiElementPinViewModel.BrushGnd
+            Color = HardwareGuiCreator.ColorShortcuts["GND"]
         };
 
-        PinViewModels["3V"] = new FpgaGuiElementPinViewModel(0, 0, 0, 0)
+        PinViewModels["3V3"] = new FpgaGuiElementPinViewModel(0, 0, 0, 0)
         {
-            Color = FpgaGuiElementPinViewModel.Brush3V
+            Color = HardwareGuiCreator.ColorShortcuts["3V3"]
         };
     }
 

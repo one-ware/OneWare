@@ -9,7 +9,8 @@
       "y": 20,
       "width": 88,
       "height": 132,
-      "color": "#206000",
+      "color": "#096845",
+      "cornerRadius": "3",
       "boxShadow": "0 0 5 5 #77000000"
     },
     {
@@ -19,22 +20,12 @@
       "bind": "PMOD_1"
     },
     {
-      "type": "text",
-      "x": 25,
-      "y": 75,
-      "text": "CRUVI"
-    },
-    {
-      "type": "text",
-      "x": 36,
-      "y": 95,
-      "text": "to"
-    },
-    {
-      "type": "text",
-      "x": 25,
-      "y": 115,
-      "text": "PMOD"
+      "type": "rect",
+      "x": 19,
+      "y": 80,
+      "width": 50,
+      "height": 50,
+      "text": "CRUVI TO PMOD"
     }
   ]
 }

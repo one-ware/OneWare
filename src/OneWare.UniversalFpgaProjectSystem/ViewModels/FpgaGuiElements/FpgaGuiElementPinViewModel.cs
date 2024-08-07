@@ -7,19 +7,11 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
 {
-    public static IBrush Brush3V = Brushes.LightCoral;
-    
-    public static IBrush Brush5V = Brushes.Red;
-    
-    public static IBrush BrushGnd = Brushes.Cyan;
-    
     private const int DefaultWidth = 10;
 
     private const int DefaultHeight = 10;
 
     public string? Bind { get; init; }
-    
-    public string? Label { get; init; }
 
     public bool FlipLabel { get; init; }
     

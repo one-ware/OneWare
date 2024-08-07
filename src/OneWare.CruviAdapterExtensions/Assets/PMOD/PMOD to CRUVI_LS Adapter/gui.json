@@ -9,7 +9,8 @@
       "y": 0,
       "width": 88,
       "height": 132,
-      "color": "#206000",
+      "color": "#096845",
+      "cornerRadius": "3",
       "boxShadow": "0 0 5 5 #77000000"
     },
     {
@@ -19,22 +20,12 @@
       "bind": "CRUVI_LS_1"
     },
     {
-      "type": "text",
-      "x": 25,
-      "y": 55,
-      "text": "PMOD"
-    },
-    {
-      "type": "text",
-      "x": 36,
-      "y": 75,
-      "text": "to"
-    },
-    {
-      "type": "text",
-      "x": 25,
-      "y": 95,
-      "text": "CRUVI"
+      "type": "rect",
+      "x": 19,
+      "y": 60,
+      "width": 50,
+      "height": 50,
+      "text": "PMOD TO CRUVI"
     }
   ]
 }

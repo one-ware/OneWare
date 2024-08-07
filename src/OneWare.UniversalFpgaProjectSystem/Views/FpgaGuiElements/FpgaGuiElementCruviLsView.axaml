@@ -28,7 +28,7 @@
                         </Interaction.Behaviors>
                         
                         <Rectangle Fill="#202020" Height="20" Width="50"/>
-                        <TextBlock Text="CRUVI LS" Foreground="White" FontSize="10" VerticalAlignment="Center"
+                        <TextBlock Text="CRUVI LS" Foreground="White" FontSize="9" VerticalAlignment="Center"
                                    TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>
                     </Panel>
                 </MenuItem.Header>

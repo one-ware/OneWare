@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:converters="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView" ClipToBounds="False"
              x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding Height}" Width="{Binding Width}">
@@ -11,7 +12,10 @@
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
-        <TextBlock Padding="3 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Label}">
+        <TextBlock Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+            <Interaction.Behaviors>
+                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+            </Interaction.Behaviors>
             <TextBlock.RenderTransform>
                 <RotateTransform Angle="{Binding FlipLabelAngle}" />
             </TextBlock.RenderTransform>

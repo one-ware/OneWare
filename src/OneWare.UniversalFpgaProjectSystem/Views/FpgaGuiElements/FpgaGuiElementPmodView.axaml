@@ -25,7 +25,7 @@
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[7]}"/>
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[8]}"/>
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[GND]}"/>
-                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V3]}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[1]}"/>
@@ -33,7 +33,7 @@
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3]}"/>
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[4]}"/>
                     <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[GND]}"/>
-                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V]}"/>
+                    <fpgaGuiElements1:FpgaGuiElementPinView DataContext="{Binding PinViewModels[3V3]}"/>
                 </StackPanel>
             </StackPanel>
             <Menu Grid.Row="0" Classes="BindMenu">

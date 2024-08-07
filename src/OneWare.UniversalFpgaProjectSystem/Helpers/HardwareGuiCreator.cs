@@ -14,19 +14,31 @@ namespace OneWare.UniversalFpgaProjectSystem.Helpers;
 
 public static class HardwareGuiCreator
 {
+    public static readonly Dictionary<string, IBrush> ColorShortcuts = new()
+    {
+        { "GND", Brushes.Cyan },
+        { "1V2", Brushes.Yellow },
+        { "3V3", Brushes.LightCoral },
+        { "5V", Brushes.Red },
+        { "TX", Brushes.Blue },
+        { "RX", Brushes.DarkRed },
+    };
+
     public static async Task<HardwareGuiViewModel> CreateGuiAsync(string guiPath, IHardwareModel hardwareModel)
     {
         var vm = new HardwareGuiViewModel();
-        
+
         try
         {
-            await using var stream = guiPath.StartsWith("avares://") ? AssetLoader.Open(new Uri(guiPath)) : File.OpenRead(guiPath);
+            await using var stream = guiPath.StartsWith("avares://")
+                ? AssetLoader.Open(new Uri(guiPath))
+                : File.OpenRead(guiPath);
             using var document = await JsonDocument.ParseAsync(stream);
             var gui = document.RootElement;
 
             vm.Width = gui.GetProperty("width").GetInt32();
             vm.Height = gui.GetProperty("height").GetInt32();
-            
+
             if (gui.TryGetProperty("offset", out var marginProperty))
             {
                 var margin = marginProperty.GetString();
@@ -47,8 +59,14 @@ public static class HardwareGuiCreator
                     ? rotationProperty.GetDouble()
                     : 0;
                 var color = element.TryGetProperty("color", out var colorProperty)
-                    ? new BrushConverter().ConvertFromString(colorProperty.GetString() ?? string.Empty) as IBrush
+                    ? (ColorShortcuts.ContainsKey(colorProperty.GetString() ?? "")
+                        ? ColorShortcuts[colorProperty.GetString()!]
+                        : new BrushConverter().ConvertFromString(colorProperty.GetString() ?? string.Empty) as IBrush)
                     : null;
+                
+                var foreground = element.TryGetProperty("textColor", out var textColorProperty)
+                    ? new BrushConverter().ConvertFromString(textColorProperty.GetString() ?? string.Empty) as IBrush : null;
+                
                 var bind = element.TryGetProperty("bind", out var bindProperty)
                     ? bindProperty.GetString()
                     : null;
@@ -96,6 +114,21 @@ public static class HardwareGuiCreator
                     }
                     case "rect":
                     {
+                        var fontWeightStr = element.TryGetProperty("fontWeight", out var fontWeightProperty)
+                            ? fontWeightProperty.GetString()
+                            : null;
+
+                        if (!Enum.TryParse<FontWeight>(fontWeightStr ?? "Normal", true, out var fontWeight))
+                        {
+                            fontWeight = FontWeight.Normal;
+                        }
+
+                        var text = element.TryGetProperty("text", out var textProperty) ? textProperty.GetString() : null;
+
+                        var fontSize = element.TryGetProperty("fontSize", out var fontSizeProperty)
+                            ? fontSizeProperty.GetInt32()
+                            : 12;
+                        
                         vm.AddElement(new FpgaGuiElementRectViewModel(x, y, width, height)
                         {
                             Color = color,
@@ -105,7 +138,11 @@ public static class HardwareGuiCreator
                                 : default,
                             BoxShadow = element.TryGetProperty("boxShadow", out var boxShadowProperty)
                                 ? BoxShadows.Parse(boxShadowProperty.GetString()!)
-                                : default
+                                : default,
+                            FontWeight = fontWeight,
+                            FontSize = fontSize,
+                            Text = text,
+                            Foreground = foreground
                         });
                         break;
                     }
@@ -142,21 +179,23 @@ public static class HardwareGuiCreator
                     case "pin":
                     {
                         color ??= Brushes.YellowGreen;
-                        
+
                         var label = element.TryGetProperty("label", out var labelProperty)
                             ? labelProperty.GetString()
                             : null;
-                        
-                        var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) && flipLabelProperty.GetBoolean();
+
+                        var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) &&
+                                        flipLabelProperty.GetBoolean();
 
                         vm.AddElement(new FpgaGuiElementPinViewModel(x, y, width, height)
                         {
                             Color = color,
                             Rotation = rotation,
                             Bind = bind,
-                            Label = label,
+                            Text = label,
                             FlipLabel = flipLabel,
-                            Parent = hardwareModel
+                            Parent = hardwareModel,
+                            Foreground = foreground
                         });
                         break;
                     }
@@ -177,25 +216,26 @@ public static class HardwareGuiCreator
                             ? fontSizeProperty.GetInt32()
                             : 12;
 
-                        vm.AddElement(new FpgaGuiElementTextViewModel(x, y, text!)
+                        vm.AddElement(new FpgaGuiElementTextViewModel(x, y)
                         {
                             Rotation = rotation,
-                            Color = color,
                             FontWeight = fontWeight,
-                            FontSize = fontSize
+                            FontSize = fontSize,
+                            Text = text,
+                            Foreground = foreground
                         });
                         break;
                     }
                 }
             }
-            
+
             vm.Initialize();
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
-        
+
         return vm;
     }
 }
