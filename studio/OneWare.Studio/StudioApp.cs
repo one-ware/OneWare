@@ -64,11 +64,6 @@ public class StudioApp : App
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
-        moduleCatalog.AddModule<IceBreakerModule>();
-        //moduleCatalog.AddModule<TangNano9KModule>();
-        moduleCatalog.AddModule<Max10Module>();
-        moduleCatalog.AddModule<Max1000Module>();
-        moduleCatalog.AddModule<Cyc5000Module>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
         //moduleCatalog.AddModule<ChatBotModule>();
     }

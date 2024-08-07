@@ -36,27 +36,27 @@ public class YosysService(
             var start = DateTime.Now;
             outputService.WriteLine("Compiling...\n==================");
 
-            var yosysSynthTool = properties.GetValueOrDefault("YosysToolchain_Yosys_SynthTool") ??
+            var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
 
             List<string> yosysArguments =
                 ["-q", "-p", $"{yosysSynthTool} -json build/synth.json"];
-            yosysArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_Yosys_Flags")?.Split(' ',
+            yosysArguments.AddRange(properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
             yosysArguments.AddRange(includedFiles);
 
-            var nextPnrTool = properties.GetValueOrDefault("YosysToolchain_NextPnr_Tool") ??
+            var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool") ??
                               throw new Exception("NextPnr Tool not set!");
             List<string> nextPnrArguments =
                 ["--json", "./build/synth.json", "--pcf", "project.pcf", "--asc", "./build/nextpnr.asc"];
-            nextPnrArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_NextPnr_Flags")?.Split(' ',
+            nextPnrArguments.AddRange(properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
 
-            var packTool = properties.GetValueOrDefault("YosysToolchain_Pack_Tool") ??
+            var packTool = properties.GetValueOrDefault("yosysToolchainPackTool") ??
                            throw new Exception("Pack Tool not set!");
             ;
             List<string> packToolArguments = ["./build/nextpnr.asc", "./build/pack.bin"];
-            packToolArguments.AddRange(properties.GetValueOrDefault("YosysToolchain_Pack_Flags")?.Split(' ',
+            packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
 
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,

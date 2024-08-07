@@ -1,11 +1,11 @@
 {
   "Properties": {
-    "YosysToolchain_Yosys_SynthTool": "synth_gowin",
-    "YosysToolchain_Yosys_Flags": "",
-    "YosysToolchain_NextPnr_Tool": "nextpnr-gowin",
-    "YosysToolchain_NextPnr_Flags": "",
-    "YosysToolchain_Pack_Tool": "gowin_pack",
-    "YosysToolchain_Pack_Flags": ""
+    "yosysToolchainYosysSynthTool": "synth_gowin",
+    "yosysToolchainYosysFlags": "",
+    "yosysToolchainNextPnrTool": "nextpnr-gowin",
+    "yosysToolchainNextPnrFlags": "",
+    "yosysToolchainPackTool": "gowin_pack",
+    "yosysToolchainPackFlags": ""
   },
   "Pins": [
     {

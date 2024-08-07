@@ -30,23 +30,23 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         _settings = FpgaSettingsParser.LoadSettings(projectRoot, fpga.Name);
 
         _boardSetting = new TitledSetting("Board", "OpenFPGALoader Board",
-            defaultProperties.GetValueOrDefault("OpenFpgaLoader_Board") ?? "");
+            defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "");
 
         _shortTermFlagsSetting = new TitledSetting("Short Term Arguments",
             "OpenFPGALoader Flags for Short Term Programming",
-            defaultProperties.GetValueOrDefault("OpenFpgaLoader_ShortTerm_Flags") ?? "");
+            defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "");
 
         _longTermFlagsSetting = new TitledSetting("Long Term Arguments",
             "OpenFPGALoader Flags for Long Term Programming",
-            defaultProperties.GetValueOrDefault("OpenFpgaLoader_LongTerm_Flags") ?? "");
+            defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "");
 
-        if (_settings.TryGetValue("OpenFpgaLoader_Board", out var oflBoard))
+        if (_settings.TryGetValue("openFpgaLoaderBoard", out var oflBoard))
             _boardSetting.Value = oflBoard;
 
-        if (_settings.TryGetValue("OpenFpgaLoader_ShortTerm_Flags", out var oflSFlags))
+        if (_settings.TryGetValue("openFpgaLoaderShortTermFlags", out var oflSFlags))
             _shortTermFlagsSetting.Value = oflSFlags;
 
-        if (_settings.TryGetValue("OpenFpgaLoader_LongTerm_Flags", out var oflLFlags))
+        if (_settings.TryGetValue("openFpgaLoaderLongTermFlags", out var oflLFlags))
             _longTermFlagsSetting.Value = oflLFlags;
 
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_boardSetting));
@@ -61,9 +61,9 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
 
     public void Save(FlexibleWindow flexibleWindow)
     {
-        _settings["OpenFpgaLoader_Board"] = _boardSetting.Value.ToString()!;
-        _settings["OpenFpgaLoader_ShortTerm_Flags"] = _shortTermFlagsSetting.Value.ToString()!;
-        _settings["OpenFpgaLoader_LongTerm_Flags"] = _longTermFlagsSetting.Value.ToString()!;
+        _settings["openFpgaLoaderBoard"] = _boardSetting.Value.ToString()!;
+        _settings["openFpgaLoaderShortTermFlags"] = _shortTermFlagsSetting.Value.ToString()!;
+        _settings["openFpgaLoaderLongTermFlags"] = _longTermFlagsSetting.Value.ToString()!;
 
         FpgaSettingsParser.SaveSettings(_projectRoot, _fpga.Name, _settings);
 

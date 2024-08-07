@@ -1,74 +1,74 @@
 {
-  "Pins": [
+  "pins": [
     {
-      "Name": "1",
-      "InterfacePin": "LS_1"
+      "name": "1",
+      "interfacePin": "LS_1"
     },
     {
-      "Name": "2",
-      "InterfacePin": "LS_2"
+      "name": "2",
+      "interfacePin": "LS_2"
     },
     {
-      "Name": "3",
-      "InterfacePin": "LS_3"
+      "name": "3",
+      "interfacePin": "LS_3"
     },
     {
-      "Name": "4",
-      "InterfacePin": "LS_4"
+      "name": "4",
+      "interfacePin": "LS_4"
     },
     {
-      "Name": "5",
-      "InterfacePin": "LS_5"
+      "name": "5",
+      "interfacePin": "LS_5"
     },
     {
-      "Name": "6",
-      "InterfacePin": "LS_6"
+      "name": "6",
+      "interfacePin": "LS_6"
     },
     {
-      "Name": "7",
-      "InterfacePin": "LS_7"
+      "name": "7",
+      "interfacePin": "LS_7"
     },
     {
-      "Name": "8",
-      "InterfacePin": "LS_8"
+      "name": "8",
+      "interfacePin": "LS_8"
     }
   ],
-  "Interfaces": [
+  "interfaces": [
     {
-      "Name": "PMOD_1",
-      "Connector": "PMOD",
-      "Pins": [
+      "name": "PMOD_1",
+      "connector": "PMOD",
+      "pins": [
         {
-          "Name": "1",
-          "Pin": "1"
+          "name": "1",
+          "pin": "1"
         },
         {
-          "Name": "2",
-          "Pin": "2"
+          "name": "2",
+          "pin": "2"
         },
         {
-          "Name": "3",
-          "Pin": "3"
+          "name": "3",
+          "pin": "3"
         },
         {
-          "Name": "4",
-          "Pin": "4"
+          "name": "4",
+          "pin": "4"
         },
         {
-          "Name": "5",
-          "Pin": "5"
+          "name": "5",
+          "pin": "5"
         },
         {
-          "Name": "6",
-          "Pin": "6"
+          "name": "6",
+          "pin": "6"
         },
         {
-          "Name": "7",
-          "Pin": "7"
+          "name": "7",
+          "pin": "7"
         },
         {
-          "Name": "8",
-          "Pin": "8"
+          "name": "8",
+          "pin": "8"
         }
       ]
     }

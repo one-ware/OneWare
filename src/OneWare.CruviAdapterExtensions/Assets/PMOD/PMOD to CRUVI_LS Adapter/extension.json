@@ -1,74 +1,74 @@
 {
-  "Pins": [
+  "pins": [
     {
-      "Name": "LS_1",
-      "InterfacePin": "1"
+      "name": "LS_1",
+      "interfacePin": "1"
     },
     {
-      "Name": "LS_2",
-      "InterfacePin": "2"
+      "name": "LS_2",
+      "interfacePin": "2"
     },
     {
-      "Name": "LS_3",
-      "InterfacePin": "3"
+      "name": "LS_3",
+      "interfacePin": "3"
     },
     {
-      "Name": "LS_4",
-      "InterfacePin": "4"
+      "name": "LS_4",
+      "interfacePin": "4"
     },
     {
-      "Name": "LS_5",
-      "InterfacePin": "5"
+      "name": "LS_5",
+      "interfacePin": "5"
     },
     {
-      "Name": "LS_6",
-      "InterfacePin": "6"
+      "name": "LS_6",
+      "interfacePin": "6"
     },
     {
-      "Name": "LS_7",
-      "InterfacePin": "7"
+      "name": "LS_7",
+      "interfacePin": "7"
     },
     {
-      "Name": "LS_8",
-      "InterfacePin": "8"
+      "name": "LS_8",
+      "interfacePin": "8"
     }
   ],
-  "Interfaces": [
+  "interfaces": [
     {
-      "Name": "CRUVI_LS_1",
-      "Connector": "CRUVI_LS",
-      "Pins": [
+      "name": "CRUVI_LS_1",
+      "connector": "CRUVI_LS",
+      "pins": [
         {
-          "Name": "LS_1",
-          "Pin": "LS_1"
+          "name": "LS_1",
+          "pin": "LS_1"
         },
         {
-          "Name": "LS_2",
-          "Pin": "LS_2"
+          "name": "LS_2",
+          "pin": "LS_2"
         },
         {
-          "Name": "LS_3",
-          "Pin": "LS_3"
+          "name": "LS_3",
+          "pin": "LS_3"
         },
         {
-          "Name": "LS_4",
-          "Pin": "LS_4"
+          "name": "LS_4",
+          "pin": "LS_4"
         },
         {
-          "Name": "LS_5",
-          "Pin": "LS_5"
+          "name": "LS_5",
+          "pin": "LS_5"
         },
         {
-          "Name": "LS_6",
-          "Pin": "LS_6"
+          "name": "LS_6",
+          "pin": "LS_6"
         },
         {
-          "Name": "LS_7",
-          "Pin": "LS_7"
+          "name": "LS_7",
+          "pin": "LS_7"
         },
         {
-          "Name": "LS_8",
-          "Pin": "LS_8"
+          "name": "LS_8",
+          "pin": "LS_8"
         }
       ]
     }

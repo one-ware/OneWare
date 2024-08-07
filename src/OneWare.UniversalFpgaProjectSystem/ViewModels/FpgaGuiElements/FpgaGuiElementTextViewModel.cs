@@ -14,7 +14,7 @@ public class FpgaGuiElementTextViewModel : FpgaGuiElementViewModelBase
         set => SetProperty(ref _color, value);
     }
 
-    public int FontSize { get; init; } = 12;
+    public int FontSize { get; init; } = 10;
     
     public FontWeight FontWeight { get; init; }
     

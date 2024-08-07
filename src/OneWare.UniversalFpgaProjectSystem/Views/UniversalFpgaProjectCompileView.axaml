@@ -73,7 +73,7 @@
                     </StackPanel>
                 </DockPanel>
 
-                <Grid Grid.Row="1" RowDefinitions="300, Auto, *">
+                <Grid Grid.Row="1" RowDefinitions="Auto, Auto, *">
 
                     <Border Margin="0 10 0 0"
                             IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -84,7 +84,7 @@
                         </controls:CustomZoomBorder>
                     </Border>
 
-                    <GridSplitter Grid.Row="1" Height="5" Background="Transparent" />
+                    <GridSplitter IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Height="5" Background="Transparent" />
 
                     <Grid Margin="0 5 0 0" Grid.Row="2" ColumnDefinitions="*, 90, *" RowDefinitions="20, *"
                           DockPanel.Dock="Top" DataContext="{Binding SelectedFpgaModel}">

@@ -1,256 +1,256 @@
 {
-  "Properties": {
-    "YosysToolchain_Yosys_SynthTool": "synth_ice40",
-    "YosysToolchain_Yosys_Flags": "",
-    "YosysToolchain_NextPnr_Tool": "nextpnr-ice40",
-    "YosysToolchain_NextPnr_Flags": "--package sg48 --up5k",
-    "YosysToolchain_Pack_Tool": "icepack",
-    "YosysToolchain_Pack_Flags": "",
-    "OpenFpgaLoader_Board": "ice40_generic",
-    "OpenFpgaLoader_ShortTerm_Flags": "",
-    "OpenFpgaLoader_LongTerm_Flags": ""
+  "properties": {
+    "yosysToolchainYosysSynthTool": "synth_ice40",
+    "yosysToolchainYosysFlags": "",
+    "yosysToolchainNextPnrTool": "nextpnr-ice40",
+    "yosysToolchainNextPnrFlags": "--package sg48 --up5k",
+    "yosysToolchainPackTool": "icepack",
+    "yosysToolchainPackFlags": "",
+    "openFpgaLoaderBoard": "ice40_generic",
+    "openFpgaLoaderShortTermFlags": "",
+    "openFpgaLoaderLongTermFlags": ""
   },
-  "Pins": [
+  "pins": [
     {
-      "Description": "WP IO2",
-      "Name": "12"
+      "description": "WP IO2",
+      "name": "12"
     },
     {
-      "Description": "RST IO3",
-      "Name": "13"
+      "description": "RST IO3",
+      "name": "13"
     },
     {
-      "Description": "MISO IO3",
-      "Name": "14"
+      "description": "MISO IO3",
+      "name": "14"
     },
     {
-      "Description": "SCK",
-      "Name": "15"
+      "description": "SCK",
+      "name": "15"
     },
     {
-      "Description": "CS",
-      "Name": "16"
+      "description": "CS",
+      "name": "16"
     },
     {
-      "Description": "MOSI IO0",
-      "Name": "17"
+      "description": "MOSI IO0",
+      "name": "17"
     },
     {
-      "Description": "P1 A7",
-      "Name": "3"
+      "description": "P1 A7",
+      "name": "3"
     },
     {
-      "Description": "P1 A8",
-      "Name": "48"
+      "description": "P1 A8",
+      "name": "48"
     },
     {
-      "Description": "P1 A9",
-      "Name": "46"
+      "description": "P1 A9",
+      "name": "46"
     },
     {
-      "Description": "P1 A10",
-      "Name": "44"
+      "description": "P1 A10",
+      "name": "44"
     },
     {
-      "Description": "P1 A1",
-      "Name": "4"
+      "description": "P1 A1",
+      "name": "4"
     },
     {
-      "Description": "P1 A2",
-      "Name": "2"
+      "description": "P1 A2",
+      "name": "2"
     },
     {
-      "Description": "P1 A3",
-      "Name": "47"
+      "description": "P1 A3",
+      "name": "47"
     },
     {
-      "Description": "P1 A4",
-      "Name": "45"
+      "description": "P1 A4",
+      "name": "45"
     },
     {
-      "Description": "P1 B7",
-      "Name": "42"
+      "description": "P1 B7",
+      "name": "42"
     },
     {
-      "Description": "P1 B8",
-      "Name": "36"
+      "description": "P1 B8",
+      "name": "36"
     },
     {
-      "Description": "P1 B9",
-      "Name": "32"
+      "description": "P1 B9",
+      "name": "32"
     },
     {
-      "Description": "P1 B10",
-      "Name": "28"
+      "description": "P1 B10",
+      "name": "28"
     },
     {
-      "Description": "P1 B1",
-      "Name": "43"
+      "description": "P1 B1",
+      "name": "43"
     },
     {
-      "Description": "P1 B2",
-      "Name": "38"
+      "description": "P1 B2",
+      "name": "38"
     },
     {
-      "Description": "P1 B3",
-      "Name": "34"
+      "description": "P1 B3",
+      "name": "34"
     },
     {
-      "Description": "P1 B4",
-      "Name": "31"
+      "description": "P1 B4",
+      "name": "31"
     },
     {
-      "Description": "UART RX",
-      "Name": "6"
+      "description": "UART RX",
+      "name": "6"
     },
     {
-      "Description": "UART TX",
-      "Name": "9"
+      "description": "UART TX",
+      "name": "9"
     },
     {
-      "Description": "USER BUTTON",
-      "Name": "10"
+      "description": "USER BUTTON",
+      "name": "10"
     },
     {
-      "Description": "P2 10",
-      "Name": "18"
+      "description": "P2 10",
+      "name": "18"
     },
     {
-      "Description": "P2 4",
-      "Name": "19"
+      "description": "P2 4",
+      "name": "19"
     },
     {
-      "Description": "P2 9",
-      "Name": "20"
+      "description": "P2 9",
+      "name": "20"
     },
     {
-      "Description": "P2 3",
-      "Name": "21"
+      "description": "P2 3",
+      "name": "21"
     },
     {
-      "Description": "P2 8",
-      "Name": "23"
+      "description": "P2 8",
+      "name": "23"
     },
     {
-      "Description": "P2 2",
-      "Name": "25"
+      "description": "P2 2",
+      "name": "25"
     },
     {
-      "Description": "P2 7",
-      "Name": "26"
+      "description": "P2 7",
+      "name": "26"
     },
     {
-      "Description": "P2 1",
-      "Name": "27"
+      "description": "P2 1",
+      "name": "27"
     },
     {
-      "Description": "CLK",
-      "Name": "35"
+      "description": "CLK",
+      "name": "35"
     },
     {
-      "Description": "GREEN LED",
-      "Name": "37"
+      "description": "GREEN LED",
+      "name": "37"
     },
     {
-      "Description": "RED LED",
-      "Name": "11"
+      "description": "RED LED",
+      "name": "11"
     },
     {
-      "Description": "LED RED",
-      "Name": "39"
+      "description": "LED RED",
+      "name": "39"
     },
     {
-      "Description": "LED GREEN",
-      "Name": "40"
+      "description": "LED GREEN",
+      "name": "40"
     },
     {
-      "Description": "LED BLUE",
-      "Name": "41"
+      "description": "LED BLUE",
+      "name": "41"
     }
   ],
-  "Interfaces": [
+  "interfaces": [
     {
-      "Name": "PMOD_1",
-      "Connector": "PMOD",
-      "Pins": [
+      "name": "PMOD_1",
+      "connector": "PMOD",
+      "pins": [
         {
-          "Name": "LS_1",
-          "Pin": "3"
+          "name": "LS_1",
+          "pin": "3"
         },
         {
-          "Name": "LS_2",
-          "Pin": "48"
+          "name": "LS_2",
+          "pin": "48"
         },
         {
-          "Name": "LS_3",
-          "Pin": "46"
+          "name": "LS_3",
+          "pin": "46"
         },
         {
-          "Name": "LS_4",
-          "Pin": "44"
+          "name": "LS_4",
+          "pin": "44"
         },
         {
-          "Name": "LS_5",
-          "Pin": "4"
+          "name": "LS_5",
+          "pin": "4"
         },
         {
-          "Name": "LS_6",
-          "Pin": "2"
+          "name": "LS_6",
+          "pin": "2"
         },
         {
-          "Name": "LS_7",
-          "Pin": "47"
+          "name": "LS_7",
+          "pin": "47"
         },
         {
-          "Name": "LS_8",
-          "Pin": "45"
+          "name": "LS_8",
+          "pin": "45"
         }
       ]
     },
     {
-      "Name": "PMOD_2",
-      "Connector": "PMOD",
-      "Pins": [
+      "name": "PMOD_2",
+      "connector": "PMOD",
+      "pins": [
         {
-          "Name": "LS_1",
-          "Pin": "42"
+          "name": "LS_1",
+          "pin": "42"
         },
         {
-          "Name": "LS_2",
-          "Pin": "36"
+          "name": "LS_2",
+          "pin": "36"
         },
         {
-          "Name": "LS_3",
-          "Pin": "32"
+          "name": "LS_3",
+          "pin": "32"
         },
         {
-          "Name": "LS_4",
-          "Pin": "28"
+          "name": "LS_4",
+          "pin": "28"
         },
         {
-          "Name": "LS_5",
-          "Pin": "43"
+          "name": "LS_5",
+          "pin": "43"
         },
         {
-          "Name": "LS_6",
-          "Pin": "38"
+          "name": "LS_6",
+          "pin": "38"
         },
         {
-          "Name": "LS_7",
-          "Pin": "34"
+          "name": "LS_7",
+          "pin": "34"
         },
         {
-          "Name": "LS_8",
-          "Pin": "31"
+          "name": "LS_8",
+          "pin": "31"
         }
       ]
     },
     {
-      "Name": "CLK",
-      "Pins": [
+      "name": "CLK",
+      "pins": [
         {
-          "Name": "1",
-          "Pin": "35"
+          "name": "1",
+          "pin": "35"
         }
       ]
     }
