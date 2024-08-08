@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -39,7 +40,13 @@ public class PackageManagerViewModel : ObservableObject
             Application.Current!.GetResourceObservable("Material.Pulse")));
         PackageCategories[0].SubCategories
             .Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
-        PackageCategories.Add(new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon")));
+
+        var hardwareCategory =
+            new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
+        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
+        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
+        
+        PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
         PackageCategories.Add(new PackageCategoryViewModel("Binaries",
