@@ -1,9 +1,11 @@
-﻿using Avalonia;
+﻿using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 
 namespace OneWare.Essentials.Controls;
@@ -63,7 +65,7 @@ public partial class SearchBox : UserControl
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (!SearchTextBox.IsFocused) SearchTextBox.Focus();
+            //if (!SearchTextBox.IsFocused) SearchTextBox.Focus();
         });
 
         //SearchTextBox.SelectAll();

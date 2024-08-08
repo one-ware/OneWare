@@ -22,4 +22,9 @@ public class GenericFpgaPackage(string name, string packagePath) : IFpgaPackage
         var guiFile = Path.Combine(packagePath, "gui.json");
         return File.Exists(guiFile) ? new GenericFpgaViewModel(fpgaModel, guiFile) : null;
     }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
