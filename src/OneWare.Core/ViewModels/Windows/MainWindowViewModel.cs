@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -61,11 +62,7 @@ public class MainWindowViewModel : ObservableObject
             {
                 Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
 
-                TypeAssistanceQuickOptions.Clear();
                 CurrentEditor = x as IEditor;
-
-                var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
-                if (quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
             }
             else
             {
@@ -105,10 +102,30 @@ public class MainWindowViewModel : ObservableObject
         set => SetProperty(ref _title, value);
     }
 
+    private CompositeDisposable _currentEditorSubscriptionDisposable = new();
+    
     public IEditor? CurrentEditor
     {
         get => _currentEditor;
-        private set => SetProperty(ref _currentEditor, value);
+        private set
+        {
+            _currentEditorSubscriptionDisposable.Dispose();
+            _currentEditorSubscriptionDisposable = new CompositeDisposable();
+            
+            SetProperty(ref _currentEditor, value);
+
+            TypeAssistanceQuickOptions.Clear();
+
+            if (_currentEditor is EditViewModel evm)
+            {
+                evm.WhenValueChanged(x => x.TypeAssistance).Subscribe(x =>
+                {
+                    TypeAssistanceQuickOptions.Clear();
+                    var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
+                    if (quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
+                }).DisposeWith(_currentEditorSubscriptionDisposable);
+            }
+        }
     }
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
