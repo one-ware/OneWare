@@ -43,14 +43,17 @@ public class FpgaService
 
     public void RegisterFpgaPackage(IFpgaPackage fpga)
     {
+        var existing = FpgaPackages.FirstOrDefault(x => x.Name == fpga.Name);
+        
+        if (existing != null) FpgaPackages.Remove(existing);
+        
         FpgaPackages.InsertSorted(fpga, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
     public void RegisterFpgaExtensionPackage(IFpgaExtensionPackage fpgaExtension)
     {
         var existing = FpgaExtensionPackages.FirstOrDefault(x => x.Name == fpgaExtension.Name);
-
-        //Allow overwrite from folder
+        
         if (existing != null) FpgaExtensionPackages.Remove(existing);
 
         FpgaExtensionPackages.InsertSorted(fpgaExtension,
@@ -119,7 +122,7 @@ public class FpgaService
 
         try
         {
-            foreach (var packageDir in Directory.GetDirectories(HardwareDirectory))
+            foreach (var packageDir in Directory.GetDirectories(HardwareDirectory).OrderBy(x => x != Path.Combine(HardwareDirectory, "Local")))
             {
                 var fpgaDir = Path.Combine(packageDir, "FPGA");
 
