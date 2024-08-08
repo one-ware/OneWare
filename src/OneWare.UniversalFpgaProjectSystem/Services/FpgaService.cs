@@ -9,24 +9,22 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 public class FpgaService
 {
     private readonly ILogger _logger;
+
     public FpgaService(IPaths paths, ILogger logger)
     {
-        FpgaDirectory = Path.Combine(paths.PackagesDirectory, "Hardware", "FPGA");
-        ExtensionDirectory = Path.Combine(paths.PackagesDirectory, "Hardware", "Extensions");
-        Directory.CreateDirectory(FpgaDirectory);
-        Directory.CreateDirectory(ExtensionDirectory);
-
-        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "PMOD"));
-        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CRUVI_LS"));
-        Directory.CreateDirectory(Path.Combine(ExtensionDirectory, "CRUVI_HS"));
+        HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
+        Directory.CreateDirectory(HardwareDirectory);
+        
+        //Create Local
+        Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local"));
+        Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "FPGA"));
+        Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "Extensions"));
         
         _logger = logger;
     }
 
-    public string FpgaDirectory { get; }
-    
-    public string ExtensionDirectory { get; }
-    
+    public string HardwareDirectory { get; }
+
     public Dictionary<string, Type> NodeProviders { get; } = new();
 
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
@@ -54,8 +52,9 @@ public class FpgaService
 
         //Allow overwrite from folder
         if (existing != null) FpgaExtensionPackages.Remove(existing);
-        
-        FpgaExtensionPackages.InsertSorted(fpgaExtension, (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
+
+        FpgaExtensionPackages.InsertSorted(fpgaExtension,
+            (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
     public void RegisterNodeProvider<T>(params string[] extensions) where T : INodeProvider
@@ -100,7 +99,7 @@ public class FpgaService
         return null;
     }
 
-    public void LoadGenericFpgas()
+    public void LoadGenericHardware()
     {
         foreach (var fpga in FpgaPackages.ToArray())
         {
@@ -110,24 +109,9 @@ public class FpgaService
             }
         }
 
-        try
-        {
-            foreach (var directory in Directory.GetDirectories(FpgaDirectory))
-            {
-                RegisterFpgaPackage(new GenericFpgaPackage(Path.GetFileName(directory), directory));
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-        }
-    }
-    
-    public void LoadGenericFpgaExtensions()
-    {
         foreach (var extension in FpgaExtensionPackages.ToArray())
         {
-            if (extension is GenericFpgaExtensionPackage gen && gen.PackagePath.StartsWith(ExtensionDirectory))
+            if (extension is GenericFpgaExtensionPackage gen && !gen.PackagePath.StartsWith("avares://"))
             {
                 FpgaExtensionPackages.Remove(extension);
             }
@@ -135,14 +119,26 @@ public class FpgaService
 
         try
         {
-            foreach (var directory in Directory.GetDirectories(ExtensionDirectory))
+            foreach (var packageDir in Directory.GetDirectories(HardwareDirectory))
             {
-                var connector = Path.GetFileName(directory);
+                var fpgaDir = Path.Combine(packageDir, "FPGA");
+
+                if (Directory.Exists(fpgaDir))
+                    foreach (var fpga in Directory.GetDirectories(fpgaDir))
+                    {
+                        RegisterFpgaPackage(new GenericFpgaPackage(Path.GetFileName(fpga), fpga));
+                    }
                 
-                foreach (var subDirectory in Directory.GetDirectories(directory))
-                {
-                    RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage(Path.GetFileName(subDirectory), connector, subDirectory));
-                }
+                var extensionDir = Path.Combine(packageDir, "Extensions");
+                
+                if (Directory.Exists(extensionDir))
+                    foreach (var connector in Directory.GetDirectories(extensionDir))
+                    {
+                        foreach (var extension in Directory.GetDirectories(connector))
+                        {
+                            RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage(Path.GetFileName(extension), Path.GetFileName(connector), extension));
+                        }
+                    }
             }
         }
         catch (Exception e)

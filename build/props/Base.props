@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <StudioVersion>0.19.2.0</StudioVersion>
-        <CoreVersion>0.21.0.0</CoreVersion>
+        <StudioVersion>0.20.0.0</StudioVersion>
+        <CoreVersion>0.22.0.0</CoreVersion>
         <UniversalFpgaProjectSystemVersion>0.30.0.0</UniversalFpgaProjectSystemVersion>
         <EssentialsVersion>0.6.0</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
