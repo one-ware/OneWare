@@ -18,7 +18,7 @@
             <ItemsControl ItemsSource="{Binding Links}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="5" />
+                        <StackPanel Orientation="Horizontal" Spacing="7" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.DataTemplates>
@@ -68,7 +68,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <ItemsControl ItemsSource="{Binding SelectedVersion.Targets}">
+            <ItemsControl ItemsSource="{Binding SelectedVersion.Targets, FallbackValue={x:Null}}" IsVisible="{Binding !SelectedVersion.TargetAll, FallbackValue={x:False}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="5" />

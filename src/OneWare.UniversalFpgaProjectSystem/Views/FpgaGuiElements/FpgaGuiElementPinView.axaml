@@ -12,7 +12,7 @@
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
-        <TextBlock IsVisible="{Binding !FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+        <TextBlock IsVisible="{Binding !FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
                 <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>
@@ -61,7 +61,7 @@
                 </DataTriggerBehavior>
             </Interaction.Behaviors>
         </Button>
-        <TextBlock IsVisible="{Binding FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="FlippedLabel" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+        <TextBlock IsVisible="{Binding FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="FlippedLabel" Height="{Binding Height}" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
                 <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>

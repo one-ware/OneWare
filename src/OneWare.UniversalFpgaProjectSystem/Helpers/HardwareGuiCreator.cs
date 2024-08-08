@@ -76,6 +76,10 @@ public static class HardwareGuiCreator
                 var connectorStyle = element.TryGetProperty("connectorStyle", out var connectorStyleProperty)
                     ? connectorStyleProperty.GetString()
                     : "default";
+                
+                var fontSize = element.TryGetProperty("fontSize", out var fontSizeProperty)
+                    ? fontSizeProperty.GetInt32()
+                    : 10;
 
                 switch (element.GetProperty("type").GetString()?.ToLower())
                 {
@@ -132,11 +136,7 @@ public static class HardwareGuiCreator
                         var text = element.TryGetProperty("text", out var textProperty)
                             ? textProperty.GetString()
                             : null;
-
-                        var fontSize = element.TryGetProperty("fontSize", out var fontSizeProperty)
-                            ? fontSizeProperty.GetInt32()
-                            : 12;
-
+                        
                         vm.AddElement(new FpgaGuiElementRectViewModel(x, y, width, height)
                         {
                             Color = color,
@@ -232,6 +232,7 @@ public static class HardwareGuiCreator
                                 FlipLabel = flipLabel,
                                 Parent = hardwareModel,
                                 Foreground = foreground,
+                                FontSize = fontSize,
                                 Rotation = isHorizontal ? 90 : 0
                             });
                         }
@@ -264,6 +265,7 @@ public static class HardwareGuiCreator
                             Text = label,
                             FlipLabel = flipLabel,
                             Parent = hardwareModel,
+                            FontSize = fontSize,
                             Foreground = foreground
                         });
                         break;
@@ -280,10 +282,6 @@ public static class HardwareGuiCreator
                         }
 
                         var text = element.GetProperty("text").GetString();
-
-                        var fontSize = element.TryGetProperty("fontSize", out var fontSizeProperty)
-                            ? fontSizeProperty.GetInt32()
-                            : 12;
 
                         vm.AddElement(new FpgaGuiElementTextViewModel(x, y)
                         {
