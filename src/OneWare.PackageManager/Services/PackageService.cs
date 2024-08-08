@@ -192,23 +192,30 @@ public class PackageService : IPackageService
             if (repository is { Packages: not null })
                 foreach (var manifest in repository.Packages)
                 {
-                    if (manifest.ManifestUrl == null) continue;
-
-                    var downloadManifest =
-                        await _httpService.DownloadTextAsync(manifest.ManifestUrl,
-                            cancellationToken: cancellationToken);
-
-                    var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
-
-                    if (package == null) continue;
-
-                    if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                    try
                     {
-                        pkg.Package = package;
-                        continue;
-                    }
+                        if (manifest.ManifestUrl == null) continue;
 
-                    AddPackage(package);
+                        var downloadManifest =
+                            await _httpService.DownloadTextAsync(manifest.ManifestUrl,
+                                cancellationToken: cancellationToken);
+
+                        var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
+
+                        if (package == null) continue;
+
+                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                        {
+                            pkg.Package = package;
+                            continue;
+                        }
+
+                        AddPackage(package);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Error(e.Message, e);
+                    }
                 }
             else throw new Exception("Packages empty");
         }
