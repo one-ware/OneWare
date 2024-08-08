@@ -10,6 +10,11 @@
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView"
              ClipToBounds="False" FontFamily="{DynamicResource EditorFont}"
              x:DataType="viewModels:GenericFpgaViewModel">
+    <UserControl.Styles>
+        <Style Selector="MenuItem MenuItem">
+            <Setter Property="FontFamily" Value="{DynamicResource Noto Sans}"/>
+        </Style>
+    </UserControl.Styles>
     <Panel>
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
 
