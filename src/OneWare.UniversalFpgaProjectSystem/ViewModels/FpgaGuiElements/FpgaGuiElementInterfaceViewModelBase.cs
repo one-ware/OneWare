@@ -7,6 +7,7 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewModelBase
 {
+    public string? ConnectorStyle { get; init; }
     public string? Bind { get; init; }
 
     private HardwareInterfaceModel? _interfaceModel;

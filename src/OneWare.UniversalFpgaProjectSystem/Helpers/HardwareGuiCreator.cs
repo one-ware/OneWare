@@ -72,6 +72,10 @@ public static class HardwareGuiCreator
                 var bind = element.TryGetProperty("bind", out var bindProperty)
                     ? bindProperty.GetString()
                     : null;
+                
+                var connectorStyle = element.TryGetProperty("connectorStyle", out var connectorStyleProperty)
+                    ? connectorStyleProperty.GetString()
+                    : "default";
 
                 switch (element.GetProperty("type").GetString()?.ToLower())
                 {
@@ -157,6 +161,7 @@ public static class HardwareGuiCreator
                             Rotation = rotation,
                             Bind = bind,
                             Parent = hardwareModel,
+                            ConnectorStyle = connectorStyle
                         });
                         break;
                     }
@@ -168,6 +173,7 @@ public static class HardwareGuiCreator
                             Rotation = rotation,
                             Bind = bind,
                             Parent = hardwareModel,
+                            ConnectorStyle = connectorStyle
                         });
                         break;
                     }
@@ -178,7 +184,8 @@ public static class HardwareGuiCreator
                         {
                             Rotation = rotation,
                             Bind = bind,
-                            Parent = hardwareModel
+                            Parent = hardwareModel,
+                            ConnectorStyle = connectorStyle
                         });
                         break;
                     }

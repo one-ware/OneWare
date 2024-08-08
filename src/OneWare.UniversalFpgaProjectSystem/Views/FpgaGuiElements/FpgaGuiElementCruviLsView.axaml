@@ -27,7 +27,7 @@
                             <ContextDropBehavior Context="{Binding InterfaceModel}" Handler="{StaticResource ExtensionDropHandler}"/>
                         </Interaction.Behaviors>
                         
-                        <Rectangle Fill="#202020" Height="20" Width="50"/>
+                        <Border Classes="ConnectorBorder" Height="20" Width="50"/>
                         <TextBlock Text="CRUVI LS" Foreground="White" FontSize="9" VerticalAlignment="Center"
                                    TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>
                     </Panel>
@@ -39,6 +39,13 @@
                     </Style>
                     <Style Selector="MenuItem.RootMenuItem:pointerover /template/ Border#root">
                         <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                    <Style Selector="MenuItem.RootMenuItem Border.ConnectorBorder">
+                        <Setter Property="Background" Value="#202020" />
+                        <Setter Property="CornerRadius" Value="0"/>
+                    </Style>
+                    <Style Selector="MenuItem.RootMenuItem:pointerover Border.ConnectorBorder">
+                        <Setter Property="Background" Value="#505050" />
                     </Style>
                 </MenuItem.Styles>
             </MenuItem>
