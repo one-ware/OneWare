@@ -1,10 +1,10 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 
 namespace OneWare.Essentials.Controls;
@@ -12,9 +12,9 @@ namespace OneWare.Essentials.Controls;
 public class CustomZoomBorder : ZoomBorder
 {
     private const int KeyPanSpeed = 5;
-    
+
     protected override Type StyleKeyOverride => typeof(ZoomBorder);
-    
+
     private CompositeDisposable _disposables = new();
 
     private readonly List<Key> _keysDown = [];
@@ -23,11 +23,6 @@ public class CustomZoomBorder : ZoomBorder
     {
         base.OnAttachedToVisualTree(e);
 
-        PointerEntered += (_, _) =>
-        {
-            this.Focus();
-        };
-            
         DispatcherTimer.Run(() =>
             {
                 if (_keysDown.Contains(Key.Down) || _keysDown.Contains(Key.S))
@@ -42,6 +37,16 @@ public class CustomZoomBorder : ZoomBorder
                 return true;
             }, TimeSpan.FromMilliseconds(10))
             .DisposeWith(_disposables);
+        
+        KeyDownEvent.AddClassHandler<TopLevel>((sender, args) =>
+        {
+            if(IsPointerOver) _keysDown.Add(args.Key);
+        }, handledEventsToo: true).DisposeWith(_disposables);
+        
+        KeyUpEvent.AddClassHandler<TopLevel>((sender, args) =>
+        {
+            _keysDown.RemoveAll(x => x == args.Key);
+        }, handledEventsToo: true).DisposeWith(_disposables);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -51,22 +56,10 @@ public class CustomZoomBorder : ZoomBorder
         _disposables = new CompositeDisposable();
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-        _keysDown.Add(e.Key);
-        base.OnKeyDown(e);
-    }
-
-    protected override void OnKeyUp(KeyEventArgs e)
-    {
-        _keysDown.RemoveAll(x => x == e.Key);
-        base.OnKeyUp(e);
-    }
-
-    protected override void OnLostFocus(RoutedEventArgs e)
+    protected override void OnPointerExited(PointerEventArgs e)
     {
         _keysDown.Clear();
-        base.OnLostFocus(e);
+        base.OnPointerExited(e);
     }
 
     public void AutoFit()

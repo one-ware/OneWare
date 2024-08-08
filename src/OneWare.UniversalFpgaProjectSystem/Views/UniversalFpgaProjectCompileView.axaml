@@ -20,6 +20,8 @@
     <Interaction.Behaviors>
         <behaviors:CommandOnKeyPressedBehavior HandledEventsToo="True" TriggerKey="Delete"
                                                Command="{Binding SelectedFpgaModel.DisconnectCommand, FallbackValue={x:Null}}" />
+        <behaviors:CommandOnKeyPressedBehavior HandledEventsToo="False" TriggerKey="Back"
+                                               Command="{Binding SelectedFpgaModel.DisconnectCommand, FallbackValue={x:Null}}" />
         <behaviors:CommandOnKeyPressedBehavior HandledEventsToo="True" TriggerKey="Enter"
                                                Command="{Binding SelectedFpgaModel.ConnectCommand, FallbackValue={x:Null}}" />
         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Escape"
