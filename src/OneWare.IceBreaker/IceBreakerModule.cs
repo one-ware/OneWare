@@ -13,8 +13,6 @@ public class IceBreakerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var fpga = new IceBreakerFpga();
-        containerProvider.Resolve<FpgaService>().RegisterFpga(fpga);
-        containerProvider.Resolve<FpgaService>().RegisterCustomFpgaViewModel<IceBreakerFpgaViewModel>(fpga);
+        containerProvider.Resolve<FpgaService>().RegisterFpgaPackage(new IceBreakerFpgaPackage());
     }
 }

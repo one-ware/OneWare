@@ -1,0 +1,42 @@
+{
+  "width": 600,
+  "height": 300,
+  "image": "Assets/background.svg",
+  "elements": [
+    {
+      "type": "pin",
+      "bind": "F14",
+      "x": 75,
+      "y": 80,
+      "color": "red"
+    },
+    {
+      "type": "pin",
+      "bind": "P4",
+      "x": 75,
+      "y": 90
+    },
+    {
+      "type": "pin",
+      "bind": "P4",
+      "x": 75,
+      "y": 100
+    },
+    {
+      "type": "pin",
+      "bind": "A1",
+      "x": 85,
+      "y": 90,
+      "color": "orange"
+    },
+    {
+      "type": "text",
+      "x": 150,
+      "y": 90,
+      "text": "Test Board",
+      "color": "white",
+      "fontWeight": "bold",
+      "fontSize": 20
+    }
+  ]
+}

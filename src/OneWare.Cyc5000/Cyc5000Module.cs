@@ -13,8 +13,6 @@ public class Cyc5000Module : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var fpga = new Cyc5000Fpga();
-        containerProvider.Resolve<FpgaService>().RegisterFpga(fpga);
-        containerProvider.Resolve<FpgaService>().RegisterCustomFpgaViewModel<Cyc5000ViewModel>(fpga);
+        containerProvider.Resolve<FpgaService>().RegisterFpgaPackage(new Cyc5000FpgaPackage());
     }
 }

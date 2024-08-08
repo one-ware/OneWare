@@ -38,9 +38,8 @@ public class PackageManagerViewModel : ObservableObject
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
             Application.Current!.GetResourceObservable("Material.Pulse")));
         PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Boards", Application.Current!.GetResourceObservable("NiosIcon")));
-        PackageCategories[0].SubCategories
             .Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
+        PackageCategories.Add(new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon")));
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
         PackageCategories.Add(new PackageCategoryViewModel("Binaries",
@@ -142,8 +141,9 @@ public class PackageManagerViewModel : ObservableObject
                 var category = packageModel.Package.Type switch
                 {
                     "Plugin" => PackageCategories[0],
-                    "Library" => PackageCategories[1],
-                    "NativeTool" => PackageCategories[2],
+                    "Hardware" => PackageCategories[1],
+                    "Library" => PackageCategories[2],
+                    "NativeTool" => PackageCategories[3],
                     _ => null
                 };
 

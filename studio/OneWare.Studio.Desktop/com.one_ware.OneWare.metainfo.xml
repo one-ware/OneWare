@@ -31,8 +31,10 @@
         <p>Get started and join our growing community!</p>
     </description>
     <url type="homepage">https://one-ware.com/studio</url>
-    <url type="bugtracker">https://github.com/one-ware/OneWare</url>
-    <url type="contact">https://one-ware.com/docs/contact/</url>
+    <url type="bugtracker">https://github.com/one-ware/OneWare/issues</url>
+    <url type="help">https://one-ware.com/docs/studio/tutorials/create-project</url>
+    <url type="contact">https://one-ware.com/docs/contact</url>
+    <url type="vcs-browser">https://github.com/one-ware/OneWare</url>
     <screenshots>
         <screenshot type="default">
             <image>https://one-ware.com/img/studio/slides2/completion.png</image>

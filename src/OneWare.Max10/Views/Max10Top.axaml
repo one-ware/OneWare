@@ -12,7 +12,7 @@
 
     <Grid ColumnDefinitions="Auto, 250, *" RowDefinitions="220" Height="220">
         <Border Width="90"
-                IsVisible="{Binding InterfaceModels[CRUVILS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                IsVisible="{Binding FpgaModel.InterfaceModels[CRUVI_LS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}" />
         <Grid Grid.Column="1" Background="#2F6B11" Width="250">
             <Grid.Styles>
                 <Style Selector="Button > TextBlock">
@@ -54,7 +54,7 @@
             </Button>
             <TextBlock Classes="VertRight" VerticalAlignment="Top" Padding="0" HorizontalAlignment="Left"
                        Margin="168, 146, 0, 0" Text="CLK" />
-            <Button DataContext="{Binding PinModels[H6]}" Classes="Connectable" Background="Blue" Width="10"
+            <Button DataContext="{Binding FpgaModel.PinModels[H6]}" Classes="Connectable" Background="Blue" Width="10"
                     Height="10" VerticalAlignment="Top" Padding="0" HorizontalAlignment="Left" Margin="173, 130, 0, 0" />
 
             <Button ToolTip.Tip="SDRAM (W9864G6JT-6)" Background="Black" Width="40" Height="40"
@@ -75,11 +75,11 @@
             <TextBlock Text="Power LED" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0, 0, 30, -1"
                        FontSize="9" />
 
-            <Button DataContext="{Binding PinModels[D13]}" Classes="Connectable" Background="Red" Width="10"
+            <Button DataContext="{Binding FpgaModel.PinModels[D13]}" Classes="Connectable" Background="Red" Width="10"
                     Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0, 0, 3, 72" />
 
             <Menu Classes="BindMenu VertRight" DragDrop.AllowDrop="True"
-                  DataContext="{Binding InterfaceModels[CRUVILS_1]}" Margin="20,42,0,0" HorizontalAlignment="Center"
+                  DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_LS_1]}" Margin="20,42,0,0" HorizontalAlignment="Center"
                   VerticalAlignment="Top">
                 <MenuItem ItemsSource="{Binding InterfaceMenu}" Cursor="Hand">
                     <MenuItem.Header>
@@ -92,7 +92,7 @@
             </Menu>
 
             <Menu Classes="BindMenu VertRight" DragDrop.AllowDrop="True"
-                  DataContext="{Binding InterfaceModels[CRUVIHS_1]}" Margin="0, 0, 5, 43"
+                  DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1]}" Margin="0, 0, 5, 43"
                   VerticalAlignment="Bottom" HorizontalAlignment="Right">
 
                 <MenuItem Padding="0" Cursor="Hand" ItemsSource="{Binding InterfaceMenu}">
@@ -108,18 +108,18 @@
             </Menu>
 
             <Border ZIndex="10"
-                    IsVisible="{Binding InterfaceModels[CRUVIHS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsVisible="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                     BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Bottom"
                     HorizontalAlignment="Right" Margin="3, 0, 0, 2">
-                <ContentPresenter DataContext="{Binding InterfaceModels[CRUVIHS_1].Connection}"
+                <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[CRUVIHS_1].ConnectedExtensionViewModel}"
                                   Content="{Binding}" />
             </Border>
 
             <Border ZIndex="10"
-                    IsVisible="{Binding InterfaceModels[CRUVILS_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsVisible="{Binding FpgaModel.InterfaceModels[CRUVI_LS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                     BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Top"
                     HorizontalAlignment="Left" Margin="3, 2, 0, 0">
-                <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding InterfaceModels[CRUVILS_1].Connection}"
+                <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_LS_1].ConnectedExtensionViewModel}"
                                   Content="{Binding}" />
             </Border>
             <Ellipse ZIndex="11" Fill="{DynamicResource ThemeBackgroundBrush}" Height="24" Width="24"
@@ -140,7 +140,7 @@
                      HorizontalAlignment="Right" VerticalAlignment="Center" StrokeThickness="6" />
         </Grid>
         <Grid Grid.Column="2">
-            <Button DataContext="{Binding PinModels[D7]}" Classes="Connectable" Background="#ffcc66" Width="10"
+            <Button DataContext="{Binding FpgaModel.PinModels[D7]}" Classes="Connectable" Background="#ffcc66" Width="10"
                     Height="15" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-1, 15, 0, 0" />
             <Button ToolTip.Tip="RESET Button" x:CompileBindings="False" Command="{Binding SelectPin}"
                     CommandParameter="RESET" Background="#ffcc66" Width="10" Height="15" HorizontalAlignment="Left"
@@ -159,11 +159,11 @@
                    HorizontalAlignment="Left" VerticalAlignment="Center" />
             <Image Source="{DynamicResource Entypo+.ArrowLongRight}" Margin="0, 20, 0, 0" Height="20" Width="20"
                    HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <Button DataContext="{Binding PinModels[J1]}" Classes="Connectable" HorizontalAlignment="Left"
+            <Button DataContext="{Binding FpgaModel.PinModels[J1]}" Classes="Connectable" HorizontalAlignment="Left"
                     VerticalAlignment="Center" Height="17" Width="24" Background="Red"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 0, 0, 20"
                     Content="RX" Foreground="White" />
-            <Button DataContext="{Binding PinModels[H4]}" Classes="Connectable" HorizontalAlignment="Left"
+            <Button DataContext="{Binding FpgaModel.PinModels[H4]}" Classes="Connectable" HorizontalAlignment="Left"
                     VerticalAlignment="Center" Height="17" Width="24" Background="Blue"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 20, 0, 0"
                     Content="TX" Foreground="White" />

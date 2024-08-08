@@ -3,9 +3,9 @@ using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
+using OneWare.CruviAdapterExtensions;
 using OneWare.Cyc5000;
 using OneWare.Essentials.Services;
-using OneWare.IasCameraExtension;
 using OneWare.IceBreaker;
 using OneWare.Max10;
 using OneWare.Max1000;
@@ -64,12 +64,7 @@ public class StudioApp : App
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
-        moduleCatalog.AddModule<IceBreakerModule>();
-        //moduleCatalog.AddModule<TangNano9KModule>();
-        moduleCatalog.AddModule<Max10Module>();
-        moduleCatalog.AddModule<Max1000Module>();
-        moduleCatalog.AddModule<Cyc5000Module>();
-        moduleCatalog.AddModule<IasCameraExtensionModule>();
+        moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
         //moduleCatalog.AddModule<ChatBotModule>();
     }
 }

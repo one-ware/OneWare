@@ -68,7 +68,7 @@
 
     <SolidColorBrush x:Key="SelectionBrush">#606e6e6e</SolidColorBrush>
     <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
-
+    
     <ResourceDictionary.ThemeDictionaries>
 
         <ResourceDictionary x:Key="Default">
@@ -163,9 +163,18 @@
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
             <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95" Color="{StaticResource ThemeBackgroundColor}" />
             
+            <DrawingBrush x:Key="CheckerBoardBrush16" TileMode="Tile" DestinationRect="0 0 16 16" Opacity="0.2">
+                <DrawingBrush.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z" Brush="{DynamicResource ThemeBorderLowColor}"/>
+                    </DrawingGroup>
+                </DrawingBrush.Drawing>
+            </DrawingBrush>
+            
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+ 
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -215,6 +224,14 @@
             
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#FFFFFF" />
             <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95" Color="{StaticResource ThemeBackgroundColor}" />
+            
+            <DrawingBrush x:Key="CheckerBoardBrush16" TileMode="Tile" DestinationRect="0 0 16 16" Opacity="0.2">
+                <DrawingBrush.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z" Brush="{DynamicResource ThemeBorderLowColor}"/>
+                    </DrawingGroup>
+                </DrawingBrush.Drawing>
+            </DrawingBrush>
             
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />

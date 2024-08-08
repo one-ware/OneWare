@@ -11,10 +11,10 @@ public static class StringExtensions
 
     public static bool EqualPaths(this string input, string otherPath)
     {
-        if (string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(otherPath))
-            return input.Trim() == otherPath.Trim();
-        return Path.GetFullPath(input).TrimEnd('\\').Equals(Path.GetFullPath(otherPath).TrimEnd('\\'),
-            StringComparison.InvariantCultureIgnoreCase);
+        if (input == otherPath) return true;
+        
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(input.NormalizePath(), otherPath.NormalizePath(), comparison);
     }
 
     public static bool ContainsSubPath(this string pathToFile, string subPath)
@@ -40,9 +40,8 @@ public static class StringExtensions
 
     public static string NormalizePath(this string path)
     {
-        return Path.GetFullPath(new Uri(path).LocalPath)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .ToUpperInvariant();
+        return Path.GetFullPath(path)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
     public static bool IsValidFileName(this string name)

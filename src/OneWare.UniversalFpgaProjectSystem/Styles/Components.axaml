@@ -30,10 +30,6 @@
         <Setter Property="BorderThickness" Value="1" />
     </Style>
 
-    <Style Selector="Button.Connectable:pointerover">
-        <Setter Property="Background" Value="#222222" />
-    </Style>
-
     <Style Selector="TextBlock">
         <Setter Property="Height" Value="15" />
         <Setter Property="FontSize" Value="12" />
@@ -100,7 +96,7 @@
         </Setter>
     </Style>
 
-    <Style Selector="Button.Connectable" x:DataType="models:FpgaPinModel" x:CompileBindings="True">
+    <Style Selector="Button.Connectable" x:DataType="models:HardwarePinModel">
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
@@ -117,7 +113,7 @@
                                         <DataTriggerBehavior.Binding>
                                             <MultiBinding
                                                 Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                <Binding Path="Parent.SelectedPinModel" />
+                                                <Binding Path="FpgaModel.SelectedPinModel" />
                                                 <Binding Path="#PinBorder.DataContext" />
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
@@ -132,7 +128,7 @@
                                         <DataTriggerBehavior.Binding>
                                             <MultiBinding
                                                 Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                <Binding Path="Parent.SelectedPinModel" />
+                                                <Binding Path="FpgaModel.SelectedPinModel" />
                                                 <Binding Path="#PinBorder.DataContext" />
                                             </MultiBinding>
                                         </DataTriggerBehavior.Binding>
@@ -147,18 +143,16 @@
                             </Grid>
                         </Border>
                         <Border Name="ConnectedRectangle"
-                                IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                IsVisible="{Binding ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 Background="Black" BorderBrush="Transparent" BorderThickness="2" Opacity="0.8" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Command" Value="{Binding Parent.SelectPin}" />
+        <Setter Property="Command" Value="{Binding FpgaModel.SelectPin}" />
         <Setter Property="CommandParameter" Value="{Binding}" />
         <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText}" />
     </Style>
-
-    <Style Selector="Button:pointerover" />
 
     <Style Selector="Button.Connectable:pointerover">
         <Setter Property="Background" Value="#353535" />

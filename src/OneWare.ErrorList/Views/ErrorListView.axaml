@@ -152,8 +152,17 @@
                                     Binding="{Binding Source}" />
                 <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Project"
                                     Binding="{Binding Root.Header}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="File"
-                                    Binding="{Binding File.Name}" />
+                <DataGridTemplateColumn Width="4*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:ErrorListItem">
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding File.FullPath}"
+                                       Text="{Binding File.Name}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="File" />
+                    </DataGridTemplateColumn.Header>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Width="40" x:DataType="models:ErrorListItem" Header="Line"
                                     Binding="{Binding StartLine}" />
             </DataGrid.Columns>

@@ -43,7 +43,7 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
-    <Style Selector="ContextMenu">
+    <Style Selector="ContextMenu, MenuFlyoutPresenter">
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
     </Style>
@@ -58,7 +58,7 @@
         <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
     </Style>
 
-    <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border">
+    <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border, MenuFlyoutPresenter > MenuItem Border">
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
@@ -83,7 +83,7 @@
         </Setter>
     </Style>
 
-    <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem"
+    <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem, MenuFlyoutPresenter.BindMenu > MenuItem"
            x:DataType="viewModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
@@ -99,5 +99,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
+    
 </Styles>

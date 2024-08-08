@@ -19,7 +19,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService 
 
         var properties = FpgaSettingsParser.LoadSettings(project, fpga);
 
-        var board = properties.GetValueOrDefault("OpenFpgaLoader_Board");
+        var board = properties.GetValueOrDefault("openFpgaLoaderBoard");
         var cable = properties.GetValueOrDefault("OpenFpgaLoader_Cable");
 
         List<string> openFpgaLoaderArguments = [];

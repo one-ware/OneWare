@@ -1,11 +1,7 @@
 ﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.Max10.ViewModels;
 
-public class Max10FpgaViewModel : FpgaModel
-{
-    public Max10FpgaViewModel(FpgaBase fpga) : base(fpga)
-    {
-    }
-}
+public class Max10FpgaViewModel(FpgaModel model) : FpgaViewModelBase(model);

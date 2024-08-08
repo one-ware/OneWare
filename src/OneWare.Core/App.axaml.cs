@@ -16,6 +16,7 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Debugger;
 using OneWare.ErrorList;
+using OneWare.Essentials.Commands;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
@@ -251,6 +252,16 @@ public class App : PrismApplication
             IconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
         });
 
+        var applicationCommandService = Container.Resolve<IApplicationCommandService>();
+
+        applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active light theme",
+            () => settingsService.SetSettingValue("General_SelectedTheme", "Light"),
+            () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Light"));
+        
+        applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active dark theme",
+            () => settingsService.SetSettingValue("General_SelectedTheme", "Dark"),
+            () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
+        
         //AvaloniaEdit Hyperlink support
         VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
         {
@@ -305,7 +316,7 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-        
+
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>

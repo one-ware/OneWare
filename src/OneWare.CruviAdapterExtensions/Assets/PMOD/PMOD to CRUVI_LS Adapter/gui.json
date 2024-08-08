@@ -1,0 +1,32 @@
+{
+  "width": 88,
+  "height": 132,
+  "offset": "0 -60 0 0",
+  "elements": [
+    {
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 88,
+      "height": 132,
+      "color": "#096845",
+      "cornerRadius": "3",
+      "boxShadow": "0 0 5 5 #77000000"
+    },
+    {
+      "type": "cruvi_ls",
+      "x": 19,
+      "y": 0,
+      "bind": "CRUVI_LS_1"
+    },
+    {
+      "type": "rect",
+      "x": 0,
+      "y": 60,
+      "width": 88,
+      "height": 50,
+      "textColor": "white",
+      "text": "CRUVI_LS\n↑\nPMOD"
+    }
+  ]
+}

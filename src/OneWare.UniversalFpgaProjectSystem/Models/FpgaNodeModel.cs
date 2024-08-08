@@ -5,7 +5,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class FpgaNodeModel : ObservableObject
 {
-    private FpgaPinModel? _connection;
+    private HardwarePinModel? _connectedPin;
 
     public FpgaNodeModel(FpgaNode node)
     {
@@ -14,14 +14,14 @@ public class FpgaNodeModel : ObservableObject
 
     public FpgaNode Node { get; }
 
-    public FpgaPinModel? Connection
+    public HardwarePinModel? ConnectedPin
     {
-        get => _connection;
-        set => SetProperty(ref _connection, value);
+        get => _connectedPin;
+        set => SetProperty(ref _connectedPin, value);
     }
 
     public override string ToString()
     {
-        return Connection is null ? Node.Name : $"{Node.Name} <-> {Connection.Pin.Name}";
+        return ConnectedPin is null ? Node.Name : $"{Node.Name} <-> {ConnectedPin.Pin.Name}";
     }
 }

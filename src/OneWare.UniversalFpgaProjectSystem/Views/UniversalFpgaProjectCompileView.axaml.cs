@@ -1,4 +1,5 @@
-﻿using DynamicData.Binding;
+﻿using Avalonia.Threading;
+using DynamicData.Binding;
 using OneWare.Essentials.Controls;
 
 namespace OneWare.UniversalFpgaProjectSystem.Views;
@@ -9,9 +10,28 @@ public partial class UniversalFpgaProjectCompileView : FlexibleWindow
     {
         InitializeComponent();
 
-        VisiblePinDataGrid.WhenValueChanged(x => x.SelectedItem).Subscribe(x =>
+        VisiblePinDataGrid.SelectionChanged += (_, _) =>
         {
-            if (x is not null) VisiblePinDataGrid.ScrollIntoView(x, null);
+            if (VisiblePinDataGrid.SelectedItem != null)
+            {
+                VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
+            }
+        };
+        
+        VisiblePinDataGrid.SelectionChanged += (_, _) =>
+        {
+            if (VisiblePinDataGrid.SelectedItem != null)
+            {
+                VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
+            }
+        };
+
+        ZoomContentControl.WhenValueChanged(x => x.Content).Subscribe(x =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                //ZoomBorder.Fill();
+            });
         });
     }
 }

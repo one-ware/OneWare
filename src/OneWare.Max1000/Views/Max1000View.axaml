@@ -15,7 +15,7 @@
         <Border Background="#1c1c1c" Height="90" Width="60" HorizontalAlignment="Right">
             <Grid>
                 <Menu Classes="VertLeft BindMenu" DragDrop.AllowDrop="True"
-                      DataContext="{Binding InterfaceModels[PMOD_1]}" Margin="-14,0,0,0" HorizontalAlignment="Left"
+                      DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1]}" Margin="-14,0,0,0" HorizontalAlignment="Left"
                       VerticalAlignment="Center">
                     <MenuItem Padding="0" Cursor="Hand"
                               ItemsSource="{Binding InterfaceMenu}">
@@ -58,7 +58,7 @@
                 </Button>
                 <TextBlock Foreground="White" VerticalAlignment="Bottom" Padding="0" HorizontalAlignment="Right"
                            Margin="0, 0, 93, 37" Text="CLK" />
-                <Button DataContext="{Binding PinModels[H6]}" Classes="Connectable" Background="Blue"
+                <Button DataContext="{Binding FpgaModel.PinModels[H6]}" Classes="Connectable" Background="Blue"
                         Width="10" Height="10" VerticalAlignment="Bottom" Padding="0" HorizontalAlignment="Right"
                         Margin="0, 0, 80, 40" />
 
@@ -82,24 +82,24 @@
 
                     <Button Grid.Row="0" Grid.Column="1" Background="#F97063" IsEnabled="False" />
                     <Button Grid.Row="1" Grid.Column="1" Background="#0094FF" IsEnabled="False" />
-                    <Button Grid.Row="2" Grid.Column="1" DataContext="{Binding PinModels[K1]}"
+                    <Button Grid.Row="2" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[K1]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="3" Grid.Column="1" DataContext="{Binding PinModels[K2]}"
+                    <Button Grid.Row="3" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[K2]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="4" Grid.Column="1" DataContext="{Binding PinModels[N2]}"
+                    <Button Grid.Row="4" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[N2]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="5" Grid.Column="1" DataContext="{Binding PinModels[N3]}"
+                    <Button Grid.Row="5" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[N3]}"
                             Classes="Connectable" />
 
                     <Button Grid.Row="0" Grid.Column="2" Background="#F97063" IsEnabled="False" />
                     <Button Grid.Row="1" Grid.Column="2" Background="#0094FF" IsEnabled="False" />
-                    <Button Grid.Row="2" Grid.Column="2" DataContext="{Binding PinModels[M1]}"
+                    <Button Grid.Row="2" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[M1]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="3" Grid.Column="2" DataContext="{Binding PinModels[M2]}"
+                    <Button Grid.Row="3" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[M2]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="4" Grid.Column="2" DataContext="{Binding PinModels[L3]}"
+                    <Button Grid.Row="4" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[L3]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="5" Grid.Column="2" DataContext="{Binding PinModels[M3]}"
+                    <Button Grid.Row="5" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[M3]}"
                             Classes="Connectable" />
 
                     <TextBlock Grid.Row="0" Grid.Column="3" Text="3V3" Foreground="White" />
@@ -128,35 +128,35 @@
                     <TextBlock Grid.Row="0" Grid.Column="12" Text="AIN0" Classes="VertLeft" Width="33" />
                     <TextBlock Grid.Row="0" Grid.Column="13" Text="AREF" Classes="VertLeft" Width="33" />
 
-                    <Button Grid.Row="1" Grid.Column="0" DataContext="{Binding PinModels[J2]}"
+                    <Button Grid.Row="1" Grid.Column="0" DataContext="{Binding FpgaModel.PinModels[J2]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="1" DataContext="{Binding PinModels[J1]}"
+                    <Button Grid.Row="1" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[J1]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="2" DataContext="{Binding PinModels[H4]}"
+                    <Button Grid.Row="1" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[H4]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="3" DataContext="{Binding PinModels[H5]}"
+                    <Button Grid.Row="1" Grid.Column="3" DataContext="{Binding FpgaModel.PinModels[H5]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="4" DataContext="{Binding PinModels[K10]}"
+                    <Button Grid.Row="1" Grid.Column="4" DataContext="{Binding FpgaModel.PinModels[K10]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="5" DataContext="{Binding PinModels[H8]}"
+                    <Button Grid.Row="1" Grid.Column="5" DataContext="{Binding FpgaModel.PinModels[H8]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="1" Grid.Column="6" DataContext="{Binding PinModels[E4]}"
+                    <Button Grid.Row="1" Grid.Column="6" DataContext="{Binding FpgaModel.PinModels[E4]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="7" DataContext="{Binding PinModels[F1]}"
+                    <Button Grid.Row="1" Grid.Column="7" DataContext="{Binding FpgaModel.PinModels[F1]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="8" DataContext="{Binding PinModels[E3]}"
+                    <Button Grid.Row="1" Grid.Column="8" DataContext="{Binding FpgaModel.PinModels[E3]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="9" DataContext="{Binding PinModels[D1]}"
+                    <Button Grid.Row="1" Grid.Column="9" DataContext="{Binding FpgaModel.PinModels[D1]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="10" DataContext="{Binding PinModels[C1]}"
+                    <Button Grid.Row="1" Grid.Column="10" DataContext="{Binding FpgaModel.PinModels[C1]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="11" DataContext="{Binding PinModels[C2]}"
+                    <Button Grid.Row="1" Grid.Column="11" DataContext="{Binding FpgaModel.PinModels[C2]}"
                             Classes="Connectable Cyan" />
-                    <Button Grid.Row="1" Grid.Column="12" DataContext="{Binding PinModels[E1]}"
+                    <Button Grid.Row="1" Grid.Column="12" DataContext="{Binding FpgaModel.PinModels[E1]}"
                             Classes="Connectable Cyan" />
                     <Button Grid.Row="1" Grid.Column="13" IsEnabled="False" Background="#FF9D00" />
 
-                    <Button Grid.Row="2" Grid.Column="11" DataContext="{Binding PinModels[B1]}"
+                    <Button Grid.Row="2" Grid.Column="11" DataContext="{Binding FpgaModel.PinModels[B1]}"
                             Classes="Connectable Cyan" />
                     <Button Grid.Row="2" Grid.Column="12" Background="#0094FF" IsEnabled="False" />
                     <Button Grid.Row="2" Grid.Column="13" IsEnabled="False" Classes="Cyan" />
@@ -181,9 +181,9 @@
                                Width="30" />
                     <TextBlock Grid.Row="5" Grid.Column="13" Foreground="White" Text="GND" Classes="VertLeft"
                                Width="30" />
-                    <Button Grid.Row="6" Grid.Column="5" DataContext="{Binding PinModels[B11]}"
+                    <Button Grid.Row="6" Grid.Column="5" DataContext="{Binding FpgaModel.PinModels[B11]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="6" Grid.Column="6" DataContext="{Binding PinModels[G13]}"
+                    <Button Grid.Row="6" Grid.Column="6" DataContext="{Binding FpgaModel.PinModels[G13]}"
                             Classes="Connectable" />
                     <Button Grid.Row="6" Grid.Column="8" Background="#fc9cff" IsEnabled="False" />
                     <Button Grid.Row="6" Grid.Column="9" Background="#fc9cff" IsEnabled="False" />
@@ -193,23 +193,23 @@
                     <Button Grid.Row="6" Grid.Column="13" Background="#0094FF" IsEnabled="False" />
 
 
-                    <Button Grid.Row="7" Grid.Column="0" DataContext="{Binding PinModels[L12]}"
+                    <Button Grid.Row="7" Grid.Column="0" DataContext="{Binding FpgaModel.PinModels[L12]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="1" DataContext="{Binding PinModels[J12]}"
+                    <Button Grid.Row="7" Grid.Column="1" DataContext="{Binding FpgaModel.PinModels[J12]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="2" DataContext="{Binding PinModels[J13]}"
+                    <Button Grid.Row="7" Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[J13]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="3" DataContext="{Binding PinModels[K11]}"
+                    <Button Grid.Row="7" Grid.Column="3" DataContext="{Binding FpgaModel.PinModels[K11]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="4" DataContext="{Binding PinModels[K12]}"
+                    <Button Grid.Row="7" Grid.Column="4" DataContext="{Binding FpgaModel.PinModels[K12]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="5" DataContext="{Binding PinModels[J10]}"
+                    <Button Grid.Row="7" Grid.Column="5" DataContext="{Binding FpgaModel.PinModels[J10]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="6" DataContext="{Binding PinModels[H10]}"
+                    <Button Grid.Row="7" Grid.Column="6" DataContext="{Binding FpgaModel.PinModels[H10]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="7" DataContext="{Binding PinModels[H13]}"
+                    <Button Grid.Row="7" Grid.Column="7" DataContext="{Binding FpgaModel.PinModels[H13]}"
                             Classes="Connectable" />
-                    <Button Grid.Row="7" Grid.Column="8" DataContext="{Binding PinModels[G12]}"
+                    <Button Grid.Row="7" Grid.Column="8" DataContext="{Binding FpgaModel.PinModels[G12]}"
                             Classes="Connectable" />
                     <Button Grid.Row="7" Grid.Column="9" Background="#fc9cff" IsEnabled="False" />
                     <Button Grid.Row="7" Grid.Column="10" Background="#0094FF" IsEnabled="False" />
@@ -234,21 +234,21 @@
                     <TextBlock Grid.Row="8" Grid.Column="13" Margin="0,7,0,0" Text="5V" Classes="VertLeft" Width="30" />
 
 
-                    <Button Grid.Row="7" Grid.Column="15" Width="8" DataContext="{Binding PinModels[D8]}"
+                    <Button Grid.Row="7" Grid.Column="15" Width="8" DataContext="{Binding FpgaModel.PinModels[D8]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="16" Width="8" DataContext="{Binding PinModels[C10]}"
+                    <Button Grid.Row="7" Grid.Column="16" Width="8" DataContext="{Binding FpgaModel.PinModels[C10]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="17" Width="8" DataContext="{Binding PinModels[C9]}"
+                    <Button Grid.Row="7" Grid.Column="17" Width="8" DataContext="{Binding FpgaModel.PinModels[C9]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="18" Width="8" DataContext="{Binding PinModels[B10]}"
+                    <Button Grid.Row="7" Grid.Column="18" Width="8" DataContext="{Binding FpgaModel.PinModels[B10]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="19" Width="8" DataContext="{Binding PinModels[A10]}"
+                    <Button Grid.Row="7" Grid.Column="19" Width="8" DataContext="{Binding FpgaModel.PinModels[A10]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="20" Width="8" DataContext="{Binding PinModels[A11]}"
+                    <Button Grid.Row="7" Grid.Column="20" Width="8" DataContext="{Binding FpgaModel.PinModels[A11]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="21" Width="8" DataContext="{Binding PinModels[A9]}"
+                    <Button Grid.Row="7" Grid.Column="21" Width="8" DataContext="{Binding FpgaModel.PinModels[A9]}"
                             Classes="Connectable" Background="White" />
-                    <Button Grid.Row="7" Grid.Column="22" Width="8" DataContext="{Binding PinModels[A8]}"
+                    <Button Grid.Row="7" Grid.Column="22" Width="8" DataContext="{Binding FpgaModel.PinModels[A8]}"
                             Classes="Connectable" Background="White" />
 
                     <TextBlock Grid.Row="8" Grid.Column="15" Grid.ColumnSpan="8" Margin="0,-10,0,0" Text="LED 8-1"
@@ -261,7 +261,7 @@
 
                 <Rectangle Fill="Gray" Width="25" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                            Margin="0, 0, 20, 0" />
-                <Button DataContext="{Binding PinModels[E6]}" Classes="Connectable" Background="#ffcc66"
+                <Button DataContext="{Binding FpgaModel.PinModels[E6]}" Classes="Connectable" Background="#ffcc66"
                         Width="15" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Margin="0, 0, 25, -10" />
                 <TextBlock Text="Button E6" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="60"
@@ -269,7 +269,7 @@
 
                 <Rectangle Fill="Gray" Width="25" Height="13" HorizontalAlignment="Right" VerticalAlignment="Top"
                            Margin="0, 0, 20, 0" />
-                <Button DataContext="{Binding PinModels[E6]}" IsEnabled="False" Background="#ffcc66" Width="15"
+                <Button DataContext="{Binding FpgaModel.PinModels[E6]}" IsEnabled="False" Background="#ffcc66" Width="15"
                         Height="10" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0, -10, 25, 0" />
                 <TextBlock Text="Reset" HorizontalAlignment="Right" VerticalAlignment="Top" Width="60"
                            TextAlignment="Center" Margin="0, -30, 3, 0" />
@@ -285,12 +285,12 @@
                Width="20" HorizontalAlignment="Left" VerticalAlignment="Center" />
         <Image Grid.Column="2" Source="{DynamicResource Entypo+.ArrowLongRight}" Margin="0, 20, 0, 0" Height="20"
                Width="20" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <Button Grid.Column="2" DataContext="{Binding PinModels[A4]}" Classes="Connectable"
+        <Button Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[A4]}" Classes="Connectable"
                 HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Width="24" Background="Red"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 0, 0, 20"
                 Content="RX"
                 Foreground="White" />
-        <Button Grid.Column="2" DataContext="{Binding PinModels[B4]}" Classes="Connectable"
+        <Button Grid.Column="2" DataContext="{Binding FpgaModel.PinModels[B4]}" Classes="Connectable"
                 HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Width="24" Background="Blue"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1" Margin="20, 20, 0, 0"
                 Content="TX"
@@ -302,9 +302,9 @@
         <Border Grid.Column="0" HorizontalAlignment="Right" Height="100">
             <Grid>
                 <Border ZIndex="10"
-                        IsVisible="{Binding InterfaceModels[PMOD_1].Connection, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        IsVisible="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                         BoxShadow="0 0 5 5 #77000000" Margin="90,0,0,0">
-                    <ContentPresenter DataContext="{Binding InterfaceModels[PMOD_1].Connection}"
+                    <ContentPresenter DataContext="{Binding FpgaModel.InterfaceModels[PMOD_1].ConnectedExtension}"
                                       HorizontalAlignment="Right" Margin="-90, 0, 0,0" Content="{Binding}" />
                 </Border>
             </Grid>

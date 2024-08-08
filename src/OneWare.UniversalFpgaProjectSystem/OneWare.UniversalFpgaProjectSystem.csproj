@@ -2,10 +2,49 @@
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
 
+    <PropertyGroup>
+        <Version>$(UniversalFpgaProjectSystemVersion)</Version>
+    </PropertyGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementTextView.axaml.cs">
+        <DependentUpon>FpgaGuiElementTextView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementRectView.axaml.cs">
+        <DependentUpon>FpgaGuiElementRectView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementEllipseView.axaml.cs">
+        <DependentUpon>FpgaGuiElementEllipseView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementPmodView.axaml.cs">
+        <DependentUpon>FpgaGuiElementPmodView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementCruviHsView.axaml.cs">
+        <DependentUpon>FpgaGuiElementCruviView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementImageView.axaml.cs">
+        <DependentUpon>FpgaGuiElementImageView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\GenericExtensionView.axaml.cs">
+        <DependentUpon>GenericFpgaExtensionView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementCruviLsView.axaml.cs">
+        <DependentUpon>FpgaGuiElementCruviLsView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

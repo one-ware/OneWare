@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:views="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericExtensionView"
+             ClipToBounds="False"
+             x:DataType="viewModels:GenericExtensionViewModel">
+    <Panel Name="ExtensionView">
+
+        <Interaction.Behaviors>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+                <AddClassAction ClassName="HideExtension" />
+            </DataTriggerBehavior>
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+                <RemoveClassAction ClassName="HideExtension" />
+            </DataTriggerBehavior>
+        </Interaction.Behaviors>
+        
+        <Panel.Styles>
+            <Style Selector="Panel#ExtensionView">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter>
+            </Style>
+            <Style Selector="Panel#ExtensionView.HideExtension">
+                <Setter Property="Opacity" Value="0.1" />
+                <Setter Property="IsHitTestVisible" Value="False"/>
+            </Style>
+        </Panel.Styles>
+
+        <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
+
+        <Panel IsVisible="{Binding GuiViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Button Height="{Binding GuiViewModel.Height, FallbackValue=0}"
+                    Width="{Binding GuiViewModel.Width, FallbackValue=0}"
+                    Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}" ClipToBounds="False"
+                    Command="{Binding $parent[views:GenericFpgaView].((viewModels:GenericFpgaViewModel)DataContext).FpgaModel.ToggleSelectExtension, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding ExtensionModel}"
+                    Background="Transparent">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </Button.Styles>
+                <Interaction.Behaviors>
+                    <behaviors:ContextDragBubbleBehavior Context="{Binding ExtensionModel}" />
+                </Interaction.Behaviors>
+                <ContentControl Name="Gui" Content="{Binding GuiViewModel}" ClipToBounds="False" />
+            </Button>
+            <Border Name="SelectionLayer" IsHitTestVisible="False"
+                    Height="{Binding GuiViewModel.Height, FallbackValue=0}"
+                    Width="{Binding GuiViewModel.Width, FallbackValue=0}" Opacity="0.6"
+                    Margin="{Binding GuiViewModel.Margin, FallbackValue={x:Null}}"
+                    BorderBrush="White">
+                <Interaction.Behaviors>
+                    <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                         Binding="{Binding ExtensionModel.IsSelected, FallbackValue={x:False}}">
+                        <AddClassAction ClassName="ExtensionSelected" />
+                    </DataTriggerBehavior>
+                    <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                         Binding="{Binding ExtensionModel.IsSelected, FallbackValue={x:False}}">
+                        <RemoveClassAction ClassName="ExtensionSelected" />
+                    </DataTriggerBehavior>
+                </Interaction.Behaviors>
+                <Border.Styles>
+                    <Style Selector="Border.ExtensionSelected">
+                        <Setter Property="BorderThickness" Value="2" />
+                    </Style>
+                </Border.Styles>
+            </Border>
+        </Panel>
+    </Panel>
+</UserControl>

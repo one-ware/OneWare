@@ -1,962 +1,961 @@
 {
-  "Name": "CYC5000",
-  "Properties": {
-    "QuartusToolchain_Family": "Cyclone V",
-    "QuartusToolchain_Device": "5CEBA2U15C8",
-    "QuartusProgrammer_ShortTerm_Mode": "JTAG",
-    "QuartusProgrammer_ShortTerm_Operation": "P",
-    "QuartusProgrammer_LongTerm_Mode": "JTAG",
-    "QuartusProgrammer_LongTerm_Format": "JIC",
-    "QuartusProgrammer_LongTerm_CpfArguments": "-s 5CEBA2 --device EPCQ64A -m ASx4",
-    "QuartusProgrammer_LongTerm_Operation": "IPV"
+  "properties": {
+    "quartusToolchainFamily": "Cyclone V",
+    "quartusToolchainDevice": "5CEBA2U15C8",
+    "quartusProgrammerShortTermMode": "JTAG",
+    "quartusProgrammerShortTermOperation": "P",
+    "quartusProgrammerLongTermMode": "JTAG",
+    "quartusProgrammerLongTermFormat": "JIC",
+    "quartusProgrammerLongTermCpfArguments": "-s 5CEBA2 --device EPCQ64A -m ASx4",
+    "quartusProgrammerLongTermOperation": "IPV"
   },
-  "Pins": [
+  "pins": [
     {
-      "Description": "CLK",
-      "Name": "F14"
+      "description": "CLK",
+      "name": "F14"
     },
     {
-      "Description": "LED",
-      "Name": "P4"
+      "description": "LED",
+      "name": "P4"
     },
     {
-      "Description": "LED",
-      "Name": "M4"
+      "description": "LED",
+      "name": "M4"
     },
     {
-      "Description": "LED",
-      "Name": "M3"
+      "description": "LED",
+      "name": "M3"
     },
     {
-      "Description": "LED",
-      "Name": "N3"
+      "description": "LED",
+      "name": "N3"
     },
     {
-      "Description": "LED",
-      "Name": "V2"
+      "description": "LED",
+      "name": "V2"
     },
     {
-      "Description": "LED",
-      "Name": "T2"
+      "description": "LED",
+      "name": "T2"
     },
     {
-      "Description": "LED",
-      "Name": "L1"
+      "description": "LED",
+      "name": "L1"
     },
     {
-      "Description": "LED",
-      "Name": "K1"
+      "description": "LED",
+      "name": "K1"
     },
     {
-      "Description": "Button",
-      "Name": "L17"
+      "description": "Button",
+      "name": "L17"
     },
     {
-      "Description": "USB TX",
-      "Name": "E18"
+      "description": "USB TX",
+      "name": "E18"
     },
     {
-      "Description": "USB RX",
-      "Name": "F16"
+      "description": "USB RX",
+      "name": "F16"
     },
     {
-      "Description": "USB BD2",
-      "Name": "H17"
+      "description": "USB BD2",
+      "name": "H17"
     },
     {
-      "Description": "USB BD3",
-      "Name": "H16"
+      "description": "USB BD3",
+      "name": "H16"
     },
     {
-      "Description": "USB BD4",
-      "Name": "J16"
+      "description": "USB BD4",
+      "name": "J16"
     },
     {
-      "Description": "USB BD5",
-      "Name": "G15"
+      "description": "USB BD5",
+      "name": "G15"
     },
     {
-      "Description": "USB BD6",
-      "Name": "J14"
+      "description": "USB BD6",
+      "name": "J14"
     },
     {
-      "Description": "USB BD7",
-      "Name": "L15"
+      "description": "USB BD7",
+      "name": "L15"
     },
     {
-      "Description": "USB BC0",
-      "Name": "G13"
+      "description": "USB BC0",
+      "name": "G13"
     },
     {
-      "Description": "USB BC1",
-      "Name": "H13"
+      "description": "USB BC1",
+      "name": "H13"
     },
     {
-      "Description": "USB BC2",
-      "Name": "J15"
+      "description": "USB BC2",
+      "name": "J15"
     },
     {
-      "Description": "USB BC3",
-      "Name": "J13"
+      "description": "USB BC3",
+      "name": "J13"
     },
     {
-      "Description": "USB BC4",
-      "Name": "K16"
+      "description": "USB BC4",
+      "name": "K16"
     },
     {
-      "Description": "USB BC5",
-      "Name": "K18"
+      "description": "USB BC5",
+      "name": "K18"
     },
     {
-      "Description": "USB BC6",
-      "Name": "K17"
+      "description": "USB BC6",
+      "name": "K17"
     },
     {
-      "Description": "USB BC7",
-      "Name": "L16"
+      "description": "USB BC7",
+      "name": "L16"
     },
     {
-      "Description": "CRUVI HS SMB_ALERT",
-      "Name": "G17"
+      "description": "CRUVI HS SMB_ALERT",
+      "name": "G17"
     },
     {
-      "Description": "CRUVI HS SMB_SDA",
-      "Name": "H18"
+      "description": "CRUVI HS SMB_SDA",
+      "name": "H18"
     },
     {
-      "Description": "CRUVI HS SMB_SCL",
-      "Name": "F17"
+      "description": "CRUVI HS SMB_SCL",
+      "name": "F17"
     },
     {
-      "Description": "CRUVI HS REFCLK",
-      "Name": "G14"
+      "description": "CRUVI HS REFCLK",
+      "name": "G14"
     },
     {
-      "Description": "CRUVI HS HSMIO",
-      "Name": "C16"
+      "description": "CRUVI HS HSMIO",
+      "name": "C16"
     },
     {
-      "Description": "CRUVI HS HSO",
-      "Name": "B14"
+      "description": "CRUVI HS HSO",
+      "name": "B14"
     },
     {
-      "Description": "CRUVI HS HSRST",
-      "Name": "B15"
+      "description": "CRUVI HS HSRST",
+      "name": "B15"
     },
     {
-      "Description": "CRUVI HS HSI",
-      "Name": "D16"
+      "description": "CRUVI HS HSI",
+      "name": "D16"
     },
     {
-      "Description": "CRUVI HS Low Speed I/Os",
-      "Name": "F4"
+      "description": "CRUVI HS Low Speed I/Os",
+      "name": "F4"
     },
     {
-      "Description": "CRUVI HS Low Speed I/Os",
-      "Name": "J3"
+      "description": "CRUVI HS Low Speed I/Os",
+      "name": "J3"
     },
     {
-      "Description": "CRUVI HS Low Speed I/Os",
-      "Name": "E3"
+      "description": "CRUVI HS Low Speed I/Os",
+      "name": "E3"
     },
     {
-      "Description": "CRUVI HS Low Speed I/Os",
-      "Name": "J4"
+      "description": "CRUVI HS Low Speed I/Os",
+      "name": "J4"
     },
     {
-      "Description": "CRUVI HS Low Speed I/Os",
-      "Name": "E2"
+      "description": "CRUVI HS Low Speed I/Os",
+      "name": "E2"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B17"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B17"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B18"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B18"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A7"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A7"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A6"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A6"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "C13"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "C13"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "C12"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "C12"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "E8"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "E8"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "F7"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "F7"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "G6"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "G6"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "F6"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "F6"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B4"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B4"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B5"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B5"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A12"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A12"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B12"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B12"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A11"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A11"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A10"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A10"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A14"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A14"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A15"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A15"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A16"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A16"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "A17"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "A17"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "F9"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "F9"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "F10"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "F10"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B7"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B7"
     },
     {
-      "Description": "CRUVI HS Differential I/Os",
-      "Name": "B8"
+      "description": "CRUVI HS Differential I/Os",
+      "name": "B8"
     },
     {
-      "Description": "VSEL",
-      "Name": "N10"
+      "description": "VSEL",
+      "name": "N10"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "V17"
+      "description": "Low Speed I/Os",
+      "name": "V17"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "U17"
+      "description": "Low Speed I/Os",
+      "name": "U17"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "T17"
+      "description": "Low Speed I/Os",
+      "name": "T17"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "U18"
+      "description": "Low Speed I/Os",
+      "name": "U18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "R17"
+      "description": "Low Speed I/Os",
+      "name": "R17"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "R18"
+      "description": "Low Speed I/Os",
+      "name": "R18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "P18"
+      "description": "Low Speed I/Os",
+      "name": "P18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "N17"
+      "description": "Low Speed I/Os",
+      "name": "N17"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "N18"
+      "description": "Low Speed I/Os",
+      "name": "N18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "M18"
+      "description": "Low Speed I/Os",
+      "name": "M18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "J18"
+      "description": "Low Speed I/Os",
+      "name": "J18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "G18"
+      "description": "Low Speed I/Os",
+      "name": "G18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "D18"
+      "description": "Low Speed I/Os",
+      "name": "D18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "C18"
+      "description": "Low Speed I/Os",
+      "name": "C18"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "T1"
+      "description": "Low Speed I/Os",
+      "name": "T1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "R2"
+      "description": "Low Speed I/Os",
+      "name": "R2"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "R1"
+      "description": "Low Speed I/Os",
+      "name": "R1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "N2"
+      "description": "Low Speed I/Os",
+      "name": "N2"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "L2"
+      "description": "Low Speed I/Os",
+      "name": "L2"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "J1"
+      "description": "Low Speed I/Os",
+      "name": "J1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "F1"
+      "description": "Low Speed I/Os",
+      "name": "F1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "E1"
+      "description": "Low Speed I/Os",
+      "name": "E1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "D1"
+      "description": "Low Speed I/Os",
+      "name": "D1"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "M2"
+      "description": "Low Speed I/Os",
+      "name": "M2"
     },
     {
-      "Description": "Low Speed I/Os",
-      "Name": "P1"
+      "description": "Low Speed I/Os",
+      "name": "P1"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "P3"
+      "description": "SPI Flash",
+      "name": "P3"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "K6"
+      "description": "SPI Flash",
+      "name": "K6"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "V1"
+      "description": "SPI Flash",
+      "name": "V1"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "U2"
+      "description": "SPI Flash",
+      "name": "U2"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "U3"
+      "description": "SPI Flash",
+      "name": "U3"
     },
     {
-      "Description": "SPI Flash",
-      "Name": "M5"
+      "description": "SPI Flash",
+      "name": "M5"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "R13"
+      "description": "SDRAM Address",
+      "name": "R13"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "U12"
+      "description": "SDRAM Address",
+      "name": "U12"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "V12"
+      "description": "SDRAM Address",
+      "name": "V12"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "V13"
+      "description": "SDRAM Address",
+      "name": "V13"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "V15"
+      "description": "SDRAM Address",
+      "name": "V15"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "V16"
+      "description": "SDRAM Address",
+      "name": "V16"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "T16"
+      "description": "SDRAM Address",
+      "name": "T16"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "U15"
+      "description": "SDRAM Address",
+      "name": "U15"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "P14"
+      "description": "SDRAM Address",
+      "name": "P14"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "T15"
+      "description": "SDRAM Address",
+      "name": "T15"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "M13"
+      "description": "SDRAM Address",
+      "name": "M13"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "P15"
+      "description": "SDRAM Address",
+      "name": "P15"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "N16"
+      "description": "SDRAM Address",
+      "name": "N16"
     },
     {
-      "Description": "SDRAM Address",
-      "Name": "R16,"
+      "description": "SDRAM Address",
+      "name": "R16"
     },
     {
-      "Description": "SDRAM Bank Select",
-      "Name": "T12"
+      "description": "SDRAM Bank Select",
+      "name": "T12"
     },
     {
-      "Description": "SDRAM Bank Select",
-      "Name": "N13"
+      "description": "SDRAM Bank Select",
+      "name": "N13"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "U4"
+      "description": "SDRAM Data",
+      "name": "U4"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "T4"
+      "description": "SDRAM Data",
+      "name": "T4"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "V6"
+      "description": "SDRAM Data",
+      "name": "V6"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "U5"
+      "description": "SDRAM Data",
+      "name": "U5"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "V7"
+      "description": "SDRAM Data",
+      "name": "V7"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "T5"
+      "description": "SDRAM Data",
+      "name": "T5"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "V8"
+      "description": "SDRAM Data",
+      "name": "V8"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "U8"
+      "description": "SDRAM Data",
+      "name": "U8"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "P10"
+      "description": "SDRAM Data",
+      "name": "P10"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "P9"
+      "description": "SDRAM Data",
+      "name": "P9"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "T11"
+      "description": "SDRAM Data",
+      "name": "T11"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "R9"
+      "description": "SDRAM Data",
+      "name": "R9"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "R11"
+      "description": "SDRAM Data",
+      "name": "R11"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "T9"
+      "description": "SDRAM Data",
+      "name": "T9"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "V10"
+      "description": "SDRAM Data",
+      "name": "V10"
     },
     {
-      "Description": "SDRAM Data",
-      "Name": "U9"
+      "description": "SDRAM Data",
+      "name": "U9"
     },
     {
-      "Description": "SDRAM I/O Mask",
-      "Name": "U13"
+      "description": "SDRAM I/O Mask",
+      "name": "U13"
     },
     {
-      "Description": "SDRAM I/O Mask",
-      "Name": "U14"
+      "description": "SDRAM I/O Mask",
+      "name": "U14"
     },
     {
-      "Description": "SDRAM Row Address Strobe",
-      "Name": "P13"
+      "description": "SDRAM Row Address Strobe",
+      "name": "P13"
     },
     {
-      "Description": "SDRAM Column Address Strobe",
-      "Name": "M14"
+      "description": "SDRAM Column Address Strobe",
+      "name": "M14"
     },
     {
-      "Description": "SDRAM Write Enable",
-      "Name": "N12"
+      "description": "SDRAM Write Enable",
+      "name": "N12"
     },
     {
-      "Description": "SDRAM Clock",
-      "Name": "P16"
+      "description": "SDRAM Clock",
+      "name": "P16"
     },
     {
-      "Description": "SDRAM Clock Enable",
-      "Name": "T14"
+      "description": "SDRAM Clock Enable",
+      "name": "T14"
     },
     {
-      "Description": "SDRAM Chip Select",
-      "Name": "L13"
+      "description": "SDRAM Chip Select",
+      "name": "L13"
     }
   ],
-  "Interfaces": [
+  "interfaces": [
     {
-      "Name": "CRUVIHS_1",
-      "Connector": "CruviHS",
-      "Pins": [
+      "name": "CRUVI_HS_1",
+      "connector": "CRUVI_HS",
+      "pins": [
         {
-          "Name": "HS_Dif_1",
-          "Pin": "B17"
+          "name": "HS_Dif_1",
+          "pin": "B17"
         },
         {
-          "Name": "HS_Dif_2",
-          "Pin": "B18"
+          "name": "HS_Dif_2",
+          "pin": "B18"
         },
         {
-          "Name": "HS_Dif_3",
-          "Pin": "A7"
+          "name": "HS_Dif_3",
+          "pin": "A7"
         },
         {
-          "Name": "HS_Dif_4",
-          "Pin": "A6"
+          "name": "HS_Dif_4",
+          "pin": "A6"
         },
         {
-          "Name": "HS_Dif_5",
-          "Pin": "C13"
+          "name": "HS_Dif_5",
+          "pin": "C13"
         },
         {
-          "Name": "HS_Dif_6",
-          "Pin": "C12"
+          "name": "HS_Dif_6",
+          "pin": "C12"
         },
         {
-          "Name": "HS_Dif_7",
-          "Pin": "E8"
+          "name": "HS_Dif_7",
+          "pin": "E8"
         },
         {
-          "Name": "HS_Dif_8",
-          "Pin": "F7"
+          "name": "HS_Dif_8",
+          "pin": "F7"
         },
         {
-          "Name": "HS_Dif_9",
-          "Pin": "G6"
+          "name": "HS_Dif_9",
+          "pin": "G6"
         },
         {
-          "Name": "HS_Dif_10",
-          "Pin": "F6"
+          "name": "HS_Dif_10",
+          "pin": "F6"
         },
         {
-          "Name": "HS_Dif_11",
-          "Pin": "B4"
+          "name": "HS_Dif_11",
+          "pin": "B4"
         },
         {
-          "Name": "HS_Dif_12",
-          "Pin": "B5"
+          "name": "HS_Dif_12",
+          "pin": "B5"
         },
         {
-          "Name": "HS_Dif_13",
-          "Pin": "A12"
+          "name": "HS_Dif_13",
+          "pin": "A12"
         },
         {
-          "Name": "HS_Dif_14",
-          "Pin": "B12"
+          "name": "HS_Dif_14",
+          "pin": "B12"
         },
         {
-          "Name": "HS_Dif_15",
-          "Pin": "A11"
+          "name": "HS_Dif_15",
+          "pin": "A11"
         },
         {
-          "Name": "HS_Dif_16",
-          "Pin": "A10"
+          "name": "HS_Dif_16",
+          "pin": "A10"
         },
         {
-          "Name": "HS_Dif_17",
-          "Pin": "A14"
+          "name": "HS_Dif_17",
+          "pin": "A14"
         },
         {
-          "Name": "HS_Dif_18",
-          "Pin": "A15"
+          "name": "HS_Dif_18",
+          "pin": "A15"
         },
         {
-          "Name": "HS_Dif_19",
-          "Pin": "A16"
+          "name": "HS_Dif_19",
+          "pin": "A16"
         },
         {
-          "Name": "HS_Dif_20",
-          "Pin": "A17"
+          "name": "HS_Dif_20",
+          "pin": "A17"
         },
         {
-          "Name": "HS_Dif_21",
-          "Pin": "F9"
+          "name": "HS_Dif_21",
+          "pin": "F9"
         },
         {
-          "Name": "HS_Dif_22",
-          "Pin": "F10"
+          "name": "HS_Dif_22",
+          "pin": "F10"
         },
         {
-          "Name": "HS_Dif_23",
-          "Pin": "B7"
+          "name": "HS_Dif_23",
+          "pin": "B7"
         },
         {
-          "Name": "HS_Dif_24",
-          "Pin": "B8"
+          "name": "HS_Dif_24",
+          "pin": "B8"
         },
         {
-          "Name": "HS_Ale",
-          "Pin": "G17"
+          "name": "HS_Ale",
+          "pin": "G17"
         },
         {
-          "Name": "HS_SDA",
-          "Pin": "H18"
+          "name": "HS_SDA",
+          "pin": "H18"
         },
         {
-          "Name": "HS_SCL",
-          "Pin": "F17"
+          "name": "HS_SCL",
+          "pin": "F17"
         },
         {
-          "Name": "HS_Ref",
-          "Pin": "G14"
+          "name": "HS_Ref",
+          "pin": "G14"
         },
         {
-          "Name": "HS_HSM",
-          "Pin": "C16"
+          "name": "HS_HSM",
+          "pin": "C16"
         },
         {
-          "Name": "HS_HSO",
-          "Pin": "B14"
+          "name": "HS_HSO",
+          "pin": "B14"
         },
         {
-          "Name": "HS_HSR",
-          "Pin": "B15"
+          "name": "HS_HSR",
+          "pin": "B15"
         },
         {
-          "Name": "HS_HSI",
-          "Pin": "D16"
+          "name": "HS_HSI",
+          "pin": "D16"
         },
         {
-          "Name": "HS_LOW_,1",
-          "Pin": "F4"
+          "name": "HS_LOW_,1",
+          "pin": "F4"
         },
         {
-          "Name": "HS_LOW_2",
-          "Pin": "J3"
+          "name": "HS_LOW_2",
+          "pin": "J3"
         },
         {
-          "Name": "HS_LOW_3",
-          "Pin": "E3"
+          "name": "HS_LOW_3",
+          "pin": "E3"
         },
         {
-          "Name": "HS_LOW_4",
-          "Pin": "J4"
+          "name": "HS_LOW_4",
+          "pin": "J4"
         },
         {
-          "Name": "HS_LOW_5",
-          "Pin": "E2"
+          "name": "HS_LOW_5",
+          "pin": "E2"
         }
       ]
     },
     {
-      "Name": "UART",
-      "Pins": [
+      "name": "UART",
+      "pins": [
         {
-          "Name": "TXD",
-          "Pin": "E18"
+          "name": "TXD",
+          "pin": "E18"
         },
         {
-          "Name": "RXD",
-          "Pin": "F16"
+          "name": "RXD",
+          "pin": "F16"
         }
       ]
     },
     {
-      "Name": "SDRAM",
-      "Pins": [
+      "name": "SDRAM",
+      "pins": [
         {
-          "Name": "ADD_1",
-          "Pin": "R13"
+          "name": "ADD_1",
+          "pin": "R13"
         },
         {
-          "Name": "ADD_2",
-          "Pin": "U12"
+          "name": "ADD_2",
+          "pin": "U12"
         },
         {
-          "Name": "ADD_3",
-          "Pin": "V12"
+          "name": "ADD_3",
+          "pin": "V12"
         },
         {
-          "Name": "ADD_4",
-          "Pin": "V13"
+          "name": "ADD_4",
+          "pin": "V13"
         },
         {
-          "Name": "ADD_5",
-          "Pin": "V15"
+          "name": "ADD_5",
+          "pin": "V15"
         },
         {
-          "Name": "ADD_6",
-          "Pin": "V16"
+          "name": "ADD_6",
+          "pin": "V16"
         },
         {
-          "Name": "ADD_7",
-          "Pin": "T16"
+          "name": "ADD_7",
+          "pin": "T16"
         },
         {
-          "Name": "ADD_8",
-          "Pin": "U15"
+          "name": "ADD_8",
+          "pin": "U15"
         },
         {
-          "Name": "ADD_9",
-          "Pin": "P14"
+          "name": "ADD_9",
+          "pin": "P14"
         },
         {
-          "Name": "ADD_10",
-          "Pin": "T15"
+          "name": "ADD_10",
+          "pin": "T15"
         },
         {
-          "Name": "ADD_11",
-          "Pin": "M13"
+          "name": "ADD_11",
+          "pin": "M13"
         },
         {
-          "Name": "ADD_12",
-          "Pin": "P15"
+          "name": "ADD_12",
+          "pin": "P15"
         },
         {
-          "Name": "ADD_13",
-          "Pin": "N16"
+          "name": "ADD_13",
+          "pin": "N16"
         },
         {
-          "Name": "ADD_14",
-          "Pin": "R16"
+          "name": "ADD_14",
+          "pin": "R16"
         },
         {
-          "Name": "BAN_1",
-          "Pin": "T12"
+          "name": "BAN_1",
+          "pin": "T12"
         },
         {
-          "Name": "BAN_2",
-          "Pin": "N13"
+          "name": "BAN_2",
+          "pin": "N13"
         },
         {
-          "Name": "DAT_1",
-          "Pin": "U4"
+          "name": "DAT_1",
+          "pin": "U4"
         },
         {
-          "Name": "DAT_2",
-          "Pin": "T4"
+          "name": "DAT_2",
+          "pin": "T4"
         },
         {
-          "Name": "DAT_3",
-          "Pin": "V6"
+          "name": "DAT_3",
+          "pin": "V6"
         },
         {
-          "Name": "DAT_4",
-          "Pin": "U5"
+          "name": "DAT_4",
+          "pin": "U5"
         },
         {
-          "Name": "DAT_5",
-          "Pin": "V7"
+          "name": "DAT_5",
+          "pin": "V7"
         },
         {
-          "Name": "DAT_6",
-          "Pin": "T5"
+          "name": "DAT_6",
+          "pin": "T5"
         },
         {
-          "Name": "DAT_7",
-          "Pin": "V8"
+          "name": "DAT_7",
+          "pin": "V8"
         },
         {
-          "Name": "DAT_8",
-          "Pin": "U8"
+          "name": "DAT_8",
+          "pin": "U8"
         },
         {
-          "Name": "DAT_9",
-          "Pin": "P10"
+          "name": "DAT_9",
+          "pin": "P10"
         },
         {
-          "Name": "DAT_10",
-          "Pin": "P9"
+          "name": "DAT_10",
+          "pin": "P9"
         },
         {
-          "Name": "DAT_11",
-          "Pin": "T11"
+          "name": "DAT_11",
+          "pin": "T11"
         },
         {
-          "Name": "DAT_12",
-          "Pin": "R9"
+          "name": "DAT_12",
+          "pin": "R9"
         },
         {
-          "Name": "DAT_13",
-          "Pin": "R11"
+          "name": "DAT_13",
+          "pin": "R11"
         },
         {
-          "Name": "DAT_14",
-          "Pin": "T9"
+          "name": "DAT_14",
+          "pin": "T9"
         },
         {
-          "Name": "DAT_15",
-          "Pin": "V10"
+          "name": "DAT_15",
+          "pin": "V10"
         },
         {
-          "Name": "DAT_16",
-          "Pin": "U9"
+          "name": "DAT_16",
+          "pin": "U9"
         },
         {
-          "Name": "DQM_1",
-          "Pin": "U13"
+          "name": "DQM_1",
+          "pin": "U13"
         },
         {
-          "Name": "DQM_2",
-          "Pin": "U14"
+          "name": "DQM_2",
+          "pin": "U14"
         },
         {
-          "Name": "RAS",
-          "Pin": "P13"
+          "name": "RAS",
+          "pin": "P13"
         },
         {
-          "Name": "CAS",
-          "Pin": "M14"
+          "name": "CAS",
+          "pin": "M14"
         },
         {
-          "Name": "WEN",
-          "Pin": "N12"
+          "name": "WEN",
+          "pin": "N12"
         },
         {
-          "Name": "ClK",
-          "Pin": "P16"
+          "name": "clk",
+          "pin": "P16"
         },
         {
-          "Name": "CKE",
-          "Pin": "T14"
+          "name": "CKE",
+          "pin": "T14"
         },
         {
-          "Name": "CSE",
-          "Pin": "L13"
+          "name": "CSE",
+          "pin": "L13"
         }
       ]
     },
     {
-      "Name": "FLASH",
-      "Pins": [
+      "name": "FLASH",
+      "pins": [
         {
-          "Name": "1",
-          "Pin": "K6"
+          "name": "1",
+          "pin": "K6"
         },
         {
-          "Name": "2",
-          "Pin": "U2"
+          "name": "2",
+          "pin": "U2"
         },
         {
-          "Name": "3",
-          "Pin": "V1"
+          "name": "3",
+          "pin": "V1"
         },
         {
-          "Name": "4",
-          "Pin": "P3"
+          "name": "4",
+          "pin": "P3"
         },
         {
-          "Name": "5",
-          "Pin": "U3"
+          "name": "5",
+          "pin": "U3"
         },
         {
-          "Name": "6",
-          "Pin": "M5"
+          "name": "6",
+          "pin": "M5"
         }
       ]
     },
     {
-      "Name": "LED",
-      "Pins": [
+      "name": "LED",
+      "pins": [
         {
-          "Name": "1",
-          "Pin": "P4"
+          "name": "1",
+          "pin": "P4"
         },
         {
-          "Name": "2",
-          "Pin": "M4"
+          "name": "2",
+          "pin": "M4"
         },
         {
-          "Name": "3",
-          "Pin": "M3"
+          "name": "3",
+          "pin": "M3"
         },
         {
-          "Name": "4",
-          "Pin": "N3"
+          "name": "4",
+          "pin": "N3"
         },
         {
-          "Name": "5",
-          "Pin": "V2"
+          "name": "5",
+          "pin": "V2"
         },
         {
-          "Name": "6",
-          "Pin": "T2"
+          "name": "6",
+          "pin": "T2"
         },
         {
-          "Name": "7",
-          "Pin": "L1"
+          "name": "7",
+          "pin": "L1"
         },
         {
-          "Name": "8",
-          "Pin": "K1"
+          "name": "8",
+          "pin": "K1"
         }
       ]
     },
     {
-      "Name": "CLK",
-      "Pins": [
+      "name": "CLK",
+      "pins": [
         {
-          "Name": "1",
-          "Pin": "F14"
+          "name": "1",
+          "pin": "F14"
         }
       ]
     }

@@ -40,7 +40,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         foreach (var property in defaultProperties) _settings.TryAdd(property.Key, property.Value);
 
         _yosysSynthToolSetting = new ComboBoxSetting("Yosys Synth Tool", "Set Yosys Synth tool",
-            defaultProperties.GetValueOrDefault("YosysToolchain_Yosys_SynthTool") ?? "", [
+            defaultProperties.GetValueOrDefault("yosysToolchainYosysSynthTool") ?? "", [
                 "synth_achronix",
                 "synth_anlogic",
                 "synth_coolrunner2",
@@ -61,10 +61,10 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "synth_xilinx"
             ]);
         _yosysFlagSetting = new TitledSetting("Yosys Flags", "Set Yosys flags",
-            defaultProperties.GetValueOrDefault("YosysToolchain_Yosys_Flags") ?? "");
+            defaultProperties.GetValueOrDefault("yosysToolchainYosysFlags") ?? "");
 
         _nextPnrToolSetting = new ComboBoxSetting("NextPnr Tool", "Set NextPnr tool",
-            defaultProperties.GetValueOrDefault("YosysToolchain_NextPnr_Tool") ?? "", [
+            defaultProperties.GetValueOrDefault("yosysToolchainNextPnrTool") ?? "", [
                 "nextpnr-ecp5",
                 "nextpnr-generic",
                 "nextpnr-gowin",
@@ -73,16 +73,16 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "nextpnr-nexus"
             ]);
         _nextPnrFlagSetting = new TitledSetting("NextPnR Flags", "Set NextPnr flags",
-            defaultProperties.GetValueOrDefault("YosysToolchain_NextPnr_Flags") ?? "");
+            defaultProperties.GetValueOrDefault("yosysToolchainNextPnrFlags") ?? "");
 
         _packToolSetting = new ComboBoxSetting("Pack Tool", "Set Pack tool",
-            defaultProperties.GetValueOrDefault("YosysToolchain_Pack_Tool") ?? "", [
+            defaultProperties.GetValueOrDefault("yosysToolchainPackTool") ?? "", [
                 "ecppack",
                 "gowin_pack",
                 "icepack"
             ]);
         _packToolFlagSetting = new TitledSetting("Pack Flags", "Set Pack flags",
-            defaultProperties.GetValueOrDefault("YosysToolchain_Pack_Flags") ?? "");
+            defaultProperties.GetValueOrDefault("yosysToolchainPackFlags") ?? "");
 
         SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_yosysSynthToolSetting));
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_yosysFlagSetting));
@@ -93,19 +93,19 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_packToolSetting));
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_packToolFlagSetting));
 
-        if (_settings.TryGetValue("YosysToolchain_Yosys_SynthTool", out var yTool))
+        if (_settings.TryGetValue("yosysToolchainYosysSynthTool", out var yTool))
             _yosysSynthToolSetting.Value = yTool;
-        if (_settings.TryGetValue("YosysToolchain_Yosys_Flags", out var yFlags))
+        if (_settings.TryGetValue("yosysToolchainYosysFlags", out var yFlags))
             _yosysFlagSetting.Value = yFlags;
 
-        if (_settings.TryGetValue("YosysToolchain_NextPnr_Tool", out var nTool))
+        if (_settings.TryGetValue("yosysToolchainNextPnrTool", out var nTool))
             _nextPnrToolSetting.Value = nTool;
-        if (_settings.TryGetValue("YosysToolchain_NextPnr_Flags", out var nFlags))
+        if (_settings.TryGetValue("yosysToolchainNextPnrFlags", out var nFlags))
             _nextPnrFlagSetting.Value = nFlags;
 
-        if (_settings.TryGetValue("YosysToolchain_Pack_Tool", out var pTool))
+        if (_settings.TryGetValue("yosysToolchainPackTool", out var pTool))
             _packToolSetting.Value = pTool;
-        if (_settings.TryGetValue("YosysToolchain_Pack_Flags", out var pFlags))
+        if (_settings.TryGetValue("yosysToolchainPackFlags", out var pFlags))
             _packToolFlagSetting.Value = pFlags;
     }
 
@@ -116,12 +116,12 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
 
     public void Save(FlexibleWindow flexibleWindow)
     {
-        _settings["YosysToolchain_Yosys_SynthTool"] = _yosysSynthToolSetting.Value.ToString()!;
-        _settings["YosysToolchain_Yosys_Flags"] = _yosysFlagSetting.Value.ToString()!;
-        _settings["YosysToolchain_NextPnr_Tool"] = _nextPnrToolSetting.Value.ToString()!;
-        _settings["YosysToolchain_NextPnr_Flags"] = _nextPnrFlagSetting.Value.ToString()!;
-        _settings["YosysToolchain_Pack_Tool"] = _packToolSetting.Value.ToString()!;
-        _settings["YosysToolchain_Pack_Flags"] = _packToolFlagSetting.Value.ToString()!;
+        _settings["yosysToolchainYosysSynthTool"] = _yosysSynthToolSetting.Value.ToString()!;
+        _settings["yosysToolchainYosysFlags"] = _yosysFlagSetting.Value.ToString()!;
+        _settings["yosysToolchainNextPnrTool"] = _nextPnrToolSetting.Value.ToString()!;
+        _settings["yosysToolchainNextPnrFlags"] = _nextPnrFlagSetting.Value.ToString()!;
+        _settings["yosysToolchainPackTool"] = _packToolSetting.Value.ToString()!;
+        _settings["yosysToolchainPackFlags"] = _packToolFlagSetting.Value.ToString()!;
 
         FpgaSettingsParser.SaveSettings(_fpgaProjectRoot, _selectedFpga.Name, _settings);
 

@@ -248,7 +248,7 @@ public abstract class LanguageServiceBase : ILanguageService
     {
         var openDoc =
             ContainerLocator.Container.Resolve<IDockService>().OpenFiles
-                .FirstOrDefault(x => x.Key.FullPath.Equals(path, StringComparison.OrdinalIgnoreCase)).Value as IEditor;
+                .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Value as IEditor;
 
         try
         {
@@ -297,13 +297,12 @@ public abstract class LanguageServiceBase : ILanguageService
     {
         Dispatcher.UIThread.Post(() =>
         {
-            var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles
-                .FirstOrDefault(x => x.Key.FullPath.EqualPaths(pdp.Uri.GetFileSystemPath())).Key;
-            file ??=
-                ContainerLocator.Container.Resolve<IProjectExplorerService>()
-                    .SearchFullPath(pdp.Uri.GetFileSystemPath()) as IFile;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>()
-                .GetTemporaryFile(pdp.Uri.GetFileSystemPath());
+            var path = pdp.Uri.GetFileSystemPath();
+            
+            var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
+            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+            
             ContainerLocator.Container.Resolve<IErrorService>()
                 .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
             //file.Diagnostics = pdp.Diagnostics;

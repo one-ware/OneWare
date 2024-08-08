@@ -1,0 +1,25 @@
+{
+  "Properties": {
+    "yosysToolchainYosysSynthTool": "synth_gowin",
+    "yosysToolchainYosysFlags": "",
+    "yosysToolchainNextPnrTool": "nextpnr-gowin",
+    "yosysToolchainNextPnrFlags": "",
+    "yosysToolchainPackTool": "gowin_pack",
+    "yosysToolchainPackFlags": ""
+  },
+  "Pins": [
+    {
+      "Description": "CLK",
+      "Name": "F14"
+    },
+    {
+      "Description": "LED",
+      "Name": "P4"
+    },
+    {
+      "Description": "Test",
+      "Name": "A1"
+    }
+  ],
+  "Interfaces": []
+}

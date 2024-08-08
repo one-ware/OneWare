@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:converters="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView" ClipToBounds="False"
+             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding ControlHeight}" Width="{Binding ControlWidth}">
+    <UserControl.RenderTransform>
+        <RotateTransform Angle="{Binding Rotation}" />
+    </UserControl.RenderTransform>
+    <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
+        <TextBlock IsVisible="{Binding !FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+            <Interaction.Behaviors>
+                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+            </Interaction.Behaviors>
+        </TextBlock>
+        <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
+                Command="{Binding PinModel.FpgaModel.SelectPin, FallbackValue={x:Null}}"
+                Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
+                CommandParameter="{Binding PinModel}" BorderBrush="Gray"
+                CornerRadius="{Binding CornerRadius}">
+            <Button.Styles>
+                <Style Selector="Button:disabled">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </Style>
+                <Style Selector="Button.PinConnected /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="#222222" />
+                </Style>
+                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="#555555" />
+                    <Setter Property="BorderBrush" Value="Gray" />
+                </Style>
+                <Style Selector="Button.PinSelected /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="BorderBrush" Value="#DDDDDD" />
+                    <Setter Property="BorderThickness" Value="2" />
+                </Style>
+                <Style Selector="Button.PinSelected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="BorderBrush" Value="#BBBBBB" />
+                </Style>
+            </Button.Styles>
+            <Interaction.Behaviors>
+                <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                     Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
+                    <AddClassAction ClassName="PinSelected" />
+                </DataTriggerBehavior>
+                <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                     Binding="{Binding PinModel.IsSelected, FallbackValue={x:False}}">
+                    <RemoveClassAction ClassName="PinSelected" />
+                </DataTriggerBehavior>
+                <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                     Binding="{Binding PinModel.ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                    <AddClassAction ClassName="PinConnected" />
+                </DataTriggerBehavior>
+                <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                     Binding="{Binding PinModel.ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                    <RemoveClassAction ClassName="PinConnected" />
+                </DataTriggerBehavior>
+            </Interaction.Behaviors>
+        </Button>
+        <TextBlock IsVisible="{Binding FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="FlippedLabel" FontSize="{Binding Height}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+            <Interaction.Behaviors>
+                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+            </Interaction.Behaviors>
+        </TextBlock>
+    </StackPanel>
+
+</UserControl>
