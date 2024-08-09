@@ -2,10 +2,10 @@ name: Publish Studio Desktop for Linux in Flathub
 
 on:
   workflow_dispatch:
-#  workflow_run:
-#    workflows: [ Publish Studio Desktop ]
-#    types:
-#      - completed
+  workflow_run:
+    workflows: [ Publish Studio Desktop ]
+    types:
+      - completed
 
 jobs:
   deploy-flathub:
