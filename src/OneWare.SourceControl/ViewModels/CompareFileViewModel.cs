@@ -80,7 +80,6 @@ public class CompareFileViewModel : Document, IWaitForContent
         IsLoading = true;
         try
         {
-            await _sourceControlViewModel.WaitUntilFreeAsync();
             var patch = _sourceControlViewModel.GetPatch(FullPath, 10000);
             if (patch != null)
             {

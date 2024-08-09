@@ -148,18 +148,19 @@ public class WindowService : IWindowService
             Input = defaultValue
         };
         await ShowDialogAsync(msg, owner);
-        if (msg.BoxStatus == MessageBoxStatus.Canceled) return null;
-        return msg.Input;
+        return msg.BoxStatus == MessageBoxStatus.Canceled ? null : msg.Input;
     }
 
-    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon,
+    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
         Window? owner = null)
     {
         var msg = new MessageBoxWindow(title, message,
-            MessageBoxMode.SelectFolder, icon);
+            MessageBoxMode.SelectFolder, icon)
+        {
+            Input = defaultValue
+        };
         await ShowDialogAsync(msg, owner);
-        if (msg.BoxStatus == MessageBoxStatus.Canceled) return null;
-        return msg.Input;
+        return msg.BoxStatus == MessageBoxStatus.Canceled ? null : msg.Input;
     }
 
     public async Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon,
@@ -170,8 +171,7 @@ public class WindowService : IWindowService
         msg.SelectionItems.AddRange(options);
         msg.SelectedItem = defaultOption;
         await ShowDialogAsync(msg, owner);
-        if (msg.BoxStatus == MessageBoxStatus.Canceled) return msg.SelectedItem;
-        return null;
+        return msg.BoxStatus == MessageBoxStatus.Canceled ? msg.SelectedItem : null;
     }
 
     public void ShowNotification(string title, string message, NotificationType type)

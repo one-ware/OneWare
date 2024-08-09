@@ -52,6 +52,13 @@
                     <MenuItem.Header>
                         <Image Width="15" Source="{DynamicResource BoxIcons.RegularDotsHorizontalRounded}" />
                     </MenuItem.Header>
+                    <MenuItem Header="Account">
+                        <MenuItem Header="Login to Github" Command="{Binding GitService.LoginGithubAsync}">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource Bootstrap.Github}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
                     <MenuItem Header="Clone" Command="{Binding CloneDialogAsyncCommand}">
                         <MenuItem.Icon>
                             <Image Source="{DynamicResource FontAwesome.DownloadSolid}" />

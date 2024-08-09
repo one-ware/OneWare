@@ -1,6 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia;
 using Avalonia.Controls;
@@ -17,6 +15,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.Models;
+using OneWare.SourceControl.Services;
 using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels;
@@ -31,7 +30,8 @@ public class SourceControlViewModel : ExtendedTool
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
-
+    private readonly IPaths _paths;
+    
     private string _commitMessage = "";
 
     private bool _dllNotFound;
@@ -48,16 +48,19 @@ public class SourceControlViewModel : ExtendedTool
 
     private string _workingPath = "";
 
-    public SourceControlViewModel(ILogger logger, ISettingsService settingsService,
+    public SourceControlViewModel(ILogger logger, GitService gitService, ISettingsService settingsService,
         IApplicationStateService applicationStateService,
         IDockService dockService, IWindowService windowService,
+        IPaths paths,
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         _logger = logger;
+        GitService = gitService;
         _settingsService = settingsService;
         _applicationStateService = applicationStateService;
         _dockService = dockService;
         _windowService = windowService;
+        _paths = paths;
         ProjectExplorerService = projectExplorerService;
 
         Id = "SourceControl";
@@ -92,6 +95,8 @@ public class SourceControlViewModel : ExtendedTool
             .WhenValueChanged(x => x.ActiveProject)
             .Subscribe(RefreshAsyncCommand.Execute);
     }
+    
+    public GitService GitService { get; }
 
     public IProjectExplorerService ProjectExplorerService { get; }
 
@@ -187,14 +192,15 @@ public class SourceControlViewModel : ExtendedTool
         if (url == null) return;
 
         var folder = await _windowService.ShowFolderSelectAsync("Clone",
-            "Select the location for the new repository", MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
+            "Select the location for the new repository", MessageBoxIcon.Info, _paths.ProjectsDirectory, _dockService.GetWindowOwner(this));
 
         if (folder == null) return;
 
         folder = Path.Combine(folder, Path.GetFileNameWithoutExtension(url) ?? "");
         Directory.CreateDirectory(folder);
 
-        var result = await CloneAsync(url, folder);
+        var result = await GitService.CloneRepositoryAsync(url, folder);
+        
         if (!result) return;
 
         await Task.Delay(200);
@@ -207,46 +213,6 @@ public class SourceControlViewModel : ExtendedTool
         {
             //var proj = await MainDock.ProjectFiles.LoadProjectAsync(file);
         }
-    }
-
-    public async Task<bool> CloneAsync(string url, string path)
-    {
-        var success = true;
-
-        var key = _applicationStateService.AddState("Cloning " + Path.GetFileName(url) + "...", AppState.Loading);
-        try
-        {
-            await WaitUntilFreeAsync();
-            IsLoading = true;
-            //Active.SetStatus("Cloning from " + url, Active.AppState.Loading);
-
-            await Task.Run(() =>
-            {
-                var options = new CloneOptions
-                {
-                    FetchOptions =
-                    {
-                        CredentialsProvider = (crUrl, usernameFromUrl, types) =>
-                            GetCredentialsAsync(crUrl, usernameFromUrl, types).Result
-                    },
-                    RecurseSubmodules = true
-                };
-                Repository.Clone(url, path, options);
-            });
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-
-            success = false;
-        }
-
-        _applicationStateService.RemoveState(key);
-
-        IsLoading = false;
-        //Active.SetStatus(success ? "Done" : "Finished with errors", Active.AppState.Idle);
-
-        return success;
     }
 
     public async Task RefreshAsync()
@@ -494,7 +460,11 @@ public class SourceControlViewModel : ExtendedTool
             if (branch.IsRemote)
             {
                 await WaitUntilFreeAsync();
-                //Active.SetStatus("Deleting remote branch", Active.AppState.Loading);                   
+                
+                var cancellationTokenSource = new CancellationTokenSource();
+                
+                _applicationStateService.AddState("Deleting remote branch", AppState.Loading, () => cancellationTokenSource.Cancel());            
+                
                 IsLoading = true;
 
                 await Task.Run(() =>
@@ -504,7 +474,7 @@ public class SourceControlViewModel : ExtendedTool
                     var options = new PushOptions
                     {
                         CredentialsProvider = (url, usernameFromUrl, types) =>
-                            GetCredentialsAsync(url, usernameFromUrl, types).Result
+                            GitService.GetCredentialsAsync(url, usernameFromUrl, types, cancellationTokenSource.Token).Result
                     };
                     CurrentRepo.Network.Push(remote, pushRefSpec, options);
                 });
@@ -733,6 +703,7 @@ public class SourceControlViewModel : ExtendedTool
 
         var pullState =
             _applicationStateService.AddState("Pulling from " + CurrentRepo.Head.RemoteName, AppState.Loading);
+        
         await WaitUntilFreeAsync();
         IsLoading = true;
 
@@ -753,7 +724,7 @@ public class SourceControlViewModel : ExtendedTool
                     FetchOptions = new FetchOptions
                     {
                         CredentialsProvider = (url, usernameFromUrl, types) =>
-                            GetCredentialsAsync(url, usernameFromUrl, types).Result
+                            GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
                     }
                 };
 
@@ -823,7 +794,7 @@ public class SourceControlViewModel : ExtendedTool
                 var pushOptions = new PushOptions
                 {
                     CredentialsProvider = (url, usernameFromUrl, types) =>
-                        GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
                 };
                 //PUSH                 
                 CurrentRepo.Network.Push(CurrentRepo.Head, pushOptions);
@@ -864,7 +835,7 @@ public class SourceControlViewModel : ExtendedTool
                 var options = new FetchOptions
                 {
                     CredentialsProvider = (url, usernameFromUrl, types) =>
-                        GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
                 };
 
                 foreach (var remote in CurrentRepo.Network.Remotes)
@@ -1126,94 +1097,6 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Credentials & Identity
 
-    public async Task<Credentials> GetCredentialsAsync(string url, string usernameFromUrl,
-        SupportedCredentialTypes types) //TODO Error handling
-    {
-        if (types.HasFlag(SupportedCredentialTypes.UsernamePassword))
-        {
-            var ub = new Uri(url);
-
-            var executable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "git.exe" : "git";
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = executable,
-                    Arguments = "credential fill",
-                    UseShellExecute = false,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-
-            process.Start();
-
-            // For stdin to work \n 
-            // We need to send empty line at the end
-            process.StandardInput.NewLine = "\n";
-            await process.StandardInput.WriteLineAsync($"protocol={ub.Scheme}");
-            await process.StandardInput.WriteLineAsync($"host={ub.Host}");
-            await process.StandardInput.WriteLineAsync($"path={ub.AbsolutePath}");
-            await process.StandardInput.WriteLineAsync();
-
-            // Get user/pass from stdout
-            string? username = null;
-            string? password = null;
-            string? line;
-
-            var autoCredentialTimeout =
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Timeout.Infinite : 5000;
-
-            //Try to get credentials with timeout of 100ms on linux / 
-            var helper = new StreamReaderHelper(process.StandardOutput);
-            while ((line = helper.ReadLine(autoCredentialTimeout)) != null)
-            {
-                var details = line.Split('=');
-                if (details[0] == "username")
-                    username = details[1];
-                else if (details[0] == "password") password = details[1];
-            }
-
-            process.Kill();
-
-            if (username == null || password == null) return new DefaultCredentials();
-
-            process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = executable,
-                    Arguments = "credential approve",
-                    UseShellExecute = false,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-            process.Start();
-            await process.StandardInput.WriteLineAsync($"protocol={ub.Scheme}");
-            await process.StandardInput.WriteLineAsync($"host={ub.Host}");
-            await process.StandardInput.WriteLineAsync($"path={ub.AbsolutePath}");
-            await process.StandardInput.WriteLineAsync($"username={username}");
-            await process.StandardInput.WriteLineAsync($"password={password}");
-            await process.StandardInput.WriteLineAsync();
-
-            return new UsernamePasswordCredentials
-            {
-                Username = username,
-                Password = password
-            };
-        }
-
-        return new DefaultCredentials();
-    }
-
     public async Task<Signature?> GetSignatureAsync()
     {
         if (CurrentRepo == null) return null;
@@ -1230,7 +1113,7 @@ public class SourceControlViewModel : ExtendedTool
         return author;
     }
 
-    public async Task<Identity?> GetIdentiyManualAsync()
+    public async Task<Identity?> GetIdentityManualAsync()
     {
         if (CurrentRepo == null) return null;
 
@@ -1258,7 +1141,7 @@ public class SourceControlViewModel : ExtendedTool
     {
         if (CurrentRepo == null) return null;
 
-        var identity = await GetIdentiyManualAsync();
+        var identity = await GetIdentityManualAsync();
 
         if (identity == null) return null;
 
