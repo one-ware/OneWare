@@ -7,7 +7,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView" ClipToBounds="False"
-             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding ControlHeight}" Width="{Binding ControlWidth}">
+             x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding Height}" Width="{Binding Width}">
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>

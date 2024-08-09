@@ -8,11 +8,17 @@
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}"/>
     </UserControl.RenderTransform>
-    <ItemsControl ItemsSource="{Binding Pins}" ClipToBounds="False">
+    <ItemsControl Classes.Horizontal="{Binding IsHorizontal}" ItemsSource="{Binding Pins}" ClipToBounds="False">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
                 <StackPanel Orientation="{Binding Orientation}" />
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
+        <ItemsControl.Styles>
+            <Style Selector="ItemsControl.Horizontal > ContentPresenter" x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
+                <Setter Property="Height" Value="{Binding Width}"/>
+                <Setter Property="Width" Value="{Binding Height}"/>
+            </Style>
+        </ItemsControl.Styles>
     </ItemsControl>
 </UserControl>

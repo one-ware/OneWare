@@ -4,7 +4,8 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementPinArrayViewModel : FpgaGuiElementViewModelBase
 {
-    public Orientation Orientation { get; init; } = Orientation.Vertical;
+    public bool IsHorizontal { get; init; }
+    public Orientation Orientation => IsHorizontal ? Orientation.Horizontal : Orientation.Vertical;
     public FpgaGuiElementPinViewModel[]? Pins { get; init; } 
     
     public FpgaGuiElementPinArrayViewModel(double x, double y) : base(x, y)

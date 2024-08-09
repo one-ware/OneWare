@@ -244,7 +244,7 @@ public static class HardwareGuiCreator
                             Parent = hardwareModel,
                             Pins = list.ToArray(),
                             Rotation = rotation,
-                            Orientation = isHorizontal ? Orientation.Horizontal : Orientation.Vertical
+                            IsHorizontal = isHorizontal
                         });
                         break;
                     }
@@ -305,12 +305,16 @@ public static class HardwareGuiCreator
                             ? bindTxProperty.GetString()
                             : null;
                         
+                        var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) &&
+                                        flipLabelProperty.GetBoolean();
+                        
                         vm.AddElement(new FpgaGuiElementUsbViewModel(x, y)
                         {
                             Rotation = rotation,
                             BindRx = bindRx,
                             BindTx = bindTx,
-                            Parent = hardwareModel
+                            Parent = hardwareModel,
+                            FlipLabel = flipLabel,
                         });
                         break;
                     }

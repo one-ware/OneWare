@@ -14,11 +14,6 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
     public string? Bind { get; init; }
 
     public bool FlipLabel { get; init; }
-
-    public double ControlHeight => Math.Abs((int)Rotation) == 90 ? Width : Height;
-    
-    public double ControlWidth =>Math.Abs((int)Rotation) == 90 ? Height : Width;
-
     
     private HardwarePinModel? _pinModel;
 

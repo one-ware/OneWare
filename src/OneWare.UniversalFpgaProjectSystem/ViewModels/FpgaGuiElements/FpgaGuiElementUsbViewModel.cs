@@ -9,6 +9,7 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
     
     public FpgaGuiElementPinViewModel? TxPin { get; private set; } 
     
+    public bool FlipLabel { get; init; }
     public string? BindRx { get; init; }
     
     public string? BindTx { get; init; }
@@ -26,9 +27,9 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
             Bind = BindRx,
             Color = HardwareGuiCreator.ColorShortcuts["RX"],
             Text = "RX",
-            Rotation = -90,
+            Rotation = FlipLabel ? 90 : -90,
             Parent = Parent,
-            FlipLabel = true
+            FlipLabel = !FlipLabel
         };
         
         TxPin ??= new FpgaGuiElementPinViewModel(0, 0, 12, 10)
@@ -36,9 +37,9 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
             Bind = BindTx,
             Color = HardwareGuiCreator.ColorShortcuts["TX"],
             Text = "TX",
-            Rotation = -90,
+            Rotation = FlipLabel ? 90 : -90,
             Parent = Parent,
-            FlipLabel = true
+            FlipLabel = !FlipLabel
         };
         
         RxPin.Initialize();
