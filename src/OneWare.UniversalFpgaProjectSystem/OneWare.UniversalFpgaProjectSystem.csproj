@@ -49,6 +49,10 @@
         <DependentUpon>FpgaGuiElementUsbView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\FpgaGuiElements\FpgaGuiElementChildView.axaml.cs">
+        <DependentUpon>FpgaGuiElementChildView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>
