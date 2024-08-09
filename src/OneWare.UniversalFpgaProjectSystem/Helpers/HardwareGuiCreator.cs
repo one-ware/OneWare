@@ -9,6 +9,7 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
+using OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements;
 using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Helpers;
@@ -291,6 +292,25 @@ public static class HardwareGuiCreator
                             FontSize = fontSize,
                             Text = text,
                             Foreground = foreground
+                        });
+                        break;
+                    }
+                    case "usb":
+                    {
+                        var bindRx = element.TryGetProperty("txBind", out var bindRxProperty)
+                            ? bindRxProperty.GetString()
+                            : null;
+                        
+                        var bindTx = element.TryGetProperty("rxBind", out var bindTxProperty)
+                            ? bindTxProperty.GetString()
+                            : null;
+                        
+                        vm.AddElement(new FpgaGuiElementUsbViewModel(x, y)
+                        {
+                            Rotation = rotation,
+                            BindRx = bindRx,
+                            BindTx = bindTx,
+                            Parent = hardwareModel
                         });
                         break;
                     }

@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
+             xmlns:fpgaGuiElements1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements"
+             mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="150" ClipToBounds="False"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementUsbView" x:DataType="fpgaGuiElements:FpgaGuiElementUsbViewModel"
+             Height="40" Width="30">
+    <UserControl.RenderTransform>
+        <RotateTransform Angle="{Binding Rotation}"/>
+    </UserControl.RenderTransform>
+    <Grid RowDefinitions="20, 20" ColumnDefinitions="2, 10, 6, 10, 2">
+        <Grid IsVisible="{Binding BindRx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0" Grid.Column="1" RowDefinitions="10, 10">
+            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding RxPin}" HorizontalAlignment="Left"/>
+            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongDown}" HorizontalAlignment="Center"/>
+        </Grid>
+        <Grid IsVisible="{Binding BindTx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0" Grid.Column="3" RowDefinitions="10, 10">
+            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding TxPin}" HorizontalAlignment="Left"/>
+            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongUp}" HorizontalAlignment="Center"/>
+        </Grid>
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Background="#444444">
+            <TextBlock Text="USB" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        </Border>
+    </Grid>
+</UserControl>
