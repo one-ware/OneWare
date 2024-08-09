@@ -21,10 +21,6 @@
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Cyc5000\OneWare.Cyc5000.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.IceBreaker\OneWare.IceBreaker.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Max1000\OneWare.Max1000.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Max10\OneWare.Max10.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj"/>
     </ItemGroup>
