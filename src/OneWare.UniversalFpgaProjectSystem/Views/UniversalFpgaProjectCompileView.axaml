@@ -88,7 +88,7 @@
                             IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Background="{DynamicResource CheckerBoardBrush16}" BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
-                        <controls:CustomZoomBorder Name="ZoomBorder" ClipToBounds="True" PanButton="Right">
+                        <controls:CustomZoomBorder UseLayoutRounding="False" Name="ZoomBorder" ClipToBounds="True" PanButton="Right">
                             <ContentControl Name="ZoomContentControl" ClipToBounds="False" HorizontalAlignment="Center" VerticalAlignment="Center" 
                                             Content="{Binding SelectedFpgaViewModel}" />
                         </controls:CustomZoomBorder>
