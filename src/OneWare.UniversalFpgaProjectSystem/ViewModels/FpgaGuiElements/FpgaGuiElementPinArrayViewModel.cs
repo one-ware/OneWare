@@ -7,7 +7,7 @@ public class FpgaGuiElementPinArrayViewModel : FpgaGuiElementViewModelBase
     public Orientation Orientation { get; init; } = Orientation.Vertical;
     public FpgaGuiElementPinViewModel[]? Pins { get; init; } 
     
-    public FpgaGuiElementPinArrayViewModel(int x, int y) : base(x, y)
+    public FpgaGuiElementPinArrayViewModel(double x, double y) : base(x, y)
     {
         
     }

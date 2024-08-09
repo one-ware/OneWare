@@ -21,6 +21,7 @@ public static class HardwareGuiCreator
         { "1V2", Brushes.Yellow },
         { "3V3", Brushes.LightCoral },
         { "5V", Brushes.Red },
+        { "VIN", Brushes.DarkRed },
         { "TX", Brushes.Blue },
         { "RX", Brushes.DarkRed },
     };
@@ -48,13 +49,13 @@ public static class HardwareGuiCreator
 
             foreach (var element in gui.GetProperty("elements").EnumerateArray())
             {
-                var x = element.GetProperty("x").GetInt32();
-                var y = element.GetProperty("y").GetInt32();
+                var x = element.GetProperty("x").GetDouble();
+                var y = element.GetProperty("y").GetDouble();
                 var width = element.TryGetProperty("width", out var widthProperty)
-                    ? widthProperty.GetInt32()
+                    ? widthProperty.GetDouble()
                     : 0;
                 var height = element.TryGetProperty("height", out var heightProperty)
-                    ? heightProperty.GetInt32()
+                    ? heightProperty.GetDouble()
                     : 0;
                 var rotation = element.TryGetProperty("rotation", out var rotationProperty)
                     ? rotationProperty.GetDouble()
@@ -106,7 +107,7 @@ public static class HardwareGuiCreator
                                 break;
                         }
 
-                        vm.AddElement(new FpgaGuiElementImageViewModel(x, y, width, height)
+                        vm.AddElement(new FpgaGuiElementImageViewModel(x, y, width == 0 ? double.NaN : width, height == 0 ? double.NaN : height)
                         {
                             Rotation = rotation,
                             Image = image

@@ -5,7 +5,7 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementCruviHsViewModel : FpgaGuiElementInterfaceViewModelBase
 {
-    public FpgaGuiElementCruviHsViewModel(int x, int y) : base(x, y)
+    public FpgaGuiElementCruviHsViewModel(double x, double y) : base(x, y)
     {
     }
 }

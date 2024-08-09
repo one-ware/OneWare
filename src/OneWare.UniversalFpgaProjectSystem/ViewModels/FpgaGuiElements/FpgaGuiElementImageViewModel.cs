@@ -6,7 +6,7 @@ public class FpgaGuiElementImageViewModel : FpgaGuiElementRectViewModel
 {
     public IImage? Image { get; init; }
     
-    public FpgaGuiElementImageViewModel(int x, int y, int width, int height) : base(x, y, width, height)
+    public FpgaGuiElementImageViewModel(double x, double y, double width, double height) : base(x, y, width, height)
     {
         
     }

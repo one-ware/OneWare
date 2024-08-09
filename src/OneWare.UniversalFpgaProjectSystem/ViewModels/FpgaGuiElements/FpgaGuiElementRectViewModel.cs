@@ -5,9 +5,9 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementRectViewModel : FpgaGuiElementTextViewModel
 {
-    public int Width { get; }
+    public double Width { get; }
     
-    public int Height { get; }
+    public double Height { get; }
     
     public IBrush? Color { get; set; }
 
@@ -15,7 +15,7 @@ public class FpgaGuiElementRectViewModel : FpgaGuiElementTextViewModel
 
     public BoxShadows BoxShadow { get; init; }
     
-    public FpgaGuiElementRectViewModel(int x, int y, int width, int height) : base(x, y) 
+    public FpgaGuiElementRectViewModel(double x, double y, double width, double height) : base(x, y) 
     {
         Width = width;
         Height = height;

@@ -38,7 +38,7 @@ public abstract class FpgaGuiElementInterfaceViewModelBase : FpgaGuiElementViewM
 
     public Dictionary<string, FpgaGuiElementPinViewModel> PinViewModels { get; } = new();
 
-    public FpgaGuiElementInterfaceViewModelBase(int x, int y) : base(x, y)
+    public FpgaGuiElementInterfaceViewModelBase(double x, double y) : base(x, y)
     {
         PinViewModels["GND"] = new FpgaGuiElementPinViewModel(0, 0, 0, 0)
         {

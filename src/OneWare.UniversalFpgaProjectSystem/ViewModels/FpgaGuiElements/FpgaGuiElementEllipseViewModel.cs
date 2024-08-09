@@ -5,14 +5,13 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementEllipseViewModel : FpgaGuiElementViewModelBase
 {
+    public double Width { get; }
     
-    public int Width { get; }
-    
-    public int Height { get; }
+    public double Height { get; }
     
     public IBrush Color { get; }
     
-    public FpgaGuiElementEllipseViewModel(int x, int y, int width, int height, IBrush color) : base(x, y) 
+    public FpgaGuiElementEllipseViewModel(double x, double y, double width, double height, IBrush color) : base(x, y) 
     {
         Color = color;
 

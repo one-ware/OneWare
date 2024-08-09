@@ -7,14 +7,14 @@
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementImageView"
              x:DataType="fpgaGuiElements:FpgaGuiElementImageViewModel" ClipToBounds="False" IsHitTestVisible="False">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
-    <Border Width="{Binding Width}" 
-            Height="{Binding Height}" 
-            Background="{Binding Color}"
-            CornerRadius="{Binding CornerRadius}" 
+    <Border Background="{Binding Color}"
+            CornerRadius="{Binding CornerRadius}"
             BoxShadow="{Binding BoxShadow}"
             ClipToBounds="True">
-        <Image Source="{Binding Image}" Stretch="Fill"/>
+        <Image Source="{Binding Image}" 
+               Width="{Binding Width}"
+               Height="{Binding Height}" />
     </Border>
 </UserControl>

@@ -18,7 +18,7 @@ public class FpgaGuiElementTextViewModel : FpgaGuiElementViewModelBase
     
     public FontWeight FontWeight { get; init; }
     
-    public FpgaGuiElementTextViewModel(int x, int y) : base(x, y)
+    public FpgaGuiElementTextViewModel(double x, double y) : base(x, y)
     {
        
     }
