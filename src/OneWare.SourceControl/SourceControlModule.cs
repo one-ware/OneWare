@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Runtime.InteropServices;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
@@ -29,6 +30,9 @@ public class SourceControlModule : IModule
         var settingsService = containerProvider.Resolve<ISettingsService>();
         var windowService = containerProvider.Resolve<IWindowService>();
 
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
+        
         settingsService.RegisterTitled("Team Explorer", "GitHub", GitHubAccountNameKey,
             "Account Name", "GitHub Account Name (gets set automatically when authenticating using a token)", "");
         
