@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Avalonia.Threading;
 using GitCredentialManager;
 using LibGit2Sharp;
@@ -15,12 +16,14 @@ public class GitService
     private readonly IApplicationStateService _applicationStateService;
     private readonly IWindowService _windowService;
     private readonly ISettingsService _settingsService;
-
-    public GitService(IApplicationStateService applicationStateService, IWindowService windowService, ISettingsService settingsService)
+    private readonly ILogger _logger;
+    
+    public GitService(IApplicationStateService applicationStateService, IWindowService windowService, ISettingsService settingsService, ILogger logger)
     {
         _applicationStateService = applicationStateService;
         _windowService = windowService;
         _settingsService = settingsService;
+        _logger = logger;
     }
 
     public async Task<bool> CloneRepositoryAsync(string url, string destination)
@@ -60,6 +63,43 @@ public class GitService
         return success;
     }
 
+    #region Branches
+
+    public void ChangeBranch(Repository repository, Branch branch)
+    {
+        try
+        {
+            if (branch.IsRemote)
+            {
+                var remoteBranch = branch;
+                var branchName = branch.FriendlyName.Split("/");
+
+                if (repository.Branches[branchName[1]] is { } localB)
+                {
+                    branch = localB;
+                }
+                else
+                {
+                    branch = repository.CreateBranch(branchName[1], branch.Tip);
+                    branch = repository.Branches.Update(branch,
+                        b => b.TrackedBranch = remoteBranch.CanonicalName);
+                }
+            }
+
+            Commands.Checkout(repository, branch);
+            
+            _logger.Log($"Switched to branch '{branch.FriendlyName}'", ConsoleColor.Green, true, Brushes.Green);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+    }
+
+    #endregion
+
+    #region Login
+    
     public Task<bool> LoginGithubAsync()
     {
         return LoginDialogAsync(ContainerLocator.Container.Resolve<GithubLoginProvider>());
@@ -116,4 +156,6 @@ public class GitService
         }
         return new DefaultCredentials();
     }
+    
+    #endregion
 }

@@ -17,7 +17,7 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="ItemTemplate">
                 <Setter.Value>
-                    <DataTemplate DataType="models:SourceControlModel">
+                    <DataTemplate DataType="models:SourceControlFileModel">
                         <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
                                 <Image Margin="1, 0, 0, 0" Height="16" Width="16"
@@ -46,8 +46,7 @@
     </UserControl.Styles>
     <Grid RowDefinitions="26, Auto, *">
         <DockPanel LastChildFill="False">
-            <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton"
-                  IsEnabled="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
                 <MenuItem>
                     <MenuItem.Header>
                         <Image Width="15" Source="{DynamicResource BoxIcons.RegularDotsHorizontalRounded}" />
@@ -80,11 +79,11 @@
                             <Image Source="{DynamicResource BoxIcons.RegularGitCommit}" />
                         </MenuItem.Icon>
                         <MenuItem Header="Commit Staged" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{StaticResource False}"
-                                  IsEnabled="{Binding #CommitMessageBox.Text.Length}" />
+                                  CommandParameter="{x:False}"
+                                  IsEnabled="{Binding CommitMessage.Length}" />
                         <MenuItem Header="Commit All" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{StaticResource True}"
-                                  IsEnabled="{Binding #CommitMessageBox.Text.Length}" />
+                                  CommandParameter="{x:True}"
+                                  IsEnabled="{Binding CommitMessage.Length}" />
                     </MenuItem>
                     <MenuItem Header="Branches">
                         <MenuItem.Icon>
@@ -217,7 +216,7 @@
                             <Style Selector="ListBoxItem">
                                 <Setter Property="ContextMenu">
                                     <Setter.Value>
-                                        <ContextMenu x:DataType="models:SourceControlModel">
+                                        <ContextMenu x:DataType="models:SourceControlFileModel">
                                             <MenuItem Header="Accept Changes / Stage"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.Conflicted}}"
                                                       Command="{Binding Parent.StageCommand}"
@@ -263,7 +262,7 @@
                             <Style Selector="ListBoxItem">
                                 <Setter Property="ContextMenu">
                                     <Setter.Value>
-                                        <ContextMenu x:DataType="models:SourceControlModel">
+                                        <ContextMenu x:DataType="models:SourceControlFileModel">
                                             <MenuItem Header="Compare with Unmodified"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:ChangeKind.Modified}}"
                                                       Command="{Binding Parent.CompareAndSwitch}"
@@ -311,7 +310,7 @@
                              Name="ChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
-                                <Setter Property="ContextMenu" x:DataType="models:SourceControlModel">
+                                <Setter Property="ContextMenu" x:DataType="models:SourceControlFileModel">
                                     <Setter.Value>
                                         <ContextMenu>
                                             <MenuItem Header="Compare with Unmodified"
