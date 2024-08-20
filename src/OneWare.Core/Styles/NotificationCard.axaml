@@ -7,6 +7,21 @@
         </Border>
     </Design.PreviewWith>
 
+    <Style Selector="WindowNotificationManager">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ReversibleStackPanel Name="PART_Items">
+                    <ReversibleStackPanel.DataTemplates>
+                        <DataTemplate DataType="x:String">
+                            <TextBlock Margin="12"
+                                       Text="{Binding}" />
+                        </DataTemplate>
+                    </ReversibleStackPanel.DataTemplates>
+                </ReversibleStackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    
     <Style Selector="NotificationCard">
         <Setter Property="Background" Value="{DynamicResource NotificationCardBackgroundBrush}" />
         <Setter Property="UseLayoutRounding" Value="True" />
@@ -27,7 +42,7 @@
                                 HorizontalAlignment="Right" VerticalAlignment="Top">
                             <Image Source="{DynamicResource MaterialDesign.Close}" />
                         </Button>-->
-                            <ContentControl Content="{TemplateBinding Content}" />
+                            <ContentPresenter Content="{TemplateBinding Content}" />
                         </Panel>
                     </Border>
                 </LayoutTransformControl>

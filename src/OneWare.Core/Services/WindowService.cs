@@ -174,21 +174,22 @@ public class WindowService : IWindowService
         return null;
     }
 
-    public void ShowNotification(string title, string message, NotificationType type)
+    public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information,
+        TimeSpan? expiration = null)
     {
+        var model = new CustomNotificationViewModel(title, message, type, expiration);
+
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager
-            ?.Show(new Notification(title, message, type));
+            ?.Show(model);
     }
 
-    public void ShowNotificationWithButton(string title, string message, string buttonText, Action buttonAction,
-        IImage? icon = null)
+    public void ShowNotificationWithButton(string title, string message, string buttonText,
+        Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information,
+        TimeSpan? expiration = null)
     {
-        var model = new CustomNotificationViewModel(title, message, buttonText, buttonAction, icon);
+        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10), buttonText, buttonAction, icon);
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(new CustomNotificationView
-        {
-            DataContext = model
-        });
+        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
     }
 
     private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)

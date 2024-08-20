@@ -27,10 +27,15 @@ public class UpdaterModule : IModule
             windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Update")
             {
                 Header = "Studio Update",
-                Command = new RelayCommand(() => windowService.Show(new UpdaterView
+                Command = new RelayCommand(() =>
                 {
-                    DataContext = containerProvider.Resolve<UpdaterViewModel>()
-                })),
+                    var vm = containerProvider.Resolve<UpdaterViewModel>();
+                    windowService.Show(new UpdaterView
+                    {
+                        DataContext = vm
+                    });
+                    if(vm.Status == UpdaterStatus.UpdateUnavailable) _ = vm.CheckForUpdateAsync();
+                }),
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
             });
     }
