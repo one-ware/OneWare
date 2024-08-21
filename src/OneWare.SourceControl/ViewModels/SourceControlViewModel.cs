@@ -702,7 +702,7 @@ public class SourceControlViewModel : ExtendedTool
                 break;
 
             case MergeStatus.UpToDate:
-                _windowService.ShowNotification("Git info", "Repository up to date", NotificationType.Information);
+                _windowService.ShowNotification("Git Info", "Repository up to date", NotificationType.Information);
                 break;
 
             case MergeStatus.FastForward:
@@ -722,6 +722,12 @@ public class SourceControlViewModel : ExtendedTool
             if (!success) return false;
         }
 
+        if (ActiveRepository.PushCommits == 0)
+        {
+            _logger.Log("Nothing to push");
+            return true;
+        }
+        
         var pullState =
             _applicationStateService.AddState("Pushing to " + repository.Head.RemoteName, AppState.Loading);
         await WaitUntilFreeAsync();
@@ -752,7 +758,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (result)
         {
-            _windowService.ShowNotification("Success", $"Pushed successfully to {repository.Head.FriendlyName}",
+            _windowService.ShowNotification("Git Info", $"Pushed successfully to {repository.Head.FriendlyName}",
                 NotificationType.Success);
         }
 
