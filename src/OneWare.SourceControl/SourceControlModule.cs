@@ -6,7 +6,6 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.SourceControl.Services;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
 using Prism.Ioc;
@@ -21,7 +20,6 @@ public class SourceControlModule : IModule
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.Register<CompareFileViewModel>();
-        containerRegistry.RegisterSingleton<GitService>();
         containerRegistry.RegisterSingleton<SourceControlViewModel>();
     }
 

@@ -1,21 +1,21 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using DynamicData.Binding;
+using GitCredentialManager;
 using LibGit2Sharp;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Models;
-using OneWare.SourceControl.Services;
+using OneWare.SourceControl.Views;
 using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels;
@@ -40,7 +40,9 @@ public class SourceControlViewModel : ExtendedTool
 
     private GitRepositoryModel? _activeRepository;
 
-    public SourceControlViewModel(ILogger logger, GitService gitService, ISettingsService settingsService,
+    private readonly Dictionary<string, ILoginProvider> _loginProviders = new();
+
+    public SourceControlViewModel(ILogger logger, ISettingsService settingsService,
         IApplicationStateService applicationStateService,
         IDockService dockService, IWindowService windowService,
         IPaths paths,
@@ -54,9 +56,7 @@ public class SourceControlViewModel : ExtendedTool
         _projectExplorerService = projectExplorerService;
         _paths = paths;
         _projectExplorerService = projectExplorerService;
-        
-        GitService = gitService;
-        
+
         Id = "SourceControl";
         Title = "Source Control";
 
@@ -88,18 +88,17 @@ public class SourceControlViewModel : ExtendedTool
         projectExplorerService
             .WhenValueChanged(x => x.ActiveProject)
             .Subscribe(RefreshAsyncCommand.Execute);
+        
+        _loginProviders.Add("github.com", ContainerLocator.Container.Resolve<GithubLoginProvider>());
     }
 
     public ObservableCollection<GitRepositoryModel> Repositories { get; } = new();
-    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
 
     public GitRepositoryModel? ActiveRepository
     {
         get => _activeRepository;
         set => SetProperty(ref _activeRepository, value);
     }
-
-    public GitService GitService { get; }
 
     public string CommitMessage
     {
@@ -132,6 +131,50 @@ public class SourceControlViewModel : ExtendedTool
     public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
     public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
 
+    private async Task RefreshAsync()
+    {
+        await WaitUntilFreeAsync();
+
+        IsLoading = true;
+
+        var removeInstances = Repositories.Where(x => _projectExplorerService.Projects.Contains(x.Project)).ToArray();
+        Repositories.RemoveMany(removeInstances);
+        
+        try
+        {
+            foreach (var project in _projectExplorerService.Projects)
+            {
+                try
+                {
+                    var path = Repository.Discover(project.RootFolderPath);
+            
+                    if (Repository.IsValid(path))
+                    {
+                        if(Repositories.Any(x => x.Project == project)) continue;
+                        Repositories.Add(new GitRepositoryModel(project, new Repository(path)));
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e.Message, e);
+                }
+            }
+
+            foreach (var repo in Repositories)
+            {
+                repo.Refresh(this);
+            }
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        IsLoading = false;
+    }
+
+    #region Initialize and Clone
+
     public void InitializeRepository()
     {
         if (_projectExplorerService.ActiveProject == null) return;
@@ -143,27 +186,6 @@ public class SourceControlViewModel : ExtendedTool
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
-        }
-    }
-
-    private void Refresh()
-    {
-        foreach (var project in _projectExplorerService.Projects)
-        {
-            try
-            {
-                var path = Repository.Discover(project.RootFolderPath);
-
-                if (Repository.IsValid(path))
-                {
-                    if(Repositories.Any(x => x.Repository.Info.WorkingDirectory.EqualPaths(path))) continue;
-                    Repositories.Add(new GitRepositoryModel(new Repository(path), GitService));
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e.Message, e);
-            }
         }
     }
 
@@ -184,7 +206,7 @@ public class SourceControlViewModel : ExtendedTool
         folder = Path.Combine(folder, Path.GetFileNameWithoutExtension(url) ?? "");
         Directory.CreateDirectory(folder);
 
-        var result = await GitService.CloneRepositoryAsync(url, folder);
+        var result = await CloneRepositoryAsync(url, folder);
 
         if (!result) return;
 
@@ -199,6 +221,45 @@ public class SourceControlViewModel : ExtendedTool
             //var proj = await MainDock.ProjectFiles.LoadProjectAsync(file);
         }
     }
+
+    private async Task<bool> CloneRepositoryAsync(string url, string destination)
+    {
+        var success = true;
+
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        var key = _applicationStateService.AddState("Cloning " + Path.GetFileName(url) + "...", AppState.Loading,
+            () => cancellationTokenSource.Cancel());
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                var options = new CloneOptions
+                {
+                    FetchOptions =
+                    {
+                        CredentialsProvider = (crUrl, usernameFromUrl, types) =>
+                            GetCredentialsAsync(crUrl, usernameFromUrl, types, cancellationTokenSource.Token).Result
+                    },
+                    RecurseSubmodules = true
+                };
+                Repository.Clone(url, destination, options);
+            }, cancellationTokenSource.Token);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+
+            success = false;
+        }
+
+        _applicationStateService.RemoveState(key);
+
+        return success;
+    }
+
+    #endregion
 
     #region General
 
@@ -225,7 +286,7 @@ public class SourceControlViewModel : ExtendedTool
 
     private void PollTimerCallback(object? sender, EventArgs args)
     {
-        if (_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) Refresh();
+        if (_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) _ = RefreshAsync();
     }
 
     public void ViewInProjectExplorer(IProjectEntry entry)
@@ -240,22 +301,57 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Branches & Remotes
 
-    public async Task CreateBranchDialogAsync()
+    public void ChangeBranch(Branch? branch)
+    {
+        if (ActiveRepository?.Repository is not { } repository || branch == null) return;
+
+        try
+        {
+            if (branch.IsRemote)
+            {
+                var remoteBranch = branch;
+                var branchName = branch.FriendlyName.Split("/");
+
+                if (repository.Branches[branchName[1]] is { } localB)
+                {
+                    branch = localB;
+                }
+                else
+                {
+                    branch = repository.CreateBranch(branchName[1], branch.Tip);
+                    branch = repository.Branches.Update(branch,
+                        b => b.TrackedBranch = remoteBranch.CanonicalName);
+                }
+            }
+
+            Commands.Checkout(repository, branch);
+
+            _ = RefreshAsync();
+
+            _logger.Log("Switched to branch '" + branch.FriendlyName + "'", ConsoleColor.Green, true, Brushes.Green);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+    }
+
+    private async Task CreateBranchDialogAsync()
     {
         var newBranchName = await _windowService.ShowInputAsync("Create Branch",
             "Please enter a name for the new branch", MessageBoxIcon.Info, null, _dockService.GetWindowOwner(this));
         if (newBranchName != null) CreateBranch(newBranchName);
     }
 
-    public Branch? CreateBranch(string name, bool checkout = true)
+    private Branch? CreateBranch(string name, bool checkout = true)
     {
-        if (CurrentRepo == null || string.IsNullOrWhiteSpace(name)) return null;
+        if (ActiveRepository?.Repository is not { } repository) return null;
 
         try
         {
-            var newBranch = CurrentRepo.CreateBranch(name);
+            var newBranch = repository.CreateBranch(name);
 
-            if (checkout) Commands.Checkout(CurrentRepo, newBranch);
+            if (checkout) Commands.Checkout(repository, newBranch);
 
             _ = RefreshAsync();
 
@@ -268,18 +364,18 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task DeleteBranchDialogAsync()
+    private async Task DeleteBranchDialogAsync()
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         var selectedBranchName = await _windowService.ShowInputSelectAsync("Delete Branch",
             "Select the branch you want to delete", MessageBoxIcon.Info,
-            CurrentRepo.Branches.Select(x => x.FriendlyName), CurrentRepo.Branches.LastOrDefault()?.FriendlyName,
+            repository.Branches.Select(x => x.FriendlyName), repository.Branches.LastOrDefault()?.FriendlyName,
             _dockService.GetWindowOwner(this)) as string;
 
         if (selectedBranchName == null) return;
 
-        var deleteBranch = CurrentRepo.Branches
+        var deleteBranch = repository.Branches
             .FirstOrDefault(x => x.FriendlyName == selectedBranchName);
 
         if (deleteBranch != null)
@@ -289,36 +385,30 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task<bool> DeleteBranchAsync(Branch branch)
+    private async Task<bool> DeleteBranchAsync(Branch branch)
     {
-        if (CurrentRepo == null) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
+
         try
         {
-            CurrentRepo.Branches.Remove(branch);
+            repository.Branches.Remove(branch);
             if (branch.IsRemote)
             {
                 await WaitUntilFreeAsync();
-
-                var cancellationTokenSource = new CancellationTokenSource();
-
-                _applicationStateService.AddState("Deleting remote branch", AppState.Loading,
-                    () => cancellationTokenSource.Cancel());
 
                 IsLoading = true;
 
                 await Task.Run(() =>
                 {
-                    var remote = CurrentRepo.Network.Remotes[branch.RemoteName];
+                    var remote = repository.Network.Remotes[branch.RemoteName];
                     var pushRefSpec = $"+:refs/heads/{branch.FriendlyName.Split('/')[1]}";
                     var options = new PushOptions
                     {
                         CredentialsProvider = (url, usernameFromUrl, types) =>
-                            GitService.GetCredentialsAsync(url, usernameFromUrl, types, cancellationTokenSource.Token)
-                                .Result
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result
                     };
-                    CurrentRepo.Network.Push(remote, pushRefSpec, options);
+                    repository.Network.Push(remote, pushRefSpec, options);
                 });
-                //Active.SetStatus("Done", Active.AppState.Idle);
                 IsLoading = false;
             }
 
@@ -332,32 +422,32 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task MergeBranchDialogAsync()
+    private async Task MergeBranchDialogAsync()
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         var selectedBranchName = await _windowService.ShowInputSelectAsync("Merge Branch",
             "Select the branch to merge from", MessageBoxIcon.Info,
-            CurrentRepo.Branches.Select(x => x.FriendlyName), CurrentRepo.Branches.LastOrDefault()?.FriendlyName,
+            repository.Branches.Select(x => x.FriendlyName), repository.Branches.LastOrDefault()?.FriendlyName,
             _dockService.GetWindowOwner(this)) as string;
 
         if (selectedBranchName == null) return;
 
-        var mergeBranch = CurrentRepo.Branches
+        var mergeBranch = repository.Branches
             .FirstOrDefault(x => x.FriendlyName == selectedBranchName);
 
         if (mergeBranch != null)
             await MergeBranchAsync(mergeBranch);
     }
 
-    public async Task MergeBranchAsync(Branch source)
+    private async Task MergeBranchAsync(Branch source)
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         try
         {
             var options = new MergeOptions();
-            var result = CurrentRepo.Merge(source.Tip, await GetSignatureAsync(), options);
+            var result = repository.Merge(source.Tip, await GetSignatureAsync(repository), options);
             if (result != null) PublishMergeResult(result);
         }
         catch (Exception e)
@@ -366,29 +456,26 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task<bool> PublishBranchDialogAsync()
+    private async Task<bool> PublishBranchDialogAsync()
     {
-        if (CurrentRepo == null) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
 
         try
         {
-            if (!CurrentRepo.Head.IsTracking)
-            {
-                var result = await _windowService.ShowYesNoAsync("Info",
-                    $"The branch {CurrentRepo.Head.FriendlyName} has no upstream branch. Would you like to publish this branch?",
-                    MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
-                if (result is MessageBoxStatus.Yes)
-                {
-                    CurrentRepo.Branches.Update(CurrentRepo.Head,
-                        b => b.Remote = CurrentRepo.Network.Remotes.First().Name,
-                        b => b.UpstreamBranch = CurrentRepo.Head.CanonicalName);
-                    return true;
-                }
+            if (repository.Head.IsTracking) return true;
 
-                return false;
+            var result = await _windowService.ShowYesNoAsync("Info",
+                $"The branch {repository.Head.FriendlyName} has no upstream branch. Would you like to publish this branch?",
+                MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
+            if (result is MessageBoxStatus.Yes)
+            {
+                repository.Branches.Update(repository.Head,
+                    b => b.Remote = repository.Network.Remotes.First().Name,
+                    b => b.UpstreamBranch = repository.Head.CanonicalName);
+                return true;
             }
 
-            return true;
+            return false;
         }
         catch (Exception e)
         {
@@ -397,11 +484,11 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task<bool> AddRemoteDialogAsync()
+    private async Task<bool> AddRemoteDialogAsync()
     {
-        if (CurrentRepo == null) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
 
-        if (!CurrentRepo.Head.IsTracking)
+        if (!repository.Head.IsTracking)
         {
             var url = await _windowService.ShowInputAsync("Add Remote", "Please enter the repository URL",
                 MessageBoxIcon.Info,
@@ -420,12 +507,15 @@ public class SourceControlViewModel : ExtendedTool
         return false;
     }
 
-    public bool AddRemote(string url, string name)
+    private bool AddRemote(string url, string name)
     {
-        if (CurrentRepo == null || string.IsNullOrEmpty(url) || string.IsNullOrEmpty(name)) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
+
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(name)) return false;
+
         try
         {
-            var remote = CurrentRepo.Network.Remotes.Add(name, url);
+            var remote = repository.Network.Remotes.Add(name, url);
             if (remote != null) return true;
         }
         catch (Exception e)
@@ -436,25 +526,28 @@ public class SourceControlViewModel : ExtendedTool
         return false;
     }
 
-    public async Task DeleteRemoteDialogAsync()
+    private async Task DeleteRemoteDialogAsync()
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
-        var selectedRemoteName = await _windowService.ShowInputSelectAsync("Delete Remote",
-            "Select the remote you want to delete", MessageBoxIcon.Info,
-            CurrentRepo.Network.Remotes.Select(x => x.Name), CurrentRepo.Network.Remotes.LastOrDefault()?.Name,
-            _dockService.GetWindowOwner(this)) as string;
-
-        if (selectedRemoteName != null)
+        if (await _windowService.ShowInputSelectAsync("Delete Remote",
+                "Select the remote you want to delete", MessageBoxIcon.Info,
+                repository.Network.Remotes.Select(x => x.Name), repository.Network.Remotes.LastOrDefault()?.Name,
+                _dockService.GetWindowOwner(this)) is string selectedRemoteName)
+        {
             DeleteRemote(selectedRemoteName);
+        }
     }
 
-    public bool DeleteRemote(string name)
+    private bool DeleteRemote(string name)
     {
-        if (CurrentRepo == null || string.IsNullOrEmpty(name)) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
+
+        if (string.IsNullOrEmpty(name)) return false;
+
         try
         {
-            CurrentRepo.Network.Remotes.Remove(name);
+            repository.Network.Remotes.Remove(name);
             return true;
         }
         catch (Exception e)
@@ -468,17 +561,17 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Commit & Sync
 
-    public async Task CommitAsync(bool staged)
+    private async Task CommitAsync(bool staged)
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         try
         {
-            if (!staged) Commands.Stage(CurrentRepo, "*");
+            if (!staged) Commands.Stage(repository, "*");
 
-            var author = await GetSignatureAsync();
+            var author = await GetSignatureAsync(repository);
             var committer = author;
-            var commit = CurrentRepo.Commit(CommitMessage, author, committer);
+            var commit = repository.Commit(CommitMessage, author, committer);
 
             _logger.Log($"Commit {commit.Message}", ConsoleColor.Green, true, Brushes.Green);
             CommitMessage = "";
@@ -494,10 +587,10 @@ public class SourceControlViewModel : ExtendedTool
 
     public async Task SyncAsync()
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         var push = true;
-        if (!CurrentRepo.Network.Remotes.Any())
+        if (!repository.Network.Remotes.Any())
         {
             var result = await _windowService.ShowYesNoAsync("Warning",
                 "This repository does not have a remote. Do you want to add one?", MessageBoxIcon.Warning,
@@ -512,7 +605,7 @@ public class SourceControlViewModel : ExtendedTool
             }
         }
 
-        if (!CurrentRepo.Head.IsTracking)
+        if (!repository.Head.IsTracking)
         {
             if (!await PublishBranchDialogAsync()) return;
         }
@@ -532,18 +625,17 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task WaitUntilFreeAsync()
+    private async Task WaitUntilFreeAsync()
     {
         while (IsLoading) await Task.Delay(100);
     }
 
-    public async Task<MergeResult?> PullAsync()
+    private async Task<MergeResult?> PullAsync()
     {
-        if (CurrentRepo == null) return null;
+        if (ActiveRepository?.Repository is not { } repository) return null;
 
         var pullState =
-            _applicationStateService.AddState("Pulling from " + CurrentRepo.Head.RemoteName, AppState.Loading);
-
+            _applicationStateService.AddState("Pulling from " + repository.Head.RemoteName, AppState.Loading);
         await WaitUntilFreeAsync();
         IsLoading = true;
 
@@ -552,7 +644,7 @@ public class SourceControlViewModel : ExtendedTool
         //    terminal.CloseConnection();
         //}
 
-        var signature = await GetSignatureAsync();
+        var signature = await GetSignatureAsync(repository);
 
         var result = await Task.Run(() =>
         {
@@ -564,11 +656,11 @@ public class SourceControlViewModel : ExtendedTool
                     FetchOptions = new FetchOptions
                     {
                         CredentialsProvider = (url, usernameFromUrl, types) =>
-                            GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result
                     }
                 };
 
-                var mergeResult = Commands.Pull(CurrentRepo, signature, options);
+                var mergeResult = Commands.Pull(repository, signature, options);
 
                 return mergeResult;
             }
@@ -591,7 +683,7 @@ public class SourceControlViewModel : ExtendedTool
         return result;
     }
 
-    public void PublishMergeResult(MergeResult result)
+    private void PublishMergeResult(MergeResult result)
     {
         switch (result.Status)
         {
@@ -612,18 +704,18 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public async Task<bool> PushAsync()
+    private async Task<bool> PushAsync()
     {
-        if (CurrentRepo == null) return false;
+        if (ActiveRepository?.Repository is not { } repository) return false;
 
-        if (!CurrentRepo.Head.IsTracking)
+        if (!repository.Head.IsTracking)
         {
             var success = await PublishBranchDialogAsync();
             if (!success) return false;
         }
 
         var pullState =
-            _applicationStateService.AddState("Pushing to " + CurrentRepo.Head.RemoteName, AppState.Loading);
+            _applicationStateService.AddState("Pushing to " + repository.Head.RemoteName, AppState.Loading);
         await WaitUntilFreeAsync();
         IsLoading = true;
 
@@ -634,10 +726,10 @@ public class SourceControlViewModel : ExtendedTool
                 var pushOptions = new PushOptions
                 {
                     CredentialsProvider = (url, usernameFromUrl, types) =>
-                        GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        GetCredentialsAsync(url, usernameFromUrl, types).Result
                 };
                 //PUSH                 
-                CurrentRepo.Network.Push(CurrentRepo.Head, pushOptions);
+                repository.Network.Push(repository.Head, pushOptions);
                 return true;
             }
             catch (Exception e)
@@ -652,17 +744,16 @@ public class SourceControlViewModel : ExtendedTool
 
         if (result)
         {
-            //Global.Factory.ShowDockable(MainDock.Output);
-            //MainDock.Output.WriteLine("Pushed successfully to " + CurrentRepo.Head.CanonicalName + "!", Brushes.Green);
+            _windowService.ShowNotification("Success", $"SPushed succesfully to {repository.Head.CanonicalName}",
+                NotificationType.Success);
         }
 
         return result;
     }
 
-    public async Task FetchAsync()
+    private async Task FetchAsync()
     {
-        if (CurrentRepo == null) return;
-
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         await WaitUntilFreeAsync();
         IsLoading = true;
@@ -675,17 +766,17 @@ public class SourceControlViewModel : ExtendedTool
                 var options = new FetchOptions
                 {
                     CredentialsProvider = (url, usernameFromUrl, types) =>
-                        GitService.GetCredentialsAsync(url, usernameFromUrl, types).Result
+                        GetCredentialsAsync(url, usernameFromUrl, types).Result
                 };
 
-                foreach (var remote in CurrentRepo.Network.Remotes)
+                foreach (var remote in repository.Network.Remotes)
                 {
                     var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
-                    Commands.Fetch(CurrentRepo, remote.Name, refSpecs, options, logMessage);
+                    Commands.Fetch(repository, remote.Name, refSpecs, options, logMessage);
                 }
 
-                PullCommits = CurrentRepo?.Head.TrackingDetails.BehindBy ?? 0;
-                PushCommits = CurrentRepo?.Head.TrackingDetails.AheadBy ?? 0;
+                ActiveRepository.PullCommits = repository.Head.TrackingDetails.BehindBy ?? 0;
+                ActiveRepository.PushCommits = repository.Head.TrackingDetails.AheadBy ?? 0;
             }
             catch (Exception e)
             {
@@ -709,49 +800,48 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Stage & Discard
 
-    public void StageAll()
+    private void StageAll()
     {
-        if (CurrentRepo == null) return;
-        Commands.Stage(CurrentRepo, "*");
+        if (ActiveRepository?.Repository is not { } repository) return;
+        Commands.Stage(repository, "*");
         _ = RefreshAsync();
     }
 
-    public void UnStageAll()
+    private void UnStageAll()
     {
-        if (CurrentRepo == null) return;
-        Commands.Unstage(CurrentRepo, "*");
+        if (ActiveRepository?.Repository is not { } repository) return;
+        Commands.Unstage(repository, "*");
         _ = RefreshAsync();
     }
 
     public void Stage(string? path)
     {
-        if (CurrentRepo == null) return;
-        Commands.Stage(CurrentRepo, path);
+        if (ActiveRepository?.Repository is not { } repository) return;
+        Commands.Stage(repository, path);
 
         _ = RefreshAsync();
     }
 
     public void UnStage(string? path)
     {
-        if (CurrentRepo == null) return;
-        Commands.Unstage(CurrentRepo, path);
+        if (ActiveRepository?.Repository is not { } repository) return;
+        Commands.Unstage(repository, path);
 
         _ = RefreshAsync();
     }
 
     public async Task DiscardAsync(string path)
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         var options = new CheckoutOptions { CheckoutModifiers = CheckoutModifiers.Force };
-        CurrentRepo.CheckoutPaths(CurrentRepo.Head.FriendlyName, new[] { path }, options);
+        repository.CheckoutPaths(repository.Head.FriendlyName, new[] { path }, options);
 
-        if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
+        if (!Path.IsPathRooted(path)) path = Path.Combine(repository.Info.WorkingDirectory, path);
 
-        if (CurrentRepo == null || CurrentRepo.Info.WorkingDirectory == null) return;
-        var entry = Changes
-            .FirstOrDefault(x => Path.Combine(CurrentRepo.Info.WorkingDirectory, x.Status.FilePath) == path);
-        if (entry != null && entry.Status.State == FileStatus.NewInWorkdir)
+        var entry = ActiveRepository.Changes
+            .FirstOrDefault(x => Path.Combine(repository.Info.WorkingDirectory, x.Status.FilePath) == path);
+        if (entry is { Status.State: FileStatus.NewInWorkdir })
         {
             var result = await _windowService.ShowYesNoCancelAsync("Warning",
                 $"Are you sure you want to delete {Path.GetFileName(path)}?", MessageBoxIcon.Warning);
@@ -760,10 +850,10 @@ public class SourceControlViewModel : ExtendedTool
                 try
                 {
                     File.Delete(path);
-                    if (ProjectExplorerService.ActiveProject?.SearchFullPath(Path.Combine(
-                            CurrentRepo.Info.WorkingDirectory,
+                    if (_projectExplorerService.ActiveProject?.SearchFullPath(Path.Combine(
+                            repository.Info.WorkingDirectory,
                             path)) is IProjectFile file)
-                        _ = ProjectExplorerService.RemoveAsync(file);
+                        _ = _projectExplorerService.RemoveAsync(file);
                 }
                 catch (Exception e)
                 {
@@ -774,21 +864,22 @@ public class SourceControlViewModel : ExtendedTool
         await RefreshAsync();
     }
 
-    public async Task DiscardAllAsync(ResetMode mode)
+    private async Task DiscardAllAsync(ResetMode mode)
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
+
         try
         {
             await WaitUntilFreeAsync();
-            CurrentRepo.Reset(mode);
+            repository.Reset(mode);
 
             if (mode == ResetMode.Hard)
             {
                 var deleteFiles = new List<string>();
-                foreach (var item in CurrentRepo.RetrieveStatus(new StatusOptions()))
+                foreach (var item in repository.RetrieveStatus(new StatusOptions()))
                     if (item.State == FileStatus.NewInWorkdir)
                     {
-                        var path = Path.Combine(CurrentRepo.Info.WorkingDirectory, item.FilePath);
+                        var path = Path.Combine(repository.Info.WorkingDirectory, item.FilePath);
                         deleteFiles.Add(path);
                     }
 
@@ -800,8 +891,8 @@ public class SourceControlViewModel : ExtendedTool
                     if (result is MessageBoxStatus.Yes)
                         foreach (var f in deleteFiles)
                         {
-                            var projFile = ProjectExplorerService.SearchFullPath(f);
-                            if (projFile != null) await ProjectExplorerService.DeleteAsync(projFile);
+                            var projFile = _projectExplorerService.SearchFullPath(f);
+                            if (projFile != null) await _projectExplorerService.DeleteAsync(projFile);
                             else File.Delete(f);
                         }
                 }
@@ -821,11 +912,11 @@ public class SourceControlViewModel : ExtendedTool
 
     public async Task<IFile?> OpenFileAsync(string path)
     {
-        if (CurrentRepo?.Info.WorkingDirectory == null) return null;
+        if (ActiveRepository?.Repository is not { } repository) return null;
 
-        if (!Path.IsPathRooted(path)) path = Path.Combine(CurrentRepo.Info.WorkingDirectory, path);
+        if (!Path.IsPathRooted(path)) path = Path.Combine(repository.Info.WorkingDirectory, path);
 
-        if (!(_projectExplorerService.ActiveProject?.SearchFullPath(path) is IFile file))
+        if (_projectExplorerService.ActiveProject?.SearchFullPath(path) is not IFile file)
             file = _projectExplorerService.GetTemporaryFile(path);
 
         await _dockService.OpenFileAsync(file);
@@ -834,10 +925,10 @@ public class SourceControlViewModel : ExtendedTool
 
     public async Task OpenHeadFileAsync(string path)
     {
-        if (CurrentRepo == null) return;
+        if (ActiveRepository?.Repository is not { } repository) return;
 
         string commitContent;
-        var blob = CurrentRepo.Head.Tip[path].Target as Blob;
+        var blob = repository.Head.Tip[path].Target as Blob;
 
         if (blob == null) throw new NullReferenceException(nameof(blob));
 
@@ -858,20 +949,29 @@ public class SourceControlViewModel : ExtendedTool
         }
     }
 
-    public void CompareAndSwitch(Repository repository, string path)
+    public void CompareAndSwitch(string path)
     {
-        Compare(repository, path, true);
+        if (ActiveRepository?.Repository is not { } repository) return;
+        Compare(path, true);
     }
 
-    public void Compare(Repository repository, string path, bool switchTab)
+    public void Compare(string path, bool switchTab)
     {
+        if (ActiveRepository?.Repository is not { } repository) return;
         _ = CompareChangesAsync(repository, path, "Diff: ", 10000, switchTab);
+    }
+
+    public void ViewChanges(string path)
+    {
+        if (ActiveRepository?.Repository is not { } repository) return;
+        _ = CompareChangesAsync(repository, path, "Changes: ");
     }
 
     public Patch? GetPatch(string path, int contextLines)
     {
-        var repository = Repositories.FirstOrDefault(x => path.ContainsSubPath(x.Repository.Info.Path));
-        return repository?.Repository.Diff.Compare<Patch>(new List<string> { path }, false,
+        if (ActiveRepository?.Repository is not { } repository) return null;
+
+        return repository.Diff.Compare<Patch>(new List<string> { path }, false,
             new ExplicitPathsOptions(),
             new CompareOptions { ContextLines = contextLines });
     }
@@ -930,7 +1030,68 @@ public class SourceControlViewModel : ExtendedTool
 
     #endregion
 
-    #region Credentials & Identity
+    #region Login
+
+    public Task<bool> LoginGithubAsync()
+    {
+        return LoginDialogAsync(ContainerLocator.Container.Resolve<GithubLoginProvider>());
+    }
+
+    private async Task<bool> LoginDialogAsync(ILoginProvider loginProvider)
+    {
+        var vm = new AuthenticateViewModel(loginProvider);
+        await Dispatcher.UIThread.InvokeAsync(() => _windowService.ShowDialogAsync(new AuthenticateGitView()
+        {
+            DataContext = vm
+        }));
+        return vm.Success;
+    }
+
+    private async Task<Credentials> GetCredentialsAsync(string url, string usernameFromUrl,
+        SupportedCredentialTypes types, CancellationToken cancellationToken = default)
+    {
+        if (types.HasFlag(SupportedCredentialTypes.UsernamePassword))
+        {
+            var ub = new Uri(url);
+
+            var username = _settingsService.GetSettingValue<string>(SourceControlModule.GitHubAccountNameKey);
+
+            var store = CredentialManager.Create("oneware");
+
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                var key = $"{ub.Scheme}://{ub.Host}";
+                var cred = store.Get(key, username);
+
+                if (cred != null)
+                    return new UsernamePasswordCredentials()
+                    {
+                        Username = cred.Account,
+                        Password = cred.Password
+                    };
+            }
+            
+            var loginResult = false;
+            
+            if (_loginProviders.TryGetValue(ub.Host, out var loginProvider))
+            {
+                loginResult = await LoginDialogAsync(loginProvider);
+            }
+
+            if (cancellationToken.IsCancellationRequested) return new DefaultCredentials();
+
+            if (loginResult)
+            {
+                return await GetCredentialsAsync(url, usernameFromUrl, types, cancellationToken);
+            }
+        }
+
+        return new DefaultCredentials();
+    }
+
+    #endregion
+
+    #region Identity
 
     private async Task<Signature?> GetSignatureAsync(Repository repository)
     {
@@ -938,7 +1099,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (author == null)
         {
-            var identity = await SetUserIdentityAsync(repository, true);
+            var identity = await SetUserIdentityAsync(true);
 
             author = new Signature(identity, DateTime.Now);
         }
@@ -951,12 +1112,11 @@ public class SourceControlViewModel : ExtendedTool
         var author = repository.Config.BuildSignature(DateTimeOffset.Now);
 
         var name = await _windowService.ShowInputAsync("Info", "Please enter a name to sign your changes",
-            MessageBoxIcon.Info, author?.Name, _dockService.GetWindowOwner(this));
+            MessageBoxIcon.Info, author?.Name);
         if (name == null) return null;
 
         var email = await _windowService.ShowInputAsync("Info",
-            "Please enter a valid email adress to sign your changes", MessageBoxIcon.Info, author?.Email,
-            _dockService.GetWindowOwner(this));
+            "Please enter a valid email adress to sign your changes", MessageBoxIcon.Info, author?.Email);
         if (email == null) return null;
 
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
@@ -968,8 +1128,10 @@ public class SourceControlViewModel : ExtendedTool
         return new Identity(name, email);
     }
 
-    private async Task<Identity?> SetUserIdentityAsync(Repository repository, bool dialog)
+    private async Task<Identity?> SetUserIdentityAsync(bool dialog)
     {
+        if (ActiveRepository?.Repository is not { } repository) return null;
+
         var identity = await GetIdentityManualAsync(repository);
 
         if (identity == null) return null;
@@ -977,7 +1139,7 @@ public class SourceControlViewModel : ExtendedTool
         var result = dialog
             ? await _windowService.ShowYesNoAsync("Info",
                 "Do you want to save this information in your global git configuration so that you do not have to enter them again next time?",
-                MessageBoxIcon.Info, _dockService.GetWindowOwner(this))
+                MessageBoxIcon.Info)
             : MessageBoxStatus.Yes;
 
         if (result is MessageBoxStatus.Yes)

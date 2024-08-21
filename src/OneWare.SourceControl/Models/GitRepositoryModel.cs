@@ -8,15 +8,13 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.SourceControl.Services;
+using OneWare.SourceControl.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.SourceControl.Models;
 
 public class GitRepositoryModel : ObservableObject
 {
-    private readonly GitService _gitService;
-
     private Branch? _headBranch;
 
     private int _pullCommits;
@@ -25,12 +23,13 @@ public class GitRepositoryModel : ObservableObject
 
     private string? _workingPath;
 
-    public GitRepositoryModel(Repository repository, GitService gitService)
+    public GitRepositoryModel(IProjectRoot project, Repository repository)
     {
-        _gitService = gitService;
+        Project = project;
         Repository = repository;
     }
 
+    public IProjectRoot Project { get; private set; }
     public Repository Repository { get; private set; }
 
     public ObservableCollection<SourceControlFileModel> Changes { get; set; } = [];
@@ -63,7 +62,9 @@ public class GitRepositoryModel : ObservableObject
         set => SetProperty(ref _pushCommits, value);
     }
 
-    public void Refresh()
+    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
+
+    public void Refresh(SourceControlViewModel sourceControlViewModel)
     {
         var changes = new List<SourceControlFileModel>();
         var stagedChanges = new List<SourceControlFileModel>();
@@ -73,28 +74,28 @@ public class GitRepositoryModel : ObservableObject
         {
             HeadBranch = Repository.Head;
 
-            // foreach (var branch in Repository.Branches)
-            // {
-            //     var menuItem = new MenuItemViewModel("BranchName")
-            //     {
-            //         Header = branch.FriendlyName,
-            //         Command = new RelayCommand(() => _gitService.ChangeBranch(Repository, branch)),
-            //     };
-            //     if (branch.IsCurrentRepositoryHead)
-            //     {
-            //         menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept");
-            //         menuItem.IsEnabled = false;
-            //     }
-            //
-            //     AvailableBranchesMenu.Add(menuItem);
-            // }
-            //
-            // AvailableBranchesMenu.Add(new MenuItemViewModel("NewBranch")
-            // {
-            //     Header = "New Branch...",
-            //     IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch"),
-            //     //Command = new AsyncRelayCommand(CreateBranchDialogAsync)
-            // });
+            foreach (var branch in Repository.Branches)
+            {
+                var menuItem = new MenuItemViewModel("BranchName")
+                {
+                    Header = branch.FriendlyName,
+                    Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch)),
+                };
+                if (branch.IsCurrentRepositoryHead)
+                {
+                    menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept");
+                    menuItem.IsEnabled = false;
+                }
+            
+                AvailableBranchesMenu.Add(menuItem);
+            }
+            
+            AvailableBranchesMenu.Add(new MenuItemViewModel("NewBranch")
+            {
+                Header = "New Branch...",
+                IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch"),
+                //Command = new AsyncRelayCommand(CreateBranchDialogAsync)
+            });
 
             foreach (var item in Repository.RetrieveStatus(new StatusOptions()))
             {
