@@ -1,4 +1,5 @@
 ﻿using OneWare.Essentials.Controls;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings;
 using OneWare.Settings.ViewModels;

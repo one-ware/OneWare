@@ -60,6 +60,7 @@ public class SourceControlViewModel : ExtendedTool
         Id = "SourceControl";
         Title = "Source Control";
 
+        InitializeRepositoryCommand = new RelayCommand(InitializeRepository, () => _projectExplorerService.ActiveProject != null);
         RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
         CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);
         SyncAsyncCommand = new AsyncRelayCommand(SyncAsync);
@@ -112,6 +113,7 @@ public class SourceControlViewModel : ExtendedTool
         set => SetProperty(ref _isLoading, value);
     }
 
+    public RelayCommand InitializeRepositoryCommand { get; }
     public AsyncRelayCommand RefreshAsyncCommand { get; }
     public AsyncRelayCommand CloneDialogAsyncCommand { get; }
     public AsyncRelayCommand SyncAsyncCommand { get; }
@@ -133,6 +135,8 @@ public class SourceControlViewModel : ExtendedTool
 
     private async Task RefreshAsync()
     {
+        InitializeRepositoryCommand.NotifyCanExecuteChanged();
+        
         await WaitUntilFreeAsync();
 
         IsLoading = true;
@@ -148,7 +152,7 @@ public class SourceControlViewModel : ExtendedTool
                 {
                     var path = Repository.Discover(project.RootFolderPath);
             
-                    if (Repository.IsValid(path))
+                    if (!string.IsNullOrEmpty(path) && Repository.IsValid(path))
                     {
                         if(Repositories.Any(x => x.Project == project)) continue;
                         Repositories.Add(new GitRepositoryModel(project, new Repository(path)));
@@ -169,6 +173,8 @@ public class SourceControlViewModel : ExtendedTool
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
+        
+        ActiveRepository = Repositories.FirstOrDefault(x => x.Project == _projectExplorerService.ActiveProject);
 
         IsLoading = false;
     }
@@ -618,9 +624,8 @@ public class SourceControlViewModel : ExtendedTool
         if (push)
         {
             var pushResult = await PushAsync();
-            if (pushResult)
-                //Active.SetStatus("Sync finished successfull", Active.AppState.Idle);
-                _windowService.ShowNotification("Success", "Sync finished successfully", NotificationType.Success);
+            //if (pushResult)
+                //_windowService.ShowNotification("Success", "Sync finished successfully", NotificationType.Success);
             _ = RefreshAsync();
         }
     }
@@ -744,7 +749,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (result)
         {
-            _windowService.ShowNotification("Success", $"SPushed succesfully to {repository.Head.CanonicalName}",
+            _windowService.ShowNotification("Success", $"Pushed successfully to {repository.Head.FriendlyName}",
                 NotificationType.Success);
         }
 
@@ -1043,7 +1048,7 @@ public class SourceControlViewModel : ExtendedTool
         await Dispatcher.UIThread.InvokeAsync(() => _windowService.ShowDialogAsync(new AuthenticateGitView()
         {
             DataContext = vm
-        }));
+        }, _dockService.GetWindowOwner(this)));
         return vm.Success;
     }
 

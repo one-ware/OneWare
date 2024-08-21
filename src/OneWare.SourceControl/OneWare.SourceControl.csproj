@@ -5,6 +5,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+        <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="DiffPlex" Version="1.7.2"/>

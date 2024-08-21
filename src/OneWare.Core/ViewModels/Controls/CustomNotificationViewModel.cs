@@ -5,10 +5,9 @@ namespace OneWare.Core.ViewModels.Controls;
 
 public class CustomNotificationViewModel : Notification
 {
-    public CustomNotificationViewModel(string title, string message, NotificationType type, TimeSpan? expiration = null,
+    public CustomNotificationViewModel(string title, string message, NotificationType type, TimeSpan expiration,
         string? buttonText = null, Action? buttonAction = null,
-        IImage? icon = null, Action? onClick = null, Action? onClose = null) : base(title, message, type,
-        expiration ?? TimeSpan.Zero, onClick,
+        IImage? icon = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration, onClick,
         onClose)
     {
         ButtonText = buttonText;

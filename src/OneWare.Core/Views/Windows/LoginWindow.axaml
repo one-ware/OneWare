@@ -14,7 +14,6 @@
                           x:DataType="windows1:LoginWindowViewModel">
     <DockPanel LastChildFill="False">
 
-
         <StackPanel Margin="4" Orientation="Vertical" DockPanel.Dock="Top" Spacing="4">
 
             <TextBlock Text="Login to your OneWare.Core Developer Account" Margin="0 0 0 10" />

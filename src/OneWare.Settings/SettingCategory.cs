@@ -1,3 +1,5 @@
+using OneWare.Essentials.Models;
+
 namespace OneWare.Settings;
 
 public class SettingCategory
@@ -9,7 +11,7 @@ public class SettingCategory
 
 public class SettingSubCategory
 {
-    public List<TitledSetting> Settings { get; } = new();
+    public List<Setting> Settings { get; } = new();
     public int Priority { get; set; }
     public string? IconKey { get; set; }
 }

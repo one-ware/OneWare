@@ -176,9 +176,9 @@
                            Text="The currently active project doesn't have a git repository. You can initialize the currently active project as a new git repository"
                            TextWrapping="Wrap" />
                 <Button
-                    IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
                     Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
-                    Command="{Binding InitializeRepository}">
+                    Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Margin="0, 0, 10, 0" Height="15"
@@ -208,7 +208,7 @@
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.MergeChanges.Count}">
+            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
                     <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
@@ -254,7 +254,7 @@
                 <TextBlock Text="{Binding ActiveRepository.StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
 
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.StagedChanges.Count}">
+            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
                     <ListBox ItemsSource="{Binding ActiveRepository.StagedChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
@@ -304,7 +304,7 @@
             </Grid>
 
             <Grid DockPanel.Dock="Top"
-                  IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                 <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
                     <ListBox ItemsSource="{Binding ActiveRepository.Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"

@@ -177,7 +177,7 @@ public class WindowService : IWindowService
     public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information,
         TimeSpan? expiration = null)
     {
-        var model = new CustomNotificationViewModel(title, message, type, expiration);
+        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(5));
 
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager
             ?.Show(model);

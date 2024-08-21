@@ -1,6 +1,8 @@
-﻿namespace OneWare.Settings.ViewModels.SettingTypes;
+﻿using OneWare.Essentials.Models;
 
-public class TextBoxSettingViewModel : SettingViewModel
+namespace OneWare.Settings.ViewModels.SettingTypes;
+
+public class TextBoxSettingViewModel : TitledSettingViewModel
 {
     public TextBoxSettingViewModel(TextBoxSetting setting) : base(setting)
     {

@@ -1,6 +1,8 @@
-﻿namespace OneWare.Settings.ViewModels.SettingTypes;
+﻿using OneWare.Essentials.Models;
 
-public class CheckBoxSettingViewModel : SettingViewModel
+namespace OneWare.Settings.ViewModels.SettingTypes;
+
+public class CheckBoxSettingViewModel : TitledSettingViewModel
 {
     public CheckBoxSettingViewModel(TitledSetting setting, IObservable<bool>? needEnabled = null) :
         base(setting)

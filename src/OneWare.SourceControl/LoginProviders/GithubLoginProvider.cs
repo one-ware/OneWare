@@ -30,11 +30,11 @@ public class GithubLoginProvider(ISettingsService settingsService, ILogger logge
         
             if (username != null)
             {
-                settingsService.SetSettingValue(SourceControlModule.GitHubAccountNameKey, username);
-            
                 var store = CredentialManager.Create("oneware");
-                store.AddOrUpdate("https://github.com", username, password);
-
+                store.AddOrUpdate(Host, username, password);
+                
+                settingsService.SetSettingValue(SourceControlModule.GitHubAccountNameKey, username);
+                
                 return true;
             }
         }

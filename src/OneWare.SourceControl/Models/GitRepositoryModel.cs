@@ -108,7 +108,7 @@ public class GitRepositoryModel : ObservableObject
                     item.State.HasFlag(FileStatus.NewInIndex) ||
                     item.State.HasFlag(FileStatus.ModifiedInIndex))
                 {
-                    StagedChanges.Add(sModel);
+                    stagedChanges.Add(sModel);
                 }
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInWorkdir) ||
@@ -117,12 +117,12 @@ public class GitRepositoryModel : ObservableObject
                     item.State.HasFlag(FileStatus.NewInWorkdir) ||
                     item.State.HasFlag(FileStatus.ModifiedInWorkdir))
                 {
-                    Changes.Add(sModel);
+                    changes.Add(sModel);
                 }
 
                 if (item.State.HasFlag(FileStatus.Conflicted))
                 {
-                    MergeChanges.Add(sModel);
+                    mergeChanges.Add(sModel);
                 }
             }
 

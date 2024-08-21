@@ -6,6 +6,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.SourceControl.Settings;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
 using Prism.Ioc;
@@ -21,6 +22,7 @@ public class SourceControlModule : IModule
     {
         containerRegistry.Register<CompareFileViewModel>();
         containerRegistry.RegisterSingleton<SourceControlViewModel>();
+        containerRegistry.RegisterSingleton<GitHubAccountSettingViewModel>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
@@ -30,9 +32,8 @@ public class SourceControlModule : IModule
 
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
-        
-        settingsService.RegisterTitled("Team Explorer", "GitHub", GitHubAccountNameKey,
-            "Account Name", "GitHub Account Name (gets set automatically when authenticating using a token)", "");
+
+        settingsService.RegisterCustom("Team Explorer", "GitHub", GitHubAccountNameKey, new GitHubAccountSetting());
         
         settingsService.RegisterSettingCategory("Team Explorer", 10, "VsImageLib.Team16X");
         settingsService.RegisterTitled("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",
