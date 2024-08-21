@@ -19,20 +19,23 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
             <TextBlock Margin="2" Background="Transparent" Name="Message" TextWrapping="Wrap"
                        Text="{Binding Message}" />
-            <DockPanel IsVisible="{Binding ShowInput}">
-                <Button IsVisible="{Binding ShowFolderButton}" DockPanel.Dock="Right" Classes="BorderButton"
-                        Width="22"
-                        BorderThickness="0,1,1,1" Height="22" Command="{Binding SelectPathAsync}"
-                        CommandParameter="{Binding #MessageWindow}">
-                    <Image Source="{DynamicResource VsImageLib.FolderOpen16X}" VerticalAlignment="Center" />
-                </Button>
-                <Border BorderThickness="1" Height="22" HorizontalAlignment="Stretch"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                    <TextBox PasswordChar="{Binding PasswordChar}" Name="InputBox" BorderThickness="0"
-                             Height="20" Text="{Binding Input}" Padding="4 2 4 0" FontSize="12"
-                             HorizontalAlignment="Stretch" />
-                </Border>
-            </DockPanel>
+            <Border Classes="RoundToolBar" IsVisible="{Binding ShowInput}" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
+                <DockPanel>
+                    <DockPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" IsVisible="{Binding ShowFolderButton}">
+                            <Border Classes="SplitterBorder" Background="{DynamicResource ThemeBorderMidBrush}" />
+
+                            <Button Command="{Binding SelectPathAsync}" CommandParameter="{Binding #MessageWindow}">
+                                <Image Height="16" Width="16" VerticalAlignment="Center"
+                                       Source="{DynamicResource VsImageLib.FolderOpen16X}" />
+                            </Button>
+                        </StackPanel>
+
+                        <TextBox Name="InputBox" DockPanel.Dock="Left" Text="{Binding Input, Mode=TwoWay}" BorderThickness="0" />
+                    </DockPanel>
+                </DockPanel>
+            </Border>
+            
             <ComboBox IsVisible="{Binding ShowSelection}" ItemsSource="{Binding SelectionItems}"
                       SelectedItem="{Binding SelectedItem}" />
         </StackPanel>

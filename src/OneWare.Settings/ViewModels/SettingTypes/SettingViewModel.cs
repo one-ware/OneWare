@@ -1,21 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public abstract class SettingViewModel : ObservableObject
 {
-    private bool _isEnabled = true;
-
-    protected SettingViewModel(TitledSetting setting)
-    {
-        Setting = setting;
-    }
-
-    public TitledSetting Setting { get; }
-
-    public bool IsEnabled
-    {
-        get => _isEnabled;
-        set => SetProperty(ref _isEnabled, value);
-    }
+    public Setting Setting { get; }
 }

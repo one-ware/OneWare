@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Helpers;
 
-namespace OneWare.Settings;
+namespace OneWare.Essentials.Models;
 
 public class Setting : ObservableObject
 {
@@ -16,7 +16,7 @@ public class Setting : ObservableObject
         _value = defaultValue;
     }
 
-    public object Value
+    public virtual object Value
     {
         get => _value;
         set => SetProperty(ref _value, value);
@@ -139,4 +139,14 @@ public class FilePathSetting : PathSetting
         var folder = await StorageProviderHelper.SelectFileAsync(topLevel, Title, StartDirectory, Filters);
         if (folder != null) Value = folder;
     }
+}
+
+public abstract class CustomSetting : Setting
+{
+    public CustomSetting(object defaultValue) : base(defaultValue)
+    {
+        
+    }
+    
+    public object? Control { get; init; }
 }

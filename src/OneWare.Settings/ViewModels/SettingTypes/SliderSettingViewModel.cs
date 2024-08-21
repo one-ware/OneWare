@@ -1,6 +1,8 @@
-﻿namespace OneWare.Settings.ViewModels.SettingTypes;
+﻿using OneWare.Essentials.Models;
 
-public class SliderSettingViewModel : SettingViewModel
+namespace OneWare.Settings.ViewModels.SettingTypes;
+
+public class SliderSettingViewModel : TitledSettingViewModel
 {
     public SliderSettingViewModel(SliderSetting setting) : base(setting)
     {

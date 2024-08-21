@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Settings.ViewModels.SettingTypes;
 

@@ -10,6 +10,7 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="OneWare.SourceControl.Views.SourceControlView"
+             Name="SourceControlViewView"
              x:DataType="viewModels:SourceControlViewModel" x:CompileBindings="True">
 
     <UserControl.Styles>
@@ -17,11 +18,11 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="ItemTemplate">
                 <Setter.Value>
-                    <DataTemplate DataType="models:SourceControlModel">
+                    <DataTemplate DataType="models:SourceControlFileModel">
                         <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
                                 <Image Margin="1, 0, 0, 0" Height="16" Width="16"
-                                       Source="{Binding File.Icon}" HorizontalAlignment="Center"
+                                       Source="{Binding ProjectFile.Icon}" HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                             </Grid>
                             <Grid DockPanel.Dock="Right" Width="11">
@@ -46,12 +47,18 @@
     </UserControl.Styles>
     <Grid RowDefinitions="26, Auto, *">
         <DockPanel LastChildFill="False">
-            <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton"
-                  IsEnabled="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
                 <MenuItem>
                     <MenuItem.Header>
                         <Image Width="15" Source="{DynamicResource BoxIcons.RegularDotsHorizontalRounded}" />
                     </MenuItem.Header>
+                    <MenuItem Header="Account">
+                        <MenuItem Header="Login to Github" Command="{Binding LoginGithubAsync}">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource Bootstrap.Github}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
                     <MenuItem Header="Clone" Command="{Binding CloneDialogAsyncCommand}">
                         <MenuItem.Icon>
                             <Image Source="{DynamicResource FontAwesome.DownloadSolid}" />
@@ -73,11 +80,11 @@
                             <Image Source="{DynamicResource BoxIcons.RegularGitCommit}" />
                         </MenuItem.Icon>
                         <MenuItem Header="Commit Staged" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{StaticResource False}"
-                                  IsEnabled="{Binding #CommitMessageBox.Text.Length}" />
+                                  CommandParameter="{x:False}"
+                                  IsEnabled="{Binding CommitMessage.Length}" />
                         <MenuItem Header="Commit All" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{StaticResource True}"
-                                  IsEnabled="{Binding #CommitMessageBox.Text.Length}" />
+                                  CommandParameter="{x:True}"
+                                  IsEnabled="{Binding CommitMessage.Length}" />
                     </MenuItem>
                     <MenuItem Header="Branches">
                         <MenuItem.Icon>
@@ -121,23 +128,23 @@
             </Button>
             <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
                     IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource False}"
-                    IsVisible="{Binding !StagedChanges.Count}">
+                    IsVisible="{Binding !ActiveRepository.StagedChanges.Count}">
                 <Image Source="{DynamicResource PicolIcons.Accept}" Width="15"
                        ToolTip.Tip="Stage all changes and commit" />
             </Button>
             <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
                     IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource True}"
-                    IsVisible="{Binding StagedChanges.Count}">
+                    IsVisible="{Binding ActiveRepository.StagedChanges.Count}">
                 <Image Source="{DynamicResource PicolIcons.Accept}" Width="15" ToolTip.Tip="Commit staged changes" />
             </Button>
 
-            <Menu IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  Name="BranchButton" ToolTip.Tip="{Binding WorkingPath}" Classes="BindMenu">
-                <MenuItem ItemsSource="{Binding AvailableBranchesMenu}">
+            <Menu IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  Name="BranchButton" ToolTip.Tip="{Binding ActiveRepository.WorkingPath}" Classes="BindMenu">
+                <MenuItem ItemsSource="{Binding ActiveRepository.AvailableBranchesMenu}">
                     <MenuItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock VerticalAlignment="Center" Height="20" Margin="1, 4, 3, 2"
-                                       Text="{Binding HeadBranch.FriendlyName}" />
+                                       Text="{Binding ActiveRepository.HeadBranch.FriendlyName}" />
                             <Image VerticalAlignment="Center" Height="13" Margin="3"
                                    Source="{DynamicResource BoxIcons.RegularGitBranch}" />
                         </StackPanel>
@@ -147,7 +154,7 @@
         </DockPanel>
 
         <DockPanel Grid.Row="1">
-            <TextBox IsEnabled="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+            <TextBox IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                      Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                      Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}"
                      BorderThickness="0,1,0,1" Watermark="Message for commit...">
@@ -164,14 +171,14 @@
 
         <DockPanel Grid.Row="2">
             <StackPanel DockPanel.Dock="Top" Margin="15" Orientation="Vertical"
-                        IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNull}}">
+                        IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNull}}">
                 <TextBlock TextAlignment="Left"
                            Text="The currently active project doesn't have a git repository. You can initialize the currently active project as a new git repository"
                            TextWrapping="Wrap" />
                 <Button
-                    IsEnabled="{Binding ProjectExplorerService.ActiveProject, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
                     Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
-                    Command="{Binding InitializeRepository}">
+                    Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Margin="0, 0, 10, 0" Height="15"
@@ -201,19 +208,19 @@
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding MergeChanges.Count}">
+            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="MergeChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
                                 <Setter Property="ContextMenu">
                                     <Setter.Value>
-                                        <ContextMenu x:DataType="models:SourceControlModel">
+                                        <ContextMenu x:DataType="models:SourceControlFileModel">
                                             <MenuItem Header="Accept Changes / Stage"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.Conflicted}}"
-                                                      Command="{Binding Parent.StageCommand}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).StageCommand, FallbackValue={x:Null}}"
                                                       CommandParameter="{Binding Status.FilePath}">
                                                 <MenuItem.Icon>
                                                     <Image Source="{DynamicResource PicolIcons.Accept}" />
@@ -221,22 +228,22 @@
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem Header="Open File"
-                                                      Command="{Binding Parent.OpenFileAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).OpenFileAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="Accept All Current"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.Conflicted}}"
-                                                      Command="{Binding Parent.MergeAcceptCurrentAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).MergeAcceptCurrentAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <MenuItem Header="Accept All Incoming"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.Conflicted}}"
-                                                      Command="{Binding Parent.MergeAcceptIncomingAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).MergeAcceptIncomingAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding File, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                      Command="{Binding Parent.ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding File}" />
+                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
+                                                      CommandParameter="{Binding ProjectFile}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -244,22 +251,22 @@
                         </ListBox.Styles>
                     </ListBox>
                 </Expander>
-                <TextBlock Text="{Binding StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
+                <TextBlock Text="{Binding ActiveRepository.StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
 
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding StagedChanges.Count}">
+            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding StagedChanges}"
+                    <ListBox ItemsSource="{Binding ActiveRepository.StagedChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
                              Name="StagedChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
                                 <Setter Property="ContextMenu">
                                     <Setter.Value>
-                                        <ContextMenu x:DataType="models:SourceControlModel">
+                                        <ContextMenu x:DataType="models:SourceControlFileModel">
                                             <MenuItem Header="Compare with Unmodified"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:ChangeKind.Modified}}"
-                                                      Command="{Binding Parent.CompareAndSwitch}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).CompareAndSwitch}"
                                                       CommandParameter="{Binding Status.FilePath}">
                                                 <MenuItem.Icon>
                                                     <Image Source="{DynamicResource VsImageLib.Compare16X}" />
@@ -271,21 +278,21 @@
                                             <!--           Command="{Binding Source={StaticResource maindock}, Path=SourceControl.ViewChanges}" -->
                                             <!--           CommandParameter="{Binding Status.FilePath}" /> -->
                                             <MenuItem Header="Open File"
-                                                      Command="{Binding Parent.OpenFileAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).OpenFileAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <MenuItem Header="Open File (Head)"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.ModifiedInWorkdir}}"
-                                                      Command="{Binding Parent.OpenHeadFileAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).OpenHeadFileAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="Unstage Changes"
-                                                      Command="{Binding Parent.UnStage}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).UnStage}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding File, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                      Command="{Binding Parent.ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding File}" />
+                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
+                                                      CommandParameter="{Binding ProjectFile}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -293,23 +300,23 @@
                         </ListBox.Styles>
                     </ListBox>
                 </Expander>
-                <TextBlock Text="{Binding StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
+                <TextBlock Text="{Binding ActiveRepository.StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
 
             <Grid DockPanel.Dock="Top"
-                  IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                 <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
-                    <ListBox ItemsSource="{Binding Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    <ListBox ItemsSource="{Binding ActiveRepository.Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="ChangeListBox">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
-                                <Setter Property="ContextMenu" x:DataType="models:SourceControlModel">
+                                <Setter Property="ContextMenu" x:DataType="models:SourceControlFileModel">
                                     <Setter.Value>
                                         <ContextMenu>
                                             <MenuItem Header="Compare with Unmodified"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.ModifiedInWorkdir}}"
-                                                      Command="{Binding Parent.CompareAndSwitch}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).CompareAndSwitch}"
                                                       CommandParameter="{Binding Status.FilePath}">
                                                 <MenuItem.Icon>
                                                     <Image Source="{DynamicResource VsImageLib.Compare16X}" />
@@ -321,18 +328,18 @@
                                             <!--           Command="{Binding Source={StaticResource maindock}, Path=SourceControl.ViewChanges}" -->
                                             <!--           CommandParameter="{Binding Status.FilePath}" /> -->
                                             <MenuItem Header="Open File"
-                                                      Command="{Binding Parent.OpenFileAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).OpenFileAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <MenuItem Header="Open File (Head)"
                                                       IsEnabled="{Binding Status.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static libgit:FileStatus.ModifiedInWorkdir}}"
-                                                      Command="{Binding Parent.OpenHeadFileAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).OpenHeadFileAsync}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="Stage Changes"
-                                                      Command="{Binding Parent.Stage}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).Stage}"
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <MenuItem Header="Undo Changes"
-                                                      Command="{Binding Parent.DiscardAsync}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).DiscardAsync}"
                                                       CommandParameter="{Binding Status.FilePath}">
                                                 <MenuItem.Icon>
                                                     <Image Source="{DynamicResource VsImageLib.Undo16X}" />
@@ -340,9 +347,9 @@
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding File, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                      Command="{Binding Parent.ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding File}" />
+                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                      Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
+                                                      CommandParameter="{Binding ProjectFile}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -350,7 +357,7 @@
                         </ListBox.Styles>
                     </ListBox>
                 </Expander>
-                <TextBlock Text="{Binding Changes.Count}" HorizontalAlignment="Right" Margin="3" />
+                <TextBlock Text="{Binding ActiveRepository.Changes.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
         </DockPanel>
     </Grid>

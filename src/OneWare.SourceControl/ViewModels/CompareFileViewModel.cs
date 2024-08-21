@@ -1,10 +1,12 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Media;
+using Avalonia.Threading;
 using DiffPlex;
 using Dock.Model.Mvvm.Controls;
 using LibGit2Sharp;
 using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.EditorExtensions;
@@ -24,6 +26,8 @@ public class CompareFileViewModel : Document, IWaitForContent
     private ScrollInfoContext _scrollInfoLeft = new();
 
     private ScrollInfoContext _scrollInfoRight = new();
+    
+    private readonly IDisposable? _fileWatcher;
 
     static CompareFileViewModel()
     {
@@ -36,9 +40,15 @@ public class CompareFileViewModel : Document, IWaitForContent
     {
         FullPath = fullPath;
         _sourceControlViewModel = sourceControlViewModel;
+
+        _fileWatcher = FileSystemWatcherHelper.WatchFile(FullPath, () => Dispatcher.UIThread.Post(InitializeContent));
     }
 
-    public bool IsContentInitialized { get; }
+    public override bool OnClose()
+    {
+        _fileWatcher?.Dispose();
+        return base.OnClose();
+    }
 
     [DataMember] public string FullPath { get; set; }
 
@@ -80,7 +90,6 @@ public class CompareFileViewModel : Document, IWaitForContent
         IsLoading = true;
         try
         {
-            await _sourceControlViewModel.WaitUntilFreeAsync();
             var patch = _sourceControlViewModel.GetPatch(FullPath, 10000);
             if (patch != null)
             {

@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Avalonia.Platform.Storage;
 using DynamicData.Binding;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Settings;
@@ -18,9 +19,9 @@ public class SettingsService : ISettingsService
 
     private Dictionary<string, object>? _loadedSettings;
     public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
-    
+
     private readonly Dictionary<string, Setting> _settings = new();
-    
+
     private readonly Dictionary<string, object> _unregisteredSettings = new();
 
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
@@ -68,27 +69,31 @@ public class SettingsService : ISettingsService
             new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
     }
 
-    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title, string description,
+    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title,
+        string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
     {
         AddSetting(category, subCategory, key,
             new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
     }
 
-    public void RegisterTitledFilePath(string category, string subCategory, string key, string title, string description,
-        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate, params FilePickerFileType[] filters)
+    public void RegisterTitledFilePath(string category, string subCategory, string key, string title,
+        string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate,
+        params FilePickerFileType[] filters)
     {
         AddSetting(category, subCategory, key,
             new FilePathSetting(title, description, defaultValue, watermark, startDir, validate, filters));
     }
 
-    public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title, string description,
+    public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title,
+        string description,
         T defaultValue, double min, double max, double step)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
     }
-    
+
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
         string description, T defaultValue, params T[] options)
     {
@@ -96,13 +101,18 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key,
             new ComboBoxSetting(title, description, defaultValue, options.Cast<object>()));
     }
-    
+
     public void RegisterTitledComboSearch<T>(string category, string subCategory, string key, string title,
         string description, T defaultValue, params T[] options)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
             new ComboBoxSearchSetting(title, description, defaultValue, options.Cast<object>()));
+    }
+
+    public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting)
+    {
+        AddSetting(category, subCategory, key, customSetting);
     }
 
     public T GetSettingValue<T>(string key)
@@ -153,7 +163,8 @@ public class SettingsService : ISettingsService
                     if (_settings.TryGetValue(key, out var registeredSetting))
                     {
                         if (setting is JsonElement je)
-                            registeredSetting.Value = je.Deserialize(registeredSetting.DefaultValue.GetType()) ?? registeredSetting.DefaultValue;
+                            registeredSetting.Value = je.Deserialize(registeredSetting.DefaultValue.GetType()) ??
+                                                      registeredSetting.DefaultValue;
                         else registeredSetting.Value = setting;
 
                         _unregisteredSettings.Remove(key);
@@ -186,11 +197,11 @@ public class SettingsService : ISettingsService
             {
                 saveD.TryAdd(unregistered.Key, unregistered.Value);
             }
-            
+
             if (_loadedSettings != null)
                 foreach (var (key, value) in _loadedSettings)
                     saveD.TryAdd(key, value);
-            
+
             using var stream = File.Create(path);
             JsonSerializer.Serialize(stream, saveD, saveD.GetType(), JsonSerializerOptions);
         }
@@ -217,7 +228,7 @@ public class SettingsService : ISettingsService
         _afterLoadingActions.Add(action);
     }
 
-    private void AddSetting(string category, string subCategory, string key, TitledSetting setting)
+    private void AddSetting(string category, string subCategory, string key, Setting setting)
     {
         AddSetting(key, setting);
         SettingCategories.TryAdd(category, new SettingCategory());

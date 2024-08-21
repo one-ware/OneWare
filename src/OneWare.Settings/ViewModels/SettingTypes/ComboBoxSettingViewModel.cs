@@ -1,6 +1,8 @@
-﻿namespace OneWare.Settings.ViewModels.SettingTypes;
+﻿using OneWare.Essentials.Models;
 
-public class ComboBoxSettingViewModel : SettingViewModel
+namespace OneWare.Settings.ViewModels.SettingTypes;
+
+public class ComboBoxSettingViewModel : TitledSettingViewModel
 {
     public ComboBoxSettingViewModel(ComboBoxSetting setting) : base(setting)
     {

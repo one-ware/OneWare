@@ -9,7 +9,7 @@
              x:DataType="viewModels:SourceControlViewModel">
 
     <Button Cursor="Hand"
-            IsVisible="{Binding HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+            IsVisible="{Binding  ActiveRepository.HeadBranch, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             Command="{Binding SyncAsync}"
             ToolTip.Tip="Synchronize Changes">
         <StackPanel Orientation="Horizontal" Spacing="3">
@@ -18,12 +18,12 @@
                               IsIntermediate="True"
                               IsAnimationRunning="{Binding IsLoading}" />
 
-            <TextBlock Text="{Binding PullCommits}" Foreground="White" />
+            <TextBlock Text="{Binding ActiveRepository.PullCommits, FallbackValue=0}" Foreground="White" />
             <Image Height="13"
                    Source="{DynamicResource Entypo+.ArrowLongDownWhite}" />
 
             <TextBlock
-                Text="{Binding PushCommits}" Foreground="White" />
+                Text="{Binding ActiveRepository.PushCommits, FallbackValue=0}" Foreground="White" />
             <Image Height="13"
                    Source="{DynamicResource Entypo+.ArrowLongUpWhite}" />
         </StackPanel>

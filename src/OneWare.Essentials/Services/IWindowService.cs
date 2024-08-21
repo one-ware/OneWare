@@ -30,7 +30,7 @@ public interface IWindowService
     public Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
         Window? owner = null);
 
-    public Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
+    public Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue, Window? owner = null);
 
     public Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon,
         IEnumerable<object> options, object? defaultOption, Window? owner = null);

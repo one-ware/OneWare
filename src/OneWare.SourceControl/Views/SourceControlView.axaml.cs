@@ -19,20 +19,20 @@ public partial class SourceControlView : UserControl
 
     public void OnChangeDoubleTap(object? sender, RoutedEventArgs e)
     {
-        if (ChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+        if (ChangeListBox.SelectedItem is SourceControlFileModel scm) _ = AutoOpenAsync(scm);
     }
 
     public void OnStagedChangeDoubleTap(object? sender, RoutedEventArgs e)
     {
-        if (StagedChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+        if (StagedChangeListBox.SelectedItem is SourceControlFileModel scm) _ = AutoOpenAsync(scm);
     }
 
     public void OnMergeChangeDoubleTap(object? sender, RoutedEventArgs e)
     {
-        if (MergeChangeListBox.SelectedItem is SourceControlModel scm) _ = AutoOpenAsync(scm);
+        if (MergeChangeListBox.SelectedItem is SourceControlFileModel scm) _ = AutoOpenAsync(scm);
     }
 
-    public async Task AutoOpenAsync(SourceControlModel scm)
+    public async Task AutoOpenAsync(SourceControlFileModel scm)
     {
         if (!(DataContext is SourceControlViewModel vm)) return;
         if (scm.Status.State == FileStatus.ModifiedInWorkdir || scm.Status.State == FileStatus.ModifiedInIndex)

@@ -1,44 +1,58 @@
 ﻿namespace OneWare.Essentials.Helpers;
 
 /// <summary>
-///     Helps reading from streams with specified timeout
+///     Helps reading from streams with specified timeout or cancellation token.
 /// </summary>
-public class StreamReaderHelper
+public class StreamReaderHelper : IDisposable
 {
     private readonly AutoResetEvent _getInput, _gotInput;
-    private readonly Thread _inputThread;
     private readonly StreamReader _outputReader;
     private string? _input;
+    private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
     public StreamReaderHelper(StreamReader output)
     {
         _getInput = new AutoResetEvent(false);
         _gotInput = new AutoResetEvent(false);
-        _inputThread = new Thread(Reader)
+        var inputThread = new Thread(Reader)
         {
             IsBackground = true
         };
-        _inputThread.Start();
+        inputThread.Start();
         _outputReader = output;
     }
 
     private void Reader()
     {
-        while (true)
+        while (!_cancellationSource.IsCancellationRequested)
         {
             _getInput.WaitOne();
             _input = _outputReader.ReadLine();
             _gotInput.Set();
         }
     }
-
-    // omit the parameter to read a line without a timeout
-    public string? ReadLine(int timeOutMillisecs = Timeout.Infinite)
+    
+    public string? ReadLine(int timeout = Timeout.Infinite, CancellationToken cancellationToken = default)
     {
+   
+        var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationSource.Token).Token;
+
         _getInput.Set();
-        var success = _gotInput.WaitOne(timeOutMillisecs);
-        if (success)
-            return _input;
-        return null;
+
+        var waitHandles = new WaitHandle[] { _gotInput, combinedToken.WaitHandle };
+
+        var index = WaitHandle.WaitAny(waitHandles, timeout);
+
+        _cancellationSource.Cancel();
+        
+        return index == 0 ? _input : null; // Timeout
+    }
+
+    public void Dispose()
+    {
+        _getInput.Dispose();
+        _gotInput.Dispose();
+        _outputReader.Dispose();
+        _cancellationSource?.Dispose();
     }
 }

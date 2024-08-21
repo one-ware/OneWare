@@ -1,6 +1,8 @@
 ﻿using Avalonia.Media;
+using DynamicData;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
@@ -59,20 +61,23 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
                         case PathSetting pS:
                             subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
                             break;
-                        default:
+                        case CustomSetting cS:
+                            subCategoryModel.SettingModels.Add(new CustomSettingViewModel(cS));
+                            break;
+                        case TitledSetting tS:
                             switch (setting.Value)
                             {
                                 case bool:
-                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(setting));
+                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(tS));
                                     break;
                                 case string:
                                 case int:
                                 case float:
                                 case double:
-                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(setting));
+                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(tS));
                                     break;
                                 case Color:
-                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(setting));
+                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(tS));
                                     break;
                             }
 
