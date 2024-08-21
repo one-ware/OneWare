@@ -70,6 +70,8 @@ public class GitRepositoryModel : ObservableObject
         var stagedChanges = new List<SourceControlFileModel>();
         var mergeChanges = new List<SourceControlFileModel>();
 
+        var projectExplorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
+        
         try
         {
             HeadBranch = Repository.Head;
@@ -100,7 +102,11 @@ public class GitRepositoryModel : ObservableObject
             foreach (var item in Repository.RetrieveStatus(new StatusOptions()))
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
-                var sModel = new SourceControlFileModel(fullPath, item);
+
+                var sModel = new SourceControlFileModel(fullPath, item)
+                {
+                    ProjectFile = projectExplorerService.SearchFullPath(fullPath) as IProjectFile
+                };
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||

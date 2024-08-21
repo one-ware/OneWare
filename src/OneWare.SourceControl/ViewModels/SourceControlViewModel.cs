@@ -141,7 +141,7 @@ public class SourceControlViewModel : ExtendedTool
 
         IsLoading = true;
 
-        var removeInstances = Repositories.Where(x => _projectExplorerService.Projects.Contains(x.Project)).ToArray();
+        var removeInstances = Repositories.Where(x => !_projectExplorerService.Projects.Contains(x.Project)).ToArray();
         Repositories.RemoveMany(removeInstances);
         
         try
@@ -166,7 +166,8 @@ public class SourceControlViewModel : ExtendedTool
 
             foreach (var repo in Repositories)
             {
-                repo.Refresh(this);
+                //repo.Refresh(this);
+                //TODO Show changes for all repos
             }
         }
         catch (Exception e)
@@ -175,6 +176,8 @@ public class SourceControlViewModel : ExtendedTool
         }
         
         ActiveRepository = Repositories.FirstOrDefault(x => x.Project == _projectExplorerService.ActiveProject);
+        
+        ActiveRepository?.Refresh(this);
 
         IsLoading = false;
     }
