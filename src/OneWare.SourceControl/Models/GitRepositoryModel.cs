@@ -109,6 +109,8 @@ public class GitRepositoryModel : ObservableObject
                     {
                         a.IconObservable = b.IconObservable;
                         a.IsEnabled = b.IsEnabled;
+                        a.Command = b.Command;
+                        a.CommandParameter = b.CommandParameter;
                     }
                     return equal;
                 },
