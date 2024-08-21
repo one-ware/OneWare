@@ -468,7 +468,11 @@ public class SourceControlViewModel : ExtendedTool
     private async Task<bool> PublishBranchDialogAsync()
     {
         if (ActiveRepository?.Repository is not { } repository) return false;
+        
+        IsLoading = true;
 
+        bool success;
+        
         try
         {
             if (repository.Head.IsTracking) return true;
@@ -476,21 +480,38 @@ public class SourceControlViewModel : ExtendedTool
             var result = await _windowService.ShowYesNoAsync("Info",
                 $"The branch {repository.Head.FriendlyName} has no upstream branch. Would you like to publish this branch?",
                 MessageBoxIcon.Info, _dockService.GetWindowOwner(this));
+            
             if (result is MessageBoxStatus.Yes)
             {
                 repository.Branches.Update(repository.Head,
                     b => b.Remote = repository.Network.Remotes.First().Name,
                     b => b.UpstreamBranch = repository.Head.CanonicalName);
-                return true;
+
+                await Task.Run(() =>
+                {
+                    repository.Network.Push(repository.Head, new PushOptions
+                    {
+                        CredentialsProvider = (url, usernameFromUrl, types) =>
+                            GetCredentialsAsync(url, usernameFromUrl, types).Result
+                    });
+                });
+                
+                _windowService.ShowNotification("Git Info", $"Branch {repository.Head.FriendlyName} published successfully!", NotificationType.Success);
+
+                success = true;
             }
 
-            return false;
+            success = false;
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            return false;
+            success = false;
         }
+
+        IsLoading = false;
+
+        return success;
     }
 
     private async Task<bool> AddRemoteDialogAsync()
