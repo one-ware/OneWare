@@ -27,7 +27,7 @@ public class CompareFileViewModel : Document, IWaitForContent
 
     private ScrollInfoContext _scrollInfoRight = new();
     
-    private IDisposable? _fileWatcher;
+    private readonly IDisposable? _fileWatcher;
 
     static CompareFileViewModel()
     {
