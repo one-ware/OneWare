@@ -71,10 +71,12 @@ public class GitRepositoryModel : ObservableObject
         var mergeChanges = new List<SourceControlFileModel>();
 
         var projectExplorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
-        
+
         try
         {
             HeadBranch = Repository.Head;
+            
+            var branchesMenu = new List<MenuItemViewModel>();
 
             foreach (var branch in Repository.Branches)
             {
@@ -88,16 +90,43 @@ public class GitRepositoryModel : ObservableObject
                     menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept");
                     menuItem.IsEnabled = false;
                 }
-            
-                AvailableBranchesMenu.Add(menuItem);
+
+                branchesMenu.Add(menuItem);
             }
-            
-            AvailableBranchesMenu.Add(new MenuItemViewModel("NewBranch")
+
+            branchesMenu.Add(new MenuItemViewModel("NewBranch")
             {
                 Header = "New Branch...",
                 IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch"),
-                //Command = new AsyncRelayCommand(CreateBranchDialogAsync)
+                Command = sourceControlViewModel.CreateBranchDialogAsyncCommand
             });
+
+            AvailableBranchesMenu.Merge(branchesMenu, (a, b) =>
+                {
+                    var equal = a.Name == b.Name;
+
+                    if (equal)
+                    {
+                        a.IconObservable = b.IconObservable;
+                        a.IsEnabled = b.IsEnabled;
+                    }
+                    return equal;
+                },
+                (a, b) =>
+                {
+                    if (a.Name == "New Branch...") return -1;
+                    if (b.Name == "New Branch...") return 1;
+                    
+                    var aTracking = a.Name.StartsWith("origin/");
+                    var bTracking = b.Name.StartsWith("origin/");
+
+                    return aTracking switch
+                    {
+                        true when !bTracking => -1,
+                        false when bTracking => 1,
+                        _ => string.Compare(a.Name, b.Name, StringComparison.Ordinal)
+                    };
+                });
 
             foreach (var item in Repository.RetrieveStatus(new StatusOptions()))
             {

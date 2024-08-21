@@ -24,6 +24,8 @@ public class MenuItemViewModel(string partId)
 
     private ObservableCollection<MenuItemViewModel>? _items;
 
+    private IObservable<object?>? _iconObservable;
+    
     private IDisposable? _subscription;
     public string PartId { get; } = partId;
     public int Priority { get; init; }
@@ -54,8 +56,14 @@ public class MenuItemViewModel(string partId)
 
     public IObservable<object?>? IconObservable
     {
+        get => _iconObservable;
         set
         {
+            _iconObservable = value;
+            if (value == null)
+            {
+                Icon = null;
+            }
             _subscription?.Dispose();
             _subscription = value?.Subscribe(x => Icon = x as IImage);
         }

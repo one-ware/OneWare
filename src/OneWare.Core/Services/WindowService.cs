@@ -171,7 +171,7 @@ public class WindowService : IWindowService
         msg.SelectionItems.AddRange(options);
         msg.SelectedItem = defaultOption;
         await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus == MessageBoxStatus.Canceled ? msg.SelectedItem : null;
+        return msg.BoxStatus != MessageBoxStatus.Canceled ? msg.SelectedItem : null;
     }
 
     public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information,
