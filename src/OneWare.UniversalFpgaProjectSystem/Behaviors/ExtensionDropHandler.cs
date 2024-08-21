@@ -10,7 +10,7 @@ public class ExtensionDropHandler : DropHandlerBase
     private static bool HandleDrop(Control control, DragEventArgs e, ExtensionModel sourceContext, HardwareInterfaceModel targetContext,
         bool bExecute)
     {
-        if(sourceContext.FpgaExtension.Connector != targetContext.Interface.Connector || sourceContext.ParentInterfaceModel == null)
+        if(sourceContext.FpgaExtension.Connector != targetContext.Interface.Connector || sourceContext.ParentInterfaceModel == null  || sourceContext.ParentInterfaceModel == targetContext)
             return false;
         
         if (bExecute)

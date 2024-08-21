@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Model.Core;
@@ -187,7 +188,7 @@ public class DesktopStudioApp : StudioApp
                     Dispatcher.UIThread.Post(() =>
                     {
                         Container.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
-                            $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
+                            $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!", 
                             "Download", () => Container.Resolve<IWindowService>().Show(new PackageManagerView
                             {
                                 DataContext = Container.Resolve<PackageManagerViewModel>()

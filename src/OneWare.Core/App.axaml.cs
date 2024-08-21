@@ -262,6 +262,12 @@ public class App : PrismApplication
             () => settingsService.SetSettingValue("General_SelectedTheme", "Dark"),
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
         
+        // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
+        //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
+        //
+        // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Test Notification",
+        //     () => Container.Resolve<IWindowService>().ShowNotificationWithButton("Test", "TestMessage", "Open", () => Console.WriteLine(""), null,  NotificationType.Warning)));
+        
         //AvaloniaEdit Hyperlink support
         VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
         {

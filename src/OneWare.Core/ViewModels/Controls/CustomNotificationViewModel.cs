@@ -5,9 +5,10 @@ namespace OneWare.Core.ViewModels.Controls;
 
 public class CustomNotificationViewModel : Notification
 {
-    public CustomNotificationViewModel(string? title, string? message, string buttonText, Action buttonAction,
-        IImage? icon, NotificationType type = NotificationType.Information, TimeSpan? expiration = null,
-        Action? onClick = null, Action? onClose = null) : base(title, message, type, TimeSpan.FromDays(1), onClick,
+    public CustomNotificationViewModel(string title, string message, NotificationType type, TimeSpan? expiration = null,
+        string? buttonText = null, Action? buttonAction = null,
+        IImage? icon = null, Action? onClick = null, Action? onClose = null) : base(title, message, type,
+        expiration ?? TimeSpan.Zero, onClick,
         onClose)
     {
         ButtonText = buttonText;
@@ -17,7 +18,7 @@ public class CustomNotificationViewModel : Notification
 
     public Action? ButtonAction { get; set; }
     public string? ButtonText { get; set; }
-    
+
     public IBrush Background { get; set; } = Brushes.DodgerBlue;
     public IImage? Icon { get; set; }
 
