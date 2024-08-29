@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using OneWare.Essentials.Helpers;
 using OneWare.WaveFormViewer.ViewModels;
 
 namespace OneWare.WaveFormViewer.Views;
@@ -64,7 +65,7 @@ public partial class WaveFormView : UserControl
                 return;
             }
 
-            if (args.KeyModifiers is KeyModifiers.Control)
+            if (args.KeyModifiers == PlatformHelper.ControlKey)
             {
                 if (args.Delta.Y != 0)
                 {
