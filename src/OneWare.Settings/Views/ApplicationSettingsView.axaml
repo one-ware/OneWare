@@ -13,13 +13,15 @@
                          Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                          Title="Settings" Name="SettingsWindowView"
                          x:CompileBindings="True" x:DataType="viewModels:ApplicationSettingsViewModel"
+                         Focusable="True"
                          WindowStartupLocation="CenterOwner">
 
     <Interaction.Behaviors>
-        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Escape"
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Escape" Routes="Bubble"
                                                Command="{Binding Close}"
                                                CommandParameter="{Binding #SettingsWindowView}" />
     </Interaction.Behaviors>
+    
     <controls:FlexibleWindow.Styles>
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent" />

@@ -99,6 +99,7 @@ public class WindowService : IWindowService
             ? null
             : ContainerLocator.Container.Resolve<MainWindow>();
         window.Show(owner);
+        window.Focus();
     }
 
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner)
