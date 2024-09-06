@@ -34,6 +34,11 @@ public class VcdParserTests
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/tb_top_aurora.vcd");
     }
 
+    private static string GetTestPath4()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/core.vcd");
+    }
+    
     [Fact]
     public void SignalLineTest()
     {
@@ -127,6 +132,21 @@ public class VcdParserTests
         _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
         Assert.Equal(216, result.Definition.SignalRegister.Count);
         Assert.Equal(130, result.Definition.ChangeTimes.Count);
+    }
+    
+    [Fact]
+    public void ParseTest4()
+    {
+        var sw = new Stopwatch();
+
+        var before = GC.GetTotalMemory(true);
+        sw.Start();
+        var result = VcdParser.ParseVcd(GetTestPath4());
+        sw.Stop();
+        var after = GC.GetTotalMemory(true);
+
+        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
 
     [Fact]

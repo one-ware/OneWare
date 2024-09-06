@@ -201,7 +201,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 else
                     menuItems.Add(new MenuItemViewModel("GoToImplementation")
                     {
-                        Header = "Go to Implentation",
+                        Header = "Go to Implementation",
                         Command = new RelayCommand<LocationLink>(GoToLocation),
                         CommandParameter = i.Location
                     });

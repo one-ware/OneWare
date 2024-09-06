@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -8,6 +10,7 @@ using DynamicData;
 using DynamicData.Binding;
 using GitCredentialManager;
 using LibGit2Sharp;
+using OneWare.Essentials.Commands;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -46,7 +49,8 @@ public class SourceControlViewModel : ExtendedTool
         IApplicationStateService applicationStateService,
         IDockService dockService, IWindowService windowService,
         IPaths paths,
-        IProjectExplorerService projectExplorerService) : base(IconKey)
+        IProjectExplorerService projectExplorerService,
+        IApplicationCommandService applicationCommandService) : base(IconKey)
     {
         _logger = logger;
         _settingsService = settingsService;
@@ -63,7 +67,7 @@ public class SourceControlViewModel : ExtendedTool
         InitializeRepositoryCommand = new RelayCommand(InitializeRepository, () => _projectExplorerService.ActiveProject != null);
         RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
         CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);
-        SyncAsyncCommand = new AsyncRelayCommand(SyncAsync);
+        SyncAsyncCommand = new AsyncRelayCommand(SyncAsync, () => ActiveRepository != null);
         PullAsyncCommand = new AsyncRelayCommand(PullAsync);
         PushAsyncCommand = new AsyncRelayCommand(PushAsync); // new AsyncRelayCommand(PushAsync);
         FetchAsyncCommand = new AsyncRelayCommand(FetchAsync);
@@ -73,7 +77,7 @@ public class SourceControlViewModel : ExtendedTool
         UnStageAllCommand = new RelayCommand(UnStageAll);
         StageCommand = new RelayCommand<string>(Stage);
         UnStageCommand = new RelayCommand<string>(UnStage);
-        CreateBranchDialogAsyncCommand = new AsyncRelayCommand(CreateBranchDialogAsync);
+        CreateBranchDialogAsyncCommand = new AsyncRelayCommand(CreateBranchDialogAsync, () => ActiveRepository != null);
         MergeBranchDialogAsyncCommand = new AsyncRelayCommand(MergeBranchDialogAsync);
         DeleteBranchDialogAsyncCommand = new AsyncRelayCommand(DeleteBranchDialogAsync);
         AddRemoteDialogAsyncCommand = new AsyncRelayCommand(AddRemoteDialogAsync);
@@ -91,6 +95,26 @@ public class SourceControlViewModel : ExtendedTool
             .Subscribe(RefreshAsyncCommand.Execute);
         
         _loginProviders.Add("github.com", ContainerLocator.Container.Resolve<GithubLoginProvider>());
+        
+        applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Sync", SyncAsyncCommand)
+        {
+            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+        });
+        
+        applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Pull", PullAsyncCommand)
+        {
+            IconObservable = Application.Current!.GetResourceObservable("Entypo+.ArrowLongDownWhite")
+        });
+        
+        applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Push", PushAsyncCommand)
+        {
+            IconObservable = Application.Current!.GetResourceObservable("Entypo+.ArrowLongUpWhite")
+        });
+        
+        applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Create Branch", CreateBranchDialogAsyncCommand)
+        {
+            IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch")
+        });
     }
 
     public ObservableCollection<GitRepositoryModel> Repositories { get; } = new();

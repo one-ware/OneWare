@@ -1,0 +1,46 @@
+$date
+  Wed Sep  4 00:15:50 2024
+$end
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module textio $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module numeric_std $end
+$upscope $end
+$scope module core $end
+$var reg 1 ! clk $end
+$var reg 1 " reset $end
+$var reg 16 # ram_data_to_ram[15:0] $end
+$var reg 16 $ ram_data_from_ram[15:0] $end
+$var reg 16 % ram_addr[15:0] $end
+$var reg 1 & ram_write $end
+$var reg 16 ' rom_data_from_ram[15:0] $end
+$var integer 32 ( rom_addr $end
+$comment r is not handled $end
+$var integer 32 ) sel_a $end
+$var integer 32 * sel_b $end
+$var reg 5 + f[0:4] $end
+$var integer 32 , alu_op $end
+$upscope $end
+$enddefinitions $end
+#0
+U!
+U"
+bUUUUUUUUUUUUUUUU #
+bUUUUUUUUUUUUUUUU $
+bUUUUUUUUUUUUUUUU %
+U&
+bUUUUUUUUUUUUUUUU '
+b0 (
+b0 )
+b0 *
+bUUUUU +
+b0 ,

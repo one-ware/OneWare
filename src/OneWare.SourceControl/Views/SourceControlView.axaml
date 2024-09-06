@@ -128,13 +128,13 @@
             </Button>
             <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
                     IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource False}"
-                    IsVisible="{Binding !ActiveRepository.StagedChanges.Count}">
+                    IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Image Source="{DynamicResource PicolIcons.Accept}" Width="15"
                        ToolTip.Tip="Stage all changes and commit" />
             </Button>
             <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
                     IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource True}"
-                    IsVisible="{Binding ActiveRepository.StagedChanges.Count}">
+                    IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Image Source="{DynamicResource PicolIcons.Accept}" Width="15" ToolTip.Tip="Commit staged changes" />
             </Button>
 
