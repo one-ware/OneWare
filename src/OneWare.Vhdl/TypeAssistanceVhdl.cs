@@ -1,4 +1,5 @@
 ﻿using Avalonia.Input;
+using AvaloniaEdit.CodeCompletion;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
@@ -46,7 +47,7 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
         {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
-                CodeBox.CaretOffset)));
+                CodeBox.CaretOffset, CurrentFile)));
         }
         
         return Task.FromResult(items);

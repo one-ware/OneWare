@@ -37,7 +37,7 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
-                CodeBox.CaretOffset)));
+                CodeBox.CaretOffset, CurrentFile)));
         }
 
         return Task.FromResult(items);

@@ -5,16 +5,17 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Snippets;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Essentials.EditorExtensions;
 
-public class CompletionData : ICompletionData
+public partial class CompletionData : ICompletionData
 {
     public readonly CompletionItem? CompletionItemLsp;
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
         double priority,
-        CompletionItem completionItem, int offset, Action? afterCompletion = null)
+        CompletionItem completionItem, int offset, IFile? file, Action? afterCompletion = null)
     {
         InsertText = insertText;
         Label = label;
@@ -24,11 +25,12 @@ public class CompletionData : ICompletionData
         Priority = priority;
         CompletionItemLsp = completionItem;
         AfterCompletion = afterCompletion;
+        File = file;
         CompletionOffset = offset;
     }
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
-        double priority, int offset, Action? afterCompletion = null)
+        double priority, int offset, IFile? file, Action? afterCompletion = null)
     {
         InsertText = insertText;
         Label = label;
@@ -36,6 +38,7 @@ public class CompletionData : ICompletionData
         Description = description;
         Image = icon;
         Priority = priority;
+        File = file;
         AfterCompletion = afterCompletion;
         CompletionOffset = offset;
     }
@@ -55,12 +58,14 @@ public class CompletionData : ICompletionData
     public object? Description { get; }
 
     public double Priority { get; }
+    
+    public IFile? File { get; set; }
 
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {
         var segmentLine = textArea.Document.GetLineByOffset(completionSegment.Offset);
 
-        var placeHolder = new Regex(@"\$(\d+)|\$\{(\d+)(?::([^}|]+))?(?:\|([^}]+)\|)?\}");
+        var placeHolder = PlaceHolderRegex();
 
         var newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, segmentLine.LineNumber);
 
@@ -90,7 +95,7 @@ public class CompletionData : ICompletionData
                 {
                     var element = new SnippetReplaceableTextElement
                     {
-                        Text = match.Groups[3].Value
+                        Text = ReplaceVariables(match.Groups[3].Value)
                     };
 
                     snippet.Elements.Add(element);
@@ -134,5 +139,13 @@ public class CompletionData : ICompletionData
         textArea.Document.EndUpdate();
 
         AfterCompletion?.Invoke();
+    }
+
+    [GeneratedRegex(@"\$(\d+)|\$\{(\d+)(?::([^}|]+))?(?:\|([^}]+)\|)?\}")]
+    private static partial Regex PlaceHolderRegex();
+
+    private string ReplaceVariables(string input)
+    {
+        return input.Replace("$TM_FILENAME_BASE", Path.GetFileNameWithoutExtension(File?.FullPath));
     }
 }

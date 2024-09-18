@@ -708,7 +708,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, comp.Detail, description, icon,
             0,
-            comp, offset, AfterComplete);
+            comp, offset, CurrentFile, AfterComplete);
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
