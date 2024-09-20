@@ -141,6 +141,7 @@ public class Wave : Control
         Point? lastEndPoint = null;
         var lastPen = signalPen;
         object? lastValue = null;
+        int lastIndex = -1;
 
         if (mz == 0) return;
 
@@ -227,8 +228,19 @@ public class Wave : Control
 
             if (model.Signal is { Type: VcdLineType.Reg or VcdLineType.Wire, BitWidth: <= 1 }) //Simple type
             {
-                if (nextChangeTime != long.MaxValue && (lastValue?.Equals(currentValue) ?? false))
-                    context.DrawLine(currentPen, startPointBottom, startPointTop);
+                //Can happen if resolution is too small to display very short changes (eg from 0 to 1 to 0 in short timeframe)
+                //We want to draw a change there
+                if (lastIndex >= 0)
+                {
+                    for (var ic = index; ic >= lastIndex; ic--)
+                    {
+                        if (!currentValue!.Equals(model.Signal.GetValueFromIndex(ic)))
+                        {
+                            context.DrawLine(currentPen, startPointBottom, startPointTop);
+                            break;
+                        }
+                    }
+                }
                 if (sWidth > 1)
                 {
                     //Connection
@@ -292,6 +304,7 @@ public class Wave : Control
             lastEndPoint = endPoint;
             lastPen = currentPen;
             lastValue = currentValue;
+            lastIndex = index;
         }
     }
 
