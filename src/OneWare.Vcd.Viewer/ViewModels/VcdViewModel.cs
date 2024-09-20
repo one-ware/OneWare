@@ -146,12 +146,15 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
             if (context?.OpenSignals is null)
             {
-                var currentSignals = WaveFormViewer.Signals.Select(x => x.Signal.Id).ToArray();
+                var currentSignals = WaveFormViewer.Signals.ToArray();
                 WaveFormViewer.Signals.Clear();
                 foreach (var signal in currentSignals)
-                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal, out var vcdSignal))
+                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Signal.Id, out var vcdSignal))
                     {
                         var model = WaveFormViewer.AddSignal(vcdSignal);
+                        model.DataType = signal.DataType;
+                        model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
+                        model.FixedPointShift = signal.FixedPointShift;
                         WatchWave(model);
                     }
             }
