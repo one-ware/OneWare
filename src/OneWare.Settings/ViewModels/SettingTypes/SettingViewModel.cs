@@ -5,5 +5,5 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public abstract class SettingViewModel : ObservableObject
 {
-    public Setting Setting { get; }
+    public abstract Setting Setting { get; }
 }

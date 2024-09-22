@@ -11,7 +11,7 @@ public abstract class TitledSettingViewModel : SettingViewModel
         Setting = setting;
     }
 
-    public new TitledSetting Setting { get; }
+    public override TitledSetting Setting { get; }
 
     public bool IsEnabled
     {

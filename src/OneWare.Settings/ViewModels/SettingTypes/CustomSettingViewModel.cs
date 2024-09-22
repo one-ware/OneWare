@@ -10,5 +10,5 @@ public class CustomSettingViewModel : SettingViewModel
         Setting = setting;
     }
     
-    public CustomSetting Setting { get; }
+    public override CustomSetting Setting { get; }
 }
