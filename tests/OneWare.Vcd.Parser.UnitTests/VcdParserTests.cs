@@ -39,6 +39,11 @@ public class VcdParserTests
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/core.vcd");
     }
     
+    private static string GetTestPath5()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/trace.vcd");
+    }
+    
     [Fact]
     public void SignalLineTest()
     {
@@ -149,6 +154,21 @@ public class VcdParserTests
         _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
 
+    [Fact]
+    public void ParseTest5()
+    {
+        var sw = new Stopwatch();
+
+        var before = GC.GetTotalMemory(true);
+        sw.Start();
+        var result = VcdParser.ParseVcd(GetTestPath5());
+        sw.Stop();
+        var after = GC.GetTotalMemory(true);
+
+        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
+    }
+    
     [Fact]
     public async Task FindLastTimeTest()
     {

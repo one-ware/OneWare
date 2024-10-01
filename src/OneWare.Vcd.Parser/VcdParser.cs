@@ -483,8 +483,11 @@ public static partial class VcdParser
                                 case ParsingType.Logic:
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentLogic);
                                     break;
-                                case ParsingType.Array:
+                                case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic[]):
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentVector.ToArray());
+                                    break;
+                                case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic) && currentVector.Count == 1:
+                                    signalRegister[id].AddChange(changeTimes.Count - 1, currentVector[0]);
                                     break;
                                 case ParsingType.Real:
                                     switch (signalRegister[id])

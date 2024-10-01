@@ -6,5 +6,6 @@ public enum VcdLineType
     Wire,
     Integer,
     Vector,
-    Real
+    Real,
+    Event,
 }
