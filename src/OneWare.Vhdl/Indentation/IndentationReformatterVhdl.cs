@@ -227,7 +227,7 @@ internal sealed class IndentationReformatterVhdl
                 _block.Bracket = "BEGIN";
             }
 
-            if (lineText.EndsWith(" IS ", StringComparison.OrdinalIgnoreCase) && !line.Contains(";"))
+            if (lineText.EndsWith(" IS ", StringComparison.OrdinalIgnoreCase) && !line.Contains(";") && NextChar(line, i) != '(')
             {
                 _block.ResetOneLineBlock();
                 _blocks.Push(_block);
@@ -421,6 +421,19 @@ internal sealed class IndentationReformatterVhdl
             doc.Text = indent + line;
     }
 
+    private static char NextChar(string text, int pos)
+    {
+        pos++;
+        
+        while (pos< text.Length)
+        {
+            if(text[pos] == ' ') continue; 
+            return text[pos];
+        }
+        
+        return '\0';
+    }
+    
     private static string Repeat(string text, int count)
     {
         if (count == 0)
