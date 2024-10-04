@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.4" InitialTargets="BeforeBuild">
+﻿<Project Sdk="WixToolset.Sdk/5.0.1" InitialTargets="BeforeBuild">
 
   <PropertyGroup>
     <InstallerPlatform>x64</InstallerPlatform>
@@ -14,8 +14,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+    <PackageReference Include="WixToolset.Heat" Version="5.0.1" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
