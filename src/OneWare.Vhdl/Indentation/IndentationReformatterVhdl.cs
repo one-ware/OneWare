@@ -227,7 +227,7 @@ internal sealed class IndentationReformatterVhdl
                 _block.Bracket = "BEGIN";
             }
 
-            if (lineText.EndsWith(" IS ", StringComparison.OrdinalIgnoreCase) && !line.Contains(";") && NextChar(line, i) != '(')
+            if (lineText.EndsWith(" IS ", StringComparison.OrdinalIgnoreCase) && !line.Contains(";") && NextChar(line, i) != '(' && !line.StartsWith("alias"))
             {
                 _block.ResetOneLineBlock();
                 _blocks.Push(_block);

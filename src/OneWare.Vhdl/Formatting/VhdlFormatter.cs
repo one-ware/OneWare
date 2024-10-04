@@ -34,7 +34,7 @@ public class VhdlFormatter : IFormattingStrategy
                 KeywordCase = "UPPERCASE",
                 TypeNameCase = "UPPERCASE",
                 EndOfLine = "\n",
-                Indentation = "   ",
+                Indentation = "    ",
                 AddNewLine = true
                 // NewLineSettings = new NewLineSettings
                 // {
