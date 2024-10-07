@@ -57,7 +57,7 @@ public class WaveFormScale : Control
 
     var range = (double)(endOffset - beginOffset);
     var mainStep = FindBeautifulStep(range, maxMainMarkers);
-    var intermediateStep = (long)(mainStep / 10);
+    var intermediateStep = (mainStep / 10);
     
     var firstMainMarker = Math.Ceiling(beginOffset / mainStep) * mainStep;
     
@@ -76,7 +76,7 @@ public class WaveFormScale : Control
             var intermediateMarker = mainMarker + i * intermediateStep;
             if (intermediateMarker < endOffset && intermediateMarker > beginOffset)
             {
-                markers.Add(new Marker { Position = intermediateMarker, IsMainMarker = false });
+                markers.Add(new Marker { Position = (long)intermediateMarker, IsMainMarker = false });
             }
         }
     }
