@@ -86,9 +86,8 @@
 
             </Component>
 
-            <!--Harvested
-            Components-->
-            <ComponentGroupRef Id="HarvestedComponents" />
+            <Files Include="!(bindpath.publish)\**\*.*" />
+
         </ComponentGroup>
     </Fragment>
 </Wix>

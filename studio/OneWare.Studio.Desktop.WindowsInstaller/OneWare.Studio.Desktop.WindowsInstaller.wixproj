@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.4" InitialTargets="BeforeBuild">
+﻿<Project Sdk="WixToolset.Sdk/5.0.1" InitialTargets="BeforeBuild">
 
   <PropertyGroup>
     <InstallerPlatform>x64</InstallerPlatform>
@@ -14,26 +14,20 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <HarvestDirectory Include="$(StudioPublish)">
-      <ComponentGroupName>HarvestedComponents</ComponentGroupName>
-      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
-      <SuppressRegistry>true</SuppressRegistry>
-      <SuppressRootDirectory>true</SuppressRootDirectory>
-    </HarvestDirectory>
-
-    <BindPath Include="$(StudioPublish)" />
+    <BindPath Include="$(StudioPublish)">
+      <BindName>publish</BindName>
+    </BindPath>
   </ItemGroup>
   
   <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
     <!-- Clean previous build folder -->
     <Exec Command="rd /s /q $(StudioPublish)" />
     <!-- Publish Oneware Studio -->
-    <Exec Command="dotnet publish $(StudioProj) -f net8.0 -c Release -r win-x64 --self-contained" />
+    <Exec Command="dotnet publish $(StudioProj) -f net8.0 -c Release -r win-x64" />
     <!-- Get assembly version -->
     <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />

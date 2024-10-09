@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System.Runtime.InteropServices;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -188,6 +189,14 @@ public class OssCadSuiteIntegrationModule : IModule
                 Path.Combine(x, "share", $"verilator"));
             environmentService.SetEnvironmentVariable("GHDL_PREFIX",
                 Path.Combine(x, "lib", $"ghdl"));
+            environmentService.SetEnvironmentVariable("GTK_EXE_PREFIX", x);
+            environmentService.SetEnvironmentVariable("GTK_DATA_PREFIX", x);
+            environmentService.SetEnvironmentVariable("GDK_PIXBUF_MODULEDIR", Path.Combine(x, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders"));
+            environmentService.SetEnvironmentVariable("GDK_PIXBUF_MODULE_FILE", Path.Combine(x, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders.cache"));
+            
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                _ = containerProvider.Resolve<IChildProcessService>().ExecuteShellAsync($"gdk-pixbuf-query-loaders{PlatformHelper.ExecutableExtension}",
+                    ["--update-cache"], x, "Updating gdk-pixbuf cache");
         });
 
         containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
