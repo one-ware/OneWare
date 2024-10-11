@@ -12,6 +12,15 @@ public class ExtensionDropHandler : DropHandlerBase
     {
         if(sourceContext.FpgaExtension.Connector != targetContext.Interface.Connector || sourceContext.ParentInterfaceModel == null  || sourceContext.ParentInterfaceModel == targetContext)
             return false;
+
+
+        var parent = targetContext.Owner;
+
+        while (parent != null)
+        {
+            parent = (parent as ExtensionModel)?.ParentInterfaceModel?.Owner;
+            if (parent == sourceContext) return false;
+        }
         
         if (bExecute)
         {

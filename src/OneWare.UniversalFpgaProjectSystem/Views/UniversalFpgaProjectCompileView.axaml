@@ -4,7 +4,6 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
                          xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
                          xmlns:converters1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
