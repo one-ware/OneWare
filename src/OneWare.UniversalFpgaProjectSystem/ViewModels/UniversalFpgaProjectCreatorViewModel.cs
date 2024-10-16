@@ -106,17 +106,19 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
                 ["Exclude"] = new JsonArray("build")
             };
             var root = new UniversalFpgaProjectRoot(projectFile, defaultProperties);
-
-            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc)
-                root.Toolchain = tc;
-
+            
             if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
                 root.Loader = loader;
-
+            
+            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc) {
+                root.Toolchain = tc;
+                tc.OnProjectCreated(root);    
+            }
+            
             await _manager.SaveProjectAsync(root);
-
+            
             _projectExplorerService.Insert(root);
-
+            
             _projectExplorerService.ActiveProject = root;
 
             if (_fpgaService.Templates.FirstOrDefault(x => x.Name == _templateSetting.Value.ToString()) is { } template)
