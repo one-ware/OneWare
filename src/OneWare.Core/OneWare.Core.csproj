@@ -23,6 +23,7 @@
         <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj"/>
         <ProjectReference Include="..\OneWare.Json\OneWare.Json.csproj"/>
+        <ProjectReference Include="..\OneWare.LibraryExplorer\OneWare.LibraryExplorer.csproj" />
         <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj"/>
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj"/>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
