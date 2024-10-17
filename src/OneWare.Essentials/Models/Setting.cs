@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -58,6 +59,20 @@ public class ComboBoxSetting : TitledSetting
     }
     
     public object[] Options { get; }
+}
+
+public class ListBoxSetting : TitledSetting
+{
+    public ListBoxSetting(string title, string description, params string[] defaultValue) : base(
+        title, description, new ObservableCollection<string>(defaultValue))
+    {
+    }
+
+    public ObservableCollection<string> Items
+    {
+        get => (Value as ObservableCollection<string>)!;
+        set => Value = value;
+    }
 }
 
 public class ComboBoxSearchSetting(string title, string description, object defaultValue, IEnumerable<object> options)

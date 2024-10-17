@@ -29,20 +29,28 @@
 
             <Border Grid.Column="1" Height="30" Grid.ColumnSpan="3" BorderThickness="0 0 0 1"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="5" Margin="5" HorizontalAlignment="Left">
-                    <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                            Command="{Binding RefreshPackagesAsync}">
-                        <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
-                    </Button>
-                    <TextBlock Text="Installed" />
-                    <CheckBox IsChecked="{Binding ShowInstalled}" />
-                    <Border Height="20" Classes="SplitterBorder" Width="1" />
-                    <TextBlock Text="Available" />
-                    <CheckBox IsChecked="{Binding ShowAvailable}" />
-                    <Border Height="20" Classes="SplitterBorder" Width="1" />
-                    <TextBlock Text="Update" />
-                    <CheckBox IsChecked="{Binding ShowUpdate}" />
-                </StackPanel>
+                <DockPanel LastChildFill="False">
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="5" HorizontalAlignment="Left">
+                        <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
+                                Command="{Binding RefreshPackagesAsync}">
+                            <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                        </Button>
+                        <TextBlock Text="Installed" />
+                        <CheckBox IsChecked="{Binding ShowInstalled}" />
+                        <Border Height="20" Classes="SplitterBorder" Width="1" />
+                        <TextBlock Text="Available" />
+                        <CheckBox IsChecked="{Binding ShowAvailable}" />
+                        <Border Height="20" Classes="SplitterBorder" Width="1" />
+                        <TextBlock Text="Update" />
+                        <CheckBox IsChecked="{Binding ShowUpdate}" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Right">
+                        <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
+                                Command="{Binding OpenSourceSettingsAsync}">
+                            <Image Height="16" Width="16" Source="{DynamicResource Material.SettingsOutline}" />
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
             </Border>
             <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" BorderThickness="0, 0, 1, 0"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"

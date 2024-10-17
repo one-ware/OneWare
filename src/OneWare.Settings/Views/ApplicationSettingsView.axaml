@@ -71,13 +71,13 @@
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.Styles>
-                    <Style Selector="ListBoxItem:selected > ContentPresenter">
+                    <Style Selector="ListBox#SettingsList > ListBoxItem:selected > ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
                     </Style>
-                    <Style Selector="ListBoxItem:pointerover > ContentPresenter">
+                    <Style Selector="ListBox#SettingsList > ListBoxItem:pointerover > ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
                     </Style>
-                    <Style Selector="ListBoxItem.Highlight > ContentPresenter">
+                    <Style Selector="ListBox#SettingsList > ListBoxItem.Highlight > ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="CornerRadius" Value="4" />
                         <Style.Animations>

@@ -32,5 +32,10 @@ public class PackageManagerModule : IModule
             })),
             IconObservable = Application.Current!.GetResourceObservable("PackageManager")
         });
+        
+        ContainerLocator.Container.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");
+        
+        ContainerLocator.Container.Resolve<ISettingsService>()
+            .RegisterTitledListBox("Package Manager", "Sources", "PackageManager_Sources", "Custom Package Sources", "Manage the sources to look for packages");
     }
 }

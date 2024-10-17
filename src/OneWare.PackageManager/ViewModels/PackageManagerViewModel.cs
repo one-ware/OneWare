@@ -177,4 +177,9 @@ public class PackageManagerViewModel : ObservableObject
         foreach (var categoryModel in PackageCategories)
             categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
     }
+
+    public async Task OpenSourceSettingsAsync()
+    {
+        
+    }
 }

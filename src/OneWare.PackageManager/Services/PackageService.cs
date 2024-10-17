@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using Avalonia.Media;
@@ -24,15 +25,17 @@ public class PackageService : IPackageService
     private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
 
     private readonly IHttpService _httpService;
+    private readonly ISettingsService _settingsService;
 
     private readonly object _lock = new();
     private readonly ILogger _logger;
     private CancellationTokenSource? _cancellationTokenSource;
     private CompositeDisposable _packageRegistrationSubscription = new();
 
-    public PackageService(IHttpService httpService, ILogger logger, IPaths paths)
+    public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
     {
         _httpService = httpService;
+        _settingsService = settingsService;
         _logger = logger;
 
         PackageDataBasePath = Path.Combine(paths.PackagesDirectory,
@@ -96,7 +99,11 @@ public class PackageService : IPackageService
 
         var result = LoadInstalledPackagesDatabase();
 
-        foreach (var repository in PackageRepositories)
+        var customRepositories = _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
+
+        var allRepos = PackageRepositories.Concat(customRepositories);
+        
+        foreach (var repository in allRepos)
         {
             var result2 = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
             result = result && result2;

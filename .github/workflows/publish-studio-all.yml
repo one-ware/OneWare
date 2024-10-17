@@ -13,6 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
       - uses: mavrosxristoforos/get-xml-info@2.0
         name: Get Version from Base.props
         id: get-props-version
@@ -27,7 +31,6 @@ jobs:
           xpath: "//*[local-name()='component']/*[local-name()='releases']/*[local-name()='release'][1]/@version"
       - name: Compare versions
         run: |
-          # Definierte Version zum Vergleich
           expected_version="${{ steps.get-props-version.outputs.info }}"
           latest_version="${{ steps.get-metainfo-version.outputs.info }}"
 
@@ -40,6 +43,17 @@ jobs:
           else
             echo "Success: Versions match!"
           fi
+      - name: Check if public plugin repository exists for current version
+        run: |
+          URL="https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/${{ steps.get-props-version.outputs.info }}/oneware-packages.json"
+          echo "Checking URL: $URL"
+          response=$(curl -s -w "%{http_code}" -o response.json "$URL")
+          if [ "$response" -ne 200 ]; then
+          echo "Error: Failed to fetch URL. HTTP status code: $response"
+          exit 1
+          fi
+
+          python -c "import json; json.load(open('response.json'))" && echo "Valid JSON" || exit 1
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get-props-version.outputs.info }}

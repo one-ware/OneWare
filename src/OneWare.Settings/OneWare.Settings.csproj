@@ -15,6 +15,10 @@
         <DependentUpon>CustomSettingView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\SettingTypes\ListBoxSettingView.axaml.cs">
+        <DependentUpon>ListBoxSettingView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

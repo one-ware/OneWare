@@ -109,6 +109,14 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key,
             new ComboBoxSearchSetting(title, description, defaultValue, options.Cast<object>()));
     }
+    
+    public void RegisterTitledListBox(string category, string subCategory, string key, string title,
+        string description, params string[] defaultValue)
+    {
+        if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
+        AddSetting(category, subCategory, key,
+            new ListBoxSetting(title, description, defaultValue));
+    }
 
     public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting)
     {

@@ -38,6 +38,9 @@ public interface ISettingsService
         string description,
         T defaultValue, params T[] options);
 
+    public void RegisterTitledListBox(string category, string subCategory, string key, string title,
+        string description, params string[] defaultValue);
+
     public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting);
 
     public T GetSettingValue<T>(string key);

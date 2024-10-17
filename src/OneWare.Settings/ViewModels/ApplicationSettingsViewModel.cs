@@ -64,6 +64,9 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
                         case CustomSetting cS:
                             subCategoryModel.SettingModels.Add(new CustomSettingViewModel(cS));
                             break;
+                        case ListBoxSetting lS:
+                            subCategoryModel.SettingModels.Add(new ListBoxSettingViewModel(lS));
+                            break;
                         case TitledSetting tS:
                             switch (setting.Value)
                             {
