@@ -2,17 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
-             xmlns:viewModels1="clr-namespace:OneWare.LibraryExplorer.ViewModels"
+             xmlns:viewModels="clr-namespace:OneWare.LibraryExplorer.ViewModels"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.LibraryExplorer.Views.LibraryExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
              BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-             x:CompileBindings="True" x:DataType="viewModels1:LibraryExplorerViewModel"
+             x:CompileBindings="True" x:DataType="viewModels:LibraryExplorerViewModel"
              Name="ProjectExplorerViewView"
              Foreground="{DynamicResource ThemeForegroundColor}"
              BorderThickness="0">
@@ -77,7 +76,7 @@
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
                             <Interaction.Behaviors>
                                 <behaviors:CommandOnDoubleTapBehavior
-                                    Command="{Binding $parent[TreeView].((viewModels1:LibraryExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
+                                    Command="{Binding $parent[TreeView].((viewModels:LibraryExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                     CommandParameter="{Binding}" />
                             </Interaction.Behaviors>
 

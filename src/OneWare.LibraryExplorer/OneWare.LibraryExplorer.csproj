@@ -4,6 +4,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+        <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj"/>
     </ItemGroup>
 
