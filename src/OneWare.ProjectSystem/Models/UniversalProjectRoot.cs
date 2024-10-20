@@ -30,7 +30,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
         if (includes == null && excludes == null) return true;
 
-        return ProjectHelper.MatchWildCards(relativePath, includes ?? new[] { "*.*" }, excludes);
+        return ProjectHelper.MatchWildCards(relativePath, includes ?? ["*.*"], excludes);
     }
 
     public override void IncludePath(string path)
