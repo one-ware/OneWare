@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -16,18 +17,22 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 {
     public const string IconKey = "BoxIcons.RegularLibrary";
 
-    private readonly IPaths _paths;
+    private string _libraryFolderPath;
+    
     private readonly IFileWatchService _fileWatchService;
     private readonly IDockService _dockService;
+    private readonly IProjectExplorerService _projectExplorerService;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IDockService dockService) : base(IconKey)
+    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
-
-        _paths = paths;
+        
         _fileWatchService = fileWatchService;
         _dockService = dockService;
+        _projectExplorerService = projectExplorerService;
+
+        _libraryFolderPath = Path.Combine(paths.PackagesDirectory, "Libraries");
         
         _ = LoadAsync();
     }
@@ -49,14 +54,13 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     public async Task LoadAsync()
     {
         var manager = ContainerLocator.Container.Resolve<FolderProjectManager>();
-        var libraryPath = Path.Combine(_paths.PackagesDirectory, "Libraries");
 
-        Directory.CreateDirectory(libraryPath);
-        var directories = Directory.EnumerateDirectories(libraryPath);
+        Directory.CreateDirectory(_libraryFolderPath);
+        var directories = Directory.EnumerateDirectories(_libraryFolderPath);
 
         foreach (var dir in directories)
         {
-            var root = await manager.LoadProjectAsync(libraryPath);
+            var root = await manager.LoadProjectAsync(dir);
             Insert(root!);
         }
     }
@@ -75,11 +79,24 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
                         Header = "Open",
                         Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
                     });
+                    menuItems.Add(new MenuItemViewModel("Copy to Project")
+                    {
+                        Header = "Copy to Active Project",
+                        Command = new AsyncRelayCommand(() => CopyLibraryAsync(file), () => _projectExplorerService.ActiveProject != null)
+                    });
                     break;
                 case IProjectFolder folder:
                     
                     break;
             }
+        }
+        else
+        {
+            menuItems.Add(new MenuItemViewModel("Open Library Folder")
+            {
+                Header = "Open Library Folder",
+                Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
+            });
         }
         
         TreeViewContextMenu = menuItems;
@@ -93,5 +110,16 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
             extendedDocument.IsReadOnly = true;
             extendedDocument.Title = "PREVIEW: " + extendedDocument.CurrentFile?.Name;
         }
+    }
+
+    private async Task CopyLibraryAsync(params IProjectEntry[] entries)
+    {
+        var proj = _projectExplorerService.ActiveProject;
+        
+        if(proj == null) return;
+
+        var libFolder = proj.AddFolder("lib", true);
+
+        await _projectExplorerService.ImportAsync(libFolder, true, true, entries.Select(x => x.FullPath).ToArray());
     }
 }

@@ -32,6 +32,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectExplorerNode node);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
+    public Task ImportAsync(IProjectFolder destination, bool copy, bool askForInclude, params string[] paths);
     public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
     public Task SaveProjectAsync(IProjectRoot project);
     public Task SaveLastProjectsFileAsync();
