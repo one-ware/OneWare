@@ -58,6 +58,8 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         Directory.CreateDirectory(_libraryFolderPath);
         var directories = Directory.EnumerateDirectories(_libraryFolderPath);
 
+        Projects.Clear();
+
         foreach (var dir in directories)
         {
             var root = await manager.LoadProjectAsync(dir);
@@ -79,19 +81,25 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
                         Header = "Open",
                         Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
                     });
-                    menuItems.Add(new MenuItemViewModel("Copy to Project")
-                    {
-                        Header = "Copy to Active Project",
-                        Command = new AsyncRelayCommand(() => CopyLibraryAsync(file), () => _projectExplorerService.ActiveProject != null)
-                    });
-                    break;
-                case IProjectFolder folder:
-                    
                     break;
             }
         }
+        if (SelectedItems.Count > 0)
+        {
+            menuItems.Add(new MenuItemViewModel("Copy to Project")
+            {
+                Header = "Copy to Active Project",
+                Command = new AsyncRelayCommand(() => CopyLibraryAsync(SelectedItems.Cast<IProjectEntry>()
+                    .ToArray()), () => _projectExplorerService.ActiveProject != null)
+            });
+        }
         else
         {
+            menuItems.Add(new MenuItemViewModel("Refresh")
+            {
+                Header = "Refresh",
+                Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
+            });
             menuItems.Add(new MenuItemViewModel("Open Library Folder")
             {
                 Header = "Open Library Folder",
