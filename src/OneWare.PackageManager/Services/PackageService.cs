@@ -156,6 +156,7 @@ public partial class PackageService : IPackageService
             "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
             "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
             "Hardware" => ContainerLocator.Container.Resolve<HardwarePackageModel>((typeof(Package), package)),
+            "Library" => ContainerLocator.Container.Resolve<LibraryPackageModel>((typeof(Package), package)),
             _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
         };
 
