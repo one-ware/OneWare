@@ -24,6 +24,7 @@ using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
 using OneWare.ImageViewer;
 using OneWare.Json;
+using OneWare.LibraryExplorer;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
 using OneWare.ProjectSystem.Services;
@@ -300,6 +301,7 @@ public class App : PrismApplication
         moduleCatalog.AddModule<ErrorListModule>();
         moduleCatalog.AddModule<OutputModule>();
         moduleCatalog.AddModule<ProjectExplorerModule>();
+        moduleCatalog.AddModule<LibraryExplorerModule>();
         moduleCatalog.AddModule<FolderProjectSystemModule>();
         moduleCatalog.AddModule<ImageViewerModule>();
         moduleCatalog.AddModule<JsonModule>();

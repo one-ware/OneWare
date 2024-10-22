@@ -37,9 +37,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IWindowService _windowService;
 
     private IProjectRoot? _activeProject;
-
-    private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
-
+    
     public ProjectExplorerViewModel(IApplicationStateService applicationStateService, IPaths paths,
         IDockService dockService,
         IWindowService windowService, ISettingsService settingsService,
@@ -65,12 +63,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public IApplicationStateService ApplicationStateService { get; }
 
     private Dictionary<string, IFile> TemporaryFiles { get; } = new();
-
-    public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
-    {
-        get => _treeViewContextMenu;
-        set => SetProperty(ref _treeViewContextMenu, value);
-    }
 
     public IProjectRoot? ActiveProject
     {

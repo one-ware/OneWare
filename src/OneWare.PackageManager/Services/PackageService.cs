@@ -2,6 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
@@ -13,7 +14,7 @@ using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
 
-public class PackageService : IPackageService
+public partial class PackageService : IPackageService
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -155,6 +156,7 @@ public class PackageService : IPackageService
             "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
             "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
             "Hardware" => ContainerLocator.Container.Resolve<HardwarePackageModel>((typeof(Package), package)),
+            "Library" => ContainerLocator.Container.Resolve<LibraryPackageModel>((typeof(Package), package)),
             _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
         };
 
@@ -192,46 +194,65 @@ public class PackageService : IPackageService
         var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
         if (repositoryString == null) return false;
 
-        try
+        var trimmed = MyRegex().Replace(repositoryString, "");
+
+        if (trimmed.StartsWith("{\"packages\":"))
         {
-            var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
+            try
+            {
+                var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
 
-            if (repository is { Packages: not null })
-                foreach (var manifest in repository.Packages)
-                {
-                    try
+                if (repository is { Packages: not null })
+                    foreach (var manifest in repository.Packages)
                     {
-                        if (manifest.ManifestUrl == null) continue;
-
-                        var downloadManifest =
-                            await _httpService.DownloadTextAsync(manifest.ManifestUrl,
-                                cancellationToken: cancellationToken);
-
-                        var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
-
-                        if (package == null) continue;
-
-                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                        try
                         {
-                            pkg.Package = package;
-                            continue;
+                            if (manifest.ManifestUrl == null) continue;
+
+                            var downloadManifest =
+                                await _httpService.DownloadTextAsync(manifest.ManifestUrl,
+                                    cancellationToken: cancellationToken);
+
+                            var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
+
+                            if (package == null) continue;
+
+                            if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                            {
+                                pkg.Package = package;
+                                continue;
+                            }
+
+                            AddPackage(package);
                         }
-
-                        AddPackage(package);
+                        catch (Exception e)
+                        {
+                            _logger.Error(e.Message, e);
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        _logger.Error(e.Message, e);
-                    }
-                }
-            else throw new Exception("Packages empty");
+                else throw new Exception("Packages empty");
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+                return false;
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-            return false;
-        }
+        else
+        { //In case link is a plugin manifest directly
+            var package = JsonSerializer.Deserialize<Package>(repositoryString!, SerializerOptions);
 
+            if (package == null) return false;
+
+            if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+            {
+                pkg.Package = package;
+                return true;
+            }
+
+            AddPackage(package);
+        }
+  
         return true;
     }
 
@@ -331,4 +352,7 @@ public class PackageService : IPackageService
             _activeInstalls.Remove(package);
         }
     }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex MyRegex();
 }

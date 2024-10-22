@@ -15,7 +15,14 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
 {
     private string _searchString = "";
     public bool EnableDragDrop = true;
+    private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
 
+    public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
+    {
+        get => _treeViewContextMenu;
+        set => SetProperty(ref _treeViewContextMenu, value);
+    }
+    
     public string SearchString
     {
         get => _searchString;

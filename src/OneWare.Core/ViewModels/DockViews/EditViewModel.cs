@@ -34,8 +34,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     private readonly IWindowService _windowService;
 
     private CompositeDisposable _composite = new();
-
-
+    
     private IEnumerable<ErrorListItem>? _diagnostics;
 
     private ITypeAssistance? _typeAssistance;
