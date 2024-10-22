@@ -126,7 +126,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         
         if(proj == null) return;
 
-        var libFolder = proj.AddFolder("lib", true);
+        var libFolder = proj.AddFolder("lib");
 
         await _projectExplorerService.ImportAsync(libFolder, true, true, entries.Select(x => x.FullPath).ToArray());
     }
