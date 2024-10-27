@@ -5,6 +5,7 @@
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:converters="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:converters1="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinView" ClipToBounds="False"
              x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel" Height="{Binding Height}" Width="{Binding Width}">
@@ -12,7 +13,8 @@
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
-        <TextBlock IsVisible="{Binding !FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+        <TextBlock IsVisible="{Binding LabelPosition, Converter={x:Static converters1:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static fpgaGuiElements:PinLabelPosition.Before}}" 
+                   Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
                 <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>
@@ -20,7 +22,7 @@
         <Button Height="{Binding Height}" Width="{Binding Width}" BorderThickness="1" Cursor="Hand"
                 Command="{Binding PinModel.FpgaModel.SelectPin, FallbackValue={x:Null}}"
                 Background="{Binding Color}" ToolTip.Tip="{Binding PinModel.ToolTipText, FallbackValue={x:Null}}"
-                CommandParameter="{Binding PinModel}" BorderBrush="Gray"
+                CommandParameter="{Binding PinModel}" BorderBrush="Gray" Padding="0"
                 CornerRadius="{Binding CornerRadius}">
             <Button.Styles>
                 <Style Selector="Button:disabled">
@@ -60,8 +62,18 @@
                     <RemoveClassAction ClassName="PinConnected" />
                 </DataTriggerBehavior>
             </Interaction.Behaviors>
+
+            <TextBlock IsVisible="{Binding LabelPosition, Converter={x:Static converters1:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static fpgaGuiElements:PinLabelPosition.Inside}}"
+                       Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="True" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}"
+                       TextWrapping="Wrap" TextAlignment="Center">
+                <Interaction.Behaviors>
+                    <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+                </Interaction.Behaviors>
+            </TextBlock>
+            
         </Button>
-        <TextBlock IsVisible="{Binding FlipLabel}" Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="FlippedLabel" Height="{Binding Height}" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
+        <TextBlock IsVisible="{Binding LabelPosition, Converter={x:Static converters1:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static fpgaGuiElements:PinLabelPosition.After}}"
+                   Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Height="{Binding Height}" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
                 <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>

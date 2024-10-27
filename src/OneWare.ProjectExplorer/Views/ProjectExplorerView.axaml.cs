@@ -14,8 +14,7 @@ public partial class ProjectExplorerView : UserControl
 
         this.WhenValueChanged(x => x.DataContext).Subscribe(x =>
         {
-            var vm = x as ProjectExplorerViewModel;
-            if (vm == null) return;
+            if (x is not ProjectExplorerViewModel vm) return;
 
             AddHandler(SearchBox.SearchEvent, (o, i) => { vm.OnSearch(); }, RoutingStrategies.Bubble);
         });

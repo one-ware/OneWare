@@ -10,6 +10,7 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
     public FpgaGuiElementPinViewModel? TxPin { get; private set; } 
     
     public bool FlipLabel { get; init; }
+    
     public string? BindRx { get; init; }
     
     public string? BindTx { get; init; }
@@ -29,7 +30,7 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
             Text = "RX",
             Rotation = FlipLabel ? 90 : -90,
             Parent = Parent,
-            FlipLabel = !FlipLabel
+            LabelPosition = !FlipLabel ? PinLabelPosition.After : PinLabelPosition.Before,
         };
         
         TxPin ??= new FpgaGuiElementPinViewModel(0, 0, 12, 10)
@@ -39,7 +40,7 @@ public class FpgaGuiElementUsbViewModel : FpgaGuiElementViewModelBase
             Text = "TX",
             Rotation = FlipLabel ? 90 : -90,
             Parent = Parent,
-            FlipLabel = !FlipLabel
+            LabelPosition = !FlipLabel ? PinLabelPosition.After : PinLabelPosition.Before,
         };
         
         RxPin.Initialize();

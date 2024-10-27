@@ -5,6 +5,13 @@ using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
+public enum PinLabelPosition
+{
+    Before,
+    Inside,
+    After
+}
+
 public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
 {
     private const int DefaultWidth = 10;
@@ -12,8 +19,8 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
     private const int DefaultHeight = 10;
 
     public string? Bind { get; init; }
-
-    public bool FlipLabel { get; init; }
+    
+    public PinLabelPosition LabelPosition { get; init; }
     
     private HardwarePinModel? _pinModel;
 

@@ -218,10 +218,21 @@ public static class HardwareGuiCreator
                             var pinHeight = element.TryGetProperty("pinHeight", out var pinHeightProperty)
                                 ? pinHeightProperty.GetInt32()
                                 : 10;
+                            
+                            var labelPosition = element.TryGetProperty("labelPosition", out var labelPositionProperty)
+                                ? labelPositionProperty.GetString()
+                                : null;
 
-                            var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) &&
-                                            flipLabelProperty.GetBoolean();
+                            Enum.TryParse<PinLabelPosition>(labelPosition, true, out var labelPositionEnum);
 
+                            if (labelPosition == null && element.TryGetProperty("flipLabel", out var flipLabelProperty))
+                            {
+                                if (flipLabelProperty.GetBoolean())
+                                {
+                                    labelPositionEnum = PinLabelPosition.After;
+                                }
+                            }
+                            
                             var isHorizontal = element.TryGetProperty("horizontal", out var horizontalProperty) &&
                                                horizontalProperty.GetBoolean();
 
@@ -250,7 +261,7 @@ public static class HardwareGuiCreator
                                     Color = colorPin ?? color,
                                     Bind = bindPin,
                                     Text = labelPin,
-                                    FlipLabel = flipLabel,
+                                    LabelPosition = labelPositionEnum,
                                     Parent = hardwareModel,
                                     Foreground = foreground,
                                     FontSize = fontSize,
@@ -267,6 +278,57 @@ public static class HardwareGuiCreator
                             });
                             break;
                         }
+                        case "pinblock":
+                        {
+                            color ??= Brushes.YellowGreen;
+
+                            var pinWidth = element.TryGetProperty("pinWidth", out var pinWidthProperty)
+                                ? pinWidthProperty.GetInt32()
+                                : 10;
+                            var pinHeight = element.TryGetProperty("pinHeight", out var pinHeightProperty)
+                                ? pinHeightProperty.GetInt32()
+                                : 10;
+
+                            var list = new List<FpgaGuiElementPinViewModel>();
+
+                            foreach (var pin in element.GetProperty("pins").EnumerateArray())
+                            {
+                                var bindPin = pin.TryGetProperty("bind", out var bindPinProperty)
+                                    ? bindPinProperty.GetString()
+                                    : null;
+
+                                var labelPin = pin.TryGetProperty("label", out var labelPinProperty)
+                                    ? labelPinProperty.GetString()
+                                    : null;
+
+                                var colorPin = pin.TryGetProperty("color", out var colorPinProperty)
+                                    ? (ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
+                                        ? ColorShortcuts[colorPinProperty.GetString()!]
+                                        : new BrushConverter().ConvertFromString(colorPinProperty.GetString() ??
+                                            string.Empty) as IBrush)
+                                    : null;
+
+                                list.Add(new FpgaGuiElementPinViewModel(0, 0, pinWidth, pinHeight)
+                                {
+                                    Color = colorPin ?? color,
+                                    Bind = bindPin,
+                                    Text = labelPin,
+                                    LabelPosition = PinLabelPosition.Inside,
+                                    Parent = hardwareModel,
+                                    Foreground = foreground,
+                                    FontSize = fontSize,
+                                });
+                            }
+
+                            vm.AddElement(new FpgaGuiElementPinBlockViewModel(x, y)
+                            {
+                                Parent = hardwareModel,
+                                Pins = list.ToArray(),
+                                Rotation = rotation,
+                                Width = width
+                            });
+                            break;
+                        }
                         case "pin":
                         {
                             color ??= Brushes.YellowGreen;
@@ -275,8 +337,19 @@ public static class HardwareGuiCreator
                                 ? labelProperty.GetString()
                                 : null;
 
-                            var flipLabel = element.TryGetProperty("flipLabel", out var flipLabelProperty) &&
-                                            flipLabelProperty.GetBoolean();
+                            var labelPosition = element.TryGetProperty("labelPosition", out var labelPositionProperty)
+                                ? labelPositionProperty.GetString()
+                                : null;
+
+                            Enum.TryParse<PinLabelPosition>(labelPosition, true, out var labelPositionEnum);
+
+                            if (labelPosition == null && element.TryGetProperty("flipLabel", out var flipLabelProperty))
+                            {
+                                if (flipLabelProperty.GetBoolean())
+                                {
+                                    labelPositionEnum = PinLabelPosition.After;
+                                }
+                            }
 
                             vm.AddElement(new FpgaGuiElementPinViewModel(x, y, width, height)
                             {
@@ -284,7 +357,7 @@ public static class HardwareGuiCreator
                                 Rotation = rotation,
                                 Bind = bind,
                                 Text = label,
-                                FlipLabel = flipLabel,
+                                LabelPosition = labelPositionEnum,
                                 Parent = hardwareModel,
                                 FontSize = fontSize,
                                 Foreground = foreground
