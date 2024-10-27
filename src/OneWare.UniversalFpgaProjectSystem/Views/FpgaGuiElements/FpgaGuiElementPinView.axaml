@@ -12,6 +12,9 @@
     <UserControl.RenderTransform>
         <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="InsidePinTextColor" Color="#c23f2f" />
+    </UserControl.Resources>
     <StackPanel Orientation="Horizontal" Margin="{Binding #Label.Bounds.Width, Converter={x:Static converters:UniversalFpgaProjectSystemConverters.HorizontalLabelMarginConverter}}">
         <TextBlock IsVisible="{Binding LabelPosition, Converter={x:Static converters1:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static fpgaGuiElements:PinLabelPosition.Before}}" 
                    Padding="2 0" VerticalAlignment="Center" ClipToBounds="False" Name="Label" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}">
@@ -66,9 +69,6 @@
             <TextBlock IsVisible="{Binding LabelPosition, Converter={x:Static converters1:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static fpgaGuiElements:PinLabelPosition.Inside}}"
                        Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="True" FontSize="{Binding FontSize}" Text="{Binding Text}" Foreground="{Binding Foreground}"
                        TextWrapping="Wrap" TextAlignment="Center">
-                <Interaction.Behaviors>
-                    <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
-                </Interaction.Behaviors>
             </TextBlock>
             
         </Button>
