@@ -38,8 +38,6 @@ public partial class OutputView : OutputBaseView
         base.OnPointerMoved(e);
 
         _lastMovedArgs = e;
-        
-        if(Output.Document.Text.Length == 0) Output.Document.Text = "VhdlSim_tb.vhd:43:5: signal interface \"led\" has no association in entity";
 
         if (e.KeyModifiers == PlatformHelper.ControlKey)
         {
