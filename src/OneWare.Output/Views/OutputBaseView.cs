@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
 
@@ -77,7 +78,8 @@ public abstract class OutputBaseView : UserControl
     protected void UpdateLineColors(OutputBaseViewModel evm)
     {
         if (Output == null) throw new NullReferenceException(nameof(Output));
-        Output.TextArea.TextView.LineTransformers.Clear();
+        for(var i = 2; i < Output.TextArea.TextView.LineTransformers.Count; i++)
+            Output.TextArea.TextView.LineTransformers.RemoveAt(i);
         for (var i = 0; i < evm.LineColors.Count; i++)
             if (evm.LineColors[i] != null)
                 Output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1, evm.LineColors[i]));
