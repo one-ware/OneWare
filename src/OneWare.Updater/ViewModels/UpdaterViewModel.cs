@@ -134,11 +134,13 @@ public class UpdaterViewModel : ObservableObject
 
     public async Task DownloadUpdateAsync(Control owner)
     {
-        if (DownloadLink == null) return;
+        if (DownloadLink == null || NewVersion == null) return;
         var topLevelWindow = TopLevel.GetTopLevel(owner) as Window;
 
         Status = UpdaterStatus.UpdatingPackages;
 
+        _packageService.RegisterPackageRepository($"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/{NewVersion.ToString()}/oneware-packages.json");
+        
         var loadPackages = await _packageService.LoadPackagesAsync();
 
         if (!loadPackages)
