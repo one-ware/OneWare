@@ -113,7 +113,7 @@ public partial class OutputView : OutputBaseView
 
         var matches = regex.Matches(lineText);
 
-        var match = matches.FirstOrDefault(x => x.Index <= pointerPosition && x.Index + x.Length >= pointerPosition);
+        var match = matches.FirstOrDefault(x => x.Index + line.Offset <= pointerPosition && x.Index + line.Offset + x.Length >= pointerPosition);
 
         if (match is not { Success: true }) return;
             
