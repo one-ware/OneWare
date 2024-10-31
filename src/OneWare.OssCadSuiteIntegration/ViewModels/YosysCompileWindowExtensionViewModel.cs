@@ -13,16 +13,16 @@ namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class YosysCompileWindowExtensionViewModel : ObservableObject
 {
-    private readonly UniversalFpgaProjectCompileViewModel _compileViewModel;
+    private readonly UniversalFpgaProjectPinPlannerViewModel _pinPlannerViewModel;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
 
     private bool _isVisible;
 
-    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectCompileViewModel compileViewModel,
+    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
         IWindowService windowService, IProjectExplorerService projectExplorerService)
     {
-        _compileViewModel = compileViewModel;
+        _pinPlannerViewModel = pinPlannerViewModel;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
 
@@ -56,7 +56,7 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                     await _windowService.ShowDialogAsync(
                         new YosysCompileSettingsView
-                            { DataContext = new YosysCompileSettingsViewModel(_compileViewModel, fpgaProjectRoot) },
+                            { DataContext = new YosysCompileSettingsViewModel(_pinPlannerViewModel, fpgaProjectRoot) },
                         ownerWindow);
             }
             catch (Exception e)

@@ -16,7 +16,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
+public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBase
 {
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
@@ -34,7 +34,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
     private readonly FpgaNode[]? _nodes;
 
-    public UniversalFpgaProjectCompileViewModel(IWindowService windowService,
+    public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
@@ -46,7 +46,7 @@ public class UniversalFpgaProjectCompileViewModel : FlexibleWindowViewModelBase
 
         this.WhenValueChanged(x => x.IsDirty).Subscribe(x =>
         {
-            Title = $"Connect and Compile - {Project.Header}{(x ? "*" : "")}";
+            Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
         if (Project.TopEntity is IProjectFile file)

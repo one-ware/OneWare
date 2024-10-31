@@ -65,29 +65,9 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
     public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
 
-    public void ToggleProjectToolchain(IFpgaToolchain toolchain)
-    {
-        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-        {
-            if (project.Toolchain != toolchain) project.Toolchain = toolchain;
-            else project.Toolchain = null;
-            _ = ProjectExplorerService.SaveProjectAsync(project);
-        }
-    }
-
     public void ToggleLongTermProgramming()
     {
         LongTermProgramming = !LongTermProgramming;
-    }
-
-    public void ToggleProjectLoader(IFpgaLoader loader)
-    {
-        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-        {
-            if (project.Loader != loader) project.Loader = loader;
-            else project.Loader = null;
-            _ = ProjectExplorerService.SaveProjectAsync(project);
-        }
     }
 
     public async Task CompileAsync()
@@ -113,10 +93,10 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-            await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView
+            await _windowService.ShowDialogAsync(new UniversalFpgaProjectPinPlannerView
             {
                 DataContext =
-                    ContainerLocator.Container.Resolve<UniversalFpgaProjectCompileViewModel>((
+                    ContainerLocator.Container.Resolve<UniversalFpgaProjectPinPlannerViewModel>((
                         typeof(UniversalFpgaProjectRoot), project))
             });
     }

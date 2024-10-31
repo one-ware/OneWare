@@ -85,10 +85,10 @@
 
     <Style Selector="Border.CruviExtension">
         <Setter Property="Opacity"
-                Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, 
+                Value="{Binding !$parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, 
                 Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}}" />
         <Setter Property="IsHitTestVisible"
-                Value="{Binding !$parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions}" />
+                Value="{Binding !$parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions}" />
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.1" />

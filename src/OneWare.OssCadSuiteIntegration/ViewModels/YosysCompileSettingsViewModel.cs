@@ -24,12 +24,12 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
 
     private readonly ComboBoxSetting _yosysSynthToolSetting;
 
-    public YosysCompileSettingsViewModel(UniversalFpgaProjectCompileViewModel compileViewModel,
+    public YosysCompileSettingsViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
         UniversalFpgaProjectRoot fpgaProjectRoot)
     {
         _fpgaProjectRoot = fpgaProjectRoot;
-        _selectedFpga = compileViewModel.SelectedFpgaModel?.Fpga ??
-                        throw new NullReferenceException(nameof(compileViewModel.SelectedFpgaModel));
+        _selectedFpga = pinPlannerViewModel.SelectedFpgaModel?.Fpga ??
+                        throw new NullReferenceException(nameof(pinPlannerViewModel.SelectedFpgaModel));
 
         Title = "Yosys Compile Settings";
         Id = "YosysCompileSettings";

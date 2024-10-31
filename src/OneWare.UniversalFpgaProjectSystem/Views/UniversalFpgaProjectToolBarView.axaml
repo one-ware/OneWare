@@ -14,10 +14,32 @@
     <StackPanel Orientation="Horizontal">
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
         <Button ToolTip.Tip="Select signals and compile"
-                Command="{Binding CompileAsync}"
+                Command="{Binding OpenPinPlannerAsync}"
                 IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
                 <Image Source="{DynamicResource CreateIcon}" Width="14" Height="14" VerticalAlignment="Center" />
+                <TextBlock Text="Pin Planner" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+        <Button>
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <StackPanel>
+                        <MenuItem Header="Open Project Settings"
+                                  Command="{Binding OpenProjectSettingsAsync}">
+                        </MenuItem>
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+            <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="10" Height="10" Margin="1 0" />
+        </Button>
+        <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
+        <Button ToolTip.Tip="Run Toolchain" Command="{Binding CompileAsync}"
+                IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
+                <Image
+                    Source="{DynamicResource VsImageLib.StartWithoutDebug16X}"
+                    Height="14" Width="14" VerticalAlignment="Center" />
                 <TextBlock Text="Compile" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
@@ -25,12 +47,15 @@
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <StackPanel>
-                        <Button  HorizontalContentAlignment="Left" Content="Open Pin Planner" 
-                                 Command="{Binding OpenPinPlannerAsync}"
-                                 />
-                        <Button  HorizontalContentAlignment="Left" Content="Open Project Settings" 
-                                 Command="{Binding OpenProjectSettingsAsync}"
-                        />
+                        <MenuItem Header="Run Synthesis"
+                                  Command="{Binding CompileAsync}">
+                        </MenuItem>
+                        <MenuItem Header="Run Place and Route"
+                                  Command="{Binding CompileAsync}">
+                        </MenuItem>
+                        <MenuItem Header="Run Pack"
+                                  Command="{Binding CompileAsync}">
+                        </MenuItem>
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>

@@ -13,8 +13,8 @@
                          WindowStartupLocation="CenterOwner"
                          Title="{Binding Title}"
                          CustomIcon="{DynamicResource CreateIcon}"
-                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectCompileView"
-                         x:DataType="viewModels:UniversalFpgaProjectCompileViewModel"
+                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectPinPlannerView"
+                         x:DataType="viewModels:UniversalFpgaProjectPinPlannerViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <Interaction.Behaviors>
         <behaviors:CommandOnKeyPressedBehavior HandledEventsToo="True" TriggerKey="Delete"
@@ -27,7 +27,7 @@
                                                Command="{Binding Close}"
                                                CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}" />
         <behaviors:CommandOnGesturePressedBehavior
-            TriggerGesture="{x:Static viewModels:UniversalFpgaProjectCompileViewModel.SaveGesture}"
+            TriggerGesture="{x:Static viewModels:UniversalFpgaProjectPinPlannerViewModel.SaveGesture}"
             Command="{Binding Save}" />
     </Interaction.Behaviors>
 

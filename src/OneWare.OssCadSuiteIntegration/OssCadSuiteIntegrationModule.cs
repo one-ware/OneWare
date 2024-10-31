@@ -142,12 +142,12 @@ public class OssCadSuiteIntegrationModule : IModule
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new UiExtension(x =>
             {
-                if (x is not UniversalFpgaProjectCompileViewModel cm) return null;
+                if (x is not UniversalFpgaProjectPinPlannerViewModel cm) return null;
                 return new YosysCompileWindowExtensionView
                 {
                     DataContext =
                         containerProvider.Resolve<YosysCompileWindowExtensionViewModel>((
-                            typeof(UniversalFpgaProjectCompileViewModel), cm))
+                            typeof(UniversalFpgaProjectPinPlannerViewModel), cm))
                 };
             }));
         containerProvider.Resolve<IWindowService>().RegisterUiExtension(

@@ -16,10 +16,10 @@
     <Panel Name="ExtensionView">
 
         <Interaction.Behaviors>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
                 <AddClassAction ClassName="HideExtension" />
             </DataTriggerBehavior>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding $parent[views:UniversalFpgaProjectCompileView].((viewModels:UniversalFpgaProjectCompileViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
                 <RemoveClassAction ClassName="HideExtension" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>
