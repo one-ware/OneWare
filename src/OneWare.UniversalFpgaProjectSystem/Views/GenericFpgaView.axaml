@@ -7,8 +7,7 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView"
-             ClipToBounds="False" FontFamily="{DynamicResource EditorFont}"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView" FontFamily="{DynamicResource EditorFont}"
              x:DataType="viewModels:GenericFpgaViewModel">
     <UserControl.Styles>
         <Style Selector="MenuItem MenuItem">
@@ -19,7 +18,7 @@
         <controls:Spinner IsVisible="{Binding IsLoading}" Height="20" Width="20" />
 
         <Panel IsVisible="{Binding !IsLoading}">
-            <ContentControl Content="{Binding GuiViewModel}" Padding="10" ClipToBounds="False"/>
+            <ContentControl Content="{Binding GuiViewModel}" Padding="10" />
         </Panel>
     </Panel>
 </UserControl>

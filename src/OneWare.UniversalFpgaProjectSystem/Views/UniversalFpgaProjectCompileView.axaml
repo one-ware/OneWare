@@ -49,7 +49,8 @@
                         </controls:SearchComboBox>
 
                         <Button Command="{Binding RefreshFpgasButtonAsync}"
-                                CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}" ToolTip.Tip="Reload FPGAs">
+                                CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
+                                ToolTip.Tip="Reload FPGAs">
                             <Image Source="{DynamicResource Modern.Refresh}" Height="16" Width="16" />
                         </Button>
 
@@ -66,11 +67,11 @@
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center"
                                 HorizontalAlignment="Right" DockPanel.Dock="Right" Margin="0 0 5 0">
                         <Button Command="{Binding SelectedFpgaModel.DisconnectCommand, FallbackValue={x:Null}}"
-                                IsEnabled="{Binding SelectedFpgaModel.SelectedExtensionModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}" 
+                                IsEnabled="{Binding SelectedFpgaModel.SelectedExtensionModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 ToolTip.Tip="Disconnect Selected Extension">
                             <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="16" Width="16" />
                         </Button>
-                        <Border Classes="SplitterBorder"/>
+                        <Border Classes="SplitterBorder" />
                         <TextBlock Text="Hide Extensions" VerticalAlignment="Center" />
                         <CheckBox IsChecked="{Binding HideExtensions}" />
                     </StackPanel>
@@ -78,23 +79,30 @@
 
                 <Grid Grid.Row="1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="{Binding SelectedFpgaViewModel, Converter={x:Static converters1:UniversalFpgaProjectSystemConverters.ObjectNotNullToStarGridLengthConverter}, ConverterParameter={x:Static GridLength.Auto}}"/>
-                        <RowDefinition Height="5"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition
+                            Height="{Binding SelectedFpgaViewModel, Converter={x:Static converters1:UniversalFpgaProjectSystemConverters.ObjectNotNullToStarGridLengthConverter}, ConverterParameter={x:Static GridLength.Auto}}" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Border Margin="0 10 0 0"
                             IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Background="{DynamicResource CheckerBoardBrush16}" BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
-                        <controls:CustomZoomBorder UseLayoutRounding="False" Name="ZoomBorder" ClipToBounds="True" PanButton="Right">
-                            <ContentControl Name="ZoomContentControl" ClipToBounds="False" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                            Content="{Binding SelectedFpgaViewModel}" />
+                        <controls:CustomZoomBorder UseLayoutRounding="False" Name="ZoomBorder" ClipToBounds="True"
+                                                   PanButton="Right">
+                            <Viewbox>
+                                <ContentControl Name="ZoomContentControl" HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Content="{Binding SelectedFpgaViewModel}" />
+                            </Viewbox>
                         </controls:CustomZoomBorder>
                     </Border>
-                    
-                    <GridSplitter IsEnabled="False" IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="1" Background="Transparent" /> 
-                    
+
+                    <GridSplitter IsEnabled="False"
+                                  IsVisible="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                  Grid.Row="1" Background="Transparent" />
+
                     <Grid Margin="0 5 0 0" Grid.Row="2" ColumnDefinitions="*, 90, *" RowDefinitions="20, *"
                           DockPanel.Dock="Top" DataContext="{Binding SelectedFpgaModel}">
 
