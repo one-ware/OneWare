@@ -93,6 +93,26 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task CompileAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
+        {
+            var name = project.Properties["Fpga"]?.ToString();
+            if (name == null) {
+                await OpenPinPlannerAsync();
+                return;
+            }
+            
+            var firstOrDefault = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
+            if (firstOrDefault == null) {
+                await OpenPinPlannerAsync();
+                return;
+            }
+
+            await project.RunToolchainAsync(new FpgaModel(firstOrDefault.LoadFpga()));
+        }
+    }
+    
+    public async Task OpenPinPlannerAsync()
+    {
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView
             {
                 DataContext =
@@ -101,6 +121,17 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
             });
     }
 
+    public async Task OpenProjectSettingsAsync()
+    {
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
+            await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
+            {
+                DataContext =
+                    ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((
+                        typeof(UniversalFpgaProjectRoot), project))
+            });
+    }
+    
     public async Task DownloadAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)

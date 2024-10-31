@@ -106,6 +106,11 @@ public class UniversalFpgaProjectManager : IProjectManager
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
                         IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
                     });
+                    menuItems.Add(new MenuItemViewModel("EditUI")
+                    {
+                        Header = "Edit",
+                        Command = new RelayCommand(() => _ = CreateFolderDialogAsync(root))
+                    });
                     menuItems.Add(new MenuItemViewModel("Edit")
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
@@ -189,5 +194,16 @@ public class UniversalFpgaProjectManager : IProjectManager
 
                     break;
             }
+    }
+    
+    public async Task CreateFolderDialogAsync(UniversalFpgaProjectRoot root)
+    {
+        // UniversalFpgaProjectRoot root
+        await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
+        {
+            DataContext = new UniversalFpgaProjectSettingsEditorViewModel(root)
+                /* ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>() */
+        });
+        
     }
 }

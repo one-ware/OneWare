@@ -24,28 +24,14 @@
         <Button>
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                    <ItemsControl ItemsSource="{Binding FpgaService.Toolchains}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="services:IFpgaToolchain">
-                                <MenuItem Header="{Binding Name}"
-                                          Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleProjectToolchain, FallbackValue={x:Null}}"
-                                          CommandParameter="{Binding}">
-                                    <MenuItem.Icon>
-                                        <CheckBox BorderThickness="0">
-                                            <CheckBox.IsChecked>
-                                                <MultiBinding
-                                                    Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding FallbackValue="{x:Null}"
-                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Toolchain"/>
-                                                    <Binding />
-                                                </MultiBinding>
-                                            </CheckBox.IsChecked>
-                                        </CheckBox>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <StackPanel>
+                        <Button  HorizontalContentAlignment="Left" Content="Open Pin Planner" 
+                                 Command="{Binding OpenPinPlannerAsync}"
+                                 />
+                        <Button  HorizontalContentAlignment="Left" Content="Open Project Settings" 
+                                 Command="{Binding OpenProjectSettingsAsync}"
+                        />
+                    </StackPanel>
                 </Flyout>
             </Button.Flyout>
             <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10" Margin="1 0" />
@@ -66,35 +52,6 @@
                 </Grid>
                 <TextBlock Text="Download" VerticalAlignment="Center" />
             </StackPanel>
-        </Button>
-        <Button>
-            <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                    <ItemsControl ItemsSource="{Binding FpgaService.Loaders}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="services:IFpgaLoader">
-                                <MenuItem Header="{Binding Name}"
-                                          Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleProjectLoader, FallbackValue={x:Null}}"
-                                          CommandParameter="{Binding}">
-                                    <MenuItem.Icon>
-                                        <CheckBox BorderThickness="0">
-                                            <CheckBox.IsChecked>
-                                                <MultiBinding
-                                                    Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
-                                                    <Binding FallbackValue="{x:Null}"
-                                                             Path="$parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ProjectExplorerService.((models:UniversalFpgaProjectRoot)ActiveProject).Loader"/>
-                                                    <Binding />
-                                                </MultiBinding>
-                                            </CheckBox.IsChecked>
-                                        </CheckBox>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Flyout>
-            </Button.Flyout>
-            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10" Margin="1 0" />
         </Button>
         <Button>
             <Button.Flyout>
