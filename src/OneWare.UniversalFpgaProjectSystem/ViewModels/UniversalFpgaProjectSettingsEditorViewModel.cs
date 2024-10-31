@@ -6,20 +6,22 @@ using DynamicData;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
+using OneWare.Settings.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.Settings.Views.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
-using ReactiveUI;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-public class UniversalFpgaProjectSettingsEditorViewModel : ReactiveObject
+public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewModelBase
 {
-    public string Title { get; set; } = "Test";
-    
-    public List<UserControl> UserControlsList { get; }
+    public SettingsCollectionViewModel SettingsCollection { get; } = new("")
+    {
+        ShowTitle = false
+    };
 
     private UniversalFpgaProjectRoot _root;
 
@@ -48,13 +50,10 @@ public class UniversalFpgaProjectSettingsEditorViewModel : ReactiveObject
         _includesSettings = new ListBoxSetting("Files to Include", "test", includes);
         _excludesSettings = new ListBoxSetting("Files to Exclude", "test", exclude);
         
-        UserControlsList = new List<UserControl>
-        {
-            new ComboBoxSettingView() {DataContext = new ComboBoxSettingViewModel(_toolchain) },
-            new ComboBoxSettingView() {DataContext = new ComboBoxSettingViewModel(_loader) },
-            new ListBoxSettingView() { DataContext = new ListBoxSettingViewModel(_includesSettings) },
-            new ListBoxSettingView() { DataContext = new ListBoxSettingViewModel(_excludesSettings) }
-        };
+        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_toolchain) );
+        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_loader) );
+        SettingsCollection.SettingModels.Add(new ListBoxSettingViewModel(_includesSettings) );
+        SettingsCollection.SettingModels.Add(new ListBoxSettingViewModel(_excludesSettings) );
     }
 
     private async Task SaveAsync()
