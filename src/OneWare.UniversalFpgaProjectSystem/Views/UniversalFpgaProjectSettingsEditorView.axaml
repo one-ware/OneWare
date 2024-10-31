@@ -14,38 +14,21 @@
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <DockPanel>
-        <StackPanel>
-            <ContentControl DockPanel.Dock="Top">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding UserControlsList}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Vertical"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,10,0,50">
-                                    <ContentPresenter Content="{Binding}" />
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    
-                </ScrollViewer>
-            </ContentControl>
-            
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom">
-                <Button Command="{Binding SaveAndCloseAsync}"
-                        CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
-                    <TextBlock Text="Save and Close" Margin="5 0" />
-                </Button>
-                <Button Command="{Binding Close}"
-                        CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
-                    <TextBlock Text="Close" Margin="5 0" />
-                </Button>
-            </StackPanel>
+        <ScrollViewer DockPanel.Dock="Top">
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
+        </ScrollViewer>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8" Classes="WindowButtons"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button Command="{Binding SaveAndCloseAsync}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                <TextBlock Text="Save and Close" Margin="5 0" />
+            </Button>
+            <Button Command="{Binding Close}"
+                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                <TextBlock Text="Close" Margin="5 0" />
+            </Button>
         </StackPanel>
     </DockPanel>
 </controls:FlexibleWindow>
