@@ -96,13 +96,13 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         {
             var name = project.Properties["Fpga"]?.ToString();
             if (name == null) {
-                await OpenPcfCreatorAsync();
+                await OpenPinPlannerAsync();
                 return;
             }
             
             var firstOrDefault = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
             if (firstOrDefault == null) {
-                await OpenPcfCreatorAsync();
+                await OpenPinPlannerAsync();
                 return;
             }
 
@@ -110,7 +110,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         }
     }
     
-    public async Task OpenPcfCreatorAsync()
+    public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView

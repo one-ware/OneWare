@@ -25,18 +25,13 @@
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <StackPanel>
-                        <Button  HorizontalContentAlignment="Left" Content="Open PCF Creator" 
-                                 Command="{Binding OpenPcfCreatorAsync}"
+                        <Button  HorizontalContentAlignment="Left" Content="Open Pin Planner" 
+                                 Command="{Binding OpenPinPlannerAsync}"
                                  />
                         <Button  HorizontalContentAlignment="Left" Content="Open Project Settings" 
                                  Command="{Binding OpenProjectSettingsAsync}"
                         />
-                        <Border Background="Gray" Height="1" Margin="0,10"/>
-                        <Button  HorizontalContentAlignment="Left" Content="Execute Synthesis"/>
-                        <Button  HorizontalContentAlignment="Left" Content="Execute Place and Route"/>
                     </StackPanel>
-                    
-                        
                 </Flyout>
             </Button.Flyout>
             <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10" Margin="1 0" />
