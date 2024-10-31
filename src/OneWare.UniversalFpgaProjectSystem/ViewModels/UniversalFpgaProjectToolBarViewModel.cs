@@ -92,6 +92,29 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
     public async Task CompileAsync()
     {
+         // _project.RunToolchainAsync();
+        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
+        {
+            var name = project.Properties["Fpga"]?.ToString();
+            if (name == null) {
+                await OpenPcfCreatorAsync();
+                return;
+            }
+            
+            var firstOrDefault = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
+            if (firstOrDefault == null) {
+                await OpenPcfCreatorAsync();
+                return;
+            }
+
+            await project.RunToolchainAsync(new FpgaModel(firstOrDefault.LoadFpga()));
+        }
+
+            
+    }
+    
+    public async Task OpenPcfCreatorAsync()
+    {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectCompileView
             {

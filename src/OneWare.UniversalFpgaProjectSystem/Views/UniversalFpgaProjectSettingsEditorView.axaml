@@ -1,0 +1,51 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+                         PrefHeight="450" PrefWidth="600" Padding="4"
+                         WindowBackground="{DynamicResource ThemeBackgroundBrush}"
+                         WindowStartupLocation="CenterOwner"
+                         Title="{Binding Title}"
+                         CustomIcon="{DynamicResource CreateIcon}"
+                         x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectSettingsEditorView"
+                         x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
+                         Name="UniversalFpgaProjectCompileViewView">
+    <DockPanel>
+        <StackPanel>
+            <ContentControl DockPanel.Dock="Top">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding UserControlsList}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,10,0,50">
+                                    <ContentPresenter Content="{Binding}" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                </ScrollViewer>
+            </ContentControl>
+            
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom">
+                <Button Command="{Binding SaveAndCloseAsync}"
+                        CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                    <TextBlock Text="Save and Close" Margin="5 0" />
+                </Button>
+                <Button Command="{Binding Close}"
+                        CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
+                    <TextBlock Text="Close" Margin="5 0" />
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</controls:FlexibleWindow>
