@@ -18,6 +18,10 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewModelBase
 {
+    private readonly IProjectExplorerService _projectExplorerService;
+    
+    private readonly FpgaService _fpgaService;
+    
     public SettingsCollectionViewModel SettingsCollection { get; } = new("")
     {
         ShowTitle = false
@@ -31,9 +35,11 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private ListBoxSetting _includesSettings;
     private ListBoxSetting _excludesSettings;
     
-    public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root)
+    public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root, IProjectExplorerService projectExplorerService, FpgaService fpgaService)
     {
         _root = root;
+        _projectExplorerService = projectExplorerService;
+        _fpgaService = fpgaService;
         Title = $"{_root.Name} Settings";
         
         var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
@@ -58,33 +64,24 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private async Task SaveAsync()
     {
-        _root.Properties["Toolchain"] = _toolchain.Value.ToString();
-        _root.Properties["Loader"] = _loader.Value.ToString();
+        var tcString = _toolchain.Value.ToString();
+        if (tcString != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == tcString) is { } tc)
+            _root.Toolchain = tc;
         
-        UpdateJsonArray(_root.Properties["Include"]!, _includesSettings.Items.Select(item => item.ToString()).ToArray());
-        UpdateJsonArray(_root.Properties["Exclude"]!, _excludesSettings.Items.Select(item => item.ToString()).ToArray());
+        var loaderString = _loader.Value.ToString();
+        if (loaderString != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loaderString) is { } loader)
+            _root.Loader = loader;
         
-        await ContainerLocator.Container.Resolve<IProjectExplorerService>().SaveProjectAsync(_root);
-    }
-
-    private void UpdateJsonArray(JsonNode? jsonObject, string[] newValues)
-    {
-        jsonObject?.AsArray().Clear();
-        foreach (var value in newValues)
-        {
-            jsonObject?.AsArray().Add(value);
-        }
+        _root.SetProjectPropertyArray("Include", _includesSettings.Items.Select(item => item.ToString()).ToArray());
+        _root.SetProjectPropertyArray("Exclude", _excludesSettings.Items.Select(item => item.ToString()).ToArray());
+        
+        await _projectExplorerService.SaveProjectAsync(_root);
+        await _projectExplorerService.ReloadAsync(_root);
     }
     
     public async Task SaveAndCloseAsync(FlexibleWindow window)
     {
         await SaveAsync();
         Close(window);
-    }
-    
-    
-    public void Close(FlexibleWindow window)
-    {
-        window.Close();
     }
 }

@@ -79,7 +79,22 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 
     public Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
+        return yosysService.CompileAsync(project, fpga);
+    }
+
+    public Task<bool> SynthesisAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    {
         return yosysService.SynthAsync(project, fpga);
+    }
+
+    public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    {
+        return yosysService.FitAsync(project, fpga);
+    }
+
+    public Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    {
+        return yosysService.AssembleAsync(project, fpga);
     }
 
     private string RemoveLine(string file, string find)

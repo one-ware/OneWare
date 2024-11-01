@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Xaml.Interactivity;
+using Action = System.Action;
 
 namespace OneWare.Essentials.Behaviors;
 

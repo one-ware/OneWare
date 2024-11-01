@@ -29,6 +29,10 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
         DownloaderConfigurationExtension =
             windowService.GetUiExtensions("UniversalFpgaToolBar_DownloaderConfigurationExtension");
+        
+        CompileMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_CompileMenuExtension");
+        
+        PinPlannerMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_PinPlannerMenuExtension");
 
         settingsService.Bind("UniversalFpgaProjectSystem_LongTermProgramming",
             this.WhenValueChanged(x => x.LongTermProgramming)).Subscribe(x => LongTermProgramming = x);
@@ -63,6 +67,10 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         set => SetProperty(ref _project, value);
     }
 
+    public ObservableCollection<UiExtension> PinPlannerMenuExtension { get; }
+
+    public ObservableCollection<UiExtension> CompileMenuExtension { get; }
+
     public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
 
     public void ToggleLongTermProgramming()
@@ -70,24 +78,51 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         LongTermProgramming = !LongTermProgramming;
     }
 
+    private (UniversalFpgaProjectRoot? project, FpgaModel? fpga) EnsureProjectAndFpga()
+    {
+        if (ProjectExplorerService.ActiveProject is not UniversalFpgaProjectRoot project)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Warning("No Active Project");
+            return (null, null);
+        }
+
+        var name = project.Properties["Fpga"]?.ToString();
+        var fpgaPackage = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
+        if (fpgaPackage == null)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+            return (project, null);
+        }
+
+        return (project, new FpgaModel(fpgaPackage.LoadFpga()));
+    }
+    
     public async Task CompileAsync()
     {
-        if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-        {
-            var name = project.Properties["Fpga"]?.ToString();
-            if (name == null) {
-                await OpenPinPlannerAsync();
-                return;
-            }
-            
-            var firstOrDefault = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
-            if (firstOrDefault == null) {
-                await OpenPinPlannerAsync();
-                return;
-            }
+        if(EnsureProjectAndFpga() is not {project: not null, fpga: not null} data) return;
+        
+        await data.project.RunToolchainAsync(data.fpga);
+    }
+    
+    public async Task SynthesisAsync()
+    {
+        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
 
-            await project.RunToolchainAsync(new FpgaModel(firstOrDefault.LoadFpga()));
-        }
+        await data.project.Toolchain.SynthesisAsync(data.project, data.fpga);
+    }
+    
+    public async Task FitAsync()
+    {
+        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
+
+        await data.project.Toolchain.FitAsync(data.project, data.fpga);
+    }
+    
+    public async Task AssembleAsync()
+    {
+        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
+
+        await data.project.Toolchain.AssembleAsync(data.project, data.fpga);
     }
     
     public async Task OpenPinPlannerAsync()

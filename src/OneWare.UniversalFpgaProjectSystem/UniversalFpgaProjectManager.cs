@@ -201,8 +201,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         // UniversalFpgaProjectRoot root
         await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
         {
-            DataContext = new UniversalFpgaProjectSettingsEditorViewModel(root)
-                /* ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>() */
+            DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((typeof(UniversalFpgaProjectRoot), root))
         });
         
     }

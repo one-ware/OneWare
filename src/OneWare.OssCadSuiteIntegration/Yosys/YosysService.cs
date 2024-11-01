@@ -14,6 +14,34 @@ public class YosysService(
     IOutputService outputService,
     IDockService dockService)
 {
+    public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    {
+        var buildDir = Path.Combine(project.FullPath, "build");
+        Directory.CreateDirectory(buildDir);
+
+        dockService.Show<IOutputService>();
+
+        var start = DateTime.Now;
+            
+        outputService.WriteLine("Compiling...\n==================");
+        
+        var success = await SynthAsync(project, fpgaModel);
+        success = success && await FitAsync(project, fpgaModel);
+        success = success && await AssembleAsync(project, fpgaModel);
+        
+        var compileTime = DateTime.Now - start;
+
+        if (success)
+            outputService.WriteLine(
+                $"==================\n\nCompilation finished after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n");
+        else
+            outputService.WriteLine(
+                $"==================\n\nCompilation failed after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n",
+                Brushes.Red);
+
+        return success;
+    }
+    
     public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
     {
         try
@@ -27,15 +55,7 @@ public class YosysService(
                 .Where(x => !project.CompileExcluded.Contains(x))
                 .Where(x => !project.TestBenches.Contains(x))
                 .Select(x => x.RelativePath);
-
-            var buildDir = Path.Combine(project.FullPath, "build");
-            Directory.CreateDirectory(buildDir);
-
-            dockService.Show<IOutputService>();
-
-            var start = DateTime.Now;
-            outputService.WriteLine("Compiling...\n==================");
-
+            
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
 
@@ -44,20 +64,6 @@ public class YosysService(
             yosysArguments.AddRange(properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
             yosysArguments.AddRange(includedFiles);
-
-            var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool") ??
-                              throw new Exception("NextPnr Tool not set!");
-            List<string> nextPnrArguments =
-                ["--json", "./build/synth.json", "--pcf", "project.pcf", "--asc", "./build/nextpnr.asc"];
-            nextPnrArguments.AddRange(properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?.Split(' ',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-
-            var packTool = properties.GetValueOrDefault("yosysToolchainPackTool") ??
-                           throw new Exception("Pack Tool not set!");
-            ;
-            List<string> packToolArguments = ["./build/nextpnr.asc", "./build/pack.bin"];
-            packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
 
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>
@@ -71,28 +77,7 @@ public class YosysService(
                     outputService.WriteLine(x);
                     return true;
                 });
-
-            success = success && (await childProcessService.ExecuteShellAsync(nextPnrTool, nextPnrArguments,
-                project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
-                {
-                    Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
-                    return true;
-                })).success;
-
-            success = success && (await childProcessService.ExecuteShellAsync(packTool, packToolArguments,
-                project.FullPath,
-                $"Running {packTool}...")).success;
-
-            var compileTime = DateTime.Now - start;
-
-            if (success)
-                outputService.WriteLine(
-                    $"==================\n\nCompilation finished after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n");
-            else
-                outputService.WriteLine(
-                    $"==================\n\nCompilation failed after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n",
-                    Brushes.Red);
-
+            
             return success;
         }
         catch (Exception e)
@@ -100,6 +85,45 @@ public class YosysService(
             logger.Error(e.Message, e);
             return false;
         }
+    }
+
+    public async Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    {
+        var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
+        
+        var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool") ??
+                          throw new Exception("NextPnr Tool not set!");
+        List<string> nextPnrArguments =
+            ["--json", "./build/synth.json", "--pcf", "project.pcf", "--asc", "./build/nextpnr.asc"];
+        nextPnrArguments.AddRange(properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?.Split(' ',
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
+        
+        var status = await childProcessService.ExecuteShellAsync(nextPnrTool, nextPnrArguments,
+            project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
+            {
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                return true;
+            });
+
+        return status.success;
+    }
+
+    public async Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    {
+        var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
+        
+        var packTool = properties.GetValueOrDefault("yosysToolchainPackTool") ??
+                       throw new Exception("Pack Tool not set!");
+        ;
+        List<string> packToolArguments = ["./build/nextpnr.asc", "./build/pack.bin"];
+        packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
+        
+        var status = await childProcessService.ExecuteShellAsync(packTool, packToolArguments,
+            project.FullPath,
+            $"Running {packTool}...");
+
+        return status.success;
     }
 
     public async Task CreateNetListJsonAsync(IProjectFile verilog)

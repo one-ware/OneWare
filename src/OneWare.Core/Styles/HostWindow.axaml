@@ -88,7 +88,6 @@
     <Style Selector="idc|HostWindow">
         <Setter Property="ExtendClientAreaToDecorationsHint" Value="True" />
         <Setter Property="ExtendClientAreaTitleBarHeightHint" Value="30" />
-        <Setter Property="Padding" Value="{TemplateBinding Padding}" />
         <Setter Property="TransparencyLevelHint" Value="Transparent" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
