@@ -38,7 +38,7 @@
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="5" Margin="0 0 5 0">
                         <TextBlock Text="Board:" VerticalAlignment="Center" />
 
-                        <ComboBox ItemsSource="{Binding FpgaPackages}"
+                        <controls:SearchComboBox IsInteractive="False" ItemsSource="{Binding FpgaPackages}"
                                                  MinWidth="150"
                                                  SelectedItem="{Binding SelectedFpgaPackage, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
@@ -46,7 +46,7 @@
                                     <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        </controls:SearchComboBox>
 
                         <Button Command="{Binding RefreshFpgasButtonAsync}"
                                 CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
