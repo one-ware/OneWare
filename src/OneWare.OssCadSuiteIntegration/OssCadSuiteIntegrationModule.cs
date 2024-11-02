@@ -1,4 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using OneWare.Essentials.Helpers;
@@ -136,6 +139,9 @@ public class OssCadSuiteIntegrationModule : IModule
         var settingsService = containerProvider.Resolve<ISettingsService>();
         var yosysService = containerProvider.Resolve<YosysService>();
         var environmentService = containerProvider.Resolve<IEnvironmentService>();
+        var windowService = containerProvider.Resolve<IWindowService>();
+        var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
+        var fpgaService = containerProvider.Resolve<FpgaService>();
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
         
@@ -150,6 +156,42 @@ public class OssCadSuiteIntegrationModule : IModule
                             typeof(UniversalFpgaProjectPinPlannerViewModel), cm))
                 };
             }));
+
+        containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
+            new UiExtension(
+                x =>
+                {
+                    if (x is not UniversalFpgaProjectRoot {Toolchain: YosysToolchain} root) return null;
+                    
+                    return new MenuItem()
+                    {
+                        Header = "Yosys Settings",
+                        Icon = new Image()
+                        {
+                            Source = Application.Current!.FindResource(Application.Current!.RequestedThemeVariant, "Material.SettingsOutline") as IImage
+                        },
+                        Command = new AsyncRelayCommand(async () =>
+                        {
+                            if (projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
+                            {
+                                var selectedFpga = root.Properties["Fpga"]?.ToString();
+                                var selectedFpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == selectedFpga);
+                    
+                                if(selectedFpgaPackage == null)
+                                {
+                                    containerProvider.Resolve<ILogger>().Warning("No FPGA Selected. Open Pin Planner first!");
+                                    return;
+                                }
+                                
+                                await windowService.ShowDialogAsync(
+                                    new YosysCompileSettingsView
+                                        { DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpgaPackage.LoadFpga()) });
+                            }
+                                
+                        })
+                    };
+                }));
+        
         containerProvider.Resolve<IWindowService>().RegisterUiExtension(
             "UniversalFpgaToolBar_DownloaderConfigurationExtension", new UiExtension(x =>
             {
@@ -161,6 +203,7 @@ public class OssCadSuiteIntegrationModule : IModule
                             typeof(UniversalFpgaProjectRoot), cm))
                 };
             }));
+        
         containerProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
         containerProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         containerProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();

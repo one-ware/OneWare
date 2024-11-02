@@ -21,6 +21,8 @@ public class FpgaService
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "Extensions"));
         
         _logger = logger;
+        
+        LoadGenericHardware();
     }
 
     public string HardwareDirectory { get; }

@@ -156,6 +156,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             }
         }
 
+        _fpgaService.LoadGenericHardware();
         RefreshHardware();
     }
 
@@ -166,9 +167,6 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         FpgaPackages.Clear();
 
         SelectedFpgaPackage = null;
-
-        //Load Hardware from files
-        _fpgaService.LoadGenericHardware();
 
         //Construct FpgaModels
         foreach (var package in _fpgaService.FpgaPackages)

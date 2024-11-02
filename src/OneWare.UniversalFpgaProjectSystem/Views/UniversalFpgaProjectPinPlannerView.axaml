@@ -91,9 +91,10 @@
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
                         <controls:CustomZoomBorder UseLayoutRounding="False" Name="ZoomBorder" ClipToBounds="True"
                                                    PanButton="Right">
-                            <Viewbox>
+                            <Viewbox ClipToBounds="False">
                                 <ContentControl Name="ZoomContentControl" HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
+                                                ClipToBounds="False"
                                                 Content="{Binding SelectedFpgaViewModel}" />
                             </Viewbox>
                         </controls:CustomZoomBorder>

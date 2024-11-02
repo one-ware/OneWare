@@ -6,6 +6,7 @@ using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 
@@ -16,15 +17,17 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
     private readonly UniversalFpgaProjectPinPlannerViewModel _pinPlannerViewModel;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-
+    private readonly FpgaService _fpgaService;
+    
     private bool _isVisible;
 
     public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
-        IWindowService windowService, IProjectExplorerService projectExplorerService)
+        IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService)
     {
         _pinPlannerViewModel = pinPlannerViewModel;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
+        _fpgaService = fpgaService;
 
         IDisposable? disposable = null;
         projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(x =>
@@ -54,10 +57,17 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
             try
             {
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
+                {
+                    var selectedFpga = _pinPlannerViewModel.SelectedFpgaModel?.Fpga;
+                    
+                    if(selectedFpga == null) return;
+                    
                     await _windowService.ShowDialogAsync(
                         new YosysCompileSettingsView
-                            { DataContext = new YosysCompileSettingsViewModel(_pinPlannerViewModel, fpgaProjectRoot) },
+                            { DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga) },
                         ownerWindow);
+                }
+               
             }
             catch (Exception e)
             {

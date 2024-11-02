@@ -7,6 +7,7 @@ using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
@@ -24,13 +25,11 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
 
     private readonly ComboBoxSetting _yosysSynthToolSetting;
 
-    public YosysCompileSettingsViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
-        UniversalFpgaProjectRoot fpgaProjectRoot)
+    public YosysCompileSettingsViewModel(UniversalFpgaProjectRoot fpgaProjectRoot, IFpga selectedFpga)
     {
         _fpgaProjectRoot = fpgaProjectRoot;
-        _selectedFpga = pinPlannerViewModel.SelectedFpgaModel?.Fpga ??
-                        throw new NullReferenceException(nameof(pinPlannerViewModel.SelectedFpgaModel));
-
+        _selectedFpga = selectedFpga;
+        
         Title = "Yosys Compile Settings";
         Id = "YosysCompileSettings";
 
