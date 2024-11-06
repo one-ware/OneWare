@@ -15,13 +15,13 @@ namespace OneWare.OssCadSuiteIntegration.ViewModels;
 public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
 {
     private readonly UniversalFpgaProjectRoot _fpgaProjectRoot;
-    private readonly TitledSetting _nextPnrFlagSetting;
+    private readonly TextBoxSetting _nextPnrFlagSetting;
     private readonly ComboBoxSetting _nextPnrToolSetting;
-    private readonly TitledSetting _packToolFlagSetting;
+    private readonly TextBoxSetting _packToolFlagSetting;
     private readonly ComboBoxSetting _packToolSetting;
     private readonly IFpga _selectedFpga;
     private readonly Dictionary<string, string> _settings;
-    private readonly TitledSetting _yosysFlagSetting;
+    private readonly TextBoxSetting _yosysFlagSetting;
 
     private readonly ComboBoxSetting _yosysSynthToolSetting;
 
@@ -60,8 +60,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "synth_sf2",
                 "synth_xilinx"
             ]);
-        _yosysFlagSetting = new TitledSetting("Yosys Flags", "Set Yosys flags",
-            defaultProperties.GetValueOrDefault("yosysToolchainYosysFlags") ?? "");
+        _yosysFlagSetting = new TextBoxSetting("Yosys Flags", "Set Yosys flags",
+            defaultProperties.GetValueOrDefault("yosysToolchainYosysFlags") ?? "", null);
 
         _nextPnrToolSetting = new ComboBoxSetting("NextPnr Tool", "Set NextPnr tool",
             defaultProperties.GetValueOrDefault("yosysToolchainNextPnrTool") ?? "", [
@@ -72,8 +72,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "nextpnr-machxo2",
                 "nextpnr-nexus"
             ]);
-        _nextPnrFlagSetting = new TitledSetting("NextPnR Flags", "Set NextPnr flags",
-            defaultProperties.GetValueOrDefault("yosysToolchainNextPnrFlags") ?? "");
+        _nextPnrFlagSetting = new TextBoxSetting("NextPnR Flags", "Set NextPnr flags",
+            defaultProperties.GetValueOrDefault("yosysToolchainNextPnrFlags") ?? "", null);
 
         _packToolSetting = new ComboBoxSetting("Pack Tool", "Set Pack tool",
             defaultProperties.GetValueOrDefault("yosysToolchainPackTool") ?? "", [
@@ -81,8 +81,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "gowin_pack",
                 "icepack"
             ]);
-        _packToolFlagSetting = new TitledSetting("Pack Flags", "Set Pack flags",
-            defaultProperties.GetValueOrDefault("yosysToolchainPackFlags") ?? "");
+        _packToolFlagSetting = new TextBoxSetting("Pack Flags", "Set Pack flags",
+            defaultProperties.GetValueOrDefault("yosysToolchainPackFlags") ?? "", null);
 
         SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_yosysSynthToolSetting));
         SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_yosysFlagSetting));

@@ -4,7 +4,7 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public class ComboBoxSettingViewModel : TitledSettingViewModel
 {
-    public ComboBoxSettingViewModel(ComboBoxSetting setting) : base(setting)
+    public ComboBoxSettingViewModel(ComboBoxSetting setting, IObservable<bool>? needEnabled = null) : base(setting, needEnabled)
     {
         Setting = setting;
     }

@@ -20,7 +20,13 @@ public class Setting : ObservableObject
     public virtual object Value
     {
         get => _value;
-        set => SetProperty(ref _value, value);
+        set
+        {
+            var originalType = DefaultValue.GetType();
+            if(value.GetType() != originalType)
+                value = Convert.ChangeType(value, originalType);
+            SetProperty(ref _value, value);
+        }
     }
 
     public object DefaultValue { get; }

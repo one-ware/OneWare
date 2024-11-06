@@ -10,7 +10,7 @@ public class ListBoxSettingViewModel : TitledSettingViewModel
 {
     private int _selectedIndex;
     
-    public ListBoxSettingViewModel(ListBoxSetting setting) : base(setting)
+    public ListBoxSettingViewModel(ListBoxSetting setting, IObservable<bool>? needEnabled = null) : base(setting, needEnabled)
     {
         Setting = setting;
     }

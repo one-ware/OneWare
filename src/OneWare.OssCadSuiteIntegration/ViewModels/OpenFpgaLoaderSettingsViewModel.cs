@@ -12,12 +12,12 @@ namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
 {
-    private readonly TitledSetting _boardSetting;
+    private readonly TextBoxSetting _boardSetting;
     private readonly IFpga _fpga;
-    private readonly TitledSetting _longTermFlagsSetting;
+    private readonly TextBoxSetting _longTermFlagsSetting;
     private readonly UniversalFpgaProjectRoot _projectRoot;
     private readonly Dictionary<string, string> _settings;
-    private readonly TitledSetting _shortTermFlagsSetting;
+    private readonly TextBoxSetting _shortTermFlagsSetting;
 
     public OpenFpgaLoaderSettingsViewModel(UniversalFpgaProjectRoot projectRoot, IFpga fpga)
     {
@@ -30,16 +30,16 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         var defaultProperties = fpga.Properties;
         _settings = FpgaSettingsParser.LoadSettings(projectRoot, fpga.Name);
 
-        _boardSetting = new TitledSetting("Board", "OpenFPGALoader Board",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "");
+        _boardSetting = new TextBoxSetting("Board", "OpenFPGALoader Board",
+            defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "", null);
 
-        _shortTermFlagsSetting = new TitledSetting("Short Term Arguments",
+        _shortTermFlagsSetting = new TextBoxSetting("Short Term Arguments",
             "OpenFPGALoader Flags for Short Term Programming",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "");
+            defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "", null);
 
-        _longTermFlagsSetting = new TitledSetting("Long Term Arguments",
+        _longTermFlagsSetting = new TextBoxSetting("Long Term Arguments",
             "OpenFPGALoader Flags for Long Term Programming",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "");
+            defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "", null);
 
         if (_settings.TryGetValue("openFpgaLoaderBoard", out var oflBoard))
             _boardSetting.Value = oflBoard;

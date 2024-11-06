@@ -4,13 +4,12 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public class TextBoxSettingViewModel : TitledSettingViewModel
 {
-    public TextBoxSettingViewModel(TextBoxSetting setting) : base(setting)
+    public TextBoxSettingViewModel(TitledSetting setting, IObservable<bool>? needEnabled = null) : base(setting, needEnabled)
     {
-        Watermark = setting.Watermark;
-    }
-
-    public TextBoxSettingViewModel(TitledSetting setting) : base(setting)
-    {
+        if (setting is TextBoxSetting tbs)
+        {
+            Watermark = tbs.Watermark;
+        }
     }
 
     public string? Watermark { get; }
