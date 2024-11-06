@@ -84,10 +84,10 @@ public class SourceControlViewModel : ExtendedTool
         DeleteRemoteDialogAsyncCommand = new AsyncRelayCommand(DeleteRemoteDialogAsync);
         SetUserIdentityAsyncCommand = new AsyncRelayCommand<bool>(SetUserIdentityAsync);
 
-        settingsService.GetSettingObservable<int>("SourceControl_AutoFetchDelay")
+        settingsService.GetSettingObservable<double>("SourceControl_AutoFetchDelay")
             .Subscribe(SetupFetchTimer);
 
-        settingsService.GetSettingObservable<int>("SourceControl_PollChangesDelay")
+        settingsService.GetSettingObservable<double>("SourceControl_PollChangesDelay")
             .Subscribe(SetupPollTimer);
 
         projectExplorerService
@@ -296,11 +296,11 @@ public class SourceControlViewModel : ExtendedTool
 
     #region General
 
-    private void SetupFetchTimer(int seconds)
+    private void SetupFetchTimer(double seconds)
     {
         if (_timer != null && Math.Abs(_timer.Interval.TotalSeconds - seconds) < 1) return;
         _timer?.Stop();
-        _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, FetchTimerCallback);
+        _timer = new DispatcherTimer(new TimeSpan(0, 0, (int)seconds), DispatcherPriority.Normal, FetchTimerCallback);
         _timer.Start();
     }
 
@@ -309,11 +309,11 @@ public class SourceControlViewModel : ExtendedTool
         if (_settingsService.GetSettingValue<bool>("SourceControl_AutoFetchEnable")) _ = FetchAsync();
     }
 
-    private void SetupPollTimer(int seconds)
+    private void SetupPollTimer(double seconds)
     {
         if (_timer != null && Math.Abs(_timer.Interval.TotalSeconds - seconds) < 1) return;
         _timer?.Stop();
-        _timer = new DispatcherTimer(new TimeSpan(0, 0, seconds), DispatcherPriority.Normal, PollTimerCallback);
+        _timer = new DispatcherTimer(new TimeSpan(0, 0, (int)seconds), DispatcherPriority.Normal, PollTimerCallback);
         _timer.Start();
     }
 

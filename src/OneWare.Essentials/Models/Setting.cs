@@ -80,7 +80,7 @@ public class ComboBoxSearchSetting(string title, string description, object defa
 
 public class SliderSetting : TitledSetting
 {
-    public SliderSetting(string title, string description, object defaultValue, double min, double max, double step) : base(
+    public SliderSetting(string title, string description, double defaultValue, double min, double max, double step) : base(
         title, description, defaultValue)
     {
         Min = min;

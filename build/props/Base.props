@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <StudioVersion>0.20.5.0</StudioVersion>
-        <CoreVersion>0.30.3.0</CoreVersion>
-        <UniversalFpgaProjectSystemVersion>0.30.3.0</UniversalFpgaProjectSystemVersion>
-        <EssentialsVersion>0.9.0</EssentialsVersion>
+        <StudioVersion>0.20.6.0</StudioVersion>
+        <CoreVersion>0.30.4.0</CoreVersion>
+        <UniversalFpgaProjectSystemVersion>0.40.0.0</UniversalFpgaProjectSystemVersion>
+        <EssentialsVersion>0.10.0</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Company>One Ware</Company>

@@ -27,8 +27,8 @@ public interface ISettingsService
     public void RegisterTitledFilePath(string category, string subCategory, string key, string title, string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate, params FilePickerFileType[] fileTypes);
 
-    public void RegisterTitledSlider<T>(string category, string subCategory, string key, string title, string description,
-        T defaultValue, double min, double max, double step);
+    public void RegisterTitledSlider(string category, string subCategory, string key, string title, string description,
+        double defaultValue, double min, double max, double step);
 
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
         string description,
