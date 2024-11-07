@@ -69,5 +69,14 @@ public class GitHubAccountSetting : CustomSetting
         
         if(avatarUrl != null)
             Image = await httpService.DownloadImageAsync(avatarUrl);
+        else
+        {
+            //Bad credentials, logout
+            if (data["status"]?.GetValue<string>() == "401")
+            {
+                store.Remove("https://github.com", Value.ToString());
+                Value = string.Empty;
+            }
+        }
     }
 }
