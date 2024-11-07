@@ -13,17 +13,18 @@
                 BorderThickness="1">
             <Grid RowDefinitions="20, *">
                 <StackPanel Orientation="Horizontal" Spacing="3">
-                    <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}">
+                    <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}" IsEnabled="{Binding IsEnabled}" >
                         <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
                     </Button>
-                    <Button Command="{Binding RemoveSelected}" CommandParameter="{Binding $self}">
+                    <Button Command="{Binding RemoveSelected}" CommandParameter="{Binding $self}" IsEnabled="{Binding IsEnabled}" >
                         <Image Source="{DynamicResource MaterialDesign.Close}" Height="12" />
                     </Button>
-                    <Button Command="{Binding EditSelectedAsync}" CommandParameter="{Binding $self}">
+                    <Button Command="{Binding EditSelectedAsync}" CommandParameter="{Binding $self}" IsEnabled="{Binding IsEnabled}" >
                         <Image Source="{DynamicResource Cool.Edit}" Height="12" />
                     </Button>
                 </StackPanel>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Setting.Items}" Height="100" 
+                         IsEnabled="{Binding IsEnabled}" 
                          SelectedIndex="{Binding SelectedIndex}"
                          Background="{DynamicResource ThemeBackgroundBrush}"
                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"

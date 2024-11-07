@@ -9,6 +9,7 @@
     <StackPanel Orientation="Horizontal" Spacing="3">
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />
-        <ColorPicker Color="{Binding Setting.Value}" Height="24" />
+        <ColorPicker IsEnabled="{Binding IsEnabled}" 
+                     Color="{Binding Setting.Value}" Height="24" />
     </StackPanel>
 </UserControl>

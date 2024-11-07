@@ -183,7 +183,7 @@
             <Color x:Key="ThemeBorderMidColor">#FF888888</Color>
             <Color x:Key="ThemeBorderHighColor">#FF333333</Color>
             <Color x:Key="ThemeControlLowColor">#FFFFFFFF</Color>
-            <Color x:Key="ThemeControlMidColor">#FFF5F5F5</Color>
+            <Color x:Key="ThemeControlMidColor">#FFCDCDCD</Color>
             <Color x:Key="ThemeControlMidHighColor">#FFC2C3C9</Color>
             <Color x:Key="ThemeControlHighColor">#FF686868</Color>
             <Color x:Key="ThemeControlVeryHighColor">#FF5B5B5B</Color>

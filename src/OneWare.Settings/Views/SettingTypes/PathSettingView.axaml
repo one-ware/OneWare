@@ -12,7 +12,7 @@
         <Border Classes="RoundToolBar" BorderBrush="Gray">
             <DockPanel>
 
-                <Button DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
+                <Button IsEnabled="{Binding IsEnabled}"  DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
                     <Image Height="16" Width="16" VerticalAlignment="Center"
                            Source="{DynamicResource VsImageLib.FolderOpen16X}" />
                 </Button>
@@ -26,7 +26,7 @@
                            Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
                 </Grid>
 
-                <TextBox DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
+                <TextBox IsEnabled="{Binding IsEnabled}"  DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
             </DockPanel>
         </Border>
     </StackPanel>

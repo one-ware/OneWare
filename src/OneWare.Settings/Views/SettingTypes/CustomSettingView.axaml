@@ -7,6 +7,6 @@
              x:Class="OneWare.Settings.Views.SettingTypes.CustomSettingView"
              x:DataType="settingTypes:CustomSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
-        <ContentControl Content="{Binding Setting.Control}"/>
+        <ContentControl Content="{Binding Setting.Control}" />
     </StackPanel>
 </UserControl>

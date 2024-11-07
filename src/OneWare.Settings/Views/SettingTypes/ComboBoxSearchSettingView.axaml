@@ -11,6 +11,7 @@
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />
         <controls:SearchComboBox ItemsSource="{Binding Setting.Options}"
+                                 IsEnabled="{Binding IsEnabled}" 
                   SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>

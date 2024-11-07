@@ -12,8 +12,10 @@
         <DockPanel>
             <TextBox DockPanel.Dock="Right"
                      Width="100"
+                     IsEnabled="{Binding IsEnabled}" 
                      Text="{Binding TextBoxValue}" />
             <Slider DockPanel.Dock="Left"
+                    IsEnabled="{Binding IsEnabled}" 
                     Minimum="{Binding Setting.Min}"
                     Maximum="{Binding Setting.Max}"
                     Value="{Binding Setting.Value}"
