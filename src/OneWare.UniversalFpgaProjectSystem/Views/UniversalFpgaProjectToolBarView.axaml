@@ -25,8 +25,11 @@
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <StackPanel>
-                        <MenuItem Header="Open Project Settings"
+                        <MenuItem Header="Project Settings"
                                   Command="{Binding OpenProjectSettingsAsync}">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource Material.SettingsOutline}"/>
+                            </MenuItem.Icon>
                         </MenuItem>
                         <controls:UiExtensionCollection
                             Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
