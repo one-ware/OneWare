@@ -14,8 +14,7 @@ public class PluginCompatibilityChecker
             
             if (!File.Exists(depFilePath))
             {
-                compatibilityIssues +=
-                    $"Extension {pluginName} incompatible:\n\ncompatibility.txt not found in plugin folder\n";
+                compatibilityIssues += $"compatibility.txt not found in plugin folder\n";
                 return new CompatibilityReport(false, compatibilityIssues);
             }
 
@@ -55,10 +54,10 @@ public class PluginCompatibilityChecker
                 
                 if (coreDep.Version < dependencyVersion)
                     compatibilityIssues +=
-                        $"Studio {dependencyName} v{coreDep.Version} is older than Plugin v{dependencyVersion}\n";
+                        $"Required {dependencyName} : {dependencyVersion} > {coreDep.Version}\n";
                 if (coreDep.Version > dependencyVersion)
                     compatibilityIssues +=
-                        $"Studio {dependencyName} v{coreDep.Version} is newer than Plugin v{dependencyVersion}\n";
+                        $"Required {dependencyName} : {dependencyVersion} < {coreDep.Version}\n";
             }
 
             return new CompatibilityReport(compatibilityIssues.Length == 0, compatibilityIssues);
