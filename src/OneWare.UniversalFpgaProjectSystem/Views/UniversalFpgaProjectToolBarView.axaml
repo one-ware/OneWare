@@ -56,15 +56,6 @@
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <StackPanel>
-                        <MenuItem Header="Run Synthesis"
-                                  Command="{Binding SynthesisAsync}">
-                        </MenuItem>
-                        <MenuItem Header="Run Place and Route"
-                                  Command="{Binding FitAsync}">
-                        </MenuItem>
-                        <MenuItem Header="Run Assemble"
-                                  Command="{Binding AssembleAsync}">
-                        </MenuItem>
                         <controls:UiExtensionCollection
                             Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
                             Extensions="{Binding CompileMenuExtension}">

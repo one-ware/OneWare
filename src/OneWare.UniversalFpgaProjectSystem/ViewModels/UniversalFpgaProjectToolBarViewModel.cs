@@ -104,27 +104,6 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         await data.project.RunToolchainAsync(data.fpga);
     }
     
-    public async Task SynthesisAsync()
-    {
-        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
-
-        await data.project.Toolchain.SynthesisAsync(data.project, data.fpga);
-    }
-    
-    public async Task FitAsync()
-    {
-        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
-
-        await data.project.Toolchain.FitAsync(data.project, data.fpga);
-    }
-    
-    public async Task AssembleAsync()
-    {
-        if(EnsureProjectAndFpga() is not {project: { Toolchain: not null }, fpga: not null} data) return;
-
-        await data.project.Toolchain.AssembleAsync(data.project, data.fpga);
-    }
-    
     public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
