@@ -81,9 +81,9 @@ public class PluginPackageModel : PackageModel
 
     public override async Task<CompatibilityReport> CheckCompatibilityAsync(PackageVersion version)
     {
-        if (version.DepsUrl != null || Package.SourceUrl != null)
+        if (version.CompatibilityUrl != null || Package.SourceUrl != null)
         {
-            var depsUrl = version.DepsUrl ?? $"{Package.SourceUrl}/{version.Version}/minimal-dependencies.txt";
+            var depsUrl = version.CompatibilityUrl ?? $"{Package.SourceUrl}/{version.Version}/compatibility.txt";
 
             var deps = await HttpService.DownloadTextAsync(depsUrl);
 

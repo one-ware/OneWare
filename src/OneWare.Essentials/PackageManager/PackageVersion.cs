@@ -6,5 +6,5 @@ public class PackageVersion
 
     public PackageTarget[]? Targets { get; init; }
     
-    public string? DepsUrl { get; init; }
+    public string? CompatibilityUrl { get; init; }
 }
