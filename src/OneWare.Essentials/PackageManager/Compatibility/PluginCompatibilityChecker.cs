@@ -8,14 +8,14 @@ public class PluginCompatibilityChecker
         {
             var pluginName = Path.GetFileName(path);
             
-            var depFilePath = Path.Combine(path, "minimal-dependencies.txt");
+            var depFilePath = Path.Combine(path, "compatibility.txt");
 
             var compatibilityIssues = "";
             
             if (!File.Exists(depFilePath))
             {
                 compatibilityIssues +=
-                    $"Extension {pluginName} incompatible:\n\nminimal-dependencies.txt not found in plugin folder\n";
+                    $"Extension {pluginName} incompatible:\n\ncompatibility.txt not found in plugin folder\n";
                 return new CompatibilityReport(false, compatibilityIssues);
             }
 
