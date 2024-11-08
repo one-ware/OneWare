@@ -15,6 +15,8 @@ public class Package
     public string? License { get; init; }
 
     public string? IconUrl { get; init; }
+    
+    public string? SourceUrl { get; init; }
 
     public PackageTab[]? Tabs { get; init; }
 

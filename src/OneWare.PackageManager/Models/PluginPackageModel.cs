@@ -1,6 +1,7 @@
 ﻿using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.Models;
@@ -31,11 +32,11 @@ public class PluginPackageModel : PackageModel
             SetProperty(ref _plugin, value);
             if (_plugin is not null)
             {
-                if (!_plugin.IsCompatible) WarningText = _plugin.CompatibilityReport;
+                if (!_plugin.IsCompatible) InstalledVersionWarningText = _plugin.CompatibilityReport;
             }
             else
             {
-                WarningText = null;
+                InstalledVersionWarningText = null;
             }
         }
     }
@@ -76,5 +77,18 @@ public class PluginPackageModel : PackageModel
         {
             Status = PackageStatus.Available;
         }
+    }
+
+    public override async Task<CompatibilityReport> CheckCompatibilityAsync(PackageVersion version)
+    {
+        if (version.DepsUrl != null || Package.SourceUrl != null)
+        {
+            var depsUrl = version.DepsUrl ?? $"{Package.SourceUrl}/{version.Version}/minimal-dependencies.txt";
+
+            var deps = await HttpService.DownloadTextAsync(depsUrl);
+
+            return PluginCompatibilityChecker.CheckCompatibility(deps);
+        }
+        return PluginCompatibilityChecker.CheckCompatibility(null);
     }
 }

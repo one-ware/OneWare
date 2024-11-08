@@ -50,8 +50,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
-                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-win64.zip",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-win64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -65,8 +64,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
-                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-linux-static-x86_64.tar.gz",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -79,8 +77,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url =
-                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-macOS.tar.gz",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -101,7 +98,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
+                        Url = 
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-win64.zip",
                         AutoSetting =
                         [
@@ -116,7 +113,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
+                        Url = 
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -130,8 +127,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url =
-                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-macOS.tar.gz",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

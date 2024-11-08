@@ -127,8 +127,8 @@
                                         <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal" Margin="2 0 0 0">
                                             <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                                                    Height="12"
-                                                   IsVisible="{Binding PackageModel.WarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                   ToolTip.Tip="{Binding PackageModel.WarningText}" />
+                                                   IsVisible="{Binding PackageModel.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                   ToolTip.Tip="{Binding PackageModel.InstalledVersionWarningText}" />
                                             <TextBlock
                                                 Text="{Binding PackageModel.InstalledVersion.Version, FallbackValue={}}"
                                                 Foreground="{DynamicResource ThemeForegroundLowBrush}" />

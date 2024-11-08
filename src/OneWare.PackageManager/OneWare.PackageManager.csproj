@@ -7,4 +7,8 @@
         <ProjectReference Include="..\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Compatibility\" />
+    </ItemGroup>
 </Project>

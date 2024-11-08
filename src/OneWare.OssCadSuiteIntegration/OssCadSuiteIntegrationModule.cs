@@ -70,8 +70,7 @@ public class OssCadSuiteIntegrationModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
-                            "https://github.com/HendrikMennen/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-windows-x64-20240727.tgz",
+                        Url = "https://github.com/HendrikMennen/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-windows-x64-20240727.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -84,8 +83,7 @@ public class OssCadSuiteIntegrationModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-linux-x64-20240727.tgz",
+                        Url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-linux-x64-20240727.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -98,8 +96,7 @@ public class OssCadSuiteIntegrationModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-x64-20240727.tgz",
+                        Url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-x64-20240727.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -112,8 +109,7 @@ public class OssCadSuiteIntegrationModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-arm64-20240727.tgz",
+                        Url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-arm64-20240727.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

@@ -6,5 +6,5 @@ public class PackageVersion
 
     public PackageTarget[]? Targets { get; init; }
     
-    public bool TargetAll => Targets is [{ Target: "all" }];
+    public string? DepsUrl { get; init; }
 }

@@ -34,7 +34,7 @@ public class PackageViewModel : ObservableObject
 
     private bool _resolveTabsStarted;
 
-    private PackageVersion? _selectedVersion;
+    private PackageVersionModel? _selectedVersionModel;
 
     protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
     {
@@ -44,16 +44,16 @@ public class PackageViewModel : ObservableObject
         RemoveCommand = new AsyncRelayCommand(PackageModel.RemoveAsync,
             () => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
 
-        InstallCommand = new AsyncRelayCommand(() => PackageModel.DownloadAsync(SelectedVersion!),
+        InstallCommand = new AsyncRelayCommand(() => PackageModel.DownloadAsync(SelectedVersionModel!.Version),
             () => PackageModel.Status is PackageStatus.Available);
 
-        UpdateCommand = new AsyncRelayCommand(() => PackageModel.UpdateAsync(SelectedVersion!),
+        UpdateCommand = new AsyncRelayCommand(() => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
             () => PackageModel.Status is PackageStatus.UpdateAvailable);
 
         PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
     }
-
+    
     public bool IsTabsResolved
     {
         get => _isTabsResolved;
@@ -76,16 +76,18 @@ public class PackageViewModel : ObservableObject
         private set => SetProperty(ref _image, value);
     }
 
+    public ObservableCollection<PackageVersionModel> PackageVersionModels { get; } = new();
     public ObservableCollection<TabModel> Tabs { get; } = [];
     public ObservableCollection<LinkModel> Links { get; } = [];
 
-    public PackageVersion? SelectedVersion
+    public PackageVersionModel? SelectedVersionModel
     {
-        get => _selectedVersion;
+        get => _selectedVersionModel;
         set
         {
-            SetProperty(ref _selectedVersion, value);
+            SetProperty(ref _selectedVersionModel, value);
             UpdateStatus();
+            _ = CheckSelectedVersionCompatibilityAsync();
         }
     }
 
@@ -112,13 +114,17 @@ public class PackageViewModel : ObservableObject
     public AsyncRelayCommand InstallCommand { get; }
 
     public AsyncRelayCommand UpdateCommand { get; }
-
+    
     private void InitPackage()
     {
         Links.Clear();
         if (PackageModel.Package.Links != null)
             Links.AddRange(PackageModel.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
-        SelectedVersion = PackageModel.Package.Versions?.LastOrDefault();
+        
+        PackageVersionModels.Clear();
+        if(PackageModel.Package.Versions != null) 
+            PackageVersionModels.AddRange(PackageModel.Package.Versions.Select(x => new PackageVersionModel(x)));
+        SelectedVersionModel = PackageVersionModels.LastOrDefault();
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
         UpdateStatus();
@@ -127,7 +133,7 @@ public class PackageViewModel : ObservableObject
 
     private void UpdateStatus()
     {
-        Version.TryParse(SelectedVersion?.Version ?? "", out var sV);
+        Version.TryParse(SelectedVersionModel?.Version.Version ?? "", out var sV);
         Version.TryParse(PackageModel.InstalledVersion?.Version ?? "", out var iV);
 
         MainButtonCommand = null;
@@ -210,5 +216,13 @@ public class PackageViewModel : ObservableObject
             }
 
         IsTabsResolved = true;
+    }
+
+    public async Task CheckSelectedVersionCompatibilityAsync()
+    {
+        if(SelectedVersionModel == null) return;
+
+        if(SelectedVersionModel.CompatibilityReport == null)
+            SelectedVersionModel.CompatibilityReport = await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
     }
 }

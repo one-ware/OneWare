@@ -138,8 +138,6 @@ public class UpdaterViewModel : ObservableObject
         var topLevelWindow = TopLevel.GetTopLevel(owner) as Window;
 
         Status = UpdaterStatus.UpdatingPackages;
-
-        _packageService.RegisterPackageRepository($"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/{NewVersion.ToString()}/oneware-packages.json");
         
         var loadPackages = await _packageService.LoadPackagesAsync();
 

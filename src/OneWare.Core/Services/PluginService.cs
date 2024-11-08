@@ -1,8 +1,10 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -36,10 +38,11 @@ public class PluginService : IPluginService
     {
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
-        if (CheckCompatibility(path) is { compatible: false } test)
+        
+        if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
-            plugin.CompatibilityReport = test.report;
-            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.report}");
+            plugin.CompatibilityReport = test.Report;
+            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.Report}");
             return plugin;
         }
 
@@ -85,63 +88,5 @@ public class PluginService : IPluginService
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
-    }
-
-    private (bool compatible, string? report) CheckCompatibility(string path)
-    {
-        try
-        {
-            var pluginName = Path.GetFileName(path);
-
-            var compatibilityIssues = string.Empty;
-
-            //Dependency check
-            var depFilePath = Path.Combine(path, "oneware.json");
-
-            if (!File.Exists(depFilePath))
-            {
-                compatibilityIssues +=
-                    $"Extension {pluginName} incompatible:\n\noneware.json not found in plugin folder\n";
-                return (false, compatibilityIssues);
-            }
-
-            var packageManifest =
-                JsonSerializer.Deserialize<PackageManifest>(File.ReadAllText(depFilePath), _jsonSerializerOptions);
-
-            if (packageManifest?.Dependencies is { } deps)
-                foreach (var dep in deps)
-                {
-                    var minVersion = Version.Parse(dep.MinVersion ?? "0");
-                    var maxVersion = Version.Parse(dep.MaxVersion ?? "10000");
-
-                    var coreDep = AppDomain.CurrentDomain.GetAssemblies()
-                        .SingleOrDefault(x => x.GetName().Name == dep.Name)?.GetName();
-
-                    if (coreDep == null)
-                    {
-                        compatibilityIssues += $"Dependency {dep.Name} not found\n";
-                        continue;
-                    }
-
-                    if (coreDep.Version < minVersion)
-                        compatibilityIssues +=
-                            $"Studio {dep.Name} v{coreDep.Version} is older than min Plugin v{minVersion}\n";
-                    if (coreDep.Version > maxVersion)
-                        compatibilityIssues +=
-                            $"Studio {dep.Name} v{coreDep.Version} is newer than max Plugin v{maxVersion}\n";
-                }
-
-            if (compatibilityIssues.Length > 0)
-            {
-                compatibilityIssues = $"Extension {pluginName} incompatible:\n" + compatibilityIssues;
-                return (false, compatibilityIssues);
-            }
-        }
-        catch (Exception e)
-        {
-            return (false, e.Message);
-        }
-
-        return (true, null);
     }
 }

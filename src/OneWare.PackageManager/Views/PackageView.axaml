@@ -33,12 +33,12 @@
 
                 <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
                     <StackPanel Orientation="Horizontal">
-                        <ComboBox ItemsSource="{Binding PackageModel.Package.Versions}"
-                                  SelectedItem="{Binding SelectedVersion}"
+                        <ComboBox ItemsSource="{Binding PackageVersionModels}"
+                                  SelectedItem="{Binding SelectedVersionModel}"
                                   BorderThickness="0">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="packageManager:PackageVersion">
-                                    <TextBlock Text="{Binding Version}" />
+                                <DataTemplate x:DataType="models:PackageVersionModel">
+                                    <TextBlock Text="{Binding Version.Version}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
@@ -60,15 +60,17 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="10"
-                            IsVisible="{Binding PackageModel.WarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            IsVisible="{Binding PackageModel.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                            Height="12" VerticalAlignment="Center"
-                           ToolTip.Tip="{Binding PackageModel.WarningText}" />
-                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Incompatible" />
+                           ToolTip.Tip="{Binding PackageModel.InstalledVersionWarningText}" />
+                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Installed version incompatible!" />
                 </StackPanel>
             </StackPanel>
 
-            <ItemsControl ItemsSource="{Binding SelectedVersion.Targets, FallbackValue={x:Null}}" IsVisible="{Binding !SelectedVersion.TargetAll, FallbackValue={x:False}}">
+
+            <ItemsControl ItemsSource="{Binding SelectedVersionModel.Version.Targets, FallbackValue={x:Null}}"
+                          IsVisible="{Binding !SelectedVersionModel.TargetAll, FallbackValue={x:False}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="5" />
@@ -81,7 +83,42 @@
                 </ItemsControl.DataTemplates>
             </ItemsControl>
 
-            <ProgressBar IsIndeterminate="{Binding PackageModel.IsIndeterminate}" Value="{Binding PackageModel.Progress}" ShowProgressText="True"
+            <Border Background="{DynamicResource ThemeControlLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="5"
+                    BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Spacing="5" Orientation="Vertical"
+                                IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNull}, FallbackValue={x:False}}">
+                        <TextBlock Text="Checking Compatibility..." HorizontalAlignment="Center" />
+                        <controls:Spinner Height="20" Width="20" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="5" Orientation="Vertical"
+                                IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                        <StackPanel Orientation="Horizontal" Spacing="5"
+                                    IsVisible="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
+                            <Image HorizontalAlignment="Left" Source="{DynamicResource BoxIcons.RegularCheck.Green}" Height="12" Width="12" 
+                                   VerticalAlignment="Center" />
+                            <TextBlock Text="Selected Version is compatible!" FontWeight="Bold" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical" Spacing="5"
+                                    IsVisible="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Image HorizontalAlignment="Left" Source="{DynamicResource MaterialDesign.Close.Red}" Height="12" Width="12" 
+                                       VerticalAlignment="Center"/>
+                                <TextBlock Text="Selected Version is incompatible!" FontWeight="Bold" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            
+            <ProgressBar IsIndeterminate="{Binding PackageModel.IsIndeterminate}"
+                         Value="{Binding PackageModel.Progress}" ShowProgressText="True"
                          Maximum="1.0"
                          Height="24"
                          IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 

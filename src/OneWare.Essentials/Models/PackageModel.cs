@@ -2,6 +2,7 @@
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Models;
@@ -9,7 +10,6 @@ namespace OneWare.Essentials.Models;
 public abstract class PackageModel : ObservableObject
 {
     private readonly IApplicationStateService _applicationStateService;
-    private readonly IHttpService _httpService;
     private readonly ILogger _logger;
     private PackageVersion? _installedVersion;
     private Package _package;
@@ -19,7 +19,9 @@ public abstract class PackageModel : ObservableObject
 
     private PackageStatus _status;
 
-    private string? _warningText;
+    private string? _installedVersionWarningText;
+    
+    protected readonly IHttpService HttpService;
 
     protected PackageModel(Package package,
         string packageType,
@@ -29,7 +31,7 @@ public abstract class PackageModel : ObservableObject
         IApplicationStateService applicationStateService)
     {
         _package = package;
-        _httpService = httpService;
+        HttpService = httpService;
         _logger = logger;
         _applicationStateService = applicationStateService;
         ExtractionFolder = extractionFolder;
@@ -48,10 +50,10 @@ public abstract class PackageModel : ObservableObject
         }
     }
 
-    public string? WarningText
+    public string? InstalledVersionWarningText
     {
-        get => _warningText;
-        set => SetProperty(ref _warningText, value);
+        get => _installedVersionWarningText;
+        set => SetProperty(ref _installedVersionWarningText, value);
     }
 
     public PackageStatus Status
@@ -104,7 +106,7 @@ public abstract class PackageModel : ObservableObject
         var target = version.Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget) ?? version.Targets?.FirstOrDefault(x => x.Target == "all");
         return target;
     }
-
+    
     public Task<bool> DownloadAsync(PackageVersion version)
     {
         var task = PerformDownloadAsync(version);
@@ -121,9 +123,11 @@ public abstract class PackageModel : ObservableObject
             Status = PackageStatus.Installing;
 
             var target = SelectTarget(version);
-
-            if (target is { Url: not null })
+            
+            if (target is not null)
             {
+                var zipUrl = target.Url ?? $"{Package.SourceUrl}/{version.Version}/{Package.Id}_{version.Version}_{target.Target}.zip";
+                
                 var state = _applicationStateService.AddState($"Downloading {Package.Id}...", AppState.Loading);
 
                 var progress = new Progress<float>(x =>
@@ -138,7 +142,7 @@ public abstract class PackageModel : ObservableObject
                 });
 
                 //Download
-                var result = await _httpService.DownloadAndExtractArchiveAsync(target.Url, ExtractionFolder, progress);
+                var result = await HttpService.DownloadAndExtractArchiveAsync(zipUrl, ExtractionFolder, progress);
 
                 _applicationStateService.RemoveState(state);
 
@@ -241,5 +245,10 @@ public abstract class PackageModel : ObservableObject
             Status = PackageStatus.Available;
         else
             Status = PackageStatus.Unavailable;
+    }
+    
+    public virtual Task<CompatibilityReport> CheckCompatibilityAsync(PackageVersion version)
+    {
+        return Task.FromResult(new CompatibilityReport(true, null));
     }
 }

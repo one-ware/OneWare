@@ -51,7 +51,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -65,7 +65,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -79,7 +79,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -100,7 +100,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -114,7 +114,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -128,7 +128,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -148,8 +148,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url =
-                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -162,7 +161,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url =
+                        Url = 
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
