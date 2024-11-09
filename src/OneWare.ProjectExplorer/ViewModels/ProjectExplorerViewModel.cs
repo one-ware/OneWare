@@ -678,6 +678,16 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (manager == null) throw new NullReferenceException(nameof(manager));
         return manager.SaveProjectAsync(project);
     }
+    
+    public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
+    {
+        var saveTasks = _dockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
+            .Select(x => x.Value.SaveAsync());
+            
+        var results = await Task.WhenAll(saveTasks);
+
+        return results.All(x => x);
+    }
 
     #endregion
 

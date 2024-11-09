@@ -40,9 +40,12 @@ public partial class VhdlNodeProvider : INodeProvider
             
             foreach (Match match in genericDeclarations)
             {
-                var name = match.Groups[1].Value;
-                var value = match.Groups[2].Value;
-                genericValues[name] = int.Parse(value);
+                var name = match.Groups[1].Value.Trim();
+                var value = match.Groups[2].Value.Trim();
+                if (int.TryParse(value, out int intValue))
+                {
+                    genericValues[name] = intValue;
+                }
             }
         }
 
@@ -69,23 +72,42 @@ public partial class VhdlNodeProvider : INodeProvider
 
             if (vectorMatch.Success)
             {
-                var name = vectorMatch.Groups[1].Value;
-                var direction = vectorMatch.Groups[2].Value.ToUpper();
+                var name = vectorMatch.Groups[1].Value.Trim();
+                var direction = vectorMatch.Groups[2].Value.ToUpper().Trim();
                 var upperBoundExpr = vectorMatch.Groups[3].Value.Trim();
                 var lowerBoundExpr = vectorMatch.Groups[4].Value.Trim();
 
-                var upperBound = EvaluateExpression(upperBoundExpr, genericValues);
-                var lowerBound = EvaluateExpression(lowerBoundExpr, genericValues);
-
-                // Create nodes for each bit in the vector
-                for (var i = lowerBound; i <= upperBound; i++)
+                try
                 {
-                    nodes.Add(new FpgaNode($"{name}[{i}]", direction)); 
+                    var upperBound = EvaluateExpression(upperBoundExpr, genericValues);
+                    var lowerBound = EvaluateExpression(lowerBoundExpr, genericValues);
+
+                    // Create nodes for each bit in the vector
+                    if (upperBound >= lowerBound)
+                    {
+                        for (var i = lowerBound; i <= upperBound; i++)
+                        {
+                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
+                        }
+                    }
+                    else
+                    {
+                        for (var i = lowerBound; i >= upperBound; i--)
+                        {
+                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing vector {name}: {ex.Message}");
                 }
             }
             else if (logicMatch.Success)
             {
-                nodes.Add(new FpgaNode(logicMatch.Groups[1].Value, logicMatch.Groups[2].Value.ToUpper()));
+                var name = logicMatch.Groups[1].Value.Trim();
+                var direction = logicMatch.Groups[2].Value.ToUpper().Trim();
+                nodes.Add(new FpgaNode(name, direction));
             }
         }
     }
@@ -93,7 +115,7 @@ public partial class VhdlNodeProvider : INodeProvider
     private static int EvaluateExpression(string expression, Dictionary<string, int> genericValues)
     {
         // Replace generic constants with their values
-        foreach (var generic in genericValues)
+        foreach (var generic in genericValues.OrderByDescending(x => x.Key.Length))
         {
             expression = Regex.Replace(expression, 
                 $@"\b{generic.Key}\b", 
@@ -107,7 +129,8 @@ public partial class VhdlNodeProvider : INodeProvider
         try
         {
             var dt = new DataTable();
-            return Convert.ToInt32(dt.Compute(expression, ""));
+            var result = dt.Compute(expression, "");
+            return Convert.ToInt32(result);
         }
         catch (Exception)
         {
@@ -115,7 +138,7 @@ public partial class VhdlNodeProvider : INodeProvider
         }
     }
 
-    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex LogicMatch();
     
     [GeneratedRegex(@"port\s*\(((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*)\)\s*;", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-US")]
@@ -127,6 +150,6 @@ public partial class VhdlNodeProvider : INodeProvider
     [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)")]
     private static partial Regex GenericDeclarationMatch();
     
-    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT)\s*STD_LOGIC_VECTOR\s*\(\s*(\d+|\w+(?:\s*[+\-*/]\s*\d+)?)\s*downto\s*(\d+|\w+(?:\s*[+\-*/]\s*\d+)?)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+)\s*downto\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex VectorMatch();
 }

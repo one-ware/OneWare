@@ -101,18 +101,23 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     {
         if(EnsureProjectAndFpga() is not {project: not null, fpga: not null} data) return;
         
+        await ProjectExplorerService.SaveOpenFilesForProjectAsync(data.project);
         await data.project.RunToolchainAsync(data.fpga);
     }
     
     public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
+        {
+            await ProjectExplorerService.SaveOpenFilesForProjectAsync(project);
+            
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectPinPlannerView
             {
                 DataContext =
                     ContainerLocator.Container.Resolve<UniversalFpgaProjectPinPlannerViewModel>((
                         typeof(UniversalFpgaProjectRoot), project))
             });
+        }
     }
 
     public async Task OpenProjectSettingsAsync()
