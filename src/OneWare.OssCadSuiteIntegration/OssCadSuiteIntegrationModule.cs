@@ -176,17 +176,29 @@ public class OssCadSuiteIntegrationModule : IModule
                             new MenuItem()
                             {
                                 Header = "Run Synthesis",
-                                Command = new AsyncRelayCommand(() => yosysService.SynthAsync(root, new FpgaModel(fpga!)), () => fpga != null)
+                                Command = new AsyncRelayCommand(async () =>
+                                {
+                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                    await yosysService.SynthAsync(root, new FpgaModel(fpga!));
+                                }, () => fpga != null)
                             },
                             new MenuItem()
                             {
                                 Header = "Run Fit",
-                                Command = new AsyncRelayCommand(() => yosysService.FitAsync(root, new FpgaModel(fpga!)), () => fpga != null)
+                                Command = new AsyncRelayCommand(async () =>
+                                {
+                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                    await yosysService.FitAsync(root, new FpgaModel(fpga!));
+                                }, () => fpga != null)
                             },
                             new MenuItem()
                             {
                                 Header = "Run Assemble",
-                                Command = new AsyncRelayCommand(() => yosysService.AssembleAsync(root, new FpgaModel(fpga!)), () => fpga != null)
+                                Command = new AsyncRelayCommand(async () =>
+                                {
+                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                    await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
+                                }, () => fpga != null)
                             },
                             new Separator(),
                             new MenuItem()
