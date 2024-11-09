@@ -75,7 +75,8 @@ public partial class VhdlNodeProvider : INodeProvider
                 var name = vectorMatch.Groups[1].Value.Trim();
                 var direction = vectorMatch.Groups[2].Value.ToUpper().Trim();
                 var upperBoundExpr = vectorMatch.Groups[3].Value.Trim();
-                var lowerBoundExpr = vectorMatch.Groups[4].Value.Trim();
+                var directionType = vectorMatch.Groups[4].Value.Trim();
+                var lowerBoundExpr = vectorMatch.Groups[5].Value.Trim();
 
                 try
                 {
@@ -83,16 +84,16 @@ public partial class VhdlNodeProvider : INodeProvider
                     var lowerBound = EvaluateExpression(lowerBoundExpr, genericValues);
 
                     // Create nodes for each bit in the vector
-                    if (upperBound >= lowerBound)
+                    if (directionType.Equals("to", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        for (var i = lowerBound; i <= upperBound; i++)
+                        for (var i = upperBound; i <= lowerBound; i++)
                         {
                             nodes.Add(new FpgaNode($"{name}[{i}]", direction));
                         }
                     }
-                    else
+                    else if(directionType.Equals("downTo", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        for (var i = lowerBound; i >= upperBound; i--)
+                        for (var i = upperBound; i >= lowerBound; i--)
                         {
                             nodes.Add(new FpgaNode($"{name}[{i}]", direction));
                         }
@@ -150,6 +151,6 @@ public partial class VhdlNodeProvider : INodeProvider
     [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)")]
     private static partial Regex GenericDeclarationMatch();
     
-    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+)\s*downto\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+?)\s*(to|downto)\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex VectorMatch();
 }

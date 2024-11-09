@@ -130,7 +130,7 @@
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Pin" Width="*" Binding="{Binding Pin.Name}" />
-                                        <DataGridTextColumn Header="Description" Width="*"
+                                        <DataGridTextColumn Header="Description" Width="2*"
                                                             Binding="{Binding Pin.Description}" />
                                         <DataGridTemplateColumn Header="Node" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
@@ -226,7 +226,7 @@
                                           BorderThickness="0 1 0 0"
                                           VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Node" Width="*" Binding="{Binding Node.Name}" />
+                                        <DataGridTextColumn Header="Node" Width="2*" Binding="{Binding Node.Name}" />
                                         <DataGridTextColumn Header="Direction" Width="*"
                                                             Binding="{Binding Node.Direction}" />
                                         <DataGridTemplateColumn Header="Pin" Width="*">
