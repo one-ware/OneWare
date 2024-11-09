@@ -13,6 +13,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -54,7 +55,14 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             var provider = fpgaService.GetNodeProvider(file.Extension);
             if (provider is not null)
             {
-                _nodes = provider.ExtractNodes(file).ToArray();
+                try
+                {
+                    _nodes = provider.ExtractNodes(file).ToArray();
+                }
+                catch (Exception e)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                }
             }
         }
 

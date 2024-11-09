@@ -1,58 +1,132 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
 using OneWare.Essentials.Models;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Vhdl.Parsing;
 
-public class VhdlNodeProvider : INodeProvider
+// ReSharper disable once ClassNeverInstantiated.Global
+public partial class VhdlNodeProvider : INodeProvider
 {
     public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
     {
-        var fileLines = File.ReadAllLines(file.FullPath);
-        return ExtractEntityPorts(fileLines);
+        var code = File.ReadAllText(file.FullPath);
+        return ExtractNodes(code);
     }
 
-    public static IEnumerable<FpgaNode> ExtractEntityPorts(IEnumerable<string> vhdlLines)
+    private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
-        var inPortSection = false;
-        var portPattern =
-            @"\b(\w+)\s+:\s+(in|out|inout|buffer)\s+(\w+)(?:\((\d+)\s+downto\s+(\d+)\))?(?:\s+:=\s+[^;]+)?";
+        var nodes = new List<FpgaNode>();
+        
+        // First, extract generics
+        var generics = ExtractGenerics(vhdlCode);
 
-        foreach (var line in vhdlLines)
+        // Extract port declarations
+        ExtractPorts(vhdlCode, nodes, generics);
+
+        return nodes;
+    }
+
+    private static Dictionary<string, int> ExtractGenerics(string vhdlCode)
+    {
+        var genericValues = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        
+        var genericMatch = GenericMatch().Match(vhdlCode);
+        if (genericMatch.Success)
         {
-            if (line.Trim().Replace(" ", "").StartsWith("port(", StringComparison.OrdinalIgnoreCase))
-                inPortSection = true;
-            if (line.Trim().StartsWith(");", StringComparison.OrdinalIgnoreCase)) inPortSection = false;
-
-            if (inPortSection)
+            var genericContent = genericMatch.Groups[1].Value;
+            var genericDeclarations = GenericDeclarationMatch().Matches(genericContent);
+            
+            foreach (Match match in genericDeclarations)
             {
-                var match = Regex.Match(line, portPattern, RegexOptions.IgnoreCase);
-                if (match.Success)
+                var name = match.Groups[1].Value;
+                var value = match.Groups[2].Value;
+                genericValues[name] = int.Parse(value);
+            }
+        }
+
+        return genericValues;
+    }
+
+    private static void ExtractPorts(string vhdlCode, List<FpgaNode> nodes, Dictionary<string, int> genericValues)
+    {
+        var portMatch = PortMatch().Match(vhdlCode);
+        if (!portMatch.Success) return;
+
+        var portContent = portMatch.Groups[1].Value;
+        var portDeclarations = portContent.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var declaration in portDeclarations)
+        {
+            if (string.IsNullOrWhiteSpace(declaration)) continue;
+
+            // Match for vector declarations
+            var vectorMatch = VectorMatch().Match(declaration);
+
+            // Match for single std_logic declarations
+            var logicMatch = LogicMatch().Match(declaration);
+
+            if (vectorMatch.Success)
+            {
+                var name = vectorMatch.Groups[1].Value;
+                var direction = vectorMatch.Groups[2].Value.ToUpper();
+                var upperBoundExpr = vectorMatch.Groups[3].Value.Trim();
+                var lowerBoundExpr = vectorMatch.Groups[4].Value.Trim();
+
+                var upperBound = EvaluateExpression(upperBoundExpr, genericValues);
+                var lowerBound = EvaluateExpression(lowerBoundExpr, genericValues);
+
+                // Create nodes for each bit in the vector
+                for (var i = lowerBound; i <= upperBound; i++)
                 {
-                    var portName = match.Groups[1].Value;
-                    var direction = match.Groups[2].Value;
-                    var portType = match.Groups[3].Value;
-                    var upperBound = match.Groups[4].Value;
-                    var lowerBound = match.Groups[5].Value;
-
-                    if (!string.IsNullOrEmpty(upperBound) && !string.IsNullOrEmpty(lowerBound))
-                    {
-                        // Expand std_logic_vector into individual ports
-                        var upper = int.Parse(upperBound);
-                        var lower = int.Parse(lowerBound);
-
-                        for (var i = upper; i >= lower; i--)
-                            yield return new FpgaNode($"{portName}[{i}]",
-                                direction); //$"{portName}({i}) : {direction} {portType}";
-                    }
-                    else
-                    {
-                        // Single port
-                        yield return new FpgaNode(portName, direction); // $"{portName} : {direction} {portType}";
-                    }
+                    nodes.Add(new FpgaNode($"{name}[{i}]", direction)); 
                 }
+            }
+            else if (logicMatch.Success)
+            {
+                nodes.Add(new FpgaNode(logicMatch.Groups[1].Value, logicMatch.Groups[2].Value.ToUpper()));
             }
         }
     }
+
+    private static int EvaluateExpression(string expression, Dictionary<string, int> genericValues)
+    {
+        // Replace generic constants with their values
+        foreach (var generic in genericValues)
+        {
+            expression = Regex.Replace(expression, 
+                $@"\b{generic.Key}\b", 
+                generic.Value.ToString(), 
+                RegexOptions.IgnoreCase);
+        }
+
+        // Clean up the expression
+        expression = expression.Replace(" ", "");
+
+        try
+        {
+            var dt = new DataTable();
+            return Convert.ToInt32(dt.Compute(expression, ""));
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException($"Unable to evaluate expression: {expression}");
+        }
+    }
+
+    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex LogicMatch();
+    
+    [GeneratedRegex(@"port\s*\(((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*)\)\s*;", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-US")]
+    private static partial Regex PortMatch();
+    
+    [GeneratedRegex(@"Generic\s*\((.*?)\)", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-US")]
+    private static partial Regex GenericMatch();
+    
+    [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)")]
+    private static partial Regex GenericDeclarationMatch();
+    
+    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT)\s*STD_LOGIC_VECTOR\s*\(\s*(\d+|\w+(?:\s*[+\-*/]\s*\d+)?)\s*downto\s*(\d+|\w+(?:\s*[+\-*/]\s*\d+)?)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex VectorMatch();
 }

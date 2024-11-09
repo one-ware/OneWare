@@ -209,8 +209,8 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     public void AddNode(FpgaNode node)
     {
         var model = new FpgaNodeModel(node);
-        NodeModels.Add(node.Name, model);
-        VisibleNodeModels.Add(model);
+        var added = NodeModels.TryAdd(node.Name, model);
+        if(added) VisibleNodeModels.Add(model);
     }
 
     private void AddInterface(HardwareInterface fpgaInterface)
