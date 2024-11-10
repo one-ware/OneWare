@@ -96,6 +96,14 @@ public abstract class PackageModel : ObservableObject
 
     public async Task<bool> UpdateAsync(PackageVersion version)
     {
+        var compat = await CheckCompatibilityAsync(version);
+
+        if (!compat.IsCompatible)
+        {
+            _logger.Error(compat.Report!);
+            return false;
+        }
+        
         if (!await RemoveAsync()) return false;
         return await DownloadAsync(version);
     }
