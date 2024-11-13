@@ -2,9 +2,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <StudioVersion>0.21.0.0</StudioVersion>
-        <CoreVersion>0.31.0.0</CoreVersion>
-        <UniversalFpgaProjectSystemVersion>0.41.0.0</UniversalFpgaProjectSystemVersion>
-        <EssentialsVersion>0.11.0.0</EssentialsVersion>
+        <CoreVersion>0.31.1.0</CoreVersion>
+        <UniversalFpgaProjectSystemVersion>0.41.1.0</UniversalFpgaProjectSystemVersion>
+        <EssentialsVersion>0.11.1.0</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Company>One Ware</Company>
