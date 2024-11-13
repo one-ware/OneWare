@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
@@ -171,6 +172,14 @@ public class FilePathSetting : PathSetting
         var folder = await StorageProviderHelper.SelectFileAsync(topLevel, Title, StartDirectory, Filters);
         if (folder != null) Value = folder;
     }
+}
+
+public class ColorSetting : TitledSetting
+{
+    public ColorSetting(string title, string description, Color defaultValue) : base(title, description, defaultValue)
+    {
+        
+    }    
 }
 
 public abstract class CustomSetting : Setting

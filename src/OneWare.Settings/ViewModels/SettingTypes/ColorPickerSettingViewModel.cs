@@ -4,7 +4,7 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public class ColorPickerSettingViewModel : TitledSettingViewModel
 {
-    public ColorPickerSettingViewModel(TitledSetting setting) : base(setting)
+    public ColorPickerSettingViewModel(ColorSetting setting) : base(setting)
     {
     }
 }

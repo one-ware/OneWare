@@ -67,23 +67,14 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
                         case ListBoxSetting lS:
                             subCategoryModel.SettingModels.Add(new ListBoxSettingViewModel(lS));
                             break;
-                        case TitledSetting tS:
-                            switch (setting.Value)
-                            {
-                                case bool:
-                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(tS));
-                                    break;
-                                case string:
-                                case int:
-                                case float:
-                                case double:
-                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(tS));
-                                    break;
-                                case Color:
-                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(tS));
-                                    break;
-                            }
-
+                        case CheckBoxSetting cbS:
+                            subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(cbS));
+                            break;
+                        case TextBoxSetting tS:
+                            subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(tS));
+                            break;
+                        case ColorSetting cS:
+                            subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(cS));
                             break;
                     }
 
