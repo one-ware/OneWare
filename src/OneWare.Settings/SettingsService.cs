@@ -117,7 +117,10 @@ public class SettingsService : ISettingsService
     public void RegisterTitledSlider(string category, string subCategory, string key, string title,
         string description, double defaultValue, double min, double max, double step)
     {
-        AddSetting(category, subCategory, key, new SliderSetting(title, description, defaultValue, min, max, step));
+        AddSetting(category, subCategory, key, new SliderSetting(title, defaultValue, min, max, step)
+        {
+            HoverDescription = description
+        });
     }
 
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
