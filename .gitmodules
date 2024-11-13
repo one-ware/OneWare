@@ -1,6 +1,3 @@
-[submodule "src/Markdown.Avalonia"]
-	path = src/Markdown.Avalonia
-	url = https://github.com/HendrikMennen/Markdown.Avalonia
 [submodule "src/VtNetCore.Avalonia"]
 	path = src/VtNetCore.Avalonia
 	url = https://github.com/HendrikMennen/VtNetCore.Avalonia.git
