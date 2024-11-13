@@ -2,7 +2,7 @@
     <Import Project="..\..\build\props\XUnit.props"/>
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <OutputType>Library</OutputType>
         <IsPackable>False</IsPackable>
         <IsTestProject>True</IsTestProject>
