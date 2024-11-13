@@ -34,10 +34,7 @@ jobs:
       - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-      - run: dotnet pack ./src/Markdown.Avalonia/ColorTextBlock.Avalonia/ColorTextBlock.Avalonia.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-      - run: dotnet pack ./src/Markdown.Avalonia/Markdown.Avalonia.SyntaxHigh/Markdown.Avalonia.SyntaxHigh.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-      - run: dotnet pack ./src/Markdown.Avalonia/Markdown.Avalonia.Tight/Markdown.Avalonia.Tight.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-
+        
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
       # If you retry a failed workflow, already published packages will be skipped without error.
