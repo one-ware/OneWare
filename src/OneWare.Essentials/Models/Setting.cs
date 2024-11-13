@@ -96,7 +96,7 @@ public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerabl
 
 public class SliderSetting : TitledSetting
 {
-    public SliderSetting(string title, string description, double defaultValue, double min, double max, double step) : base(
+    public SliderSetting(string title, double defaultValue, double min, double max, double step) : base(
         title, defaultValue)
     {
         Min = min;
