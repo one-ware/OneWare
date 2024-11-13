@@ -32,7 +32,7 @@ public class Setting : ObservableObject
     public object DefaultValue { get; }
 }
 
-public class TitledSetting : Setting
+public abstract class TitledSetting : Setting
 {
     public TitledSetting(string title, string description, object defaultValue) : base(defaultValue)
     {
@@ -47,6 +47,13 @@ public class TitledSetting : Setting
     public IObservable<bool>? IsEnabledObservable { get; init; }
     
     public IObservable<bool>? IsVisibleObservable { get; init; }
+}
+
+public class CheckBoxSetting : TitledSetting
+{
+    public CheckBoxSetting(string title, string description, bool defaultValue) : base(title, description, defaultValue)
+    {
+    }
 }
 
 public class TextBoxSetting : TitledSetting

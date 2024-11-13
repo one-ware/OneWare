@@ -5,11 +5,12 @@
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
-             x:DataType="settingTypes:CheckBoxSettingViewModel">
+             x:DataType="settingTypes:CheckBoxSettingViewModel"
+             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
     <Border Padding="0 3">
         <StackPanel Orientation="Horizontal" Spacing="3">
             <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
-                      IsEnabled="{Binding IsEnabled}" />
+                      IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
             <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding Setting.Description}" />
         </StackPanel>

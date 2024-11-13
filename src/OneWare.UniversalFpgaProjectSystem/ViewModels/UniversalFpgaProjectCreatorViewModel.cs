@@ -42,7 +42,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _folderPathSetting = new FolderPathSetting("Location", "Set the location where the new project is created",
             paths.ProjectsDirectory, "Enter path...", paths.ProjectsDirectory, Directory.Exists);
 
-        _createNewFolderSetting = new TitledSetting("Create new Folder",
+        _createNewFolderSetting = new CheckBoxSetting("Create new Folder",
             "Set if a new folder should be created in the selected location", true);
 
         _toolchainSetting = new ComboBoxSetting("Toolchain",

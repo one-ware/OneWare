@@ -12,10 +12,4 @@ public abstract class TitledSettingViewModel : SettingViewModel
     }
 
     public override TitledSetting Setting { get; }
-
-    public bool IsEnabled
-    {
-        get => _isEnabled;
-        set => SetProperty(ref _isEnabled, value);
-    }
 }

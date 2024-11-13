@@ -64,7 +64,15 @@ public class SettingsService : ISettingsService
         T defaultValue)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
-        AddSetting(category, subCategory, key, new TitledSetting(title, description, defaultValue));
+        switch (defaultValue)
+        {
+            case bool b:
+                AddSetting(category, subCategory, key, new CheckBoxSetting(title, description, b));
+                break;
+            default:
+                AddSetting(category, subCategory, key, new TextBoxSetting(title, description, defaultValue, null));
+                break;
+        }
     }
 
     public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,

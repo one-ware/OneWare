@@ -19,6 +19,7 @@ using OneWare.ErrorList;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;

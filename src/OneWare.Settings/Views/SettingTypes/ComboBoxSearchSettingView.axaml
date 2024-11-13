@@ -6,12 +6,13 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.ComboBoxSearchSettingView"
-             x:DataType="settingTypes:ComboBoxSearchSettingViewModel">
+             x:DataType="settingTypes:ComboBoxSearchSettingViewModel"
+             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
     <StackPanel Orientation="Vertical" Spacing="2">
         <TextBlock Text="{Binding Setting.Title}"
                    ToolTip.Tip="{Binding Setting.Description}" />
         <controls:SearchComboBox ItemsSource="{Binding Setting.Options}"
-                                 IsEnabled="{Binding IsEnabled}" 
+                                 IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" 
                   SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>
