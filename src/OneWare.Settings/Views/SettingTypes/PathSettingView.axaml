@@ -3,16 +3,31 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.PathSettingView"
-             x:DataType="settingTypes:PathSettingViewModel">
+             x:DataType="settingTypes:PathSettingViewModel"
+             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
     <StackPanel Orientation="Vertical" Spacing="2">
-        <TextBlock Text="{Binding Setting.Title}"
-                   ToolTip.Tip="{Binding Setting.Description}" />
+        <StackPanel Spacing="3" Orientation="Horizontal">
+            <TextBlock Text="{Binding Setting.Title}"
+                       ToolTip.Tip="{Binding Setting.HoverDescription}" />
+            <Button Padding="0" VerticalAlignment="Center"
+                    IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                       VerticalAlignment="Center" />
+                <Button.Flyout>
+                    <Flyout>
+                        <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                     MaxWidth="900" MaxHeight="500" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
         <Border Classes="RoundToolBar" BorderBrush="Gray">
             <DockPanel>
 
-                <Button IsEnabled="{Binding IsEnabled}"  DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
+                <Button IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
                     <Image Height="16" Width="16" VerticalAlignment="Center"
                            Source="{DynamicResource VsImageLib.FolderOpen16X}" />
                 </Button>
@@ -26,7 +41,7 @@
                            Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
                 </Grid>
 
-                <TextBox IsEnabled="{Binding IsEnabled}"  DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
+                <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
             </DockPanel>
         </Border>
     </StackPanel>

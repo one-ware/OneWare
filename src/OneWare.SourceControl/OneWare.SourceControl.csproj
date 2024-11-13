@@ -10,6 +10,6 @@
     <ItemGroup>
         <PackageReference Include="DiffPlex" Version="1.7.2"/>
         <PackageReference Include="LibGit2Sharp" Version="0.30.0"/>
-        <PackageReference Include="Devlooped.CredentialManager" Version="2.5.0.1"/>
+        <PackageReference Include="Devlooped.CredentialManager" Version="2.6.0" />
     </ItemGroup>
 </Project>

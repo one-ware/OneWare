@@ -38,54 +38,10 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
             foreach (var subCategory in category.Value.SettingSubCategories.OrderBy(x => x.Value.Priority))
             {
-                var subCategoryModel = new SettingsCollectionViewModel(subCategory.Key, subCategory.Value.IconKey);
-
-                foreach (var setting in subCategory.Value.Settings)
-                    switch (setting)
-                    {
-                        case ComboBoxSearchSetting csS:
-                            subCategoryModel.SettingModels.Add(new ComboBoxSearchSettingViewModel(csS));
-                            break;
-                        case ComboBoxSetting cS:
-                            subCategoryModel.SettingModels.Add(new ComboBoxSettingViewModel(cS));
-                            break;
-                        case SliderSetting ss:
-                            subCategoryModel.SettingModels.Add(new SliderSettingViewModel(ss));
-                            break;
-                        case FolderPathSetting pS:
-                            subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
-                            break;
-                        case FilePathSetting pS:
-                            subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
-                            break;
-                        case PathSetting pS:
-                            subCategoryModel.SettingModels.Add(new PathSettingViewModel(pS));
-                            break;
-                        case CustomSetting cS:
-                            subCategoryModel.SettingModels.Add(new CustomSettingViewModel(cS));
-                            break;
-                        case ListBoxSetting lS:
-                            subCategoryModel.SettingModels.Add(new ListBoxSettingViewModel(lS));
-                            break;
-                        case TitledSetting tS:
-                            switch (setting.Value)
-                            {
-                                case bool:
-                                    subCategoryModel.SettingModels.Add(new CheckBoxSettingViewModel(tS));
-                                    break;
-                                case string:
-                                case int:
-                                case float:
-                                case double:
-                                    subCategoryModel.SettingModels.Add(new TextBoxSettingViewModel(tS));
-                                    break;
-                                case Color:
-                                    subCategoryModel.SettingModels.Add(new ColorPickerSettingViewModel(tS));
-                                    break;
-                            }
-
-                            break;
-                    }
+                var subCategoryModel = new SettingsCollectionViewModel(subCategory.Key, subCategory.Value.IconKey)
+                {
+                    SettingModels = { subCategory.Value.Settings }
+                };
 
                 pageModel.SettingCollections.Add(subCategoryModel);
             }

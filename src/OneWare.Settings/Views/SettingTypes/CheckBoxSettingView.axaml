@@ -3,15 +3,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
-             x:DataType="settingTypes:CheckBoxSettingViewModel">
+             x:DataType="settingTypes:CheckBoxSettingViewModel"
+             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
     <Border Padding="0 3">
         <StackPanel Orientation="Horizontal" Spacing="3">
             <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
-                      IsEnabled="{Binding IsEnabled}" />
-            <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
-                       ToolTip.Tip="{Binding Setting.Description}" />
+                      IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
+            <StackPanel Spacing="3" Orientation="Horizontal">
+                <TextBlock Text="{Binding Setting.Title}"
+                           ToolTip.Tip="{Binding Setting.HoverDescription}" />
+                <Button Padding="0" VerticalAlignment="Center"
+                        IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                           VerticalAlignment="Center" />
+                    <Button.Flyout>
+                        <Flyout>
+                            <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                         MaxWidth="900" MaxHeight="500" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
         </StackPanel>
     </Border>
 </UserControl>

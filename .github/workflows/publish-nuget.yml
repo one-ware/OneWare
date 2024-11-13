@@ -27,7 +27,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
       
       # Create the NuGet packages in the folder from the environment variable NuGetDirectory
       - run: dotnet pack ./src/OneWare.Essentials/OneWare.Essentials.csproj --configuration Release --output ${{ env.NuGetDirectory }}

@@ -3,14 +3,29 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.ComboBoxSettingView"
-             x:DataType="settingTypes:ComboBoxSettingViewModel">
+             x:DataType="settingTypes:ComboBoxSettingViewModel"
+             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
     <StackPanel Orientation="Vertical" Spacing="2">
-        <TextBlock Text="{Binding Setting.Title}"
-                   ToolTip.Tip="{Binding Setting.Description}" />
+        <StackPanel Spacing="3" Orientation="Horizontal">
+            <TextBlock Text="{Binding Setting.Title}"
+                       ToolTip.Tip="{Binding Setting.HoverDescription}" />
+            <Button Padding="0" VerticalAlignment="Center"
+                    IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                       VerticalAlignment="Center" />
+                <Button.Flyout>
+                    <Flyout>
+                        <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                     MaxWidth="900" MaxHeight="500" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
         <ComboBox ItemsSource="{Binding Setting.Options}"
-                  IsEnabled="{Binding IsEnabled}" 
+                  IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                   SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>

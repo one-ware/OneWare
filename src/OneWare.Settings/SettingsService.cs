@@ -46,6 +46,11 @@ public class SettingsService : ISettingsService
         AddSetting(key, new Setting(defaultValue));
     }
 
+    public void RegisterSetting(string category, string subCategory, string key, TitledSetting setting)
+    {
+        AddSetting(category, subCategory, key, setting);
+    }
+
     public IObservable<T> Bind<T>(string key, IObservable<T> observable)
     {
         if (!_settings.TryGetValue(key, out var setting))
@@ -59,14 +64,31 @@ public class SettingsService : ISettingsService
         T defaultValue)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
-        AddSetting(category, subCategory, key, new TitledSetting(title, description, defaultValue));
+        switch (defaultValue)
+        {
+            case bool b:
+                AddSetting(category, subCategory, key, new CheckBoxSetting(title, b)
+                {
+                    HoverDescription = description
+                });
+                break;
+            default:
+                AddSetting(category, subCategory, key, new TextBoxSetting(title, defaultValue, null)
+                {
+                    HoverDescription = description
+                });
+                break;
+        }
     }
 
     public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
     {
         AddSetting(category, subCategory, key,
-            new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
+            new FolderPathSetting(title, defaultValue, watermark, startDir, validate)
+            {
+                HoverDescription = description
+            });
     }
 
     public void RegisterTitledFolderPath(string category, string subCategory, string key, string title,
@@ -74,7 +96,10 @@ public class SettingsService : ISettingsService
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
     {
         AddSetting(category, subCategory, key,
-            new FolderPathSetting(title, description, defaultValue, watermark, startDir, validate));
+            new FolderPathSetting(title, defaultValue, watermark, startDir, validate)
+            {
+                HoverDescription = description
+            });
     }
 
     public void RegisterTitledFilePath(string category, string subCategory, string key, string title,
@@ -83,7 +108,10 @@ public class SettingsService : ISettingsService
         params FilePickerFileType[] filters)
     {
         AddSetting(category, subCategory, key,
-            new FilePathSetting(title, description, defaultValue, watermark, startDir, validate, filters));
+            new FilePathSetting(title, defaultValue, watermark, startDir, validate, filters)
+            {
+                HoverDescription = description
+            });
     }
 
     public void RegisterTitledSlider(string category, string subCategory, string key, string title,
@@ -97,7 +125,10 @@ public class SettingsService : ISettingsService
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ComboBoxSetting(title, description, defaultValue, options.Cast<object>()));
+            new ComboBoxSetting(title, defaultValue, options.Cast<object>())
+            {
+                HoverDescription = description
+            });
     }
 
     public void RegisterTitledComboSearch<T>(string category, string subCategory, string key, string title,
@@ -105,15 +136,21 @@ public class SettingsService : ISettingsService
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ComboBoxSearchSetting(title, description, defaultValue, options.Cast<object>()));
+            new ComboBoxSearchSetting(title, defaultValue, options.Cast<object>())
+            {
+                HoverDescription = description
+            });
     }
-    
+
     public void RegisterTitledListBox(string category, string subCategory, string key, string title,
         string description, params string[] defaultValue)
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ListBoxSetting(title, description, defaultValue));
+            new ListBoxSetting(title, defaultValue)
+            {
+                HoverDescription = description
+            });
     }
 
     public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting)
