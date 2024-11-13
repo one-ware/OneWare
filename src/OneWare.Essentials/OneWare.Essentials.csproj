@@ -20,6 +20,7 @@
     <Import Project="..\..\build\props\Jint.props"/>
     <Import Project="..\..\build\props\CommunityToolkit.Mvvm.props"/>
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>
+    <Import Project="..\..\build\props\Markdown.Avalonia.props"/>
 
     <PropertyGroup>
         <Description>Essentials Needed for One Ware Plugin Development</Description>

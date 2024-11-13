@@ -42,9 +42,12 @@ public class PluginCompatibilityChecker
                 var dependencyName = parts[0].Trim();
                 var versionString = parts[1].Trim();
                 var dependencyVersion = Version.Parse(NormalizeVersion(versionString));
-            
-                var coreDep = AppDomain.CurrentDomain.GetAssemblies()
-                    .SingleOrDefault(x => x.GetName().Name == dependencyName)?.GetName();
+
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+                var test = assemblies.SingleOrDefault(x => x.GetName().Name == "Markdown.Avalonia");
+                
+                var coreDep = assemblies.SingleOrDefault(x => x.GetName().Name == dependencyName)?.GetName();
 
                 if (coreDep == null)
                 {
