@@ -5,7 +5,7 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public class SliderSettingViewModel : TitledSettingViewModel
 {
-    public SliderSettingViewModel(SliderSetting setting, IObservable<bool>? needEnabled = null) : base(setting, needEnabled)
+    public SliderSettingViewModel(SliderSetting setting, IObservable<bool>? needEnabled = null) : base(setting)
     {
         Setting = setting;
         

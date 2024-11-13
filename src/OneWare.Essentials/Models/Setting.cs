@@ -41,8 +41,12 @@ public class TitledSetting : Setting
     }
 
     public string Title { get; }
-
+    
     public string Description { get; }
+    
+    public IObservable<bool>? IsEnabledObservable { get; init; }
+    
+    public IObservable<bool>? IsVisibleObservable { get; init; }
 }
 
 public class TextBoxSetting : TitledSetting

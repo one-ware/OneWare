@@ -6,15 +6,9 @@ public abstract class TitledSettingViewModel : SettingViewModel
 {
     private bool _isEnabled = true;
 
-    protected TitledSettingViewModel(TitledSetting setting, IObservable<bool>? needEnabled)
+    protected TitledSettingViewModel(TitledSetting setting)
     {
         Setting = setting;
-        
-        needEnabled?.Subscribe(x =>
-        {
-            IsEnabled = x;
-            if (!x) setting.Value = false;
-        });
     }
 
     public override TitledSetting Setting { get; }

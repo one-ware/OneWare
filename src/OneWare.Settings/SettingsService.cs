@@ -45,6 +45,11 @@ public class SettingsService : ISettingsService
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(key, new Setting(defaultValue));
     }
+    
+    public void RegisterSetting(string category, string subCategory, string key, TitledSetting setting)
+    {
+        AddSetting(category, subCategory, key, setting);
+    }
 
     public IObservable<T> Bind<T>(string key, IObservable<T> observable)
     {
