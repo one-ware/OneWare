@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;
@@ -36,6 +37,14 @@ public class PackageManagerModule : IModule
         ContainerLocator.Container.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");
         
         ContainerLocator.Container.Resolve<ISettingsService>()
-            .RegisterTitledListBox("Package Manager", "Sources", "PackageManager_Sources", "Custom Package Sources", "Manage the sources to look for packages");
+            .RegisterSetting("Package Manager", "Sources", "PackageManager_Sources",  new ListBoxSetting("Custom Package Sources", [])
+            {
+                MarkdownDocumentation = """
+                                        Add custom package sources to the package manager. These sources will be used to search for and install packages.
+                                        You can add either:
+                                        - A Package Repository
+                                        - A Direct link to a package manifest
+                                        """,
+            });
     }
 }

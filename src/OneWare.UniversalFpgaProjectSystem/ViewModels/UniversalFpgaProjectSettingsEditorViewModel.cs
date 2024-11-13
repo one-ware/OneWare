@@ -47,19 +47,19 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains.Select(toolchain => toolchain.Name);
         var currentToolchain = _root.Properties["Toolchain"]!.ToString();
-        _toolchain = new ComboBoxSetting("Toolchain", "test", currentToolchain, toolchains);
+        _toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
         
         var loader = ContainerLocator.Container.Resolve<FpgaService>().Loaders.Select(loader => loader.Name);
         var currentLoader = _root.Properties["Loader"]!.ToString();
-        _loader = new ComboBoxSetting("Loader", "test", currentLoader, loader);
+        _loader = new ComboBoxSetting("Loader", currentLoader, loader);
 
-        _includesSettings = new ListBoxSetting("Files to Include", "test", includes);
-        _excludesSettings = new ListBoxSetting("Files to Exclude", "test", exclude);
-        
-        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_toolchain) );
-        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_loader) );
-        SettingsCollection.SettingModels.Add(new ListBoxSettingViewModel(_includesSettings) );
-        SettingsCollection.SettingModels.Add(new ListBoxSettingViewModel(_excludesSettings) );
+        _includesSettings = new ListBoxSetting("Files to Include", includes);
+        _excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
+
+        SettingsCollection.SettingModels.Add(_toolchain);
+        SettingsCollection.SettingModels.Add(_loader);
+        SettingsCollection.SettingModels.Add(_includesSettings);
+        SettingsCollection.SettingModels.Add(_excludesSettings);
     }
 
     private async Task SaveAsync()

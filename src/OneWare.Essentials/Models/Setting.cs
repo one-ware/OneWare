@@ -35,15 +35,16 @@ public class Setting : ObservableObject
 
 public abstract class TitledSetting : Setting
 {
-    public TitledSetting(string title, string description, object defaultValue) : base(defaultValue)
+    public TitledSetting(string title, object defaultValue) : base(defaultValue)
     {
         Title = title;
-        Description = description;
     }
 
     public string Title { get; }
     
-    public string Description { get; }
+    public string? HoverDescription { get; init; }
+    
+    public string? MarkdownDocumentation { get; init; }
     
     public IObservable<bool>? IsEnabledObservable { get; init; }
     
@@ -52,15 +53,14 @@ public abstract class TitledSetting : Setting
 
 public class CheckBoxSetting : TitledSetting
 {
-    public CheckBoxSetting(string title, string description, bool defaultValue) : base(title, description, defaultValue)
+    public CheckBoxSetting(string title, bool defaultValue) : base(title, defaultValue)
     {
     }
 }
 
 public class TextBoxSetting : TitledSetting
 {
-    public TextBoxSetting(string title, string description, object defaultValue, string? watermark) : base(title,
-        description, defaultValue)
+    public TextBoxSetting(string title, object defaultValue, string? watermark) : base(title, defaultValue)
     {
         Watermark = watermark;
     }
@@ -70,8 +70,7 @@ public class TextBoxSetting : TitledSetting
 
 public class ComboBoxSetting : TitledSetting
 {
-    public ComboBoxSetting(string title, string description, object defaultValue, IEnumerable<object> options) : base(
-        title, description, defaultValue)
+    public ComboBoxSetting(string title, object defaultValue, IEnumerable<object> options) : base(title, defaultValue)
     {
         Options = options.ToArray();
     }
@@ -81,8 +80,7 @@ public class ComboBoxSetting : TitledSetting
 
 public class ListBoxSetting : TitledSetting
 {
-    public ListBoxSetting(string title, string description, params string[] defaultValue) : base(
-        title, description, new ObservableCollection<string>(defaultValue))
+    public ListBoxSetting(string title, params string[] defaultValue) : base(title, new ObservableCollection<string>(defaultValue))
     {
     }
 
@@ -93,13 +91,13 @@ public class ListBoxSetting : TitledSetting
     }
 }
 
-public class ComboBoxSearchSetting(string title, string description, object defaultValue, IEnumerable<object> options)
-    : ComboBoxSetting(title, description, defaultValue, options);
+public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerable<object> options)
+    : ComboBoxSetting(title, defaultValue, options);
 
 public class SliderSetting : TitledSetting
 {
     public SliderSetting(string title, string description, double defaultValue, double min, double max, double step) : base(
-        title, description, defaultValue)
+        title, defaultValue)
     {
         Min = min;
         Max = max;
@@ -117,8 +115,8 @@ public abstract class PathSetting : TextBoxSetting
 {
     private bool _isValid = true;
 
-    protected PathSetting(string title, string description, object defaultValue, string? watermark,
-        string? startDirectory, Func<string, bool>? checkPath) : base(title, description, defaultValue, watermark)
+    protected PathSetting(string title, string defaultValue, string? watermark,
+        string? startDirectory, Func<string, bool>? checkPath) : base(title, defaultValue, watermark)
     {
         StartDirectory = startDirectory;
 
@@ -143,9 +141,9 @@ public abstract class PathSetting : TextBoxSetting
 
 public class FolderPathSetting : PathSetting
 {
-    public FolderPathSetting(string title, string description, object defaultValue, string? watermark,
+    public FolderPathSetting(string title, string defaultValue, string? watermark,
         string? startDirectory, Func<string, bool>? checkPath)
-        : base(title, description, defaultValue, watermark, startDirectory, checkPath)
+        : base(title, defaultValue, watermark, startDirectory, checkPath)
     {
     }
 
@@ -158,9 +156,9 @@ public class FolderPathSetting : PathSetting
 
 public class FilePathSetting : PathSetting
 {
-    public FilePathSetting(string title, string description, object defaultValue, string? watermark,
+    public FilePathSetting(string title, string defaultValue, string? watermark,
         string? startDirectory, Func<string, bool>? checkPath, params FilePickerFileType[] filters)
-        : base(title, description, defaultValue, watermark, startDirectory, checkPath)
+        : base(title, defaultValue, watermark, startDirectory, checkPath)
     {
         Filters = filters;
     }
@@ -176,7 +174,7 @@ public class FilePathSetting : PathSetting
 
 public class ColorSetting : TitledSetting
 {
-    public ColorSetting(string title, string description, Color defaultValue) : base(title, description, defaultValue)
+    public ColorSetting(string title, Color defaultValue) : base(title, defaultValue)
     {
         
     }    

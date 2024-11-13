@@ -30,16 +30,22 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         var defaultProperties = fpga.Properties;
         _settings = FpgaSettingsParser.LoadSettings(projectRoot, fpga.Name);
 
-        _boardSetting = new TextBoxSetting("Board", "OpenFPGALoader Board",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "", null);
+        _boardSetting = new TextBoxSetting("Board", defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "", null)
+        {
+            HoverDescription = "OpenFPGALoader Board"
+        };
 
         _shortTermFlagsSetting = new TextBoxSetting("Short Term Arguments",
-            "OpenFPGALoader Flags for Short Term Programming",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "", null);
+            defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "", null)
+        {
+            HoverDescription = "OpenFPGALoader Flags for Short Term Programming"
+        };
 
         _longTermFlagsSetting = new TextBoxSetting("Long Term Arguments",
-            "OpenFPGALoader Flags for Long Term Programming",
-            defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "", null);
+            defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "", null)
+        {
+            HoverDescription = "OpenFPGALoader Flags for Long Term Programming",
+        };
 
         if (_settings.TryGetValue("openFpgaLoaderBoard", out var oflBoard))
             _boardSetting.Value = oflBoard;
@@ -50,9 +56,9 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         if (_settings.TryGetValue("openFpgaLoaderLongTermFlags", out var oflLFlags))
             _longTermFlagsSetting.Value = oflLFlags;
 
-        SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_boardSetting));
-        SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_shortTermFlagsSetting));
-        SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_longTermFlagsSetting));
+        SettingsCollection.SettingModels.Add(_boardSetting);
+        SettingsCollection.SettingModels.Add(_shortTermFlagsSetting);
+        SettingsCollection.SettingModels.Add(_longTermFlagsSetting);
     }
 
     public SettingsCollectionViewModel SettingsCollection { get; } = new("OpenFPGALoader Settings")
@@ -73,6 +79,6 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
 
     public void Reset()
     {
-        foreach (var setting in SettingsCollection.SettingModels) setting.Setting.Value = setting.Setting.DefaultValue;
+        foreach (var setting in SettingsCollection.SettingModels) setting.Value = setting.DefaultValue;
     }
 }

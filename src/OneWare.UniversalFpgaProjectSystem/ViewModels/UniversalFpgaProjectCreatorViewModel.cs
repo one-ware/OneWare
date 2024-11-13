@@ -34,35 +34,50 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _manager = manager;
         Paths = paths;
 
-        _nameSetting = new TextBoxSetting("Name", "Set the name for the project", "", "Enter name...");
+        _nameSetting = new TextBoxSetting("Name", "", "Enter name...")
+        {
+            HoverDescription = "Set the name for the project"
+        };
 
-        _templateSetting = new ComboBoxSearchSetting("Template", "Set the template used for this project", "Empty",
-            new[] { "Empty" }.Concat(fpgaService.Templates.Select(x => x.Name)));
+        _templateSetting = new ComboBoxSearchSetting("Template", "Empty",
+            new[] { "Empty" }.Concat(fpgaService.Templates.Select(x => x.Name)))
+        {
+            HoverDescription = "Set the template used for this project"
+        };
 
-        _folderPathSetting = new FolderPathSetting("Location", "Set the location where the new project is created",
-            paths.ProjectsDirectory, "Enter path...", paths.ProjectsDirectory, Directory.Exists);
+        _folderPathSetting = new FolderPathSetting("Location",
+            paths.ProjectsDirectory, "Enter path...", paths.ProjectsDirectory, Directory.Exists)
+        {
+            HoverDescription = "Set the location where the new project is created"
+        };
 
-        _createNewFolderSetting = new CheckBoxSetting("Create new Folder",
-            "Set if a new folder should be created in the selected location", true);
+        _createNewFolderSetting = new CheckBoxSetting("Create new Folder", true)
+        {
+            HoverDescription = "Set if a new folder should be created in the selected location"
+        };
 
         _toolchainSetting = new ComboBoxSetting("Toolchain",
-            "Set the toolchain to use for the project (can be changed later)",
             fpgaService.Toolchains.FirstOrDefault()?.Name ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Toolchains
-                .Select(x => x.Name)));
+                .Select(x => x.Name)))
+        {
+            HoverDescription = "Set the toolchain to use for the project (can be changed later)"
+        };
 
         _loaderSetting = new ComboBoxSetting("Loader",
-            "Set the loader to use for the project (can be changed later)",
             fpgaService.Loaders.FirstOrDefault()?.Name ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Loaders
-                .Select(x => x.Name)));
+                .Select(x => x.Name)))
+        {
+            HoverDescription = "Set the loader to use for the project (can be changed later)"
+        };
 
-        SettingsCollection.SettingModels.Add(new TextBoxSettingViewModel(_nameSetting));
-        SettingsCollection.SettingModels.Add(new ComboBoxSearchSettingViewModel(_templateSetting));
-        SettingsCollection.SettingModels.Add(new PathSettingViewModel(_folderPathSetting));
-        SettingsCollection.SettingModels.Add(new CheckBoxSettingViewModel(_createNewFolderSetting));
-        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_toolchainSetting));
-        SettingsCollection.SettingModels.Add(new ComboBoxSettingViewModel(_loaderSetting));
+        SettingsCollection.SettingModels.Add(_nameSetting);
+        SettingsCollection.SettingModels.Add(_templateSetting);
+        SettingsCollection.SettingModels.Add(_folderPathSetting);
+        SettingsCollection.SettingModels.Add(_createNewFolderSetting);
+        SettingsCollection.SettingModels.Add(_toolchainSetting);
+        SettingsCollection.SettingModels.Add(_loaderSetting);
     }
 
     public IPaths Paths { get; }
@@ -106,19 +121,20 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
                 ["Exclude"] = new JsonArray("build")
             };
             var root = new UniversalFpgaProjectRoot(projectFile, defaultProperties);
-            
+
             if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
                 root.Loader = loader;
-            
-            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc) {
+
+            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc)
+            {
                 root.Toolchain = tc;
-                tc.OnProjectCreated(root);    
+                tc.OnProjectCreated(root);
             }
-            
+
             await _manager.SaveProjectAsync(root);
-            
+
             _projectExplorerService.Insert(root);
-            
+
             _projectExplorerService.ActiveProject = root;
 
             if (_fpgaService.Templates.FirstOrDefault(x => x.Name == _templateSetting.Value.ToString()) is { } template)

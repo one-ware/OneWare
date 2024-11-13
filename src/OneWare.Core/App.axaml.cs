@@ -130,30 +130,29 @@ public class App : PrismApplication
         settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
+        
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily", 
+            new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL", ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
+        
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize", 
+            new ComboBoxSetting("Font Size", 15,Enumerable.Range(10, 30).Cast<object>()));
 
-        settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontFamily", "Font",
-            "Editor Font Family",
-            "JetBrains Mono NL",
-            "JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code");
-
-        settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_FontSize", "Font Size",
-            "Editor Font Size", 15, Enumerable.Range(10, 30).ToArray());
-
-        settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Dark", "Editor Theme Dark",
-            "Setts the theme for Syntax Highlighting in Dark Mode", ThemeName.DarkPlus,
-            Enum.GetValues<ThemeName>());
-
-        settingsService.RegisterTitledCombo("Editor", "Appearance", "Editor_SyntaxTheme_Light",
-            "Editor Theme Light",
-            "Setts the theme for Syntax Highlighting in Light Mode", ThemeName.LightPlus,
-            Enum.GetValues<ThemeName>());
-
-        //settingsService.RegisterTitled("Editor", "Appearance", "Editor_ErrorMarking_Mode", "Error Marking mode"); dfdf 
-
-        settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoFormatting", "Use Auto Formatting",
-            "Use Auto Formatting in Editor", true);
-        settingsService.RegisterTitled("Editor", "Formatting", "Editor_UseAutoBracket", "Use Auto Bracket",
-            "Use Auto Bracket in Editor", true);
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark", 
+            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus,Enum.GetValues<ThemeName>().Cast<object>())
+            {
+                HoverDescription = "Sets the theme for Syntax Highlighting in Dark Mode"
+            });
+        
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light", 
+            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus,Enum.GetValues<ThemeName>().Cast<object>())
+            {
+                HoverDescription = "Sets the theme for Syntax Highlighting in Light Mode"
+            });
+        
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoFormatting",
+            new CheckBoxSetting("Use Auto Formatting", true));
+        
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket", new CheckBoxSetting("Use Auto Bracket", true));
 
         settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding",
             "Use Folding in Editor", true);
@@ -257,11 +256,19 @@ public class App : PrismApplication
         var applicationCommandService = Container.Resolve<IApplicationCommandService>();
 
         applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active light theme",
-            () => settingsService.SetSettingValue("General_SelectedTheme", "Light"),
+            () =>
+            {
+                settingsService.SetSettingValue("General_SelectedTheme", "Light");
+                settingsService.Save(paths.SettingsPath);
+            },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Light"));
         
         applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active dark theme",
-            () => settingsService.SetSettingValue("General_SelectedTheme", "Dark"),
+            () =>
+            {
+                settingsService.SetSettingValue("General_SelectedTheme", "Dark");
+                settingsService.Save(paths.SettingsPath);
+            },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
         
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",

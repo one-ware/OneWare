@@ -3,6 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             xmlns:settingTypes="clr-namespace:OneWare.Settings.Views.SettingTypes"
+             xmlns:settingTypes1="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingsCollectionView"
              x:DataType="viewModels:SettingsCollectionViewModel">
@@ -16,7 +19,7 @@
                     Height="1" VerticalAlignment="Center" />
         </DockPanel>
 
-        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding SettingModels}" Background="Transparent"
+        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding SettingViewModels}" Background="Transparent"
                       Padding="0">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
