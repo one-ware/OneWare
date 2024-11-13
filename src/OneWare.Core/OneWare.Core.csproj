@@ -5,6 +5,7 @@
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
     <Import Project="..\..\build\props\SharpCompress.props"/>
+    <Import Project="..\..\build\props\Markdown.Avalonia.props"/>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**\*.*"/>

@@ -43,6 +43,9 @@ public class PluginCompatibilityChecker
                 var versionString = parts[1].Trim();
                 var dependencyVersion = Version.Parse(NormalizeVersion(versionString));
 
+                if(dependencyName is "OneWare.Markdown.Avalonia.Tight") dependencyName = "Markdown.Avalonia";
+                if(dependencyName is "OneWare.Markdown.Avalonia.SyntaxHigh") dependencyName = "Markdown.Avalonia.SyntaxHigh";
+                
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
                 var test = assemblies.SingleOrDefault(x => x.GetName().Name == "Markdown.Avalonia");
