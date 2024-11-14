@@ -11,7 +11,7 @@ rm -rf source
 mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir "OneWare Studio.app/Contents/MacOS"
-dotnet publish -c Release -f net8.0 -r osx-arm64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o "source/OneWare Studio.app/Contents/MacOS"
+dotnet publish -c Release -f net9.0 -r osx-arm64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o "source/OneWare Studio.app/Contents/MacOS"
 
 PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
@@ -31,7 +31,7 @@ rm -rf source
 mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir "OneWare Studio.app/Contents/MacOS"
-dotnet publish -c Release -f net8.0 -r osx-x64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o "source/OneWare Studio.app/Contents/MacOS"
+dotnet publish -c Release -f net9.0 -r osx-x64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -o "source/OneWare Studio.app/Contents/MacOS"
 
 PACKAGENAME="publish/OneWareStudio-x64.dmg"
 

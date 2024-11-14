@@ -24,7 +24,7 @@ parts:
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
       cd studio/OneWare.Studio.Desktop
-      dotnet publish -f net8.0 -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
+      dotnet publish -f net9.0 -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
       chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
       chmod +x $SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper
 
