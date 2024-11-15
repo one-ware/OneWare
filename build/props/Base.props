@@ -4,7 +4,7 @@
         <StudioVersion>0.21.0.0</StudioVersion>
         <CoreVersion>0.31.2.0</CoreVersion>
         <UniversalFpgaProjectSystemVersion>0.41.2.0</UniversalFpgaProjectSystemVersion>
-        <EssentialsVersion>0.11.2.0</EssentialsVersion>
+        <EssentialsVersion>0.11.2.1</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Company>One Ware</Company>
