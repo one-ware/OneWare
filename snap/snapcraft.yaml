@@ -19,7 +19,7 @@ parts:
     source: .
     parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
     build-packages: 
-      - dotnet-sdk-8.0
+      - dotnet-sdk-9.0
     override-build: |
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
