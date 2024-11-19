@@ -18,17 +18,6 @@
         <SelfContained>true</SelfContained>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
-    
-    <!--Not working in NET7 / Avalonia 11-->
-    <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAOT'">
-        <TrimMode>partial</TrimMode>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <PublishAot>True</PublishAot>
-        <TrimmerSingleWarn>false</TrimmerSingleWarn>
-        <DebugSymbols>False</DebugSymbols>
-        <DebugType>None</DebugType>
-        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
-    </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj"/>
