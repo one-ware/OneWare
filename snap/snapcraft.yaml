@@ -12,20 +12,24 @@ apps:
     command: ./OneWareStudio
     common-id: com.one_ware.OneWare
     desktop: ./com.one_ware.OneWare.desktop
-    
+
 parts:
   oneware:
     plugin: dump
     source: .
     parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
+    build-packages:
+      - libicu74
     override-build: |
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
       curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
       chmod +x ./dotnet-install.sh
-      ./dotnet-install.sh --version latest
+      ./dotnet-install.sh --channel 9.0
       export DOTNET_ROOT=$HOME/.dotnet
       export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+      export DOTNET_NOLOGO=1
+      export DOTNET_CLI_TELEMETRY_OPTOUT=1
       cd studio/OneWare.Studio.Desktop
       dotnet publish -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
       chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
