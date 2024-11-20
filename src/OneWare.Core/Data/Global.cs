@@ -6,5 +6,7 @@ namespace OneWare.Core.Data;
 
 public static class Global
 {
-    public static string VersionCode => Assembly.GetEntryAssembly()!.GetName().Version?.ToString() ?? "";
+    public static Version Version => Assembly.GetEntryAssembly()!.GetName().Version!;
+    
+    public static string VersionCode => Version.ToString() ?? "";
 }

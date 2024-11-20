@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -114,16 +115,19 @@ public class PackageViewModel : ObservableObject
     public AsyncRelayCommand InstallCommand { get; }
 
     public AsyncRelayCommand UpdateCommand { get; }
-    
+
     private void InitPackage()
     {
         Links.Clear();
         if (PackageModel.Package.Links != null)
             Links.AddRange(PackageModel.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
-        
+
         PackageVersionModels.Clear();
-        if(PackageModel.Package.Versions != null) 
-            PackageVersionModels.AddRange(PackageModel.Package.Versions.Select(x => new PackageVersionModel(x)));
+        if (PackageModel.Package.Versions != null)
+            PackageVersionModels.AddRange(PackageModel.Package.Versions
+                .Where(x => x.MinStudioVersion == null || Version.TryParse(x.MinStudioVersion, out var minVersion) 
+                    && Assembly.GetEntryAssembly()!.GetName().Version > minVersion)
+                .Select(x => new PackageVersionModel(x)));
         SelectedVersionModel = PackageVersionModels.LastOrDefault();
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
