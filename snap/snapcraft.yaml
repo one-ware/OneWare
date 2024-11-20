@@ -21,7 +21,7 @@ parts:
     override-build: |
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-      wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+      curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
       chmod +x ./dotnet-install.sh
       ./dotnet-install.sh --version latest
       export DOTNET_ROOT=$HOME/.dotnet
