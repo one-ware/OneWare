@@ -64,7 +64,7 @@
                     <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                            Height="12" VerticalAlignment="Center"
                            ToolTip.Tip="{Binding PackageModel.InstalledVersionWarningText}" />
-                    <TextBlock VerticalAlignment="Center" Foreground="Yellow" Text="Installed version incompatible!" />
+                    <TextBlock VerticalAlignment="Center" Foreground="DarkOrange" Text="Installed version incompatible!" />
                 </StackPanel>
             </StackPanel>
 
