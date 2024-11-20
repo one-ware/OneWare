@@ -1,5 +1,5 @@
 ﻿name: oneware
-base: core22
+base: core24
 
 confinement: classic
 
