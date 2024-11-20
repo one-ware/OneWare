@@ -18,13 +18,16 @@ parts:
     plugin: dump
     source: .
     parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
-    build-packages: 
-      - dotnet-sdk-9.0
     override-build: |
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+      wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+      chmod +x ./dotnet-install.sh
+      ./dotnet-install.sh --version latest
+      export DOTNET_ROOT=$HOME/.dotnet
+      export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
       cd studio/OneWare.Studio.Desktop
-      dotnet publish -f net9.0 -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
+      dotnet publish -r linux-x64 -c Release -o $SNAPCRAFT_PART_INSTALL
       chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
       chmod +x $SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper
 
