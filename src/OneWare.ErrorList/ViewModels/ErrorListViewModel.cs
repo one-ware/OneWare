@@ -196,9 +196,16 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     public void Clear(string source)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.Source == source));
+        var errors = _items.Where(x => x.Source == source).ToList();
+        var files = errors.Select(x => x.File).Distinct();
+        
+        ListEx.RemoveMany(_items, errors);
 
-        ErrorRefresh?.Invoke(this, null);
+        foreach (var file in files)
+        {
+            ErrorRefresh?.Invoke(this, file);
+        }
+        
         RefreshCountToggle();
     }
 
