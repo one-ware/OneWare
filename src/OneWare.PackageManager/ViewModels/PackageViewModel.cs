@@ -133,7 +133,7 @@ public class PackageViewModel : ObservableObject
                 .Select(x => new PackageVersionModel(x)));
         
         SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version.MinStudioVersion == null || Version.TryParse(x.Version.MinStudioVersion, out var minVersion) 
-            && Assembly.GetEntryAssembly()!.GetName().Version > minVersion);
+            && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion);
         
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
