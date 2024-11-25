@@ -125,10 +125,16 @@ public class PackageViewModel : ObservableObject
         PackageVersionModels.Clear();
         if (PackageModel.Package.Versions != null)
             PackageVersionModels.AddRange(PackageModel.Package.Versions
-                .Where(x => x.MinStudioVersion == null || Version.TryParse(x.MinStudioVersion, out var minVersion) 
-                    && Assembly.GetEntryAssembly()!.GetName().Version > minVersion)
+                .OrderByDescending(x =>
+                {
+                    if (Version.TryParse(x.Version, out var v)) return v;
+                    return new Version(int.MaxValue, 0);
+                })
                 .Select(x => new PackageVersionModel(x)));
-        SelectedVersionModel = PackageVersionModels.LastOrDefault();
+        
+        SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version.MinStudioVersion == null || Version.TryParse(x.Version.MinStudioVersion, out var minVersion) 
+            && Assembly.GetEntryAssembly()!.GetName().Version > minVersion);
+        
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
         UpdateStatus();
