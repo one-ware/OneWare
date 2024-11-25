@@ -92,6 +92,12 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             Path.GetFileNameWithoutExtension(vcdPath) + ".vcdconf");
     }
 
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
+        if (_isLiveExecution) Title = $"{Path.GetFileName(FullPath)} - LIVE";
+    }
+    
     protected override void UpdateCurrentFile(IFile? oldFile)
     {
         Refresh();
@@ -215,7 +221,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         IsLoading = false;
         CheckIsDirty();
 
-        await Task.Delay(50);
+        await Task.Delay(200);
         _isLiveExecution = false;
 
         return true;
@@ -226,7 +232,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         if (_vcdFile == null) return;
 
         Title = isLive ? $"{Path.GetFileName(FullPath)} - LIVE" : $"{Path.GetFileName(FullPath)} {progress}%";
-
+        
         if (_vcdFile.Definition.ChangeTimes.Count != 0)
         {
             if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > WaveFormViewer.Max)
