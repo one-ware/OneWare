@@ -242,6 +242,11 @@ public class DockService : Factory, IDockService
 
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
     {
+        if (IsDockablePinned(dockable))
+        {
+            UnpinDockable(dockable);
+        }
+        
         //Check if dockable already exists
         if (SearchView(dockable) is { } result)
         {
