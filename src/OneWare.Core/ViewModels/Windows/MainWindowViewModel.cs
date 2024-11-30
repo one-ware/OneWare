@@ -177,9 +177,9 @@ public class MainWindowViewModel : ObservableObject
         _applicationCommandService.ApplicationCommands.RemoveMany(removals);
     }
 
-    public void OpenSettings()
+    public Task OpenSettingsDialogAsync()
     {
-        _windowService.Show(new ApplicationSettingsView
+        return _windowService.ShowDialogAsync(new ApplicationSettingsView
         {
             DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
         });
