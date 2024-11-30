@@ -56,9 +56,10 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 | Package                             | Download                                                                            |
 |---|---|
 | OneWare.Essentials                  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Essentials)                 |
+| OneWare.Settings                    | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Settings)                   |
 | OneWare.UniversalFpgaProjectSystem  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.UniversalFpgaProjectSystem) |
-| OneWare.Settings                    |  ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Settings)                  |
-| OneWare.Templates                   |  ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Templates)                 |
+| OneWare.OssCadSuiteIntegration      | ![NuGet Version](https://img.shields.io/nuget/v/OssCadSuiteIntegration)             |
+| OneWare.Templates                   | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Templates)                  |
    
 ## Contributing
 
