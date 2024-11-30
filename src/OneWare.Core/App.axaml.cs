@@ -112,7 +112,7 @@ public class App : PrismApplication
                 new NativeMenuItem
                 {
                     Header = "Settings",
-                    Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                    Command = new AsyncRelayCommand(() => Container.Resolve<IWindowService>().ShowDialogAsync(
                         new ApplicationSettingsView
                         {
                             DataContext = Container.Resolve<ApplicationSettingsViewModel>()
@@ -216,7 +216,7 @@ public class App : PrismApplication
         {
             Header = "Settings",
             IconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
-            Command = new RelayCommand(() => windowService.Show(new ApplicationSettingsView
+            Command = new AsyncRelayCommand(() => windowService.ShowDialogAsync(new ApplicationSettingsView
             {
                 DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
             }))
