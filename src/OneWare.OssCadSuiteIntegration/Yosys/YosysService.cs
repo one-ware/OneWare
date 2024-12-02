@@ -126,6 +126,7 @@ public class YosysService(
         return status.success;
     }
 
+    [Obsolete (message: "Use CreateJsonNetListAsync instead")]
     public async Task CreateNetListJsonAsync(IProjectFile verilog)
     {
         await childProcessService.ExecuteShellAsync("yosys", [
@@ -133,5 +134,16 @@ public class YosysService(
                 $"{verilog.Header}.json", verilog.Header
             ],
             Path.GetDirectoryName(verilog.FullPath)!, "Create Netlist...");
+    }
+    
+    public async Task<bool> CreateJsonNetListAsync(IProjectFile verilog)
+    {
+        var result = await childProcessService.ExecuteShellAsync("yosys", [
+                "-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean", "-o",
+                $"{verilog.Header}.json", verilog.Header
+            ],
+            Path.GetDirectoryName(verilog.FullPath)!, "Create Netlist...");
+        
+        return result.success;
     }
 }
