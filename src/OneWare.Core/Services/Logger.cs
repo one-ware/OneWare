@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using OneWare.Core.Data;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -39,7 +40,24 @@ public class Logger : ILogger
             }
     }
 
-    public void Log(object message, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
+    public void Log(object message, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null)
+    {
+        Log(message, null, color, showOutput, outputBrush);
+    }
+
+    public void Warning(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
+        Window? dialogOwner = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Error(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
+        Window? dialogOwner = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Log(object message, IProjectRoot? project, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
     {
         var appRun = DateTime.Now - AppStart;
 #if DEBUG
@@ -56,11 +74,11 @@ public class Logger : ILogger
         WriteLogFile(message?.ToString() ?? "");
     }
 
-    public void Error(string message, Exception? exception = null, bool showOutput = true,
+    public void Error(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
         var output = message + (exception != null ? $"\n{exception}" : "");
-        Log(output, ConsoleColor.Red);
+        Log(output, project, ConsoleColor.Red);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
             Dispatcher.UIThread.Post(() =>
@@ -78,11 +96,11 @@ public class Logger : ILogger
             });
     }
 
-    public void Warning(string message, Exception? exception = null, bool showOutput = true,
+    public void Warning(string message, IProjectRoot? project, Exception? exception = null,   bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
         var output = message + (exception != null ? $"\n{exception}" : "");
-        Log(output, ConsoleColor.Yellow);
+        Log(output, project, ConsoleColor.Yellow);
 
         if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
         {
@@ -104,8 +122,7 @@ public class Logger : ILogger
             PlatformHelper.ChmodFile(LogFilePath);
 
             Log(
-                $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}",
-                ConsoleColor.Cyan);
+                $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
         }
         catch
         {

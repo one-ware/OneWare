@@ -3,7 +3,6 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
-using DynamicData;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
 
@@ -11,16 +10,16 @@ namespace OneWare.Output.Views;
 
 public abstract class OutputBaseView : UserControl
 {
-    private TextEditor? Output;
+    private TextEditor? _output;
 
     public OutputBaseView()
     {
-        this.WhenValueChanged(x => x.DataContext).Subscribe(x =>
+        this.WhenValueChanged(x => x.DataContext).Subscribe(xb =>
         {
-            Output = this.Find<TextEditor>("Output");
-            if (Output == null) return;
+            _output = this.Find<TextEditor>("Output");
+            if (_output == null) return;
 
-            Output.TextArea.TextView.LinkTextForegroundBrush =
+            _output.TextArea.TextView.LinkTextForegroundBrush =
                 new BrushConverter().ConvertFrom("#f5cd56") as IBrush ?? throw new NullReferenceException();
 
             var viewModel = DataContext as OutputBaseViewModel;
@@ -34,18 +33,18 @@ public abstract class OutputBaseView : UserControl
             }
 
             viewModel.OutputDocument.UndoStack.SizeLimit = 0;
-            Output.Document = viewModel.OutputDocument;
+            _output.Document = viewModel.OutputDocument;
 
             var stopScroll = false;
 
-            viewModel.WhenValueChanged(x => x.AutoScroll).Subscribe(x =>
+            viewModel.WhenValueChanged(xa => xa.AutoScroll).Subscribe(_ =>
             {
                 if (!IsEffectivelyVisible) return;
-                Output.CaretOffset = Output.Text.Length;
-                Output.TextArea.Caret.BringCaretToView(5);
+                _output.CaretOffset = _output.Text.Length;
+                _output.TextArea.Caret.BringCaretToView(5);
             });
 
-            viewModel.OutputDocument.WhenValueChanged(x => x.LineCount).Subscribe(x =>
+            viewModel.OutputDocument.WhenValueChanged(xa => xa.LineCount).Subscribe(x =>
             {
                 _ = Dispatcher.UIThread.InvokeAsync(() =>
                 {
@@ -53,35 +52,35 @@ public abstract class OutputBaseView : UserControl
 
                     if (viewModel is { AutoScroll: true } && !stopScroll)
                     {
-                        Output.CaretOffset = Output.Text.Length;
+                        _output.CaretOffset = _output.Text.Length;
                         if (IsEffectivelyVisible)
-                            Output.TextArea.Caret.BringCaretToView(5);
+                            _output.TextArea.Caret.BringCaretToView(5);
                     }
                 }, DispatcherPriority.Background);
             });
 
-            viewModel?.LineColors.ToObservableChangeSet().Subscribe(changes => UpdateLineColors(viewModel));
+            viewModel.LineContexts.ToObservableChangeSet().Subscribe(_ => UpdateLineColors(viewModel));
 
-            AddHandler(PointerMovedEvent, (o, i) =>
+            AddHandler(PointerMovedEvent, (_, i) =>
             {
-                if (i.GetCurrentPoint(null).Properties.IsLeftButtonPressed && Output.IsPointerOver)
+                if (i.GetCurrentPoint(null).Properties.IsLeftButtonPressed && _output.IsPointerOver)
                     stopScroll = true;
                 else
                     stopScroll = false;
             }, RoutingStrategies.Tunnel, true);
 
-            Output.CaretOffset = Output.Text.Length;
-            Output.TextArea.Caret.BringCaretToView(1);
+            _output.CaretOffset = _output.Text.Length;
+            _output.TextArea.Caret.BringCaretToView(1);
         });
     }
 
     protected void UpdateLineColors(OutputBaseViewModel evm)
     {
-        if (Output == null) throw new NullReferenceException(nameof(Output));
-        for(var i = 2; i < Output.TextArea.TextView.LineTransformers.Count; i++)
-            Output.TextArea.TextView.LineTransformers.RemoveAt(i);
-        for (var i = 0; i < evm.LineColors.Count; i++)
-            if (evm.LineColors[i] != null)
-                Output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1, evm.LineColors[i]));
+        if (_output == null) throw new NullReferenceException(nameof(_output));
+        for(var i = 2; i < _output.TextArea.TextView.LineTransformers.Count; i++)
+            _output.TextArea.TextView.LineTransformers.RemoveAt(i);
+        for (var i = 0; i < evm.LineContexts.Count; i++)
+            if (evm.LineContexts[i].LineColor != null)
+                _output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1, evm.LineContexts[i].LineColor));
     }
 }

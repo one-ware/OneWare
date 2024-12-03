@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Output.ViewModels;
@@ -42,7 +43,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
         set => SetProperty(ref _caretIndex, value);
     }
 
-    public ObservableCollection<IBrush?> LineColors { get; } = new();
+    public ObservableCollection<LineContext> LineContexts { get; } = new();
 
     public bool IsLoading
     {
@@ -61,7 +62,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
         Write(text + "\n", textColor);
     }
 
-    public void Write(string text, IBrush? textColor = null)
+    public void Write(string text, IBrush? textColor = null, IProjectRoot owner = null)
     {
         lock (_synclock)
         {
@@ -76,7 +77,11 @@ public abstract class OutputBaseViewModel : ExtendedTool
                     if (text[i] == '\n')
                     {
                         _currentLineNumber++;
-                        LineColors.Add(textColor);
+                        LineContexts.Add(new LineContext()
+                        {
+                            LineColor = textColor,
+                            Owner = owner
+                        });
                         _currentLineLength = 0;
                     }
                     else
@@ -93,7 +98,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
                 {
                     var removeLines = OutputDocument.Text[..(OutputDocument.TextLength - Maxoutputlength)]
                         .Split('\n').Length - 1;
-                    for (var i = 0; i < removeLines; i++) LineColors.RemoveAt(0);
+                    for (var i = 0; i < removeLines; i++) LineContexts.RemoveAt(0);
                     OutputDocument.Remove(0, OutputDocument.TextLength - Maxoutputlength);
                 }
 
@@ -106,7 +111,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
     {
         OutputDocument.Text = "";
         OutputDocument.UndoStack.ClearAll();
-        LineColors.Clear();
+        LineContexts.Clear();
         _currentLineNumber = 1;
     }
 }
