@@ -28,7 +28,7 @@ public class OneWareCloudAccountSetting : CustomSetting
         {
             SetProperty(ref _value, value);
             OnPropertyChanged(nameof(IsLoggedIn));
-            OnPropertyChanged(nameof(Username));
+            OnPropertyChanged(nameof(Email));
             _ = ResolveAsync();
         }
     }
@@ -41,7 +41,7 @@ public class OneWareCloudAccountSetting : CustomSetting
     
     public bool IsLoggedIn => !string.IsNullOrEmpty(Value.ToString());
 
-    public string? Username => IsLoggedIn ? Value.ToString() : "Not logged in";
+    public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
 
     private async Task ResolveAsync()
     {

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Services;
@@ -16,6 +17,7 @@ public class OneWareCloudIntegrationModule : IModule
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<OneWareCloudAccountSettingViewModel>();
+        containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

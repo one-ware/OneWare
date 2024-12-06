@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GitCredentialManager;
+using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -15,6 +16,7 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 {
     private readonly ISettingsService _settingService;
     private readonly ILogger _logger;
+    private readonly OneWareCloudLoginService _loginService;
 
     private string? _errorText;
     
@@ -24,10 +26,11 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 
     private bool _isLoading = false;
     
-    public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger)
+    public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger, OneWareCloudLoginService loginService)
     {
         _settingService = settingsService;
         _logger = logger;
+        _loginService = loginService;
         
         Title = $"Login to OneWare Cloud";
         
@@ -35,8 +38,6 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
     }
     
     public string Description { get; }
-    
-    public bool Success { get; private set; }
     
     public bool IsLoading
     {
@@ -69,71 +70,21 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
         IsLoading = true;
         ErrorText = null;
 
-        var result = await PerformLoginAsync();
+        var result = await _loginService.LoginAsync(Email, Password);
 
         IsLoading = false;
 
-        if (!result) return;
-
-        Success = true;
+        if (!result)
+        {
+            ErrorText = "Login failed!";
+            return;
+        }
         
         window.Close();
-    }
-
-    private async Task<bool> PerformLoginAsync()
-    {
-        try
-        {
-            var client = new RestClient(OneWareCloudIntegrationModule.Host);
-            var request = new RestRequest("/api/auth/login");
-            request.AddJsonBody(new LoginModel
-            {
-                Email = Email,
-                Password = Password
-            });
-        
-            var response = await client.ExecutePostAsync(request);
-
-            if (response.IsSuccessful)
-            {
-                var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-            
-                var token = data["token"]?.GetValue<string>();
-            
-                if (token != null)
-                {
-                    var store = CredentialManager.Create("oneware");
-                    store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, Email, token);
-                
-                    _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, Email);
-
-                    return true;
-                }
-            }
-            
-            ErrorText = "Login unsuccessful!";
-            return false;
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-            ErrorText = e.Message;
-        }
-
-        return false;
     }
     
     public void Cancel(FlexibleWindow window)
     {
         window.Close();
-    }
-    
-    public class LoginModel
-    {
-        [JsonPropertyName("email")]
-        public string Email { get; set; }
-        
-        [JsonPropertyName("password")]
-        public string Password { get; set; }
     }
 }
