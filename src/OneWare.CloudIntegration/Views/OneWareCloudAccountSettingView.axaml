@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountSettingView" x:DataType="viewModels:OneWareCloudAccountSettingViewModel">
+    <Grid ColumnDefinitions="40, 5, *" RowDefinitions="20, 20" Margin="0 5">
+        <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="50">
+            <Panel>
+                <Image Source="{Binding Setting.Image}"/>
+                <Image IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="6"/>
+            </Panel>
+
+        </Border>
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Setting.Username}" VerticalAlignment="Top"/>
+        <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <Button IsVisible="{Binding !Setting.IsLoggedIn}" Command="{Binding LoginAsync}" 
+                    CommandParameter="{Binding $self}" Content="Login" Classes="BorderButton" Padding="5 0" CornerRadius="3"/>
+            <Button IsVisible="{Binding Setting.IsLoggedIn}" Command="{Binding Logout}" Content="Logout" Classes="BorderButton" Padding="5 0" CornerRadius="3"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
+    <Import Project="..\..\build\props\RestSharp.props"/>
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\OneWareCloudAccountSettingView.axaml.cs">
+        <DependentUpon>GitHubAccountSettingView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\AuthenticateCloudView.axaml.cs">
+        <DependentUpon>AuthenticateGitView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+</Project>

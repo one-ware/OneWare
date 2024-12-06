@@ -9,6 +9,7 @@ using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
+using OneWare.CloudIntegration;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -315,6 +316,7 @@ public class App : PrismApplication
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<DebuggerModule>();
+        moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
 
         base.ConfigureModuleCatalog(moduleCatalog);
     }

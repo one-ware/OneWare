@@ -8,7 +8,7 @@ using RestSharp;
 
 namespace OneWare.SourceControl.ViewModels;
 
-public class AuthenticateViewModel : FlexibleWindowViewModelBase
+public class AuthenticateGitViewModel : FlexibleWindowViewModelBase
 {
     private readonly ILoginProvider _loginProvider;
 
@@ -18,7 +18,7 @@ public class AuthenticateViewModel : FlexibleWindowViewModelBase
 
     private bool _isLoading = true;
     
-    public AuthenticateViewModel(ILoginProvider loginProvider)
+    public AuthenticateGitViewModel(ILoginProvider loginProvider)
     {
         Title = $"Login to {loginProvider.Name}";
         
