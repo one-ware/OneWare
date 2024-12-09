@@ -71,7 +71,7 @@ public class OneWareCloudAccountSetting : CustomSetting
         else
         {
             //Bad credentials, logout
-            if (data["status"]?.GetValue<string>() == "401")
+            if (data["status"]?.GetValue<int>() == 404)
             {
                 store.Remove(OneWareCloudIntegrationModule.CredentialStore, Value.ToString());
                 Value = string.Empty;

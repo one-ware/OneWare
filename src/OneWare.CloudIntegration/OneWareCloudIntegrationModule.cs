@@ -10,7 +10,7 @@ namespace OneWare.CloudIntegration;
 
 public class OneWareCloudIntegrationModule : IModule
 {
-    public const string Host = "http://localhost:5263";
+    public const string Host = "http://localhost:5140";
     public const string OneWareAccountEmailKey = "General_OneWareCloud_AccountEmail";
     public const string CredentialStore = "https://cloud.one-ware.com";
     
