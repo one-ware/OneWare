@@ -50,7 +50,8 @@ public class CompareFileViewModel : Document, IWaitForContent
         return base.OnClose();
     }
 
-    [DataMember] public string FullPath { get; set; }
+    [DataMember]
+    public string FullPath { get; set; }
 
     public bool IsLoading
     {

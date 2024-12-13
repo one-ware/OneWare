@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media;
 using GitCredentialManager;
+using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -45,19 +46,17 @@ public class OneWareCloudAccountSetting : CustomSetting
 
     private async Task ResolveAsync()
     {
+        var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
+        
         Image = null;
         
-        if(string.IsNullOrEmpty(Value.ToString())) return;
-        
-        var store = CredentialManager.Create("oneware");
+        if(string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
 
-        var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, Value.ToString());
-        
-        if(cred == null) return;
+        var jwt = await loginService.GetJwtTokenAsync(Email);
 
         var client = new RestClient(OneWareCloudIntegrationModule.Host);
         var request = new RestRequest("/api/user/data");
-        request.AddHeader("Authorization", $"Bearer {cred.Password}");
+        request.AddHeader("Authorization", $"Bearer {jwt}");
         
         var response = await client.ExecuteGetAsync(request);
         var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
@@ -73,7 +72,7 @@ public class OneWareCloudAccountSetting : CustomSetting
             //Bad credentials, logout
             if (data["status"]?.GetValue<int>() == 404)
             {
-                store.Remove(OneWareCloudIntegrationModule.CredentialStore, Value.ToString());
+                loginService.Logout(Email);
                 Value = string.Empty;
             }
         }
