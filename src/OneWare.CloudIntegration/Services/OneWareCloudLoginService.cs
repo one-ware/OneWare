@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -10,8 +11,9 @@ namespace OneWare.CloudIntegration.Services;
 public class OneWareCloudLoginService(ILogger logger, ISettingsService settingService)
 {
     private Dictionary<string, JwtToken> _jwtTokenCache = new();
+    
 
-    public Task<string?> GetLoggedInJwtTokenAsync()
+    public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
         var email = settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey);
 
@@ -21,24 +23,24 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
     /// <summary>
     /// Gives a JWT Token that has at least 5 minutes left before expiration
     /// </summary>
-    public async Task<string?> GetJwtTokenAsync(string email)
+    public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
     {
         _jwtTokenCache.TryGetValue(email, out var existingToken);
 
         if (existingToken?.Expiration > DateTime.Now.AddMinutes(5))
         {
-            return existingToken.Token;
+            return (existingToken.Token, HttpStatusCode.NoContent);
         }
 
-        var result = await RefreshAsync(email);
-        if (!result) return null;
+        var (result, status) = await RefreshAsync(email);
+        if (!result) return (null, status);
 
-        if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return null;
+        if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
 
-        return regeneratedToken.Token;
+        return (regeneratedToken.Token, status);
     }
 
-    public async Task<bool> RefreshAsync(string email)
+    public async Task<(bool success, HttpStatusCode status)> RefreshAsync(string email)
     {
         try
         {
@@ -47,7 +49,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
             var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
             var refreshToken = cred?.Password;
 
-            if (refreshToken == null) throw new InvalidOperationException("Refresh token not found");
+            if (refreshToken == null) return (false, HttpStatusCode.Unauthorized);
 
             var client = new RestClient(OneWareCloudIntegrationModule.Host);
             var request = new RestRequest("/api/auth/refresh");
@@ -69,15 +71,15 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
                 
                 SaveCredentials(email, token, refreshToken);
 
-                return true;
+                return (true, response.StatusCode);
             }
 
-            return false;
+            return (false, response.StatusCode);
         }
         catch (Exception e)
         {
             logger.Error(e.Message, e);
-            return false;
+            return (false, HttpStatusCode.NoContent);
         }
     }
 

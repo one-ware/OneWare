@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media;
@@ -52,7 +53,17 @@ public class OneWareCloudAccountSetting : CustomSetting
         
         if(string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
 
-        var jwt = await loginService.GetJwtTokenAsync(Email);
+        var (jwt, status) = await loginService.GetJwtTokenAsync(Email);
+
+        if (jwt == null)
+        {
+            if (status == HttpStatusCode.Unauthorized)
+            {
+                loginService.Logout(Email);
+                Value = string.Empty;
+                return;
+            }
+        }
 
         var client = new RestClient(OneWareCloudIntegrationModule.Host);
         var request = new RestRequest("/api/user/data");
@@ -67,14 +78,5 @@ public class OneWareCloudAccountSetting : CustomSetting
         
         if(avatarUrl != null)
             Image = await httpService.DownloadImageAsync(avatarUrl);
-        else
-        {
-            //Bad credentials, logout
-            if (data["status"]?.GetValue<int>() == 404)
-            {
-                loginService.Logout(Email);
-                Value = string.Empty;
-            }
-        }
     }
 }
