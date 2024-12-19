@@ -58,7 +58,10 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 | OneWare.Essentials                  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Essentials)                 |
 | OneWare.Settings                    | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Settings)                   |
 | OneWare.UniversalFpgaProjectSystem  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.UniversalFpgaProjectSystem) |
-| OneWare.OssCadSuiteIntegration      | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.OssCadSuiteIntegration)             |
+| OneWare.OssCadSuiteIntegration      | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.OssCadSuiteIntegration)     |
+| OneWare.Vcd.Parser                  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Vcd.Parser)                 |
+| OneWare.Vcd.Viewer                  | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Vcd.Viewer)                 |
+| OneWare.WaveFormViewer              | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.WaveFormViewer)             |
 | OneWare.Templates                   | ![NuGet Version](https://img.shields.io/nuget/v/OneWare.Templates)                  |
    
 ## Contributing
