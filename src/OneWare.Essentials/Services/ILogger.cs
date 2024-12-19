@@ -7,6 +7,7 @@ namespace OneWare.Essentials.Services;
 public interface ILogger
 {
     public void WriteLogFile(string value);
+    
     public void Log(object message, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null);
 
     public void Log(object message, IProjectRoot? owner, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null);

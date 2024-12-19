@@ -48,13 +48,13 @@ public class Logger : ILogger
     public void Warning(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
         Window? dialogOwner = null)
     {
-        throw new NotImplementedException();
+        Warning(message, null, exception, showOutput, showDialog, dialogOwner);
     }
 
     public void Error(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
         Window? dialogOwner = null)
     {
-        throw new NotImplementedException();
+        Error(message, null, exception, showOutput, showDialog, dialogOwner);
     }
 
     public void Log(object message, IProjectRoot? project, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
