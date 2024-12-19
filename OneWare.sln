@@ -62,6 +62,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.ReactiveUI.props = build\props\Avalonia.ReactiveUI.props
 		build\props\SharpCompress.props = build\props\SharpCompress.props
 		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
+		build\props\Devlooped.CredentialManager.props = build\props\Devlooped.CredentialManager.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectSystem", "ProjectSystem", "{0AD88B48-CA52-4A71-BA09-DD41BCCD5BB7}"
@@ -164,6 +165,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.CruviAdapterExtensions", "src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj", "{01BC6288-6AD8-4D70-9360-F84601CCBA56}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.LibraryExplorer", "src\OneWare.LibraryExplorer\OneWare.LibraryExplorer.csproj", "{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.CloudIntegration", "src\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj", "{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -347,6 +350,10 @@ Global
 		{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390} = {0761690C-7DA0-4554-9F6B-211088412DCD}
@@ -401,5 +408,6 @@ Global
 		{484F3E48-EF14-4801-B896-41BDB67A54E6} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
 		{01BC6288-6AD8-4D70-9360-F84601CCBA56} = {53C7F88A-3B98-4AB4-992B-71C1F91F1BA7}
 		{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34} = {0761690C-7DA0-4554-9F6B-211088412DCD}
+		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 	EndGlobalSection
 EndGlobal

@@ -1098,7 +1098,7 @@ public class SourceControlViewModel : ExtendedTool
 
     private async Task<bool> LoginDialogAsync(ILoginProvider loginProvider)
     {
-        var vm = new AuthenticateViewModel(loginProvider);
+        var vm = new AuthenticateGitViewModel(loginProvider);
         await Dispatcher.UIThread.InvokeAsync(() => _windowService.ShowDialogAsync(new AuthenticateGitView()
         {
             DataContext = vm

@@ -2,6 +2,7 @@
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
+    <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
@@ -10,6 +11,5 @@
     <ItemGroup>
         <PackageReference Include="DiffPlex" Version="1.7.2"/>
         <PackageReference Include="LibGit2Sharp" Version="0.30.0"/>
-        <PackageReference Include="Devlooped.CredentialManager" Version="2.6.0" />
     </ItemGroup>
 </Project>

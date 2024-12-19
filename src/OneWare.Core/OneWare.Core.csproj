@@ -17,6 +17,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj"/>
+        <ProjectReference Include="..\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj" />
         <ProjectReference Include="..\OneWare.Debugger\OneWare.Debugger.csproj"/>
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj"/>
         <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj"/>

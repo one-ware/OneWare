@@ -247,7 +247,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     {
         TypeAssistance?.Uncomment();
     }
-
+    
     #region Jump
 
     public async Task<bool> WaitForEditorReadyAsync()

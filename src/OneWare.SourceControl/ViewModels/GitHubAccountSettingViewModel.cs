@@ -26,7 +26,7 @@ public class GitHubAccountSettingViewModel : ObservableObject
     {
         return Dispatcher.UIThread.InvokeAsync(() => ContainerLocator.Container.Resolve<IWindowService>().ShowDialogAsync(new AuthenticateGitView()
         {
-            DataContext = new AuthenticateViewModel(ContainerLocator.Container.Resolve<GithubLoginProvider>())
+            DataContext = new AuthenticateGitViewModel(ContainerLocator.Container.Resolve<GithubLoginProvider>())
         }, TopLevel.GetTopLevel(owner) as Window));
     }
 
