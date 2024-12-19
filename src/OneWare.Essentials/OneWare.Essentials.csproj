@@ -11,7 +11,6 @@
     <Import Project="..\..\build\props\Avalonia.Xaml.Behaviors.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.ColorPicker.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.DataGrid.props"/>
-    <Import Project="..\..\build\props\Avalonia.Controls.TreeDataGrid.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.PanAndZoom.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.TextMate.props"/>
