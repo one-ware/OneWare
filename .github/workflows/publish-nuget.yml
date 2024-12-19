@@ -36,7 +36,7 @@ jobs:
       - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.OssCadSuiteIntegration/OneWare.OssCadSuiteIntegration.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj --configuration Release --output ${{ env.NuGetDirectory }}
-      - run: dotnet pack ./src/OneWare.WareFormViewer/OneWare.WaveFormViewer.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.WaveFormViewer/OneWare.WaveFormViewer.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj --configuration Release --output ${{ env.NuGetDirectory }}
 
