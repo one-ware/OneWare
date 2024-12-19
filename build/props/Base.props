@@ -10,5 +10,6 @@
         <Company>One Ware</Company>
         <Description>Next Generation IDE for Electronics Development</Description>
         <Copyright>Copyright © One Ware 2024</Copyright>
+        <PackageLicenseExpression>GPL-3.0</PackageLicenseExpression>
     </PropertyGroup>
 </Project>
