@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -9,6 +8,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.Output.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Output.Views;
@@ -122,9 +122,10 @@ public partial class OutputView : OutputBaseView
         var fileColumn = int.Parse(match.Groups[3].Value);
         
         _searchResult = new SearchResult(path, fileLine, fileColumn);
-        
-        var result = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-            .ActiveProject?.SearchRelativePath(_searchResult.Path);
+
+        var lineContext = (DataContext as OutputBaseViewModel)?.LineContexts[line.LineNumber-1];
+
+        var result = lineContext?.Owner?.SearchRelativePath(_searchResult.Path);
         
         if(result == null) return;
         
