@@ -13,7 +13,7 @@
             <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
                       IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
             <StackPanel Spacing="3" Orientation="Horizontal">
-                <TextBlock Text="{Binding Setting.Title}"
+                <TextBlock Text="{Binding Setting.Title}" Margin="0 1 0 0"
                            ToolTip.Tip="{Binding Setting.HoverDescription}" />
                 <Button Padding="0" VerticalAlignment="Center"
                         IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">

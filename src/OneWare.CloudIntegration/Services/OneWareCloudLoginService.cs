@@ -10,9 +10,8 @@ namespace OneWare.CloudIntegration.Services;
 
 public class OneWareCloudLoginService(ILogger logger, ISettingsService settingService)
 {
-    private Dictionary<string, JwtToken> _jwtTokenCache = new();
+    private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
     
-
     public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
         var email = settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey);

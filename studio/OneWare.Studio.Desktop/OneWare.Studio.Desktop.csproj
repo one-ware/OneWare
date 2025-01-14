@@ -44,4 +44,5 @@
     <ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
     </ItemGroup>
+    
 </Project>

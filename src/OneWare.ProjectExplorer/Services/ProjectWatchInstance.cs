@@ -11,7 +11,7 @@ public class ProjectWatchInstance : IDisposable
     private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
     private readonly IDockService _dockService;
     private readonly FileSystemWatcher _fileSystemWatcher;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IProjectRoot _root;
     private readonly IWindowService _windowService;
