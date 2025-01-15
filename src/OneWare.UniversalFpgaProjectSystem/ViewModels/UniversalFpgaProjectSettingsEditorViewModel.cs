@@ -31,6 +31,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private ComboBoxSetting _toolchain;
     private ComboBoxSetting _loader;
+    private ComboBoxSetting? _vhdlStandard;
 
     private ListBoxSetting _includesSettings;
     private ListBoxSetting _excludesSettings;
@@ -41,6 +42,13 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
         Title = $"{_root.Name} Settings";
+
+        if (root.TopEntity != null && (root.TopEntity.Name.Contains("vhd") || root.TopEntity.Name.Contains("vhdl")))
+        {
+            var standard = _root.Properties["VHDL_Standard"];
+            var value = standard == null ? "" : standard.ToString();
+            _vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
+        }
         
         var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
         var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
@@ -52,14 +60,21 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         var loader = ContainerLocator.Container.Resolve<FpgaService>().Loaders.Select(loader => loader.Name);
         var currentLoader = _root.Properties["Loader"]!.ToString();
         _loader = new ComboBoxSetting("Loader", currentLoader, loader);
-
+    
         _includesSettings = new ListBoxSetting("Files to Include", includes);
         _excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
 
+        
         SettingsCollection.SettingModels.Add(_toolchain);
         SettingsCollection.SettingModels.Add(_loader);
+        
+        if (_vhdlStandard != null) {
+            SettingsCollection.SettingModels.Add(_vhdlStandard);
+        }
+        
         SettingsCollection.SettingModels.Add(_includesSettings);
         SettingsCollection.SettingModels.Add(_excludesSettings);
+        
     }
 
     private async Task SaveAsync()
@@ -74,6 +89,9 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         
         _root.SetProjectPropertyArray("Include", _includesSettings.Items.Select(item => item.ToString()).ToArray());
         _root.SetProjectPropertyArray("Exclude", _excludesSettings.Items.Select(item => item.ToString()).ToArray());
+        
+        if (_vhdlStandard.Value.ToString() != null)
+            _root.SetProjectProperty("VHDL_Standard", _vhdlStandard.Value.ToString()!);
         
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadAsync(_root);

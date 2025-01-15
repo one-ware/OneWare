@@ -13,12 +13,17 @@
                          x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectSettingsEditorView"
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
-    <DockPanel>
-        <ScrollViewer DockPanel.Dock="Top">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" /> 
+            <RowDefinition Height="Auto" /> 
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0">
             <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
         </ScrollViewer>
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8" Classes="WindowButtons"
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="8" Classes="WindowButtons"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
             <Button Command="{Binding SaveAndCloseAsync}"
@@ -27,5 +32,5 @@
                 <TextBlock Text="Save and Close" Margin="5 0" />
             </Button>
         </StackPanel>
-    </DockPanel>
+    </Grid>
 </controls:FlexibleWindow>
