@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using OneWare.Essentials.Helpers;
+using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 
 namespace OneWare.WaveFormViewer.Views;
@@ -124,5 +125,13 @@ public partial class WaveFormView : UserControl
         if ((e.Source as Visual).FindAncestorOfType<ScrollViewer>() is not { Name: "SimPartScroll" }) return;
         _pointerPressed = false;
         SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed);
+    }
+    
+    private void OnSignalNameClicked(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is TextBlock textBlock && textBlock.DataContext is WaveModel waveModel)
+        {
+            _viewModel.SelectedSignal = waveModel;
+        }
     }
 }

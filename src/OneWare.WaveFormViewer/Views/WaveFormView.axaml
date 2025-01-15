@@ -161,7 +161,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Signal.Name}"
-                                           ToolTip.Tip="{Binding Signal.Name}" />
+                                           ToolTip.Tip="{Binding Signal.Name}" PointerPressed="OnSignalNameClicked"/>
                                 <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
                                            FontFamily="{DynamicResource EditorFont}"
                                            ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"

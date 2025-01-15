@@ -36,6 +36,8 @@ public class WaveFormViewModel : ObservableObject
 
     public ObservableCollection<WaveModel> Signals { get; } = [];
 
+    public WaveModel SelectedSignal;
+    
     /// <summary>
     ///     1 = 1 fs
     /// </summary>
