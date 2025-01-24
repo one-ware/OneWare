@@ -129,7 +129,7 @@ public partial class WaveFormView : UserControl
     
     private void OnSignalNameClicked(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is TextBlock textBlock && textBlock.DataContext is WaveModel waveModel)
+        if (sender is Grid grid && grid.DataContext is WaveModel waveModel)
         {
             _viewModel.SelectedSignal = waveModel;
         }

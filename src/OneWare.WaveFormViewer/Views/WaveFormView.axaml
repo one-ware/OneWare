@@ -154,14 +154,14 @@
                     <DataTemplate x:DataType="models:WaveModel">
                         <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
                                    Height="{DynamicResource LineHeight}">
-                            <Grid VerticalAlignment="Center" DockPanel.Dock="Left">
+                            <Grid VerticalAlignment="Center" DockPanel.Dock="Left" PointerPressed="OnSignalNameClicked" Background="Transparent">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition MinWidth="50" Width="*" />
                                     <ColumnDefinition Width="5" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Signal.Name}"
-                                           ToolTip.Tip="{Binding Signal.Name}" PointerPressed="OnSignalNameClicked"/>
+                                           ToolTip.Tip="{Binding Signal.Name}" />
                                 <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
                                            FontFamily="{DynamicResource EditorFont}"
                                            ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"
