@@ -72,8 +72,7 @@
                 </StackPanel>
             </DockPanel>
 
-            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}"
-                         UseLayoutRounding="False" />
+            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}" />
 
             <Border Grid.Row="3" Padding="2"
                     Background="{DynamicResource ThemeAccentBrush}">

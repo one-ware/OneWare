@@ -18,8 +18,7 @@
                          ExtendClientAreaToDecorationsHint="False"
                          CanResize="False"
                          WindowStartupLocation="CenterOwner"
-                         CloseOnDeactivated="True"
-                         UseLayoutRounding="True">
+                         CloseOnDeactivated="True">
     <controls:FlexibleWindow.Styles>
         <Style Selector="controls|AdvancedWindow.PlatformLinux Border#WindowBorder">
             <Setter Property="BorderThickness" Value="1" />

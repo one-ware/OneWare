@@ -186,7 +186,6 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
-                        UseLayoutRounding="True"
                         Padding="{TemplateBinding Padding}">
                     <ContentPresenter Content="{TemplateBinding Content}" />
                 </Border>
