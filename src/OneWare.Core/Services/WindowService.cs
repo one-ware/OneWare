@@ -102,15 +102,17 @@ public class WindowService : IWindowService
         window.Focus();
     }
 
-    public Task ShowDialogAsync(FlexibleWindow window, Window? owner)
+    public async Task ShowDialogAsync(FlexibleWindow window, Window? owner)
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
-            return window.ShowDialogAsync(owner);
+            await window.ShowDialogAsync(owner);
         }
 
-        return ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
+        await ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
+        
+        window.Focus();
     }
 
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner)
