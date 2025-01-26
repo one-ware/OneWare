@@ -114,14 +114,14 @@ public partial class WaveFormView : UserControl
 
     private void OnPointerPressed(object? sender, PointerEventArgs e)
     {
-        if ((e.Source as Visual).FindAncestorOfType<ScrollViewer>() is not { Name: "SimPartScroll" }) return;
+        if ((e.Source as Visual).FindAncestorOfType<ListBox>() is not { Name: "SimPartScroll" }) return;
         SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed);
         _pointerPressed = true;
     }
 
     private void OnPointerReleased(object? sender, PointerEventArgs e)
     {
-        if ((e.Source as Visual).FindAncestorOfType<ScrollViewer>() is not { Name: "SimPartScroll" }) return;
+        if ((e.Source as Visual).FindAncestorOfType<ListBox>() is not { Name: "SimPartScroll" }) return;
         _pointerPressed = false;
         SimulatorEffectsRenderer.SetPos(e.GetPosition(SimulatorEffectsRenderer).X, _pointerPressed);
     }

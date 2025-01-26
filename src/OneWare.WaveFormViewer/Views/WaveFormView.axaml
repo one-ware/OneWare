@@ -8,12 +8,15 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls1="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.WaveFormViewer.Enums"
+             xmlns:behaviors="clr-namespace:OneWare.WaveFormViewer.Behaviors"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" x:DataType="viewModels:WaveFormViewModel"
              x:Class="OneWare.WaveFormViewer.Views.WaveFormView" Focusable="True">
 
     <UserControl.Resources>
         <x:Double x:Key="LineHeight">40</x:Double>
-
+        
+        <behaviors:WaveListDropBehavior x:Key="WaveListDropBehavior" />
+        
         <ContextMenu x:Key="WaveModelContextMenu" x:DataType="models:WaveModel">
             <MenuItem Header="Data Format" ItemsSource="{Binding AvailableDataTypes}"
                       IsEnabled="{Binding AvailableDataTypes.Length}">
@@ -61,6 +64,17 @@
             </MenuItem>
         </ContextMenu>
     </UserControl.Resources>
+    
+    <UserControl.Styles>
+        <Style Selector="ListBox.Scroll">
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="Padding" Value="0" />
+          <Setter Property="Background" Value="Transparent"></Setter>
+        </Style>
+        <Style Selector="ListBox.Scroll ListBoxItem">
+            <Setter Property="Padding" Value="3 0" />
+        </Style>
+    </UserControl.Styles>
 
     <Grid Background="{DynamicResource ThemeControlLowBrush}" Name="TopPartGrid"
           RowDefinitions="Auto, 22, *, Auto">
@@ -144,34 +158,50 @@
 
             </DockPanel>
         </Border>
-
-        <ScrollViewer Padding="3,0,3,0" Name="TextPartScroll"
-                      Bounds="{Binding #SimulatorScaleRenderer.TextAreaBounds, Mode=OneWayToSource}"
-                      Grid.Column="0" Grid.Row="2" HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Hidden">
-            <ItemsControl Padding="5, 0, 5, 0" ItemsSource="{Binding Signals}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:WaveModel">
-                        <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
-                                   Height="{DynamicResource LineHeight}">
-                            <Grid VerticalAlignment="Center" DockPanel.Dock="Left">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition MinWidth="50" Width="*" />
-                                    <ColumnDefinition Width="5" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Signal.Name}"
-                                           ToolTip.Tip="{Binding Signal.Name}" />
-                                <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
-                                           FontFamily="{DynamicResource EditorFont}"
-                                           ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"
-                                           FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" />
-                            </Grid>
-                        </DockPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        
+        <ListBox Grid.Column="0" Grid.Row="2"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                 Bounds="{Binding #SimulatorScaleRenderer.TextAreaBounds, Mode=OneWayToSource}"
+                 ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
+                 Name="TextPartScroll"
+                 Classes="Scroll" Padding="1 0 0 0">
+            <Interaction.Behaviors>
+                <ContextDropBehavior Handler="{StaticResource WaveListDropBehavior}" />
+            </Interaction.Behaviors>
+            <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="(Interaction.Behaviors)">
+                        <BehaviorCollectionTemplate>
+                            <BehaviorCollection>
+                                <ContextDragBehavior HorizontalDragThreshold="3" VerticalDragThreshold="3" />
+                            </BehaviorCollection>
+                        </BehaviorCollectionTemplate>
+                    </Setter>
+                </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:WaveModel">
+                    <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
+                               Height="{DynamicResource LineHeight}">
+                        <Grid VerticalAlignment="Center" DockPanel.Dock="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition MinWidth="50" Width="*" />
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding Signal.Name}"
+                                       ToolTip.Tip="{Binding Signal.Name}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
+                                       FontFamily="{DynamicResource EditorFont}"
+                                       ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"
+                                       FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" 
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <GridSplitter Background="{DynamicResource ThemeControlLowBrush}" Width="2" VerticalAlignment="Stretch"
                       Grid.Row="2"
@@ -180,25 +210,37 @@
         <controls:WaveFormScale IsHitTestVisible="False" Margin="2,0,1,0" Name="SimulatorScaleRenderer"
                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="2" />
 
-        <ScrollViewer ClipToBounds="True" Name="SimPartScroll" Grid.Row="2" Grid.Column="2"
-                      Offset="{Binding #TextPartScroll.Offset, Mode=TwoWay}"
-                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
-            <ItemsControl ItemsSource="{Binding Signals}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:WaveModel">
-                        <controls:Wave
-                            FontFamily="{DynamicResource EditorFont}"
-                            Height="{DynamicResource LineHeight}"
-                            Max="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Max, FallbackValue={x:Null}}"
-                            ZoomMultiply="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ZoomMultiply, FallbackValue={x:Null}}"
-                            Offset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Offset, FallbackValue={x:Null}}"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                            ExtendSignals="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ExtendSignals, FallbackValue={x:Null}}"
-                            LoadingOffset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).LoadingMarkerOffset, FallbackValue={x:Null}}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <ListBox Name="SimPartScroll" Grid.Row="2" Grid.Column="2" ClipToBounds="True"
+                 ScrollViewer.Offset="{Binding #TextPartScroll.Scroll.Offset, Mode=TwoWay, FallbackValue=0}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Visible"
+                 ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
+                 Classes="Scroll">
+            <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="IsHitTestVisible" Value="False"></Setter>
+                    <Style Selector="^:selected /template/ ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                    <Style Selector="^:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:WaveModel">
+                    <controls:Wave
+                        FontFamily="{DynamicResource EditorFont}"
+                        Height="{DynamicResource LineHeight}"
+                        Max="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Max, FallbackValue={x:Null}}"
+                        ZoomMultiply="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ZoomMultiply, FallbackValue={x:Null}}"
+                        Offset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Offset, FallbackValue={x:Null}}"
+                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                        ExtendSignals="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ExtendSignals, FallbackValue={x:Null}}"
+                        LoadingOffset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).LoadingMarkerOffset, FallbackValue={x:Null}}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <controls:WaveFormEffects Name="SimulatorEffectsRenderer" VerticalAlignment="Stretch"
                                   IsHitTestVisible="False" Margin="0 0 1 0"

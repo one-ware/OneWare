@@ -22,7 +22,7 @@ public class WaveFormScale : Control
     private readonly IPen _markerBrushPen;
 
     private CompositeDisposable _disposableReg = new();
-    
+
     private const int MinScaleNumberWidth = 150;
 
     public WaveFormScale()
@@ -49,65 +49,69 @@ public class WaveFormScale : Control
     }
 
     public static List<Marker> CalculateMarkers(long beginOffset, long endOffset, int maxMainMarkers)
-{
-    var markers = new List<Marker>();
-    
-    if (beginOffset >= endOffset || maxMainMarkers <= 0)
-        return markers;
-
-    var range = (double)(endOffset - beginOffset);
-    var mainStep = FindBeautifulStep(range, maxMainMarkers);
-    var intermediateStep = (mainStep / 10);
-    
-    var firstMainMarker = Math.Ceiling(beginOffset / mainStep) * mainStep;
-    
-    for (var i = firstMainMarker; i >= beginOffset; i -= intermediateStep)
     {
-        markers.Insert(0, new Marker { Position = (long)i, IsMainMarker = false });
-    }
+        var markers = new List<Marker>();
 
-    for (var mainMarker = (long)firstMainMarker; mainMarker <= endOffset; mainMarker += (long)mainStep)
-    {
-        markers.Add(new Marker { Position = mainMarker, IsMainMarker = true });
+        if (beginOffset >= endOffset || maxMainMarkers <= 0)
+            return markers;
 
-        // Add intermediate markers
-        for (var i = 1; i < 10; i++)
+        var range = (double)(endOffset - beginOffset);
+        var mainStep = FindBeautifulStep(range, maxMainMarkers);
+
+        //TODO Investigate why this could happen
+        if (mainStep < 1) mainStep = 1;
+
+        var intermediateStep = (mainStep / 10);
+
+        var firstMainMarker = Math.Ceiling(beginOffset / mainStep) * mainStep;
+
+        for (var i = firstMainMarker; i >= beginOffset; i -= intermediateStep)
         {
-            var intermediateMarker = mainMarker + i * intermediateStep;
-            if (intermediateMarker < endOffset && intermediateMarker > beginOffset)
+            markers.Insert(0, new Marker { Position = (long)i, IsMainMarker = false });
+        }
+
+        for (var mainMarker = (long)firstMainMarker; mainMarker <= endOffset; mainMarker += (long)mainStep)
+        {
+            markers.Add(new Marker { Position = mainMarker, IsMainMarker = true });
+
+            // Add intermediate markers
+            for (var i = 1; i < 10; i++)
             {
-                markers.Add(new Marker { Position = (long)intermediateMarker, IsMainMarker = false });
+                var intermediateMarker = mainMarker + i * intermediateStep;
+                if (intermediateMarker < endOffset && intermediateMarker > beginOffset)
+                {
+                    markers.Add(new Marker { Position = (long)intermediateMarker, IsMainMarker = false });
+                }
             }
         }
+
+        return markers;
     }
 
-    return markers;
-}
-
-private static double FindBeautifulStep(double range, int maxMainMarkers)
-{
-    double[] beautifulNumbers = { 1, 2, 5, 10 };
-    var targetStepSize = range / (maxMainMarkers - 1);
-
-    var exponent = (int)Math.Floor(Math.Log10(targetStepSize));
-    var scale = Math.Pow(10, exponent);
-
-    var bestStep = scale;
-    var minDifference = double.MaxValue;
-
-    foreach (var factor in beautifulNumbers)
+    private static double FindBeautifulStep(double range, int maxMainMarkers)
     {
-        var currentStep = scale * factor;
-        var difference = Math.Abs(currentStep - targetStepSize);
-        if (difference < minDifference)
-        {
-            minDifference = difference;
-            bestStep = currentStep;
-        }
-    }
+        double[] beautifulNumbers = { 1, 2, 5, 10 };
+        var targetStepSize = range / (maxMainMarkers - 1);
 
-    return bestStep;
-}
+        var exponent = (int)Math.Floor(Math.Log10(targetStepSize));
+        var scale = Math.Pow(10, exponent);
+
+        var bestStep = scale;
+        var minDifference = double.MaxValue;
+
+        foreach (var factor in beautifulNumbers)
+        {
+            var currentStep = scale * factor;
+            var difference = Math.Abs(currentStep - targetStepSize);
+            if (difference < minDifference)
+            {
+                minDifference = difference;
+                bestStep = currentStep;
+            }
+        }
+
+        return bestStep;
+    }
 
     #region Rendering
 
@@ -142,7 +146,7 @@ private static double FindBeautifulStep(double range, int maxMainMarkers)
 
         var yOffset = 22;
         var width = Bounds.Width;
-        
+
         var endOffset = vm.Offset + (long)(width * zm);
 
         var markerX = CalculateMarkers(vm.Offset, endOffset, (int)Bounds.Width / MinScaleNumberWidth);
@@ -152,7 +156,7 @@ private static double FindBeautifulStep(double range, int maxMainMarkers)
             new Rect(TextAreaBounds.Width, yOffset, Bounds.Width, Bounds.Height));
 
         if (multiplier == 0) return;
-        
+
         foreach (var mX in markerX)
         {
             var screenXPosition = (mX.Position - vm.Offset) / zm;
@@ -162,14 +166,16 @@ private static double FindBeautifulStep(double range, int maxMainMarkers)
 
             if (!mX.IsMainMarker)
             {
-                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 4), new Point(screenXPosition, yOffset));
+                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 4),
+                    new Point(screenXPosition, yOffset));
             }
             else
             {
                 var drawT = TimeHelper.FormatTime(mX.Position, vm.TimeScale, vm.ViewPortWidth);
 
                 //Big marker
-                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 6), new Point(screenXPosition, Bounds.Height));
+                context.DrawLine(_markerBrushPen, new Point(screenXPosition, yOffset - 6),
+                    new Point(screenXPosition, Bounds.Height));
 
                 var text = new FormattedText(drawT, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                     Typeface.Default,
