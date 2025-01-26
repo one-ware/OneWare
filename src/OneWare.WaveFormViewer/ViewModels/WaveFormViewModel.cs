@@ -30,11 +30,20 @@ public class WaveFormViewModel : ObservableObject
     private long _timeScale = 1;
 
     private int _zoomLevel;
+
+    private WaveModel? _selectedSignal;
+    
     private double _zoomMultiply = 1;
     public int MinZoomLevel { get; } = -2;
     public int MaxZoomLevel { get; } = 20;
 
     public ObservableCollection<WaveModel> Signals { get; } = [];
+
+    public WaveModel? SelectedSignal
+    {
+        get => _selectedSignal;
+        set => SetProperty(ref _selectedSignal, value);
+    }
 
     /// <summary>
     ///     1 = 1 fs
