@@ -57,7 +57,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                         new FilePickerFileType(
                             $"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
                         {
-                            Patterns = new[] { $"*{UniversalFpgaProjectRoot.ProjectFileExtension}" }
+                            Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
                 Icon = SharedConverters.PathToBitmapConverter.Convert(
                     ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap

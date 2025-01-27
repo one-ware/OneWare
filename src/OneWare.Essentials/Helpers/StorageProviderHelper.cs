@@ -42,8 +42,15 @@ public static class StorageProviderHelper
         return folders;
     }
 
-    public static async Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir,
+    [Obsolete ("Use SelectSaveFileAsync with more options instead")]
+    public static Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir,
         string defaultExtension, params FilePickerFileType[] filters)
+    {
+        return SelectSaveFileAsync(owner, title, startDir, defaultExtension, null, true, filters);
+    }
+    
+    public static async Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir,
+        string defaultExtension, string? suggestedFileName, bool showOverwritePrompt, params FilePickerFileType[] filters)
     {
         var startUpLocation = startDir == null
             ? null
@@ -53,7 +60,9 @@ public static class StorageProviderHelper
             Title = title,
             SuggestedStartLocation = startUpLocation,
             FileTypeChoices = filters,
-            DefaultExtension = defaultExtension
+            DefaultExtension = defaultExtension,
+            SuggestedFileName = suggestedFileName,
+            ShowOverwritePrompt = showOverwritePrompt
         });
 
         if (result == null) return null;
