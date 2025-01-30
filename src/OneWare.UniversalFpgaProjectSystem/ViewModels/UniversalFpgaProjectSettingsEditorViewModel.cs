@@ -90,7 +90,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _root.SetProjectPropertyArray("Include", _includesSettings.Items.Select(item => item.ToString()).ToArray());
         _root.SetProjectPropertyArray("Exclude", _excludesSettings.Items.Select(item => item.ToString()).ToArray());
         
-        if (_vhdlStandard.Value.ToString() != null)
+        if (_vhdlStandard?.Value.ToString() != null)
             _root.SetProjectProperty("VHDL_Standard", _vhdlStandard.Value.ToString()!);
         
         await _projectExplorerService.SaveProjectAsync(_root);
