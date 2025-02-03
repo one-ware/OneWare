@@ -389,11 +389,11 @@ public static class HardwareGuiCreator
                         }
                         case "usb":
                         {
-                            var bindRx = element.TryGetProperty("txBind", out var bindRxProperty)
+                            var bindRx = element.TryGetProperty("rxBind", out var bindRxProperty)
                                 ? bindRxProperty.GetString()
                                 : null;
 
-                            var bindTx = element.TryGetProperty("rxBind", out var bindTxProperty)
+                            var bindTx = element.TryGetProperty("txBind", out var bindTxProperty)
                                 ? bindTxProperty.GetString()
                                 : null;
 
