@@ -8,6 +8,7 @@
         <Version>$(StudioVersion)</Version>
         <TargetFramework>net9.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
+        <EnableWorkloadResolver>true</EnableWorkloadResolver>
         <!--Enable Threading once dotnet runtime issues are resolved-->
         <WasmEnableThreads>false</WasmEnableThreads>
     </PropertyGroup>
