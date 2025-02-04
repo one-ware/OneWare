@@ -32,7 +32,9 @@
     </ItemGroup>
     
     <ItemGroup>
+        <!--
         <PackageReference Include="TextMateSharp.Wasm" Version="1.0.60"/>
+        -->
     </ItemGroup>
     
 </Project>
