@@ -34,8 +34,9 @@ public class WaveFormViewModel : ObservableObject
     private WaveModel? _selectedSignal;
     
     private double _zoomMultiply = 1;
+    
     public int MinZoomLevel { get; } = -2;
-    public int MaxZoomLevel { get; } = 20;
+    public int MaxZoomLevel { get; private set; } = 1;
 
     public ObservableCollection<WaveModel> Signals { get; } = [];
 
@@ -82,6 +83,10 @@ public class WaveFormViewModel : ObservableObject
             SetProperty(ref _max, value);
             OnPropertyChanged(nameof(ViewPortWidth));
             OnPropertyChanged(nameof(MaxScroll));
+            
+            MaxZoomLevel = Max > 0 ? (int)Math.Log2(Max) : 0;
+            
+            Console.WriteLine(MaxZoomLevel);
         }
     }
 
