@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform;
+﻿using System.Runtime.InteropServices;
+using Avalonia.Platform;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars.Reader;
@@ -15,9 +16,6 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 
     public IRawGrammar GetGrammar(string scopeName)
     {
-        //For Browser Textmate is not working as of now
-        //if (RuntimeInformation.ProcessArchitecture == Architecture.Wasm) return null!;
-
         var g = _availableLanguages.FirstOrDefault(x => x.Id == scopeName.Split('.').Last());
 
         if (g == null) return _defaultRegistryOptions.GetGrammar(scopeName);

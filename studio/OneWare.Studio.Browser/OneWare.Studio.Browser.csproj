@@ -8,12 +8,8 @@
         <Version>$(StudioVersion)</Version>
         <TargetFramework>net9.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
-        <!--Enable Multithread
-        <WasmEnableThreads>true</WasmEnableThreads>
-        <_WasmAppIncludeThreadsWorker>true</_WasmAppIncludeThreadsWorker>
-        <_WasmPThreadPoolSize>8</_WasmPThreadPoolSize>-->
+        <!--Enable Threading once dotnet runtime issues are resolved-->
+        <WasmEnableThreads>false</WasmEnableThreads>
     </PropertyGroup>
 
     <!--
@@ -36,8 +32,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <!--<PackageReference Include="Microsoft.NET.WebAssembly.Threading" Version="8.0.0"/>
-        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.58"/>-->
+        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.60"/>
     </ItemGroup>
     
 </Project>
