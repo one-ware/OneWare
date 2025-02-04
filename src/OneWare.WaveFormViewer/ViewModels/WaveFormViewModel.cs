@@ -85,8 +85,6 @@ public class WaveFormViewModel : ObservableObject
             OnPropertyChanged(nameof(MaxScroll));
             
             MaxZoomLevel = Max > 0 ? (int)Math.Log2(Max) : 0;
-            
-            Console.WriteLine(MaxZoomLevel);
         }
     }
 
