@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using OneWare.Core.Models;
@@ -23,10 +25,14 @@ public class PluginService : IPluginService
 
     private readonly string _pluginDirectory;
 
+    private List<Assembly> _initAssemblies;
+
     public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
     {
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
+
+        _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
         Directory.CreateDirectory(_pluginDirectory);
@@ -38,7 +44,7 @@ public class PluginService : IPluginService
     {
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
-        
+
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
@@ -68,6 +74,8 @@ public class PluginService : IPluginService
                 ContainerLocator.Container.Resolve<ILogger>()
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
+            
+            SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
@@ -87,6 +95,45 @@ public class PluginService : IPluginService
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+    }
+
+    private void SetupNativeImports(string pluginPath)
+    {
+        var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));
+        
+        foreach (var assembly in newAssemblies)
+        {
+            _initAssemblies.Add(assembly);
+
+            try
+            {
+                NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
+                {
+                    var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
+                    var libPath = Path.Combine(pluginPath, libFileName);
+
+                    if (!File.Exists(libPath))
+                    {
+                        //Alternative path for debug builds
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                            libFileName);
+                    }
+                    if (File.Exists(libPath))
+                    {
+                        Console.WriteLine($"Loading native library: {libPath}");
+                        return NativeLibrary.Load(libPath);
+                    }
+                    
+                    Console.WriteLine($"Loading native library {libPath} failed");
+                    
+                    return IntPtr.Zero;
+                });
+            }
+            catch (InvalidOperationException)
+            {
+                // Some assemblies do not support SetDllImportResolver, ignore them
+            }
         }
     }
 }

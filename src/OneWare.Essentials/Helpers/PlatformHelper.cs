@@ -63,8 +63,32 @@ public static class PlatformHelper
 
     public static PlatformId Platform { get; }
 
+    public static string PlatformIdentifier => Platform switch
+    {
+        PlatformId.WinX64 => "win-x64",
+        PlatformId.WinArm64 => "win-arm64",
+        PlatformId.LinuxX64 => "linux-x64",
+        PlatformId.LinuxArm64 => "linux-arm64",
+        PlatformId.OsxX64 => "osx-x64",
+        PlatformId.OsxArm64 => "osx-arm64",
+        PlatformId.Wasm => "wasm",
+        _ => "unknown"
+    };
+
     public static string ExecutableExtension { get; } = string.Empty;
 
+    public static string GetLibraryFileName(string libraryName)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return $"{libraryName}.dll"; // Windows uses .dll
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return $"lib{libraryName}.dylib"; // macOS uses .dylib
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return $"lib{libraryName}.so"; // Linux uses .so
+
+        throw new PlatformNotSupportedException("Unsupported operating system.");
+    }
+    
     public static bool Exists(string path)
     {
         return File.Exists(path) || ExistsOnPath(path);
