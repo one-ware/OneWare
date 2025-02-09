@@ -206,8 +206,6 @@ public class WaveFormViewModel : ObservableObject
 
     public string CursorText => TimeHelper.FormatTime(CursorOffset, TimeScale, ViewPortWidth);
 
-    public event EventHandler? SignalRemoved;
-
     private void SetSignalMarkerValues(long offset)
     {
         foreach (var s in Signals) SetSignalMarkerValue(s, offset);
@@ -260,6 +258,5 @@ public class WaveFormViewModel : ObservableObject
     public void RemoveSignal(WaveModel model)
     {
         Signals.Remove(model);
-        SignalRemoved?.Invoke(this, EventArgs.Empty);
     }
 }

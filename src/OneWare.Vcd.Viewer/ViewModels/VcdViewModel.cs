@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Avalonia.Threading;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -9,7 +11,6 @@ using OneWare.Vcd.Parser;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
-using OneWare.WaveFormViewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
 using Prism.Ioc;
 
@@ -19,9 +20,10 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 {
     private readonly ISettingsService _settingsService;
 
-    private CancellationTokenSource? _cancellationTokenSource;
+    private CancellationTokenSource _cancellationTokenSource = new();
     private CompositeDisposable _compositeDisposable = new();
     private bool _isLiveExecution;
+    private bool _waitLiveExecution;
 
     private VcdContext? _lastContext;
 
@@ -31,8 +33,6 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
-
-    private bool _waitForLiveStream;
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
         ISettingsService settingsService, IWindowService windowService)
@@ -49,7 +49,13 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         LoadingThreadOptions = settingsService.GetComboOptions<int>("VcdViewer_LoadingThreads");
 
-        WaveFormViewer.SignalRemoved += (_, _) => { MarkIfDirty(); };
+        WaveFormViewer.Signals.ToObservableChangeSet().Subscribe(_ => MarkIfDirty());
+        WaveFormViewer.Signals.ToObservableChangeSet().Transform(signal =>
+                Observable.Merge(signal.WhenValueChanged(x => x.FixedPointShift).Select(object? (_) => null),
+                    signal.WhenValueChanged(x => x.AutomaticFixedPointShift).Select(object? (_) => null),
+                    signal.WhenValueChanged(x => x.DataType).Select(object? (_) => null)))
+            .MergeMany(x => x)
+            .Subscribe(_ => MarkIfDirty());
     }
 
     public ObservableCollection<VcdScopeModel> Scopes { get; } = new();
@@ -81,9 +87,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     public void PrepareLiveStream()
     {
-        Reset();
-        _waitForLiveStream = true;
-        _isLiveExecution = false;
+        _waitLiveExecution = true;
     }
 
     private static string GetSaveFilePath(string vcdPath)
@@ -97,7 +101,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         base.InitializeContent();
         if (_isLiveExecution) Title = $"{Path.GetFileName(FullPath)} - LIVE";
     }
-    
+
     protected override void UpdateCurrentFile(IFile? oldFile)
     {
         Refresh();
@@ -108,107 +112,43 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         WaveFormViewer.MarkerOffset = long.MaxValue;
         if (CurrentFile != null && !_isLiveExecution)
         {
-            if (_waitForLiveStream)
+            if (_waitLiveExecution)
             {
                 _isLiveExecution = true;
-                _waitForLiveStream = false;
+                _waitLiveExecution = false;
             }
-
             _ = LoadAsync();
         }
     }
 
     private async Task<bool> LoadAsync()
     {
-        IsLoading = true;
-        if (_cancellationTokenSource != null) await _cancellationTokenSource.CancelAsync();
-        _cancellationTokenSource = new CancellationTokenSource();
-        Scopes.Clear();
+        Reset();
 
-        IDisposable? timer = null;
+        IsLoading = true;
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        Scopes.Clear();
 
         try
         {
-            var context = !WaveFormViewer.Signals.Any()
-                ? await VcdContextManager.LoadContextAsync(GetSaveFilePath(FullPath))
-                : null;
+            var live = _isLiveExecution;
+            var token = _cancellationTokenSource.Token;
+            LoadingFailed = !await LoadInternalAsync(token);
 
-            if (context != null) _lastContext = context;
-
-            if (_cancellationTokenSource.IsCancellationRequested) return false;
-
-            var parseLock = LoadingThreads > 1 ? new object() : null;
-
-            _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
-
-            Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Count != 0 || x.Scopes.Count != 0)
-                .Select(x => new VcdScopeModel(x)));
-
-            WaveFormViewer.TimeScale = _vcdFile.Definition.TimeScale;
-
-            var lastTime = !_isLiveExecution ? await VcdParser.TryFindLastTime(FullPath) : 0;
-
-            if (_cancellationTokenSource.IsCancellationRequested) return false;
-
-            if (context?.OpenSignals is null)
+            if (live && token.IsCancellationRequested)
             {
-                var currentSignals = WaveFormViewer.Signals.ToArray();
-                WaveFormViewer.Signals.Clear();
-                foreach (var signal in currentSignals)
-                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Signal.Id, out var vcdSignal))
-                    {
-                        var model = WaveFormViewer.AddSignal(vcdSignal);
-                        model.DataType = signal.DataType;
-                        model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
-                        model.FixedPointShift = signal.FixedPointShift;
-                        WatchWave(model);
-                    }
+                LoadingFailed = !await LoadInternalAsync(token);
             }
-            else
-            {
-                foreach (var signal in context.OpenSignals)
-                    if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Id, out var vcdSignal))
-                    {
-                        var model = WaveFormViewer.AddSignal(vcdSignal);
-                        model.DataType = signal.DataType;
-                        model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
-                        model.FixedPointShift = signal.FixedPointShift;
-                        WatchWave(model);
-                    }
-            }
-
-            if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
-
-            //Check if a process is writing to this VCD to disable multicore parsing
-            var useThreads = _isLiveExecution ? 1 : _loadingThreads;
-
-            //Progress Handling
-            var progressParts = new int[LoadingThreads];
-            var progress = new Progress<(int part, int progress)>(x =>
-            {
-                if (x.part < progressParts.Length) progressParts[x.part] = x.progress;
-            });
-
-            timer = DispatcherTimer.Run(() =>
-            {
-                if (_cancellationTokenSource.Token.IsCancellationRequested) return false;
-
-                var progressAverage = (int)progressParts.Average();
-                ReportProgress(progressAverage, _isLiveExecution);
-                return true;
-            }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue);
-
-            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, _cancellationTokenSource.Token, useThreads,
-                parseLock);
-
-            if (_vcdFile != null)
-                foreach (var (_, s) in _vcdFile.Definition.SignalRegister)
-                    s.Invalidate();
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile!.Name;
 
-            LoadingFailed = false;
+            if (live)
+            {
+                await Task.Delay(200);
+                _isLiveExecution = false;
+            }
         }
         catch (Exception e)
         {
@@ -216,13 +156,92 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             LoadingFailed = true;
         }
 
-        timer?.Dispose();
-
         IsLoading = false;
         CheckIsDirty();
 
         await Task.Delay(200);
-        _isLiveExecution = false;
+
+        return true;
+    }
+
+    private async Task<bool> LoadInternalAsync(CancellationToken cancellationToken)
+    {
+        var context = !WaveFormViewer.Signals.Any()
+            ? await VcdContextManager.LoadContextAsync(GetSaveFilePath(FullPath))
+            : null;
+
+        if (context != null) _lastContext = context;
+
+        if (cancellationToken.IsCancellationRequested) return false;
+
+        var parseLock = LoadingThreads > 1 ? new object() : null;
+
+        _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
+
+        Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Count != 0 || x.Scopes.Count != 0)
+            .Select(x => new VcdScopeModel(x)));
+
+        WaveFormViewer.TimeScale = _vcdFile.Definition.TimeScale;
+
+        var lastTime = !_isLiveExecution ? await VcdParser.TryFindLastTime(FullPath) : 0;
+
+        if (cancellationToken.IsCancellationRequested) return false;
+
+        if (context?.OpenSignals is null)
+        {
+            var currentSignals = WaveFormViewer.Signals.ToArray();
+            WaveFormViewer.Signals.Clear();
+            foreach (var signal in currentSignals)
+                if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Signal.Id, out var vcdSignal))
+                {
+                    var model = WaveFormViewer.AddSignal(vcdSignal);
+                    model.DataType = signal.DataType;
+                    model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
+                    model.FixedPointShift = signal.FixedPointShift;
+                }
+        }
+        else
+        {
+            foreach (var signal in context.OpenSignals)
+                if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Id, out var vcdSignal))
+                {
+                    var model = WaveFormViewer.AddSignal(vcdSignal);
+                    model.DataType = signal.DataType;
+                    model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
+                    model.FixedPointShift = signal.FixedPointShift;
+                }
+        }
+
+        if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
+
+        //Check if a process is writing to this VCD to disable multicore parsing
+        var useThreads = _isLiveExecution ? 1 : _loadingThreads;
+
+        //Progress Handling
+        var progressParts = new int[LoadingThreads];
+        var progress = new Progress<(int part, int progress)>(x =>
+        {
+            if (x.part < progressParts.Length) progressParts[x.part] = x.progress;
+        });
+
+        var disposable = DispatcherTimer.Run(() =>
+            {
+                if (cancellationToken.IsCancellationRequested) return false;
+
+                var progressAverage = (int)progressParts.Average();
+                ReportProgress(progressAverage, _isLiveExecution);
+                return true;
+            }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue)
+            .DisposeWith(_compositeDisposable);
+
+        await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
+            parseLock);
+        
+        disposable.Dispose();
+
+        if (_vcdFile != null)
+            foreach (var (_, s) in _vcdFile.Definition.SignalRegister)
+                s.Invalidate();
 
         return true;
     }
@@ -232,7 +251,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         if (_vcdFile == null) return;
 
         Title = isLive ? $"{Path.GetFileName(FullPath)} - LIVE" : $"{Path.GetFileName(FullPath)} {progress}%";
-        
+
         if (_vcdFile.Definition.ChangeTimes.Count != 0)
         {
             if (_vcdFile.Definition.ChangeTimes.LastOrDefault() > WaveFormViewer.Max)
@@ -248,24 +267,13 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     public void AddSignal(IVcdSignal signal)
     {
-        var model = WaveFormViewer.AddSignal(signal);
+        WaveFormViewer.AddSignal(signal);
         MarkIfDirty();
-        WatchWave(model);
-    }
-
-    private void WatchWave(WaveModel waveModel)
-    {
-        waveModel.WhenValueChanged(x => x.DataType).Subscribe(x => { MarkIfDirty(); })
-            .DisposeWith(_compositeDisposable);
-        waveModel.WhenValueChanged(x => x.FixedPointShift).Subscribe(x => { MarkIfDirty(); })
-            .DisposeWith(_compositeDisposable);
-        waveModel.WhenValueChanged(x => x.AutomaticFixedPointShift).Subscribe(x => { MarkIfDirty(); })
-            .DisposeWith(_compositeDisposable);
     }
 
     protected override void Reset()
     {
-        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource.Cancel();
         _compositeDisposable.Dispose();
         _compositeDisposable = new CompositeDisposable();
 

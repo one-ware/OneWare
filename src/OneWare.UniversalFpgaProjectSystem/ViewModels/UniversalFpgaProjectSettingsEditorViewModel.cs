@@ -63,7 +63,6 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     
         _includesSettings = new ListBoxSetting("Files to Include", includes);
         _excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
-
         
         SettingsCollection.SettingModels.Add(_toolchain);
         SettingsCollection.SettingModels.Add(_loader);
