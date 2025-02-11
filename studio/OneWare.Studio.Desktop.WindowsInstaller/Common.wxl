@@ -7,5 +7,6 @@
   <String Id="Description" Value="FPGA Programming made easy"/>
   <String Id="Keywords" Value="dotnet,core,application,installer,vhdplus"/>
   <String Id="DowngradeErrorMessage" Value="A newer version of OneWare Studio is already installed."/>
+  <String Id="LaunchOnExit" Value="Launch OneWare Studio"/>
   <String Id="Language" Value="1033"/>
 </WixLocalization>

@@ -7,9 +7,5 @@
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="DATAFOLDER" Name="data" />
     </DirectoryRef>
-
-    <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="InstallProgramMenuFolder" Name="!(bind.Property.ProductName)" />
-    </StandardDirectory>
   </Fragment>
 </Wix>

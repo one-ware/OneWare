@@ -15,6 +15,7 @@
   
   <ItemGroup>
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +28,7 @@
     <!-- Clean previous build folder -->
     <Exec Command="rd /s /q $(StudioPublish)" />
     <!-- Publish Oneware Studio -->
-    <Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64" />
+    <!--<Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64" />-->
     <!-- Get assembly version -->
     <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />

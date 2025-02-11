@@ -2,91 +2,42 @@
     <Fragment>
         <ComponentGroup Id="StudioComponents" Directory="INSTALLFOLDER">
 
-            <Component Id="MainAppShortcut" Guid="{b4d03014-1ed3-45c4-9d61-f96cb666e999}">
+            <Component Id="OneWareStudioExeComponent" Guid="{7a73a50a-c9e7-4511-af5d-642296257da6}">
+                <File Id="OneWareStudioExe" Source="!(bindpath.publish)\OneWareStudio.exe"
+                    KeyPath="yes">
+                    <Shortcut Name="!(loc.ProductNameShortCut)" Directory="DesktopFolder"
+                        Advertise="yes" WorkingDirectory="INSTALLFOLDER" />
 
-                <Shortcut Id="MainAppShortcut"
-                    Name="!(loc.ProductNameShortCut)"
-                    Target="[INSTALLFOLDER]OneWareStudio.exe"
-                    Directory="InstallProgramMenuFolder"
-                    WorkingDirectory="INSTALLFOLDER"
-                />
+                    <Shortcut Name="!(loc.ProductNameShortCut)" Directory="ProgramMenuFolder"
+                        Advertise="yes" WorkingDirectory="INSTALLFOLDER" />
+                </File>
+            </Component>
 
-                <!-- Desktop shortcut -->
-                <Shortcut Id="ApplicationDesktopShortcut"
-                    Name="!(loc.ProductNameShortCut)"
-                    Description="!(loc.Description)"
-                    Directory="DesktopFolder"
-                    Target="[INSTALLFOLDER]OneWareStudio.exe"
-                    WorkingDirectory="INSTALLFOLDER" />
+            <Component Id="FileAssociations" Guid="{079f76d6-ed96-4ae3-9a74-d5aa5e99b01d}">
 
-                <!-- Our unique key for this component/shortcut -->
-                <RegistryValue Id="RegShortcutKey" Root="HKCU"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)" Name="Shortcut" Value="1" Type="integer"
-                    KeyPath="yes" />
+                <!-- Associate .fpgaproj files -->
+                <RegistryKey Root="HKCR" Key=".fpgaproj">
+                    <RegistryValue Value="OneWare.Project" Type="string" />
+                </RegistryKey>
 
-                <!--Remove start menu items -->
-                <RemoveFolder Id="RemoveStartMenu" Directory="InstallProgramMenuFolder"
-                    On="uninstall" />
+                <!-- Assign an icon to .fpgaproj files -->
+                <RegistryKey Root="HKCR" Key="OneWare.Project\DefaultIcon">
+                    <RegistryValue Value="[#OneWareStudioExe],0" Type="string" />
+                </RegistryKey>
 
-                <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
-                <RegistryValue Root="HKLM" Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities"
-                    Name="ApplicationDescription" Value="OneWare Studio" Type="string" />
-                <RegistryValue Root="HKLM" Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities"
-                    Name="ApplicationIcon" Value="[INSTALLFOLDER]OneWareStudio.exe,0" Type="string" />
-                <RegistryValue Root="HKLM" Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities"
-                    Name="ApplicationName" Value="OneWare Studio" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\DefaultIcon"
-                    Value="[INSTALLFOLDER]OneWareStudio.exe,1" Type="string" />
-
-                    <!--
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\FileAssociations"
-                    Name=".vhdpproj" Value="VHDPlus.Project" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\FileAssociations"
-                    Name=".vhdp" Value="VHDPlus.Document" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\MIMEAssociations"
-                    Name="application/vhdpproj" Value="VHDPlus.Project" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\MIMEAssociations"
-                    Name="application/vhdp" Value="VHDPlus.Document" Type="string" />
-
-                    -->
-
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\!(loc.ProductNameFolder)\Capabilities\shell\Open\command"
-                    Value="&quot;[INSTALLFOLDER]OneWareStudio.exe&quot; &quot;%1&quot;" Type="string" />
-                <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="!(loc.ProductNameFolder)"
-                    Value="SOFTWARE\!(loc.ProductNameFolder)\Capabilities" Type="string" />
-
-                <!-- App Paths to support Start,Run -> "myapp" -->
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OneWareStudio.exe"
-                    Value="[!OneWareStudio.exe]" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OneWareStudio.exe"
-                    Name="Path" Value="[INSTALLFOLDER]" Type="string" />
-
-                <!-- Extend to the "open with" list + Win7 jump menu pinning
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\Classes\Applications\VHDPlus.exe\SupportedTypes" Name=".vhdpproj"
-                    Value="" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\Classes\Applications\VHDPlus.exe\SupportedTypes" Name=".vhdp"
-                    Value="" Type="string" />
-                <RegistryValue Root="HKLM"
-                    Key="SOFTWARE\Classes\Applications\VHDPlus.exe\shell\open" Name="VHDPlus"
-                    Value="VHDPlus" Type="string" />
-
-                <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\VHDP.Project" Name="VHDPlus"
-                    Value="VHDPlus" Type="string" />
-                -->
+                <!-- Define how to open files -->
+                <RegistryKey Root="HKCR" Key="OneWare.Project\shell\open\command">
+                    <RegistryValue Value="&quot;[#OneWareStudioExe]&quot; &quot;%1&quot;"
+                        Type="string" />
+                </RegistryKey>
 
             </Component>
 
-            <Files Include="!(bindpath.publish)\**\*.*" />
+
+            <!-- Harvest Studio Files Automatically -->
+            <Files Include="!(bindpath.publish)\**\*.*">
+                <Exclude Files="!(bindpath.publish)OneWareStudio.exe" />
+            </Files>
 
         </ComponentGroup>
     </Fragment>

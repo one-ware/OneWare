@@ -1,8 +1,30 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Fragment>
     <UI Id="UI">
-      <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER"/>
+      <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
       <UIRef Id="WixUI_ErrorProgressText" />
+
+      <!-- Shows launch application on last screen -->
+      <Publish Dialog="ExitDialog"
+        Control="Finish"
+        Event="DoAction"
+        Value="LaunchApplication"
+        Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
     </UI>
-   </Fragment>
+
+    <!-- Checkbox checked by default -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <!-- Checkbox text message -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.LaunchOnExit)" />
+
+    <Property Id="WixShellExecTarget" Value="[#OneWareStudioExe]" />
+
+    <!-- Run custom action -->
+    <CustomAction Id="LaunchApplication"
+      BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+      DllEntry="WixShellExec"
+      Impersonate="yes" />
+      
+  </Fragment>
 </Wix>
