@@ -11,13 +11,11 @@
                     <Shortcut Name="!(loc.ProductNameShortCut)" Directory="ProgramMenuFolder"
                         Advertise="yes" WorkingDirectory="INSTALLFOLDER" />
                 </File>
-            </Component>
-
-            <Component Id="FileAssociations" Guid="{079f76d6-ed96-4ae3-9a74-d5aa5e99b01d}">
 
                 <!-- Associate .fpgaproj files -->
                 <RegistryKey Root="HKCR" Key=".fpgaproj">
                     <RegistryValue Value="OneWare.Project" Type="string" />
+                    <RegistryValue Name="PerceivedType" Value="document" Type="string" />
                 </RegistryKey>
 
                 <!-- Assign an icon to .fpgaproj files -->
@@ -31,8 +29,17 @@
                         Type="string" />
                 </RegistryKey>
 
-            </Component>
+                <!-- Register OneWare Studio in the "Open With" list -->
+                <RegistryKey Root="HKCR" Key="Applications\OneWareStudio.exe">
+                    <RegistryValue Name="FriendlyAppName" Value="OneWare Studio" Type="string" />
+                </RegistryKey>
 
+                <!-- Define how OneWare Studio should open files -->
+                <RegistryKey Root="HKCR" Key="Applications\OneWareStudio.exe\shell\open\command">
+                    <RegistryValue Value="&quot;[#OneWareStudioExe]&quot; &quot;%1&quot;"
+                        Type="string" />
+                </RegistryKey>
+            </Component>
 
             <!-- Harvest Studio Files Automatically -->
             <Files Include="!(bindpath.publish)\**\*.*">

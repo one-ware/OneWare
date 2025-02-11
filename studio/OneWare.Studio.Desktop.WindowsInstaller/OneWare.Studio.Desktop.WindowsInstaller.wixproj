@@ -6,7 +6,7 @@
     <OutputType>Package</OutputType>
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-    <StudioPublish>$(StudioFolder)/bin/Release/net9.0/win-x64/publish</StudioPublish>
+    <StudioPublish>./publish</StudioPublish>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +28,7 @@
     <!-- Clean previous build folder -->
     <Exec Command="rd /s /q $(StudioPublish)" />
     <!-- Publish Oneware Studio -->
-    <!--<Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64" />-->
+    <Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
     <!-- Get assembly version -->
     <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
