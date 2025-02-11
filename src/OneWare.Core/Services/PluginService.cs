@@ -121,7 +121,6 @@ public class PluginService : IPluginService
                     }
                     if (File.Exists(libPath))
                     {
-                        Console.WriteLine($"Loading native library: {libPath}");
                         return NativeLibrary.Load(libPath);
                     }
                     
