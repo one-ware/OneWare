@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using ImTools;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
 
@@ -14,6 +15,21 @@ public class Paths : IPaths
         AppName = appName;
         AppIconPath = appIconPath;
         AppFolderName = appName.Replace(" ", "");
+        
+        var commandLineArgs = Environment.GetCommandLineArgs();
+        if (commandLineArgs.Length > 1 && commandLineArgs.IndexOf(x => x == "--oneware-dir") is { } dirIndex and >= 0)
+        {
+            DocumentsDirectory = Path.GetFullPath(commandLineArgs[dirIndex + 1]);
+        }
+        else DocumentsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
+        if (commandLineArgs.Length > 1 && commandLineArgs.IndexOf(x => x == "--oneware-appdata-dir") is { } appdataDirIndex and >= 0)
+        {
+            AppDataDirectory = Path.GetFullPath(commandLineArgs[appdataDirIndex + 1]);
+        }
+        else AppDataDirectory = Path.Combine(
+            Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? Environment.SpecialFolder.LocalApplicationData
+                : Environment.SpecialFolder.ApplicationData), AppFolderName);
 
         Directory.CreateDirectory(AppDataDirectory);
         Directory.CreateDirectory(DocumentsDirectory);
@@ -39,11 +55,7 @@ public class Paths : IPaths
     public string AppIconPath { get; }
     public string AppFolderName { get; }
 
-    public string AppDataDirectory =>
-        Path.Combine(
-            Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                ? Environment.SpecialFolder.LocalApplicationData
-                : Environment.SpecialFolder.ApplicationData), AppFolderName);
+    public string AppDataDirectory { get; }
 
     public string TempDirectory => Path.GetTempPath();
 
@@ -51,8 +63,7 @@ public class Paths : IPaths
     public string LayoutDirectory => Path.Combine(AppDataDirectory, "Layouts");
     public string SettingsPath => Path.Combine(AppDataDirectory, "Settings.json");
 
-    public string DocumentsDirectory =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
+    public string DocumentsDirectory { get; }
 
     public string ProjectsDirectory => Path.Combine(DocumentsDirectory, "Projects");
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
