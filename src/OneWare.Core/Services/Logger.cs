@@ -26,8 +26,7 @@ public class Logger : ILogger
     }
 
     private string LogFilePath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), _paths.AppFolderName,
-            "IDELog.txt");
+        Path.Combine(_paths.DocumentsDirectory, "IDELog.txt");
 
     public void WriteLogFile(string value)
     {
