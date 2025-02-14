@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -325,6 +326,8 @@ public class App : PrismApplication
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
+            DisableAvaloniaDataAnnotationValidation();
+            
             var mainWindow = Container.Resolve<MainWindow>();
             mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
             {
@@ -424,5 +427,18 @@ public class App : PrismApplication
         Container.Resolve<IApplicationStateService>().ExecuteShutdownActions();
 
         Environment.Exit(0);
+    }
+    
+    private void DisableAvaloniaDataAnnotationValidation()
+    {
+        // Get an array of plugins to remove
+        var dataValidationPluginsToRemove =
+            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
+
+        // remove each entry found
+        foreach (var plugin in dataValidationPluginsToRemove)
+        {
+            BindingPlugins.DataValidators.Remove(plugin);
+        }
     }
 }
