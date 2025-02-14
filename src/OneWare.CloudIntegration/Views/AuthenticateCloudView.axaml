@@ -9,6 +9,7 @@
                          x:Class="OneWare.SourceControl.Views.AuthenticateCloudView"
                          x:DataType="viewModels:AuthenticateCloudViewModel"
                          CustomIcon="{DynamicResource CodeIcons.Account}"
+                         WindowStartupLocation="CenterOwner"
                          Name="AuthenticateGitViewView" Title="{Binding Title}">
 
     <Interaction.Behaviors>
