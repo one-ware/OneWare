@@ -180,6 +180,18 @@ public class ColorSetting : TitledSetting
     }    
 }
 
+public class ProjectSetting
+{
+    public ProjectSetting(string key, TitledSetting setting)
+    {
+        this.Key = key;
+        this.Setting = setting;
+    }
+    
+    public string Key { get; }
+    public TitledSetting Setting { get; }
+}
+
 public abstract class CustomSetting : Setting
 {
     public CustomSetting(object defaultValue) : base(defaultValue)
