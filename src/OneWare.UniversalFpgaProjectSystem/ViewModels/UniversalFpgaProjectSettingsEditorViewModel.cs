@@ -22,6 +22,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     
     private readonly FpgaService _fpgaService;
     
+    private readonly IProjectSettingsService _projectSettingsService;
+    
     public SettingsCollectionViewModel SettingsCollection { get; } = new("")
     {
         ShowTitle = false
@@ -36,11 +38,12 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private ListBoxSetting _includesSettings;
     private ListBoxSetting _excludesSettings;
     
-    public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root, IProjectExplorerService projectExplorerService, FpgaService fpgaService)
+    public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root, IProjectExplorerService projectExplorerService, FpgaService fpgaService, IProjectSettingsService projectSettingsService)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
+        _projectSettingsService = projectSettingsService;
         Title = $"{_root.Name} Settings";
 
         if (root.TopEntity != null && (root.TopEntity.Name.Contains("vhd") || root.TopEntity.Name.Contains("vhdl")))
@@ -73,6 +76,11 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         
         SettingsCollection.SettingModels.Add(_includesSettings);
         SettingsCollection.SettingModels.Add(_excludesSettings);
+
+        /*foreach (ProjectSetting setting in _projectSettingsService.GetProjectSettingsDictionary().Values.)
+        {
+            TitledSetting localCopy = setting.Setting.
+        }*/
         
     }
 
