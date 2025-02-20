@@ -5,16 +5,16 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class ProjectSettingService : IProjectSettingsService
 {
-    public Dictionary<string, ProjectSetting> ProjectSettings { get; } = new();
+    public Dictionary<string, TitledSetting> ProjectSettings { get; } = new();
     
     public void AddProjectSetting(string key, TitledSetting projectSetting)
     {
-        throw new NotImplementedException();
+        AddProjectSetting(new ProjectSetting(key, projectSetting));
     }
     
     public void AddProjectSetting(ProjectSetting projectSetting)
     {
-        throw new NotImplementedException();
+        ProjectSettings.Add(projectSetting.Key, projectSetting.Setting);
     }
 
     public T[] GetComboOptions<T>(string key)
