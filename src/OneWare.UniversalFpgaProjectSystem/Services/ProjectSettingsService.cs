@@ -31,4 +31,9 @@ public class ProjectSettingService : IProjectSettingsService
     {
         throw new NotImplementedException();
     }
+
+    public Dictionary<string, ProjectSetting> GetProjectSettingsDictionary()
+    {
+        throw new NotImplementedException();
+    }
 }

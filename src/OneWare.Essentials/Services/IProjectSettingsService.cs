@@ -13,4 +13,6 @@ public interface IProjectSettingsService
     public void Load(string path);
     
     public void Save(string path);
+    
+    public Dictionary<string, ProjectSetting> GetProjectSettingsDictionary();
 }
