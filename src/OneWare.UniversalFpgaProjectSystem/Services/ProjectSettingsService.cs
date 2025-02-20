@@ -3,7 +3,7 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 
-public class ProjectSettingService : IProjectSettingsService
+public class ProjectSettingsService : IProjectSettingsService
 {
     public Dictionary<string, TitledSetting> ProjectSettings { get; } = new();
     
