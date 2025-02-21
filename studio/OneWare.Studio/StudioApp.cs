@@ -37,7 +37,6 @@ public class StudioApp : App
             "Automatically download Binaries",
             "Automatically download binaries for features when possible", true);
         SettingsService.Load(Paths.SettingsPath);
-        ProjectSettingsService.AddProjectSetting("test", new CheckBoxSetting("blub", false));
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
