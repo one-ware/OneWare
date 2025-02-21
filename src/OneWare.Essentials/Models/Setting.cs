@@ -76,7 +76,7 @@ public class TextBoxSetting : TitledSetting
     
     public override TitledSetting Clone()
     {
-        return new TextBoxSetting(this.Title, (bool)this.DefaultValue, Watermark);
+        return new TextBoxSetting(this.Title, this.DefaultValue, Watermark);
     }
 }
 
@@ -91,7 +91,7 @@ public class ComboBoxSetting : TitledSetting
     
     public override TitledSetting Clone()
     {
-        return new ComboBoxSetting(this.Title, (bool)this.DefaultValue, Options);
+        return new ComboBoxSetting(this.Title, this.DefaultValue, Options);
     }
 }
 
