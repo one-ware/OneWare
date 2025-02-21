@@ -8,11 +8,9 @@ public interface IProjectSettingsService
     
     public void AddProjectSetting(ProjectSetting projectSetting);
 
-    public T[] GetComboOptions<T>(string key);
-
     public void Load(string path);
     
     public void Save(string path);
     
-    public Dictionary<string, ProjectSetting> GetProjectSettingsDictionary();
+    public List<ProjectSetting> GetProjectSettingsList();
 }

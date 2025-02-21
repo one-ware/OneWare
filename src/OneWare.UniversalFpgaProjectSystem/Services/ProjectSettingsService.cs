@@ -5,7 +5,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class ProjectSettingsService : IProjectSettingsService
 {
-    public Dictionary<string, TitledSetting> ProjectSettings { get; } = new();
+    public List<ProjectSetting> ProjectSettings { get; } = new();
     
     public void AddProjectSetting(string key, TitledSetting projectSetting)
     {
@@ -14,12 +14,7 @@ public class ProjectSettingsService : IProjectSettingsService
     
     public void AddProjectSetting(ProjectSetting projectSetting)
     {
-        ProjectSettings.Add(projectSetting.Key, projectSetting.Setting);
-    }
-
-    public T[] GetComboOptions<T>(string key)
-    {
-        throw new NotImplementedException();
+        ProjectSettings.Add(projectSetting);
     }
 
     public void Load(string path)
@@ -32,8 +27,15 @@ public class ProjectSettingsService : IProjectSettingsService
         throw new NotImplementedException();
     }
 
-    public Dictionary<string, ProjectSetting> GetProjectSettingsDictionary()
+    public List<ProjectSetting> GetProjectSettingsList()
     {
-        throw new NotImplementedException();
+        List<ProjectSetting> ret = new();
+        
+        foreach (var projectSetting in ProjectSettings)
+        {
+            ret.Add(new ProjectSetting(projectSetting.Key, projectSetting.Setting.Clone()));
+        }
+        
+        return ret;
     }
 }

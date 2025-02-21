@@ -4,6 +4,7 @@ using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
@@ -36,6 +37,7 @@ public class StudioApp : App
             "Automatically download Binaries",
             "Automatically download binaries for features when possible", true);
         SettingsService.Load(Paths.SettingsPath);
+        ProjectSettingsService.AddProjectSetting("test", new CheckBoxSetting("blub", false));
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)

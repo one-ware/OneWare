@@ -49,12 +49,19 @@ public abstract class TitledSetting : Setting
     public IObservable<bool>? IsEnabledObservable { get; init; }
     
     public IObservable<bool>? IsVisibleObservable { get; init; }
+
+    public abstract TitledSetting Clone();
 }
 
 public class CheckBoxSetting : TitledSetting
 {
     public CheckBoxSetting(string title, bool defaultValue) : base(title, defaultValue)
     {
+    }
+
+    public override TitledSetting Clone()
+    {
+        return new CheckBoxSetting(this.Title, (bool)this.DefaultValue);
     }
 }
 
@@ -66,6 +73,11 @@ public class TextBoxSetting : TitledSetting
     }
 
     public string? Watermark { get; }
+    
+    public override TitledSetting Clone()
+    {
+        return new TextBoxSetting(this.Title, (bool)this.DefaultValue, Watermark);
+    }
 }
 
 public class ComboBoxSetting : TitledSetting
@@ -76,6 +88,11 @@ public class ComboBoxSetting : TitledSetting
     }
     
     public object[] Options { get; }
+    
+    public override TitledSetting Clone()
+    {
+        return new ComboBoxSetting(this.Title, (bool)this.DefaultValue, Options);
+    }
 }
 
 public class ListBoxSetting : TitledSetting
@@ -88,6 +105,11 @@ public class ListBoxSetting : TitledSetting
     {
         get => (Value as ObservableCollection<string>)!;
         set => Value = value;
+    }
+
+    public override TitledSetting Clone()
+    {
+        return new ListBoxSetting(this.Title, (string[])this.DefaultValue);
     }
 }
 
@@ -109,6 +131,11 @@ public class SliderSetting : TitledSetting
     public double Max { get; }
 
     public double Step { get; }
+    
+    public override TitledSetting Clone()
+    {
+        return new SliderSetting(this.Title, (double)this.DefaultValue, Min, Max, Step);
+    }
 }
 
 public abstract class PathSetting : TextBoxSetting
@@ -119,6 +146,7 @@ public abstract class PathSetting : TextBoxSetting
         string? startDirectory, Func<string, bool>? checkPath) : base(title, defaultValue, watermark)
     {
         StartDirectory = startDirectory;
+        CheckPath = checkPath;
 
         if (checkPath != null)
         {
@@ -129,6 +157,8 @@ public abstract class PathSetting : TextBoxSetting
 
     public string? StartDirectory { get; }
     public bool CanVerify { get; }
+    
+    public Func<string, bool>? CheckPath { get; }
 
     public bool IsValid
     {
@@ -177,7 +207,12 @@ public class ColorSetting : TitledSetting
     public ColorSetting(string title, Color defaultValue) : base(title, defaultValue)
     {
         
-    }    
+    }
+
+    public override TitledSetting Clone()
+    {
+        return new ColorSetting(this.Title, (Color)this.DefaultValue);
+    }
 }
 
 public class ProjectSetting
