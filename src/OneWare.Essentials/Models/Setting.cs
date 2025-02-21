@@ -109,7 +109,7 @@ public class ListBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ListBoxSetting(this.Title, (string[])this.DefaultValue);
+        return new ListBoxSetting(this.Title, ((ObservableCollection<string>)this.DefaultValue).ToArray());
     }
 }
 
