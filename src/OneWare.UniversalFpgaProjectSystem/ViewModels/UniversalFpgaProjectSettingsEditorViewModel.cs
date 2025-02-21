@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia.Media;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
@@ -115,7 +116,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "SliderSetting":
                         localCopy = new SliderSetting(localCopy.Title,
-                            (double)_root.Properties[setting.Key]!.AsValue(), ((SliderSetting)localCopy).Min,
+                            Double.Parse(_root.Properties[setting.Key]!.ToString(), CultureInfo.InvariantCulture), ((SliderSetting)localCopy).Min,
                             ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step);
                         break;
 
