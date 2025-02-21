@@ -1,16 +1,9 @@
-using System.Collections.ObjectModel;
-using System.Text.Json.Nodes;
-using System.Windows.Input;
-using Avalonia.Controls;
 using Avalonia.Media;
-using DynamicData;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
-using OneWare.Settings.ViewModels.SettingTypes;
-using OneWare.Settings.Views.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
@@ -100,12 +93,12 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         break;
 
                     case "TextBoxSetting":
-                        localCopy = new TextBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.AsObject(),
+                        localCopy = new TextBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
                             ((TextBoxSetting)localCopy).Watermark);
                         break;
 
                     case "ComboBoxSetting":
-                        localCopy = new ComboBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.AsObject(),
+                        localCopy = new ComboBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
                             ((ComboBoxSetting)localCopy).Options);
                         break;
 
@@ -122,22 +115,25 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "SliderSetting":
                         localCopy = new SliderSetting(localCopy.Title,
-                            (double)_root.Properties[setting.Key]!.AsObject(), ((SliderSetting)localCopy).Min,
+                            (double)_root.Properties[setting.Key]!.AsValue(), ((SliderSetting)localCopy).Min,
                             ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step);
                         break;
 
                     case "FolderPathSetting":
                         localCopy = new FolderPathSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsObject().ToString(), ((FolderPathSetting)localCopy).Watermark,
+                            _root.Properties[setting.Key]!.ToString(), ((FolderPathSetting)localCopy).Watermark,
                             ((FolderPathSetting)localCopy).StartDirectory, ((FolderPathSetting)localCopy).CheckPath);
                         break;
 
                     case "FilePathSetting":
-                        localCopy = new FilePathSetting(localCopy.Title, _root.Properties[setting.Key]!.AsObject().ToString(), ((FilePathSetting)localCopy).Watermark, ((FilePathSetting)localCopy).StartDirectory, ((FilePathSetting)localCopy).CheckPath);
+                        localCopy = new FilePathSetting(localCopy.Title,
+                            _root.Properties[setting.Key]!.ToString(),
+                            ((FilePathSetting)localCopy).Watermark, ((FilePathSetting)localCopy).StartDirectory,
+                            ((FilePathSetting)localCopy).CheckPath);
                         break;
 
                     case "ColorSetting":
-                        Color.TryParse(_root.Properties[setting.Key]!.AsObject().ToString(), out Color color);
+                        Color.TryParse(_root.Properties[setting.Key]!.ToString(), out Color color);
                         localCopy = new ColorSetting(localCopy.Title, color);
                         break;
 
@@ -147,7 +143,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         continue;
                 }
             }
-            
+
             _dynamicSettingsKeys.Add(localCopy, setting.Key);
 
             SettingsCollection.SettingModels.Add(localCopy);
@@ -176,7 +172,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 toSave == _excludesSettings || toSave == _vhdlStandard)
             {
                 // Hardcoded; Skip for now
-                
+
                 continue;
             }
 
@@ -188,47 +184,48 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             switch (toSave.GetType().Name)
             {
                 case "CheckBoxSetting":
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
+                        toSave.Value.ToString()!);
+                    break;
+
+                case "TextBoxSetting":
                     _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
-                case "TextBoxSetting":
 
-                    break;
-                
                 case "ComboBoxSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
+
                 case "ListBoxSetting":
-                    
+                    _root.SetProjectPropertyArray(_dynamicSettingsKeys[(toSave as TitledSetting)!], ((ListBoxSetting)toSave).Items.Select(item => item.ToString()).ToArray());
                     break;
-                
+
                 case "ComboBoxSearchSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
+
                 case "SliderSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
+
                 case "FolderPathSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
+
                 case "FilePathSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
                     break;
-                
+
                 case "ColorSetting":
-                    
+                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], ((Color) ((ColorSetting) toSave).Value).ToString());
                     break;
-                
+
                 default:
                     // This should never happen
                     break;
             }
         }
-        
+
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadAsync(_root);
     }
