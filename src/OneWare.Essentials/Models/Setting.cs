@@ -217,14 +217,17 @@ public class ColorSetting : TitledSetting
 
 public class ProjectSetting
 {
-    public ProjectSetting(string key, TitledSetting setting)
+    public ProjectSetting(string key, TitledSetting setting, Func<IProjectRootWithFile, bool> activationFunction)
     {
         this.Key = key;
         this.Setting = setting;
+        this.ActivationFunction = activationFunction;
     }
     
     public string Key { get; }
     public TitledSetting Setting { get; }
+    
+    public Func<IProjectRootWithFile, bool> ActivationFunction { get; }
 }
 
 public abstract class CustomSetting : Setting

@@ -4,7 +4,7 @@ namespace OneWare.Essentials.Services;
 
 public interface IProjectSettingsService
 {
-    public void AddProjectSetting(string key, TitledSetting projectSetting);
+    public void AddProjectSetting(string key, TitledSetting projectSetting, Func<IProjectRootWithFile, bool> activationFunction);
     
     public void AddProjectSetting(ProjectSetting projectSetting);
 

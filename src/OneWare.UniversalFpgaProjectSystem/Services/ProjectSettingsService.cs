@@ -7,9 +7,9 @@ public class ProjectSettingsService : IProjectSettingsService
 {
     public List<ProjectSetting> ProjectSettings { get; } = new();
     
-    public void AddProjectSetting(string key, TitledSetting projectSetting)
+    public void AddProjectSetting(string key, TitledSetting projectSetting, Func<IProjectRootWithFile, bool> activationFunction)
     {
-        AddProjectSetting(new ProjectSetting(key, projectSetting));
+        AddProjectSetting(new ProjectSetting(key, projectSetting, activationFunction));
     }
     
     public void AddProjectSetting(ProjectSetting projectSetting)
@@ -33,7 +33,7 @@ public class ProjectSettingsService : IProjectSettingsService
         
         foreach (var projectSetting in ProjectSettings)
         {
-            ret.Add(new ProjectSetting(projectSetting.Key, projectSetting.Setting.Clone()));
+            ret.Add(new ProjectSetting(projectSetting.Key, projectSetting.Setting.Clone(), projectSetting.ActivationFunction));
         }
         
         return ret;
