@@ -82,6 +82,11 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         {
             TitledSetting localCopy = setting.Setting;
 
+            if (setting.ActivationFunction(root) == false)
+            {
+                continue;
+            }
+
             if (_root.Properties.AsObject().ContainsKey(setting.Key))
             {
                 // load stored value
