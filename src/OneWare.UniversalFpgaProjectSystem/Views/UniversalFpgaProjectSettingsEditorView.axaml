@@ -5,11 +5,12 @@
                          xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
-                         PrefHeight="450" PrefWidth="600" Padding="4"
+                         SizeToContent="Height" PrefWidth="600" Padding="4"
                          WindowBackground="{DynamicResource ThemeBackgroundBrush}"
                          WindowStartupLocation="CenterOwner"
                          Title="{Binding Title}"
-                         CustomIcon="{DynamicResource CreateIcon}"
+                         CustomIcon="{DynamicResource Material.SettingsOutline}"
+                         Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                          x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectSettingsEditorView"
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
@@ -32,5 +33,6 @@
                 <TextBlock Text="Save and Close" Margin="5 0" />
             </Button>
         </StackPanel>
+        
     </Grid>
 </controls:FlexibleWindow>
