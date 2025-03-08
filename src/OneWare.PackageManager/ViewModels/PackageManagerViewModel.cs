@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
+using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -11,8 +13,9 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : ObservableObject
 {
-    private readonly ILogger _logger;
     private readonly IPackageService _packageService;
+    
+    private readonly ILogger _logger;
 
     private string _filter = string.Empty;
 
@@ -56,19 +59,17 @@ public class PackageManagerViewModel : ObservableObject
 
         SelectedCategory = PackageCategories.First();
 
+        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x =>
+        {
+            IsLoading = x;
+        });
+
+        Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
+        {
+            ConstructPackageViewModels();
+        });
+        
         ConstructPackageViewModels();
-
-        packageService.UpdateStarted += (_, _) =>
-        {
-            ConstructPackageViewModels();
-            IsLoading = true;
-        };
-
-        packageService.UpdateEnded += (_, _) =>
-        {
-            IsLoading = false;
-            ConstructPackageViewModels();
-        };
     }
 
     public bool ShowInstalled
@@ -176,10 +177,5 @@ public class PackageManagerViewModel : ObservableObject
     {
         foreach (var categoryModel in PackageCategories)
             categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
-    }
-
-    public async Task OpenSourceSettingsAsync()
-    {
-        
     }
 }

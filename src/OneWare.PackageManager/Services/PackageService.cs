@@ -1,10 +1,12 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -14,7 +16,7 @@ using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
 
-public partial class PackageService : IPackageService
+public partial class PackageService : ObservableObject, IPackageService
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -22,13 +24,16 @@ public partial class PackageService : IPackageService
         AllowTrailingCommas = true,
         WriteIndented = true
     };
+    
+    private bool _isUpdating;
 
     private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
 
     private readonly IHttpService _httpService;
     private readonly ISettingsService _settingsService;
 
-    private readonly object _lock = new();
+    private readonly Lock _installLock = new();
+
     private readonly ILogger _logger;
     private CancellationTokenSource? _cancellationTokenSource;
     private CompositeDisposable _packageRegistrationSubscription = new();
@@ -44,6 +49,14 @@ public partial class PackageService : IPackageService
 
         LoadInstalledPackagesDatabase();
     }
+    
+    public bool IsUpdating
+    {
+        get => _isUpdating;
+        private set => SetProperty(ref _isUpdating, value);
+    }
+
+    public event EventHandler? PackagesUpdated;
 
     private string PackageDataBasePath { get; }
 
@@ -52,10 +65,6 @@ public partial class PackageService : IPackageService
     private List<Package> StandalonePackages { get; } = [];
 
     public Dictionary<string, PackageModel> Packages { get; } = [];
-
-    public event EventHandler? UpdateStarted;
-
-    public event EventHandler? UpdateEnded;
 
     public void RegisterPackageRepository(string url)
     {
@@ -78,9 +87,7 @@ public partial class PackageService : IPackageService
         }
         else
         {
-            Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
             AddPackage(package);
-            Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
         }
     }
 
@@ -91,26 +98,51 @@ public partial class PackageService : IPackageService
 
         await WaitForInstallsAsync();
 
-        Dispatcher.UIThread.Post(() => UpdateStarted?.Invoke(this, EventArgs.Empty));
-
+        IsUpdating = true;
+        
         _packageRegistrationSubscription?.Dispose();
         _packageRegistrationSubscription = new CompositeDisposable();
 
-        Packages.Clear();
-
         var result = LoadInstalledPackagesDatabase();
 
-        var customRepositories = _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
+        var customRepositories =
+            _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
 
         var allRepos = PackageRepositories.Concat(customRepositories);
+        var newPackages = new List<Package>();
         
         foreach (var repository in allRepos)
         {
-            var result2 = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
-            result = result && result2;
+            var loadedPackages = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
+
+            if (_cancellationTokenSource.IsCancellationRequested) break;
+            
+            if (loadedPackages != null)
+                foreach (var package in loadedPackages)
+                {
+                    newPackages.Add(package);
+                    
+                    if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                    {
+                        pkg.Package = package;
+                    }
+                    else
+                    {
+                        AddPackage(package);
+                    }
+                }
+
+            result = result && loadedPackages != null;
         }
 
-        Dispatcher.UIThread.Post(() => UpdateEnded?.Invoke(this, EventArgs.Empty));
+        foreach (var removedPackage in Packages.Values.Where(x => !newPackages.Contains(x.Package)).ToArray())
+        {
+            Packages.Remove(removedPackage.Package.Id!);
+        }
+
+        PackagesUpdated?.Invoke(this, EventArgs.Empty);
+
+        IsUpdating = false;
 
         return result;
     }
@@ -122,7 +154,7 @@ public partial class PackageService : IPackageService
     /// </summary>
     public Task<bool> InstallAsync(Package package)
     {
-        lock (_lock)
+        lock (_installLock)
         {
             if (Packages.TryGetValue(package.Id!, out var model))
             {
@@ -150,7 +182,8 @@ public partial class PackageService : IPackageService
     private void AddPackage(Package package, string? installedVersion = null)
     {
         if (package.Id == null) throw new Exception("Package ID cannot be empty");
-
+        if (Packages.ContainsKey(package.Id)) return;
+        
         PackageModel model = package.Type switch
         {
             "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
@@ -161,7 +194,7 @@ public partial class PackageService : IPackageService
         };
 
         model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
-
+        
         Packages.Add(package.Id, model);
 
         Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
@@ -181,7 +214,7 @@ public partial class PackageService : IPackageService
     {
         //Wait until all installs complete
         Task<bool>[] activeInstallTasks;
-        lock (_lock)
+        lock (_installLock)
         {
             activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
         }
@@ -189,12 +222,14 @@ public partial class PackageService : IPackageService
         if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
     }
 
-    private async Task<bool> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
+    private async Task<Package[]?> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
     {
         var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
-        if (repositoryString == null) return false;
+        if (repositoryString == null) return null;
 
         var trimmed = MyRegex().Replace(repositoryString, "");
+
+        var packages = new List<Package>();
 
         if (trimmed.StartsWith("{\"packages\":"))
         {
@@ -217,13 +252,7 @@ public partial class PackageService : IPackageService
 
                             if (package == null) continue;
 
-                            if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
-                            {
-                                pkg.Package = package;
-                                continue;
-                            }
-
-                            AddPackage(package);
+                            packages.Add(package);
                         }
                         catch (Exception e)
                         {
@@ -235,25 +264,22 @@ public partial class PackageService : IPackageService
             catch (Exception e)
             {
                 _logger.Error(e.Message, e);
-                return false;
+                return null;
             }
         }
         else
-        { //In case link is a plugin manifest directly
+        {
+            //In case link is a plugin manifest directly
             var package = JsonSerializer.Deserialize<Package>(repositoryString!, SerializerOptions);
 
-            if (package == null) return false;
+            if (package == null) return null;
 
-            if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
-            {
-                pkg.Package = package;
-                return true;
-            }
+            packages.Add(package);
 
             AddPackage(package);
         }
-  
-        return true;
+
+        return packages.ToArray();
     }
 
     private bool LoadInstalledPackagesDatabase()
@@ -333,7 +359,7 @@ public partial class PackageService : IPackageService
 
     private void ObserveInstall(Package package, Task<bool> installTask)
     {
-        lock (_lock)
+        lock (_installLock)
         {
             _activeInstalls.Add(package, installTask);
 
@@ -347,7 +373,7 @@ public partial class PackageService : IPackageService
 
     private void FinishInstall(Package package)
     {
-        lock (_lock)
+        lock (_installLock)
         {
             _activeInstalls.Remove(package);
         }

@@ -1,15 +1,16 @@
-﻿using OneWare.Essentials.Models;
+﻿using System.ComponentModel;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 
 namespace OneWare.Essentials.Services;
 
-public interface IPackageService
+public interface IPackageService : INotifyPropertyChanged
 {
+    public bool IsUpdating { get; }
+    
     public Dictionary<string, PackageModel> Packages { get; }
 
-    public event EventHandler? UpdateStarted;
-
-    public event EventHandler? UpdateEnded;
+    public event EventHandler PackagesUpdated;
 
     public void RegisterPackage(Package package);
 
