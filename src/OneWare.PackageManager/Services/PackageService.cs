@@ -36,7 +36,6 @@ public partial class PackageService : ObservableObject, IPackageService
 
     private readonly ILogger _logger;
     private CancellationTokenSource? _cancellationTokenSource;
-    private CompositeDisposable _packageRegistrationSubscription = new();
 
     public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
     {
@@ -99,11 +98,8 @@ public partial class PackageService : ObservableObject, IPackageService
         await WaitForInstallsAsync();
 
         IsUpdating = true;
-        
-        _packageRegistrationSubscription?.Dispose();
-        _packageRegistrationSubscription = new CompositeDisposable();
 
-        var result = LoadInstalledPackagesDatabase();
+        var result = true;
 
         var customRepositories =
             _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
@@ -182,7 +178,11 @@ public partial class PackageService : ObservableObject, IPackageService
     private void AddPackage(Package package, string? installedVersion = null)
     {
         if (package.Id == null) throw new Exception("Package ID cannot be empty");
-        if (Packages.ContainsKey(package.Id)) return;
+        if (Packages.ContainsKey(package.Id))
+        {
+            Console.WriteLine(package.Id + " is already installed.");
+            return;
+        }
         
         PackageModel model = package.Type switch
         {
@@ -198,16 +198,13 @@ public partial class PackageService : ObservableObject, IPackageService
         Packages.Add(package.Id, model);
 
         Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
-            .Subscribe(x => ObserveInstall((x.Sender as PackageModel)!.Package, x.EventArgs))
-            .DisposeWith(_packageRegistrationSubscription);
+            .Subscribe(x => ObserveInstall((x.Sender as PackageModel)!.Package, x.EventArgs));
 
         Observable.FromEventPattern(model, nameof(model.Installed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
-            .DisposeWith(_packageRegistrationSubscription);
+            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync());
 
         Observable.FromEventPattern(model, nameof(model.Removed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync())
-            .DisposeWith(_packageRegistrationSubscription);
+            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync());
     }
 
     private async Task WaitForInstallsAsync()
@@ -275,8 +272,6 @@ public partial class PackageService : ObservableObject, IPackageService
             if (package == null) return null;
 
             packages.Add(package);
-
-            AddPackage(package);
         }
 
         return packages.ToArray();
