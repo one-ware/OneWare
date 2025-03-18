@@ -50,6 +50,7 @@ public class MainWindowViewModel : ObservableObject
 
         RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
         LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
+        RightToolBarExtension = windowService.GetUiExtensions("MainWindow_RightToolBarExtension");
         BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
 
         MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
@@ -130,6 +131,8 @@ public class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
+    
+    public ObservableCollection<UiExtension> RightToolBarExtension { get; }
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
 

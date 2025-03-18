@@ -67,6 +67,9 @@
             </StackPanel>
 
             <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
+                
+                <sdkControls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
+                
                 <Button ToolTip.Tip="Settings" Command="{Binding OpenSettingsDialogAsync}">
                     <Image Source="{DynamicResource Material.SettingsOutline}" />
                 </Button>
