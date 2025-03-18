@@ -131,9 +131,11 @@ public partial class PackageService : ObservableObject, IPackageService
             result = result && loadedPackages != null;
         }
 
-        foreach (var removedPackage in Packages.Values.Where(x => !newPackages.Contains(x.Package)).ToArray())
+        foreach (var removedPackage in Packages.Select(x => x.Value.Package)
+                     .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
+                     .ToArray())
         {
-            Packages.Remove(removedPackage.Package.Id!);
+            Packages.Remove(removedPackage.Id!);
         }
 
         PackagesUpdated?.Invoke(this, EventArgs.Empty);
