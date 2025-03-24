@@ -99,46 +99,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var pos = CodeBox.Document.GetPositionFromOffset(offset);
 
         //Quick Fixes
-        var error = GetErrorAtLocation(location);
-        if (error != null && error.Diagnostic != null)
-        {
-            var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
-                new Range
-                {
-                    Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
-                    End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
-                }, error.Diagnostic);
-
-            if (codeactions is not null && IsOpen)
-            {
-                var quickfixes = new ObservableCollection<MenuItemViewModel>();
-                foreach (var ca in codeactions)
-                    if (ca.IsCodeAction && ca.CodeAction != null)
-                    {
-                        if (ca.CodeAction.Command != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new RelayCommand<Command>(ExecuteCommand),
-                                CommandParameter = ca.CodeAction.Command
-                            });
-                        else if (ca.CodeAction.Edit != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
-                                CommandParameter = ca.CodeAction.Edit
-                            });
-                    }
-
-                if (quickfixes.Count > 0)
-                    menuItems.Add(new MenuItemViewModel("Quick fix")
-                    {
-                        Header = "Quick fix...",
-                        Items = quickfixes
-                    });
-            }
-        }
+        await GenerateQuickFixMenuItemsAsync(location, menuItems);
 
         //Refactorings
         var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
@@ -224,6 +185,50 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         CommandParameter = i.Location
                     });
         return menuItems;
+    }
+
+    private async Task GenerateQuickFixMenuItemsAsync(TextLocation location, List<MenuItemViewModel> menuItems)
+    {
+        var error = GetErrorAtLocation(location);
+        if (error != null && error.Diagnostic != null)
+        {
+            var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
+                new Range
+                {
+                    Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
+                    End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
+                }, error.Diagnostic);
+
+            if (codeactions is not null && IsOpen)
+            {
+                var quickfixes = new ObservableCollection<MenuItemViewModel>();
+                foreach (var ca in codeactions)
+                    if (ca.IsCodeAction && ca.CodeAction != null)
+                    {
+                        if (ca.CodeAction.Command != null)
+                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            {
+                                Header = ca.CodeAction.Title,
+                                Command = new RelayCommand<Command>(ExecuteCommand),
+                                CommandParameter = ca.CodeAction.Command
+                            });
+                        else if (ca.CodeAction.Edit != null)
+                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            {
+                                Header = ca.CodeAction.Title,
+                                Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
+                                CommandParameter = ca.CodeAction.Edit
+                            });
+                    }
+
+                if (quickfixes.Count > 0)
+                    menuItems.Add(new MenuItemViewModel("Quick fix")
+                    {
+                        Header = "Quick fix...",
+                        Items = quickfixes
+                    });
+            }
+        }
     }
 
     protected async Task StartRenameSymbolAsync(RangeOrPlaceholderRange? range)
