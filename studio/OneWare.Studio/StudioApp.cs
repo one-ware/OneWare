@@ -4,9 +4,11 @@ using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
+using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -16,6 +18,8 @@ namespace OneWare.Studio;
 public class StudioApp : App
 {
     public static readonly ISettingsService SettingsService = new SettingsService();
+
+    public static readonly IProjectSettingsService ProjectSettingsService = new ProjectSettingsService();
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 
@@ -38,6 +42,7 @@ public class StudioApp : App
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterInstance(SettingsService);
+        containerRegistry.RegisterInstance(ProjectSettingsService);
         containerRegistry.RegisterInstance(Paths);
         containerRegistry.RegisterInstance(Logger);
 

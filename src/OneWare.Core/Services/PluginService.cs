@@ -115,15 +115,22 @@ public class PluginService : IPluginService
 
                     if (!File.Exists(libPath))
                     {
-                        //Alternative path for debug builds
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
-                            libFileName);
-                    }
-                    if (File.Exists(libPath))
-                    {
-                        return NativeLibrary.Load(libPath);
+                        // Alternative path for debug builds
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
                     }
                     
+                    // Try to load the library from the plugin directory
+                    if (NativeLibrary.TryLoad(libPath, out var customHandle))
+                    {
+                        return customHandle;
+                    }
+
+                    // Try the default system resolution as a fallback
+                    if (NativeLibrary.TryLoad(libraryName, out var handle))
+                    {
+                        return handle;
+                    }
+
                     Console.WriteLine($"Loading native library {libPath} failed");
                     
                     return IntPtr.Zero;
