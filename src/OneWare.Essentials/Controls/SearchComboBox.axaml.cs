@@ -79,7 +79,7 @@ public class SearchComboBox : ComboBox
                     false);
             }
 
-            if (IsInteractive)
+            if (IsInteractive && item is not null)
             {
                 SelectedItem = item;
             }
