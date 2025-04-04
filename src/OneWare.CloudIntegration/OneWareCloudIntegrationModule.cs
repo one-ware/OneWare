@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Microsoft.AspNet.SignalR.Client;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
@@ -18,6 +19,7 @@ public class OneWareCloudIntegrationModule : IModule
     {
         containerRegistry.RegisterSingleton<OneWareCloudAccountSettingViewModel>();
         containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
+        containerRegistry.RegisterSingleton<OneWareCloudNotificationService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

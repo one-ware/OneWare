@@ -4,18 +4,15 @@
     <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
 
+    <PropertyGroup>
+        <Version>0.31.4.1</Version>
+    </PropertyGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Views\OneWareCloudAccountSettingView.axaml.cs">
-        <DependentUpon>GitHubAccountSettingView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\AuthenticateCloudView.axaml.cs">
-        <DependentUpon>AuthenticateGitView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+      <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
     </ItemGroup>
 </Project>
