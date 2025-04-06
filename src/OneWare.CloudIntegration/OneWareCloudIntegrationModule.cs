@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Microsoft.AspNet.SignalR.Client;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;

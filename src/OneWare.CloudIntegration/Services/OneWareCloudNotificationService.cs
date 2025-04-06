@@ -1,4 +1,4 @@
-using Microsoft.AspNet.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace OneWare.CloudIntegration.Services;
 
@@ -10,7 +10,7 @@ public class OneWareCloudNotificationService
     /// <summary>
     /// Gets the current state of the SignalR connection.
     /// </summary>
-    public ConnectionState ConnectionState => _connection?.State ?? ConnectionState.Disconnected;
+    public HubConnectionState ConnectionState => _connection?.State ?? HubConnectionState.Disconnected;
 
     /// <summary>
     /// Occurs when a notification is received from the hub.
@@ -21,11 +21,8 @@ public class OneWareCloudNotificationService
     /// Occurs when the connection state changes.
     /// The first parameter is the previous state, and the second is the new state.
     /// </summary>
-    public event Action<ConnectionState, ConnectionState>? ConnectionStateChanged;
+    public event Action<HubConnectionState, HubConnectionState>? ConnectionStateChanged;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="OneWareCloudNotificationService"/> class.
-    /// </summary>
     public OneWareCloudNotificationService(OneWareCloudLoginService loginService)
     {
         _loginService = loginService;
@@ -36,61 +33,69 @@ public class OneWareCloudNotificationService
     /// </summary>
     public async Task<bool> ConnectAsync()
     {
-        // Avoid reconnecting if already connected.
-        if (_connection is { State: ConnectionState.Connected })
+        if (_connection is { State: HubConnectionState.Connected })
             return true;
 
         var (token, status) = await _loginService.GetLoggedInJwtTokenAsync();
+        if (string.IsNullOrWhiteSpace(token)) return false;
 
-        if (token == null) return false;
-        
-        _connection = new HubConnection($"{OneWareCloudIntegrationModule.Host}/hub");
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"{OneWareCloudIntegrationModule.Host}/hub", options =>
+            {
+                options.AccessTokenProvider = () => Task.FromResult(token)!;
+            })
+            .WithAutomaticReconnect()
+            .Build();
+
+        // Hook up connection state events
+        _connection.Reconnecting += error =>
         {
-            _connection.Headers.Add("Authorization", $"Bearer {token}");
+            ConnectionStateChanged?.Invoke(HubConnectionState.Connected, HubConnectionState.Reconnecting);
+            return Task.CompletedTask;
         };
 
-        // Handle connection state events.
-        _connection.Reconnecting += () => 
+        _connection.Reconnected += connectionId =>
         {
-            ConnectionStateChanged?.Invoke(_connection.State, ConnectionState.Connecting);
-            return;
-        };
-        
-        _connection.Reconnected += () =>
-        {
-            ConnectionStateChanged?.Invoke(ConnectionState.Connecting, ConnectionState.Connected);
+            ConnectionStateChanged?.Invoke(HubConnectionState.Reconnecting, HubConnectionState.Connected);
+            return Task.CompletedTask;
         };
 
-        _connection.Closed += () =>
+        _connection.Closed += error =>
         {
-            ConnectionStateChanged?.Invoke(_connection.State, ConnectionState.Disconnected);
+            ConnectionStateChanged?.Invoke(_connection.State, HubConnectionState.Disconnected);
+            return Task.CompletedTask;
         };
 
-        // Subscribe to hub event "ReceiveNotification".
-        // Adjust the event name and parameter types to match your hub's implementation.
-        _connection.Received += data =>
+        // Hook up notification event
+        _connection.On<string>("ReceiveMessage", message =>
         {
-            NotificationReceived?.Invoke(data);
-        };
-        
-        // Start the connection.
-        await _connection.Start();
-        ConnectionStateChanged?.Invoke(ConnectionState.Disconnected, _connection.State);
+            NotificationReceived?.Invoke(message);
+        });
 
-        return true;
+        try
+        {
+            await _connection.StartAsync();
+            ConnectionStateChanged?.Invoke(HubConnectionState.Disconnected, _connection.State);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to start SignalR connection: {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>
     /// Disconnects from the SignalR hub.
     /// </summary>
-    public void Disconnect()
+    public async Task DisconnectAsync()
     {
         if (_connection != null)
         {
-            _connection.Stop();
-            _connection.Dispose();
-            // Signal that the connection is now disconnected.
-            ConnectionStateChanged?.Invoke(_connection.State, ConnectionState.Disconnected);
+            var previousState = _connection.State;
+            await _connection.StopAsync();
+            await _connection.DisposeAsync();
+            ConnectionStateChanged?.Invoke(previousState, HubConnectionState.Disconnected);
             _connection = null;
         }
     }
