@@ -81,20 +81,6 @@ public class OneWareCloudNotificationService
     /// </summary>
     public IDisposable SubscribeToHubMethod<T>(string methodName, Action<T> handler)
     {
-        return _connection.On<string>(methodName, json =>
-        {
-            try
-            {
-                var result = JsonSerializer.Deserialize<T>(json);
-                if (result != null)
-                {
-                    handler(result);
-                }
-            }
-            catch (Exception ex)
-            {
-                ContainerLocator.Container.Resolve<ILogger>().Error($"Deserialization error for method '{methodName}': {ex.Message}");
-            }
-        });
+        return _connection.On<T>(methodName, handler);
     }
 }
