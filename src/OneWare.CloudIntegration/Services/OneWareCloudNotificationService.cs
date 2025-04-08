@@ -1,53 +1,43 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Text.Json;
+using OneWare.Essentials.Services;
+using Prism.Ioc;
 
 namespace OneWare.CloudIntegration.Services;
 
 public class OneWareCloudNotificationService
 {
     private readonly OneWareCloudLoginService _loginService;
-    private HubConnection? _connection;
+    private HubConnection _connection;
 
-    /// <summary>
-    /// Gets the current state of the SignalR connection.
-    /// </summary>
     public HubConnectionState ConnectionState => _connection?.State ?? HubConnectionState.Disconnected;
 
-    /// <summary>
-    /// Occurs when a notification is received from the hub.
-    /// </summary>
-    public event Action<string>? NotificationReceived;
-
-    /// <summary>
-    /// Occurs when the connection state changes.
-    /// The first parameter is the previous state, and the second is the new state.
-    /// </summary>
     public event Action<HubConnectionState, HubConnectionState>? ConnectionStateChanged;
 
     public OneWareCloudNotificationService(OneWareCloudLoginService loginService)
     {
         _loginService = loginService;
+        
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"{OneWareCloudIntegrationModule.Host}/hub", options =>
+            {
+                options.AccessTokenProvider = GetTokenAsync;
+            })
+            .WithAutomaticReconnect()
+            .Build();
     }
 
-    /// <summary>
-    /// Connects to the SignalR hub.
-    /// </summary>
+    private async Task<string?> GetTokenAsync()
+    {
+        var (token, status) = await _loginService.GetLoggedInJwtTokenAsync();
+        return token;
+    }
+
     public async Task<bool> ConnectAsync()
     {
         if (_connection is { State: HubConnectionState.Connected })
             return true;
 
-        var (token, status) = await _loginService.GetLoggedInJwtTokenAsync();
-        if (string.IsNullOrWhiteSpace(token)) return false;
-
-        _connection = new HubConnectionBuilder()
-            .WithUrl($"{OneWareCloudIntegrationModule.Host}/hub", options =>
-            {
-                options.AccessTokenProvider = () => Task.FromResult(token)!;
-            })
-            .WithAutomaticReconnect()
-            .Build();
-
-        // Hook up connection state events
         _connection.Reconnecting += error =>
         {
             ConnectionStateChanged?.Invoke(HubConnectionState.Connected, HubConnectionState.Reconnecting);
@@ -66,12 +56,6 @@ public class OneWareCloudNotificationService
             return Task.CompletedTask;
         };
 
-        // Hook up notification event
-        _connection.On<string>("ReceiveMessage", message =>
-        {
-            NotificationReceived?.Invoke(message);
-        });
-
         try
         {
             await _connection.StartAsync();
@@ -85,18 +69,32 @@ public class OneWareCloudNotificationService
         }
     }
 
-    /// <summary>
-    /// Disconnects from the SignalR hub.
-    /// </summary>
     public async Task DisconnectAsync()
     {
-        if (_connection != null)
+        var previousState = _connection.State;
+        await _connection.StopAsync();
+        ConnectionStateChanged?.Invoke(previousState, HubConnectionState.Disconnected);
+    }
+
+    /// <summary>
+    /// Subscribes to a method from the SignalR hub and automatically parses the payload to the specified type.
+    /// </summary>
+    public IDisposable SubscribeToHubMethod<T>(string methodName, Action<T> handler)
+    {
+        return _connection.On<string>(methodName, json =>
         {
-            var previousState = _connection.State;
-            await _connection.StopAsync();
-            await _connection.DisposeAsync();
-            ConnectionStateChanged?.Invoke(previousState, HubConnectionState.Disconnected);
-            _connection = null;
-        }
+            try
+            {
+                var result = JsonSerializer.Deserialize<T>(json);
+                if (result != null)
+                {
+                    handler(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error($"Deserialization error for method '{methodName}': {ex.Message}");
+            }
+        });
     }
 }
