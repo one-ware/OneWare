@@ -99,46 +99,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var pos = CodeBox.Document.GetPositionFromOffset(offset);
 
         //Quick Fixes
-        var error = GetErrorAtLocation(location);
-        if (error != null && error.Diagnostic != null)
-        {
-            var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
-                new Range
-                {
-                    Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
-                    End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
-                }, error.Diagnostic);
-
-            if (codeactions is not null && IsOpen)
-            {
-                var quickfixes = new ObservableCollection<MenuItemViewModel>();
-                foreach (var ca in codeactions)
-                    if (ca.IsCodeAction && ca.CodeAction != null)
-                    {
-                        if (ca.CodeAction.Command != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new RelayCommand<Command>(ExecuteCommand),
-                                CommandParameter = ca.CodeAction.Command
-                            });
-                        else if (ca.CodeAction.Edit != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
-                                CommandParameter = ca.CodeAction.Edit
-                            });
-                    }
-
-                if (quickfixes.Count > 0)
-                    menuItems.Add(new MenuItemViewModel("Quick fix")
-                    {
-                        Header = "Quick fix...",
-                        Items = quickfixes
-                    });
-            }
-        }
+        await GenerateQuickFixMenuItemsAsync(location, menuItems);
 
         //Refactorings
         var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
@@ -224,6 +185,264 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         CommandParameter = i.Location
                     });
         return menuItems;
+    }
+
+    private async Task GenerateQuickFixMenuItemsAsync(TextLocation location, List<MenuItemViewModel> menuItems)
+    {
+        var error = GetErrorAtLocation(location);
+        if (error != null && error.Diagnostic != null)
+        {
+            await AddServerQuickFixItemsAsync(menuItems, error);
+            AddUndeclaredSymbolFix(menuItems, error);
+            AddWrongTypeFix(menuItems, error);
+        }
+    }
+    
+    /// <summary>
+    /// Adds a quick fix for "No declaration of ___" diagnostics.
+    /// </summary>
+    private void AddUndeclaredSymbolFix(List<MenuItemViewModel> menuItems, ErrorListItem error)
+    {
+        if (!error.Diagnostic!.Message.Contains("No declaration of", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        // Extract substring from the diagnostic message (e.g. "No declaration of 'my_signal'")
+        string symbolName = error.Diagnostic!.Message
+            .Replace("No declaration of", "", StringComparison.OrdinalIgnoreCase)
+            .Trim()
+            .Replace("'", "");
+
+        var quickfix = new MenuItemViewModel($"Declare {symbolName}")
+        {
+            Header = $"Declare {symbolName}",
+            Command = new AsyncRelayCommand<object>(async _ =>
+            {
+                var docText = CodeBox.Document.Text;
+
+                // 1) Find the start of the architecture: "architecture <name> of <entity> is"
+                var archStartRegex = new Regex(@"(?i)architecture\s+\S+\s+of\s+\S+\s+is");
+                var archStartMatch = archStartRegex.Match(docText);
+                if (!archStartMatch.Success)
+                {
+                    Console.WriteLine("Could not find 'architecture ... of ... is'.");
+                    return;
+                }
+
+                // 2) From there, find the corresponding "end architecture" 
+                //    (or just take the rest of the file if none is found).
+                int archStartIndex = archStartMatch.Index + archStartMatch.Length;
+                var archEndRegex = new Regex(@"(?i)\bend\s+architecture\b");
+                var archEndMatch = archEndRegex.Match(docText, archStartIndex);
+
+                int archEndIndex = archEndMatch.Success
+                    ? archEndMatch.Index
+                    : docText.Length; // fallback if no "end architecture" found
+
+                // 3) Extract just that slice of text (the "architecture body" region)
+                if (archEndIndex <= archStartIndex)
+                {
+                    Console.WriteLine("Architecture range is invalid. Cannot insert signal.");
+                    return;
+                }
+                string archBody = docText.Substring(archStartIndex, archEndIndex - archStartIndex);
+
+                // 4) Within that slice, find the *last* line that starts with "begin"
+                //    (in multiline mode, case-insensitive).
+                var beginRegex = new Regex(@"(?i)^\s*begin\b", RegexOptions.Multiline);
+                var matches = beginRegex.Matches(archBody);
+                if (matches.Count == 0)
+                {
+                    Console.WriteLine("Could not find the architecture's begin line.");
+                    return;
+                }
+
+                // The last match is presumably the architecture's main begin
+                var lastBeginMatch = matches[matches.Count - 1];
+                int offsetInArchBody = lastBeginMatch.Index;
+
+                // 5) Convert that offset back to the absolute offset in the entire document
+                int offsetToInsert = archStartIndex + offsetInArchBody;
+
+                // 6) Insert your declaration above that line
+                //    (Feel free to adjust indentation or spacing.)
+                var insertText = $"\tsignal {symbolName} : std_logic;\n";
+
+                CodeBox.Document.BeginUpdate();
+                CodeBox.Document.Insert(offsetToInsert, insertText);
+                CodeBox.Document.EndUpdate();
+                
+                CodeBox.CaretOffset = offsetToInsert + insertText.Length;
+
+            })
+        };
+
+        var quickFixParent = menuItems.FirstOrDefault(mi => mi.Header == "Quick fix...");
+        if (quickFixParent == null)
+        {
+            quickFixParent = new MenuItemViewModel("Quick fix...")
+            {
+                Header = "Quick fix...",
+                Items = new ObservableCollection<MenuItemViewModel>()
+            };
+            menuItems.Add(quickFixParent);
+        }
+
+        quickFixParent.Items.Add(quickfix);
+    }
+    
+private void AddWrongTypeFix(List<MenuItemViewModel> menuItems, ErrorListItem error)
+{
+    // Example diagnostic message:
+    //  "signal 'my_signal' of subtype 'std_logic_vector' does not match type 'unsigned'"
+    var mismatchRegex = new Regex(
+        @"(?i)signal\s*'([^']+)'\s*of\s*(?:sub)?type\s*'([^']+)'\s*does\s*not\s*match\s*(?:sub)?type\s*'([^']+)'"
+    );
+    var mismatchMatch = mismatchRegex.Match(error.Diagnostic!.Message);
+    if (!mismatchMatch.Success) return;
+    
+    var signalName = mismatchMatch.Groups[1].Value;
+    var oldType= mismatchMatch.Groups[2].Value;
+    var newType= mismatchMatch.Groups[3].Value;
+
+    var quickfix = new MenuItemViewModel($"Change {signalName} from {oldType} to {newType}")
+    {
+        Header = $"Change {signalName} to {newType}",
+        Command = new AsyncRelayCommand<object>(async _ =>
+        {
+            var docText = CodeBox.Document.Text;
+
+            // 1) Locate the architecture region: from "architecture ... is" to "end architecture"
+            var archStartRegex = new Regex(@"(?i)architecture\s+\S+\s+of\s+\S+\s+is");
+            var archStartMatch = archStartRegex.Match(docText);
+            if (!archStartMatch.Success)
+            {
+                Console.WriteLine("Could not find 'architecture ... of ... is'.");
+                return;
+            }
+
+            var archStartIndex = archStartMatch.Index + archStartMatch.Length;
+
+            var archEndRegex = new Regex(@"(?i)\bend\s+architecture\b");
+            var archEndMatch = archEndRegex.Match(docText, archStartIndex);
+            var archEndIndex = archEndMatch.Success ? archEndMatch.Index : docText.Length;
+
+            if (archEndIndex <= archStartIndex)
+            {
+                Console.WriteLine("Architecture range is invalid. Cannot change signal type.");
+                return;
+            }
+
+            string archBody = docText.Substring(archStartIndex, archEndIndex - archStartIndex);
+            
+            var declPattern = $@"(?i)(signal\s+{Regex.Escape(signalName)}\s*:\s*)([^;]+)(;)";
+            var declRegex = new Regex(declPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            var declMatch = declRegex.Match(archBody);
+
+            if (!declMatch.Success)
+            {
+                Console.WriteLine($"Could not find a declaration for 'signal {signalName} : ...;' in this architecture.");
+                return;
+            }
+            
+            var prefix        = declMatch.Groups[1].Value;    // e.g. "signal my_signal : "
+            var declaredType  = declMatch.Groups[2].Value;    // e.g. "std_logic_vector(7 downto 0)"
+            var semicolon     = declMatch.Groups[3].Value;    // e.g. ";"
+            
+            (var baseTypeInCode, var rangePart) = ExtractTypeRange(declaredType);
+            
+            var finalNewType = newType + rangePart;
+
+            var newDeclaration = $"{prefix}{finalNewType}{semicolon}";
+            
+            var localOffset    = declMatch.Index;
+            var absoluteOffset = archStartIndex + localOffset;
+            var length         = declMatch.Length;
+
+            CodeBox.Document.BeginUpdate();
+            CodeBox.Document.Replace(absoluteOffset, length, newDeclaration);
+            CodeBox.Document.EndUpdate();
+            
+            CodeBox.CaretOffset = absoluteOffset + newDeclaration.Length;
+        })
+    };
+
+    // Add it under "Quick fix..." menu
+    var quickFixParent = menuItems.FirstOrDefault(mi => mi.Header == "Quick fix...");
+    if (quickFixParent == null)
+    {
+        quickFixParent = new MenuItemViewModel("Quick fix...")
+        {
+            Header = "Quick fix...",
+            Items = new ObservableCollection<MenuItemViewModel>()
+        };
+        menuItems.Add(quickFixParent);
+    }
+    quickFixParent.Items.Add(quickfix);
+}
+
+/// <summary>
+/// Splits a type into a base portion and optional parentheses. E.g.:
+///   "std_logic_vector(7 downto 0)" => ("std_logic_vector", "(7 downto 0)")
+///   "unsigned(15 downto 0)"        => ("unsigned", "(15 downto 0)")
+///   "boolean_vector"               => ("boolean_vector", "")
+///   "std_logic"                    => ("std_logic", "")
+/// </summary>
+private (string baseType, string rangePart) ExtractTypeRange(string fullType)
+{
+    var rangeRegex = new Regex(@"\([^)]+\)$");
+    var match = rangeRegex.Match(fullType.Trim());
+
+    if (!match.Success)
+    {
+        // No parentheses found
+        return (fullType.Trim(), "");
+    }
+    
+    string rangePart = match.Value; 
+    string basePart = fullType.Substring(0, match.Index).TrimEnd();
+    return (basePart, rangePart);
+}
+
+    private async Task AddServerQuickFixItemsAsync(List<MenuItemViewModel> menuItems, ErrorListItem error)
+    {
+        var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
+            new Range
+            {
+                Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
+                End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
+            }, error.Diagnostic!);
+
+        if (codeactions is not null && IsOpen)
+        {
+            var quickfixes = new ObservableCollection<MenuItemViewModel>();
+            foreach (var ca in codeactions)
+                if (ca.IsCodeAction && ca.CodeAction != null)
+                {
+                    if (ca.CodeAction.Command != null)
+                        quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                        {
+                            Header = ca.CodeAction.Title,
+                            Command = new RelayCommand<Command>(ExecuteCommand),
+                            CommandParameter = ca.CodeAction.Command
+                        });
+                    else if (ca.CodeAction.Edit != null)
+                        quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                        {
+                            Header = ca.CodeAction.Title,
+                            Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
+                            CommandParameter = ca.CodeAction.Edit
+                        });
+                }
+
+            if (quickfixes.Count > 0)
+                menuItems.Add(new MenuItemViewModel("Quick fix")
+                {
+                    Header = "Quick fix...",
+                    Items = quickfixes
+                });
+        }
     }
 
     protected async Task StartRenameSymbolAsync(RangeOrPlaceholderRange? range)
