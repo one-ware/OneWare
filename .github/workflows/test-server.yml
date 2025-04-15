@@ -17,12 +17,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 9.0.x
-      - name: Workload Restore
-        run: dotnet workload restore
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
