@@ -1,9 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using OneWare.Core.Models;
-using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
@@ -15,15 +12,11 @@ namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     private readonly IModuleCatalog _moduleCatalog;
     private readonly IModuleManager _moduleManager;
 
     private readonly string _pluginDirectory;
+    private readonly HashSet<string> _resolverSetAssemblies = new();
 
     private List<Assembly> _initAssemblies;
 
@@ -42,6 +35,9 @@ public class PluginService : IPluginService
 
     public IPlugin AddPlugin(string path)
     {
+        // Update known assemblies to avoid redundant resolver registration
+        _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
 
@@ -74,7 +70,7 @@ public class PluginService : IPluginService
                 ContainerLocator.Container.Resolve<ILogger>()
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
-            
+
             SetupNativeImports(realPath);
         }
         catch (Exception e)
@@ -101,10 +97,15 @@ public class PluginService : IPluginService
     private void SetupNativeImports(string pluginPath)
     {
         var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));
-        
+
         foreach (var assembly in newAssemblies)
         {
             _initAssemblies.Add(assembly);
+
+            if(assembly.FullName == null) continue;
+            
+            if (_resolverSetAssemblies.Contains(assembly.FullName))
+                continue;
 
             try
             {
@@ -115,30 +116,31 @@ public class PluginService : IPluginService
 
                     if (!File.Exists(libPath))
                     {
-                        // Alternative path for debug builds
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
                     }
-                    
-                    // Try to load the library from the plugin directory
+
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
                     {
                         return customHandle;
                     }
 
-                    // Try the default system resolution as a fallback
                     if (NativeLibrary.TryLoad(libraryName, out var handle))
                     {
                         return handle;
                     }
 
                     Console.WriteLine($"Loading native library {libPath} failed");
-                    
                     return IntPtr.Zero;
                 });
+
+                _resolverSetAssemblies.Add(assembly.FullName);
             }
             catch (InvalidOperationException)
             {
-                // Some assemblies do not support SetDllImportResolver, ignore them
+                // This assembly already has a resolver — log and continue
+                ContainerLocator.Container.Resolve<ILogger>().Log(
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.", 
+                    ConsoleColor.DarkYellow, true);
             }
         }
     }
