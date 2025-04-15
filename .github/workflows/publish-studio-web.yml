@@ -20,11 +20,12 @@ jobs:
         run: dotnet workload install wasm-tools
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj -c Release -o ./out
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Sync Files
+        uses: pontago/lftp-deploy-action@master
         with:
-          server: w01ec151.kasserver.com
-          username: w01ec151
-          password: ${{ secrets.ONEWARE_FTP }}
-          local-dir: ./out/wwwroot/
-          server-dir: studio.one-ware.com/
+          protocol: sftp
+          host: 5017617850.ssh.w2.strato.hosting
+          username: su165987
+          password: ${{ secrets.ONEWARE_SFTP_PW }}
+          local_dir: ./out/wwwroot/
+          remote_dir: studio.one-ware.com/

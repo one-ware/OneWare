@@ -63,17 +63,18 @@ jobs:
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg" > ./out/osx-x64.txt
       - name: Create VersionInfo arm64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg" > ./out/osx-arm64.txt
-      - uses: joutvhu/ftp-transfer@v1
-        name: Upload
+      - name: Upload to CDN
+        uses: pontago/lftp-deploy-action@master
         with:
-          host: w01ec151.kasserver.com
-          username: w01ec151
-          password: ${{ secrets.ONEWARE_FTP }}
-          commands: |
-            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
-            put ./out/MacOSDownload-x64.htm ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
-            put ./out/MacOSDownload-arm64.htm ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
-            put ./out/osx-x64.txt ./cdn.one-ware.com/onewarestudio/osx-x64.txt
-            put ./out/osx-arm64.txt ./cdn.one-ware.com/onewarestudio/osx-arm64.txt
+          protocol: sftp
+          host: 5017617850.ssh.w2.strato.hosting
+          username: su165987
+          password: ${{ secrets.ONEWARE_SFTP_PW }}
+          script: |
+            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
+            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
+            put ./out/MacOSDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
+            put ./out/MacOSDownload-arm64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
+            put ./out/osx-x64.txt -o ./cdn.one-ware.com/onewarestudio/osx-x64.txt
+            put ./out/osx-arm64.txt -o ./cdn.one-ware.com/onewarestudio/osx-arm64.txt

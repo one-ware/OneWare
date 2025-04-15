@@ -51,13 +51,14 @@ jobs:
           omitDraftDuringUpdate: True
       - name: Create VersionInfo x64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz" > ./out/linux-x64.txt
-      - uses: joutvhu/ftp-transfer@v1
-        name: Upload
+      - name: Upload to CDN
+        uses: pontago/lftp-deploy-action@master
         with:
-          host: w01ec151.kasserver.com
-          username: w01ec151
-          password: ${{ secrets.ONEWARE_FTP }}
-          commands: |
-            mkdir ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
-            put ./out/linux-x64.txt ./cdn.one-ware.com/onewarestudio/linux-x64.txt
+          protocol: sftp
+          host: 5017617850.ssh.w2.strato.hosting
+          username: su165987
+          password: ${{ secrets.ONEWARE_SFTP_PW }}
+          script: |
+            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
+            put ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
+            put ./out/linux-x64.txt -o ./cdn.one-ware.com/onewarestudio/linux-x64.txt
