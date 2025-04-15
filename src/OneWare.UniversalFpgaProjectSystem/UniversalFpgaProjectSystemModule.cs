@@ -93,7 +93,7 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         windowService.RegisterUiExtension("EditView_Top", new UiExtension(x =>
         {
-            if (x is IFile {Extension: ".cpp" or ".h"})
+            if (x is IFile)
                 return new UniversalFpgaProjectTestBenchToolBarView
                 {
                     DataContext =
