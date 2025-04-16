@@ -18,22 +18,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - uses: mavrosxristoforos/get-xml-info@2.0
         name: Get Version
         id: get-oneware-version
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r linux-x64 -o ./out
-
       - name: Compress
         uses: a7ul/tar-action@v1.1.0
         id: compress
@@ -42,10 +38,8 @@ jobs:
           files: ./
           cwd: ./out
           outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
-
       - name: Create VersionInfo
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz" > ./out/linux-x64.txt
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -65,18 +59,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-artifacts
-
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.build.outputs.version }}
-          artifacts: "./out/*.tgz"
+          artifacts: "*.tgz"
           allowUpdates: true
           omitBodyDuringUpdate: True
           omitNameDuringUpdate: True
           omitPrereleaseDuringUpdate: True
           omitDraftDuringUpdate: True
-
       - name: Upload to CDN using lftp
         uses: pontago/lftp-deploy-action@master
         with:
@@ -88,5 +80,5 @@ jobs:
             set cmd:fail-exit false
             mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
             set cmd:fail-exit true
-            put ./out/OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz
-            put ./out/linux-x64.txt -o ./cdn.one-ware.com/onewarestudio/linux-x64.txt
+            put OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz
+            put linux-x64.txt -o ./cdn.one-ware.com/onewarestudio/linux-x64.txt

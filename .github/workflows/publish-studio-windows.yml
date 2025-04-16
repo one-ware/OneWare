@@ -60,7 +60,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.build.outputs.version }}
-          artifacts: "./out/en-us/*.msi"
+          artifacts: "*.msi"
           allowUpdates: true
           omitBodyDuringUpdate: True
           omitNameDuringUpdate: True
@@ -77,6 +77,6 @@ jobs:
             set cmd:fail-exit false
             mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
             set cmd:fail-exit true
-            put ./out/en-us/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
-            put ./out/WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
-            put ./out/win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
+            put OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
+            put WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
+            put win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
