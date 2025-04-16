@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build
     runs-on: macos-latest
+    outputs:
+      version: ${{ steps.get-oneware-version.outputs.info }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
