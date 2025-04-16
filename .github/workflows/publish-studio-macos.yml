@@ -80,7 +80,7 @@ jobs:
           omitNameDuringUpdate: True
           omitPrereleaseDuringUpdate: True
           omitDraftDuringUpdate: True
-      - name: Upload to CDN using lftp
+      - name: Upload to CDN
         uses: pontago/lftp-deploy-action@master
         with:
           protocol: sftp

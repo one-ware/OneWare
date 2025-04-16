@@ -8,14 +8,11 @@ on:
       - completed
 
 jobs:
-  # Build MSI and Upload to CDN
-  # Run on local machine that needs to install .NET SDK 8.0
-  deploy-windows:
-    name: Deploy for Windows
+  build:
+    name: Build
     runs-on: self-hosted
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
-    permissions:
-      contents: write
+    outputs:
+      version: ${{ steps.get-oneware-version.outputs.info }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,12 +24,6 @@ jobs:
         with:
           xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-      #      - name: Setup .NET
-      #        uses: actions/setup-dotnet@v4
-      #        with:
-      #          dotnet-version: 9.0.x
-      #      - name: Install Wix
-      #        run: dotnet tool install --global wix
       - name: Publish
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
       - name: Create Button HTML
@@ -45,9 +36,30 @@ jobs:
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" > ./out/win-x64.txt
       - name: Rename Installer
         run: mv ./out/en-us/OneWareStudio.WindowsInstaller.msi ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
-      - uses: ncipollo/release-action@v1
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tag: ${{ steps.get-oneware-version.outputs.info }}
+          name: windows-artifacts
+          path: |
+            ./out/en-us/*.msi
+            ./out/WinDownload.htm
+            ./out/win-x64.txt
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifacts
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.build.outputs.version }}
           artifacts: "./out/en-us/*.msi"
           allowUpdates: true
           omitBodyDuringUpdate: True
@@ -62,7 +74,9 @@ jobs:
           username: su165987
           password: ${{ secrets.ONEWARE_SFTP_PW }}
           script: |
-            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
+            set cmd:fail-exit false
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
+            set cmd:fail-exit true
+            put ./out/en-us/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
             put ./out/WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
             put ./out/win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
