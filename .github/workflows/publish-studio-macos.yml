@@ -39,8 +39,8 @@ jobs:
         run: ./CreateAppBundle.sh
       - name: Rename Packages
         run: |
-          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
-          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
+          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
+          mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
       - name: Create Button HTML x64
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.MacOSInstaller/MacOSDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/MacOSDownload-x64.htm -Encoding UTF8
@@ -56,7 +56,7 @@ jobs:
         with:
           name: macos-artifacts
           path: |
-            ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/*.dmg
+            ./out/*.dmg
             ./out/*.htm
             ./out/*.txt
 
