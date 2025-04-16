@@ -8,21 +8,17 @@ on:
       - completed
 
 jobs:
-  # Build DMG (x64, arm64) and upload to CDN
-  deploy-macos:
-    name: Deploy for MacOS
+  build:
+    name: Build
     runs-on: macos-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: mavrosxristoforos/get-xml-info@2.0
-        name: Get Version
+      - name: Get Version
         id: get-oneware-version
+        uses: mavrosxristoforos/get-xml-info@2.0
         with:
           xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
@@ -31,7 +27,6 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Set up Homebrew
-        id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install create-dmg using Brew
         run: brew install create-dmg
@@ -44,15 +39,6 @@ jobs:
         run: |
           mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
           mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
-      - uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.get-oneware-version.outputs.info }}
-          artifacts: "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/*.dmg"
-          allowUpdates: true
-          omitBodyDuringUpdate: True
-          omitNameDuringUpdate: True
-          omitPrereleaseDuringUpdate: True
-          omitDraftDuringUpdate: True
       - name: Create Button HTML x64
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.MacOSInstaller/MacOSDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/MacOSDownload-x64.htm -Encoding UTF8
@@ -63,7 +49,34 @@ jobs:
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg" > ./out/osx-x64.txt
       - name: Create VersionInfo arm64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg" > ./out/osx-arm64.txt
-      - name: Upload to CDN
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-artifacts
+          path: |
+            ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/*.dmg
+            ./out/*.htm
+            ./out/*.txt
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-artifacts
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.build.outputs.version }}
+          artifacts: "*.dmg"
+          allowUpdates: true
+          omitBodyDuringUpdate: True
+          omitNameDuringUpdate: True
+          omitPrereleaseDuringUpdate: True
+          omitDraftDuringUpdate: True
+      - name: Upload to CDN using lftp
         uses: pontago/lftp-deploy-action@master
         with:
           protocol: sftp
@@ -71,10 +84,10 @@ jobs:
           username: su165987
           password: ${{ secrets.ONEWARE_SFTP_PW }}
           script: |
-            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
-            put ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-arm64.dmg
-            put ./out/MacOSDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
-            put ./out/MacOSDownload-arm64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
-            put ./out/osx-x64.txt -o ./cdn.one-ware.com/onewarestudio/osx-x64.txt
-            put ./out/osx-arm64.txt -o ./cdn.one-ware.com/onewarestudio/osx-arm64.txt
+            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
+            put OneWareStudio-${{ needs.build.outputs.version }}-osx-x64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-osx-x64.dmg
+            put OneWareStudio-${{ needs.build.outputs.version }}-osx-arm64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-osx-arm64.dmg
+            put MacOSDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
+            put MacOSDownload-arm64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-arm64.htm
+            put osx-x64.txt -o ./cdn.one-ware.com/onewarestudio/osx-x64.txt
+            put osx-arm64.txt -o ./cdn.one-ware.com/onewarestudio/osx-arm64.txt
