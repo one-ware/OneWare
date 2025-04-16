@@ -88,7 +88,9 @@ jobs:
           username: su165987
           password: ${{ secrets.ONEWARE_SFTP_PW }}
           script: |
-            !mkdir -p ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
+            set cmd:fail-exit false
+            mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
+            set cmd:fail-exit true
             put OneWareStudio-${{ needs.build.outputs.version }}-osx-x64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-osx-x64.dmg
             put OneWareStudio-${{ needs.build.outputs.version }}-osx-arm64.dmg -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-osx-arm64.dmg
             put MacOSDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/MacOSDownload-x64.htm
