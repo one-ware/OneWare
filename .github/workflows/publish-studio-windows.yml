@@ -25,23 +25,23 @@ jobs:
           xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
       - name: Publish
-        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./out
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./publish
       - name: Create Button HTML
         shell: powershell
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
       - name: Sign Installer
         shell: powershell
-        run: signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ./out/en-us/OneWareStudio.WindowsInstaller.msi
+        run: signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a ./publish/en-us/OneWareStudio.WindowsInstaller.msi
       - name: Create VersionInfo
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" > ./out/win-x64.txt
       - name: Rename Installer
-        run: mv ./out/en-us/OneWareStudio.WindowsInstaller.msi ./out/en-us/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
+        run: mv ./publish/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: |
-            ./out/en-us/*.msi
+            ./out/*.msi
             ./out/WinDownload.htm
             ./out/win-x64.txt
 
