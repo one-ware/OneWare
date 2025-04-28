@@ -19,7 +19,25 @@ public class SliderSettingViewModel : TitledSettingViewModel
     
     public double TextBoxValue
     {
-        get => (double) Setting.Value;
-        set => Setting.Value = value < Setting.Min ? Setting.Min : value > Setting.Max ? Setting.Max : value;
+        get => Math.Round((double)Setting.Value, GetPrecision(Setting.Step));
+        set => Setting.Value = Math.Round(value, GetPrecision(Setting.Step));
+
     }
+
+    // Helper method: how many decimals do we need?
+    private int GetPrecision(double step)
+    {
+        if (step >= 1)
+            return 0;
+
+        int precision = 0;
+        while (step < 1)
+        {
+            step *= 10;
+            precision++;
+        }
+        return precision;
+    }
+
+
 }
