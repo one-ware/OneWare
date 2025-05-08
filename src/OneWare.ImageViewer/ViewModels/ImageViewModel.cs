@@ -34,12 +34,13 @@ public class ImageViewModel : ExtendedDocument
             {
                 case ".svg":
                     var svg = SvgSource.Load(FullPath);
-                        Image = new SvgImage
-                        {
-                            Source = svg
-                        };
+                    Image = new SvgImage
+                    {
+                        Source = svg
+                    };
                     break;
                 case ".jpg":
+                case ".jpeg":
                 case ".png":
                     Image = new Bitmap(FullPath);
                     break;
