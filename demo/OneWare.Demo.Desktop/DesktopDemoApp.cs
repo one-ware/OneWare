@@ -1,11 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
-using ImTools;
 using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;
 using OneWare.Demo.Desktop.ViewModels;
@@ -15,48 +16,52 @@ using OneWare.Essentials.Services;
 using OneWare.PackageManager;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Demo.Desktop;
 
 public class DesktopDemoApp : DemoApp
 {
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    public override void Initialize()
     {
-        base.ConfigureModuleCatalog(moduleCatalog);
+        base.Initialize();
 
-        moduleCatalog.AddModule<PackageManagerModule>();
-        moduleCatalog.AddModule<TerminalManagerModule>();
-        moduleCatalog.AddModule<SourceControlModule>();
+        // Initialize plugin modules
+        // Register Autofac modules directly in Initialize
+        var builder = new ContainerBuilder();
 
+        // Register your modules
+        builder.RegisterModule<PackageManagerModule>();
+        builder.RegisterModule<TerminalManagerModule>();
+        builder.RegisterModule<SourceControlModule>();
+
+
+        // Optional plugin loading from plugin directory
         try
         {
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
+            foreach (var module in plugins)
+                Container.Resolve<IPluginService>().AddPlugin(module);
         }
         catch (Exception e)
         {
             Container.Resolve<ILogger>().Error(e.Message, e);
         }
 
-        var commandLineArgs = Environment.GetCommandLineArgs();
-        if (commandLineArgs.Length > 1)
+        // Check --modules argument
+        var args = Environment.GetCommandLineArgs();
+        var m = Array.IndexOf(args, "--modules");
+        if (m >= 0 && m < args.Length - 1)
         {
-            var m = commandLineArgs.IndexOf(x => x == "--modules");
-            if (m >= 0 && m < commandLineArgs.Length - 1)
-            {
-                var path = commandLineArgs[m + 1];
-                Container.Resolve<IPluginService>().AddPlugin(path);
-            }
+            var pluginPath = args[m + 1];
+            Container.Resolve<IPluginService>().AddPlugin(pluginPath);
         }
     }
 
     protected override async Task LoadContentAsync()
     {
-        var arguments = Environment.GetCommandLineArgs();
-
+        var args = Environment.GetCommandLineArgs();
         Window? splashWindow = null;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             splashWindow = new SplashWindow
@@ -66,22 +71,10 @@ public class DesktopDemoApp : DemoApp
             splashWindow.Show();
         }
 
-        if (arguments.Length > 1 && !arguments[1].StartsWith("--"))
+        if (args.Length > 1 && !args[1].StartsWith("--") && File.Exists(args[1]))
         {
-            var fileName = arguments[1];
-            //Check file exists
-            if (File.Exists(fileName))
-            {
-                if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
-                {
-                    var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Container.Resolve<IDockService>().OpenFileAsync(file);
-                }
-                else
-                {
-                    Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
-                }
-            }
+            var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(args[1]);
+            _ = Container.Resolve<IDockService>().OpenFileAsync(file);
         }
         else
         {
@@ -89,6 +82,7 @@ public class DesktopDemoApp : DemoApp
             {
                 var key = Container.Resolve<IApplicationStateService>()
                     .AddState("Loading last projects...", AppState.Loading);
+
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
                 Container.Resolve<IDockService>().InitializeContent();
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
@@ -101,22 +95,21 @@ public class DesktopDemoApp : DemoApp
         try
         {
             var settingsService = Container.Resolve<ISettingsService>();
-            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            var logger = Container.Resolve<ILogger>();
+
+            logger.Log("Loading last projects finished!", ConsoleColor.Cyan);
 
             if (settingsService.GetSettingValue<string>("LastVersion") != Global.VersionCode)
             {
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
-
-                Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                    () => { Container.Resolve<IWindowService>().Show(new ChangelogView()); },
-                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                Container.Resolve<IWindowService>().ShowNotificationWithButton(
+                    "Update Successful!",
+                    $"{Paths.AppName} updated to {Global.VersionCode}!",
+                    "View Changelog",
+                    () => Container.Resolve<IWindowService>().Show(new ChangelogView()),
+                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage
+                );
             }
-
-            //await Task.Factory.StartNew(() =>
-            //{
-            //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
-            //}, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
         }
         catch (Exception e)
         {
