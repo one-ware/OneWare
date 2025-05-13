@@ -43,7 +43,6 @@ public class DesktopStudioApp : StudioApp
 {
     private Window? _splashWindow;
     protected override string GetDefaultLayoutName => "Desktop";
-
     public static IContainer Container { get; private set; } = null!;
 
     public override void OnFrameworkInitializationCompleted()
@@ -68,19 +67,24 @@ public class DesktopStudioApp : StudioApp
     {
         var builder = new ContainerBuilder();
 
-        // Registering services
+        // Pre-register core services
         builder.RegisterType<Logger>().As<ILogger>().SingleInstance();
         builder.RegisterType<SettingsService>().As<ISettingsService>().SingleInstance();
-        builder.RegisterType<Paths>().As<IPaths>().SingleInstance();
         builder.RegisterType<WindowService>().As<IWindowService>().SingleInstance();
         builder.RegisterType<DockService>().As<IDockService>().SingleInstance();
         builder.RegisterType<ApplicationStateService>().As<IApplicationStateService>().SingleInstance();
         builder.RegisterType<ProjectManagerService>().As<IProjectManagerService>().SingleInstance();
         builder.RegisterType<PluginService>().As<IPluginService>().SingleInstance();
         builder.RegisterType<PackageService>().As<IPackageService>().SingleInstance();
-        builder.RegisterType<UpdaterViewModel>().SingleInstance();
 
-        // Registering Views and ViewModels
+        // Register Paths with constructor parameters
+        builder.RegisterType<Paths>()
+            .As<IPaths>()
+            .WithParameter("appName", "OneWare Studio")
+            .WithParameter("appIconPath", "Assets/Icons/studio.ico")
+            .SingleInstance();
+
+        // Register views and viewmodels
         builder.RegisterType<MainWindow>().SingleInstance();
         builder.RegisterType<MainWindowViewModel>().SingleInstance();
         builder.RegisterType<SplashWindow>().InstancePerDependency();
@@ -88,8 +92,9 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterType<PackageManagerView>().InstancePerDependency();
         builder.RegisterType<PackageManagerViewModel>().InstancePerDependency();
         builder.RegisterType<UpdaterView>().InstancePerDependency();
+        builder.RegisterType<UpdaterViewModel>().SingleInstance();
 
-        // Registering modules
+        // Register modules
         builder.RegisterModule<UpdaterModule>();
         builder.RegisterModule<PackageManagerModule>();
         builder.RegisterModule<SourceControlModule>();
@@ -100,25 +105,25 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterModule<VerilogModule>();
         builder.RegisterModule<OssCadSuiteIntegrationModule>();
 
-        // Registering plugin service and scanning plugins
+        // Build temporary container to resolve IPaths and IPluginService
+        var tempContainer = builder.Build();
+        var pluginService = tempContainer.Resolve<IPluginService>();
+        var paths = tempContainer.Resolve<IPaths>();
+
         try
         {
             var args = Environment.GetCommandLineArgs();
 
-            // Resolve the required dependencies from the container
-            var pluginService = builder.Build().Resolve<IPluginService>();
-
-            if (args.Length > 1)
+            // Handle command-line plugins
+            var m = Array.IndexOf(args, "--modules");
+            if (m >= 0 && m < args.Length - 1)
             {
-                var m = Array.IndexOf(args, "--modules");
-                if (m >= 0 && m < args.Length - 1)
-                {
-                    var path = args[m + 1];
-                    pluginService.AddPlugin(path);
-                }
+                var path = args[m + 1];
+                pluginService.AddPlugin(path);
             }
 
-            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
+            // Load plugins from directory
+            var plugins = Directory.GetDirectories(paths.PluginsDirectory);
             foreach (var module in plugins)
             {
                 pluginService.AddPlugin(module);
@@ -131,10 +136,9 @@ public class DesktopStudioApp : StudioApp
             Console.WriteLine("Plugin loading failed: " + e.Message);
         }
 
-        // Finalizing the container
+        // Finalize container
         Container = builder.Build();
     }
-
 
     protected override async Task LoadContentAsync()
     {
@@ -240,7 +244,7 @@ public class DesktopStudioApp : StudioApp
                 Dispatcher.UIThread.Post(() =>
                 {
                     windowService.ShowNotificationWithButton("Update Available",
-                        $"{Paths.AppName} {updater.NewVersion} is available!",
+                        $"{Container.Resolve<IPaths>().AppName} {updater.NewVersion} is available!",
                         "Download", () =>
                         {
                             windowService.Show(new UpdaterView

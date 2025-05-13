@@ -1,4 +1,5 @@
 using Autofac;
+using Avalonia;
 using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
 using OneWare.Core.Data;
@@ -10,77 +11,67 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using OneWare.Vcd.Viewer.ViewModels;
-using Prism.Modularity;
+using System;
 
-namespace OneWare.Studio
+namespace OneWare.Studio;
+
+public class StudioApp : App
 {
-    public class StudioApp : App
+    public static IContainer Container { get; private set; } = null!;
+
+    public override void Initialize()
     {
-        public static readonly ISettingsService SettingsService = new SettingsService();
-        public static readonly IProjectSettingsService ProjectSettingsService = new ProjectSettingsService();
-        public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
-        private static readonly ILogger Logger = new Logger(Paths);
+        base.Initialize();
+        var builder = new ContainerBuilder();
 
-        static StudioApp()
+        RegisterInfrastructure(builder);
+        RegisterModules(builder);
+
+        Container = builder.Build();
+
+        ApplyTheme(Container.Resolve<ThemeManager>());
+    }
+
+    private void RegisterInfrastructure(ContainerBuilder builder)
+    {
+        var settingsService = new SettingsService();
+        var projectSettingsService = new ProjectSettingsService();
+        var paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
+        var logger = new Logger(paths);
+
+        settingsService.Register("LastVersion", Global.VersionCode);
+        settingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
+        settingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
+            "Use Managed File Dialog (restart required)",
+            "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!",
+            false);
+        settingsService.RegisterTitled("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
+            "Automatically download Binaries",
+            "Automatically download binaries for features when possible", true);
+        settingsService.Load(paths.SettingsPath);
+
+        // Register core infrastructure
+        builder.RegisterInstance(settingsService).As<ISettingsService>().SingleInstance();
+        builder.RegisterInstance(projectSettingsService).As<IProjectSettingsService>().SingleInstance();
+        builder.RegisterInstance(paths).As<IPaths>().SingleInstance();
+        builder.RegisterInstance(logger).As<ILogger>().SingleInstance();
+
+        builder.RegisterType<ThemeManager>().AsSelf().SingleInstance();
+    }
+
+    private void RegisterModules(ContainerBuilder builder)
+    {
+        UniversalFpgaProjectSystemModule.Register(builder);
+        VcdViewerModule.Register(builder);
+        CruviAdapterExtensionsModule.Register(builder);
+        // Add more modules as needed
+    }
+
+    private void ApplyTheme(ThemeManager themeManager)
+    {
+        Styles.Add(new StyleInclude(new Uri("avares://OneWare.Studio"))
         {
-            // Register settings and configuration
-            SettingsService.Register("LastVersion", Global.VersionCode);
-            SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-            SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
-                "Use Managed File Dialog (restart required)",
-                "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!",
-                false);
-            SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
-                "Automatically download Binaries",
-                "Automatically download binaries for features when possible", true);
-            SettingsService.Load(Paths.SettingsPath);
-        }
-
-        // Container to hold resolved instances
-        public static IContainer Container { get; private set; }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            // Setup the Autofac container here
-            var builder = new ContainerBuilder();
-
-            // Register services
-            builder.RegisterInstance(SettingsService);
-            builder.RegisterInstance(ProjectSettingsService);
-            builder.RegisterInstance(Paths);
-            builder.RegisterInstance(Logger);
-
-            // Register services (Singletons)
-            builder.RegisterType<ThemeManager>().AsSelf().SingleInstance();
-
-            // Register your Autofac module (instead of RegisterType)
-
-            UniversalFpgaProjectSystemModule.Register(builder);
-            VcdViewerModule.Register(builder);
-            CruviAdapterExtensionsModule.Register(builder);
-
-            // Build the container
-            Container = builder.Build();
-
-            // Resolve ThemeManager instance and apply styles
-            var themeManager = Container.Resolve<ThemeManager>();
-
-            // Apply the styles
-            Styles.Add(new StyleInclude(new Uri("avares://OneWare.Studio"))
-            {
-                Source = new Uri("avares://OneWare.Studio/Styles/Theme.axaml")
-            });
-
-            // Initialize your modules or services manually if required
-        }
-
-        protected void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-        {
-            // Modules are handled via Autofac directly now.
-            // You can initialize or resolve modules manually if needed.
-        }
+            Source = new Uri("avares://OneWare.Studio/Styles/Theme.axaml")
+        });
     }
 }

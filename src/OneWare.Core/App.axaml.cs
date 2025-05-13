@@ -23,6 +23,8 @@ using OneWare.ApplicationCommands.Services;
 using OneWare.Essentials.LanguageService;
 using OneWare.ProjectSystem.Services;
 using OneWare.Core.ModuleLogic;
+using OneWare.Settings;
+using OneWare.Core.ViewModels.DockViews;
 
 namespace OneWare.Core;
 
@@ -67,6 +69,25 @@ public class App : Application
         builder.RegisterType<MainWindow>().SingleInstance();
         builder.RegisterType<ApplicationSettingsView>().InstancePerDependency();
         builder.RegisterType<AboutView>().InstancePerDependency();
+
+        builder.Register(ctx =>
+        {
+            string appName = "OneWare Studio";
+            string appIconPath = "avares://OneWare.Studio/Assets/icon.ico"; // or fetch from a settings file
+            return new Paths(appName, appIconPath);
+        }).As<IPaths>().SingleInstance();
+
+        builder.RegisterType<WelcomeScreenViewModel>()
+       .AsSelf(); // or .As<IWelcomeScreenViewModel> if you're using an interface
+
+        builder.RegisterType<MainDocumentDockViewModel>()
+               .AsSelf(); // same applies here
+
+        builder.RegisterType<DockService>()
+       .As<IDockService>()
+       .SingleInstance(); // or Scoped, depending on your app structure
+
+        builder.RegisterType<SettingsService>().As<ISettingsService>().SingleInstance();
 
         Container = builder.Build();
 
