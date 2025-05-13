@@ -36,6 +36,7 @@ using OneWare.Core.Services;
 using OneWare.PackageManager.Services;
 using OneWare.ProjectSystem.Services;
 using OneWare.Settings;
+using OneWare.ErrorList;
 
 namespace OneWare.Studio.Desktop;
 
@@ -77,6 +78,7 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterType<PluginService>().As<IPluginService>().SingleInstance();
         builder.RegisterType<PackageService>().As<IPackageService>().SingleInstance();
 
+
         // Register Paths with constructor parameters
         builder.RegisterType<Paths>()
             .As<IPaths>()
@@ -93,6 +95,7 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterType<PackageManagerViewModel>().InstancePerDependency();
         builder.RegisterType<UpdaterView>().InstancePerDependency();
         builder.RegisterType<UpdaterViewModel>().SingleInstance();
+        builder.RegisterType<HttpService>().As<IHttpService>().SingleInstance();
 
         // Register modules
         builder.RegisterModule<UpdaterModule>();
@@ -104,6 +107,8 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterModule<VhdlModule>();
         builder.RegisterModule<VerilogModule>();
         builder.RegisterModule<OssCadSuiteIntegrationModule>();
+        builder.RegisterModule<ErrorListModule>();
+
 
         // Build temporary container to resolve IPaths and IPluginService
         var tempContainer = builder.Build();
