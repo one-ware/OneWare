@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using Autofac;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Models;
@@ -7,44 +8,42 @@ using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.PackageManager;
 
-public class PackageManagerModule : IModule
+public class PackageManagerModule : Module
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void Load(ContainerBuilder builder)
     {
-        containerRegistry.RegisterSingleton<IPackageService, PackageService>();
-        containerRegistry.RegisterSingleton<PackageManagerViewModel>();
-    }
+        builder.RegisterType<PackageService>().As<IPackageService>().SingleInstance();
+        builder.RegisterType<PackageManagerViewModel>().SingleInstance();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        var windowService = containerProvider.Resolve<IWindowService>();
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
+        builder.RegisterBuildCallback(container =>
         {
-            Header = "Extensions",
-            Command = new RelayCommand(() => windowService.Show(new PackageManagerView
+            var windowService = container.Resolve<IWindowService>();
+            var settingsService = container.Resolve<ISettingsService>();
+
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
             {
-                DataContext = containerProvider.Resolve<PackageManagerViewModel>()
-            })),
-            IconObservable = Application.Current!.GetResourceObservable("PackageManager")
-        });
-        
-        ContainerLocator.Container.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");
-        
-        ContainerLocator.Container.Resolve<ISettingsService>()
-            .RegisterSetting("Package Manager", "Sources", "PackageManager_Sources",  new ListBoxSetting("Custom Package Sources", [])
+                Header = "Extensions",
+                Command = new RelayCommand(() => windowService.Show(new PackageManagerView
+                {
+                    DataContext = container.Resolve<PackageManagerViewModel>()
+                })),
+                IconObservable = Application.Current!.GetResourceObservable("PackageManager")
+            });
+
+            settingsService.RegisterSettingCategory("Package Manager", 0, "PackageManager");
+
+            settingsService.RegisterSetting("Package Manager", "Sources", "PackageManager_Sources", new ListBoxSetting("Custom Package Sources", [])
             {
                 MarkdownDocumentation = """
-                                        Add custom package sources to the package manager. These sources will be used to search for and install packages.
-                                        You can add either:
-                                        - A Package Repository
-                                        - A Direct link to a package manifest
-                                        """,
+                    Add custom package sources to the package manager. These sources will be used to search for and install packages.
+                    You can add either:
+                    - A Package Repository
+                    - A Direct link to a package manifest
+                """,
             });
+        });
     }
 }

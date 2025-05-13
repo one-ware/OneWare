@@ -1,34 +1,34 @@
-﻿using Avalonia;
+﻿using Autofac;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.TerminalManager.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.TerminalManager;
 
-public class TerminalManagerModule : IModule
+public class TerminalManagerModule : Module
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void Load(ContainerBuilder builder)
     {
-        containerRegistry.RegisterSingleton<TerminalManagerViewModel>();
-    }
+        builder.RegisterType<TerminalManagerViewModel>().SingleInstance();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        containerProvider.Resolve<IDockService>()
-            .RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Terminal")
+        builder.RegisterBuildCallback(container =>
+        {
+            var dockService = container.Resolve<IDockService>();
+            var windowService = container.Resolve<IWindowService>();
+            var terminalVm = container.Resolve<TerminalManagerViewModel>();
+
+            dockService.RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
+
+            windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Terminal")
             {
                 Header = "Terminal",
-                Command = new RelayCommand(() =>
-                    containerProvider.Resolve<IDockService>()
-                        .Show(containerProvider.Resolve<TerminalManagerViewModel>())),
+                Command = new RelayCommand(() => dockService.Show(terminalVm)),
                 IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
             });
+        });
     }
 }

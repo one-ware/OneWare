@@ -1,19 +1,26 @@
-﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
+﻿using Autofac;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.CruviAdapterExtensions;
 
-public class CruviAdapterExtensionsModule : IModule
+public static class CruviAdapterExtensionsModule
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public static void Register(ContainerBuilder builder)
     {
+        // No types to register in this module
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public static void Initialize(IContainer container)
     {
-        containerProvider.Resolve<FpgaService>().RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage("CRUVI_LS to PMOD Adapter", "CRUVI_LS", "avares://OneWare.CruviAdapterExtensions/Assets/CRUVI_LS/CRUVI_LS to PMOD Adapter"));
-        containerProvider.Resolve<FpgaService>().RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage("PMOD to CRUVI_LS Adapter", "PMOD", "avares://OneWare.CruviAdapterExtensions/Assets/PMOD/PMOD to CRUVI_LS Adapter"));
+        var fpgaService = container.Resolve<FpgaService>();
+
+        fpgaService.RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage(
+            "CRUVI_LS to PMOD Adapter", "CRUVI_LS",
+            "avares://OneWare.CruviAdapterExtensions/Assets/CRUVI_LS/CRUVI_LS to PMOD Adapter"));
+
+        fpgaService.RegisterFpgaExtensionPackage(new GenericFpgaExtensionPackage(
+            "PMOD to CRUVI_LS Adapter", "PMOD",
+            "avares://OneWare.CruviAdapterExtensions/Assets/PMOD/PMOD to CRUVI_LS Adapter"));
     }
 }

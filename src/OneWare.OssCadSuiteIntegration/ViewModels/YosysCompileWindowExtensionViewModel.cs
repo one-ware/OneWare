@@ -8,7 +8,6 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
@@ -18,16 +17,22 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
-    
+    private readonly ILogger _logger;
+
     private bool _isVisible;
 
-    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
-        IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService)
+    public YosysCompileWindowExtensionViewModel(
+        UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
+        IWindowService windowService,
+        IProjectExplorerService projectExplorerService,
+        FpgaService fpgaService,
+        ILogger logger)
     {
         _pinPlannerViewModel = pinPlannerViewModel;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
+        _logger = logger;
 
         IDisposable? disposable = null;
         projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(x =>
@@ -59,19 +64,20 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                 {
                     var selectedFpga = _pinPlannerViewModel.SelectedFpgaModel?.Fpga;
-                    
-                    if(selectedFpga == null) return;
-                    
+
+                    if (selectedFpga == null) return;
+
                     await _windowService.ShowDialogAsync(
                         new YosysCompileSettingsView
-                            { DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga) },
+                        {
+                            DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga)
+                        },
                         ownerWindow);
                 }
-               
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
         });
     }
