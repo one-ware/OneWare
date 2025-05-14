@@ -1,16 +1,20 @@
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using System;
+using System.IO;
 
 namespace OneWare.Essentials.Helpers;
 
 public class FileWatcher : IDisposable
 {
     private readonly FileSystemWatcher _fileSystemWatcher;
-    
+    private readonly ILogger _logger;
+
     private DateTime _lastRead = DateTime.MinValue;
 
-    public FileWatcher(string filePath, Action onChanged)
+    public FileWatcher(string filePath, Action onChanged, ILogger logger)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
         _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(filePath)!)
         {
             NotifyFilter = NotifyFilters.LastWrite,
@@ -27,7 +31,7 @@ public class FileWatcher : IDisposable
                 _lastRead = lastWriteTime;
             }
         };
-        
+
         _fileSystemWatcher.EnableRaisingEvents = true;
     }
 
@@ -39,15 +43,15 @@ public class FileWatcher : IDisposable
 
 public static class FileSystemWatcherHelper
 {
-    public static IDisposable? WatchFile(string path, Action onChanged)
+    public static IDisposable? WatchFile(string path, Action onChanged, ILogger logger)
     {
         try
         {
-            return new FileWatcher(path, onChanged);
+            return new FileWatcher(path, onChanged, logger);
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger?.Error(e.Message, e);
         }
         return null;
     }

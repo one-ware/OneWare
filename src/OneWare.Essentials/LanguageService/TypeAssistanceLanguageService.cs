@@ -2,6 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
+using Autofac;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
@@ -22,7 +23,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
@@ -37,11 +37,10 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 {
     private readonly IBrush _highlightBackground = SolidColorBrush.Parse("#3300c8ff");
-
     private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(100);
+    private readonly ILifetimeScope _scope;
 
     private bool _completionBusy;
-
     private CompositeDisposable _completionDisposable = new();
     private DispatcherTimer? _dispatcherTimer;
     private TimeSpan _lastCaretChangedRefreshTime = DateTime.Now.TimeOfDay;
@@ -49,15 +48,15 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastDocumentChangedRefreshTime = DateTime.Now.TimeOfDay;
-
     private TimeSpan _lastEditTime = DateTime.Now.TimeOfDay;
 
-    protected TypeAssistanceLanguageService(IEditor evm, ILanguageService langService) : base(evm)
+    protected TypeAssistanceLanguageService(IEditor evm, ILanguageService langService, ILifetimeScope scope) : base(evm)
     {
         Service = langService;
+        _scope = scope;
     }
 
-    private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
+    private ISettingsService SettingsService => _scope.Resolve<ISettingsService>();
     protected virtual TimeSpan DocumentChangedRefreshTime => TimeSpan.FromMilliseconds(500);
     protected virtual TimeSpan CaretChangedRefreshTime => TimeSpan.FromMilliseconds(100);
 
@@ -69,7 +68,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile)
+        var error = _scope.Resolve<IErrorService>().GetErrorsForFile(CurrentFile)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
@@ -250,7 +249,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            _scope.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -258,7 +257,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         if (Regex.IsMatch(newName, @"\W"))
         {
-            ContainerLocator.Container.Resolve<ILogger>()
+            _scope.Resolve<ILogger>()
                 ?.Error($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
             return;
         }
@@ -268,11 +267,11 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             var workspaceEdit = await Service.RequestRenameAsync(CurrentFile.FullPath, range.Range.Start, newName);
             if (workspaceEdit != null && IsOpen)
                 await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
-                    { Edit = workspaceEdit, Label = "Rename" });
+                { Edit = workspaceEdit, Label = "Rename" });
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            _scope.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -298,10 +297,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (location == null) return;
 
         var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
-        file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+        var file = _scope.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
+        file ??= _scope.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
-        var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+        var dockable = await _scope.Resolve<IDockService>().OpenFileAsync(file);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
@@ -312,7 +311,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
+        _scope.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
     }
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
@@ -357,7 +356,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _scope.Resolve<ILogger>()?.Error(e.Message, e);
         }
     }
 
@@ -432,23 +431,23 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFile.FullPath);
 
-        var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
+        var languageManager = _scope.Resolve<ILanguageManager>();
 
         if (tokens != null)
         {
             var segments = tokens.Select(x =>
+            {
+                var offset =
+                    Editor.CurrentDocument.GetOffsetFromPosition(new Position(x.Line, x.StartCharacter)) - 1;
+
+                if (!languageManager.CurrentEditorThemeColors.TryGetValue(x.TokenType.ToString(), out var b))
+                    return null;
+
+                return new TextModificationSegment(offset, offset + x.Length)
                 {
-                    var offset =
-                        Editor.CurrentDocument.GetOffsetFromPosition(new Position(x.Line, x.StartCharacter)) - 1;
-
-                    if (!languageManager.CurrentEditorThemeColors.TryGetValue(x.TokenType.ToString(), out var b))
-                        return null;
-
-                    return new TextModificationSegment(offset, offset + x.Length)
-                    {
-                        Foreground = b
-                    };
-                }).Where(x => x is not null)
+                    Foreground = b
+                };
+            }).Where(x => x is not null)
                 .Cast<TextModificationSegment>()
                 .ToArray();
 
@@ -463,7 +462,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual async Task UpdateInlayHintsAsync()
     {
         if (CodeBox.Document.LineCount == 0) return;
-        
+
         var inlayHintContainer =
             await Service.RequestInlayHintsAsync(CurrentFile.FullPath, new Range(0, 0, CodeBox.Document.LineCount, CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
 
@@ -502,8 +501,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual async Task ShowCompletionAsync(CompletionTriggerKind triggerKind, string? triggerChar)
     {
-        //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
-
         var completionOffset = CodeBox.CaretOffset;
         if (triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
 
@@ -553,7 +550,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 {
                     var compare = string.Compare(Completion.CompletionList.CompletionData[c].Label, customItem.Label,
                         StringComparison.Ordinal);
-                    
+
                     if (compare > 0)
                     {
                         Completion.CompletionList.CompletionData.Insert(c, customItem);
@@ -567,7 +564,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         break;
                     }
                 }
-                
+
                 if (!insert) Completion.CompletionList.CompletionData.Add(customItem);
             }
 
@@ -622,7 +619,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual async Task ResolveCompletionAsync()
     {
-        //Resolve selected item
         if (Service.IsLanguageServiceReady && Completion is
             {
                 IsOpen: true,
@@ -685,7 +681,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list, int offset)
     {
-        //Parse completionitem
         foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, offset);
     }
 
@@ -713,7 +708,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
     {
-        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
+        foreach (var error in _scope.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
             if (location.Line >= error.StartLine && location.Column >= error.StartColumn &&
                 (location.Line < error.EndLine ||
                  (location.Line == error.EndLine && location.Column <= error.EndColumn)))
@@ -797,8 +792,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             _lastEditTime <= DateTime.Now.TimeOfDay - DocumentChangedRefreshTime)
         {
             _lastDocumentChangedRefreshTime = DateTime.Now.TimeOfDay;
-
-            //Execute slower actions after no edit was done for 500ms
             CodeUpdated();
         }
 
@@ -806,8 +799,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             _lastCaretChangeTime <= DateTime.Now.TimeOfDay - CaretChangedRefreshTime)
         {
             _lastCaretChangedRefreshTime = DateTime.Now.TimeOfDay;
-
-            //Execute slower actions after the caret was not changed for 100ms
             _ = GetDocumentHighlightAsync();
             _ = UpdateInlayHintsAsync();
         }
@@ -816,8 +807,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             _lastCompletionItemChangedTime <= DateTime.Now.TimeOfDay - CaretChangedRefreshTime)
         {
             _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
-
-            //Execute slower actions after the caret was not changed for 100ms
             _ = ResolveCompletionAsync();
         }
     }

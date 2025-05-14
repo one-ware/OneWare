@@ -3,37 +3,51 @@ using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
-using Prism.Ioc;
 
 namespace OneWare.Core.Dock;
 
-public static class DefaultLayout
+public class DefaultLayout
 {
-    private static IList<IDockable> ConvertRegistration(IEnumerable<Type>? types, IFactory factory)
-    {
-        var bottomToolsResolved = types?
-            .Select(x => ContainerLocator.Container.Resolve(x))
-            .Cast<IDockable>();
+    private readonly DockService _dockService;
+    private readonly IFactory _factory;
+    private readonly MainDocumentDockViewModel _mainDocumentDock;
+    private readonly Func<Type, IDockable> _dockableResolver;
 
-        return bottomToolsResolved == null
-            ? factory.CreateList<IDockable>()
-            : factory.CreateList(bottomToolsResolved.ToArray());
+    public DefaultLayout(
+        DockService dockService,
+        IFactory factory,
+        MainDocumentDockViewModel mainDocumentDock,
+        Func<Type, IDockable> dockableResolver)
+    {
+        _dockService = dockService;
+        _factory = factory;
+        _mainDocumentDock = mainDocumentDock;
+        _dockableResolver = dockableResolver;
     }
 
-    public static RootDock GetDefaultLayout(DockService dockService)
+    private IList<IDockable> ConvertRegistration(IEnumerable<Type>? types)
     {
-        var documentDock = ContainerLocator.Container.Resolve<MainDocumentDockViewModel>();
-        documentDock.ActiveDockable = null;
-        documentDock.FocusedDockable = null;
-        documentDock.VisibleDockables?.Clear();
-        dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
-        dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
+        if (types == null)
+            return _factory.CreateList<IDockable>();
+
+        var dockables = types.Select(t => _dockableResolver(t)).ToArray();
+        return _factory.CreateList(dockables);
+    }
+
+    public RootDock GetDefaultLayout()
+    {
+        _mainDocumentDock.ActiveDockable = null;
+        _mainDocumentDock.FocusedDockable = null;
+        _mainDocumentDock.VisibleDockables?.Clear();
+
+        _dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
+        _dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
 
         var leftTool = new ToolDock
         {
             Id = "LeftPaneTop",
             Title = "LeftPaneTop",
-            VisibleDockables = ConvertRegistration(leftTools, dockService),
+            VisibleDockables = ConvertRegistration(leftTools),
             Alignment = Alignment.Left
         };
 
@@ -43,17 +57,14 @@ public static class DefaultLayout
             Title = "LeftPane",
             Proportion = 0.25,
             Orientation = Orientation.Vertical,
-            VisibleDockables = dockService.CreateList<IDockable>
-            (
-                leftTool
-            )
+            VisibleDockables = _dockService.CreateList<IDockable>(leftTool)
         };
 
         var bottomTool = new ToolDock
         {
             Id = "BottomPaneOne",
             Title = "BottomPaneOne",
-            VisibleDockables = ConvertRegistration(bottomTools, dockService),
+            VisibleDockables = ConvertRegistration(bottomTools),
             Alignment = Alignment.Bottom
         };
 
@@ -63,10 +74,7 @@ public static class DefaultLayout
             Title = "BottomRow",
             Proportion = 0.3,
             Orientation = Orientation.Horizontal,
-            VisibleDockables = dockService.CreateList<IDockable>
-            (
-                bottomTool
-            )
+            VisibleDockables = _dockService.CreateList<IDockable>(bottomTool)
         };
 
         var right = new ProportionalDock
@@ -75,12 +83,10 @@ public static class DefaultLayout
             Title = "TopRow",
             Orientation = Orientation.Vertical,
             ActiveDockable = null,
-            VisibleDockables = dockService.CreateList<IDockable>
-            (
-                documentDock,
+            VisibleDockables = _dockService.CreateList<IDockable>(
+                _mainDocumentDock,
                 new ProportionalDockSplitter(),
-                bottom
-            )
+                bottom)
         };
 
         var mainLayout = new ProportionalDock
@@ -89,12 +95,10 @@ public static class DefaultLayout
             Title = "MainLayout",
             Orientation = Orientation.Horizontal,
             ActiveDockable = null,
-            VisibleDockables = dockService.CreateList<IDockable>
-            (
+            VisibleDockables = _dockService.CreateList<IDockable>(
                 left,
                 new ProportionalDockSplitter(),
-                right
-            )
+                right)
         };
 
         var root = new RootDock
@@ -102,7 +106,7 @@ public static class DefaultLayout
             Id = "Root",
             Title = "Root",
             IsCollapsable = false,
-            VisibleDockables = dockService.CreateList<IDockable>(mainLayout),
+            VisibleDockables = _dockService.CreateList<IDockable>(mainLayout),
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout
         };

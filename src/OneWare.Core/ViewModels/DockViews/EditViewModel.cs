@@ -15,7 +15,7 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Autofac;  // Import Autofac for DI
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -32,18 +32,26 @@ public class EditViewModel : ExtendedDocument, IEditor
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;  // Injected ILogger from Autofac
 
     private CompositeDisposable _composite = new();
-    
+
     private IEnumerable<ErrorListItem>? _diagnostics;
 
     private ITypeAssistance? _typeAssistance;
 
-    public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
-        IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
-        IProjectExplorerService projectExplorerService, IErrorService errorService,
+    // Constructor with Autofac DI
+    public EditViewModel(string fullPath,
+        ILogger logger,
+        ISettingsService settingsService,
+        IDockService dockService,
+        ILanguageManager languageManager,
+        IWindowService windowService,
+        IProjectExplorerService projectExplorerService,
+        IErrorService errorService,
         BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
     {
+        _logger = logger;  // Assign injected logger
         _settingsService = settingsService;
         _dockService = dockService;
         _windowService = windowService;
@@ -57,7 +65,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+        _logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -75,15 +83,6 @@ public class EditViewModel : ExtendedDocument, IEditor
             if (_diagnostics != null)
             {
                 Editor.MarkerService.SetDiagnostics(_diagnostics);
-
-                // Editor.ModificationService.SetModification("Errors", _diagnostics.Where(x => x.Type == ErrorType.Error).Select(b =>
-                // {
-                //     var off = b.GetOffset(Editor.Document);
-                //     return new TextModificationService.TextModificationSegment(off.startOffset, off.endOffset)
-                //     {
-                //         Brush = _errorBrushText
-                //     };
-                // }).ToArray());
 
                 var errorLines = _diagnostics
                     .Where(b => b.Type is ErrorType.Error)
@@ -149,8 +148,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             DisableEditViewEvents = CurrentDocument.TextLength > 100000;
             if (DisableEditViewEvents)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Warning("Some features are disabled for this large file to reduce performance loss");
+                _logger.Warning("Some features are disabled for this large file to reduce performance loss");
             }
             else
             {
@@ -205,14 +203,6 @@ public class EditViewModel : ExtendedDocument, IEditor
                     .Subscribe(x => { UpdateFolding(); }).DisposeWith(_composite);
             }
 
-            // Observable.FromEventPattern(
-            //         h => TypeAssistance.AssistanceActivated += h,
-            //         h => TypeAssistance.AssistanceActivated -= h)
-            //     .Subscribe(x =>
-            //     {
-            //         
-            //     });
-            //
             Observable.FromEventPattern(
                     h => TypeAssistance.AssistanceDeactivated += h,
                     h => TypeAssistance.AssistanceDeactivated -= h)
@@ -247,7 +237,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     {
         TypeAssistance?.Uncomment();
     }
-    
+
     #region Jump
 
     public async Task<bool> WaitForEditorReadyAsync()
@@ -328,12 +318,11 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger?.Error(e.Message, e);
             return false;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
+        _logger?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;
@@ -374,8 +363,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+            _logger?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
 
             success = false;
         }

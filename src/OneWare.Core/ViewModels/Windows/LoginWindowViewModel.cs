@@ -1,27 +1,36 @@
 ﻿using Avalonia.Controls;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using RestSharp;
+using Autofac;  // Import Autofac for DI
 
-namespace OneWare.Core.ViewModels.Windows;
-
-internal class LoginWindowViewModel : FlexibleWindowViewModelBase
+namespace OneWare.Core.ViewModels.Windows
 {
-    public string? Email { get; set; }
-    public string? Password { get; set; }
-    public bool RememberPassword { get; set; }
-
-    public async Task LoginAsync(Window window)
+    internal class LoginWindowViewModel : FlexibleWindowViewModelBase
     {
-        var client = new RestClient("https://api.vhdplus.com");
+        private readonly ILogger _logger;  // Injected ILogger via Autofac
+        private readonly RestClient _client;  // Injected RestClient via Autofac or instantiate here
 
-        var request = new RestRequest("/auth/login", Method.Post);
-        request.AddParameter("username", Email);
-        request.AddParameter("password", Password);
+        // Constructor with Autofac DI
+        public LoginWindowViewModel(ILogger logger, RestClient client)
+        {
+            _logger = logger;  // Assign injected ILogger
+            _client = client ?? new RestClient("https://api.vhdplus.com"); // Default if not injected
+        }
 
-        var result = await client.ExecuteAsync(request);
+        public string? Email { get; set; }
+        public string? Password { get; set; }
+        public bool RememberPassword { get; set; }
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Error("RES: " + result.Content, null, true, true, window);
+        public async Task LoginAsync(Window window)
+        {
+            var request = new RestRequest("/auth/login", Method.Post);
+            request.AddParameter("username", Email);
+            request.AddParameter("password", Password);
+
+            var result = await _client.ExecuteAsync(request);
+
+            _logger?.Error("RES: " + result.Content, null, true, true, window);  // Use injected ILogger
+        }
     }
 }

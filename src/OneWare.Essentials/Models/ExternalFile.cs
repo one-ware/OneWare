@@ -2,16 +2,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Autofac;  // Add this import for Autofac
 
 namespace OneWare.Essentials.Models;
 
 public class ExternalFile : ObservableObject, IFile
 {
+    private readonly IFileIconService _fileIconService;
     private IImage? _icon;
 
-    public ExternalFile(string fullPath)
+    // Constructor now accepts IFileIconService through dependency injection
+    public ExternalFile(string fullPath, IFileIconService fileIconService)
     {
+        _fileIconService = fileIconService ?? throw new ArgumentNullException(nameof(fileIconService));
         FullPath = fullPath;
 
         IDisposable? fileSubscription = null;
@@ -19,7 +22,7 @@ public class ExternalFile : ObservableObject, IFile
         this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
         {
             fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
+            var observable = _fileIconService.GetFileIcon(Extension); // Use the injected service
             fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
         });
     }

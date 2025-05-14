@@ -4,31 +4,42 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
-using Prism.Ioc;
-using Prism.Modularity;
+using Autofac; // Add this for Autofac
 
 namespace OneWare.FolderProjectSystem;
 
-public class FolderProjectSystemModule : IModule
+public class FolderProjectSystemModule
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    private readonly ILifetimeScope _container;
+
+    // Constructor now accepts ILifetimeScope to resolve dependencies
+    public FolderProjectSystemModule(ILifetimeScope container)
     {
+        _container = container;
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public void RegisterTypes()
     {
-        var manager = containerProvider.Resolve<FolderProjectManager>();
+        // Register types in the container as needed
+        // Example:
+        // _container.RegisterType<FolderProjectManager>().AsSelf();
+    }
 
-        containerProvider
-            .Resolve<IProjectManagerService>()
-            .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
+    public void OnInitialized()
+    {
+        // Resolving the FolderProjectManager from Autofac container
+        var manager = _container.Resolve<FolderProjectManager>();
 
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
+        _container.Resolve<IProjectManagerService>()
+                  .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
+
+        // Resolving IWindowService to register the menu item
+        _container.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemViewModel("Folder")
             {
                 Header = "Folder",
                 Command = new RelayCommand(() =>
-                    _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
+                    _ = _container.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16X")
             });
     }

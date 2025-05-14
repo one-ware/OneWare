@@ -5,48 +5,54 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Autofac;
 
-namespace OneWare.Cpp;
-
-internal class TypeAssistanceCpp : TypeAssistanceLanguageService
+namespace OneWare.Cpp
 {
-    public TypeAssistanceCpp(IEditor editor, LanguageServiceCpp ls) : base(editor, ls)
+    internal class TypeAssistanceCpp : TypeAssistanceLanguageService
     {
-        CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
-        FoldingStrategy =
-            new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart,
-                FoldingRegexCpp.FoldingEnd); //new LspFoldingStrategy(ls, editor.CurrentFile);
-        LineCommentSequence = "//";
-    }
+        private readonly IErrorService _errorService;
 
-    public override bool CanAddBreakPoints => true;
-
-    public override async Task<string?> GetHoverInfoAsync(int offset)
-    {
-        if (!Service.IsLanguageServiceReady) return null;
-
-        var pos = CodeBox.Document.GetLocation(offset);
-
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile!)
-            .OrderBy(x => x.Type)
-            .FirstOrDefault(error => pos.Line >= error.StartLine
-                                     && pos.Line <= error.EndLine
-                                     && pos.Column >= error.StartColumn
-                                     && pos.Column <= error.EndColumn);
-        var info = "";
-
-        if (error != null) info += error.Description + "\n";
-
-        var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
-            new Position(pos.Line - 1, pos.Column - 1));
-        if (hover != null)
+        // Constructor with Autofac DI
+        public TypeAssistanceCpp(IEditor editor, LanguageServiceCpp ls, IErrorService errorService)
+            : base(editor, ls)
         {
-            if (hover.Contents.HasMarkedStrings)
-                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-            if (hover.Contents.HasMarkupContent) info += $"```cpp\n{hover.Contents.MarkupContent?.Value}\n```";
+            _errorService = errorService;
+
+            CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
+            FoldingStrategy = new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart, FoldingRegexCpp.FoldingEnd);
+            LineCommentSequence = "//";
         }
 
-        return string.IsNullOrWhiteSpace(info) ? null : info;
+        public override bool CanAddBreakPoints => true;
+
+        public override async Task<string?> GetHoverInfoAsync(int offset)
+        {
+            if (!Service.IsLanguageServiceReady) return null;
+
+            var pos = CodeBox.Document.GetLocation(offset);
+
+            // Use the injected IErrorService instead of resolving via ContainerLocator
+            var error = _errorService.GetErrorsForFile(Editor.CurrentFile!)
+                .OrderBy(x => x.Type)
+                .FirstOrDefault(error => pos.Line >= error.StartLine
+                                         && pos.Line <= error.EndLine
+                                         && pos.Column >= error.StartColumn
+                                         && pos.Column <= error.EndColumn);
+            var info = "";
+
+            if (error != null) info += error.Description + "\n";
+
+            var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
+                new Position(pos.Line - 1, pos.Column - 1));
+            if (hover != null)
+            {
+                if (hover.Contents.HasMarkedStrings)
+                    info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; // TODO: Clarify this behavior
+                if (hover.Contents.HasMarkupContent) info += $"```cpp\n{hover.Contents.MarkupContent?.Value}\n```";
+            }
+
+            return string.IsNullOrWhiteSpace(info) ? null : info;
+        }
     }
 }

@@ -4,18 +4,23 @@ using Avalonia.Svg.Skia;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.ImageViewer.ViewModels;
 
 public class ImageViewModel : ExtendedDocument
 {
+    private readonly ILogger<ImageViewModel> _logger;
     private IImage? _image;
 
-    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
-        IWindowService windowService) :
-        base(fullPath, projectExplorerService, dockService, windowService)
+    public ImageViewModel(
+        string fullPath,
+        IProjectExplorerService projectExplorerService,
+        IDockService dockService,
+        IWindowService windowService,
+        ILogger<ImageViewModel> logger) : base(fullPath, projectExplorerService, dockService, windowService)
     {
+        _logger = logger;
     }
 
     public IImage? Image
@@ -34,10 +39,10 @@ public class ImageViewModel : ExtendedDocument
             {
                 case ".svg":
                     var svg = SvgSource.Load(FullPath);
-                        Image = new SvgImage
-                        {
-                            Source = svg
-                        };
+                    Image = new SvgImage
+                    {
+                        Source = svg
+                    };
                     break;
                 case ".jpg":
                 case ".png":
@@ -47,7 +52,7 @@ public class ImageViewModel : ExtendedDocument
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e, "Failed to load image.");
             LoadingFailed = true;
         }
 

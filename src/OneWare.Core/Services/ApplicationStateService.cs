@@ -5,16 +5,15 @@ using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OneWare.Core.Services;
 
 public class ApplicationStateService : ObservableObject, IApplicationStateService
 {
     private readonly object _activeLock = new();
-
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
-
     private readonly List<Action> _shutdownActions = new();
     private readonly IWindowService _windowService;
 
@@ -28,7 +27,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         {
             if (_activeStates.Count > 0)
             {
-                //Check if active process is compiling
+                // Check if active process is compiling
                 var withProcess = _activeStates.Where(x => x.Terminate != null).ToArray();
                 ActiveProcess = withProcess.Any() ? withProcess.Last() : _activeStates.Last();
             }
@@ -49,8 +48,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     /// <summary>
     ///     Use the key to remove the added state with RemoveState()
     /// </summary>
-    public ApplicationProcess AddState(string status, AppState state,
-        Action? terminate = null)
+    public ApplicationProcess AddState(string status, AppState state, Action? terminate = null)
     {
         lock (_activeLock)
         {
@@ -100,6 +98,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public void TryShutdown()
     {
-        Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
+        Dispatcher.UIThread.Post(() => _windowService.CloseMainWindow());
     }
 }

@@ -12,9 +12,10 @@ using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
-using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
-using UiExtension = OneWare.Essentials.Models.UiExtension;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Core.Services;
 
@@ -22,23 +23,29 @@ public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
+    private readonly INotificationManager _notificationManager;  // Dependency for notifications
+
+    public WindowService(INotificationManager notificationManager)
+    {
+        _notificationManager = notificationManager;
+    }
 
     public void RegisterUiExtension(string key, UiExtension extension)
     {
-        _uiExtensions.TryAdd(key, []);
+        _uiExtensions.TryAdd(key, new ObservableCollection<UiExtension>());
         _uiExtensions[key].Add(extension);
     }
 
     public ObservableCollection<UiExtension> GetUiExtensions(string key)
     {
-        _uiExtensions.TryAdd(key, []);
+        _uiExtensions.TryAdd(key, new ObservableCollection<UiExtension>());
         return _uiExtensions[key];
     }
 
     public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems)
     {
         var parts = key.Split('/');
-        _menuItems.TryAdd(parts[0], []);
+        _menuItems.TryAdd(parts[0], new ObservableCollection<MenuItemViewModel>());
         var activeCollection = _menuItems[parts[0]];
 
         if (parts.Length > 1)
@@ -95,9 +102,7 @@ public class WindowService : IWindowService
 
     public void Show(FlexibleWindow window, Window? owner = null)
     {
-        owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime
-            ? null
-            : ContainerLocator.Container.Resolve<MainWindow>();
+        owner ??= GetMainWindow();  // Directly obtain the main window
         window.Show(owner);
         window.Focus();
     }
@@ -106,11 +111,11 @@ public class WindowService : IWindowService
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            owner ??= ContainerLocator.Container.Resolve<MainWindow>();
+            owner ??= GetMainWindow();  // Directly obtain the main window
             await window.ShowDialogAsync(owner);
         }
-        else await ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
-        
+        else await ShowVirtualDialogAsync(window);  // Handle virtual dialogs (if applicable)
+
         window.Focus();
     }
 
@@ -181,8 +186,7 @@ public class WindowService : IWindowService
     {
         var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(5));
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager
-            ?.Show(model);
+        _notificationManager?.Show(model);  // Use injected notification manager
     }
 
     public void ShowNotificationWithButton(string title, string message, string buttonText,
@@ -191,7 +195,7 @@ public class WindowService : IWindowService
     {
         var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10), buttonText, buttonAction, icon);
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
+        _notificationManager?.Show(model);  // Use injected notification manager
     }
 
     private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
@@ -209,5 +213,29 @@ public class WindowService : IWindowService
 
             if (!insert) collection.Add(item);
         }
+    }
+
+    // Helper method to get the main window (or resolve it from DI, if needed)
+    private Window GetMainWindow()
+    {
+        return Application.Current?.ApplicationLifetime switch
+        {
+            IClassicDesktopStyleApplicationLifetime desktopApp => desktopApp.MainWindow,
+            _ => throw new InvalidOperationException("Unable to resolve main window.")
+        };
+    }
+
+    // Placeholder for handling virtual dialogs, if necessary
+    private async Task ShowVirtualDialogAsync(FlexibleWindow window)
+    {
+        // Custom handling for virtual dialogs can be implemented here
+        await Task.CompletedTask;
+    }
+
+    // Method to close the main window
+    public void CloseMainWindow()
+    {
+        var mainWindow = GetMainWindow();
+        mainWindow?.Close();
     }
 }

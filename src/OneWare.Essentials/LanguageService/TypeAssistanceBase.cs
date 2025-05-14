@@ -6,15 +6,18 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.LanguageService;
 
 public abstract class TypeAssistanceBase : ITypeAssistance
 {
-    protected TypeAssistanceBase(IEditor editor)
+    private readonly ISettingsService _settingsService;
+
+    // Constructor that accepts ISettingsService as a dependency
+    protected TypeAssistanceBase(IEditor editor, ISettingsService settingsService)
     {
         Editor = editor;
+        _settingsService = settingsService;
     }
 
     protected IEditor Editor { get; }
@@ -127,7 +130,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
 
     protected virtual Task TextEnteredAsync(TextInputEventArgs e)
     {
-        if (ContainerLocator.Container.Resolve<ISettingsService>().GetSettingValue<bool>("Editor_UseAutoBracket"))
+        if (_settingsService.GetSettingValue<bool>("Editor_UseAutoBracket"))
         {
             if (CodeBox.CaretOffset > CodeBox.Document.TextLength || CodeBox.CaretOffset < 2) return Task.CompletedTask;
 

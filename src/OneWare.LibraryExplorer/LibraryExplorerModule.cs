@@ -6,32 +6,45 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.LibraryExplorer.ViewModels;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.Logging;
+using Autofac;
 
 namespace OneWare.LibraryExplorer;
 
-public class LibraryExplorerModule : IModule
+public class LibraryExplorerModule 
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    private readonly ILogger<LibraryExplorerModule> _logger;
+
+    public LibraryExplorerModule(ILogger<LibraryExplorerModule> logger)
     {
-        containerRegistry.RegisterSingleton<LibraryExplorerViewModel>();
+        _logger = logger;
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public void RegisterTypes(ContainerBuilder containerBuilder)
     {
-        var dockService = containerProvider.Resolve<IDockService>();
-        var windowService = containerProvider.Resolve<IWindowService>();
+        containerBuilder.RegisterType<LibraryExplorerViewModel>().AsSelf().SingleInstance();
+    }
 
-        dockService.RegisterLayoutExtension<LibraryExplorerViewModel>(DockShowLocation.Left);
-        
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Library Explorer")
-            {
-                Header = "Library Explorer",
-                Command =
-                    new RelayCommand(() => dockService.Show(containerProvider.Resolve<LibraryExplorerViewModel>())),
-                IconObservable = Application.Current!.GetResourceObservable(LibraryExplorerViewModel.IconKey)
-            });
+    public void OnInitialized(IComponentContext container)
+    {
+        try
+        {
+            var dockService = container.Resolve<IDockService>();
+            var windowService = container.Resolve<IWindowService>();
+
+            dockService.RegisterLayoutExtension<LibraryExplorerViewModel>(DockShowLocation.Left);
+
+            windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+                new MenuItemViewModel("Library Explorer")
+                {
+                    Header = "Library Explorer",
+                    Command = new RelayCommand(() => dockService.Show(container.Resolve<LibraryExplorerViewModel>())),
+                    IconObservable = Application.Current!.GetResourceObservable(LibraryExplorerViewModel.IconKey)
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during initialization of LibraryExplorerModule.");
+        }
     }
 }

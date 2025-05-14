@@ -3,7 +3,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Autofac;
 using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
@@ -107,7 +107,10 @@ public class LspIndentationStrategy : IIndentationStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            // Resolving ILogger using Autofac
+            // TODO: GAB - Check if this is the right way to resolve ILogger
+            //var logger = AutofacContainer.Resolve<ILogger>();
+            //logger?.Error(e.Message, e);
         }
     }
 }

@@ -97,6 +97,7 @@ public class DesktopStudioApp : StudioApp
         builder.RegisterType<UpdaterViewModel>().SingleInstance();
         builder.RegisterType<HttpService>().As<IHttpService>().SingleInstance();
 
+
         // Register modules
         builder.RegisterModule<UpdaterModule>();
         builder.RegisterModule<PackageManagerModule>();

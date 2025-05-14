@@ -1,15 +1,19 @@
 ﻿using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
-using Prism.Ioc;
+using Autofac;  // Import Autofac for Dependency Injection
 
-namespace OneWare.Core.Views.Windows;
-
-public partial class ActivateWindow : FlexibleWindow
+namespace OneWare.Core.Views.Windows
 {
-    public ActivateWindow()
+    public partial class ActivateWindow : FlexibleWindow
     {
-        DataContext = ContainerLocator.Container.Resolve<ActivateWindowViewModel>();
+        // Constructor with Autofac Dependency Injection
+        public ActivateWindow(ActivateWindowViewModel viewModel)
+        {
+            // Set the DataContext to the injected ViewModel
+            DataContext = viewModel;
 
-        InitializeComponent();
+            // Initialize the window components
+            InitializeComponent();
+        }
     }
 }

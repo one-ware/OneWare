@@ -5,29 +5,33 @@ using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Autofac;
 
-namespace OneWare.Debugger;
-
-public class DebuggerModule : IModule
+namespace OneWare.Debugger
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public class DebuggerModule
     {
-    }
+        public void RegisterTypes(ContainerBuilder builder)
+        {
+            // Register types with Autofac container
+            // For example:
+            // builder.RegisterType<DebuggerViewModel>().AsSelf();
+        }
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        var dockService = containerProvider.Resolve<IDockService>();
-        //dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
+        public void OnInitialized(IContainer container)
+        {
+            // Resolve dependencies using Autofac
+            var dockService = container.Resolve<IDockService>();
+            var windowService = container.Resolve<IWindowService>();
 
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Debugger")
-            {
-                Header = "Debugger",
-                Command = new RelayCommand(() =>
-                    dockService.Show(containerProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
-                IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
-            });
+            windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+                new MenuItemViewModel("Debugger")
+                {
+                    Header = "Debugger",
+                    Command = new RelayCommand(() =>
+                        dockService.Show(container.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
+                    IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
+                });
+        }
     }
 }

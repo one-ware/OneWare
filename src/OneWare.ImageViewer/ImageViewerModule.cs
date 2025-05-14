@@ -1,19 +1,21 @@
 ﻿using OneWare.Essentials.Services;
 using OneWare.ImageViewer.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Autofac;
 
 namespace OneWare.ImageViewer;
 
-public class ImageViewerModule : IModule
+public class ImageViewerModule
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public void RegisterTypes(ContainerBuilder builder)
     {
-        containerRegistry.Register<ImageViewModel>();
+        // Register ImageViewModel with Autofac
+        builder.RegisterType<ImageViewModel>().AsSelf();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public void OnInitialized(ILifetimeScope containerScope)
     {
-        containerProvider.Resolve<IDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png");
+        // Resolve IDockService and register the ImageViewModel for specific file types
+        var dockService = containerScope.Resolve<IDockService>();
+        dockService.RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png");
     }
 }

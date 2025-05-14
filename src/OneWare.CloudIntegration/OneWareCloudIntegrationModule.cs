@@ -1,31 +1,39 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
+using Autofac;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.CloudIntegration;
 
-public class OneWareCloudIntegrationModule : IModule
+public class OneWareCloudIntegrationModule : Module
 {
     public const string Host = "http://localhost:5140";
     public const string OneWareAccountEmailKey = "General_OneWareCloud_AccountEmail";
     public const string CredentialStore = "https://cloud.one-ware.com";
-    
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+
+    protected override void Load(ContainerBuilder builder)
     {
-        containerRegistry.RegisterSingleton<OneWareCloudAccountSettingViewModel>();
-        containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
-        containerRegistry.RegisterSingleton<OneWareCloudNotificationService>();
+        builder.RegisterType<OneWareCloudAccountSettingViewModel>()
+               .SingleInstance();
+
+        builder.RegisterType<OneWareCloudLoginService>()
+               .SingleInstance();
+
+        builder.RegisterType<OneWareCloudNotificationService>()
+               .SingleInstance();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public static void InitializeSettings(IComponentContext context)
     {
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
-        
-        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
+        }
+
+        var settingsService = context.Resolve<ISettingsService>();
+        settingsService.RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
     }
 }

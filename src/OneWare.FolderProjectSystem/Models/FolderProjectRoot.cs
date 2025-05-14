@@ -2,7 +2,7 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;
-using Prism.Ioc;
+using Autofac;
 
 namespace OneWare.FolderProjectSystem.Models;
 
@@ -11,9 +11,12 @@ public class FolderProjectRoot : ProjectRoot
     public const string ProjectType = "Folder";
 
     private readonly Dictionary<IProjectFolder, IDisposable> _registeredFolders = new();
+    private readonly ILogger _logger; // ILogger injected via constructor
 
-    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
+    // Constructor now accepts ILogger via dependency injection
+    public FolderProjectRoot(string rootFolderPath, ILogger logger) : base(rootFolderPath, true)
     {
+        _logger = logger;
         WatchDirectory(this);
     }
 
@@ -54,13 +57,11 @@ public class FolderProjectRoot : ProjectRoot
                 }
             });
 
-            //Console.WriteLine("watch folder: " + folder.FullPath);
-
             _registeredFolders.Add(folder, subscription);
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e); // Using injected logger
         }
     }
 
