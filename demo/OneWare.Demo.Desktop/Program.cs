@@ -2,12 +2,12 @@
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using Autofac;
 using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Demo.Desktop;
 
@@ -16,7 +16,8 @@ internal abstract class Program
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
-        var app = AppBuilder.Configure<DesktopDemoApp>().UsePlatformDetect()
+        var app = AppBuilder.Configure<DesktopDemoApp>()
+            .UsePlatformDetect()
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true
@@ -34,7 +35,7 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (DemoApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
+        if (DemoApp.SettingsService?.GetSettingValue<bool>("Experimental_UseManagedFileDialog") == true)
             app.UseManagedSystemDialogs();
 
         return app;
@@ -49,14 +50,18 @@ internal abstract class Program
         }
         catch (Exception ex)
         {
-            if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
-            else Console.WriteLine(ex.ToString());
+            var logger = DemoApp.Container?.ResolveOptional<ILogger>();
+
+            if (logger is not null)
+                logger.Error(ex.Message, ex, false);
+            else
+                Console.WriteLine(ex.ToString());
 
             PlatformHelper.WriteTextFile(
                 Path.Combine(DemoApp.Paths.CrashReportsDirectory,
                     "crash_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", DateTimeFormatInfo.InvariantInfo) +
                     ".txt"), ex.ToString());
+
 #if DEBUG
             Console.ReadLine();
 #endif

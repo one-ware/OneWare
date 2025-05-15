@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using OneWare.Essentials.Enums;
-using Prism.Modularity;
+using OneWare.Core.Enums; // Assuming you create ModuleInitializationMode here
 
 namespace OneWare.Core.ModuleLogic;
 
@@ -9,7 +9,7 @@ internal class ModuleTrackingState : INotifyPropertyChanged
 {
     private string _configuredDependencies = "(none)";
     private DiscoveryMethod _expectedDiscoveryMethod;
-    private InitializationMode _expectedInitializationMode;
+    private ModuleInitializationMode _expectedInitializationMode;
     private ModuleInitializationStatus _moduleInitializationStatus;
     private string? _moduleName;
 
@@ -31,7 +31,7 @@ internal class ModuleTrackingState : INotifyPropertyChanged
         set => SetProperty(ref _expectedDiscoveryMethod, value);
     }
 
-    public InitializationMode ExpectedInitializationMode
+    public ModuleInitializationMode ExpectedInitializationMode
     {
         get => _expectedInitializationMode;
         set => SetProperty(ref _expectedInitializationMode, value);

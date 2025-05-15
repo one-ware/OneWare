@@ -1,10 +1,10 @@
-﻿using Avalonia;
+﻿using System.IO;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 
@@ -17,10 +17,18 @@ public partial class HyperLink : UserControl
         AvaloniaProperty.Register<HyperLink, string>(nameof(Label));
 
     public static readonly StyledProperty<TextDecorationCollection> TextDecorationsProperty =
-        AvaloniaProperty.Register<HyperLink, TextDecorationCollection>(nameof(TextDecorations));
+        AvaloniaProperty.Register<HyperLink, TextDecorationCollection>(
+            nameof(TextDecorations),
+            new TextDecorationCollection());
 
-    public HyperLink()
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IDockService _dockService;
+
+    public HyperLink(IProjectExplorerService projectExplorerService, IDockService dockService)
     {
+        _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
+
         InitializeComponent();
     }
 
@@ -42,12 +50,12 @@ public partial class HyperLink : UserControl
         set => SetValue(TextDecorationsProperty, value);
     }
 
-    public void Open_Click(object? sender, RoutedEventArgs e)
+    public async void Open_Click(object? sender, RoutedEventArgs e)
     {
         if (File.Exists(Url))
         {
-            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(Url);
-            _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            var file = _projectExplorerService.GetTemporaryFile(Url);
+            await _dockService.OpenFileAsync(file);
         }
         else
         {

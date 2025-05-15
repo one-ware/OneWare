@@ -21,13 +21,14 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
-using Prism.Ioc;
+using Autofac;
 using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.ViewModels.Windows;
 
 public class MainWindowViewModel : ObservableObject
 {
+    private readonly ILifetimeScope _scope;
     private readonly IApplicationCommandService _applicationCommandService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
@@ -37,10 +38,16 @@ public class MainWindowViewModel : ObservableObject
 
     private string _title;
 
-    public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
-        ISettingsService settingsService, IApplicationCommandService applicationCommandService)
+    public MainWindowViewModel(
+        IPaths paths,
+        IApplicationStateService applicationStateService,
+        IWindowService windowService,
+        IDockService dockService,
+        ISettingsService settingsService,
+        IApplicationCommandService applicationCommandService,
+        ILifetimeScope scope)
     {
+        _scope = scope;
         _applicationCommandService = applicationCommandService;
         ApplicationStateService = applicationStateService;
         _windowService = windowService;
@@ -62,7 +69,6 @@ public class MainWindowViewModel : ObservableObject
             if (x != null)
             {
                 Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
-
                 CurrentEditor = x as IEditor;
             }
             else
@@ -104,7 +110,7 @@ public class MainWindowViewModel : ObservableObject
     }
 
     private CompositeDisposable _currentEditorSubscriptionDisposable = new();
-    
+
     public IEditor? CurrentEditor
     {
         get => _currentEditor;
@@ -112,7 +118,7 @@ public class MainWindowViewModel : ObservableObject
         {
             _currentEditorSubscriptionDisposable.Dispose();
             _currentEditorSubscriptionDisposable = new CompositeDisposable();
-            
+
             SetProperty(ref _currentEditor, value);
 
             TypeAssistanceQuickOptions.Clear();
@@ -123,7 +129,8 @@ public class MainWindowViewModel : ObservableObject
                 {
                     TypeAssistanceQuickOptions.Clear();
                     var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
-                    if (quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
+                    if (quickOptions != null)
+                        TypeAssistanceQuickOptions.AddRange(quickOptions);
                 }).DisposeWith(_currentEditorSubscriptionDisposable);
             }
         }
@@ -131,7 +138,6 @@ public class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
-    
     public ObservableCollection<UiExtension> RightToolBarExtension { get; }
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
@@ -140,11 +146,12 @@ public class MainWindowViewModel : ObservableObject
 
     private Control GetMainView()
     {
-        if (Application.Current!.ApplicationLifetime is ISingleViewApplicationLifetime isv)
-            return isv.MainView ?? throw new NullReferenceException(nameof(isv.MainView));
-        if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime icv)
-            return icv.MainWindow ?? throw new NullReferenceException(nameof(icv.MainWindow));
-        throw new Exception("MainView/MainWindow not found");
+        return Application.Current!.ApplicationLifetime switch
+        {
+            ISingleViewApplicationLifetime isv => isv.MainView ?? throw new NullReferenceException(nameof(isv.MainView)),
+            IClassicDesktopStyleApplicationLifetime icv => icv.MainWindow ?? throw new NullReferenceException(nameof(icv.MainWindow)),
+            _ => throw new Exception("MainView/MainWindow not found")
+        };
     }
 
     private void OpenManager(ILogical logical, string startTab)
@@ -157,7 +164,8 @@ public class MainWindowViewModel : ObservableObject
         }
         else
         {
-            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
+            var manager = _scope.Resolve<CommandManagerViewModel>(
+                new TypedParameter(typeof(ILogical), logical));
             manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
             _lastManagerWindow = new CommandManagerView
             {
@@ -170,21 +178,24 @@ public class MainWindowViewModel : ObservableObject
     private void AddMenuItem(MenuItemViewModel menuItem, string path = "")
     {
         if (menuItem.Command is not null)
+        {
             _applicationCommandService.RegisterCommand(new MenuItemApplicationCommand(menuItem, path));
+        }
     }
 
     private void RemoveMenuItem(MenuItemViewModel menuItem)
     {
-        var removals = _applicationCommandService.ApplicationCommands.Where(x =>
-            x is MenuItemApplicationCommand command && command.MenuItem == menuItem);
+        var removals = _applicationCommandService.ApplicationCommands
+            .Where(x => x is MenuItemApplicationCommand command && command.MenuItem == menuItem);
         _applicationCommandService.ApplicationCommands.RemoveMany(removals);
     }
 
     public Task OpenSettingsDialogAsync()
     {
+        var vm = _scope.Resolve<ApplicationSettingsViewModel>();
         return _windowService.ShowDialogAsync(new ApplicationSettingsView
         {
-            DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+            DataContext = vm
         });
     }
 

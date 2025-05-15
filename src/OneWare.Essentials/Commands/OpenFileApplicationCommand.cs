@@ -3,24 +3,29 @@ using Avalonia.LogicalTree;
 using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Commands;
 
 public class OpenFileApplicationCommand : ApplicationCommandBase
 {
     private readonly IProjectFile _file;
+    private readonly IDockService _dockService;
 
-    public OpenFileApplicationCommand(IProjectFile file) : base(Path.Combine(file.Root.Header, file.RelativePath))
+    public OpenFileApplicationCommand(IProjectFile file, IDockService dockService)
+        : base(Path.Combine(file.Root.Header, file.RelativePath))
     {
         _file = file;
+        _dockService = dockService;
 
-        if (file is INotifyPropertyChanged obs) IconObservable = obs.WhenValueChanged(x => (x as IProjectFile)!.Icon);
+        if (file is INotifyPropertyChanged obs)
+        {
+            IconObservable = obs.WhenValueChanged(x => (x as IProjectFile)!.Icon);
+        }
     }
 
     public override bool Execute(ILogical source)
     {
-        _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(_file);
+        _ = _dockService.OpenFileAsync(_file);
         return true;
     }
 

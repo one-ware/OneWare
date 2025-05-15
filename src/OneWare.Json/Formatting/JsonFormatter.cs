@@ -1,12 +1,20 @@
-﻿using AvaloniaEdit.Document;
+﻿using System;
+using System.Linq;
+using AvaloniaEdit.Document;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Json.Formatting;
 
 public class JsonFormatter : IFormattingStrategy
 {
+    private readonly ILogger _logger;
+
+    public JsonFormatter(ILogger logger)
+    {
+        _logger = logger;
+    }
+
     public void Format(TextDocument document)
     {
         try
@@ -15,15 +23,15 @@ public class JsonFormatter : IFormattingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
     public static string FormatJson(string json, string indent = "  ")
     {
-        var indentation = 0;
-        var quoteCount = 0;
-        var escapeCount = 0;
+        int indentation = 0;
+        int quoteCount = 0;
+        int escapeCount = 0;
 
         var result =
             from ch in json ?? string.Empty

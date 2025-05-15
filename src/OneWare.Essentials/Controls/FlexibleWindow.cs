@@ -1,5 +1,8 @@
-﻿using System.Reactive.Disposables;
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -8,12 +11,18 @@ using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 
 public class FlexibleWindow : UserControl
 {
+    private readonly IDockService _dockService;
+
+    public FlexibleWindow(IDockService dockService)
+    {
+        _dockService = dockService;
+    }
+
     public static readonly StyledProperty<double> PrefWidthProperty =
         AvaloniaProperty.Register<FlexibleWindow, double>(nameof(PrefWidth), double.NaN);
 
@@ -21,7 +30,7 @@ public class FlexibleWindow : UserControl
         AvaloniaProperty.Register<FlexibleWindow, double>(nameof(PrefHeight), double.NaN);
 
     public static readonly StyledProperty<bool> ShowTitleProperty =
-        AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ShowTitleProperty), true);
+        AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ShowTitle), true);
 
     public static readonly StyledProperty<IImage?> CustomIconProperty =
         AvaloniaProperty.Register<FlexibleWindow, IImage?>(nameof(CustomIcon));
@@ -164,11 +173,8 @@ public class FlexibleWindow : UserControl
     private CompositeDisposable? Disposables { get; set; }
 
     public event EventHandler? Activated;
-
     public event EventHandler? Deactivated;
-
     public event EventHandler? Opened;
-
     public event EventHandler? Closed;
 
     public void Show(Window? owner)
@@ -198,7 +204,7 @@ public class FlexibleWindow : UserControl
             if (DataContext is not Document doc)
                 throw new Exception("ViewModel for FlexibleWindow must be Document");
 
-            ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
+            _dockService.Show(doc, DockShowLocation.Document);
         }
 
         AttachedToHost();
@@ -218,9 +224,7 @@ public class FlexibleWindow : UserControl
         Closed?.Invoke(this, EventArgs.Empty);
     }
 
-    protected virtual void AttachedToHost()
-    {
-    }
+    protected virtual void AttachedToHost() { }
 
     protected virtual Window CreateHost()
     {
@@ -230,24 +234,16 @@ public class FlexibleWindow : UserControl
         host.Bind(AdvancedWindow.CustomIconProperty, this.GetObservable(CustomIconProperty));
         host.Bind(AdvancedWindow.TitleBarContentProperty, this.GetObservable(TitleBarContentProperty));
         host.Bind(AdvancedWindow.BottomContentProperty, this.GetObservable(BottomContentProperty));
-
         host.Bind(Window.WindowStartupLocationProperty, this.GetObservable(WindowStartupLocationProperty));
         host.Bind(Window.IconProperty, this.GetObservable(IconProperty));
         host.Bind(Window.TitleProperty, this.GetObservable(TitleProperty));
         host.Bind(Window.SystemDecorationsProperty, this.GetObservable(SystemDecorationsProperty));
-        host.Bind(Window.ExtendClientAreaToDecorationsHintProperty,
-            this.GetObservable(ExtendClientAreaToDecorationsHintProperty));
+        host.Bind(Window.ExtendClientAreaToDecorationsHintProperty, this.GetObservable(ExtendClientAreaToDecorationsHintProperty));
         host.Bind(Window.CanResizeProperty, this.GetObservable(CanResizeProperty));
-
-        //host.Bind(TopLevel.TransparencyLevelHintProperty, flexible.GetObservable(FlexibleWindow.TransparencyLevelHintProperty));
-        host.Bind(BackgroundProperty,
-            this.GetObservable(WindowBackgroundProperty).Where(x => x is not null));
-
+        host.Bind(BackgroundProperty, this.GetObservable(WindowBackgroundProperty).Where(x => x is not null));
         host.Height = PrefHeight;
         host.Width = PrefWidth;
-
         host.Content = this;
-
         host.Bind(Window.SizeToContentProperty, this.GetObservable(SizeToContentProperty));
 
         return host;
