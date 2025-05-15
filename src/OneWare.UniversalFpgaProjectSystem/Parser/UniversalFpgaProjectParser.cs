@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Parser;
 
@@ -16,7 +15,7 @@ public static class UniversalFpgaProjectParser
         AllowTrailingCommas = true
     };
 
-    public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path)
+    public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path, ILogger logger)
     {
         try
         {
@@ -32,12 +31,12 @@ public static class UniversalFpgaProjectParser
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger.Error(e.Message, e);
             return null;
         }
     }
 
-    public static async Task<bool> SerializeAsync(UniversalFpgaProjectRoot root)
+    public static async Task<bool> SerializeAsync(UniversalFpgaProjectRoot root, ILogger logger)
     {
         try
         {
@@ -48,12 +47,11 @@ public static class UniversalFpgaProjectParser
             }
 
             root.LastSaveTime = DateTime.Now;
-
             return true;
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger.Error(e.Message, e);
             return false;
         }
     }

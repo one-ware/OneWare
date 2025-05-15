@@ -3,20 +3,27 @@ using AvaloniaEdit.Document;
 using Jint;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using System;
 
 namespace OneWare.Vhdl.Formatting;
 
 public class VhdlFormatter : IFormattingStrategy
 {
-    public void Format(TextDocument document)
+    private readonly ILogger _logger;
+
+    public VhdlFormatter(ILogger logger)
     {
-        var test = Format(document.Text);
-        if (test != null)
-            document.Text = test;
+        _logger = logger;
     }
 
-    private static string? Format(string source)
+    public void Format(TextDocument document)
+    {
+        var formatted = Format(document.Text);
+        if (formatted != null)
+            document.Text = formatted;
+    }
+
+    private string? Format(string source)
     {
         try
         {
@@ -38,13 +45,9 @@ public class VhdlFormatter : IFormattingStrategy
                 AddNewLine = true
                 // NewLineSettings = new NewLineSettings
                 // {
-                //     newLineAfter = new []
-                //     {
-                //         ";",
-                //         "then"
-                //     },
+                //     newLineAfter = new[] { ";", "then" },
                 //     noLineAfter = Array.Empty<string>()
-                //}
+                // }
             };
 
             engine.SetValue("settings", settings);
@@ -55,7 +58,7 @@ public class VhdlFormatter : IFormattingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
             return null;
         }
     }
@@ -64,23 +67,15 @@ public class VhdlFormatter : IFormattingStrategy
 public class BeautifierSettings
 {
     public string? KeywordCase { get; set; }
-
     public string? TypeNameCase { get; set; }
-
     public string? EndOfLine { get; set; }
-
     public string? Indentation { get; set; }
-
     public bool AddNewLine { get; set; }
-
     public NewLineSettings? NewLineSettings { get; set; }
 }
 
 public class NewLineSettings
 {
-    // ReSharper disable once InconsistentNaming
     public string[]? newLineAfter { get; set; }
-
-    // ReSharper disable once InconsistentNaming
     public string[]? noLineAfter { get; set; }
 }

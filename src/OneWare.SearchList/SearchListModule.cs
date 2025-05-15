@@ -6,35 +6,37 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Autofac;
 
 namespace OneWare.SearchList;
 
-public class SearchListModule : IModule
+public class SearchListModule
 {
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;
 
+    // Constructor with dependency injection via Autofac
     public SearchListModule(IWindowService windowService, IDockService dockService)
     {
-        _windowService = windowService;
-        _dockService = dockService;
+        _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
+        _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
     }
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    // Register types with Autofac
+    public void RegisterTypes(ContainerBuilder builder)
     {
-        containerRegistry.RegisterSingleton<SearchListViewModel>();
+        builder.RegisterType<SearchListViewModel>().AsSelf().SingleInstance();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    // Initialization logic using Autofac
+    public void OnInitialized(IComponentContext container)
     {
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() =>
             {
-                var vm = containerProvider.Resolve<SearchListViewModel>();
+                var vm = container.Resolve<SearchListViewModel>();  // Resolving SearchListViewModel via Autofac
                 vm.SearchString = string.Empty;
                 _dockService.Show(vm);
             }),

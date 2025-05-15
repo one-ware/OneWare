@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,25 +10,28 @@ using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class HardwareInterfaceModel : ObservableObject
 {
-    private ExtensionModel? _connectedExtension;
+    private readonly ILogger _logger;
+    private readonly FpgaService _fpgaService;
 
+    private ExtensionModel? _connectedExtension;
     private ExtensionViewModelBase? _connectedExtensionViewModel;
-    
-    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner)
+
+    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner, ILogger logger, FpgaService fpgaService)
     {
         Interface = fpgaInterface;
         Owner = owner;
+        _logger = logger;
+        _fpgaService = fpgaService;
 
         TranslatePins();
         UpdateMenu();
     }
-    
+
     public IHardwareModel Owner { get; }
 
     public FpgaModel? FpgaModel
@@ -41,11 +47,9 @@ public class HardwareInterfaceModel : ObservableObject
             return null;
         }
     }
-    
+
     public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
-
     public HardwareInterface Interface { get; }
-
     public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
 
     public ExtensionModel? ConnectedExtension
@@ -80,14 +84,12 @@ public class HardwareInterfaceModel : ObservableObject
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
-    
+
     private void UpdateMenu()
     {
-        var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
-
         InterfaceMenu.Clear();
 
         if (ConnectedExtension != null)
@@ -101,7 +103,7 @@ public class HardwareInterfaceModel : ObservableObject
             return;
         }
 
-        foreach (var ext in fpgaService.FpgaExtensionPackages)
+        foreach (var ext in _fpgaService.FpgaExtensionPackages)
         {
             if (ext.Connector != Interface.Connector) continue;
 
@@ -118,11 +120,13 @@ public class HardwareInterfaceModel : ObservableObject
     {
         if (extensionPackage != null)
         {
-            ConnectedExtension = new ExtensionModel(extensionPackage.LoadExtension())
+            var extension = new ExtensionModel(extensionPackage.LoadExtension(), _logger)
             {
                 ParentInterfaceModel = this
             };
-            ConnectedExtensionViewModel = extensionPackage.LoadExtensionViewModel(ConnectedExtension);
+
+            ConnectedExtension = extension;
+            ConnectedExtensionViewModel = extensionPackage.LoadExtensionViewModel(extension);
         }
         else
         {
@@ -135,14 +139,15 @@ public class HardwareInterfaceModel : ObservableObject
 
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
-        var connections = lastOwner.TranslatedPins!.Where(x => x.Value.ConnectedNode != null).ToList();
-        
+        var connections = lastOwner.TranslatedPins!
+            .Where(x => x.Value.ConnectedNode != null)
+            .ToList();
+
         ConnectedExtension = lastOwner.ConnectedExtension;
         ConnectedExtension!.ParentInterfaceModel = this;
         ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
         ConnectedExtensionViewModel?.Initialize();
 
-        // Autoconnect pins
         if (FpgaModel is { } model)
         {
             foreach (var connection in connections)
@@ -153,9 +158,8 @@ public class HardwareInterfaceModel : ObservableObject
                 model.Connect(pin, node!);
             }
         }
-        
-        lastOwner.SetExtension(null);
 
+        lastOwner.SetExtension(null);
         Dispatcher.UIThread.Post(UpdateMenu);
     }
 }

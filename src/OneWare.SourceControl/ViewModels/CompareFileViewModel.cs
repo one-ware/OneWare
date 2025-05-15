@@ -11,22 +11,20 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.Models;
-using Prism.Ioc;
+using Autofac;
+using System.Collections.Generic;
 
 namespace OneWare.SourceControl.ViewModels;
 
 public class CompareFileViewModel : Document, IWaitForContent
 {
     private readonly SourceControlViewModel _sourceControlViewModel;
+    private readonly ILogger _logger;
 
     private List<DiffSectionViewModel>? _chunks;
-
     private bool _isLoading = true;
-
     private ScrollInfoContext _scrollInfoLeft = new();
-
     private ScrollInfoContext _scrollInfoRight = new();
-    
     private readonly IDisposable? _fileWatcher;
 
     static CompareFileViewModel()
@@ -36,10 +34,12 @@ public class CompareFileViewModel : Document, IWaitForContent
         WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     }
 
-    public CompareFileViewModel(string fullPath, SourceControlViewModel sourceControlViewModel)
+    // Constructor injection for ILogger and SourceControlViewModel
+    public CompareFileViewModel(string fullPath, SourceControlViewModel sourceControlViewModel, ILogger logger)
     {
         FullPath = fullPath;
         _sourceControlViewModel = sourceControlViewModel;
+        _logger = logger;
 
         _fileWatcher = FileSystemWatcherHelper.WatchFile(FullPath, () => Dispatcher.UIThread.Post(InitializeContent));
     }
@@ -105,7 +105,7 @@ public class CompareFileViewModel : Document, IWaitForContent
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e); // Using injected ILogger
         }
 
         IsLoading = false;
@@ -230,7 +230,6 @@ public class CompareFileViewModel : Document, IWaitForContent
             var rightDiffSize = lineNumbers.Groups["rightCount"].Success
                 ? int.Parse(lineNumbers.Groups["rightCount"].Value)
                 : 1;
-
 
             var removeCounter = 0;
 

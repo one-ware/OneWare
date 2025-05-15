@@ -1,19 +1,21 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class ExtensionModel : ObservableObject, IHardwareModel
 {
+    private readonly ILogger _logger;
     private HardwareInterfaceModel? _parentInterfaceModel;
-
     private bool _isSelected;
-    
-    public ExtensionModel(IFpgaExtension fpgaExtension)
+
+    public ExtensionModel(IFpgaExtension fpgaExtension, ILogger logger)
     {
         FpgaExtension = fpgaExtension;
+        _logger = logger;
     }
 
     public bool IsSelected
@@ -21,11 +23,9 @@ public class ExtensionModel : ObservableObject, IHardwareModel
         get => _isSelected;
         set => SetProperty(ref _isSelected, value);
     }
-    
+
     public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
-    
     public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
-    
     public IFpgaExtension FpgaExtension { get; }
 
     public HardwareInterfaceModel? ParentInterfaceModel
@@ -43,6 +43,7 @@ public class ExtensionModel : ObservableObject, IHardwareModel
                     {
                         PinModels[pin.Name] = _parentInterfaceModel.TranslatedPins[pin.InterfacePin!];
                     }
+
                     foreach (var fpgaInterface in FpgaExtension.Interfaces)
                     {
                         InterfaceModels.TryAdd(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this));
@@ -52,7 +53,7 @@ public class ExtensionModel : ObservableObject, IHardwareModel
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
         }
     }

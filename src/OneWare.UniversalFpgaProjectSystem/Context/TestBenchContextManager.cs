@@ -2,27 +2,34 @@
 using System.Text.Json.Nodes;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Context;
 
-public static class TestBenchContextManager
+public class TestBenchContextManager
 {
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true
     };
 
+    private readonly ILogger _logger;
+
+    public TestBenchContextManager(ILogger logger)
+    {
+        _logger = logger;
+    }
+
     private static string GetSaveFilePath(string tbPath)
     {
         return Path.Combine(Path.GetDirectoryName(tbPath) ?? "", Path.GetFileNameWithoutExtension(tbPath) + ".tbconf");
     }
 
-    public static async Task<TestBenchContext> LoadContextAsync(IFile file)
+    public async Task<TestBenchContext> LoadContextAsync(IFile file)
     {
         var path = GetSaveFilePath(file.FullPath);
 
         if (File.Exists(path))
+        {
             try
             {
                 await using var stream = File.OpenRead(path);
@@ -33,13 +40,14 @@ public static class TestBenchContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
+        }
 
         return new TestBenchContext(file, new JsonObject());
     }
 
-    public static async Task<bool> SaveContextAsync(TestBenchContext context)
+    public async Task<bool> SaveContextAsync(TestBenchContext context)
     {
         try
         {
@@ -54,7 +62,7 @@ public static class TestBenchContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
             return false;
         }
     }

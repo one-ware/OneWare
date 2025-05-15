@@ -9,34 +9,32 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
+using Autofac;
 
 namespace OneWare.SourceControl.Models;
 
 public class GitRepositoryModel : ObservableObject
 {
     private Branch? _headBranch;
-
     private int _pullCommits;
-
     private int _pushCommits;
-
     private string? _workingPath;
 
-    public GitRepositoryModel(IProjectRoot project, Repository repository)
+    // Constructor with dependency injection via Autofac
+    public GitRepositoryModel(IProjectRoot project, Repository repository, IProjectExplorerService projectExplorerService, ILogger logger)
     {
-        Project = project;
-        Repository = repository;
+        Project = project ?? throw new ArgumentNullException(nameof(project));
+        Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _projectExplorerService = projectExplorerService ?? throw new ArgumentNullException(nameof(projectExplorerService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public IProjectRoot Project { get; private set; }
     public Repository Repository { get; private set; }
 
-    public ObservableCollection<SourceControlFileModel> Changes { get; set; } = [];
-
-    public ObservableCollection<SourceControlFileModel> StagedChanges { get; set; } = [];
-
-    public ObservableCollection<SourceControlFileModel> MergeChanges { get; set; } = [];
+    public ObservableCollection<SourceControlFileModel> Changes { get; set; } = new ObservableCollection<SourceControlFileModel>();
+    public ObservableCollection<SourceControlFileModel> StagedChanges { get; set; } = new ObservableCollection<SourceControlFileModel>();
+    public ObservableCollection<SourceControlFileModel> MergeChanges { get; set; } = new ObservableCollection<SourceControlFileModel>();
 
     public string? WorkingPath
     {
@@ -62,7 +60,10 @@ public class GitRepositoryModel : ObservableObject
         set => SetProperty(ref _pushCommits, value);
     }
 
-    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
+    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new ObservableCollection<MenuItemViewModel>();
+
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly ILogger _logger;
 
     public void Refresh(SourceControlViewModel sourceControlViewModel)
     {
@@ -70,12 +71,10 @@ public class GitRepositoryModel : ObservableObject
         var stagedChanges = new List<SourceControlFileModel>();
         var mergeChanges = new List<SourceControlFileModel>();
 
-        var projectExplorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
-
         try
         {
             HeadBranch = Repository.Head;
-            
+
             var branchesMenu = new List<MenuItemViewModel>();
 
             foreach (var branch in Repository.Branches)
@@ -102,23 +101,23 @@ public class GitRepositoryModel : ObservableObject
             });
 
             AvailableBranchesMenu.Merge(branchesMenu, (a, b) =>
-                {
-                    var equal = a.Name == b.Name;
+            {
+                var equal = a.Name == b.Name;
 
-                    if (equal)
-                    {
-                        a.IconObservable = b.IconObservable;
-                        a.IsEnabled = b.IsEnabled;
-                        a.Command = b.Command;
-                        a.CommandParameter = b.CommandParameter;
-                    }
-                    return equal;
-                },
+                if (equal)
+                {
+                    a.IconObservable = b.IconObservable;
+                    a.IsEnabled = b.IsEnabled;
+                    a.Command = b.Command;
+                    a.CommandParameter = b.CommandParameter;
+                }
+                return equal;
+            },
                 (a, b) =>
                 {
                     if (a.Name == "New Branch...") return -1;
                     if (b.Name == "New Branch...") return 1;
-                    
+
                     var aTracking = a.Name.StartsWith("origin/");
                     var bTracking = b.Name.StartsWith("origin/");
 
@@ -136,7 +135,7 @@ public class GitRepositoryModel : ObservableObject
 
                 var sModel = new SourceControlFileModel(fullPath, item)
                 {
-                    ProjectFile = projectExplorerService.SearchFullPath(fullPath) as IProjectFile
+                    ProjectFile = _projectExplorerService.SearchFullPath(fullPath) as IProjectFile
                 };
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
@@ -168,7 +167,7 @@ public class GitRepositoryModel : ObservableObject
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger?.Error(e.Message, e);
         }
 
         StagedChanges.Merge(stagedChanges, (a, b) =>

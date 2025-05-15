@@ -7,22 +7,28 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
-public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKey)
+public abstract class ProjectViewModelBase : ExtendedTool
 {
+    private readonly ILogger _logger;
     private string _searchString = "";
     public bool EnableDragDrop = true;
     private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
+
+    public ProjectViewModelBase(string iconKey, ILogger logger)
+        : base(iconKey)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
     {
         get => _treeViewContextMenu;
         set => SetProperty(ref _treeViewContextMenu, value);
     }
-    
+
     public string SearchString
     {
         get => _searchString;
@@ -39,7 +45,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
+            _logger?.Error("Project already loaded");
             return;
         }
 

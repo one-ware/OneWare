@@ -13,7 +13,6 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -22,25 +21,26 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
+    private readonly ILogger _logger;
 
     private CompositeDisposable? _compositeDisposable;
-
     private bool _hideExtensions;
-
     private IFpgaPackage? _selectedPackage;
-
     private FpgaModel? _selectedModel;
-
     private FpgaViewModelBase? _selectedViewModel;
-
     private readonly FpgaNode[]? _nodes;
 
-    public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
-        IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
+    public UniversalFpgaProjectPinPlannerViewModel(
+        IWindowService windowService,
+        IProjectExplorerService projectExplorerService,
+        FpgaService fpgaService,
+        ILogger logger,
+        UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
+        _logger = logger;
         Project = project;
 
         TopRightExtension = windowService.GetUiExtensions("CompileWindow_TopRightExtension");
@@ -61,7 +61,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                    _logger.Error(e.Message, e);
                 }
             }
         }
@@ -135,7 +135,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
         get => _selectedViewModel;
-        private set { SetProperty(ref _selectedViewModel, value); }
+        private set => SetProperty(ref _selectedViewModel, value);
     }
 
     public bool HideExtensions
@@ -173,10 +173,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
 
         FpgaPackages.Clear();
-
         SelectedFpgaPackage = null;
 
-        //Construct FpgaModels
         foreach (var package in _fpgaService.FpgaPackages)
         {
             FpgaPackages.Add(package);

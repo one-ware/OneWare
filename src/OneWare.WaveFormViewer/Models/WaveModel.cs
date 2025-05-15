@@ -7,24 +7,23 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Enums;
-using Prism.Ioc;
 
 namespace OneWare.WaveFormViewer.Models;
 
 public partial class WaveModel : ObservableObject
 {
+    private readonly IWindowService _windowService;
+
     private bool _automaticFixedPointShift;
-
     private WaveDataType _dataType;
-
     private int _fixedPointShift;
-
     private string? _markerValue;
 
-    public WaveModel(IVcdSignal signal, IBrush waveBrush)
+    public WaveModel(IVcdSignal signal, IBrush waveBrush, IWindowService windowService)
     {
         Signal = signal;
         WaveBrush = waveBrush;
+        _windowService = windowService;
 
         if (signal.BitWidth == 1)
         {
@@ -36,7 +35,10 @@ public partial class WaveModel : ObservableObject
             DataType = WaveDataType.SignedDecimal;
             AvailableDataTypes =
             [
-                WaveDataType.Binary, WaveDataType.Decimal, WaveDataType.SignedDecimal, WaveDataType.Hex,
+                WaveDataType.Binary,
+                WaveDataType.Decimal,
+                WaveDataType.SignedDecimal,
+                WaveDataType.Hex,
                 WaveDataType.Ascii
             ];
         }
@@ -95,9 +97,13 @@ public partial class WaveModel : ObservableObject
 
     public async Task SpecifyFixedPointShiftDialogAsync(Visual owner)
     {
-        var result = await ContainerLocator.Container.Resolve<IWindowService>().ShowInputAsync(
-            "Fixed point shift", "Specify fixed point shift", MessageBoxIcon.Info,
-            FixedPointShift.ToString(), TopLevel.GetTopLevel(owner) as Window);
+        var result = await _windowService.ShowInputAsync(
+            "Fixed point shift",
+            "Specify fixed point shift",
+            MessageBoxIcon.Info,
+            FixedPointShift.ToString(),
+            TopLevel.GetTopLevel(owner) as Window
+        );
 
         if (result != null && int.TryParse(result, out var shift))
         {
@@ -113,8 +119,10 @@ public partial class WaveModel : ObservableObject
 
         if (!match.Success || !int.TryParse(match.Groups[1].Value, out var lower) ||
             !int.TryParse(match.Groups[2].Value, out var upper)) return 0;
+
         if (upper > lower) return upper - lower;
         if (lower > upper) return upper * -1;
+
         return 0;
     }
 }

@@ -7,31 +7,26 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : ObservableObject
 {
     private readonly IPackageService _packageService;
-    
     private readonly ILogger _logger;
 
-    private string _filter = string.Empty;
+    // These are factory delegates registered with Autofac
+    private readonly Func<PackageModel, PackageViewModel> _packageViewModelFactory;
 
-    private bool _isLoading;
-    private PackageCategoryViewModel? _selectedCategory;
-
-    private bool _showAvailable = true;
-
-    private bool _showInstalled = true;
-
-    private bool _showUpdate = true;
-
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger)
+    public PackageManagerViewModel(
+        IPackageService packageService,
+        ILogger logger,
+        Func<PackageModel, PackageViewModel> packageViewModelFactory)
     {
         _packageService = packageService;
         _logger = logger;
+        _packageViewModelFactory = packageViewModelFactory;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
             Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
@@ -48,7 +43,7 @@ public class PackageManagerViewModel : ObservableObject
             new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
-        
+
         PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
@@ -68,9 +63,16 @@ public class PackageManagerViewModel : ObservableObject
         {
             ConstructPackageViewModels();
         });
-        
+
         ConstructPackageViewModels();
     }
+
+    private string _filter = string.Empty;
+    private bool _isLoading;
+    private PackageCategoryViewModel? _selectedCategory;
+    private bool _showAvailable = true;
+    private bool _showInstalled = true;
+    private bool _showUpdate = true;
 
     public bool ShowInstalled
     {
@@ -137,14 +139,15 @@ public class PackageManagerViewModel : ObservableObject
         {
             foreach (var pkg in category.Packages.ToArray()) category.Remove(pkg);
             foreach (var sub in category.SubCategories)
-            foreach (var pkg in sub.Packages.ToArray())
-                sub.Remove(pkg);
+                foreach (var pkg in sub.Packages.ToArray())
+                    sub.Remove(pkg);
         }
 
         foreach (var (_, packageModel) in _packageService.Packages)
+        {
             try
             {
-                var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(PackageModel), packageModel));
+                var model = _packageViewModelFactory(packageModel);
 
                 var category = packageModel.Package.Type switch
                 {
@@ -169,6 +172,7 @@ public class PackageManagerViewModel : ObservableObject
             {
                 _logger.Error(e.Message, e);
             }
+        }
 
         FilterPackages();
     }

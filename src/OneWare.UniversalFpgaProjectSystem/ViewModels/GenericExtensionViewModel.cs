@@ -12,18 +12,14 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class GenericExtensionViewModel : ExtensionViewModelBase
 {
     private readonly string _guiPath;
-
     private readonly IDisposable? _fileWatcher;
-
     private bool _isLoading;
-
     private HardwareGuiViewModel? _guiViewModel;
 
     public GenericExtensionViewModel(ExtensionModel extensionModel, string guiPath) : base(extensionModel)
@@ -33,8 +29,11 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
         _ = LoadGuiAsync();
 
         if (!guiPath.StartsWith("avares://"))
-            _fileWatcher =
-                FileSystemWatcherHelper.WatchFile(guiPath, () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
+        {
+            _fileWatcher = FileSystemWatcherHelper.WatchFile(
+                guiPath,
+                () => Dispatcher.UIThread.Post(() => _ = LoadGuiAsync()));
+        }
     }
 
     public bool IsLoading
@@ -61,7 +60,6 @@ public class GenericExtensionViewModel : ExtensionViewModelBase
     public override void Initialize()
     {
         base.Initialize();
-
         GuiViewModel?.Initialize();
     }
 

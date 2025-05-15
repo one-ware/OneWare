@@ -6,36 +6,47 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 {
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;
+    private readonly Func<UniversalFpgaProjectRoot, UniversalFpgaProjectPinPlannerViewModel> _pinPlannerFactory;
+    private readonly Func<UniversalFpgaProjectRoot, UniversalFpgaProjectSettingsEditorViewModel> _settingsEditorFactory;
 
     private bool _isVisible;
-
     private bool _longTermProgramming;
-
     private UniversalFpgaProjectRoot? _project;
 
-    public UniversalFpgaProjectToolBarViewModel(IWindowService windowService,
-        IProjectExplorerService projectExplorerService, ISettingsService settingsService, FpgaService fpgaService)
+    public UniversalFpgaProjectToolBarViewModel(
+        IWindowService windowService,
+        IProjectExplorerService projectExplorerService,
+        ISettingsService settingsService,
+        FpgaService fpgaService,
+        ILogger logger,
+        Func<UniversalFpgaProjectRoot, UniversalFpgaProjectPinPlannerViewModel> pinPlannerFactory,
+        Func<UniversalFpgaProjectRoot, UniversalFpgaProjectSettingsEditorViewModel> settingsEditorFactory)
     {
         _windowService = windowService;
+        _logger = logger;
+        _pinPlannerFactory = pinPlannerFactory;
+        _settingsEditorFactory = settingsEditorFactory;
+
         ProjectExplorerService = projectExplorerService;
         FpgaService = fpgaService;
 
         DownloaderConfigurationExtension =
             windowService.GetUiExtensions("UniversalFpgaToolBar_DownloaderConfigurationExtension");
-        
+
         CompileMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_CompileMenuExtension");
-        
+
         PinPlannerMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_PinPlannerMenuExtension");
 
-        settingsService.Bind("UniversalFpgaProjectSystem_LongTermProgramming",
-            this.WhenValueChanged(x => x.LongTermProgramming)).Subscribe(x => LongTermProgramming = x);
+        settingsService
+            .Bind("UniversalFpgaProjectSystem_LongTermProgramming", this.WhenValueChanged(x => x.LongTermProgramming))
+            .Subscribe(x => LongTermProgramming = x);
 
         projectExplorerService
             .WhenValueChanged(x => x.ActiveProject)
@@ -68,9 +79,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     }
 
     public ObservableCollection<UiExtension> PinPlannerMenuExtension { get; }
-
     public ObservableCollection<UiExtension> CompileMenuExtension { get; }
-
     public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
 
     public void ToggleLongTermProgramming()
@@ -82,7 +91,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     {
         if (ProjectExplorerService.ActiveProject is not UniversalFpgaProjectRoot project)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Warning("No Active Project");
+            _logger.Warning("No Active Project");
             return (null, null);
         }
 
@@ -90,32 +99,31 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         var fpgaPackage = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
         if (fpgaPackage == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+            _logger.Warning("No FPGA Selected, open Pin Planner first");
             return (project, null);
         }
 
         return (project, new FpgaModel(fpgaPackage.LoadFpga()));
     }
-    
+
     public async Task CompileAsync()
     {
-        if(EnsureProjectAndFpga() is not {project: not null, fpga: not null} data) return;
-        
+        if (EnsureProjectAndFpga() is not { project: not null, fpga: not null } data)
+            return;
+
         await ProjectExplorerService.SaveOpenFilesForProjectAsync(data.project);
         await data.project.RunToolchainAsync(data.fpga);
     }
-    
+
     public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
         {
             await ProjectExplorerService.SaveOpenFilesForProjectAsync(project);
-            
+            var viewModel = _pinPlannerFactory(project);
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectPinPlannerView
             {
-                DataContext =
-                    ContainerLocator.Container.Resolve<UniversalFpgaProjectPinPlannerViewModel>((
-                        typeof(UniversalFpgaProjectRoot), project))
+                DataContext = viewModel
             });
         }
     }
@@ -123,14 +131,15 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task OpenProjectSettingsAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-            await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
+        {
+            var viewModel = _settingsEditorFactory(project);
+            await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView
             {
-                DataContext =
-                    ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((
-                        typeof(UniversalFpgaProjectRoot), project))
+                DataContext = viewModel
             });
+        }
     }
-    
+
     public async Task DownloadAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)

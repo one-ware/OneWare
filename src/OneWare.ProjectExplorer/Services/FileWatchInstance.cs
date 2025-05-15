@@ -1,7 +1,11 @@
 ﻿using Avalonia.Threading;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reactive.Linq;
 
 namespace OneWare.ProjectExplorer.Services;
 
@@ -13,14 +17,20 @@ public class FileWatchInstance : IDisposable
     private readonly FileSystemWatcher? _fileSystemWatcher;
     private readonly object _lock = new();
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;
     private DispatcherTimer? _timer;
 
-    public FileWatchInstance(IFile file, IDockService dockService, ISettingsService settingsService,
-        IWindowService windowService, ILogger logger)
+    public FileWatchInstance(
+        IFile file,
+        IDockService dockService,
+        ISettingsService settingsService,
+        IWindowService windowService,
+        ILogger logger)
     {
         _file = file;
         _dockService = dockService;
         _windowService = windowService;
+        _logger = logger;
 
         if (!File.Exists(file.FullPath)) return;
 
@@ -44,6 +54,7 @@ public class FileWatchInstance : IDisposable
 
                 _timer?.Stop();
                 if (!x) return;
+
                 _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
                 {
                     lock (_lock)
@@ -56,7 +67,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
@@ -69,6 +80,7 @@ public class FileWatchInstance : IDisposable
     private void File_Changed(object source, FileSystemEventArgs e)
     {
         if (e.Name == null || e.FullPath != _file.FullPath) return;
+
         lock (_lock)
         {
             _changes.Add(e);
@@ -77,7 +89,11 @@ public class FileWatchInstance : IDisposable
 
     private void ProcessChanges()
     {
-        if (_changes.Any()) Process(_changes);
+        if (_changes.Any())
+        {
+            Process(_changes);
+        }
+
         _changes.Clear();
     }
 
@@ -89,12 +105,8 @@ public class FileWatchInstance : IDisposable
 
             _dockService.OpenFiles.TryGetValue(_file, out var tab);
 
-            // Can happen naturally if the file is opened in an external tool
-            // Also when a temporary file is registered but not opened yet, we can ignore the changes
             if (tab == null)
             {
-                //Dispose();
-                //throw new NullReferenceException(nameof(tab));
                 return;
             }
 
@@ -103,8 +115,10 @@ public class FileWatchInstance : IDisposable
                 case WatcherChangeTypes.Created:
                 case WatcherChangeTypes.Renamed:
                 case WatcherChangeTypes.Changed:
-                    if (File.GetLastWriteTime(_file.FullPath) > _file.LastSaveTime) tab.InitializeContent();
+                    if (File.GetLastWriteTime(_file.FullPath) > _file.LastSaveTime)
+                        tab.InitializeContent();
                     return;
+
                 case WatcherChangeTypes.Deleted:
                     tab.InitializeContent();
                     return;
@@ -112,7 +126,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
+            _logger.Error(e.Message, e, false);
         }
     }
 }

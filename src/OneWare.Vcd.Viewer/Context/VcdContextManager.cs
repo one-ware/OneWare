@@ -1,19 +1,26 @@
 ﻿using System.Text.Json;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Vcd.Viewer.Context;
 
-public static class VcdContextManager
+public class VcdContextManager
 {
+    private readonly ILogger _logger;
+
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true
     };
 
-    public static async Task<VcdContext?> LoadContextAsync(string path)
+    public VcdContextManager(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<VcdContext?> LoadContextAsync(string path)
     {
         if (File.Exists(path))
+        {
             try
             {
                 await using var stream = File.OpenRead(path);
@@ -21,13 +28,14 @@ public static class VcdContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
+        }
 
         return null;
     }
 
-    public static async Task<bool> SaveContextAsync(string path, VcdContext context)
+    public async Task<bool> SaveContextAsync(string path, VcdContext context)
     {
         try
         {
@@ -38,7 +46,7 @@ public static class VcdContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
             return false;
         }
     }

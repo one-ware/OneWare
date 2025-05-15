@@ -2,18 +2,36 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Studio.Browser;
 
 public class WebStudioApp : StudioApp
 {
     protected override string GetDefaultLayoutName => "Web";
+
+    private readonly IPaths _paths;
+    private readonly IProjectExplorerService _projectExplorer;
+    private readonly IDockService _dockService;
+    private readonly ILogger _logger;
+    private readonly UniversalFpgaProjectManager _projectManager;
+
+    public WebStudioApp(
+        IPaths paths,
+        IProjectExplorerService projectExplorer,
+        IDockService dockService,
+        ILogger logger,
+        UniversalFpgaProjectManager projectManager)
+    {
+        _paths = paths;
+        _projectExplorer = projectExplorer;
+        _dockService = dockService;
+        _logger = logger;
+        _projectManager = projectManager;
+    }
 
     private static void CopyAvaloniaAssetIntoFolder(Uri asset, string location)
     {
@@ -30,12 +48,7 @@ public class WebStudioApp : StudioApp
     {
         try
         {
-            var paths = Container.Resolve<IPaths>();
-            var projectExplorer = Container.Resolve<IProjectExplorerService>();
-            var dockService = Container.Resolve<IDockService>();
-            var logger = Container.Resolve<ILogger>();
-
-            var testProj = Path.Combine(paths.ProjectsDirectory, "DemoProject");
+            var testProj = Path.Combine(_paths.ProjectsDirectory, "DemoProject");
             Directory.CreateDirectory(testProj);
 
             // Copy demo project assets
@@ -45,22 +58,21 @@ public class WebStudioApp : StudioApp
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VCD", "VcdTest.vcd"));
 
             var projectPath = Path.Combine(testProj, "DemoProject.fpgaproj");
-            var projectManager = Container.Resolve<UniversalFpgaProjectManager>();
-            var project = await projectManager.LoadProjectAsync(projectPath);
+            var project = await _projectManager.LoadProjectAsync(projectPath);
 
             if (project is null)
             {
-                logger.Warning("Demo project could not be loaded.");
+                _logger.Warning("Demo project could not be loaded.");
                 return;
             }
 
-            projectExplorer.Projects.Add(project);
-            projectExplorer.ActiveProject = project;
+            _projectExplorer.Projects.Add(project);
+            _projectExplorer.ActiveProject = project;
             project.IsExpanded = true;
 
             foreach (var file in project.Files)
             {
-                var vm = await dockService.OpenFileAsync(file);
+                var vm = await _dockService.OpenFileAsync(file);
 
                 if (vm is VcdViewModel vcdViewModel)
                 {
@@ -74,7 +86,7 @@ public class WebStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error("Failed to load demo project.", e);
+            _logger.Error("Failed to load demo project.", e);
         }
     }
 }

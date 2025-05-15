@@ -2,6 +2,9 @@
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OneWare.OssCadSuiteIntegration.Yosys
 {

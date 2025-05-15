@@ -7,7 +7,6 @@ using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
 using OneWare.Terminal.Provider.Win32;
-using Prism.Ioc;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
@@ -20,12 +19,12 @@ public class TerminalViewModel : ObservableObject
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();
-    
+    private readonly ILogger _logger;
+
     public string? StartArguments { get; }
     public string WorkingDir { get; }
 
     private IConnection? _connection;
-
     public IConnection? Connection
     {
         get => _connection;
@@ -33,16 +32,13 @@ public class TerminalViewModel : ObservableObject
     }
 
     private VirtualTerminalController? _terminal;
-
-    
     public VirtualTerminalController? Terminal
     {
         get => _terminal;
         set => SetProperty(ref _terminal, value);
     }
-    
+
     private bool _terminalVisible;
-    
     public bool TerminalVisible
     {
         get => _terminalVisible;
@@ -50,7 +46,6 @@ public class TerminalViewModel : ObservableObject
     }
 
     private bool _terminalLoading = true;
-
     public bool TerminalLoading
     {
         get => _terminalLoading;
@@ -58,15 +53,16 @@ public class TerminalViewModel : ObservableObject
     }
 
     public event EventHandler? TerminalReady;
-    
-    public TerminalViewModel(string workingDir, string? startArguments = null)
+
+    public TerminalViewModel(ILogger logger, string workingDir, string? startArguments = null)
     {
+        _logger = logger;
         WorkingDir = workingDir;
         StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
             : null);
     }
-    
+
     public void Redraw()
     {
         if (TerminalVisible)
@@ -85,12 +81,11 @@ public class TerminalViewModel : ObservableObject
     {
         if (Connection is { IsConnected: true }) return;
         TerminalLoading = true;
-        
+
         lock (_createLock)
         {
             CloseConnection();
-            
-            //TODO Fix zsh support
+
             var shellExecutable = PlatformHelper.Platform switch
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
@@ -106,23 +101,22 @@ public class TerminalViewModel : ObservableObject
 
                 if (terminal == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    _logger.Error("Error creating terminal!");
                     return;
                 }
 
                 Connection = new PseudoTerminalConnection(terminal);
-
                 Terminal = new VirtualTerminalController();
 
                 _ = Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     TerminalVisible = true;
                     Connection.Connect();
-                    
+
                     await Task.Delay(500);
-            
+
                     TerminalLoading = false;
-                    
+
                     TerminalReady?.Invoke(this, EventArgs.Empty);
                 });
             }
@@ -131,7 +125,8 @@ public class TerminalViewModel : ObservableObject
 
     public void Send(string command)
     {
-        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
+        if (Connection?.IsConnected ?? false)
+            Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
     }
 
     public void CloseConnection()

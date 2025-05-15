@@ -5,41 +5,45 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Output.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Autofac;
 
-namespace OneWare.Output;
-
-public class OutputModule : IModule
+namespace OneWare.Output
 {
-    private readonly IDockService _dockService;
-    private readonly ISettingsService _settingsService;
-    private readonly IWindowService _windowService;
-
-    public OutputModule(ISettingsService settingsService, IDockService dockService, IWindowService windowService)
+    public class OutputModule
     {
-        _settingsService = settingsService;
-        _windowService = windowService;
-        _dockService = dockService;
-    }
+        private readonly IDockService _dockService;
+        private readonly ISettingsService _settingsService;
+        private readonly IWindowService _windowService;
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
-    {
-        containerRegistry.RegisterManySingleton<OutputViewModel>(typeof(IOutputService),
-            typeof(OutputViewModel));
-    }
-
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        _dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
-
-        _settingsService.Register("Output_Autoscroll", true);
-
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
+        public OutputModule(IDockService dockService, ISettingsService settingsService, IWindowService windowService)
         {
-            Header = "Output",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
-            IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
-        });
+            _dockService = dockService;
+            _settingsService = settingsService;
+            _windowService = windowService;
+        }
+
+        public void RegisterTypes(ContainerBuilder builder)
+        {
+            // Register OutputViewModel and IOutputService as singletons
+            builder.RegisterType<OutputViewModel>().As<IOutputService>().SingleInstance();
+            builder.RegisterType<OutputViewModel>().AsSelf().SingleInstance();
+        }
+
+        public void OnInitialized(IComponentContext context)
+        {
+            // Register the DockService layout extension
+            _dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
+
+            // Register settings
+            _settingsService.Register("Output_Autoscroll", true);
+
+            // Register the menu item for the output window
+            _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
+            {
+                Header = "Output",
+                Command = new RelayCommand(() => _dockService.Show(context.Resolve<IOutputService>())),
+                IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
+            });
+        }
     }
 }

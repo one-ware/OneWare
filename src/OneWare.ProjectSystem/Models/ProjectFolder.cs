@@ -6,15 +6,19 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header,
-        topFolder)
+    private readonly ILogger _logger;
+
+    // Constructor now accepts ILogger via dependency injection
+    public ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true, ILogger logger)
+        : base(header, topFolder)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
         if (defaultFolderAnimation)
         {
             IDisposable? iconDisposable = null;
@@ -88,7 +92,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    _logger?.Error(e.Message, e);
                 }
             else
                 projFile.LoadingFailed = true;
@@ -127,7 +131,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                _logger?.Error(e.Message, e);
             }
 
         var pf = ConstructNewProjectFolder(path, this);
@@ -168,16 +172,16 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     private void Insert(IProjectEntry entry)
     {
-        //Insert in correct posiion
+        // Insert in correct position
         var inserted = false;
         for (var i = 0; i < Children.Count; i++)
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
                                                   string.CompareOrdinal(entry.Header, Children[i].Header) <=
-                                                  0) || //Insert if both are folders
+                                                  0) || // Insert if both are folders
                                                  (entry is not ProjectFolder && Children[i] is not ProjectFolder &&
                                                   string.CompareOrdinal(entry.Header, Children[i].Header) <=
-                                                  0))) //Insert if both are files
+                                                  0))) // Insert if both are files
             {
                 Children.Insert(i, entry);
                 inserted = true;
@@ -195,10 +199,10 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         var destination = Path.Combine(FullPath, Path.GetFileName(path));
 
-        //Check if File exists
+        // Check if File exists
         if (!File.Exists(path))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {path}. File does not exist");
+            _logger?.Warning($"Cannot import {path}. File does not exist");
             return null;
         }
 
@@ -211,14 +215,14 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger?.Error(e.Message, e);
             return null;
         }
     }
 
     protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
     {
-        return new ProjectFolder(path, topFolder);
+        return new ProjectFolder(path, topFolder, logger: _logger);
     }
 
     protected virtual IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)

@@ -1,21 +1,25 @@
 ﻿using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFile : ProjectEntry, IProjectFile
 {
-    public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
-    {
-        IDisposable? fileSubscription = null;
+    private readonly IFileIconService _fileIconService;
+    private IDisposable? _fileSubscription;
 
+    public ProjectFile(string header, IProjectFolder topFolder, IFileIconService fileIconService)
+        : base(header, topFolder)
+    {
+        _fileIconService = fileIconService ?? throw new ArgumentNullException(nameof(fileIconService));
+
+        // Listen to changes in FullPath and update the file icon when it changes
         this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
         {
-            fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
-            fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
+            _fileSubscription?.Dispose();
+            var observable = _fileIconService.GetFileIcon(Extension);
+            _fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
         });
     }
 
