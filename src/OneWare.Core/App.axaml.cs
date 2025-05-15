@@ -232,6 +232,24 @@ public class App : PrismApplication
                 () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
             InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
         });
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
+        {
+            Header = "Comment Selection",
+            IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
+            Command = new RelayCommand(
+                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
+                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null} ),
+            InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
+        });
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
+        {
+            Header = "Uncomment Selection",
+            IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
+            Command = new RelayCommand(
+                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
+                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null}),
+            InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
+        });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
         {
