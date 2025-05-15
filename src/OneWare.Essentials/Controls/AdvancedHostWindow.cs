@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
@@ -14,6 +15,7 @@ public class AdvancedHostWindow : HostWindow
 {
     private bool _cancelClose = true;
     private readonly IDockService _dockService;
+    private WindowState _lastWindowState = WindowState.Normal;
 
     public AdvancedHostWindow(IDockService dockService)
     {
@@ -21,6 +23,29 @@ public class AdvancedHostWindow : HostWindow
         this.AttachDevTools();
 #endif
         _dockService = dockService;
+
+        this.KeyDown += (s, args) =>
+        {
+            if (args.Key == Key.F11)
+            {
+                if (WindowState == WindowState.FullScreen)
+                {
+                    WindowState = _lastWindowState;
+                    Classes.Remove("FullScreen");
+                }
+                else
+                {
+                    _lastWindowState = WindowState;
+                    WindowState = WindowState.FullScreen;
+                    Classes.Add("FullScreen");
+                }
+            }
+            else if (args.Key == Key.Escape && WindowState == WindowState.FullScreen)
+            {
+                WindowState = _lastWindowState;
+                Classes.Remove("FullScreen");
+            }
+        };
     }
 
     protected override Type StyleKeyOverride => typeof(HostWindow);
