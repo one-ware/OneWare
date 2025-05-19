@@ -12,16 +12,27 @@ using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
 using System;
+using Serilog;
+using Serilog.Events;
 
 namespace OneWare.Studio;
 
-public class StudioApp : App
+public class StudioApp : Avalonia.Application
 {
     public static IContainer Container { get; private set; } = null!;
 
     public override void Initialize()
     {
         base.Initialize();
+
+        // Configure Serilog before container creation
+        var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OneWare Studio", "logs", "studio.log");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+            .CreateLogger();
+
         var builder = new ContainerBuilder();
 
         RegisterInfrastructure(builder);
@@ -37,7 +48,6 @@ public class StudioApp : App
         var settingsService = new SettingsService();
         var projectSettingsService = new ProjectSettingsService();
         var paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
-        var logger = new Logger(paths);
 
         settingsService.Register("LastVersion", Global.VersionCode);
         settingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
@@ -54,7 +64,9 @@ public class StudioApp : App
         builder.RegisterInstance(settingsService).As<ISettingsService>().SingleInstance();
         builder.RegisterInstance(projectSettingsService).As<IProjectSettingsService>().SingleInstance();
         builder.RegisterInstance(paths).As<IPaths>().SingleInstance();
-        builder.RegisterInstance(logger).As<ILogger>().SingleInstance();
+
+        // Register Serilog logger
+        builder.RegisterInstance(Log.Logger).As<Serilog.ILogger>().SingleInstance();
 
         builder.RegisterType<ThemeManager>().AsSelf().SingleInstance();
     }

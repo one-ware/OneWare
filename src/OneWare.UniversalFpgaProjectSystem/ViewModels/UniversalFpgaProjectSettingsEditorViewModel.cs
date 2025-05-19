@@ -7,17 +7,15 @@ using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewModelBase
 {
     private readonly IProjectExplorerService _projectExplorerService;
-
     private readonly FpgaService _fpgaService;
-
     private readonly IProjectSettingsService _projectSettingsService;
+    private readonly ILogger _logger;
 
     public SettingsCollectionViewModel SettingsCollection { get; } = new("")
     {
@@ -35,34 +33,38 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private Dictionary<TitledSetting, string> _dynamicSettingsKeys = new();
 
-    public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root,
-        IProjectExplorerService projectExplorerService, FpgaService fpgaService,
-        IProjectSettingsService projectSettingsService, ILogger logger)
+    public UniversalFpgaProjectSettingsEditorViewModel(
+        UniversalFpgaProjectRoot root,
+        IProjectExplorerService projectExplorerService,
+        FpgaService fpgaService,
+        IProjectSettingsService projectSettingsService,
+        ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
         _projectSettingsService = projectSettingsService;
+        _logger = logger;
+
         Title = $"{_root.Name} Settings";
 
         if (root.TopEntity != null && (root.TopEntity.Name.Contains("vhd") || root.TopEntity.Name.Contains("vhdl")))
         {
             var standard = _root.Properties["VHDL_Standard"];
-            var value = standard == null ? "" : standard.ToString();
+            var value = standard?.ToString() ?? "";
             _vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
         }
 
         var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
         var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
 
-        var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Name);
+        var toolchains = _fpgaService.Toolchains.Select(toolchain => toolchain.Name);
         var currentToolchain = _root.Properties["Toolchain"]!.ToString();
         _toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
-        var loader = ContainerLocator.Container.Resolve<FpgaService>().Loaders.Select(loader => loader.Name);
+        var loaders = _fpgaService.Loaders.Select(loader => loader.Name);
         var currentLoader = _root.Properties["Loader"]!.ToString();
-        _loader = new ComboBoxSetting("Loader", currentLoader, loader);
+        _loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
         _includesSettings = new ListBoxSetting("Files to Include", includes);
         _excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
@@ -82,76 +84,37 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         {
             TitledSetting localCopy = setting.Setting;
 
-            if (setting.ActivationFunction(root) == false)
-            {
+            if (!setting.ActivationFunction(root))
                 continue;
-            }
 
             if (_root.Properties.AsObject().ContainsKey(setting.Key))
             {
-                // load stored value
+                var value = _root.Properties[setting.Key]!.ToString();
 
-                switch (localCopy.GetType().Name)
+                localCopy = localCopy switch
                 {
-                    case "CheckBoxSetting":
-                        localCopy = new CheckBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString() == "True" ? true : false);
-                        break;
-
-                    case "TextBoxSetting":
-                        localCopy = new TextBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
-                            ((TextBoxSetting)localCopy).Watermark);
-                        break;
-
-                    case "ComboBoxSetting":
-                        localCopy = new ComboBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
-                            ((ComboBoxSetting)localCopy).Options);
-                        break;
-
-                    case "ListBoxSetting":
-                        localCopy = new ListBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray());
-                        break;
-
-                    case "ComboBoxSearchSetting":
-                        localCopy = new ComboBoxSearchSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray(),
-                            ((ComboBoxSearchSetting)localCopy).Options);
-                        break;
-
-                    case "SliderSetting":
-                        localCopy = new SliderSetting(localCopy.Title,
-                            Double.Parse(_root.Properties[setting.Key]!.ToString(), CultureInfo.InvariantCulture), ((SliderSetting)localCopy).Min,
-                            ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step);
-                        break;
-
-                    case "FolderPathSetting":
-                        localCopy = new FolderPathSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString(), ((FolderPathSetting)localCopy).Watermark,
-                            ((FolderPathSetting)localCopy).StartDirectory, ((FolderPathSetting)localCopy).CheckPath);
-                        break;
-
-                    case "FilePathSetting":
-                        localCopy = new FilePathSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString(),
-                            ((FilePathSetting)localCopy).Watermark, ((FilePathSetting)localCopy).StartDirectory,
-                            ((FilePathSetting)localCopy).CheckPath);
-                        break;
-
-                    case "ColorSetting":
-                        Color.TryParse(_root.Properties[setting.Key]!.ToString(), out Color color);
-                        localCopy = new ColorSetting(localCopy.Title, color);
-                        break;
-
-                    default:
-
-                        logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
-                        continue;
-                }
+                    CheckBoxSetting => new CheckBoxSetting(localCopy.Title, value == "True"),
+                    TextBoxSetting text => new TextBoxSetting(localCopy.Title, value, text.Watermark),
+                    ComboBoxSetting combo => new ComboBoxSetting(localCopy.Title, value, combo.Options),
+                    ListBoxSetting => new ListBoxSetting(localCopy.Title,
+                        _root.Properties[setting.Key]!.AsArray().Select(n => n!.ToString()).ToArray()),
+                    ComboBoxSearchSetting comboSearch => new ComboBoxSearchSetting(localCopy.Title,
+                        _root.Properties[setting.Key]!.AsArray().Select(n => n!.ToString()).ToArray(),
+                        comboSearch.Options),
+                    SliderSetting slider => new SliderSetting(localCopy.Title,
+                        double.Parse(value, CultureInfo.InvariantCulture), slider.Min, slider.Max, slider.Step),
+                    FolderPathSetting folder => new FolderPathSetting(localCopy.Title, value,
+                        folder.Watermark, folder.StartDirectory, folder.CheckPath),
+                    FilePathSetting file => new FilePathSetting(localCopy.Title, value,
+                        file.Watermark, file.StartDirectory, file.CheckPath),
+                    ColorSetting => Color.TryParse(value, out var color)
+                        ? new ColorSetting(localCopy.Title, color)
+                        : localCopy,
+                    _ => _logger.Error($"Unknown setting of type: {localCopy.GetType().Name}"),
+                };
             }
 
-            _dynamicSettingsKeys.Add(localCopy, setting.Key);
-
+            _dynamicSettingsKeys[localCopy] = setting.Key;
             SettingsCollection.SettingModels.Add(localCopy);
         }
     }
@@ -174,60 +137,24 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         foreach (var toSave in SettingsCollection.SettingModels)
         {
-            if (toSave == _toolchain || toSave == _loader || toSave == _includesSettings ||
+            if (toSave is not TitledSetting ts ||
+                toSave == _toolchain || toSave == _loader || toSave == _includesSettings ||
                 toSave == _excludesSettings || toSave == _vhdlStandard)
-            {
-                // Hardcoded; Skip for now
-
                 continue;
-            }
 
-            if (toSave is not TitledSetting)
+            switch (toSave)
             {
-                continue;
-            }
-
-            switch (toSave.GetType().Name)
-            {
-                case "CheckBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
+                case ListBoxSetting listBox:
+                    _root.SetProjectPropertyArray(_dynamicSettingsKeys[ts],
+                        listBox.Items.Select(i => i.ToString()).ToArray());
                     break;
 
-                case "TextBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "ComboBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "ListBoxSetting":
-                    _root.SetProjectPropertyArray(_dynamicSettingsKeys[(toSave as TitledSetting)!], ((ListBoxSetting)toSave).Items.Select(item => item.ToString()).ToArray());
-                    break;
-
-                case "ComboBoxSearchSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "SliderSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "FolderPathSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "FilePathSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], toSave.Value.ToString()!);
-                    break;
-
-                case "ColorSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!], ((Color) ((ColorSetting) toSave).Value).ToString());
+                case ColorSetting colorSetting:
+                    _root.SetProjectProperty(_dynamicSettingsKeys[ts], ((Color)colorSetting.Value).ToString());
                     break;
 
                 default:
-                    // This should never happen
+                    _root.SetProjectProperty(_dynamicSettingsKeys[ts], toSave.Value.ToString()!);
                     break;
             }
         }

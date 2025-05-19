@@ -1,17 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props"/>
-    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
     
     <PropertyGroup>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
-        <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj"/>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6"/>
+        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6" />
+        <PackageReference Include="Serilog" Version="4.2.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     </ItemGroup>
 </Project>

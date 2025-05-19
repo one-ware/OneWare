@@ -20,8 +20,11 @@ namespace OneWare.Essentials.LanguageService
         private readonly IErrorService _errorService;
         private readonly IProjectExplorerService _projectExplorerService;
 
-        protected LanguageServiceBase(string name, string? workspace = null,
-            IDockService dockService, ILogger logger, IErrorService errorService, IProjectExplorerService projectExplorerService)
+        protected LanguageServiceBase(string name, string? workspace,
+                IDockService dockService,
+                ILogger logger,
+                IErrorService errorService,
+                IProjectExplorerService projectExplorerService)
         {
             Name = name;
             Workspace = workspace;

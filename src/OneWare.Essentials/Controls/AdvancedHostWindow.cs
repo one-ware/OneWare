@@ -1,4 +1,8 @@
-using Avalonia;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Dock.Avalonia.Controls;
@@ -8,60 +12,71 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.Essentials.Controls;
-
-public class AdvancedHostWindow : HostWindow
+namespace OneWare.Essentials.Controls
 {
-    private bool _cancelClose = true;
-    private readonly IDockService _dockService;
-
-    public AdvancedHostWindow(IDockService dockService)
+    public class AdvancedHostWindow : HostWindow
     {
-#if DEBUG
-        this.AttachDevTools();
-#endif
-        _dockService = dockService;
-    }
+        private bool _cancelClose = true;
+        private readonly IDockService _dockService;
+        private readonly WindowHelper _windowHelper;
 
-    protected override Type StyleKeyOverride => typeof(HostWindow);
+        public AdvancedHostWindow(IDockService dockService, WindowHelper windowHelper)
+        {
+//#if DEBUG
+//            this.AttachDevTools();
+//#endif
+            _dockService = dockService;
+            _windowHelper = windowHelper;
+        }
 
-    protected override void OnClosing(WindowClosingEventArgs e)
-    {
-        if (DataContext is IRootDock dock)
-            if (dock.VisibleDockables is { Count: > 0 } &&
-                dock.VisibleDockables[0] is DocumentDock tool)
+        protected override Type StyleKeyOverride => typeof(HostWindow);
+
+        protected override void OnClosing(WindowClosingEventArgs e)
+        {
+            if (DataContext is IRootDock dock)
             {
-                var docs = _dockService.OpenFiles
-                    .Where(x => tool.VisibleDockables != null && tool.VisibleDockables.Contains(x.Value)).ToArray();
-
-                var unsaved = docs.Where(x => x.Value is { IsDirty: true })
-                    .Select(x => x.Value)
-                    .ToList();
-
-                if (unsaved.Any() && _cancelClose)
+                if (dock.VisibleDockables is { Count: > 0 } &&
+                    dock.VisibleDockables[0] is DocumentDock tool)
                 {
-                    e.Cancel = true;
-                    Activate();
-                    _ = TrySafeFilesAsync(unsaved);
-                }
-                else
-                {
-                    foreach (var i in docs) _ = _dockService.CloseFileAsync(i.Key);
+                    var docs = _dockService.OpenFiles
+                        .Where(x => tool.VisibleDockables != null && tool.VisibleDockables.Contains(x.Value))
+                        .ToArray();
+
+                    var unsaved = docs
+                        .Where(x => x.Value is { IsDirty: true })
+                        .Select(x => x.Value)
+                        .ToList();
+
+                    if (unsaved.Any() && _cancelClose)
+                    {
+                        e.Cancel = true;
+                        Activate();
+                        _ = TrySaveFilesAsync(unsaved);
+                    }
+                    else
+                    {
+                        foreach (var i in docs)
+                            _ = _dockService.CloseFileAsync(i.Key);
+                    }
                 }
             }
-    }
+        }
 
-    private async Task TrySafeFilesAsync(List<IExtendedDocument> unsavedFiles)
-    {
-        var close = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, this);
-        if (close)
+        private async Task TrySaveFilesAsync(List<IExtendedDocument> unsavedFiles)
         {
-            _cancelClose = false;
-            foreach (var file in unsavedFiles)
-                if (file.CurrentFile != null)
-                    _dockService.OpenFiles.Remove(file.CurrentFile);
+            var close = await _windowHelper.HandleUnsavedFilesAsync(unsavedFiles, this);
+            if (close)
+            {
+                _cancelClose = false;
 
-            Dispatcher.UIThread.Post(Close);
+                foreach (var file in unsavedFiles)
+                {
+                    if (file.CurrentFile != null)
+                        _dockService.OpenFiles.Remove(file.CurrentFile);
+                }
+
+                Dispatcher.UIThread.Post(Close);
+            }
         }
     }
 }

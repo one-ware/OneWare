@@ -8,6 +8,9 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Controls;
 
+/// <summary>
+/// A clickable hyperlink control that either opens a file or launches a URL in the default browser.
+/// </summary>
 public partial class HyperLink : UserControl
 {
     public static readonly StyledProperty<string> UrlProperty =
@@ -23,11 +26,16 @@ public partial class HyperLink : UserControl
 
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IDockService _dockService;
+    private readonly PlatformHelper _platformHelper;
 
-    public HyperLink(IProjectExplorerService projectExplorerService, IDockService dockService)
+    public HyperLink(
+        IProjectExplorerService projectExplorerService,
+        IDockService dockService,
+        PlatformHelper platformHelper)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
+        _platformHelper = platformHelper;
 
         InitializeComponent();
     }
@@ -59,7 +67,7 @@ public partial class HyperLink : UserControl
         }
         else
         {
-            PlatformHelper.OpenHyperLink(Url);
+            _platformHelper.OpenHyperLink(Url);
         }
     }
 }

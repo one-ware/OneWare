@@ -9,7 +9,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.LibraryExplorer.ViewModels;
 
@@ -18,31 +17,39 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     public const string IconKey = "BoxIcons.RegularLibrary";
 
     private string _libraryFolderPath;
-    
+
     private readonly IFileWatchService _fileWatchService;
     private readonly IDockService _dockService;
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly FolderProjectManager _folderProjectManager;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public LibraryExplorerViewModel(
+        IPaths paths,
+        IFileWatchService fileWatchService,
+        IDockService dockService,
+        IProjectExplorerService projectExplorerService,
+        FolderProjectManager folderProjectManager
+    ) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
-        
+
         _fileWatchService = fileWatchService;
         _dockService = dockService;
         _projectExplorerService = projectExplorerService;
+        _folderProjectManager = folderProjectManager;
 
         _libraryFolderPath = Path.Combine(paths.PackagesDirectory, "Libraries");
-        
+
         _ = LoadAsync();
     }
-    
+
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
         _fileWatchService.Register(project);
     }
-    
+
     public void DoubleTab(IProjectEntry entry)
     {
         if (entry is IProjectFile file)
@@ -53,8 +60,6 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     public async Task LoadAsync()
     {
-        var manager = ContainerLocator.Container.Resolve<FolderProjectManager>();
-
         Directory.CreateDirectory(_libraryFolderPath);
         var directories = Directory.EnumerateDirectories(_libraryFolderPath);
 
@@ -62,8 +67,9 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
         foreach (var dir in directories)
         {
-            var root = await manager.LoadProjectAsync(dir);
-            Insert(root!);
+            var root = await _folderProjectManager.LoadProjectAsync(dir);
+            if (root != null)
+                Insert(root);
         }
     }
 
@@ -73,24 +79,23 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
         if (SelectedItems is [{ } item])
         {
-            switch (item)
+            if (item is IProjectFile file)
             {
-                case IProjectFile file:
-                    menuItems.Add(new MenuItemViewModel("Open")
-                    {
-                        Header = "Open",
-                        Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
-                    });
-                    break;
+                menuItems.Add(new MenuItemViewModel("Open")
+                {
+                    Header = "Open",
+                    Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
+                });
             }
         }
+
         if (SelectedItems.Count > 0)
         {
             menuItems.Add(new MenuItemViewModel("Copy to Project")
             {
                 Header = "Copy to Active Project",
-                Command = new AsyncRelayCommand(() => CopyLibraryAsync(SelectedItems.Cast<IProjectEntry>()
-                    .ToArray()), () => _projectExplorerService.ActiveProject != null)
+                Command = new AsyncRelayCommand(() => CopyLibraryAsync(SelectedItems.Cast<IProjectEntry>().ToArray()),
+                    () => _projectExplorerService.ActiveProject != null)
             });
         }
         else
@@ -106,7 +111,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
             });
         }
-        
+
         TreeViewContextMenu = menuItems;
     }
 
@@ -123,11 +128,13 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     private async Task CopyLibraryAsync(params IProjectEntry[] entries)
     {
         var proj = _projectExplorerService.ActiveProject;
-        
-        if(proj == null) return;
+
+        if (proj == null)
+            return;
 
         var libFolder = proj.AddFolder("lib");
 
-        await _projectExplorerService.ImportAsync(libFolder, true, true, entries.Select(x => x.FullPath).ToArray());
+        await _projectExplorerService.ImportAsync(libFolder, true, true,
+            entries.Select(x => x.FullPath).ToArray());
     }
 }

@@ -12,13 +12,14 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
-using Prism.Ioc;
+using Serilog;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 
 public class VcdViewModel : ExtendedDocument, IStreamableDocument
 {
     private readonly ISettingsService _settingsService;
+    private readonly ILogger _logger;
 
     private CancellationTokenSource _cancellationTokenSource = new();
     private CompositeDisposable _compositeDisposable = new();
@@ -26,21 +27,19 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private bool _waitLiveExecution;
 
     private VcdContext? _lastContext;
-
     private int _loadingThreads;
-
     private VcdScopeModel? _selectedScope;
-
     private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
-        ISettingsService settingsService, IWindowService windowService)
+        ISettingsService settingsService, IWindowService windowService, ILogger logger)
         : base(fullPath, projectExplorerService, dockService, windowService)
     {
-        WaveFormViewer.ExtendSignals = true;
-
         _settingsService = settingsService;
+        _logger = logger;
+
+        WaveFormViewer.ExtendSignals = true;
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
@@ -152,7 +151,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e, "Error while loading VCD");
             LoadingFailed = true;
         }
 
@@ -214,10 +213,8 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
 
-        //Check if a process is writing to this VCD to disable multicore parsing
         var useThreads = _isLiveExecution ? 1 : _loadingThreads;
 
-        //Progress Handling
         var progressParts = new int[LoadingThreads];
         var progress = new Progress<(int part, int progress)>(x =>
         {
@@ -225,18 +222,18 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         });
 
         var disposable = DispatcherTimer.Run(() =>
-            {
-                if (cancellationToken.IsCancellationRequested) return false;
+        {
+            if (cancellationToken.IsCancellationRequested) return false;
 
-                var progressAverage = (int)progressParts.Average();
-                ReportProgress(progressAverage, _isLiveExecution);
-                return true;
-            }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue)
+            var progressAverage = (int)progressParts.Average();
+            ReportProgress(progressAverage, _isLiveExecution);
+            return true;
+        }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue)
             .DisposeWith(_compositeDisposable);
 
         await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
             parseLock);
-        
+
         disposable.Dispose();
 
         if (_vcdFile != null)
@@ -277,7 +274,6 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         _compositeDisposable.Dispose();
         _compositeDisposable = new CompositeDisposable();
 
-        //Manual cleanup because ViewModel is stuck somewhere
         WaveFormViewer.Signals.Clear();
         SelectedSignal = null;
         SelectedScope = null;

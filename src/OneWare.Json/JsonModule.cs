@@ -1,18 +1,15 @@
-﻿using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
+﻿using Autofac;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Json;
 
-public class JsonModule : IModule
+public class JsonModule : Module
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void Load(ContainerBuilder builder)
     {
-    }
-
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
+        // Optionally register services here
+        builder.RegisterType<JsonInitializer>()
+               .AsSelf()
+               .SingleInstance(); // Singleton is usually good for init
     }
 }

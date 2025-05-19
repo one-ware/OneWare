@@ -7,7 +7,6 @@ using DynamicData.Binding;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.Views;
 
@@ -43,17 +42,11 @@ public partial class CompareFileView : UserControl
         DiffEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) =>
         {
             HeadEditor.ScrollViewer.Offset = DiffEditor.ScrollViewer.Offset;
-            // var canScrollH = DiffEditor.ScrollViewer.Ca .GetValue(ScrollViewer.CanHorizontallyScrollProperty);
-            // if (canScrollH) HeadEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
-            // else HeadEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
         };
 
         HeadEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) =>
         {
             DiffEditor.ScrollViewer.Offset = HeadEditor.ScrollViewer.Offset;
-            // var canScrollH = HeadEditor.ScrollViewer.GetValue(ScrollViewer.CanHorizontallyScrollProperty);
-            // if (canScrollH) DiffEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
-            // else DiffEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
         };
 
         DataContextChanged += (_, _) =>
@@ -63,10 +56,10 @@ public partial class CompareFileView : UserControl
 
             if (DataContext is not CompareFileViewModel vm) return;
 
-            //Syntax Highlighting
+            // Get ILanguageManager from the ViewModel (injected via Autofac)
+            var languageManager = vm.LanguageManager;
             var language = Path.GetExtension(Path.GetExtension(vm.FullPath));
 
-            var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
             if (languageManager.GetTextMateScopeByExtension(language) is { } scope)
             {
                 var textMateDiff = DiffEditor.InstallTextMate(languageManager.RegistryOptions);
@@ -114,16 +107,9 @@ public partial class CompareFileView : UserControl
             foreach (var chunk in vm.Chunks)
             {
                 var row = vm.Chunks.IndexOf(chunk);
-                // draw header
-                var textBlockLeft = new TextBlock
-                {
-                    Text = "HEAD: " + chunk.DiffSectionHeader
-                };
 
-                var textBlockRight = new TextBlock
-                {
-                    Text = "LOCAL: " + chunk.DiffSectionHeader
-                };
+                var textBlockLeft = new TextBlock { Text = "HEAD: " + chunk.DiffSectionHeader };
+                var textBlockRight = new TextBlock { Text = "LOCAL: " + chunk.DiffSectionHeader };
 
                 LeftSide.RowDefinitions.Add(new RowDefinition { Height = new GridLength(20) });
                 LeftSide.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -135,32 +121,29 @@ public partial class CompareFileView : UserControl
                 LeftSide.Children.Add(textBlockLeft);
                 RightSide.Children.Add(textBlockRight);
 
-                // draw left diff
                 var leftMargin = new DiffInfoMargin { Lines = chunk.LeftDiff };
-                var left = new TextEditor();
-                //left.SyntaxHighlighting = EditorThemeManager.Instance.SelectedTheme.Theme;
-                left.ShowLineNumbers = true;
+                var left = new TextEditor
+                {
+                    ShowLineNumbers = true,
+                    Text = string.Join("\n", chunk.LeftDiff.Select(x => x.Text)).Replace("\t", "    ")
+                };
                 left.TextArea.LeftMargins.RemoveAt(0);
                 left.TextArea.LeftMargins.Insert(0, leftMargin);
                 var leftBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = chunk.LeftDiff };
                 left.TextArea.TextView.BackgroundRenderers.Add(leftBackgroundRenderer);
-                left.Text = string.Join("\n", chunk.LeftDiff.Select(x => x.Text)).Replace("\t", "    ");
-
                 Grid.SetRow(left, 2 * row + 1);
                 LeftSide.Children.Add(left);
 
-                // draw right diff
                 var rightMargin = new DiffInfoMargin { Lines = chunk.RightDiff };
-                var right = new TextEditor();
-                //right.SyntaxHighlighting = EditorThemeManager.Instance.SelectedTheme.Theme;
-                right.ShowLineNumbers = true;
+                var right = new TextEditor
+                {
+                    ShowLineNumbers = true,
+                    Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ")
+                };
                 right.TextArea.LeftMargins.RemoveAt(0);
                 right.TextArea.LeftMargins.Insert(0, rightMargin);
                 var rightBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = chunk.RightDiff };
                 right.TextArea.TextView.BackgroundRenderers.Add(rightBackgroundRenderer);
-                right.Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ");
-                ;
-
                 Grid.SetRow(right, 2 * row + 1);
                 RightSide.Children.Add(right);
             }
@@ -177,12 +160,10 @@ public partial class CompareFileView : UserControl
             _leftInfoMargin.Lines = chunk.LeftDiff;
             _leftBackgroundRenderer.Lines = chunk.LeftDiff;
             HeadEditor.Text = string.Join("\n", chunk.LeftDiff.Select(x => x.Text)).Replace("\t", "    ");
-            ;
 
             _rightInfoMargin.Lines = chunk.RightDiff;
             _rightBackgroundRenderer.Lines = chunk.RightDiff;
             DiffEditor.Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ");
-            ;
         }
     }
 }

@@ -28,7 +28,7 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Autofac;
 using Range = System.Range;
 
 namespace OneWare.Core.Views.DockViews;
@@ -37,17 +37,22 @@ public partial class EditView : UserControl
 {
     private readonly IErrorService _errorService;
     private readonly ISettingsService _settingsService;
+    private readonly ILogger _logger;
+    private readonly ErrorListViewModel _errorListViewModel;
 
     private CompositeDisposable _compositeDisposable = new();
-
     private IEnumerable<int> _lastSearchResultLines = new List<int>();
-
     private ITypeAssistance? _typeAssistance;
 
-    public EditView()
+    public EditView(IErrorService errorService,
+                   ISettingsService settingsService,
+                   ILogger logger,
+                   ErrorListViewModel errorListViewModel)
     {
-        _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
-        _errorService = ContainerLocator.Container.Resolve<IErrorService>();
+        _errorService = errorService;
+        _settingsService = settingsService;
+        _logger = logger;
+        _errorListViewModel = errorListViewModel;
 
         InitializeComponent();
 
@@ -106,7 +111,7 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
 
         TopLevel.GetTopLevel(this)?.AddDisposableHandler(KeyDownEvent, (o, e) =>
@@ -236,19 +241,9 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
-
-    // public void UpdateDebuggerLine(BreakPoint active)
-    // {
-    //     CodeBox.TextArea.TextView.LineTransformers.RemoveMany(CodeBox.TextArea.TextView.LineTransformers
-    //         .Where(b => b is LineColorizer { Id: "DebuggerLine" }));
-    //     if (active != null && active.File.EqualPaths(CurrentFile.FullPath))
-    //         CodeBox.TextArea.TextView.LineTransformers.Add(
-    //             new LineColorizer(active.Line, null,
-    //                 Application.Current.FindResource("DebuggerBreakLine") as IBrush, "DebuggerLine"));
-    // }
 
     public void PointerPressedAfterCaretUpdate(object? sender, PointerPressedEventArgs e)
     {
@@ -299,9 +294,6 @@ public partial class EditView : UserControl
 
     #region Quick Menu
 
-    /// <summary>
-    ///     Sets event to handled if Cursor is over Selection
-    /// </summary>
     private void PointerPressedBeforeCaretUpdate(object? sender, PointerEventArgs e)
     {
         if (ViewModel?.DisableEditViewEvents ?? true) return;
@@ -344,37 +336,10 @@ public partial class EditView : UserControl
                     _controlAction.Invoke();
                     e.Handled = true;
                 }
-
-            //CodeBox.WordRenderer.SetHighlight(VhdpHelpers.SearchSelectedWord(CodeBox.Document, CodeBox.CaretOffset)); TODO
         }
         else if (e.GetCurrentPoint(null).Properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
         {
             var contextMenuList = new ObservableCollection<object>();
-
-            // //Check for merge
-            // foreach (var merge in CodeBox.MergeService.Merges)
-            //     if (CodeBox.CaretOffset > merge.StartIndex && CodeBox.CaretOffset < merge.EndIndex)
-            //         //contextMenuList.Add(new MenuItemViewModel
-            //         //{
-            //         //    Header = "Keep HEAD",
-            //         //    Command = ReactiveCommand.Create<MergeEntry>(MergeService.MergeKeepCurrent),
-            //         //    CommandParameter = merge
-            //         //});
-            //         //contextMenuList.Add(new MenuItemViewModel
-            //         //{
-            //         //    Header = "Keep Incoming",
-            //         //    Command = ReactiveCommand.Create<MergeEntry>(MergeService.MergeKeepIncoming),
-            //         //    CommandParameter = merge
-            //         //});
-            //         //contextMenuList.Add(new MenuItemViewModel
-            //         //{
-            //         //    Header = "Keep Both",
-            //         //    Command = ReactiveCommand.Create<MergeEntry>(MergeService.MergeKeepBoth),
-            //         //    CommandParameter = merge
-            //         //});
-            //         //contextMenuList.Add(new Separator());
-            //
-            //         break;
 
             if (_typeAssistance != null)
             {
@@ -448,8 +413,6 @@ public partial class EditView : UserControl
         }
     }
 
-    //int clickOffset = -1;        
-
     private ErrorListItem? GetErrorAtMousePos(PointerEventArgs e)
     {
         if (ViewModel?.CurrentFile == null) return null;
@@ -459,8 +422,7 @@ public partial class EditView : UserControl
         {
             var offset = CodeBox.Document.GetOffset(pos.Value.Location);
             var location = CodeBox.Document.GetLocation(offset);
-            foreach (var error in ContainerLocator.Container.Resolve<ErrorListViewModel>()
-                         .GetErrorsForFile(ViewModel.CurrentFile))
+            foreach (var error in _errorListViewModel.GetErrorsForFile(ViewModel.CurrentFile))
                 if (location.Line >= error.StartLine && location.Line <= error.EndLine &&
                     location.Column >= error.StartColumn && location.Column <= error.EndColumn)
                     return error;
@@ -486,9 +448,6 @@ public partial class EditView : UserControl
         _ = TextEditorMouseHoverAsync(sender, e);
     }
 
-    /// <summary>
-    ///     closes toolTip if hover stopped
-    /// </summary>
     private void Pointer_Moved(object? sender, PointerEventArgs e)
     {
         if (ViewModel?.DisableEditViewEvents ?? true) return;
@@ -538,14 +497,11 @@ public partial class EditView : UserControl
                 CodeBox.ModificationService.SetModification("Control_Underline", new TextModificationSegment(
                         _lastWordBounds.Value.Start.Value,
                         _lastWordBounds.Value.End.Value)
-                    { Decorations = TextDecorationCollection.Parse("Underline") });
+                { Decorations = TextDecorationCollection.Parse("Underline") });
             }
         }
     }
 
-    /// <summary>
-    ///     opens toolTip if there is information about the word the mouse hovers over
-    /// </summary>
     private async Task TextEditorMouseHoverAsync(object? sender, PointerEventArgs e)
     {
         if (!Equals(e.Source, CodeBox.TextArea.TextView)) return;
@@ -558,7 +514,6 @@ public partial class EditView : UserControl
 
         if (offset <= 0 && HoverBox.IsOpen) return;
 
-        //HoverTextBox.Markdown = "";
         HoverBoxContent.Content = null;
 
         if (word != null)
@@ -635,42 +590,11 @@ public partial class EditView : UserControl
     private readonly IBrush _wordResultScrollBrush = (IBrush)new BrushConverter().ConvertFrom("#502859af")!;
     private readonly IBrush _searchResultScrollBrush = (IBrush)new BrushConverter().ConvertFrom("#50af7e28")!;
 
-    /// <summary>
-    ///     Fills in Data for the Completion Window
-    /// </summary>
     private void TextEditor_TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
         if (ViewModel?.DisableEditViewEvents ?? true) return;
 
-        // //Apply Caret difference
-        // if (CodeBox.CaretOffset + _caretDiff < 0) CodeBox.CaretOffset = 0;
-        // else if (CodeBox.CaretOffset + _caretDiff > CodeBox.Text.Length) CodeBox.CaretOffset = CodeBox.Text.Length;
-        // else CodeBox.CaretOffset += _caretDiff;
-        // _caretDiff = 0;
-
-        //Language Specific Type Assistance
         _typeAssistance?.TextEntered(e);
-
-        // #region Detect Auto Format / Language Specific?
-        //
-        // _enteredString += e.Text;
-        // var startOffset = -1;
-        // if (e.Text == "}")
-        //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("{", StringComparison.Ordinal);
-        // else if (e.Text == ")")
-        //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("(", StringComparison.Ordinal);
-        // else if (_enteredString.Contains("#endregion"))
-        //     startOffset = CodeBox.Text[..CodeBox.CaretOffset].LastIndexOf("#region", StringComparison.Ordinal);
-        // if (_enteredString.Length > 10) _enteredString = _enteredString.Remove(0, 1);
-        //
-        // if (startOffset >= 0)
-        // {
-        //     var startLineNumber = CodeBox.Document.GetLineByOffset(startOffset).LineNumber;
-        //     var endLineNumber = CodeBox.Document.GetLineByOffset(CodeBox.CaretOffset).LineNumber;
-        //     if (_settingsService.GetSettingValue<bool>("Editor_UseAutoFormatting"))
-        //         _typeAssistance?.AutoIndent(startLineNumber, endLineNumber);
-        // }
-        // //#endregion
     }
 
     private void TextEditor_TextArea_TextEntering(object? sender, TextInputEventArgs e)
@@ -682,9 +606,6 @@ public partial class EditView : UserControl
         _typeAssistance?.TextEntering(e);
     }
 
-    /// <summary>
-    ///     Auto format entire document
-    /// </summary>
     public void AutoFormat()
     {
         if (!CodeBox.IsReadOnly)

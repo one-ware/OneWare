@@ -12,7 +12,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
 
@@ -24,31 +23,46 @@ public partial class PackageService : ObservableObject, IPackageService
         AllowTrailingCommas = true,
         WriteIndented = true
     };
-    
+
     private bool _isUpdating;
 
     private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
-
     private readonly IHttpService _httpService;
     private readonly ISettingsService _settingsService;
-
-    private readonly Lock _installLock = new();
-
     private readonly ILogger _logger;
+    private readonly string _packageDataBasePath;
+    private readonly Lock _installLock = new();
     private CancellationTokenSource? _cancellationTokenSource;
 
-    public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
+    private readonly Func<Package, PluginPackageModel> _pluginFactory;
+    private readonly Func<Package, NativeToolPackageModel> _nativeToolFactory;
+    private readonly Func<Package, HardwarePackageModel> _hardwareFactory;
+    private readonly Func<Package, LibraryPackageModel> _libraryFactory;
+
+    public PackageService(
+        IHttpService httpService,
+        ISettingsService settingsService,
+        ILogger logger,
+        IPaths paths,
+        Func<Package, PluginPackageModel> pluginFactory,
+        Func<Package, NativeToolPackageModel> nativeToolFactory,
+        Func<Package, HardwarePackageModel> hardwareFactory,
+        Func<Package, LibraryPackageModel> libraryFactory)
     {
         _httpService = httpService;
         _settingsService = settingsService;
         _logger = logger;
+        _pluginFactory = pluginFactory;
+        _nativeToolFactory = nativeToolFactory;
+        _hardwareFactory = hardwareFactory;
+        _libraryFactory = libraryFactory;
 
-        PackageDataBasePath = Path.Combine(paths.PackagesDirectory,
+        _packageDataBasePath = Path.Combine(paths.PackagesDirectory,
             $"{paths.AppName.ToLower().Replace(" ", "")}-packages.json");
 
         LoadInstalledPackagesDatabase();
     }
-    
+
     public bool IsUpdating
     {
         get => _isUpdating;
@@ -57,12 +71,8 @@ public partial class PackageService : ObservableObject, IPackageService
 
     public event EventHandler? PackagesUpdated;
 
-    private string PackageDataBasePath { get; }
-
     public List<string> PackageRepositories { get; } = [];
-
     private List<Package> StandalonePackages { get; } = [];
-
     public Dictionary<string, PackageModel> Packages { get; } = [];
 
     public void RegisterPackageRepository(string url)
@@ -106,18 +116,18 @@ public partial class PackageService : ObservableObject, IPackageService
 
         var allRepos = PackageRepositories.Concat(customRepositories);
         var newPackages = new List<Package>();
-        
+
         foreach (var repository in allRepos)
         {
             var loadedPackages = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
 
             if (_cancellationTokenSource.IsCancellationRequested) break;
-            
+
             if (loadedPackages != null)
                 foreach (var package in loadedPackages)
                 {
                     newPackages.Add(package);
-                    
+
                     if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
                     {
                         pkg.Package = package;
@@ -145,11 +155,6 @@ public partial class PackageService : ObservableObject, IPackageService
         return result;
     }
 
-
-    /// <summary>
-    ///     Will install the package if not already installed
-    ///     Waits if another thread already started the installation
-    /// </summary>
     public Task<bool> InstallAsync(Package package)
     {
         lock (_installLock)
@@ -161,13 +166,11 @@ public partial class PackageService : ObservableObject, IPackageService
                 switch (model.Status)
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true,
-                            Brushes.DarkCyan);
+                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true, Brushes.DarkCyan);
                         return model.DownloadAsync(model.Package.Versions.Last());
                     case PackageStatus.Installing:
                         if (_activeInstalls.TryGetValue(model.Package, out var task)) return task;
-                        return Task.FromResult(model.Status is PackageStatus.Installed
-                            or PackageStatus.UpdateAvailable);
+                        return Task.FromResult(model.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
                     case PackageStatus.Installed:
                         return Task.FromResult(true);
                 }
@@ -185,18 +188,17 @@ public partial class PackageService : ObservableObject, IPackageService
             Console.WriteLine(package.Id + " is already installed.");
             return;
         }
-        
+
         PackageModel model = package.Type switch
         {
-            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
-            "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
-            "Hardware" => ContainerLocator.Container.Resolve<HardwarePackageModel>((typeof(Package), package)),
-            "Library" => ContainerLocator.Container.Resolve<LibraryPackageModel>((typeof(Package), package)),
+            "Plugin" => _pluginFactory(package),
+            "NativeTool" => _nativeToolFactory(package),
+            "Hardware" => _hardwareFactory(package),
+            "Library" => _libraryFactory(package),
             _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
         };
 
         model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
-        
         Packages.Add(package.Id, model);
 
         Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
@@ -211,14 +213,14 @@ public partial class PackageService : ObservableObject, IPackageService
 
     private async Task WaitForInstallsAsync()
     {
-        //Wait until all installs complete
         Task<bool>[] activeInstallTasks;
         lock (_installLock)
         {
             activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
         }
 
-        if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
+        if (activeInstallTasks.Length != 0)
+            await Task.WhenAll(activeInstallTasks.ToArray());
     }
 
     private async Task<Package[]?> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
@@ -236,29 +238,26 @@ public partial class PackageService : ObservableObject, IPackageService
             {
                 var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
 
-                if (repository is { Packages: not null })
+                if (repository?.Packages is not null)
+                {
                     foreach (var manifest in repository.Packages)
                     {
                         try
                         {
                             if (manifest.ManifestUrl == null) continue;
 
-                            var downloadManifest =
-                                await _httpService.DownloadTextAsync(manifest.ManifestUrl,
-                                    cancellationToken: cancellationToken);
-
+                            var downloadManifest = await _httpService.DownloadTextAsync(manifest.ManifestUrl, cancellationToken: cancellationToken);
                             var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
 
-                            if (package == null) continue;
-
-                            packages.Add(package);
+                            if (package != null)
+                                packages.Add(package);
                         }
                         catch (Exception e)
                         {
                             _logger.Error(e.Message, e);
                         }
                     }
-                else throw new Exception("Packages empty");
+                }
             }
             catch (Exception e)
             {
@@ -268,12 +267,8 @@ public partial class PackageService : ObservableObject, IPackageService
         }
         else
         {
-            //In case link is a plugin manifest directly
             var package = JsonSerializer.Deserialize<Package>(repositoryString!, SerializerOptions);
-
-            if (package == null) return null;
-
-            packages.Add(package);
+            if (package != null) packages.Add(package);
         }
 
         return packages.ToArray();
@@ -283,11 +278,12 @@ public partial class PackageService : ObservableObject, IPackageService
     {
         try
         {
-            if (File.Exists(PackageDataBasePath))
+            if (File.Exists(_packageDataBasePath))
             {
-                using var file = File.OpenRead(PackageDataBasePath);
+                using var file = File.OpenRead(_packageDataBasePath);
                 var installedPackages = JsonSerializer.Deserialize<InstalledPackage[]>(file, SerializerOptions);
                 if (installedPackages != null)
+                {
                     foreach (var installedPackage in installedPackages)
                     {
                         var package = new Package
@@ -296,8 +292,7 @@ public partial class PackageService : ObservableObject, IPackageService
                             Type = installedPackage.Type,
                             Name = installedPackage.Name,
                             Category = installedPackage.Category,
-                            Versions =
-                            [
+                            Versions = [
                                 new PackageVersion
                                 {
                                     Version = installedPackage.InstalledVersion
@@ -309,19 +304,21 @@ public partial class PackageService : ObservableObject, IPackageService
 
                         AddPackage(package, installedPackage.InstalledVersion);
                     }
+                }
             }
 
             foreach (var package in StandalonePackages)
+            {
                 if (Packages.TryGetValue(package.Id!, out var pkg))
                 {
                     pkg.Package = package;
-                    pkg.InstalledVersion =
-                        package.Versions?.FirstOrDefault(x => x.Version == pkg.InstalledVersion?.Version);
+                    pkg.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == pkg.InstalledVersion?.Version);
                 }
                 else
                 {
                     AddPackage(package);
                 }
+            }
         }
         catch (Exception e)
         {
@@ -336,7 +333,7 @@ public partial class PackageService : ObservableObject, IPackageService
     {
         try
         {
-            await using var file = File.OpenWrite(PackageDataBasePath);
+            await using var file = File.OpenWrite(_packageDataBasePath);
             file.SetLength(0);
 
             var installedPackages = Packages
@@ -358,7 +355,7 @@ public partial class PackageService : ObservableObject, IPackageService
     {
         lock (_installLock)
         {
-            _activeInstalls.Add(package, installTask);
+            _activeInstalls[package] = installTask;
 
             _ = installTask.ContinueWith(t =>
             {
