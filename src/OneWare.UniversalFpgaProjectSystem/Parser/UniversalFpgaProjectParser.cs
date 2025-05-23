@@ -26,6 +26,8 @@ public static class UniversalFpgaProjectParser
             {
                 AllowTrailingCommas = true
             });
+            
+            stream.Close();
 
             var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
             return root;
@@ -45,6 +47,8 @@ public static class UniversalFpgaProjectParser
             {
                 stream.SetLength(0);
                 await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
+                
+                stream.Close();
             }
 
             root.LastSaveTime = DateTime.Now;
