@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Avalonia.Threading;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
@@ -20,15 +21,18 @@ public static class UniversalFpgaProjectParser
     {
         try
         {
-            await using var stream = File.OpenRead(path);
-
-            var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+            return await Dispatcher.UIThread.Invoke(async () =>
             {
-                AllowTrailingCommas = true
-            });
+                await using var stream = File.OpenRead(path);
 
-            var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
-            return root;
+                var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = true
+                });
+                
+                var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
+                return root;
+            });
         }
         catch (Exception e)
         {
@@ -41,11 +45,14 @@ public static class UniversalFpgaProjectParser
     {
         try
         {
-            await using (var stream = File.OpenWrite(root.ProjectFilePath))
+            await Dispatcher.UIThread.Invoke(async () =>
             {
-                stream.SetLength(0);
-                await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
-            }
+                await using (var stream = File.OpenWrite(root.ProjectFilePath))
+                {
+                    stream.SetLength(0);
+                    await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
+                }
+            });
 
             root.LastSaveTime = DateTime.Now;
 
