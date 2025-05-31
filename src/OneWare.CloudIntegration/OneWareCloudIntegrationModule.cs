@@ -28,7 +28,7 @@ public class OneWareCloudIntegrationModule : IModule
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
         
-        containerProvider.Resolve<ISettingsService>().RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://one-ware.com", "https://one-ware.com"));
+        containerProvider.Resolve<ISettingsService>().RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
         
         containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
         
