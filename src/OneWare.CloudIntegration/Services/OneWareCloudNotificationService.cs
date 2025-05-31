@@ -71,13 +71,13 @@ public class OneWareCloudNotificationService
             
             ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
             
-            _logger.Log("Connected to OneWare Cloud", ConsoleColor.Cyan, true, Brushes.CornflowerBlue);
+            _logger.Log("Connected to OneWare Cloud", ConsoleColor.Green, true, Brushes.Lime);
             
             return true;
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Warning("Failed to connect to OneWare Cloud", null, true);
             
             return false;
         }

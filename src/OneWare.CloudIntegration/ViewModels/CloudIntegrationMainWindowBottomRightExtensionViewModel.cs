@@ -24,8 +24,14 @@ public class CloudIntegrationMainWindowBottomRightExtensionViewModel : Observabl
     public HubConnectionState ConnectionState
     {
         get => _connectionState;
-        set => SetProperty(ref _connectionState, value);
+        set
+        {
+            SetProperty(ref _connectionState, value);
+            OnPropertyChanged(nameof(IsConnecting));
+        }
     }
+
+    public bool IsConnecting => ConnectionState is HubConnectionState.Connecting or HubConnectionState.Reconnecting;
 
     public async Task ConnectAsync()
     {

@@ -41,6 +41,8 @@ public class OneWareCloudLoginService
     /// </summary>
     public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
     {
+        if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+        
         _jwtTokenCache.TryGetValue(email, out var existingToken);
 
         if (existingToken?.Expiration > DateTime.Now.AddMinutes(5))
