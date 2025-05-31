@@ -64,12 +64,11 @@ public class OneWareCloudAccountSetting : CustomSetting
                 return;
             }
         }
-
-        var client = new RestClient(OneWareCloudIntegrationModule.Host);
-        var request = new RestRequest("/api/user/data");
+        
+        var request = new RestRequest("/api/users/me");
         request.AddHeader("Authorization", $"Bearer {jwt}");
         
-        var response = await client.ExecuteGetAsync(request);
+        var response = await loginService.GetRestClient().ExecuteGetAsync(request);
         var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
         
         var avatarUrl = data["avatarUrl"]?.GetValue<string>();
