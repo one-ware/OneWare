@@ -48,7 +48,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\Avalonia.Controls.DataGrid.props = build\props\Avalonia.Controls.DataGrid.props
 		build\props\Avalonia.Controls.PanAndZoom.props = build\props\Avalonia.Controls.PanAndZoom.props
 		build\props\Avalonia.props = build\props\Avalonia.props
-		build\props\Avalonia.Svg.props = build\props\Avalonia.Svg.props
 		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
 		build\props\AvaloniaEdit.TextMate.props = build\props\AvaloniaEdit.TextMate.props
 		build\props\CommunityToolkit.Mvvm.props = build\props\CommunityToolkit.Mvvm.props
@@ -62,6 +61,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267
 		build\props\SharpCompress.props = build\props\SharpCompress.props
 		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
 		build\props\Devlooped.CredentialManager.props = build\props\Devlooped.CredentialManager.props
+		build\props\Svg.Controls.Skia.Avalonia.props = build\props\Svg.Controls.Skia.Avalonia.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectSystem", "ProjectSystem", "{0AD88B48-CA52-4A71-BA09-DD41BCCD5BB7}"
