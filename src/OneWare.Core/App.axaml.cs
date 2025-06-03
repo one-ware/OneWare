@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.ModuleLogic;
@@ -38,6 +39,7 @@ using OneWare.Toml;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
+using Serilog;
 using TextMateSharp.Grammars;
 
 namespace OneWare.Core;
@@ -342,6 +344,22 @@ public class App : PrismApplication
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // 🔧 Configure Serilog globally
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+        // 🌐 Optional: register Serilog ILogger<T> into DI (if needed)
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddSerilog();
+        });
+
+        var logger = loggerFactory.CreateLogger<App>();
+        logger.LogInformation("Starting framework initialization...");
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             DisableAvaloniaDataAnnotationValidation();
@@ -363,7 +381,7 @@ public class App : PrismApplication
             TypeAssistanceIconStore.Instance.Load();
         });
 
-        Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+        Container.Resolve<Essentials.Services.ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
         Container.Resolve<BackupService>().Init();
@@ -414,7 +432,7 @@ public class App : PrismApplication
         }
         catch (Exception ex)
         {
-            Container.Resolve<ILogger>().Error(ex.Message, ex);
+            Container.Resolve<Essentials.Services.ILogger>().Error(ex.Message, ex);
         }
     }
 
@@ -433,7 +451,7 @@ public class App : PrismApplication
 
         //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
 
-        Container.Resolve<ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
+        Container.Resolve<Essentials.Services.ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
 
         //Save active layout
         if (!_tempMode) Container.Resolve<IDockService>().SaveLayout();
