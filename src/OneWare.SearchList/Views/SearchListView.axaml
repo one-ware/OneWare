@@ -47,7 +47,7 @@
                 <Border DockPanel.Dock="Right" Classes="SplitterBorder" Margin="6 0" />
 
                 <Border DockPanel.Dock="Left" Classes="RoundToolBar">
-                    <controls:SearchBox SearchText="{Binding SearchString}" Name="Search" BorderThickness="0"
+                    <controls:SearchBox SearchText="{Binding SearchString}" x:Name="Search" BorderThickness="0"
                                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                         HorizontalAlignment="Stretch">
                         <Interaction.Behaviors>
@@ -65,7 +65,7 @@
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   Grid.Row="1" Background="Transparent"
                   RowBackground="Transparent" IsReadOnly="True"
-                  Name="SearchList" ItemsSource="{Binding Items}"
+                  x:Name="SearchList" ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}"
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <Interaction.Behaviors>

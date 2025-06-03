@@ -8,13 +8,30 @@ using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
-public class OneWareCloudLoginService(ILogger logger, ISettingsService settingService)
+public class OneWareCloudLoginService
 {
     private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
+
+    private readonly ILogger _logger;
+    private readonly ISettingsService _settingService;
+    private readonly IHttpService _httpService;
+
+    public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService)
+    {
+        _logger = logger;
+        _settingService = settingService;
+        _httpService = httpService;
+    }
+    
+    public RestClient GetRestClient()
+    {
+        var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+        return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
+    }
     
     public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
-        var email = settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey);
+        var email = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey);
 
         return GetJwtTokenAsync(email);
     }
@@ -24,6 +41,8 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
     /// </summary>
     public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
     {
+        if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+        
         _jwtTokenCache.TryGetValue(email, out var existingToken);
 
         if (existingToken?.Expiration > DateTime.Now.AddMinutes(5))
@@ -49,25 +68,23 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
             var refreshToken = cred?.Password;
 
             if (refreshToken == null) return (false, HttpStatusCode.Unauthorized);
-
-            var client = new RestClient(OneWareCloudIntegrationModule.Host);
+            
             var request = new RestRequest("/api/auth/refresh");
             request.AddJsonBody(new RefreshModel()
             {
                 RefreshToken = refreshToken
             });
-
-            var response = await client.ExecutePostAsync(request);
+            var response = await GetRestClient().ExecutePostAsync(request);
 
             if (response.IsSuccessful)
             {
                 var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-                
+
                 var token = data["token"]?.GetValue<string>();
                 refreshToken = data["refreshToken"]?.GetValue<string>();
 
-                if(token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
-                
+                if (token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
+
                 SaveCredentials(email, token, refreshToken);
 
                 return (true, response.StatusCode);
@@ -77,7 +94,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            _logger.Error(e.Message, e);
             return (false, HttpStatusCode.NoContent);
         }
     }
@@ -86,7 +103,6 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
     {
         try
         {
-            var client = new RestClient(OneWareCloudIntegrationModule.Host);
             var request = new RestRequest("/api/auth/login");
             request.AddJsonBody(new LoginModel
             {
@@ -94,7 +110,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
                 Password = password
             });
 
-            var response = await client.ExecutePostAsync(request);
+            var response = await GetRestClient().ExecutePostAsync(request);
 
             if (response.IsSuccessful)
             {
@@ -103,8 +119,8 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
                 var token = data["token"]?.GetValue<string>();
                 var refreshToken = data["refreshToken"]?.GetValue<string>();
 
-                if(token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
-                
+                if (token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
+
                 SaveCredentials(email, token, refreshToken);
 
                 return true;
@@ -114,7 +130,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
 
         return false;
@@ -130,7 +146,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
@@ -145,7 +161,7 @@ public class OneWareCloudLoginService(ILogger logger, ISettingsService settingSe
         var store = CredentialManager.Create("oneware");
         store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
 
-        settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
     }
 
     private class LoginModel

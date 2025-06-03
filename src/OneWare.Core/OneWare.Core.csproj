@@ -12,10 +12,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Autofac" Version="8.3.0" />
-        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-        <PackageReference Include="DeviceId" Version="6.2.0" />
-        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="DeviceId" Version="6.2.0"/>
+        <!-- Bug with 11.3.0 ?, Check why this is needed and maybe remove in future -->
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
     </ItemGroup>
 
     <ItemGroup>

@@ -15,7 +15,7 @@ namespace OneWare.CloudIntegration.Settings;
 public class OneWareCloudAccountSetting : CustomSetting
 {
     private object _value;
-    
+
     private IImage? _image;
 
     public OneWareCloudAccountSetting() : base(string.Empty)
@@ -24,23 +24,26 @@ public class OneWareCloudAccountSetting : CustomSetting
         _value = string.Empty;
     }
 
-    public override object Value {
+    public override object Value
+    {
         get => _value;
         set
         {
-            SetProperty(ref _value, value);
-            OnPropertyChanged(nameof(IsLoggedIn));
-            OnPropertyChanged(nameof(Email));
-            _ = ResolveAsync();
+            if (SetProperty(ref _value, value))
+            {
+                OnPropertyChanged(nameof(IsLoggedIn));
+                OnPropertyChanged(nameof(Email));
+                _ = ResolveAsync();
+            }
         }
     }
-    
+
     public IImage? Image
     {
         get => _image;
         set => SetProperty(ref _image, value);
     }
-    
+
     public bool IsLoggedIn => !string.IsNullOrEmpty(Value.ToString());
 
     public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
@@ -48,10 +51,10 @@ public class OneWareCloudAccountSetting : CustomSetting
     private async Task ResolveAsync()
     {
         var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
-        
+
         Image = null;
-        
-        if(string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
+
+        if (string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
 
         var (jwt, status) = await loginService.GetJwtTokenAsync(Email);
 
@@ -65,18 +68,24 @@ public class OneWareCloudAccountSetting : CustomSetting
             }
         }
 
-        var client = new RestClient(OneWareCloudIntegrationModule.Host);
-        var request = new RestRequest("/api/user/data");
+        var request = new RestRequest("/api/users/me");
         request.AddHeader("Authorization", $"Bearer {jwt}");
-        
-        var response = await client.ExecuteGetAsync(request);
+
+        var response = await loginService.GetRestClient().ExecuteGetAsync(request);
         var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-        
+
         var avatarUrl = data["avatarUrl"]?.GetValue<string>();
-        
+
         var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-        
-        if(avatarUrl != null)
+
+        if (avatarUrl != null)
+        {
             Image = await httpService.DownloadImageAsync(avatarUrl);
+
+            Console.WriteLine(avatarUrl);
+
+            //TODO Move this to somewhere else
+            await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
+        }
     }
 }
