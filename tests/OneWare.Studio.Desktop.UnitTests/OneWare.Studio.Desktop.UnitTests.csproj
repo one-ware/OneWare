@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props"/>
+    <Import Project="..\..\build\props\XUnit.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -13,7 +13,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\studio\OneWare.Studio.Desktop\OneWare.Studio.Desktop.csproj"/>
+      <PackageReference Include="Autofac" Version="8.3.0" />
+      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\studio\OneWare.Studio.Desktop\OneWare.Studio.Desktop.csproj" />
     </ItemGroup>
 
 </Project>

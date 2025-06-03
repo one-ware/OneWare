@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\Base.props"/>
-    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
+        <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
 
     <ItemGroup>
@@ -18,11 +18,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>
+      <PackageReference Include="Autofac" Version="8.3.0" />
+      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj" />
         <ProjectReference Include="..\..\src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj" />
     </ItemGroup>
 
 </Project>

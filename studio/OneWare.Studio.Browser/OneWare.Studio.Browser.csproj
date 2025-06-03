@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
-    <Import Project="..\..\build\props\Avalonia.Browser.props"/>
-    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props"/>
-    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\Avalonia.Browser.props" />
+    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
+    <Import Project="..\..\build\props\Base.props" />
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
@@ -23,18 +23,18 @@
     -->
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
-        <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
+        <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\**\*.*" />
     </ItemGroup>
-    
+
     <ItemGroup>
-        <!--
-        <PackageReference Include="TextMateSharp.Wasm" Version="1.0.60"/>
-        -->
+      <PackageReference Include="Autofac" Version="8.3.0" />
+      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
     </ItemGroup>
     
 </Project>

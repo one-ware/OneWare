@@ -1,23 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props"/>
-    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
 
-    <Import Project="..\..\build\props\MsBuildUncompressTask.props"/>
+    <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
-        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\verilog.tmLanguage.json"/>
-        <AvaloniaResource Include="Assets\verilog.json"/>
+        <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
+        <AvaloniaResource Include="Assets\verilog.json" />
     </ItemGroup>
 
     <ItemGroup>
         <Content Include="Assets\Templates\**\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Autofac" Version="8.3.0" />
+      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
     </ItemGroup>
 
 </Project>
