@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
@@ -344,14 +345,15 @@ public class App : PrismApplication
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // 🔧 Configure Serilog globally
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .        Build();
+
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+            .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
-        // 🌐 Optional: register Serilog ILogger<T> into DI (if needed)
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddSerilog();
