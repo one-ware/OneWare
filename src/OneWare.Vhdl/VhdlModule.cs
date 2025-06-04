@@ -185,6 +185,51 @@ public class VhdlModule : IModule
                         ]
                     }
                 ]
+            },
+            new PackageVersion()
+            {
+                Version = "0.85.0",
+                Targets = [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("vhdl_ls-x86_64-pc-windows-msvc", "bin", "vhdl_ls.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = 
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("vhdl_ls-x86_64-unknown-linux-gnu", "bin", "vhdl_ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget()
+                    {
+                        Target = "osx-arm64",
+                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-aarch64-apple-darwin.zip",
+                        AutoSetting = [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin", "vhdl_ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     };
