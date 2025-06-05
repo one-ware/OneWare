@@ -39,7 +39,13 @@
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.Terminal\OneWare.Terminal.csproj" />
         <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Helpers\" />
+      <Folder Include="Services\Proxies\" />
     </ItemGroup>
 
 </Project>

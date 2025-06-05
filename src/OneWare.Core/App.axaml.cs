@@ -47,6 +47,11 @@ namespace OneWare.Core;
 
 public class App : PrismApplication
 {
+    private readonly ISettingsService _settingsService;
+    private readonly IPaths _paths;
+    private readonly IWindowService _windowService;
+    private readonly IApplicationCommandService _commandService;
+
     protected bool _tempMode = false;
     protected AggregateModuleCatalog ModuleCatalog { get; } = new();
 
