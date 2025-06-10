@@ -1,22 +1,28 @@
-﻿using System.Text;
+﻿using System;
+using System.IO;
+using System.Text;
 using Dock.Model.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using OneWare.Core.Adapters;
+using OneWare.Essentials.Converters;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Dock;
 
 /// <summary>
-///     A class that implements the <see cref="IDockSerializer" /> interface using JSON serialization.
+/// A class that implements the <see cref="IDockSerializer" /> interface using JSON serialization.
 /// </summary>
 public sealed class DockSerializer : IDockSerializer
 {
     private readonly JsonSerializerSettings _settings;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DockSerializer" /> class with the specified list type.
+    /// Initializes a new instance of the <see cref="DockSerializer"/> class.
     /// </summary>
-    /// <param name="listType">The type of list to use in the serialization process.</param>
-    public DockSerializer(Type listType)
+    /// <param name="listType">The generic list type to support for Dock serialization.</param>
+    /// <param name="container">The DI container adapter.</param>
+    public DockSerializer(Type listType, IContainerAdapter container)
     {
         _settings = new JsonSerializerSettings
         {
@@ -24,7 +30,7 @@ public sealed class DockSerializer : IDockSerializer
             TypeNameHandling = TypeNameHandling.Objects,
             PreserveReferencesHandling = PreserveReferencesHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-            ContractResolver = new ListContractResolver(listType),
+            ContractResolver = new ListContractResolver(listType, container),
             NullValueHandling = NullValueHandling.Ignore,
             Converters =
             {

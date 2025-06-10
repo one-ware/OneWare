@@ -10,6 +10,7 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
+using OneWare.Core.Adapters;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -24,7 +25,7 @@ namespace OneWare.Core.Services;
 
 public class DockService : Factory, IDockService
 {
-    private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
+    private readonly IDockSerializer _serializer;
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
     private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
@@ -42,11 +43,12 @@ public class DockService : Factory, IDockService
     private RootDock? _layout;
 
     public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
-        MainDocumentDockViewModel mainDocumentDockViewModel)
+        MainDocumentDockViewModel mainDocumentDockViewModel, IContainerAdapter containerAdapter)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
+        _serializer = new DockSerializer(typeof(ObservableCollection<>), containerAdapter);
 
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
@@ -309,7 +311,7 @@ public class DockService : Factory, IDockService
                 if (File.Exists(layoutPath))
                 {
                     using var stream = File.OpenRead(layoutPath);
-                    layout = Serializer.Load<RootDock>(stream);
+                    layout = _serializer.Load<RootDock>(stream);
                 }
             }
             catch (Exception e)
@@ -346,7 +348,7 @@ public class DockService : Factory, IDockService
 
         Layout.FocusedDockable = null;
 
-        Serializer.Save(stream, Layout);
+        _serializer.Save(stream, Layout);
     }
 
     public void InitializeContent()

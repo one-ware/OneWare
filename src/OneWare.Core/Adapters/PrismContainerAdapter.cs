@@ -6,7 +6,7 @@ namespace OneWare.Core.Adapters
     {
         private readonly IContainerRegistry _registry;
         private readonly IContainerProvider _provider;
-
+        private readonly IContainerProvider _container;
         public PrismContainerAdapter(IContainerRegistry registry, IContainerProvider provider)
         {
             _registry = registry;
@@ -37,6 +37,10 @@ namespace OneWare.Core.Adapters
                 _registry.RegisterInstance(serviceType, instance);
             else
                 _registry.RegisterInstance(serviceType, instance, name);
+        }
+        public object? Resolve(Type type)
+        {
+            return _provider.Resolve(type);
         }
 
         public object Resolve(Type serviceType, string name = null)
