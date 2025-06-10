@@ -102,6 +102,9 @@ namespace OneWare.Core
             containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
             containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
             containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
+            containerRegistry.RegisterSingleton<IContainerAdapter, PrismContainerAdapter>();
+            containerRegistry.RegisterSingleton<IDockService, DockService>();
+            containerRegistry.RegisterInstance(containerRegistry);
 
             // ViewModels - Singletons
             containerRegistry.RegisterSingleton<MainWindowViewModel>();
