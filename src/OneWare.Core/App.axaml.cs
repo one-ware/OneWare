@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using Autofac;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -36,6 +37,7 @@ using OneWare.Output;
 using OneWare.ProjectExplorer;
 using OneWare.ProjectSystem.Services;
 using OneWare.SearchList;
+using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using OneWare.Toml;
@@ -53,6 +55,11 @@ namespace OneWare.Core
         private readonly IPaths _paths;
         private readonly IWindowService _windowService;
         private readonly IApplicationCommandService _commandService;
+
+        private Autofac.IContainer _autofacContainer;
+        private ContainerBuilder _autofacBuilder;
+
+        private TransitionContainerProxy _transitionContainerProxy;
 
         protected bool _tempMode = false;
         protected AggregateModuleCatalog ModuleCatalog { get; } = new();
@@ -82,6 +89,43 @@ namespace OneWare.Core
                 // For example, to transition to Autofac:
                 // _targetContainer = new AutofacContainerAdapter(new ContainerBuilder());
             };
+        }
+
+        private void RegisterAutofacTypes(ContainerBuilder builder)
+        {
+            // Services as Singletons
+            builder.RegisterType<PluginService>().As<IPluginService>().SingleInstance();
+            builder.RegisterType<HttpService>().As<IHttpService>().SingleInstance();
+            builder.RegisterType<ApplicationCommandService>().As<IApplicationCommandService>().SingleInstance();
+            builder.RegisterType<ProjectManagerService>().As<IProjectManagerService>().SingleInstance();
+            builder.RegisterType<LanguageManager>().As<ILanguageManager>().SingleInstance();
+            builder.RegisterType<ApplicationStateService>().As<IApplicationStateService>().SingleInstance();
+            builder.RegisterType<DockService>().As<IDockService>().SingleInstance();
+            builder.RegisterType<WindowService>().As<IWindowService>().SingleInstance();
+            builder.RegisterType<ModuleTracker>().As<IModuleTracker>().SingleInstance();
+            builder.RegisterType<BackupService>().SingleInstance();
+            builder.RegisterType<ChildProcessService>().As<IChildProcessService>().SingleInstance();
+            builder.RegisterType<FileIconService>().As<IFileIconService>().SingleInstance();
+            builder.RegisterType<EnvironmentService>().As<IEnvironmentService>().SingleInstance();
+            builder.RegisterType<PrismContainerAdapter>().As<IContainerAdapter>().SingleInstance();
+
+            // Note: IDockService was registered twice in Prism - only one needed here
+
+            // ViewModels - Singletons
+            builder.RegisterType<MainWindowViewModel>().SingleInstance();
+            builder.RegisterType<MainDocumentDockViewModel>().SingleInstance();
+
+            // ViewModels - Transients (InstancePerDependency is default)
+            builder.RegisterType<WelcomeScreenViewModel>().InstancePerDependency();
+            builder.RegisterType<EditViewModel>().InstancePerDependency();
+            builder.RegisterType<ChangelogViewModel>().InstancePerDependency();
+            builder.RegisterType<AboutViewModel>().InstancePerDependency();
+
+            // Windows - Singletons
+            builder.RegisterType<MainWindow>().SingleInstance();
+            builder.RegisterType<MainView>().SingleInstance();
+
+            // Add other Autofac registrations as needed
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
