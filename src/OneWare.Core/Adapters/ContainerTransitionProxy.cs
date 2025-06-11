@@ -1,4 +1,7 @@
-﻿namespace OneWare.Core.Adapters
+﻿using System;
+using System.Collections.Generic;
+
+namespace OneWare.Core.Adapters
 {
     public class ContainerTransitionProxy : IContainerAdapter
     {
@@ -23,7 +26,6 @@
             if (_targetContainer == null) throw new InvalidOperationException("Target container not set");
             if (_isReleased) return;
 
-            // Replay all operations on target container
             while (_operationQueue.Count > 0)
             {
                 var operation = _operationQueue.Dequeue();
@@ -35,8 +37,7 @@
 
         public void Register(Type serviceType, Type implementationType, string name = null, bool isSingleton = false)
         {
-            if (_isReleased) throw new InvalidOperationException("Cannot register after release");
-
+            ThrowIfReleased();
             var operation = new RegisterOperation(serviceType, implementationType, name, isSingleton);
             operation.Execute(_initialContainer);
             _operationQueue.Enqueue(operation);
@@ -44,8 +45,7 @@
 
         public void RegisterInstance(Type serviceType, object instance, string name = null)
         {
-            if (_isReleased) throw new InvalidOperationException("Cannot register after release");
-
+            ThrowIfReleased();
             var operation = new RegisterInstanceOperation(serviceType, instance, name);
             operation.Execute(_initialContainer);
             _operationQueue.Enqueue(operation);
@@ -53,19 +53,46 @@
 
         public object Resolve(Type serviceType, string name = null)
         {
-            return _isReleased
-                ? _targetContainer.Resolve(serviceType, name)
-                : _initialContainer.Resolve(serviceType, name);
+            return (_isReleased ? _targetContainer : _initialContainer).Resolve(serviceType, name);
+        }
+
+        public T Resolve<T>(string name = null)
+        {
+            return (_isReleased ? _targetContainer : _initialContainer).Resolve<T>(name);
+        }
+
+        public void Register<TService, TImplementation>(string name = null, bool isSingleton = false)
+            where TImplementation : TService
+        {
+            Register(typeof(TService), typeof(TImplementation), name, isSingleton);
+        }
+
+        public void RegisterInstance<TService>(TService instance, string name = null)
+        {
+            RegisterInstance(typeof(TService), instance, name);
         }
 
         public bool IsRegistered(Type serviceType, string name = null)
         {
-            return _isReleased
-                ? _targetContainer.IsRegistered(serviceType, name)
-                : _initialContainer.IsRegistered(serviceType, name);
+            return (_isReleased ? _targetContainer : _initialContainer).IsRegistered(serviceType, name);
         }
 
-        // Operation pattern to record container operations
+        public void Build()
+        {
+            if (_isReleased)
+                _targetContainer?.Build();
+            else
+                _initialContainer.Build();
+        }
+
+        private void ThrowIfReleased()
+        {
+            if (_isReleased)
+                throw new InvalidOperationException("Cannot register after release");
+        }
+
+        // ---------------- Operation Pattern ----------------
+
         private abstract class ContainerOperation
         {
             public abstract void Execute(IContainerAdapter container);

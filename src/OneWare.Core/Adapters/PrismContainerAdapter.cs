@@ -1,4 +1,5 @@
-﻿using Prism.Ioc;
+﻿using System;
+using Prism.Ioc;
 
 namespace OneWare.Core.Adapters
 {
@@ -6,7 +7,7 @@ namespace OneWare.Core.Adapters
     {
         private readonly IContainerRegistry _registry;
         private readonly IContainerProvider _provider;
-        private readonly IContainerProvider _container;
+
         public PrismContainerAdapter(IContainerRegistry registry, IContainerProvider provider)
         {
             _registry = registry;
@@ -38,10 +39,6 @@ namespace OneWare.Core.Adapters
             else
                 _registry.RegisterInstance(serviceType, instance, name);
         }
-        public object? Resolve(Type type)
-        {
-            return _provider.Resolve(type);
-        }
 
         public object Resolve(Type serviceType, string name = null)
         {
@@ -50,11 +47,34 @@ namespace OneWare.Core.Adapters
                 : _provider.Resolve(serviceType, name);
         }
 
+        public T Resolve<T>(string name = null)
+        {
+            return string.IsNullOrEmpty(name)
+                ? _provider.Resolve<T>()
+                : _provider.Resolve<T>(name);
+        }
+
+        public void Register<TService, TImplementation>(string name = null, bool isSingleton = false)
+            where TImplementation : TService
+        {
+            Register(typeof(TService), typeof(TImplementation), name, isSingleton);
+        }
+
+        public void RegisterInstance<TService>(TService instance, string name = null)
+        {
+            RegisterInstance(typeof(TService), instance, name);
+        }
+
         public bool IsRegistered(Type serviceType, string name = null)
         {
             return string.IsNullOrEmpty(name)
                 ? _registry.IsRegistered(serviceType)
                 : _registry.IsRegistered(serviceType, name);
+        }
+
+        public void Build()
+        {
+            // No-op for Prism, but required by interface
         }
     }
 }

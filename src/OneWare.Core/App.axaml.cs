@@ -11,6 +11,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Example;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
@@ -51,6 +52,8 @@ namespace OneWare.Core
 {
     public class App : PrismApplication
     {
+        public static IContainerAdapter ContainerAdapter { get; private set; }
+
         private readonly ISettingsService _settingsService;
         private readonly IPaths _paths;
         private readonly IWindowService _windowService;
@@ -72,6 +75,15 @@ namespace OneWare.Core
             base.Initialize();
         }
 
+        public App()
+        {
+            // Start with lightweight container
+            var initial = new PureContainerAdapter();
+
+            // Proxy to defer actual container switch
+            ContainerAdapter = new ContainerTransitionProxy(initial);
+        }
+
         protected override IContainerExtension CreateContainerExtension()
         {
             // Create the Prism container extension
@@ -85,49 +97,10 @@ namespace OneWare.Core
 
             return new TransitionContainerProxy(prismContainerExtension)
             {
-                // Optionally set the target container here if you want to transition to another container
-                // For example, to transition to Autofac:
-                // _targetContainer = new AutofacContainerAdapter(new ContainerBuilder());
             };
         }
 
-        private void RegisterAutofacTypes(ContainerBuilder builder)
-        {
-            // Services as Singletons
-            builder.RegisterType<PluginService>().As<IPluginService>().SingleInstance();
-            builder.RegisterType<HttpService>().As<IHttpService>().SingleInstance();
-            builder.RegisterType<ApplicationCommandService>().As<IApplicationCommandService>().SingleInstance();
-            builder.RegisterType<ProjectManagerService>().As<IProjectManagerService>().SingleInstance();
-            builder.RegisterType<LanguageManager>().As<ILanguageManager>().SingleInstance();
-            builder.RegisterType<ApplicationStateService>().As<IApplicationStateService>().SingleInstance();
-            builder.RegisterType<DockService>().As<IDockService>().SingleInstance();
-            builder.RegisterType<WindowService>().As<IWindowService>().SingleInstance();
-            builder.RegisterType<ModuleTracker>().As<IModuleTracker>().SingleInstance();
-            builder.RegisterType<BackupService>().SingleInstance();
-            builder.RegisterType<ChildProcessService>().As<IChildProcessService>().SingleInstance();
-            builder.RegisterType<FileIconService>().As<IFileIconService>().SingleInstance();
-            builder.RegisterType<EnvironmentService>().As<IEnvironmentService>().SingleInstance();
-            builder.RegisterType<PrismContainerAdapter>().As<IContainerAdapter>().SingleInstance();
-
-            // Note: IDockService was registered twice in Prism - only one needed here
-
-            // ViewModels - Singletons
-            builder.RegisterType<MainWindowViewModel>().SingleInstance();
-            builder.RegisterType<MainDocumentDockViewModel>().SingleInstance();
-
-            // ViewModels - Transients (InstancePerDependency is default)
-            builder.RegisterType<WelcomeScreenViewModel>().InstancePerDependency();
-            builder.RegisterType<EditViewModel>().InstancePerDependency();
-            builder.RegisterType<ChangelogViewModel>().InstancePerDependency();
-            builder.RegisterType<AboutViewModel>().InstancePerDependency();
-
-            // Windows - Singletons
-            builder.RegisterType<MainWindow>().SingleInstance();
-            builder.RegisterType<MainView>().SingleInstance();
-
-            // Add other Autofac registrations as needed
-        }
-
+       
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
