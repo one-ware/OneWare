@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\XUnit.props" />
+	<Import Project="..\..\build\props\Autofac.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -10,12 +11,7 @@
         <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Autofac" Version="8.3.0" />
-      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    </ItemGroup>
-
+	
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
     </ItemGroup>

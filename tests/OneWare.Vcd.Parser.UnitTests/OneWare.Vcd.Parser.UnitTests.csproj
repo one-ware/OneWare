@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="..\..\build\props\XUnit.props" />
+	<Import Project="..\..\build\props\Autofac.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -21,10 +22,4 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Autofac" Version="8.3.0" />
-      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    </ItemGroup>
-
 </Project>
