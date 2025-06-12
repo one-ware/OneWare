@@ -22,9 +22,21 @@ namespace OneWare.Demo.Desktop;
 
 public class DesktopDemoApp : DemoApp
 {
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    private IContainerProvider Container { get; }
+
+    public DesktopDemoApp(IContainerProvider containerProvider)
     {
-        base.ConfigureModuleCatalog(moduleCatalog);
+        Container = containerProvider;
+    }
+
+    public DesktopDemoApp()
+    {
+        // Initialization logic if needed
+    }
+
+    protected void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    {
+        //base.ConfigureModuleCatalog(moduleCatalog);
 
         moduleCatalog.AddModule<PackageManagerModule>();
         moduleCatalog.AddModule<TerminalManagerModule>();
@@ -112,11 +124,6 @@ public class DesktopDemoApp : DemoApp
                     () => { Container.Resolve<IWindowService>().Show(new ChangelogView()); },
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
             }
-
-            //await Task.Factory.StartNew(() =>
-            //{
-            //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
-            //}, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
         }
         catch (Exception e)
         {

@@ -39,14 +39,14 @@ public class StudioApp : App
         SettingsService.Load(Paths.SettingsPath);
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected virtual void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterInstance(SettingsService);
         containerRegistry.RegisterInstance(ProjectSettingsService);
         containerRegistry.RegisterInstance(Paths);
         containerRegistry.RegisterInstance(Logger);
 
-        base.RegisterTypes(containerRegistry);
+        // Removed the call to base.RegisterTypes(containerRegistry) as App does not define RegisterTypes.
     }
 
     public override void Initialize()
@@ -60,9 +60,8 @@ public class StudioApp : App
         });
     }
 
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-    {
-        base.ConfigureModuleCatalog(moduleCatalog);
+    protected void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    {      
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();

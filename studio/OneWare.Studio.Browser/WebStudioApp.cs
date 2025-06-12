@@ -12,8 +12,20 @@ namespace OneWare.Studio.Browser;
 
 public class WebStudioApp : StudioApp
 {
+    private IContainerProvider Container { get; }
+
+    public WebStudioApp(IContainerProvider container)
+    {
+        Container = container;
+    }
+
+    public WebStudioApp()
+    {
+        Container = ContainerLocator.Container;
+    }
+
     protected override string GetDefaultLayoutName => "Web";
-    
+
     private static void CopyAvaloniaAssetIntoFolder(Uri asset, string location)
     {
         using var stream = AssetLoader.Open(asset);
@@ -21,7 +33,7 @@ public class WebStudioApp : StudioApp
         using var writer = File.OpenWrite(location);
         stream.CopyTo(writer);
     }
-    
+
     protected override async Task LoadContentAsync()
     {
         try
@@ -29,10 +41,8 @@ public class WebStudioApp : StudioApp
             var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "DemoProject");
 
             Directory.CreateDirectory(testProj);
-            
-            //Highlighting will not work with NET9, wait for NET10
+
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/DemoProject.fpgaproj"), Path.Combine(testProj, "DemoProject.fpgaproj"));
-            //CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/CppTest.cpp"), Path.Combine(testProj, "CPP", "CppTest.cpp"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VhdlTest.vhd"), Path.Combine(testProj, "VHDL", "VhdlTest.vhd"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "Verilog", "VerilogTest.v"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VCD", "VcdTest.vcd"));
