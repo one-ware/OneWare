@@ -1,25 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
+	<!-- Import shared build props for XUnit testing and Autofac DI -->
+	<Import Project="..\..\build\props\XUnit.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <IsPackable>False</IsPackable>
-        <IsTestProject>True</IsTestProject>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
+	<PropertyGroup>
+		<!-- Target latest .NET 9.0 framework -->
+		<TargetFramework>net9.0</TargetFramework>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
-    </ItemGroup>
+		<!-- Build as a class library -->
+		<OutputType>Library</OutputType>
 
-    <ItemGroup>
-        <Content Include="Assets\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<!-- Do not pack this project into a NuGet package -->
+		<IsPackable>false</IsPackable>
+
+		<!-- Mark project as a test project -->
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Disable auto-generation of assembly info -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<!-- Enable generation of runtime config files -->
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+
+		<!-- Enable nullable reference types -->
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference main project being tested -->
+		<ProjectReference Include="..\..\src\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include all files under Assets folder, copy to output if newer -->
+		<Content Include="Assets\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

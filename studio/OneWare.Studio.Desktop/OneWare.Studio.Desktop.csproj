@@ -1,53 +1,69 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\Avalonia.Desktop.props" />
+	<!-- Import shared build properties for base, Avalonia desktop, DI, config, and logging -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\Avalonia.Desktop.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
 
-    <PropertyGroup>
-        <Version>$(StudioVersion)</Version>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
-        <OutputType Condition="'$(Configuration.toUpper())' != 'DEBUG'">WinExe</OutputType>
-        <OutputType Condition="'$(Configuration.toUpper())' == 'DEBUG'">Exe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
-        <ApplicationIcon>..\OneWare.Studio\Assets\icon.ico</ApplicationIcon>
-        <LangVersion>latest</LangVersion>
-        <Nullable>enable</Nullable>
-        <AssemblyName>OneWareStudio</AssemblyName>
-        <InvariantGlobalization>true</InvariantGlobalization>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <SelfContained>true</SelfContained>
-        <PublishTrimmed>false</PublishTrimmed>
-    </PropertyGroup>
+	<PropertyGroup>
+		<!-- Version controlled centrally -->
+		<Version>$(StudioVersion)</Version>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Updater\OneWare.Updater.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
-        <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
-    </ItemGroup>
+		<!-- Application settings -->
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<ApplicationIcon>..\OneWare.Studio\Assets\icon.ico</ApplicationIcon>
+		<AssemblyName>OneWareStudio</AssemblyName>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\Startup.jpg" />
-    </ItemGroup>
+		<!-- Output type varies by configuration for debugging convenience -->
+		<OutputType Condition="'$(Configuration.ToUpper())' != 'DEBUG'">WinExe</OutputType>
+		<OutputType Condition="'$(Configuration.ToUpper())' == 'DEBUG'">Exe</OutputType>
 
-    <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
-        <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest" />
-        <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
+		<!-- Target framework and language settings -->
+		<TargetFramework>net9.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 
-    <!--Exclude Terminal on Linux to stop crashes on SetWindowSize-->
-    <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
-        <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="..\..\demo\OneWare.Demo.Desktop\appsettings.json" Link="appsettings.json" />
-    </ItemGroup>    
+		<!-- Globalization and publishing options -->
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<PublishReadyToRun>true</PublishReadyToRun>
+		<SelfContained>true</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Project references for modular architecture -->
+		<ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.TerminalManager\OneWare.TerminalManager.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.Updater\OneWare.Updater.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
+		<ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Avalonia UI resources -->
+		<AvaloniaResource Include="Assets\Startup.jpg" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+		<!-- Linux-specific desktop integration files -->
+		<Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<!-- Exclude Terminal DLL from ReadyToRun compilation on Linux to avoid crashes -->
+	<ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+		<PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Link external appsettings.json for configuration -->
+		<Content Include="..\..\demo\OneWare.Demo.Desktop\appsettings.json" Link="appsettings.json" />
+	</ItemGroup>
+
 </Project>

@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Base and Module Properties -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Dependency Injection & Logging -->
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
 
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
+	<!-- Project References -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj" />
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
+
 </Project>

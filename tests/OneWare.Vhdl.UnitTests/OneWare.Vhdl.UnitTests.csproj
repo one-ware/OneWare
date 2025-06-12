@@ -1,19 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
+	<!-- Import common props for XUnit tests and Autofac DI -->
+	<Import Project="..\..\build\props\XUnit.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <IsPackable>False</IsPackable>
-        <IsTestProject>True</IsTestProject>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
-    </ItemGroup>
+	<PropertyGroup>
+		<!-- Target latest .NET 9.0 framework -->
+		<TargetFramework>net9.0</TargetFramework>
+
+		<!-- Output as a class library -->
+		<OutputType>Library</OutputType>
+
+		<!-- Do not produce a NuGet package -->
+		<IsPackable>false</IsPackable>
+
+		<!-- This is a test project -->
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Disable automatic assembly info generation to control it manually -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<!-- Generate runtime configuration files -->
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+
+		<!-- Enable nullable reference types -->
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference to the VHDL core project -->
+		<ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
+	</ItemGroup>
 
 </Project>

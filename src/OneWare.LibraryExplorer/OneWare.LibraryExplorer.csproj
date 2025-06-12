@@ -1,20 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Base and module-specific imports -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Dependency injection and configuration -->
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
-	<Import Project="..\..\build\props\Serilog.props" />
-	
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-        <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
-        <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
-    </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Views\LibraryExplorerView.axaml.cs">
-        <DependentUpon>ProjectExplorerView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
+	<!-- Logging -->
+	<Import Project="..\..\build\props\Serilog.props" />
+
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+		<ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj" />
+		<ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj" />
+	</ItemGroup>
+
+	<!-- View code-behind association -->
+	<ItemGroup>
+		<Compile Update="Views\LibraryExplorerView.axaml.cs">
+			<DependentUpon>LibraryExplorerView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+
 </Project>

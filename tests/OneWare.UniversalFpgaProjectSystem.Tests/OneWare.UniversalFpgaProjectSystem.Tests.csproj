@@ -1,24 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
+	<!-- Import shared build properties for XUnit testing and Autofac DI -->
+	<Import Project="..\..\build\props\XUnit.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <IsPackable>False</IsPackable>
-        <IsTestProject>True</IsTestProject>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
+	<PropertyGroup>
+		<!-- Target .NET 9.0 -->
+		<TargetFramework>net9.0</TargetFramework>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
-    </ItemGroup>
+		<!-- Output as a class library -->
+		<OutputType>Library</OutputType>
 
-    <ItemGroup>
-      <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
+		<!-- Disable packing this project as a NuGet package -->
+		<IsPackable>false</IsPackable>
+
+		<!-- Mark this as a test project -->
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Do not auto-generate assembly info (e.g., AssemblyInfo.cs) -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<!-- Generate runtime configuration files -->
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+
+		<!-- Enable nullable reference types -->
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference the Universal FPGA Project System main project -->
+		<ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include all assets and copy to output folder on build if newer -->
+		<Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 
 </Project>

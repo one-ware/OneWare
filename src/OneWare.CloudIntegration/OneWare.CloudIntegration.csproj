@@ -1,21 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Devlooped.CredentialManager.props" />
-    <Import Project="..\..\build\props\RestSharp.props" />
-	<Import Project="..\..\build\props\Autofac.props" />
-	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
-	<Import Project="..\..\build\props\Serilog.props" />
-	<Import Project="..\..\build\props\Microsoft.AspNetCore.props" />
-	
-	<ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Views\CloudIntegrationMainWindowBottomRightExtension.axaml.cs">
-        <DependentUpon>SourceControlMainWindowBottomRightExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
+	<!-- Import shared build properties -->
+	<Import Project="..\..\build\props\Autofac.props" />
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\Devlooped.CredentialManager.props" />
+	<Import Project="..\..\build\props\Microsoft.AspNetCore.props" />
+	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
+	<Import Project="..\..\build\props\RestSharp.props" />
+	<Import Project="..\..\build\props\Serilog.props" />
+
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
+
+	<!-- AXAML Code-behind relationship fix -->
+	<ItemGroup>
+		<Compile Update="Views\CloudIntegrationMainWindowBottomRightExtension.axaml.cs">
+			<DependentUpon>SourceControlMainWindowBottomRightExtension.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+
 </Project>

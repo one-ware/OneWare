@@ -1,16 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Markdown.Avalonia.props" />
+
+	<!-- Import shared build properties and configurations -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
+	<Import Project="..\..\build\props\Markdown.Avalonia.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
 
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Compatibility\" />
-    </ItemGroup>
+	<!-- Include folders in project -->
+	<ItemGroup>
+		<Folder Include="Compatibility\" />
+	</ItemGroup>
+
 </Project>

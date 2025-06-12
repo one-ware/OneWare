@@ -1,18 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Shared build configuration -->
 	<Import Project="..\..\build\props\Autofac.props" />
+	<Import Project="..\..\build\props\Base.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
-	<Import Project="..\..\build\props\Serilog.props" />
 	<Import Project="..\..\build\props\Mono.Posix.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
+	<Import Project="..\..\build\props\Serilog.props" />
 
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <Content Include="Assets\SIGINT.exe" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<!-- Windows-only content -->
+	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+		<Content Include="Assets\SIGINT.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

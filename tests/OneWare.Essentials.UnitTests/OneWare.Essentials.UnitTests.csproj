@@ -1,20 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\XUnit.props" />
+	<!-- Import shared build properties for XUnit testing and Autofac DI -->
+	<Import Project="..\..\build\props\XUnit.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <IsPackable>False</IsPackable>
-        <IsTestProject>True</IsTestProject>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-	
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
-    
+	<PropertyGroup>
+		<!-- Target latest .NET version for libraries -->
+		<TargetFramework>net9.0</TargetFramework>
+
+		<!-- Output as a class library -->
+		<OutputType>Library</OutputType>
+
+		<!-- Mark as a test project (for test runners) -->
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Disable auto generation of assembly info to avoid conflicts -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<!-- Ensure runtime configuration files are generated -->
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+
+		<!-- Enable nullable reference types for improved code safety -->
+		<Nullable>enable</Nullable>
+
+		<!-- Prevent this test project from being packed into NuGet packages -->
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference core project dependency -->
+		<ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,26 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Import common build property files -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
 
-    <Import Project="..\..\build\props\MsBuildUncompressTask.props" />
+	<!-- Import custom MSBuild task for uncompressing -->
+	<Import Project="..\..\build\props\MsBuildUncompressTask.props" />
 
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
-    </ItemGroup>
+	<!-- Project references to dependent modules -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+		<ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
-        <AvaloniaResource Include="Assets\verilog.json" />
-    </ItemGroup>
+	<!-- Avalonia resources for syntax highlighting and related assets -->
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\verilog.tmLanguage.json" />
+		<AvaloniaResource Include="Assets\verilog.json" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <Content Include="Assets\Templates\**\*.*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<!-- Copy template files to output directory preserving newest versions -->
+	<ItemGroup>
+		<Content Include="Assets\Templates\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 </Project>

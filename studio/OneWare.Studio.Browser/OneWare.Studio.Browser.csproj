@@ -1,37 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
-    <Import Project="..\..\build\props\Avalonia.Browser.props" />
-    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
-    <Import Project="..\..\build\props\Base.props" />
+	<!-- Import shared build props for Avalonia, Autofac, Configuration, and Logging -->
+	<Import Project="..\..\build\props\Avalonia.Browser.props" />
+	<Import Project="..\..\build\props\Avalonia.Fonts.Inter.props" />
+	<Import Project="..\..\build\props\Base.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
 
-    <PropertyGroup>
-        <Version>$(StudioVersion)</Version>
-        <TargetFramework>net9.0-browser</TargetFramework>
-        <OutputType>Exe</OutputType>
-        <!--Enable Threading once dotnet runtime issues are resolved
-        <WasmEnableThreads>false</WasmEnableThreads>-->
-    </PropertyGroup>
+	<PropertyGroup>
+		<!-- Version controlled centrally -->
+		<Version>$(StudioVersion)</Version>
+		<TargetFramework>net9.0-browser</TargetFramework>
+		<OutputType>Exe</OutputType>
 
-    <!--
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <RunAOTCompilation>false</RunAOTCompilation>
-        <PublishTrimmed>false</PublishTrimmed>
-        <TrimMode>full</TrimMode>
-        <WasmBuildNative>true</WasmBuildNative>
-        <InvariantGlobalization>true</InvariantGlobalization>
-    </PropertyGroup>
+		<!--
+      Enable threading once runtime issues are resolved:
+      <WasmEnableThreads>false</WasmEnableThreads>
     -->
+	</PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
-        <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
-    </ItemGroup>
+	<!--
+  Uncomment and configure for Release optimizations once ready:
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <WasmBuildNative>true</WasmBuildNative>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  -->
 
-    <ItemGroup>
-      <AvaloniaResource Include="Assets\**\*.*" />
-    </ItemGroup>
+	<ItemGroup>
+		<!-- Project dependencies -->
+		<ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj" />
+		<ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include all assets recursively -->
+		<AvaloniaResource Include="Assets\**\*.*" />
+	</ItemGroup>
 
 </Project>

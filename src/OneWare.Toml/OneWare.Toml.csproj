@@ -1,14 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Import shared build properties -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\TOML.tmLanguage.json" />
-    </ItemGroup>
+	<ItemGroup>
+		<!-- Reference to shared essentials project -->
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include TOML syntax resource -->
+		<AvaloniaResource Include="Assets\TOML.tmLanguage.json" />
+	</ItemGroup>
+
 </Project>

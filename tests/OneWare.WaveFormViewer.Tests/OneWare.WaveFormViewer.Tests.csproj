@@ -1,18 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\XUnit.props" />
+
+	<!-- Import common properties for XUnit testing and Autofac DI -->
+	<Import Project="..\..\build\props\XUnit.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <IsPackable>False</IsPackable>
-        <IsTestProject>True</IsTestProject>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-	
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
-    </ItemGroup>
+	<PropertyGroup>
+		<!-- Target .NET 9.0 -->
+		<TargetFramework>net9.0</TargetFramework>
+
+		<!-- Produce a class library -->
+		<OutputType>Library</OutputType>
+
+		<!-- Do not generate NuGet package -->
+		<IsPackable>false</IsPackable>
+
+		<!-- Mark this as a test project -->
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Disable auto assembly info generation -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+		<!-- Generate runtime configuration files -->
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+
+		<!-- Enable nullable reference types -->
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference WaveFormViewer project -->
+		<ProjectReference Include="..\..\src\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,13 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+	<!-- Import shared property files to centralize common build settings -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
 	<Import Project="..\..\build\props\Autofac.props" />
 	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 	<Import Project="..\..\build\props\Serilog.props" />
-	
-    <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-        <ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
-        <ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
-    </ItemGroup>
+
+	<!-- Reference dependent projects within the solution -->
+	<ItemGroup>
+		<ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+		<ProjectReference Include="..\OneWare.Vcd.Parser\OneWare.Vcd.Parser.csproj" />
+		<ProjectReference Include="..\OneWare.WaveFormViewer\OneWare.WaveFormViewer.csproj" />
+	</ItemGroup>
+
 </Project>
