@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.DockViews;
@@ -9,9 +9,10 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
+
 namespace OneWare.Core.Services;
 
-public class BackupService
+public class BackupService : IBackupService
 {
     public const string KeyBackupServiceEnable = "BackupService_Enable";
     public const string KeyBackupServiceInterval = "BackupService_Interval";

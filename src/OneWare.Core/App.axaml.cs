@@ -42,27 +42,18 @@ using OneWare.Settings;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using OneWare.Toml;
-using Prism.DryIoc;
-using Prism.Ioc;
-using Prism.Modularity;
 using Serilog;
 using TextMateSharp.Grammars;
+using OneWare.Core.ViewModels;
+using OneWare.Core.Views;
 
 namespace OneWare.Core
 {
-    public class App : PrismApplication
+    public class App : Application
     {
         public static IContainerAdapter ContainerAdapter { get; private set; }
 
-        private readonly ISettingsService _settingsService;
-        private readonly IPaths _paths;
-        private readonly IWindowService _windowService;
-        private readonly IApplicationCommandService _commandService;
 
-        private Autofac.IContainer _autofacContainer;
-        private ContainerBuilder _autofacBuilder;
-
-        private TransitionContainerProxy _transitionContainerProxy;
 
         protected bool _tempMode = false;
         protected AggregateModuleCatalog ModuleCatalog { get; } = new();
@@ -72,7 +63,7 @@ namespace OneWare.Core
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
-            base.Initialize();
+            InitializeContainer();
         }
 
         public App()
@@ -84,65 +75,110 @@ namespace OneWare.Core
             ContainerAdapter = new ContainerTransitionProxy(initial);
         }
 
-        protected override IContainerExtension CreateContainerExtension()
+        protected virtual void InitializeContainer()
         {
-            // Create the Prism container extension
-            var prismContainerExtension = base.CreateContainerExtension();
+            // Create and configure the Autofac container
+            var autofacAdapter = new AutofacContainerAdapter();
+            
+            // Register services
+            RegisterServices(autofacAdapter);
+            
+            // Build the container
+            autofacAdapter.Build();
+            
+            // Update the container adapter
+            ContainerAdapter = autofacAdapter;
 
-            // Create the Prism container adapter
-            var prismContainerRegistry = (IContainerRegistry)prismContainerExtension;
-            var prismContainerProvider = prismContainerExtension as IContainerProvider;
-
-            var prismContainerAdapter = new PrismContainerAdapter(prismContainerRegistry, prismContainerProvider);
-
-            return new TransitionContainerProxy(prismContainerExtension)
-            {
-            };
+            // Configure settings and menu
+            ConfigureSettings(autofacAdapter);
         }
 
-       
-        protected override void RegisterTypes(IContainerRegistry containerRegistry)
+        protected virtual void RegisterServices(IContainerAdapter container)
         {
-            containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
-
-            // Services
-            containerRegistry.RegisterSingleton<IPluginService, PluginService>();
-            containerRegistry.RegisterSingleton<IHttpService, HttpService>();
-            containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
-            containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
-            containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
-            containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
-            containerRegistry.RegisterSingleton<IDockService, DockService>();
-            containerRegistry.RegisterSingleton<IWindowService, WindowService>();
-            containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
-            containerRegistry.RegisterSingleton<BackupService>();
-            containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
-            containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
-            containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
-            containerRegistry.RegisterSingleton<IContainerAdapter, PrismContainerAdapter>();
-            containerRegistry.RegisterSingleton<IDockService, DockService>();
-            containerRegistry.RegisterInstance(containerRegistry);
+            // Register core services
+            container.Register<ISettingsService, SettingsService>(isSingleton: true);
+            container.Register<IPaths, Paths>(isSingleton: true);
+            container.Register<IWindowService, WindowService>(isSingleton: true);
+            container.Register<IApplicationCommandService, ApplicationCommandService>(isSingleton: true);
+            container.Register<IPluginService, PluginService>(isSingleton: true);
+            container.Register<IHttpService, HttpService>(isSingleton: true);
+            container.Register<IProjectManagerService, ProjectManagerService>(isSingleton: true);
+            container.Register<ILanguageManager, LanguageManager>(isSingleton: true);
+            container.Register<IApplicationStateService, ApplicationStateService>(isSingleton: true);
+            container.Register<IDockService, DockService>(isSingleton: true);
+            container.Register<IModuleTracker, ModuleTracker>(isSingleton: true);
+            container.RegisterInstance<BackupService>(new BackupService(ContainerAdapter.Resolve<IPaths>(), ContainerAdapter.Resolve<IDockService>(), ContainerAdapter.Resolve<ISettingsService>(), ContainerAdapter.Resolve<Essentials.Services.ILogger>(), ContainerAdapter.Resolve<IWindowService>()));
+            container.Register<IChildProcessService, ChildProcessService>(isSingleton: true);
+            container.Register<IFileIconService, FileIconService>(isSingleton: true);
+            container.Register<IEnvironmentService, EnvironmentService>(isSingleton: true);
 
             // ViewModels - Singletons
-            containerRegistry.RegisterSingleton<MainWindowViewModel>();
-            containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
+            container.Register<MainWindowViewModel, MainWindowViewModel>(isSingleton: true);
+            container.Register<MainDocumentDockViewModel, MainDocumentDockViewModel>(isSingleton: true);
 
             // ViewModels Transients
-            containerRegistry.Register<WelcomeScreenViewModel>();
-            containerRegistry.Register<EditViewModel>();
-            containerRegistry.Register<ChangelogViewModel>();
-            containerRegistry.Register<AboutViewModel>();
+            container.Register<WelcomeScreenViewModel, WelcomeScreenViewModel>();
+            container.Register<EditViewModel, EditViewModel>();
+            container.Register<ChangelogViewModel, ChangelogViewModel>();
+            container.Register<AboutViewModel, AboutViewModel>();
+            container.Register<ApplicationSettingsViewModel, ApplicationSettingsViewModel>();
 
             // Windows
-            containerRegistry.RegisterSingleton<MainWindow>();
-            containerRegistry.RegisterSingleton<MainView>();
+            container.Register<MainWindow, MainWindow>(isSingleton: true);
+            container.Register<MainView, MainView>(isSingleton: true);
+            container.Register<AboutView, AboutView>();
+            container.Register<ApplicationSettingsView, ApplicationSettingsView>();
         }
 
-        protected override AvaloniaObject CreateShell()
+        public override void OnFrameworkInitializationCompleted()
         {
-            // Register IDE Settings
-            var settingsService = Container.Resolve<ISettingsService>();
-            var paths = Container.Resolve<IPaths>();
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = ContainerAdapter.Resolve<MainWindow>();
+                
+                DisableAvaloniaDataAnnotationValidation();
+                
+                var mainWindow = desktop.MainWindow;
+                if (mainWindow != null)
+                {
+                    var notificationManager = new WindowNotificationManager(mainWindow)
+                    {
+                        Position = NotificationPosition.TopRight,
+                        Margin = new Thickness(0, 55, 5, 0),
+                        BorderThickness = new Thickness(0),
+                        MaxItems = 3
+                    };
+                    mainWindow.Resources["NotificationManager"] = notificationManager;
+                }
+            }
+
+            // Subscribe to font settings changes
+            ContainerAdapter.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
+            {
+                if (FontManager.Current.SystemFonts.Contains(x))
+                {
+                    Resources["EditorFont"] = new FontFamily(x);
+                    return;
+                }
+
+                var findFont = this.TryFindResource(x, out var resourceFont);
+                if (findFont && resourceFont is FontFamily) Resources["EditorFont"] = this.FindResource(x);
+            });
+
+            ContainerAdapter.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
+            {
+                Resources["EditorFontSize"] = (double)x;
+            });
+
+            _ = LoadContentAsync();
+
+            base.OnFrameworkInitializationCompleted();
+        }
+
+        private void ConfigureSettings(IContainerAdapter container)
+        {
+            var settingsService = container.Resolve<ISettingsService>();
+            var paths = container.Resolve<IPaths>();
 
             Name = paths.AppName;
 
@@ -153,20 +189,20 @@ namespace OneWare.Core
                     new NativeMenuItem
                     {
                         Header = $"About {Name}",
-                        Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                        Command = new RelayCommand(() => container.Resolve<IWindowService>().Show(
                             new AboutView
                             {
-                                DataContext = Container.Resolve<AboutViewModel>()
+                                DataContext = container.Resolve<AboutViewModel>()
                             }))
                     },
                     new NativeMenuItemSeparator(),
                     new NativeMenuItem
                     {
                         Header = "Settings",
-                        Command = new AsyncRelayCommand(() => Container.Resolve<IWindowService>().ShowDialogAsync(
+                        Command = new AsyncRelayCommand(() => container.Resolve<IWindowService>().ShowDialogAsync(
                             new ApplicationSettingsView
                             {
-                                DataContext = Container.Resolve<ApplicationSettingsViewModel>()
+                                DataContext = container.Resolve<ApplicationSettingsViewModel>()
                             }))
                     }
                 }
@@ -189,10 +225,7 @@ namespace OneWare.Core
                 new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
 
             settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
-                new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>())
-                {
-                    HoverDescription = "Sets the theme for Syntax Highlighting in Dark Mode"
-                });
+                new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>()));
 
             settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light",
                 new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus, Enum.GetValues<ThemeName>().Cast<object>())
@@ -227,227 +260,6 @@ namespace OneWare.Core
                 "Enable Code Suggestions", "Enable completion suggestions", true);
             settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
                 "Enable Auto Formatting", "Enable automatic formatting", true);
-
-            var windowService = Container.Resolve<IWindowService>();
-            var commandService = Container.Resolve<IApplicationCommandService>();
-
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
-            {
-                Header = "Help",
-                Priority = 1000
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Code")
-            {
-                Header = "Code",
-                Priority = 100
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Changelog")
-            {
-                Header = "Changelog",
-                IconObservable = Current!.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
-                Command = new RelayCommand(() => windowService.Show(new ChangelogView
-                {
-                    DataContext = Container.Resolve<ChangelogViewModel>()
-                }))
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("About")
-            {
-                Header = $"About {paths.AppName}",
-                Command = new RelayCommand(() => windowService.Show(new AboutView
-                {
-                    DataContext = Container.Resolve<AboutViewModel>()
-                }))
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Extras")
-            {
-                Header = "Extras",
-                Priority = 900
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Settings")
-            {
-                Header = "Settings",
-                IconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
-                Command = new AsyncRelayCommand(() => windowService.ShowDialogAsync(new ApplicationSettingsView
-                {
-                    DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
-                }))
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
-            {
-                Header = "Format",
-                IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
-                Command = new RelayCommand(
-                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
-                    () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
-                InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
-            {
-                Header = "Comment Selection",
-                IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
-                Command = new RelayCommand(
-                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
-                    () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
-                InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
-            });
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
-            {
-                Header = "Uncomment Selection",
-                IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
-                Command = new RelayCommand(
-                    () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
-                    () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
-                InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
-            });
-
-            windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
-            {
-                Command = new AsyncRelayCommand(
-                    () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
-                    () => Container.Resolve<IDockService>().CurrentDocument is not null),
-                Header = "Save Current",
-                InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
-                IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
-            });
-
-            windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
-            {
-                Command = new RelayCommand(
-                    () =>
-                    {
-                        foreach (var file in Container.Resolve<IDockService>().OpenFiles) _ = file.Value.SaveAsync();
-                    }),
-                Header = "Save All",
-                InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
-                IconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
-            });
-
-            var applicationCommandService = Container.Resolve<IApplicationCommandService>();
-
-            applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active light theme",
-                () =>
-                {
-                    settingsService.SetSettingValue("General_SelectedTheme", "Light");
-                    settingsService.Save(paths.SettingsPath);
-                },
-                () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Light"));
-
-            applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active dark theme",
-                () =>
-                {
-                    settingsService.SetSettingValue("General_SelectedTheme", "Dark");
-                    settingsService.Save(paths.SettingsPath);
-                },
-                () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
-
-            // AvaloniaEdit Hyperlink support
-            VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
-            {
-                var link = args.Uri.ToString();
-                PlatformHelper.OpenHyperLink(link);
-            });
-
-            if (ApplicationLifetime is ISingleViewApplicationLifetime)
-            {
-                var mainView = Container.Resolve<MainView>();
-                mainView.DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();
-                return mainView;
-            }
-
-            var mainWindow = Container.Resolve<MainWindow>();
-
-            mainWindow.Closing += (o, i) => _ = TryShutDownAsync(o, i);
-
-            return mainWindow;
-        }
-
-        protected override IModuleCatalog CreateModuleCatalog()
-        {
-            return ModuleCatalog;
-        }
-
-        protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-        {
-            moduleCatalog.AddModule<SearchListModule>();
-            moduleCatalog.AddModule<ErrorListModule>();
-            moduleCatalog.AddModule<OutputModule>();
-            moduleCatalog.AddModule<ProjectExplorerModule>();
-            moduleCatalog.AddModule<LibraryExplorerModule>();
-            moduleCatalog.AddModule<FolderProjectSystemModule>();
-            moduleCatalog.AddModule<ImageViewerModule>();
-            moduleCatalog.AddModule<JsonModule>();
-            moduleCatalog.AddModule<TomlModule>();
-            moduleCatalog.AddModule<DebuggerModule>();
-            moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
-
-            base.ConfigureModuleCatalog(moduleCatalog);
-        }
-
-        public override void OnFrameworkInitializationCompleted()
-        {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
-
-            var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddSerilog();
-            });
-
-            var logger = loggerFactory.CreateLogger<App>();
-            logger.LogInformation("Starting framework initialization...");
-
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                DisableAvaloniaDataAnnotationValidation();
-
-                var mainWindow = Container.Resolve<MainWindow>();
-                mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
-                {
-                    Position = NotificationPosition.TopRight,
-                    Margin = new Thickness(0, 55, 5, 0),
-                    BorderThickness = new Thickness(0),
-                    MaxItems = 3
-                };
-            }
-
-            Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
-
-            Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
-            {
-                TypeAssistanceIconStore.Instance.Load();
-            });
-
-            Container.Resolve<Essentials.Services.ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
-            Container.Resolve<BackupService>().LoadAutoSaveFile();
-            Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
-            Container.Resolve<BackupService>().Init();
-
-            Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
-            {
-                if (FontManager.Current.SystemFonts.Contains(x))
-                {
-                    Resources["EditorFont"] = new FontFamily(x);
-                    return;
-                }
-
-                var findFont = this.TryFindResource(x, out var resourceFont);
-                if (findFont && resourceFont is FontFamily fFamily) Resources["EditorFont"] = this.FindResource(x);
-            });
-
-            Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
-            {
-                Resources["EditorFontSize"] = (double)x;
-            });
-
-            _ = LoadContentAsync();
-
-            base.OnFrameworkInitializationCompleted();
         }
 
         protected virtual Task LoadContentAsync()
@@ -462,19 +274,19 @@ namespace OneWare.Core
             {
                 var unsavedFiles = new List<IExtendedDocument>();
 
-                foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
-                    if (tab.Value is { IsDirty: true } evm)
-                        unsavedFiles.Add(evm);
+                foreach (var tab in ContainerAdapter.Resolve<IDockService>().OpenFiles)
+                if (tab.Value is { IsDirty: true } evm)
+                    unsavedFiles.Add(evm);
 
-                var mainWin = MainWindow as Window;
+                var mainWin = ContainerAdapter.Resolve<MainWindow>() as Window;
                 if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-                var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
+            var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
 
-                if (shutdownReady) await ShutdownAsync();
+            if (shutdownReady) await ShutdownAsync();
             }
             catch (Exception ex)
             {
-                Container.Resolve<Essentials.Services.ILogger>().Error(ex.Message, ex);
+                ContainerAdapter.Resolve<Essentials.Services.ILogger>().Error(ex.Message, ex);
             }
         }
 
@@ -484,19 +296,19 @@ namespace OneWare.Core
                 foreach (var win in cds.Windows)
                     win.Hide();
 
-            Container.Resolve<BackupService>().CleanUp();
+            ContainerAdapter.Resolve<BackupService>().CleanUp();
 
-            await Container.Resolve<LanguageManager>().CleanResourcesAsync();
+            await ContainerAdapter.Resolve<LanguageManager>().CleanResourcesAsync();
 
-            if (!_tempMode) await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
+            if (!_tempMode) await ContainerAdapter.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
 
-            Container.Resolve<Essentials.Services.ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
+            ContainerAdapter.Resolve<Essentials.Services.ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
 
-            if (!_tempMode) Container.Resolve<IDockService>().SaveLayout();
+            if (!_tempMode) ContainerAdapter.Resolve<IDockService>().SaveLayout();
 
-            Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
+            ContainerAdapter.Resolve<ISettingsService>().Save(ContainerAdapter.Resolve<IPaths>().SettingsPath);
 
-            Container.Resolve<IApplicationStateService>().ExecuteShutdownActions();
+            ContainerAdapter.Resolve<IApplicationStateService>().ExecuteShutdownActions();
 
             Environment.Exit(0);
         }

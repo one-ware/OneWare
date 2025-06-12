@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
 using OneWare.Core;
+using OneWare.Core.Adapters;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Essentials.Services;
@@ -26,13 +27,11 @@ public class DemoApp : App
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IContainerAdapter container)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
-
-        base.RegisterTypes(containerRegistry);
+        container.RegisterInstance(SettingsService);
+        container.RegisterInstance(Paths);
+        container.RegisterInstance(Logger);
     }
 
     public override void Initialize()
