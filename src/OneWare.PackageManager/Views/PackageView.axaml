@@ -48,6 +48,7 @@
                 <StackPanel Orientation="Horizontal">
                     <Button Content="{Binding PrimaryButtonText}"
                             Classes="RoundButton" Command="{Binding MainButtonCommand}"
+                            CommandParameter="{Binding $self}"
                             Background="{Binding PrimaryButtonBrush}" />
                     <Button>
                         <Button.Flyout>
