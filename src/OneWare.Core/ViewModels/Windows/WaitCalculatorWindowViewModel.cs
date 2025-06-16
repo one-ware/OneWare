@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Core.ViewModels.Windows;
 
@@ -65,7 +64,7 @@ public class WaitCalculatorWindowViewModel : ObservableObject
 
     public void CalculateResult()
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log(FrequencyUnit + " " + WaitUnit);
+        _logger.LogInformation(FrequencyUnit + " " + WaitUnit);
         double.TryParse(Frequency, out var frequency);
         if (FrequencyUnit > -1 && frequency > -1) frequency *= Math.Pow(10, FrequencyUnit * 3);
         double.TryParse(Wait, out var wait);

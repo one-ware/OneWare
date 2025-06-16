@@ -6,7 +6,6 @@ using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
-using Prism.Ioc;
 
 namespace OneWare.Demo;
 

@@ -6,8 +6,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Helpers;
 
@@ -25,8 +25,10 @@ public enum PlatformId
 
 public static class PlatformHelper
 {
-    static PlatformHelper()
+    private static readonly ILogger<PlatformHelper> _logger;
+    static PlatformHelper(ILogger<PlatformHelper> logger)
     {
+        _logger = logger;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = RuntimeInformation.OSArchitecture switch
@@ -130,8 +132,7 @@ public static class PlatformHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error("Failed open: " + link + " | " + e.Message, e, true, true);
+            _logger.Error("Failed open: " + link + " | " + e.Message, e, true, true);
         }
     }
 
@@ -164,8 +165,7 @@ public static class PlatformHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                .Error("Can't open " + path + " in explorer. " + e, e, true, true);
+            _logger.Error("Can't open " + path + " in explorer. " + e, e, true, true);
         }
     }
 

@@ -9,7 +9,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.LibraryExplorer.ViewModels;
 

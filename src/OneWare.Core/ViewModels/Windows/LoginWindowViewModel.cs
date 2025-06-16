@@ -1,7 +1,6 @@
 ﻿using Avalonia.Controls;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.Core.ViewModels.Windows;
@@ -22,6 +21,6 @@ internal class LoginWindowViewModel : FlexibleWindowViewModelBase
 
         var result = await client.ExecuteAsync(request);
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Error("RES: " + result.Content, null, true, true, window);
+        _logger.LogError("RES: " + result.Content, null, true, true, window);
     }
 }

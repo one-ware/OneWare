@@ -10,7 +10,6 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Studio;

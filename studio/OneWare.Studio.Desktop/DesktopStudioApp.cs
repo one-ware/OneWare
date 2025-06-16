@@ -11,7 +11,6 @@ using OneWare.TerminalManager;
 using OneWare.Updater;
 using OneWare.Verilog;
 using OneWare.Vhdl;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Studio.Desktop;

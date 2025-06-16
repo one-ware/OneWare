@@ -5,12 +5,11 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.TerminalManager.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.TerminalManager;
 
-public class TerminalManagerModule : IModule
+public class TerminalManagerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

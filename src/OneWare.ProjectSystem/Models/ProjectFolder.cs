@@ -6,7 +6,6 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectSystem.Models;
 
@@ -88,7 +87,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    _logger.LogError(e.Message, e);
                 }
             else
                 projFile.LoadingFailed = true;
@@ -127,7 +126,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                _logger.LogError(e.Message, e);
             }
 
         var pf = ConstructNewProjectFolder(path, this);
@@ -198,7 +197,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Check if File exists
         if (!File.Exists(path))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {path}. File does not exist");
+            _logger.LogWaring($"Cannot import {path}. File does not exist");
             return null;
         }
 
@@ -211,7 +210,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             return null;
         }
     }

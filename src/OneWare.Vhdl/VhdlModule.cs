@@ -4,12 +4,11 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vhdl.Parsing;
 using OneWare.Vhdl.Templates;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Vhdl;
 
-public class VhdlModule : IModule
+public class VhdlModule 
 {
     public const string LspName = "RustHDL";
     public const string LspPathSetting = "VhdlModule_RustHdlPath";

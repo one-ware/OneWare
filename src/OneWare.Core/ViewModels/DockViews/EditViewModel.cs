@@ -15,7 +15,7 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -328,7 +328,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             return false;
         }
 

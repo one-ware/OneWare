@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic;

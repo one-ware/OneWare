@@ -1,7 +1,6 @@
 ﻿using Avalonia.Threading;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 

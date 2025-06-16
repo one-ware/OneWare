@@ -1,11 +1,11 @@
 ﻿using OneWare.Essentials.Services;
 using OneWare.ImageViewer.ViewModels;
-using Prism.Ioc;
+
 using Prism.Modularity;
 
 namespace OneWare.ImageViewer;
 
-public class ImageViewerModule : IModule
+public class ImageViewerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

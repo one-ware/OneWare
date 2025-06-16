@@ -7,7 +7,6 @@ using DynamicData.Binding;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.Views;
 
@@ -15,12 +14,13 @@ public partial class CompareFileView : UserControl
 {
     private readonly DiffLineBackgroundRenderer _leftBackgroundRenderer, _rightBackgroundRenderer;
     private readonly DiffInfoMargin _leftInfoMargin, _rightInfoMargin;
-
+    private readonly ILanguageManager _languageManager;
     private CompositeDisposable _compositeDisposable = new();
 
-    public CompareFileView()
+    public CompareFileView(ILanguageManager languageManager)
     {
         InitializeComponent();
+        _languageManager = languageManager;:
 
         DiffEditor.Options.AllowScrollBelowDocument = true;
         DiffEditor.Options.ConvertTabsToSpaces = true;
@@ -66,8 +66,7 @@ public partial class CompareFileView : UserControl
             //Syntax Highlighting
             var language = Path.GetExtension(Path.GetExtension(vm.FullPath));
 
-            var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
-            if (languageManager.GetTextMateScopeByExtension(language) is { } scope)
+            if (_languageManager.GetTextMateScopeByExtension(language) is { } scope)
             {
                 var textMateDiff = DiffEditor.InstallTextMate(languageManager.RegistryOptions);
                 textMateDiff.SetGrammar(scope);
@@ -90,6 +89,8 @@ public partial class CompareFileView : UserControl
                     if (b != null) Load(vm);
                 }).DisposeWith(_compositeDisposable);
         };
+        _languageManager = languageManager;
+
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

@@ -18,7 +18,6 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 using Orientation = Avalonia.Layout.Orientation;
 
@@ -26,7 +25,7 @@ using Orientation = Avalonia.Layout.Orientation;
 
 namespace OneWare.OssCadSuiteIntegration;
 
-public class OssCadSuiteIntegrationModule : IModule
+public class OssCadSuiteIntegrationModule
 {
     public const string OssPathSetting = "OssCadSuite_Path";
 

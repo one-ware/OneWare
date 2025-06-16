@@ -5,12 +5,11 @@ using OneWare.ErrorList.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.ErrorList;
 
-public class ErrorListModule : IModule
+public class ErrorListModule 
 {
     public const string KeyErrorListFilterMode = "ErrorList_FilterMode";
     public const string KeyErrorListShowExternalErrors = "ErrorList_ShowExternalErrors";

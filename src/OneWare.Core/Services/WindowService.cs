@@ -12,7 +12,6 @@ using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
 using UiExtension = OneWare.Essentials.Models.UiExtension;
 

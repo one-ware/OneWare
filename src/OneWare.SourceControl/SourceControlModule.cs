@@ -9,12 +9,11 @@ using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.Settings;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.SourceControl;
 
-public class SourceControlModule : IModule
+public class SourceControlModule 
 {
     public const string GitHubAccountNameKey = "SourceControl_GitHub_AccountName";
     

@@ -6,12 +6,11 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.SearchList;
 
-public class SearchListModule : IModule
+public class SearchListModule 
 {
     private readonly IDockService _dockService;
     private readonly IWindowService _windowService;

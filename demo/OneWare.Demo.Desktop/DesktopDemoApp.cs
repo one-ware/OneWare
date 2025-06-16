@@ -15,7 +15,6 @@ using OneWare.Essentials.Services;
 using OneWare.PackageManager;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Demo.Desktop;

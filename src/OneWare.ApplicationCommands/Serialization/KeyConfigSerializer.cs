@@ -2,7 +2,6 @@
 using Avalonia.Input;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ApplicationCommands.Serialization;
 

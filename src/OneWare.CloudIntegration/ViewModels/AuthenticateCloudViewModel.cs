@@ -7,7 +7,6 @@ using OneWare.Essentials.Controls;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.ViewModels;

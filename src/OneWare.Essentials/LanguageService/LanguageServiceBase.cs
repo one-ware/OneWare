@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -6,7 +7,6 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
@@ -15,10 +15,23 @@ namespace OneWare.Essentials.LanguageService;
 
 public abstract class LanguageServiceBase : ILanguageService
 {
-    protected LanguageServiceBase(string name, string? workspace = null)
+    private readonly IDockService _dockService;
+    private readonly ILogger<LanguageServiceBase> _logger;
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly IErrorService _errorService;
+    protected LanguageServiceBase(string name,
+                                  IDockService dockService,
+                                   ILogger<LanguageServiceBase> logger,
+                                   IProjectExplorerService projectExplorerService,
+                                   IErrorService errorService,
+                                  string? workspace = null)
     {
         Name = name;
         Workspace = workspace;
+        _dockService = dockService;
+        _logger = logger;
+        _projectExplorerService = projectExplorerService;
+        _errorService = errorService;
     }
 
     public string Name { get; }
@@ -247,7 +260,7 @@ public abstract class LanguageServiceBase : ILanguageService
     public virtual void ApplyContainer(string path, IEnumerable<TextEdit> con)
     {
         var openDoc =
-            ContainerLocator.Container.Resolve<IDockService>().OpenFiles
+            _dockService.OpenFiles
                 .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Value as IEditor;
 
         try
@@ -266,7 +279,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -285,7 +298,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
         finally
         {
@@ -299,12 +312,11 @@ public abstract class LanguageServiceBase : ILanguageService
         {
             var path = pdp.Uri.GetFileSystemPath();
             
-            var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+            var file =_dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+            file ??= _projectExplorerService.SearchFullPath(path) as IFile;
+            file ??= _projectExplorerService.GetTemporaryFile(path);
             
-            ContainerLocator.Container.Resolve<IErrorService>()
-                .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
+            _errorService.RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
             //file.Diagnostics = pdp.Diagnostics;
         }, DispatcherPriority.Background);
     }

@@ -1,20 +1,19 @@
 ﻿using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Toml;
 
-public class TomlModule : IModule
+public class TomlModule 
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    private readonly ILanguageManager _languageManager;
+    public TomlModule(ILanguageManager languageManager)
     {
+        _languageManager = languageManager;
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+
+    public void OnInitialized()
     {
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceToml), ".toml");
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterTextMateLanguage("toml", "avares://OneWare.Toml/Assets/TOML.tmLanguage.json", ".toml");
+        _languageManager.RegisterStandaloneTypeAssistance(typeof(TypeAssistanceToml), ".toml");
+        _languageManager.RegisterTextMateLanguage("toml", "avares://OneWare.Toml/Assets/TOML.tmLanguage.json", ".toml");
     }
 }

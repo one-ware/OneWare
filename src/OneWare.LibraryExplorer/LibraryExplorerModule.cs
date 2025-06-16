@@ -6,12 +6,11 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.LibraryExplorer.ViewModels;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.LibraryExplorer;
 
-public class LibraryExplorerModule : IModule
+public class LibraryExplorerModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

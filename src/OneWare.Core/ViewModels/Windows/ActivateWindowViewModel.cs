@@ -43,7 +43,7 @@ internal class ActivateWindowViewModel : ObservableObject
         //
         //         if (!activateRequest.APIReturnedSuccess)
         //         {
-        //             ContainerLocator.Container.Resolve<ILogger>()?.Error("Error activating license");
+        //             _logger.LogError("Error activating license");
         //             return;
         //         }
         //         
@@ -61,7 +61,7 @@ internal class ActivateWindowViewModel : ObservableObject
         // }
         // else
         // {
-        //     ContainerLocator.Container.Resolve<ILogger>()?.Error("Invalid License");
+        //     _logger.LogError("Invalid License");
         // }
         return Task.CompletedTask;
     }

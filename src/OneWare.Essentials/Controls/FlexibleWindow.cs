@@ -8,12 +8,27 @@ using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+
 
 namespace OneWare.Essentials.Controls;
 
 public class FlexibleWindow : UserControl
 {
+
+    private readonly IDockService _dockService;
+    public FlexibleWindow(IDockService dockService)
+    {
+        _dockService = dockService;
+        DataContext = this;
+        // Set default values
+        PrefWidth = 800;
+        PrefHeight = 600;
+        ShowTitle = true;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        SizeToContent = SizeToContent.Manual;
+        TransparencyLevelHint = Array.Empty<WindowTransparencyLevel>();
+    }
+
     public static readonly StyledProperty<double> PrefWidthProperty =
         AvaloniaProperty.Register<FlexibleWindow, double>(nameof(PrefWidth), double.NaN);
 
@@ -198,7 +213,7 @@ public class FlexibleWindow : UserControl
             if (DataContext is not Document doc)
                 throw new Exception("ViewModel for FlexibleWindow must be Document");
 
-            ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
+            _dockService.Show(doc, DockShowLocation.Document);
         }
 
         AttachedToHost();

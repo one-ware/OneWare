@@ -1,12 +1,11 @@
 ﻿using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Cpp;
 
-public class CppModule : IModule
+public class CppModule 
 {
     public const string LspName = "clangd";
     public const string LspPathSetting = "CppModule_ClangdPath";

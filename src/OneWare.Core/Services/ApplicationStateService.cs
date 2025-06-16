@@ -5,7 +5,7 @@ using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+
 
 namespace OneWare.Core.Services;
 

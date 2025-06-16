@@ -1,11 +1,11 @@
 ﻿using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
+
 using Prism.Modularity;
 
 namespace OneWare.CruviAdapterExtensions;
 
-public class CruviAdapterExtensionsModule : IModule
+public class CruviAdapterExtensionsModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

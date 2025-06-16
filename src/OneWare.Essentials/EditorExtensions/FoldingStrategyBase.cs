@@ -1,7 +1,7 @@
 ﻿using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+
 
 namespace OneWare.Essentials.EditorExtensions;
 
@@ -31,7 +31,7 @@ public class FoldingStrategyBase : IFoldingStrategy
             IEnumerable<NewFolding> newFoldings = await CreateNewFoldingsAsync(document, out var firstErrorOffset);
             manager.UpdateFoldings(newFoldings, firstErrorOffset);
 
-            //ContainerLocator.Container.Resolve<ILogger>()?.Log("Updated foldings after: " + (DateTime.Now.TimeOfDay - beforeFolding).Milliseconds + "ms", ConsoleColor.DarkGray);
+            //_logger.LogInformation("Updated foldings after: " + (DateTime.Now.TimeOfDay - beforeFolding).Milliseconds + "ms", ConsoleColor.DarkGray);
         }
         catch (Exception e)
         {

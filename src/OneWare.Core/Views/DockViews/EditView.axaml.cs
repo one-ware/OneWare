@@ -16,6 +16,7 @@ using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Markdown.Avalonia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
@@ -28,15 +29,16 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using Range = System.Range;
 
 namespace OneWare.Core.Views.DockViews;
 
 public partial class EditView : UserControl
 {
+    private readonly ErrorListViewModel _errorListViewModel;
     private readonly IErrorService _errorService;
     private readonly ISettingsService _settingsService;
+    private ILogger<EditView>? _logger;
 
     private CompositeDisposable _compositeDisposable = new();
 
@@ -44,10 +46,13 @@ public partial class EditView : UserControl
 
     private ITypeAssistance? _typeAssistance;
 
-    public EditView()
+    public EditView(ILogger<EditView> logger, ErrorListViewModel errorListViewModel, ISettingsService settingsService, IErrorService errorService)
     {
-        _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
-        _errorService = ContainerLocator.Container.Resolve<IErrorService>();
+        _settingsService = settingsService;
+        _errorService = errorService;
+        _errorListViewModel = errorListViewModel;
+        _logger = logger;
+
 
         InitializeComponent();
 
@@ -106,7 +111,7 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         TopLevel.GetTopLevel(this)?.AddDisposableHandler(KeyDownEvent, (o, e) =>
@@ -236,7 +241,7 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -459,7 +464,7 @@ public partial class EditView : UserControl
         {
             var offset = CodeBox.Document.GetOffset(pos.Value.Location);
             var location = CodeBox.Document.GetLocation(offset);
-            foreach (var error in ContainerLocator.Container.Resolve<ErrorListViewModel>()
+            foreach (var error in _errorListViewModel
                          .GetErrorsForFile(ViewModel.CurrentFile))
                 if (location.Line >= error.StartLine && location.Line <= error.EndLine &&
                     location.Column >= error.StartColumn && location.Column <= error.EndColumn)

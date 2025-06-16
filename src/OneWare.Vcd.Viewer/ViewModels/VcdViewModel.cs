@@ -12,7 +12,6 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 

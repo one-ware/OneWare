@@ -9,7 +9,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.Models;
 
@@ -168,7 +167,7 @@ public class GitRepositoryModel : ObservableObject
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         StagedChanges.Merge(stagedChanges, (a, b) =>

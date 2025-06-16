@@ -1,18 +1,19 @@
 ﻿using OneWare.Cyc5000.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Cyc5000;
 
-public class Cyc5000Module : IModule
+public class Cyc5000Module 
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
-    {
-    }
+    FpgaService _fpgaService
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public Cyc5000Module(FpgaService fpgaService)
     {
-        containerProvider.Resolve<FpgaService>().RegisterFpgaPackage(new Cyc5000FpgaPackage());
+        _fpgaService = fpgaService;
+    }
+    public void OnInitialized()
+    {
+        _fpgaService.RegisterFpgaPackage(new Cyc5000FpgaPackage());
     }
 }

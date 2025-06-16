@@ -10,6 +10,7 @@ using DynamicData;
 using DynamicData.Binding;
 using GitCredentialManager;
 using LibGit2Sharp;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -19,7 +20,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Models;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels;
 
@@ -30,7 +30,7 @@ public class SourceControlViewModel : ExtendedTool
     private readonly IDockService _dockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    private readonly ILogger _logger;
+    private readonly ILogger<SourceControlViewModel> _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
     private readonly IPaths _paths;
@@ -45,7 +45,7 @@ public class SourceControlViewModel : ExtendedTool
 
     private readonly Dictionary<string, ILoginProvider> _loginProviders = new();
 
-    public SourceControlViewModel(ILogger logger, ISettingsService settingsService,
+    public SourceControlViewModel(ILogger<SourceControlViewModel> logger, ISettingsService settingsService,
         IApplicationStateService applicationStateService,
         IDockService dockService, IWindowService windowService,
         IPaths paths,
@@ -184,7 +184,7 @@ public class SourceControlViewModel : ExtendedTool
                 }
                 catch (Exception e)
                 {
-                    _logger.Error(e.Message, e);
+                    _logger.LogError(e.Message, e);
                 }
             }
 
@@ -196,7 +196,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
         
         ActiveRepository = Repositories.FirstOrDefault(x => x.Project == _projectExplorerService.ActiveProject);
@@ -218,7 +218,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -282,7 +282,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
 
             success = false;
         }
@@ -365,7 +365,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -392,7 +392,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             return null;
         }
     }
@@ -450,7 +450,7 @@ public class SourceControlViewModel : ExtendedTool
         catch (Exception e)
         {
             IsLoading = false;
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             return false;
         }
     }
@@ -485,7 +485,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -529,7 +529,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             success = false;
         }
 
@@ -574,7 +574,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         return false;
@@ -606,7 +606,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             return false;
         }
     }
@@ -632,7 +632,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         _ = RefreshAsync();
@@ -719,7 +719,7 @@ public class SourceControlViewModel : ExtendedTool
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                _logger.LogError(e.Message, e);
                 return null;
             }
         });
@@ -793,7 +793,7 @@ public class SourceControlViewModel : ExtendedTool
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                _logger.LogError(e.Message, e);
                 return false;
             }
         });
@@ -841,13 +841,12 @@ public class SourceControlViewModel : ExtendedTool
             {
                 if (_settingsService.GetSettingValue<bool>("SourceControl_AutoFetchEnable"))
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error(e.Message + "\nAutomatic fetching disabled!", e);
+                    _logger.LogError(e.Message + "\nAutomatic fetching disabled!", e);
                     _settingsService.SetSettingValue("SourceControl_AutoFetchEnable", false);
                 }
                 else
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    _logger.LogError(e.Message, e);
                 }
             }
         });
@@ -916,7 +915,7 @@ public class SourceControlViewModel : ExtendedTool
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    _logger.LogError(e.Message, e);
                 }
         }
 
@@ -961,7 +960,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -1055,7 +1054,7 @@ public class SourceControlViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -1180,7 +1179,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
         {
-            _logger.Error("Username and/or email can't be empty", null, false, true);
+            _logger.LogError("Username and/or email can't be empty", null, false, true);
             return null;
         }
 
@@ -1215,7 +1214,7 @@ public class SourceControlViewModel : ExtendedTool
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    _logger.LogError(e.Message, e);
                 }
             }
             else

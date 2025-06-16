@@ -1,7 +1,6 @@
 ﻿using AvaloniaEdit.Document;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Json.Formatting;
 

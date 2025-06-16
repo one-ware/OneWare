@@ -1,13 +1,14 @@
 using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+
 
 
 namespace OneWare.Core.Services;
@@ -21,7 +22,7 @@ public class BackupService : IBackupService
     private readonly string _backupRegistryFile;
 
     private readonly IDockService _dockService;
-    private readonly ILogger _logger;
+    private readonly ILogger<BackupService> _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
@@ -30,7 +31,7 @@ public class BackupService : IBackupService
     private DispatcherTimer? _timer;
 
     public BackupService(IPaths paths, IDockService dockService, ISettingsService settingsService,
-        ILogger logger, IWindowService windowService)
+        ILogger<BackupService> logger, IWindowService windowService)
     {
         _dockService = dockService;
         _logger = logger;
@@ -71,7 +72,7 @@ public class BackupService : IBackupService
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Warning("Loading BackupRegistry failed", e);
+                _logger.LogWarning("Loading BackupRegistry failed", e);
             }
     }
 
@@ -89,7 +90,7 @@ public class BackupService : IBackupService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Saving BackupRegistry failed", e);
+            _logger.LogError("Saving BackupRegistry failed", e);
         }
     }
 
@@ -135,8 +136,7 @@ public class BackupService : IBackupService
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error($"Backup failed for {doc.Value.Title}:\n{e.Message}", e);
+                    _logger.LogError($"Backup failed for {doc.Value.Title}:\n{e.Message}", e);
                 }
 
         SaveAutoSaveFile();
@@ -153,7 +153,7 @@ public class BackupService : IBackupService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         SaveAutoSaveFile();

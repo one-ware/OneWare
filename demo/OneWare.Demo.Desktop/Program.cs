@@ -7,7 +7,6 @@ using Avalonia.Dialogs;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Demo.Desktop;
 

@@ -7,7 +7,6 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
-using Prism.Ioc;
 
 namespace OneWare.TerminalManager.ViewModels;
 
@@ -106,7 +105,7 @@ public class TerminalManagerViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 }

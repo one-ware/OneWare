@@ -1,18 +1,18 @@
 ﻿using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Json;
 
-public class JsonModule : IModule
+public class JsonModule 
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
-    {
-    }
+    private readonly ILanguageManager _languageManager;
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public JsonModule(ILanguageManager languageManager)
     {
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
+        _languageManager = languageManager;
+    }
+    public void OnInitialized()
+    {
+        _languageManager.RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
     }
 }

@@ -5,12 +5,11 @@ using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Debugger;
 
-public class DebuggerModule : IModule
+public class DebuggerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

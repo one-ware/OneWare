@@ -14,7 +14,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.ProjectExplorer.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
@@ -502,7 +501,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (destination == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(
+            _logger.LogError(
                 "Can't import folder if there is no active project selected. Please select an active project first",
                 null, true, true);
             return;
@@ -521,7 +520,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (destination == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(
+            _logger.LogError(
                 "Can't import files if there is no active project selected. Please select an active project first",
                 null, true, true);
             return;
@@ -584,7 +583,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (!newName.IsValidFileName() || (entry is IProjectFolder && Path.HasExtension(newName)) ||
             pathBase == null || entry.TopFolder == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error($"Can't rename {entry.Header} to {newName}!");
+            _logger.LogError($"Can't rename {entry.Header} to {newName}!");
             return entry;
         }
 
@@ -609,7 +608,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         return entry;
@@ -819,7 +818,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -851,7 +850,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 

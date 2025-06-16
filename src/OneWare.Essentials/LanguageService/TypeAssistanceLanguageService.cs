@@ -14,6 +14,7 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
@@ -21,7 +22,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
@@ -38,6 +38,13 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private readonly IBrush _highlightBackground = SolidColorBrush.Parse("#3300c8ff");
 
     private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(100);
+    private readonly IErrorService _errorService;
+    private readonly ISettingsService _settingsService;
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly ILogger<TypeAssistanceLanguageService> _logger;
+    private readonly IDockService _dockService;
+    private readonly ILanguageService _languageService;
+    private readonly ILanguageManager _languageManager;
 
     private bool _completionBusy;
 
@@ -48,15 +55,31 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastDocumentChangedRefreshTime = DateTime.Now.TimeOfDay;
+    
 
     private TimeSpan _lastEditTime = DateTime.Now.TimeOfDay;
-
-    protected TypeAssistanceLanguageService(IEditor evm, ILanguageService langService) : base(evm)
+    
+    protected TypeAssistanceLanguageService(IEditor evm,
+                                            ILogger<TypeAssistanceLanguageService> logger,
+                                            IErrorService errorService,
+                                            IProjectExplorerService projectExplorerService,
+                                            ISettingsService settingsService,
+                                            IDockService dockService,
+                                            ILanguageManager languageManager,
+                                            ILanguageService langService) : base(evm)
     {
         Service = langService;
+        _errorService = errorService;
+        _settingsService = settingsService;
+        _logger = logger;
+        _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
+        _languageService = langService;
+        _languageManager = languageManager;
+
     }
 
-    private static ISettingsService SettingsService => ContainerLocator.Container.Resolve<ISettingsService>();
+    
     protected virtual TimeSpan DocumentChangedRefreshTime => TimeSpan.FromMilliseconds(500);
     protected virtual TimeSpan CaretChangedRefreshTime => TimeSpan.FromMilliseconds(100);
 
@@ -68,7 +91,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile)
+        var error = _errorService.GetErrorsForFile(CurrentFile)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
@@ -249,7 +272,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            _logger.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -257,8 +280,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         if (Regex.IsMatch(newName, @"\W"))
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
+            _logger.LogError($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
             return;
         }
 
@@ -271,7 +293,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            _logger.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -297,10 +319,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (location == null) return;
 
         var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
-        file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+        var file = _projectExplorerService.SearchFullPath(path) as IFile;
+        file ??= _projectExplorerService.GetTemporaryFile(path);
 
-        var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+        var dockable = await _dockService.OpenFileAsync(file);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
@@ -311,19 +333,19 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
+        _logger.LogDebug("Location link not supported"); //TODO   
     }
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
     {
         try
         {
-            if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoFormatting"))
+            if (_settingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoFormatting"))
                 TextEnteredAutoFormat(args);
 
             if (!Service.IsLanguageServiceReady || args.Text == null) return;
 
-            if (SettingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy)
+            if (_settingsService.GetSettingValue<bool>("TypeAssistance_EnableAutoCompletion") && !_completionBusy)
             {
                 var triggerChar = args.Text!;
                 var beforeTriggerChar = CodeBox.CaretOffset > 1 ? CodeBox.Text[CodeBox.CaretOffset - 2] : ' ';
@@ -356,7 +378,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -431,8 +453,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFile.FullPath);
 
-        var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
-
+        
         if (tokens != null)
         {
             var segments = tokens.Select(x =>
@@ -440,7 +461,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                     var offset =
                         Editor.CurrentDocument.GetOffsetFromPosition(new Position(x.Line, x.StartCharacter)) - 1;
 
-                    if (!languageManager.CurrentEditorThemeColors.TryGetValue(x.TokenType.ToString(), out var b))
+                    if (!_languageManager.CurrentEditorThemeColors.TryGetValue(x.TokenType.ToString(), out var b))
                         return null;
 
                     return new TextModificationSegment(offset, offset + x.Length)
@@ -490,11 +511,11 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             {
                 Provider = overloadProvider,
                 PlacementGravity = PopupGravity.TopRight,
-                AdditionalOffset = new Vector(0, -(SettingsService.GetSettingValue<int>("Editor_FontSize") * 1.4))
+                AdditionalOffset = new Vector(0, -(_settingsService.GetSettingValue<int>("Editor_FontSize") * 1.4))
             };
 
             OverloadInsight.SetValue(TextBlock.FontSizeProperty,
-                SettingsService.GetSettingValue<int>("Editor_FontSize"));
+                _settingsService.GetSettingValue<int>("Editor_FontSize"));
             if (overloadProvider.Count > 0) OverloadInsight.Show();
         }
     }
@@ -582,7 +603,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 if (visibleChars > length) length = visibleChars;
             }
 
-            var calculatedWith = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
+            var calculatedWith = length * _settingsService.GetSettingValue<int>("Editor_FontSize") + 50;
 
             Completion.Width = calculatedWith > 400 ? 500 : calculatedWith;
 
@@ -712,7 +733,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
     {
-        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
+        foreach (var error in _errorService.GetErrorsForFile(CurrentFile))
             if (location.Line >= error.StartLine && location.Column >= error.StartColumn &&
                 (location.Line < error.EndLine ||
                  (location.Line == error.EndLine && location.Column <= error.EndColumn)))

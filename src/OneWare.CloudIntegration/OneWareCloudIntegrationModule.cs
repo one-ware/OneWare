@@ -1,16 +1,15 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.CloudIntegration.Views;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.CloudIntegration;
 
-public class OneWareCloudIntegrationModule : IModule
+public class OneWareCloudIntegrationModule
 {
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
     public const string OneWareAccountEmailKey = "General_OneWareCloud_AccountEmail";
@@ -28,11 +27,12 @@ public class OneWareCloudIntegrationModule : IModule
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
         
-        containerProvider.Resolve<ISettingsService>().RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
+        var settingsService = containerProvider.Resolve<ISettingsService>();
+        settingsService.RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
+        settingsService.RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
         
-        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
-        
-        containerProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x =>
+        var windowService = containerProvider.Resolve<IWindowService>();
+        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x =>
             new CloudIntegrationMainWindowBottomRightExtension()
             {
                 DataContext = containerProvider.Resolve<CloudIntegrationMainWindowBottomRightExtensionViewModel>()

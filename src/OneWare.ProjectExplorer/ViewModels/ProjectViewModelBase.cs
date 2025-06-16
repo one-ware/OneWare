@@ -7,7 +7,6 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
@@ -39,7 +38,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
+            _logger.LogError("Project already loaded");
             return;
         }
 

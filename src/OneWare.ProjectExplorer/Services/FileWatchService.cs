@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using OneWare.Essentials.Models;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Prism.Ioc;
+
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 

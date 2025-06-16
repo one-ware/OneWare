@@ -10,7 +10,6 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 using OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Helpers;
 

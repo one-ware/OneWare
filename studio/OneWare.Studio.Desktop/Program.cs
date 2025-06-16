@@ -8,7 +8,6 @@ using Avalonia.Media;
 using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Studio.Desktop;
 

@@ -6,12 +6,11 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Updater;
 
-public class UpdaterModule : IModule
+public class UpdaterModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

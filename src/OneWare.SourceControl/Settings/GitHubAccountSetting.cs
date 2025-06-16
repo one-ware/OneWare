@@ -6,7 +6,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.SourceControl.Settings;

@@ -35,7 +35,7 @@ public class LspFoldingStrategy : IFoldingStrategy
             var newFoldings = await CreateNewFoldingsAsync(document);
             manager.UpdateFoldings(newFoldings, -1);
 
-            //ContainerLocator.Container.Resolve<ILogger>()?.Log("Updated foldings after: " + (DateTime.Now.TimeOfDay - beforeFolding).Milliseconds + "ms", ConsoleColor.DarkGray);
+            //_logger.LogInformation("Updated foldings after: " + (DateTime.Now.TimeOfDay - beforeFolding).Milliseconds + "ms", ConsoleColor.DarkGray);
         }
         catch (Exception)
         {

@@ -12,7 +12,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
 

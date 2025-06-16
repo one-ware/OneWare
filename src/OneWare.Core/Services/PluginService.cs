@@ -5,7 +5,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Core.Services;

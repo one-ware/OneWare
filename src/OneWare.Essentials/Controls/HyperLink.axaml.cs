@@ -4,12 +4,14 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+
 
 namespace OneWare.Essentials.Controls;
 
 public partial class HyperLink : UserControl
 {
+    private readonly IDockService _dockService;
+    private readonly IProjectExplorerService _projectExplorerService;
     public static readonly StyledProperty<string> UrlProperty =
         AvaloniaProperty.Register<HyperLink, string>(nameof(Url));
 
@@ -19,9 +21,12 @@ public partial class HyperLink : UserControl
     public static readonly StyledProperty<TextDecorationCollection> TextDecorationsProperty =
         AvaloniaProperty.Register<HyperLink, TextDecorationCollection>(nameof(TextDecorations));
 
-    public HyperLink()
+    public HyperLink(IDockService dockService, IProjectExplorerService projectExplorerService)
     {
         InitializeComponent();
+        _dockService = dockService;
+        _projectExplorerService = projectExplorerService;
+
     }
 
     public string Url
@@ -46,8 +51,8 @@ public partial class HyperLink : UserControl
     {
         if (File.Exists(Url))
         {
-            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(Url);
-            _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            var file = _projectExplorerService.GetTemporaryFile(Url);
+            _ = _dockService.OpenFileAsync(file);
         }
         else
         {

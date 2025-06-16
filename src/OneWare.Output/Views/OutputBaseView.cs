@@ -28,7 +28,7 @@ public abstract class OutputBaseView : UserControl
             }
             else
             {
-                //ContainerLocator.Container.Resolve<ILogger>()?.Error("Output no datacontext!"); TODO
+                //_logger.LogError("Output no datacontext!"); TODO
                 return;
             }
 

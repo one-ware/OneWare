@@ -1,11 +1,10 @@
 ﻿using OneWare.Essentials.Services;
 using OneWare.Vcd.Viewer.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.Vcd.Viewer;
 
-public class VcdViewerModule : IModule
+public class VcdViewerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

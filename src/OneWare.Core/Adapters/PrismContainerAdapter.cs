@@ -1,5 +1,5 @@
 ﻿using System;
-using Prism.Ioc;
+
 
 namespace OneWare.Core.Adapters
 {

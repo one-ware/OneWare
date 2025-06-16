@@ -5,12 +5,11 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SerialMonitor.ViewModels;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.SerialMonitor;
 
-public class SerialMonitorModule : IModule
+public class SerialMonitorModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

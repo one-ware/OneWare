@@ -1,10 +1,10 @@
-﻿using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Verilog.Parsing;
 using OneWare.Verilog.Templates;
-using Prism.Ioc;
+using OneWare.Core.Adapters;
 using Prism.Modularity;
 
 namespace OneWare.Verilog;
@@ -193,30 +193,32 @@ public class VerilogModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public void RegisterTypes(IContainerAdapter containerAdapter)
     {
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public void OnInitialized(IContainerAdapter containerAdapter)
     {
-        containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
+        containerAdapter.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
+        var settingsService = containerAdapter.Resolve<ISettingsService>();
+        settingsService.RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
             "Verible Path", "Path for Verible executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
+            null, containerAdapter.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
         
-        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
+        settingsService.RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
             "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
 
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",
+        containerAdapter.Resolve<IErrorService>().RegisterErrorSource(LspName);
+        
+        var languageManager = containerAdapter.Resolve<ILanguageManager>();
+        languageManager.RegisterTextMateLanguage("verilog",
             "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v", ".sv");
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterService(typeof(LanguageServiceVerilog), true, ".v", ".sv");
+        languageManager.RegisterService(typeof(LanguageServiceVerilog), true, ".v", ".sv");
 
-        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VerilogNodeProvider>(".v", ".sv");
-
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkTemplate>();
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkSimulationTemplate>();
+        var fpgaService = containerAdapter.Resolve<FpgaService>();
+        fpgaService.RegisterNodeProvider<VerilogNodeProvider>(".v", ".sv");
+        fpgaService.RegisterTemplate<VerilogBlinkTemplate>();
+        fpgaService.RegisterTemplate<VerilogBlinkSimulationTemplate>();
     }
 }

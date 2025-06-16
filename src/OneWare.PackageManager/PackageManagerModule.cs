@@ -7,12 +7,11 @@ using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.PackageManager;
 
-public class PackageManagerModule : IModule
+public class PackageManagerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

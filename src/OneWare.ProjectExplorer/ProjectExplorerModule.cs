@@ -8,12 +8,11 @@ using OneWare.Essentials.ViewModels;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 using OneWare.ProjectExplorer.Views;
-using Prism.Ioc;
 using Prism.Modularity;
 
 namespace OneWare.ProjectExplorer;
 
-public class ProjectExplorerModule : IModule
+public class ProjectExplorerModule 
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

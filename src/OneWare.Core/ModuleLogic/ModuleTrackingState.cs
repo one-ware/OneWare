@@ -1,10 +1,10 @@
 using OneWare.Essentials.Enums;
 using Prism.Modularity;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Core.ModuleLogic;
 
-internal class ModuleTrackingState : BindableBase
+internal partial class ModuleTrackingState : ObservableObject
 {
     private string _configuredDependencies = "(none)";
     private DiscoveryMethod _expectedDiscoveryMethod;
@@ -17,7 +17,7 @@ internal class ModuleTrackingState : BindableBase
         get => _moduleName;
         set
         {
-            if (_moduleName != value) base.SetProperty(ref _moduleName, value);
+            SetProperty(ref _moduleName, value);
         }
     }
 
@@ -26,7 +26,7 @@ internal class ModuleTrackingState : BindableBase
         get => _moduleInitializationStatus;
         set
         {
-            if (_moduleInitializationStatus != value) base.SetProperty(ref _moduleInitializationStatus, value);
+            SetProperty(ref _moduleInitializationStatus, value);
         }
     }
 
@@ -35,7 +35,7 @@ internal class ModuleTrackingState : BindableBase
         get => _expectedDiscoveryMethod;
         set
         {
-            if (_expectedDiscoveryMethod != value) base.SetProperty(ref _expectedDiscoveryMethod, value);
+            SetProperty(ref _expectedDiscoveryMethod, value);
         }
     }
 
@@ -44,7 +44,7 @@ internal class ModuleTrackingState : BindableBase
         get => _expectedInitializationMode;
         set
         {
-            if (_expectedInitializationMode != value) base.SetProperty(ref _expectedInitializationMode, value);
+            SetProperty(ref _expectedInitializationMode, value);
         }
     }
 
@@ -53,7 +53,7 @@ internal class ModuleTrackingState : BindableBase
         get => _configuredDependencies;
         set
         {
-            if (_configuredDependencies != value) base.SetProperty(ref _configuredDependencies, value);
+            SetProperty(ref _configuredDependencies, value);
         }
     }
 }

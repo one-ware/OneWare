@@ -2,21 +2,27 @@ using Avalonia.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+
 
 namespace OneWare.Essentials.Helpers;
 
 public class WindowHelper
 {
+    IWindowService _windowService;
+
+    public WindowHelper(IWindowService windowService)
+    {
+        _windowService = windowService;
+    }
     /// <summary>
     ///     Asks to save all files and returns true if ready to close or false if operation was canceled
     /// </summary>
     public static async Task<bool> HandleUnsavedFilesAsync(List<IExtendedDocument> unsavedFiles, Window dialogOwner)
     {
+        
         if (unsavedFiles.Count > 0)
         {
-            var status = await ContainerLocator.Container.Resolve<IWindowService>()
-                .ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning, dialogOwner);
+            var status = await _windowService.ShowYesNoCancelAsync("Warning", "Keep unsaved changes?", MessageBoxIcon.Warning, dialogOwner);
 
             if (status == MessageBoxStatus.Yes)
             {
@@ -33,8 +39,7 @@ public class WindowHelper
                 foreach (var file in unsavedFiles) message += file.Title + ", ";
                 message = message.Remove(message.Length - 2);
 
-                var status2 = await ContainerLocator.Container.Resolve<IWindowService>()
-                    .ShowYesNoCancelAsync("Error", $"{message}\nQuit anyways?", MessageBoxIcon.Error);
+                var status2 = await _windowService.ShowYesNoCancelAsync("Error", $"{message}\nQuit anyways?", MessageBoxIcon.Error);
 
                 if (status2 == MessageBoxStatus.Yes) return true;
             }
