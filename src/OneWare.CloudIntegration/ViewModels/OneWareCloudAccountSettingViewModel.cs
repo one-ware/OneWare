@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GitCredentialManager;
+using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.Views;
@@ -29,6 +30,8 @@ public class OneWareCloudAccountSettingViewModel : ObservableObject
 
     public void Logout()
     {
+        _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
+        
         var store = CredentialManager.Create("oneware");
         store.Remove("https://one-ware.com", Setting.Value.ToString());
         Setting.Value = string.Empty;
