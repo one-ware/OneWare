@@ -19,12 +19,13 @@ public abstract class LanguageServiceBase : ILanguageService
     private readonly ILogger<LanguageServiceBase> _logger;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IErrorService _errorService;
+
     protected LanguageServiceBase(string name,
-                                  IDockService dockService,
-                                   ILogger<LanguageServiceBase> logger,
-                                   IProjectExplorerService projectExplorerService,
-                                   IErrorService errorService,
-                                  string? workspace = null)
+                                IDockService dockService,
+                                ILogger<LanguageServiceBase> logger,
+                                IProjectExplorerService projectExplorerService,
+                                IErrorService errorService,
+                                string? workspace = null)
     {
         Name = name;
         Workspace = workspace;
@@ -283,7 +284,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
     }
 
-    private static void ApplyContainer(TextDocument doc, IEnumerable<TextEdit> con, bool beginUpdate = true)
+    private void ApplyContainer(TextDocument doc, IEnumerable<TextEdit> con, bool beginUpdate = true)
     {
         if (beginUpdate) doc.BeginUpdate();
         try
@@ -311,13 +312,12 @@ public abstract class LanguageServiceBase : ILanguageService
         Dispatcher.UIThread.Post(() =>
         {
             var path = pdp.Uri.GetFileSystemPath();
-            
-            var file =_dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+
+            var file = _dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
             file ??= _projectExplorerService.SearchFullPath(path) as IFile;
             file ??= _projectExplorerService.GetTemporaryFile(path);
-            
+
             _errorService.RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
-            //file.Diagnostics = pdp.Diagnostics;
         }, DispatcherPriority.Background);
     }
 

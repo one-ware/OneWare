@@ -66,7 +66,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                                             ISettingsService settingsService,
                                             IDockService dockService,
                                             ILanguageManager languageManager,
-                                            ILanguageService langService) : base(evm)
+                                            ILanguageService langService) : base(evm, settingsService)
     {
         Service = langService;
         _errorService = errorService;

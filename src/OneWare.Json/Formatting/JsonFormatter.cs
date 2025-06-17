@@ -1,4 +1,5 @@
 ﻿using AvaloniaEdit.Document;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 
@@ -6,6 +7,13 @@ namespace OneWare.Json.Formatting;
 
 public class JsonFormatter : IFormattingStrategy
 {
+    private readonly ILogger<JsonFormatter> _logger;
+
+    public JsonFormatter(ILogger<JsonFormatter> logger)
+    {
+        _logger = logger;
+    }
+
     public void Format(TextDocument document)
     {
         try
@@ -14,11 +22,17 @@ public class JsonFormatter : IFormattingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
-    public static string FormatJson(string json, string indent = "  ")
+    public string FormatJson(string json,                                 
+                                    string indent = "  ")
+    {
+        return JsonTextFormat(json, indent);
+    }
+
+    private static string JsonTextFormat(string json, string indent)
     {
         var indentation = 0;
         var quoteCount = 0;

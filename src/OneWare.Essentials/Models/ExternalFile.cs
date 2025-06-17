@@ -7,20 +7,24 @@ namespace OneWare.Essentials.Models;
 
 public class ExternalFile : ObservableObject, IFile
 {
+    private readonly IFileIconService _fileIconService;
     private IImage? _icon;
 
-    public ExternalFile(string fullPath)
+    public ExternalFile(string fullPath, IFileIconService fileIconService)
     {
         FullPath = fullPath;
 
         IDisposable? fileSubscription = null;
+        _fileIconService = fileIconService;
 
         this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
         {
             fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
+            var observable = _fileIconService.GetFileIcon(Extension);
             fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
         });
+        
+
     }
 
     public string Extension => Path.GetExtension(FullPath);

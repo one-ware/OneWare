@@ -10,6 +10,7 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Adapters;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
@@ -26,10 +27,14 @@ namespace OneWare.Core.Services;
 public class DockService : Factory, IDockService
 {
     private readonly IDockSerializer _serializer;
+    private readonly ILogger<DockService> _logger;
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
     private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
+    private readonly MainWindow _mainWindow;
+    private readonly AdvancedHostWindow _advancedHostWindow;
+    private readonly DefaultLayout _defaultLayout;
 
     private readonly IPaths _paths;
     private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
@@ -42,15 +47,25 @@ public class DockService : Factory, IDockService
 
     private RootDock? _layout;
 
-    public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
-        MainDocumentDockViewModel mainDocumentDockViewModel, IContainerAdapter containerAdapter)
+    public DockService(IPaths paths,
+                       ILogger<DockService> logger,
+                       IWindowService windowService, 
+                       WelcomeScreenViewModel welcomeScreenViewModel,
+                       MainDocumentDockViewModel mainDocumentDockViewModel,
+                       MainWindow mainWindow,
+                       AdvancedHostWindow advancedHostWindow,
+                       DefaultLayout defaultLayout,
+                       IContainerAdapter containerAdapter)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
         _serializer = new DockSerializer(typeof(ObservableCollection<>), containerAdapter);
-
+        _logger = logger;
+        _mainWindow = mainWindow;
+        _advancedHostWindow = advancedHostWindow;
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
+        _defaultLayout = defaultLayout;
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
             new MenuItemViewModel("ResetLayout")
@@ -126,7 +141,7 @@ public class DockService : Factory, IDockService
 
         _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
         type ??= typeof(EditViewModel);
-        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
+        var viewModel = _defaultLayout.ServiceProvider.GetRequiredService(type) as IExtendedDocument;
 
         if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
 
@@ -162,7 +177,7 @@ public class DockService : Factory, IDockService
         }
 
         return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
-            ? ContainerLocator.Container.Resolve<MainWindow>()
+            ? _mainWindow
             : null;
     }
 
@@ -228,7 +243,7 @@ public class DockService : Factory, IDockService
         ContextLocator = new Dictionary<string, Func<object?>>();
         HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
         {
-            [nameof(IDockWindow)] = () => ContainerLocator.Container.Resolve<AdvancedHostWindow>()
+            [nameof(IDockWindow)] = () => _advancedHostWindow
         };
         DockableLocator = new Dictionary<string, Func<IDockable?>>();
 
@@ -239,7 +254,12 @@ public class DockService : Factory, IDockService
 
     public void Show<T>(DockShowLocation location = DockShowLocation.Window) where T : IDockable
     {
-        Show(ContainerLocator.Container.Resolve<T>(), location);
+        if (Layout == null) throw new NullReferenceException(nameof(Layout));
+
+        var container = _defaultLayout.ServiceProvider.GetRequiredService(typeof(T)) as T;
+        if (container == null) throw new NullReferenceException($"Could not resolve type {typeof(T)} from the service provider.");
+
+        Show(container, location);
     }
 
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
@@ -278,12 +298,12 @@ public class DockService : Factory, IDockService
 
                 if (window != null)
                 {
-                    var mainWindow = ContainerLocator.Current.Resolve<MainWindow>();
+                    
                     AddWindow(Layout, window);
                     window.Height = 400;
                     window.Width = 600;
-                    window.X = mainWindow.Position.X + mainWindow.Width / 2 - window.Width / 2;
-                    window.Y = mainWindow.Position.Y + mainWindow.Height / 2 - window.Height / 2;
+                    window.X = _mainWindow.Position.X + _mainWindow.Width / 2 - window.Width / 2;
+                    window.Y = _mainWindow.Position.Y + _mainWindow.Height / 2 - window.Height / 2;
                     window.Topmost = false;
                     window.Present(false);
                     SetActiveDockable(dockable);
@@ -316,15 +336,14 @@ public class DockService : Factory, IDockService
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    ?.Log("Could not load layout from file! Loading default layout..." + e, ConsoleColor.Red);
+                _logger.LogInformation("Could not load layout from file! Loading default layout..." + e, ConsoleColor.Red);
             }
 
         if (layout == null)
         {
             layout = name switch
             {
-                _ => DefaultLayout.GetDefaultLayout(this)
+                _ => _defaultLayout.GetDefaultLayout(this)
             };
             OpenFiles.Clear();
             Show(_welcomeScreenViewModel, DockShowLocation.Document);

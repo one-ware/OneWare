@@ -1,4 +1,6 @@
-﻿using OneWare.Essentials.PackageManager;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.LanguageService;
@@ -10,8 +12,11 @@ public abstract class LanguageServiceLspAutoDownload : LanguageServiceLsp
     private bool _enableAutoDownload;
 
     protected LanguageServiceLspAutoDownload(IObservable<string> executablePath, Package package, string name,
-        string? workspace, IPackageService packageService, IObservable<bool> enableAutoDownload)
-        : base(name, workspace)
+        string? workspace, IPackageService packageService, IObservable<bool> enableAutoDownload,
+        IChildProcessService childProcessService, PlatformHelper platformHelper, ILogger<LanguageServiceLsp> logger,
+        IErrorService errorService, IDockService dockService, ILogger<LanguageServiceBase> baseLogger,
+        IProjectExplorerService projectExplorerService)
+        : base(name, childProcessService, workspace, platformHelper, logger, errorService, dockService, baseLogger, projectExplorerService)
     {
         _package = package;
         _packageService = packageService;

@@ -10,9 +10,11 @@ public class FolderProjectRoot : ProjectRoot
     public const string ProjectType = "Folder";
 
     private readonly Dictionary<IProjectFolder, IDisposable> _registeredFolders = new();
+    private readonly ILogger _logger;
 
-    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
+    public FolderProjectRoot(string rootFolderPath, ILogger logger) : base(rootFolderPath, true)
     {
+        _logger = logger;
         WatchDirectory(this);
     }
 
@@ -39,27 +41,32 @@ public class FolderProjectRoot : ProjectRoot
             {
                 if (x)
                 {
-                    if (folder.Children.FirstOrDefault() is LoadingDummyNode) folder.Children.RemoveAt(0);
+                    if (folder.Children.FirstOrDefault() is LoadingDummyNode)
+                        folder.Children.RemoveAt(0);
+
                     FolderProjectManager.LoadFolder(folder);
                 }
                 else
                 {
                     if (folder.Entities.Count > 0)
+                    {
                         foreach (var subEntity in folder.Entities.ToArray())
                             folder.Remove(subEntity);
+                    }
+
                     if (Directory.Exists(folder.FullPath) &&
                         Directory.EnumerateFileSystemEntries(folder.FullPath).Any())
+                    {
                         folder.Children.Add(new LoadingDummyNode());
+                    }
                 }
             });
-
-            //Console.WriteLine("watch folder: " + folder.FullPath);
 
             _registeredFolders.Add(folder, subscription);
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
@@ -72,14 +79,11 @@ public class FolderProjectRoot : ProjectRoot
         }
     }
 
-    public override bool IsPathIncluded(string path)
-    {
-        return true;
-    }
+    public override bool IsPathIncluded(string path) => true;
 
     public override void IncludePath(string path)
     {
-        //Not needed
+        // Not needed
     }
 
     public override void OnExternalEntryAdded(string path, FileAttributes attributes)

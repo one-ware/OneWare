@@ -14,9 +14,11 @@ public partial class WaveFormView : UserControl
     private bool _pointerPressed;
     private WaveFormViewModel? _viewModel;
     private double _zoomDelta;
+    private readonly PlatformHelper _platformHelper ;
 
-    public WaveFormView()
+    public WaveFormView(PlatformHelper platformHelper)
     {
+        _platformHelper = platformHelper;
         InitializeComponent();
 
         if (DataContext is WaveFormViewModel viewmodel)
@@ -65,7 +67,7 @@ public partial class WaveFormView : UserControl
                 return;
             }
 
-            if (args.KeyModifiers == PlatformHelper.ControlKey)
+            if (args.KeyModifiers == _platformHelper.ControlKey)
             {
                 if (args.Delta.Y != 0)
                 {
@@ -99,6 +101,8 @@ public partial class WaveFormView : UserControl
             //else if(args.Delta.Y == 1) _viewModel.ZoomIn();
             //else if(args.Delta.Y == -1) _viewModel.ZoomOut();
         });
+        _platformHelper = platformHelper;
+
     }
 
     private void Initialize(WaveFormViewModel vm)

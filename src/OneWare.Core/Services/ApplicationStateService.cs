@@ -12,7 +12,7 @@ namespace OneWare.Core.Services;
 public class ApplicationStateService : ObservableObject, IApplicationStateService
 {
     private readonly object _activeLock = new();
-
+    private readonly MainWindow _mainWindow;
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
 
     private readonly List<Action> _shutdownActions = new();
@@ -20,7 +20,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     private ApplicationProcess _activeProcess = new() { State = AppState.Idle, StatusMessage = "Ready" };
 
-    public ApplicationStateService(IWindowService windowService)
+    public ApplicationStateService(IWindowService windowService, MainWindow mainWindow)
     {
         _windowService = windowService;
 
@@ -38,6 +38,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                     ActiveProcess = new ApplicationProcess { State = AppState.Idle, StatusMessage = s.FinishMessage };
             }
         };
+        _mainWindow = mainWindow;
+
     }
 
     public ApplicationProcess ActiveProcess
@@ -100,6 +102,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public void TryShutdown()
     {
-        Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
+        Dispatcher.UIThread.Post(() => _mainWindow.Close());
     }
 }

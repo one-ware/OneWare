@@ -7,6 +7,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -24,6 +25,8 @@ public class EditViewModel : ExtendedDocument, IEditor
     private static readonly IBrush ErrorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
+    private readonly ILogger<EditViewModel> _logger;
+    public readonly PlatformHelper _platformHelper;
     private readonly BackupService _backupService;
 
     private readonly IDockService _dockService;
@@ -39,7 +42,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     private ITypeAssistance? _typeAssistance;
 
-    public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
+    public EditViewModel(string fullPath, ILogger<EditViewModel> logger, ISettingsService settingsService,
         IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
         BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
@@ -51,13 +54,13 @@ public class EditViewModel : ExtendedDocument, IEditor
         _languageManager = languageManager;
         _errorService = errorService;
         _backupService = backupService;
-
+        _logger = logger;
         TopExtensions = windowService.GetUiExtensions("EditView_Top");
         BottomExtensions = windowService.GetUiExtensions("EditView_Bottom");
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+        _logger.LogInformation("Initializing " + fullPath + "", ConsoleColor.DarkGray);
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -149,8 +152,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             DisableEditViewEvents = CurrentDocument.TextLength > 100000;
             if (DisableEditViewEvents)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Warning("Some features are disabled for this large file to reduce performance loss");
+                _logger.LogWarning("Some features are disabled for this large file to reduce performance loss");
             }
             else
             {
@@ -324,7 +326,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         try
         {
-            await PlatformHelper.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
+            await _platformHelper.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
         }
         catch (Exception e)
         {
@@ -332,8 +334,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             return false;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
+        _logger.LogInformation($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;
@@ -374,8 +375,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+            _logger.LogError($"Failed loading file {CurrentFile.FullPath}", e, false);
 
             success = false;
         }

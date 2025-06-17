@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
@@ -19,7 +20,16 @@ public class TerminalViewModel : ObservableObject
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();
-    
+    private readonly PlatformHelper _platformHelper;
+    private readonly ILogger<TerminalViewModel> _logger;
+
+    public TerminalViewModel(PlatformHelper platformHelper,
+                             ILogger<TerminalViewModel> logger)
+    {
+        _platformHelper = platformHelper;
+        _logger = logger;
+    }
+
     public string? StartArguments { get; }
     public string WorkingDir { get; }
 
@@ -90,12 +100,12 @@ public class TerminalViewModel : ObservableObject
             CloseConnection();
             
             //TODO Fix zsh support
-            var shellExecutable = PlatformHelper.Platform switch
+            var shellExecutable = _platformHelper.Platform switch
             {
-                PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
-                PlatformId.LinuxX64 or PlatformId.LinuxArm64 => PlatformHelper.GetFullPath("bash"),
-                PlatformId.OsxX64 or PlatformId.OsxArm64 => PlatformHelper.GetFullPath("zsh") ??
-                                                            PlatformHelper.GetFullPath("bash"),
+                PlatformId.WinX64 or PlatformId.WinArm64 => _platformHelper.GetFullPath("powershell.exe"),
+                PlatformId.LinuxX64 or PlatformId.LinuxArm64 => _platformHelper.GetFullPath("bash"),
+                PlatformId.OsxX64 or PlatformId.OsxArm64 => _platformHelper.GetFullPath("zsh") ??
+                                                            _platformHelper.GetFullPath("bash"),
                 _ => null
             };
 
@@ -105,7 +115,7 @@ public class TerminalViewModel : ObservableObject
 
                 if (terminal == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    _logger.LogError("Error creating terminal!");
                     return;
                 }
 

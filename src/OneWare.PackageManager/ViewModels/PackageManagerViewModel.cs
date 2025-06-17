@@ -1,5 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,173 +11,180 @@ using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
-namespace OneWare.PackageManager.ViewModels;
-
-public class PackageManagerViewModel : ObservableObject
+namespace OneWare.PackageManager.ViewModels
 {
-    private readonly IPackageService _packageService;
-    
-    private readonly ILogger _logger;
+    // Factory delegate to create PackageViewModel instances with PackageModel parameter
+    public delegate PackageViewModel PackageViewModelFactory(PackageModel model);
 
-    private string _filter = string.Empty;
-
-    private bool _isLoading;
-    private PackageCategoryViewModel? _selectedCategory;
-
-    private bool _showAvailable = true;
-
-    private bool _showInstalled = true;
-
-    private bool _showUpdate = true;
-
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger)
+    public class PackageManagerViewModel : ObservableObject
     {
-        _packageService = packageService;
-        _logger = logger;
+        private readonly IPackageService _packageService;
+        private readonly ILogger _logger;
+        private readonly PackageViewModelFactory _packageViewModelFactory;
 
-        PackageCategories.Add(new PackageCategoryViewModel("Plugins",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Languages",
-            Application.Current!.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Toolchains",
-            Application.Current!.GetResourceObservable("FeatherIcons.Tool")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
-            Application.Current!.GetResourceObservable("Material.Pulse")));
-        PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
+        private string _filter = string.Empty;
+        private bool _isLoading;
+        private PackageCategoryViewModel? _selectedCategory;
 
-        var hardwareCategory =
-            new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
-        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
-        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
-        
-        PackageCategories.Add(hardwareCategory);
-        PackageCategories.Add(new PackageCategoryViewModel("Libraries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
-        PackageCategories.Add(new PackageCategoryViewModel("Binaries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
-        PackageCategories.Add(new PackageCategoryViewModel("Drivers",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularUsb")));
+        private bool _showAvailable = true;
+        private bool _showInstalled = true;
+        private bool _showUpdate = true;
 
-        SelectedCategory = PackageCategories.First();
-
-        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x =>
+        public PackageManagerViewModel(
+            IPackageService packageService,
+            ILogger logger,
+            PackageViewModelFactory packageViewModelFactory)
         {
-            IsLoading = x;
-        });
+            _packageService = packageService;
+            _logger = logger;
+            _packageViewModelFactory = packageViewModelFactory;
 
-        Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
-        {
+            PackageCategories.Add(new PackageCategoryViewModel("Plugins",
+                Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
+            PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Languages",
+                Application.Current!.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
+            PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Toolchains",
+                Application.Current!.GetResourceObservable("FeatherIcons.Tool")));
+            PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
+                Application.Current!.GetResourceObservable("Material.Pulse")));
+            PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Misc",
+                Application.Current!.GetResourceObservable("Module")));
+
+            var hardwareCategory = new PackageCategoryViewModel("Hardware",
+                Application.Current!.GetResourceObservable("NiosIcon"));
+            hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
+            hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
+
+            PackageCategories.Add(hardwareCategory);
+            PackageCategories.Add(new PackageCategoryViewModel("Libraries",
+                Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
+            PackageCategories.Add(new PackageCategoryViewModel("Binaries",
+                Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
+            PackageCategories.Add(new PackageCategoryViewModel("Drivers",
+                Application.Current!.GetResourceObservable("BoxIcons.RegularUsb")));
+
+            SelectedCategory = PackageCategories.First();
+
+            _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => IsLoading = x);
+
+            Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
+            {
+                ConstructPackageViewModels();
+            });
+
             ConstructPackageViewModels();
-        });
-        
-        ConstructPackageViewModels();
-    }
-
-    public bool ShowInstalled
-    {
-        get => _showInstalled;
-        set
-        {
-            SetProperty(ref _showInstalled, value);
-            FilterPackages();
-        }
-    }
-
-    public bool ShowUpdate
-    {
-        get => _showUpdate;
-        set
-        {
-            SetProperty(ref _showUpdate, value);
-            FilterPackages();
-        }
-    }
-
-    public bool ShowAvailable
-    {
-        get => _showAvailable;
-        set
-        {
-            SetProperty(ref _showAvailable, value);
-            FilterPackages();
-        }
-    }
-
-    public string Filter
-    {
-        get => _filter;
-        set
-        {
-            SetProperty(ref _filter, value);
-            FilterPackages();
-        }
-    }
-
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
-
-    public PackageCategoryViewModel? SelectedCategory
-    {
-        get => _selectedCategory;
-        set => SetProperty(ref _selectedCategory, value);
-    }
-
-    public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
-
-    public async Task RefreshPackagesAsync()
-    {
-        await _packageService.LoadPackagesAsync();
-    }
-
-    private void ConstructPackageViewModels()
-    {
-        foreach (var category in PackageCategories)
-        {
-            foreach (var pkg in category.Packages.ToArray()) category.Remove(pkg);
-            foreach (var sub in category.SubCategories)
-            foreach (var pkg in sub.Packages.ToArray())
-                sub.Remove(pkg);
         }
 
-        foreach (var (_, packageModel) in _packageService.Packages)
-            try
+        public bool ShowInstalled
+        {
+            get => _showInstalled;
+            set
             {
-                var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(PackageModel), packageModel));
+                SetProperty(ref _showInstalled, value);
+                FilterPackages();
+            }
+        }
 
-                var category = packageModel.Package.Type switch
+        public bool ShowUpdate
+        {
+            get => _showUpdate;
+            set
+            {
+                SetProperty(ref _showUpdate, value);
+                FilterPackages();
+            }
+        }
+
+        public bool ShowAvailable
+        {
+            get => _showAvailable;
+            set
+            {
+                SetProperty(ref _showAvailable, value);
+                FilterPackages();
+            }
+        }
+
+        public string Filter
+        {
+            get => _filter;
+            set
+            {
+                SetProperty(ref _filter, value);
+                FilterPackages();
+            }
+        }
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
+        public PackageCategoryViewModel? SelectedCategory
+        {
+            get => _selectedCategory;
+            set => SetProperty(ref _selectedCategory, value);
+        }
+
+        public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = new();
+
+        public async Task RefreshPackagesAsync()
+        {
+            await _packageService.LoadPackagesAsync();
+        }
+
+        private void ConstructPackageViewModels()
+        {
+            // Clear existing packages from all categories and subcategories
+            foreach (var category in PackageCategories)
+            {
+                foreach (var pkg in category.Packages.ToArray())
+                    category.Remove(pkg);
+                foreach (var sub in category.SubCategories)
+                    foreach (var pkg in sub.Packages.ToArray())
+                        sub.Remove(pkg);
+            }
+
+            // Create and add PackageViewModels using injected factory
+            foreach (var (_, packageModel) in _packageService.Packages)
+            {
+                try
                 {
-                    "Plugin" => PackageCategories[0],
-                    "Hardware" => PackageCategories[1],
-                    "Library" => PackageCategories[2],
-                    "NativeTool" => PackageCategories[3],
-                    _ => null
-                };
+                    var model = _packageViewModelFactory(packageModel);
 
-                if (category == null) continue;
+                    var category = packageModel.Package.Type switch
+                    {
+                        "Plugin" => PackageCategories[0],
+                        "Hardware" => PackageCategories[1],
+                        "Library" => PackageCategories[2],
+                        "NativeTool" => PackageCategories[3],
+                        _ => null
+                    };
 
-                var subCategory = category.SubCategories.FirstOrDefault(x =>
-                    x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
+                    if (category == null) continue;
 
-                if (subCategory != null)
-                    subCategory.Add(model);
-                else
-                    category.Add(model);
+                    var subCategory = category.SubCategories.FirstOrDefault(x =>
+                        x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
+
+                    if (subCategory != null)
+                        subCategory.Add(model);
+                    else
+                        category.Add(model);
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e.Message, e);
+                }
             }
-            catch (Exception e)
-            {
-                _logger.Error(e.Message, e);
-            }
 
-        FilterPackages();
-    }
+            FilterPackages();
+        }
 
-    private void FilterPackages()
-    {
-        foreach (var categoryModel in PackageCategories)
-            categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+        private void FilterPackages()
+        {
+            foreach (var categoryModel in PackageCategories)
+                categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+        }
     }
 }

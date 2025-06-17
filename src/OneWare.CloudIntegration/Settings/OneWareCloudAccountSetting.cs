@@ -7,23 +7,34 @@ using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Settings;
 
 public class OneWareCloudAccountSetting : CustomSetting
 {
-    private object _value;
+    private readonly OneWareCloudLoginService _oneWareCloudLoginService;
+    private readonly OneWareCloudNotificationService _oneWareCloudNotificationService;
+    private readonly OneWareCloudAccountSettingViewModel _oneWareCloudAccountSettingViewModel;
+    private readonly IHttpService _httpService;
 
+    private object _value;
     private IImage? _image;
 
-    public OneWareCloudAccountSetting() : base(string.Empty)
+    public OneWareCloudAccountSetting(OneWareCloudLoginService oneWareCloudLoginService, 
+                                      OneWareCloudNotificationService oneWareCloudNotificationService,
+                                      OneWareCloudAccountSettingViewModel oneWareCloudAccountSettingViewModel,
+                                      IHttpService httpService) : base(string.Empty)
     {
-        Control = new OneWareCloudAccountSettingViewModel(this);
+        _oneWareCloudAccountSettingViewModel = oneWareCloudAccountSettingViewModel;        
         _value = string.Empty;
+        _oneWareCloudLoginService = oneWareCloudLoginService;
+        _oneWareCloudNotificationService = oneWareCloudNotificationService;
+        _httpService = httpService;
+        Control = _oneWareCloudAccountSettingViewModel.Setting = this;        
     }
 
+    
     public override object Value
     {
         get => _value;
@@ -50,19 +61,18 @@ public class OneWareCloudAccountSetting : CustomSetting
 
     private async Task ResolveAsync()
     {
-        var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
 
         Image = null;
 
         if (string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
 
-        var (jwt, status) = await loginService.GetJwtTokenAsync(Email);
+        var (jwt, status) = await _oneWareCloudLoginService.GetJwtTokenAsync(Email);
 
         if (jwt == null)
         {
             if (status == HttpStatusCode.Unauthorized)
             {
-                loginService.Logout(Email);
+                _oneWareCloudLoginService.Logout(Email);
                 Value = string.Empty;
                 return;
             }
@@ -71,21 +81,19 @@ public class OneWareCloudAccountSetting : CustomSetting
         var request = new RestRequest("/api/users/me");
         request.AddHeader("Authorization", $"Bearer {jwt}");
 
-        var response = await loginService.GetRestClient().ExecuteGetAsync(request);
+        var response = await _oneWareCloudLoginService.GetRestClient().ExecuteGetAsync(request);
         var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
 
         var avatarUrl = data["avatarUrl"]?.GetValue<string>();
-
-        var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-
+        
         if (avatarUrl != null)
         {
-            Image = await httpService.DownloadImageAsync(avatarUrl);
+            Image = await _httpService.DownloadImageAsync(avatarUrl);
 
             Console.WriteLine(avatarUrl);
 
             //TODO Move this to somewhere else
-            await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
+            await _oneWareCloudNotificationService.ConnectAsync();
         }
     }
 }

@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Helpers;
 
@@ -23,12 +23,33 @@ public enum PlatformId
     Unknown
 }
 
-public static class PlatformHelper
+public class PlatformHelper
 {
-    private static readonly ILogger<PlatformHelper> _logger;
-    static PlatformHelper(ILogger<PlatformHelper> logger)
+    private readonly ILogger<PlatformHelper> _logger;
+
+    public PlatformId Platform { get; }
+    public string ExecutableExtension { get; } = string.Empty;
+    public string PlatformIdentifier => Platform switch
+    {
+        PlatformId.WinX64 => "win-x64",
+        PlatformId.WinArm64 => "win-arm64",
+        PlatformId.LinuxX64 => "linux-x64",
+        PlatformId.LinuxArm64 => "linux-arm64",
+        PlatformId.OsxX64 => "osx-x64",
+        PlatformId.OsxArm64 => "osx-arm64",
+        PlatformId.Wasm => "wasm",
+        _ => "unknown"
+    };
+
+    public FilePickerFileType ExeFile { get; }
+    public FilePickerFileType AllFiles { get; } = new("All files (*)") { Patterns = new[] { "*" } };
+
+    private static readonly IPEndPoint DefaultLoopbackEndpoint = new(IPAddress.Loopback, 0);
+
+    public PlatformHelper(ILogger<PlatformHelper> logger)
     {
         _logger = logger;
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = RuntimeInformation.OSArchitecture switch
@@ -61,54 +82,29 @@ public static class PlatformHelper
         {
             Platform = PlatformId.Wasm;
         }
+        else
+        {
+            Platform = PlatformId.Unknown;
+        }
+
+        ExeFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? new FilePickerFileType("Executable (*.exe)") { Patterns = new[] { "*.exe" } }
+            : new FilePickerFileType("Executable (*)") { Patterns = new[] { "*" } };
     }
 
-    public static PlatformId Platform { get; }
+    // File helpers
+    public bool Exists(string path) => File.Exists(path) || ExistsOnPath(path);
 
-    public static string PlatformIdentifier => Platform switch
-    {
-        PlatformId.WinX64 => "win-x64",
-        PlatformId.WinArm64 => "win-arm64",
-        PlatformId.LinuxX64 => "linux-x64",
-        PlatformId.LinuxArm64 => "linux-arm64",
-        PlatformId.OsxX64 => "osx-x64",
-        PlatformId.OsxArm64 => "osx-arm64",
-        PlatformId.Wasm => "wasm",
-        _ => "unknown"
-    };
+    public bool ExistsOnPath(string fileName) => !string.IsNullOrWhiteSpace(fileName) && GetFullPath(fileName) != null;
 
-    public static string ExecutableExtension { get; } = string.Empty;
-
-    public static string GetLibraryFileName(string libraryName)
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return $"{libraryName}.dll"; // Windows uses .dll
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            return $"lib{libraryName}.dylib"; // macOS uses .dylib
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return $"lib{libraryName}.so"; // Linux uses .so
-
-        throw new PlatformNotSupportedException("Unsupported operating system.");
-    }
-    
-    public static bool Exists(string path)
-    {
-        return File.Exists(path) || ExistsOnPath(path);
-    }
-
-    public static bool ExistsOnPath(string fileName)
-    {
-        if (string.IsNullOrWhiteSpace(fileName)) return false;
-        return GetFullPath(fileName) != null;
-    }
-
-    public static string? GetFullPath(string fileName)
+    public string? GetFullPath(string fileName)
     {
         if (File.Exists(fileName))
             return Path.GetFullPath(fileName);
 
         var values = Environment.GetEnvironmentVariable("PATH");
         if (values == null) return fileName;
+
         foreach (var path in values.Split(Path.PathSeparator))
         {
             var fullPath = Path.Combine(path, fileName);
@@ -119,30 +115,25 @@ public static class PlatformHelper
         return null;
     }
 
-    public static void OpenHyperLink(string link)
+    public void OpenHyperLink(string link)
     {
         try
         {
-            var ps = new ProcessStartInfo(link)
-            {
-                UseShellExecute = true,
-                Verb = "open"
-            };
-            Process.Start(ps);
+            var psi = new ProcessStartInfo(link) { UseShellExecute = true, Verb = "open" };
+            Process.Start(psi);
         }
         catch (Exception e)
         {
-            _logger.Error("Failed open: " + link + " | " + e.Message, e, true, true);
+            _logger.LogError(e, "Failed to open link: {Link}", link);
         }
     }
 
-    public static void OpenExplorerPath(string path)
+    public void OpenExplorerPath(string path)
     {
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                // On Windows, use "explorer /select," to open the folder and select the file
                 Process.Start(new ProcessStartInfo("explorer", $"/select,\"{path}\"") { UseShellExecute = true });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -151,163 +142,176 @@ public static class PlatformHelper
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                // Try opening the directory if the path is a file
-                if (System.IO.File.Exists(path))
-                {
-                    path = Path.GetDirectoryName(path) ?? throw new NullReferenceException(nameof(path));
-                }
+                if (File.Exists(path))
+                    path = Path.GetDirectoryName(path)!;
+
                 Process.Start("xdg-open", $"\"{path}\"");
             }
             else
             {
-                throw new NotSupportedException("Operating system not supported");
+                throw new PlatformNotSupportedException();
             }
         }
         catch (Exception e)
         {
-            _logger.Error("Can't open " + path + " in explorer. " + e, e, true, true);
+            _logger.LogError(e, "Failed to open path: {Path}", path);
         }
     }
 
-    #region File Management
-
-    public static void CopyFile(string sourcePath, string destinationPath, bool overwrite = false)
+    public string GetLibraryFileName(string libraryName)
     {
-        File.Copy(sourcePath, destinationPath, overwrite);
-        ChmodFile(destinationPath);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return $"{libraryName}.dll";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return $"lib{libraryName}.dylib";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return $"lib{libraryName}.so";
+
+        throw new PlatformNotSupportedException("Unsupported OS.");
     }
 
-    public static void CopyDirectory(string sourcePath, string destPath)
+    // File management
+    public void CopyFile(string source, string dest, bool overwrite = false)
     {
-        var dir = new DirectoryInfo(sourcePath);
+        File.Copy(source, dest, overwrite);
+        ChmodFile(dest);
+    }
 
+    public void CopyDirectory(string source, string dest)
+    {
+        var dir = new DirectoryInfo(source);
         if (!dir.Exists)
             throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
 
-        var dirs = dir.GetDirectories();
-
-        Directory.CreateDirectory(destPath);
+        Directory.CreateDirectory(dest);
 
         foreach (var file in dir.GetFiles())
         {
-            var targetFilePath = Path.Combine(destPath, file.Name);
+            var targetFilePath = Path.Combine(dest, file.Name);
             file.CopyTo(targetFilePath);
             ChmodFile(targetFilePath);
         }
 
-        foreach (var subDir in dirs)
+        foreach (var subDir in dir.GetDirectories())
         {
-            var newDestinationDir = Path.Combine(destPath, subDir.Name);
+            var newDestinationDir = Path.Combine(dest, subDir.Name);
             CopyDirectory(subDir.FullName, newDestinationDir);
         }
     }
 
-    public static void ExecBash(string cmd)
+    public void CreateFile(string path)
+    {
+        File.Create(path).Close();
+        ChmodFile(path);
+    }
+
+    public void WriteTextFile(string path, string text)
+    {
+        File.WriteAllText(path, text);
+        ChmodFile(path);
+    }
+
+    public async Task WriteTextFileAsync(string path, string text)
+    {
+        await File.WriteAllTextAsync(path, text);
+        ChmodFile(path);
+    }
+
+    public void ChmodFile(string path)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture != Architecture.Wasm)
+        {
+            ExecBash($"chmod 777 '{path}'");
+        }
+    }
+
+    public void ChmodFolder(string path)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && RuntimeInformation.ProcessArchitecture != Architecture.Wasm)
+        {
+            ExecBash($"chmod -R 777 '{path}'");
+        }
+    }
+
+    public void ExecBash(string cmd)
     {
         var escapedArgs = cmd.Replace("\"", "\\\"");
-
-        using var process = new Process();
-        process.StartInfo = new ProcessStartInfo
+        using var process = new Process
         {
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "/bin/bash",
-            Arguments = $"-c \"{escapedArgs}\""
+            StartInfo = new ProcessStartInfo
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{escapedArgs}\""
+            }
         };
 
         process.Start();
         process.WaitForExit();
     }
 
-    public static void CreateFile(string path)
+    public int GetAvailablePort()
     {
-        File.Create(path).Close();
-        ChmodFile(path);
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.Bind(DefaultLoopbackEndpoint);
+        return (socket.LocalEndPoint as IPEndPoint)?.Port ?? throw new Exception("Error getting free port!");
     }
 
-    public static void WriteTextFile(string path, string text)
+    // Windows-only UI Helpers
+    public Thickness WindowsOnlyBorder =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+        Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            ? new Thickness(1)
+            : new Thickness(0);
+
+    public CornerRadius WindowsCornerRadius => GetCornerRadius();
+    public CornerRadius WindowsCornerRadiusBottom => GetCornerRadius(bottom: true);
+    public CornerRadius WindowsCornerRadiusBottomLeft => GetCornerRadius(bottomLeft: true);
+    public CornerRadius WindowsCornerRadiusBottomRight => GetCornerRadius(bottomRight: true);
+
+    private static CornerRadius GetCornerRadius(bool bottom = false, bool bottomLeft = false, bool bottomRight = false)
     {
-        File.WriteAllText(path, text);
-        ChmodFile(path);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
+            Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime)
+            return new CornerRadius(0);
+
+        var radius = Environment.OSVersion.Version.Build >= 22000 ? 8 : 0;
+        return bottom ? new CornerRadius(0, 0, radius, radius) :
+            bottomLeft ? new CornerRadius(0, 0, 0, radius) :
+            bottomRight ? new CornerRadius(0, 0, radius, 0) :
+            new CornerRadius(radius);
     }
 
-    public static async Task WriteTextFileAsync(string path, string text)
+    // Input
+    public KeyModifiers ControlKey => RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+        ? KeyModifiers.Meta
+        : KeyModifiers.Control;
+
+    public bool IsControl(KeyEventArgs e)
     {
-        await File.WriteAllTextAsync(path, text);
-        ChmodFile(path);
+        return Platform switch
+        {
+            PlatformId.OsxArm64 or PlatformId.OsxX64 =>
+                e.KeyModifiers.HasFlag(ControlKey) || e.Key is Key.LWin or Key.RWin,
+            _ => e.KeyModifiers.HasFlag(ControlKey) || e.Key is Key.LeftCtrl or Key.RightCtrl
+        };
     }
 
-    public static void ChmodFile(string path)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-            RuntimeInformation.ProcessArchitecture is not Architecture.Wasm)
-            ExecBash($"chmod 777 '{path}'");
-    }
-
-    public static void ChmodFolder(string path)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-            RuntimeInformation.ProcessArchitecture is not Architecture.Wasm)
-            ExecBash($"chmod -R 777 '{path}'");
-    }
-
-    #endregion
-
-    #region BringWindowToFront WINDOWS
-
-    private const int Alt = 0xA4;
-    private const int Extendedkey = 0x1;
-    private const int Keyup = 0x2;
-    private const int ShowMaximized = 3;
-
-#pragma warning disable IDE1006
-
-    //WINDOWS
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
-
-    [DllImport("user32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-    //LINUX
-    [DllImport("libX11.so.6")]
-    public static extern int XRaiseWindow(IntPtr display, IntPtr window);
-
-    [DllImport("libX11.so.6")]
-    public static extern IntPtr XOpenDisplay(IntPtr display);
-
-#pragma warning disable IDE1006
-
-    public static void ActivateWindow(Process process)
+    // Window activation
+    public void ActivateWindow(Process process)
     {
         ActivateWindow(process.MainWindowHandle, process.Handle);
     }
 
-    public static void ActivateWindow(IntPtr mainWindowHandle, IntPtr displayHandle)
+    public void ActivateWindow(IntPtr mainWindowHandle, IntPtr displayHandle)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Guard: check if window already has focus.
             if (mainWindowHandle == GetForegroundWindow()) return;
 
-            // Show window maximized.
             ShowWindow(mainWindowHandle, 1);
-
-            // Simulate an "ALT" key press.
             keybd_event(Alt, 0x45, Extendedkey | 0, 0);
-
-            // Simulate an "ALT" key release.
             keybd_event(Alt, 0x45, Extendedkey | Keyup, 0);
-
-            // Show window in forground.
             SetForegroundWindow(mainWindowHandle);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -316,89 +320,15 @@ public static class PlatformHelper
         }
     }
 
-    #endregion
+    // Win32 Interop
+    private const int Alt = 0xA4;
+    private const int Extendedkey = 0x1;
+    private const int Keyup = 0x2;
 
-    #region Window Styles
-
-    public static Thickness WindowsOnlyBorder =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-        Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
-            ? new Thickness(1)
-            : new
-                Thickness(0);
-
-    public static CornerRadius WindowsCornerRadius => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-                                                      Application.Current?.ApplicationLifetime is
-                                                          IClassicDesktopStyleApplicationLifetime
-        ? Environment.OSVersion.Version.Build >= 22000 ? new CornerRadius(8) : new CornerRadius(0)
-        : new CornerRadius(0);
-
-    public static CornerRadius WindowsCornerRadiusBottom => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-                                                            Application.Current?.ApplicationLifetime is
-                                                                IClassicDesktopStyleApplicationLifetime
-        ? Environment.OSVersion.Version.Build >= 22000 ? new CornerRadius(0, 0, 8, 8) : new CornerRadius(0)
-        : new CornerRadius(0);
-
-    public static CornerRadius WindowsCornerRadiusBottomLeft =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-        Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
-            ? Environment.OSVersion.Version.Build >= 22000 ? new CornerRadius(0, 0, 0, 8) : new CornerRadius(0)
-            : new CornerRadius(0);
-
-    public static CornerRadius WindowsCornerRadiusBottomRight =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-        Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
-            ? Environment.OSVersion.Version.Build >= 22000 ? new CornerRadius(0, 0, 8, 0) : new CornerRadius(0)
-            : new CornerRadius(0);
-
-    #endregion
-
-    #region Keys
-
-    public static KeyModifiers ControlKey => RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-        ? KeyModifiers.Meta
-        : KeyModifiers.Control;
-
-    public static bool IsControl(KeyEventArgs e)
-    {
-        switch (Platform)
-        {
-            case PlatformId.OsxArm64:
-            case PlatformId.OsxX64:
-                return e.KeyModifiers.HasFlag(ControlKey) || e.Key is Key.LWin or Key.RWin;
-            default:
-                return e.KeyModifiers.HasFlag(ControlKey) || e.Key is Key.LeftCtrl or Key.RightCtrl;
-        }
-    }
-
-    #endregion
-    
-    #region Common FileDialogFilters
-
-    public static readonly FilePickerFileType ExeFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? new FilePickerFileType("Executable (*.exe)")
-        {
-            Patterns = new[] { "*.exe" }
-        }
-        : new FilePickerFileType("Executable (*)")
-        {
-            Patterns = new[] { "*" }
-        };
-
-    public static readonly FilePickerFileType AllFiles = new("All files (*)")
-    {
-        Patterns = new[] { "*" }
-    };
-
-    #endregion
-
-    private static readonly IPEndPoint DefaultLoopbackEndpoint = new(IPAddress.Loopback, 0);
-
-    public static int GetAvailablePort()
-    {
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(DefaultLoopbackEndpoint);
-
-        return (socket.LocalEndPoint as IPEndPoint)?.Port ?? throw new Exception("Error getting free port!");
-    }
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("libX11.so.6")] public static extern int XRaiseWindow(IntPtr display, IntPtr window);
+    [DllImport("libX11.so.6")] public static extern IntPtr XOpenDisplay(IntPtr display);
 }

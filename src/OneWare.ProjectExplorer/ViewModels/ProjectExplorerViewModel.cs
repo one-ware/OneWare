@@ -23,25 +23,26 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IDockService _dockService;
     private readonly IFileWatchService _fileWatchService;
     private readonly ILanguageManager _languageManager;
-
     private readonly string _lastProjectsFile;
-
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManagerService;
-
-    private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
-        new();
-
+    private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu = new();
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;
 
     private IProjectRoot? _activeProject;
-    
-    public ProjectExplorerViewModel(IApplicationStateService applicationStateService, IPaths paths,
+
+    public ProjectExplorerViewModel(
+        IApplicationStateService applicationStateService,
+        IPaths paths,
         IDockService dockService,
-        IWindowService windowService, ISettingsService settingsService,
-        IProjectManagerService projectManagerService, IFileWatchService fileWatchService,
-        ILanguageManager languageManager)
+        IWindowService windowService,
+        ISettingsService settingsService,
+        IProjectManagerService projectManagerService,
+        IFileWatchService fileWatchService,
+        ILanguageManager languageManager,
+        ILogger logger)
         : base(IconKey)
     {
         ApplicationStateService = applicationStateService;
@@ -52,6 +53,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _projectManagerService = projectManagerService;
         _fileWatchService = fileWatchService;
         _languageManager = languageManager;
+        _logger = logger;
 
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
 
@@ -235,12 +237,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         Header = "Edit",
                         Items = new ObservableCollection<MenuItemViewModel>
                         {
-                            // new MenuItemModel("Cut")
-                            // {
-                            //     Header = "Cut",
-                            //     Command = new RelayCommand(() => _ = CutAsync(entry)),
-                            //     ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
-                            // },
                             new("Copy")
                             {
                                 Header = "Copy",
@@ -288,12 +284,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     Header = "Edit",
                     Items = new ObservableCollection<MenuItemViewModel>
                     {
-                        // new MenuItemModel("Cut")
-                        // {
-                        //     Header = "Cut",
-                        //     Command = new RelayCommand(() => _ = CutAsync(entry)),
-                        //     ImageIconObservable = Application.Current?.GetResourceObservable("MaterialDesign.DeleteForever")
-                        // },
                         new("Delete")
                         {
                             Header = "Delete",
@@ -304,7 +294,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                         }
                     }
                 });
-
 
             foreach (var reg in _registerContextMenu) reg.Invoke(SelectedItems, menuItems);
         }
@@ -390,8 +379,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         foreach (var entry in entries) await RemoveAsync(entry);
 
         roots.RemoveAll(x => !Projects.Contains(x));
-
-        //await Task.WhenAll(roots.Select(x => ProjectManager.SaveAsync(x)));
     }
 
     private async Task RemoveAsync(IProjectEntry entry)
@@ -438,10 +425,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task DeleteDialogAsync(params IProjectEntry[] entries)
     {
-        if(entries.Length < 1) return;
-        
+        if (entries.Length < 1) return;
+
         var message = string.Empty;
-        
+
         if (entries.Length == 1)
         {
             message = entries[0] switch
@@ -484,8 +471,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error("File / Directory could not be deleted from storage!" + e);
+            _logger.Error("File / Directory could not be deleted from storage!" + e);
         }
 
         await RemoveAsync(new[] { entry });
@@ -545,10 +531,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
                     var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameDirectory();
-                    // if (askForInclude)
-                    //     if (!await AskForIncludeDialogAsync(destination.Root,
-                    //             Path.GetRelativePath(destination.Root.FullPath, destPath)))
-                    //         return;
                     if (copy) PlatformHelper.CopyDirectory(path, destPath);
                     else Directory.Move(path, destPath);
                 }
@@ -564,7 +546,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
         }
     }
@@ -618,8 +600,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (!entry.IsValid())
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                .Error("Tried to reload invalid entry (no root) " + entry.Header);
+            _logger.Error("Tried to reload invalid entry (no root) " + entry.Header);
             return entry;
         }
 
@@ -630,8 +611,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (manager == null)
             {
                 entry.LoadingFailed = true;
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"Cannot reload {entry.Header}. Manager not found!");
+                _logger.Error($"Cannot reload {entry.Header}. Manager not found!");
             }
 
             var proj = manager != null ? await manager.LoadProjectAsync(root.ProjectPath) : null;
@@ -653,7 +633,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (entry.TopFolder == null) return entry;
 
         if (entry is IProjectFolder folder)
-            //TODO
             return entry;
 
         if (entry is IProjectFile file)
@@ -677,12 +656,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (manager == null) throw new NullReferenceException(nameof(manager));
         return manager.SaveProjectAsync(project);
     }
-    
+
     public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
     {
         var saveTasks = _dockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
             .Select(x => x.Value.SaveAsync());
-            
+
         var results = await Task.WhenAll(saveTasks);
 
         return results.All(x => x);
@@ -792,10 +771,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public Task DeleteSelectedDialog()
     {
         if (SelectedItems.Count == 0 || SelectedItems.Any(x => x is not IProjectEntry)) return Task.CompletedTask;
-        
-        return this.DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
+
+        return DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
     }
-    
+
     #endregion
 
     #region LastProjectsFile
@@ -841,9 +820,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (manager != null)
                     loadProjectTasks.Add(LoadProjectAsync(l.Path, manager, l.IsExpanded, l.IsActive));
                 else
-                    ContainerLocator.Container.Resolve<ILogger>()?
-                        .Warning(
-                            $"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
+                    _logger.Warning(
+                        $"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
             }
 
             await Task.WhenAll(loadProjectTasks);

@@ -8,153 +8,155 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
-namespace OneWare.UniversalFpgaProjectSystem.Models;
-
-public class HardwareInterfaceModel : ObservableObject
+namespace OneWare.UniversalFpgaProjectSystem.Models
 {
-    private ExtensionModel? _connectedExtension;
-
-    private ExtensionViewModelBase? _connectedExtensionViewModel;
-    
-    public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner)
+    public class HardwareInterfaceModel : ObservableObject
     {
-        Interface = fpgaInterface;
-        Owner = owner;
+        private readonly ILogger _logger;
+        private readonly FpgaService _fpgaService;
+        private ExtensionModel? _connectedExtension;
+        private ExtensionViewModelBase? _connectedExtensionViewModel;
 
-        TranslatePins();
-        UpdateMenu();
-    }
-    
-    public IHardwareModel Owner { get; }
-
-    public FpgaModel? FpgaModel
-    {
-        get
+        public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner, ILogger logger, FpgaService fpgaService)
         {
-            var parent = Owner;
-            while (parent != null)
-            {
-                if (parent is FpgaModel fpgaModel) return fpgaModel;
-                parent = (parent as ExtensionModel)?.ParentInterfaceModel?.Owner;
-            }
-            return null;
+            Interface = fpgaInterface;
+            Owner = owner;
+            _logger = logger;
+            _fpgaService = fpgaService;
+
+            TranslatePins();
+            UpdateMenu();
         }
-    }
-    
-    public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
 
-    public HardwareInterface Interface { get; }
+        public IHardwareModel Owner { get; }
 
-    public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
-
-    public ExtensionModel? ConnectedExtension
-    {
-        get => _connectedExtension;
-        private set => SetProperty(ref _connectedExtension, value);
-    }
-
-    public ExtensionViewModelBase? ConnectedExtensionViewModel
-    {
-        get => _connectedExtensionViewModel;
-        private set
+        public FpgaModel? FpgaModel
         {
-            _connectedExtensionViewModel?.Dispose();
-            SetProperty(ref _connectedExtensionViewModel, value);
-        }
-    }
-
-    public void TranslatePins()
-    {
-        try
-        {
-            foreach (var pin in Interface.Pins)
+            get
             {
-                TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
+                var parent = Owner;
+                while (parent != null)
+                {
+                    if (parent is FpgaModel fpgaModel) return fpgaModel;
+                    parent = (parent as ExtensionModel)?.ParentInterfaceModel?.Owner;
+                }
+                return null;
             }
+        }
+
+        public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
+
+        public HardwareInterface Interface { get; }
+
+        public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
+
+        public ExtensionModel? ConnectedExtension
+        {
+            get => _connectedExtension;
+            private set => SetProperty(ref _connectedExtension, value);
+        }
+
+        public ExtensionViewModelBase? ConnectedExtensionViewModel
+        {
+            get => _connectedExtensionViewModel;
+            private set
+            {
+                _connectedExtensionViewModel?.Dispose();
+                SetProperty(ref _connectedExtensionViewModel, value);
+            }
+        }
+
+        public void TranslatePins()
+        {
+            try
+            {
+                foreach (var pin in Interface.Pins)
+                {
+                    TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
+                }
+
+                if (ConnectedExtension != null)
+                {
+                    ConnectedExtension.ParentInterfaceModel = this;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+            }
+        }
+
+        private void UpdateMenu()
+        {
+            InterfaceMenu.Clear();
 
             if (ConnectedExtension != null)
             {
-                ConnectedExtension.ParentInterfaceModel = this;
+                InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
+                {
+                    Header = "Disconnect",
+                    Command = new RelayCommand<IFpgaExtensionPackage?>(SetExtension),
+                    CommandParameter = null
+                });
+                return;
+            }
+
+            foreach (var ext in _fpgaService.FpgaExtensionPackages)
+            {
+                if (ext.Connector != Interface.Connector) continue;
+
+                InterfaceMenu.Add(new MenuItemViewModel($"Connect {ext.Name}")
+                {
+                    Header = $"Connect {ext.Name}",
+                    Command = new RelayCommand<IFpgaExtensionPackage>(SetExtension),
+                    CommandParameter = ext
+                });
             }
         }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
-    }
-    
-    private void UpdateMenu()
-    {
-        var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
 
-        InterfaceMenu.Clear();
-
-        if (ConnectedExtension != null)
+        public void SetExtension(IFpgaExtensionPackage? extensionPackage)
         {
-            InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
+            if (extensionPackage != null)
             {
-                Header = "Disconnect",
-                Command = new RelayCommand<IFpgaExtensionPackage?>(SetExtension),
-                CommandParameter = null
-            });
-            return;
-        }
-
-        foreach (var ext in fpgaService.FpgaExtensionPackages)
-        {
-            if (ext.Connector != Interface.Connector) continue;
-
-            InterfaceMenu.Add(new MenuItemViewModel($"Connect {ext.Name}")
-            {
-                Header = $"Connect {ext.Name}",
-                Command = new RelayCommand<IFpgaExtensionPackage>(SetExtension),
-                CommandParameter = ext
-            });
-        }
-    }
-
-    public void SetExtension(IFpgaExtensionPackage? extensionPackage)
-    {
-        if (extensionPackage != null)
-        {
-            ConnectedExtension = new ExtensionModel(extensionPackage.LoadExtension())
-            {
-                ParentInterfaceModel = this
-            };
-            ConnectedExtensionViewModel = extensionPackage.LoadExtensionViewModel(ConnectedExtension);
-        }
-        else
-        {
-            ConnectedExtension = null;
-            ConnectedExtensionViewModel = null;
-        }
-
-        Dispatcher.UIThread.Post(UpdateMenu);
-    }
-
-    public void DropExtension(HardwareInterfaceModel lastOwner)
-    {
-        var connections = lastOwner.TranslatedPins!.Where(x => x.Value.ConnectedNode != null).ToList();
-        
-        ConnectedExtension = lastOwner.ConnectedExtension;
-        ConnectedExtension!.ParentInterfaceModel = this;
-        ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
-        ConnectedExtensionViewModel?.Initialize();
-
-        // Autoconnect pins
-        if (FpgaModel is { } model)
-        {
-            foreach (var connection in connections)
-            {
-                var pin = TranslatedPins[connection.Key];
-                var node = connection.Value.ConnectedNode;
-                model.Disconnect(connection.Value);
-                model.Connect(pin, node!);
+                ConnectedExtension = new ExtensionModel(extensionPackage.LoadExtension(), _logger)
+                {
+                    ParentInterfaceModel = this
+                };
+                ConnectedExtensionViewModel = extensionPackage.LoadExtensionViewModel(ConnectedExtension);
             }
-        }
-        
-        lastOwner.SetExtension(null);
+            else
+            {
+                ConnectedExtension = null;
+                ConnectedExtensionViewModel = null;
+            }
 
-        Dispatcher.UIThread.Post(UpdateMenu);
+            Dispatcher.UIThread.Post(UpdateMenu);
+        }
+
+        public void DropExtension(HardwareInterfaceModel lastOwner)
+        {
+            var connections = lastOwner.TranslatedPins!.Where(x => x.Value.ConnectedNode != null).ToList();
+
+            ConnectedExtension = lastOwner.ConnectedExtension;
+            ConnectedExtension!.ParentInterfaceModel = this;
+            ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
+            ConnectedExtensionViewModel?.Initialize();
+
+            // Autoconnect pins
+            if (FpgaModel is { } model)
+            {
+                foreach (var connection in connections)
+                {
+                    var pin = TranslatedPins[connection.Key];
+                    var node = connection.Value.ConnectedNode;
+                    model.Disconnect(connection.Value);
+                    model.Connect(pin, node!);
+                }
+            }
+
+            lastOwner.SetExtension(null);
+
+            Dispatcher.UIThread.Post(UpdateMenu);
+        }
     }
 }

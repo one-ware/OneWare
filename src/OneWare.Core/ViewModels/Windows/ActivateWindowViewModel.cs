@@ -4,7 +4,7 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.Windows;
 
-internal class ActivateWindowViewModel : ObservableObject
+public class ActivateWindowViewModel : ObservableObject
 {
     private ILogger _logger;
     private readonly IPaths _paths;

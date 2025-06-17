@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
+using OneWare.Core.Services;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
@@ -11,16 +13,23 @@ namespace OneWare.Studio.Browser;
 
 public class WebStudioApp : StudioApp
 {
-    private IContainerProvider Container { get; }
+    private readonly IPaths _paths;
+    private readonly UniversalFpgaProjectManager _universalFpgaProjectManager;
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly ILogger<WebStudioApp> _logger;
+    private readonly IDockService _dockService;
 
-    public WebStudioApp(IContainerProvider container)
+    public WebStudioApp(IPaths paths,
+                        IProjectExplorerService projectExplorerService,
+                        ILogger<WebStudioApp> logger,
+                        IDockService dockService,
+                        UniversalFpgaProjectManager universalFpgaProjectManager)
     {
-        Container = container;
-    }
-
-    public WebStudioApp()
-    {
-        Container = ContainerLocator.Container;
+        _paths = paths;
+        _universalFpgaProjectManager = universalFpgaProjectManager;
+        _projectExplorerService = projectExplorerService;
+        _logger = logger;
+        _dockService = dockService;
     }
 
     protected override string GetDefaultLayoutName => "Web";
@@ -37,7 +46,7 @@ public class WebStudioApp : StudioApp
     {
         try
         {
-            var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "DemoProject");
+            var testProj = Path.Combine(_paths.ProjectsDirectory, "DemoProject");
 
             Directory.CreateDirectory(testProj);
 
@@ -46,14 +55,14 @@ public class WebStudioApp : StudioApp
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VerilogTest.v"), Path.Combine(testProj, "Verilog", "VerilogTest.v"));
             CopyAvaloniaAssetIntoFolder(new Uri("avares://OneWare.Studio.Browser/Assets/DemoFiles/VcdTest.vcd"), Path.Combine(testProj, "VCD", "VcdTest.vcd"));
 
-            var dummy = await Container.Resolve<UniversalFpgaProjectManager>().LoadProjectAsync(Path.Combine(testProj, "DemoProject.fpgaproj"));
+            var dummy = await _universalFpgaProjectManager.LoadProjectAsync(Path.Combine(testProj, "DemoProject.fpgaproj"));
 
-            Container.Resolve<IProjectExplorerService>().Projects.Add(dummy);
-            Container.Resolve<IProjectExplorerService>().ActiveProject = dummy;
+            _projectExplorerService.Projects.Add(dummy);
+            _projectExplorerService.ActiveProject = dummy;
 
             foreach (var file in dummy!.Files)
             {
-                var vm = await Container.Resolve<IDockService>().OpenFileAsync(file);
+                var vm = await _dockService.OpenFileAsync(file);
 
                 if (vm is VcdViewModel vcdViewModel)
                 {
@@ -68,7 +77,7 @@ public class WebStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 }

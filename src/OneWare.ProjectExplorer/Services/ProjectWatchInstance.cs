@@ -14,15 +14,22 @@ public class ProjectWatchInstance : IDisposable
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IProjectRoot _root;
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;
     private DispatcherTimer? _timer;
 
-    public ProjectWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
-        IDockService dockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
+    public ProjectWatchInstance(
+        IProjectRoot root,
+        IProjectExplorerService projectExplorerService,
+        IDockService dockService,
+        ISettingsService settingsService,
+        IWindowService windowService,
+        ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _windowService = windowService;
+        _logger = logger;
 
         _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
         {
@@ -48,6 +55,7 @@ public class ProjectWatchInstance : IDisposable
 
                 _timer?.Stop();
                 if (!x) return;
+
                 _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
                 {
                     lock (_lock)
@@ -60,7 +68,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
@@ -75,16 +83,20 @@ public class ProjectWatchInstance : IDisposable
         if (e.Name == null) return;
         lock (_lock)
         {
-            _changes.TryAdd(e.FullPath, new List<FileSystemEventArgs>());
-            _changes[e.FullPath].Add(e);
+            if (!_changes.TryAdd(e.FullPath, new List<FileSystemEventArgs>()))
+            {
+                _changes[e.FullPath].Add(e);
+            }
         }
     }
 
     private void ProcessChanges()
     {
-        foreach (var change in _changes) _ = ProcessAsync(change.Key, change.Value);
+        foreach (var change in _changes)
+        {
+            _ = ProcessAsync(change.Key, change.Value);
+        }
 
-        //Task.WhenAll(_changes.Select(x => ProcessAsync(x.Key, x.Value)));
         _changes.Clear();
     }
 
@@ -94,13 +106,15 @@ public class ProjectWatchInstance : IDisposable
         {
             var attributes = FileAttributes.None;
 
-            if (File.Exists(path) || Directory.Exists(path)) attributes = File.GetAttributes(path);
+            if (File.Exists(path) || Directory.Exists(path))
+                attributes = File.GetAttributes(path);
 
             var entry = _root.SearchFullPath(path);
 
             var lastArg = changes.Last();
 
             if (entry is not null)
+            {
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Created:
@@ -108,7 +122,10 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Changed:
                         if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
                             _root.SearchFullPath(rea.OldFullPath) is { } deleted)
+                        {
                             await _projectExplorerService.RemoveAsync(deleted);
+                        }
+
                         if (entry is ISavable savable)
                         {
                             var lastWriteTime = File.GetLastWriteTime(savable.FullPath);
@@ -118,7 +135,9 @@ public class ProjectWatchInstance : IDisposable
                             if (savable is IProjectFile { Root: IProjectRootWithFile rootWithFile } &&
                                 rootWithFile.ProjectFilePath == savable.FullPath &&
                                 lastWriteTime > rootWithFile.LastSaveTime)
+                            {
                                 await _projectExplorerService.ReloadAsync(rootWithFile);
+                            }
                         }
                         else
                         {
@@ -126,12 +145,14 @@ public class ProjectWatchInstance : IDisposable
                         }
 
                         return;
+
                     case WatcherChangeTypes.Deleted:
                         await _projectExplorerService.RemoveAsync(entry);
                         return;
                 }
-
-            if (entry is null)
+            }
+            else
+            {
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Renamed:
@@ -144,7 +165,7 @@ public class ProjectWatchInstance : IDisposable
 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
-                                //TODO dont remove tab and Initialize Current Tab
+                                // TODO: Don't remove tab and Initialize Current Tab
                             }
                             else
                             {
@@ -152,8 +173,8 @@ public class ProjectWatchInstance : IDisposable
                                 _root.OnExternalEntryAdded(path, attributes);
                             }
                         }
-
                         return;
+
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
@@ -161,11 +182,15 @@ public class ProjectWatchInstance : IDisposable
                         if (openTab.Key is not null)
                             openTab.Value.InitializeContent();
                         return;
+
                     case WatcherChangeTypes.Changed:
                         if (_root is ISavable savable && _root.ProjectPath.EqualPaths(path))
+                        {
                             if (File.GetLastWriteTime(_root.FullPath) > savable.LastSaveTime)
                                 await _projectExplorerService.ReloadAsync(_root);
+                        }
                         return;
+
                     case WatcherChangeTypes.Deleted:
                         if (_root.ProjectPath.EqualPaths(path))
                         {
@@ -173,10 +198,11 @@ public class ProjectWatchInstance : IDisposable
                         }
                         return;
                 }
+            }
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
+            _logger.Error(e.Message, e, false);
         }
     }
 }

@@ -4,12 +4,22 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Yosys;
 
-public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
+public class YosysToolchain : IFpgaToolchain
 {
+    private readonly YosysService _yosysService;
+    private readonly ILogger _logger;
+
+    public YosysToolchain(YosysService yosysService, ILogger logger)
+    {
+        _yosysService = yosysService;
+        _logger = logger;
+    }
+
     public string Name => "Yosys";
 
     public void OnProjectCreated(UniversalFpgaProjectRoot project)
     {
+        // No implementation needed
     }
 
     public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
@@ -30,7 +40,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
                         var parts = trimmedLine.Split(' ');
                         if (parts.Length != 3)
                         {
-                            ContainerLocator.Container.Resolve<ILogger>().Warning("PCF Line invalid: " + trimmedLine);
+                            _logger.Warning("PCF Line invalid: " + trimmedLine);
                             continue;
                         }
 
@@ -39,14 +49,16 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 
                         if (fpga.PinModels.TryGetValue(pin, out var pinModel) &&
                             fpga.NodeModels.TryGetValue(signal, out var signalModel))
+                        {
                             fpga.Connect(pinModel, signalModel);
+                        }
                     }
                 }
             }
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
@@ -72,29 +84,21 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.Error(e.Message, e);
         }
     }
 
     public Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
-    {
-        return yosysService.CompileAsync(project, fpga);
-    }
+        => _yosysService.CompileAsync(project, fpga);
 
     public Task<bool> SynthesisAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
-    {
-        return yosysService.SynthAsync(project, fpga);
-    }
+        => _yosysService.SynthAsync(project, fpga);
 
     public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
-    {
-        return yosysService.FitAsync(project, fpga);
-    }
+        => _yosysService.FitAsync(project, fpga);
 
     public Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
-    {
-        return yosysService.AssembleAsync(project, fpga);
-    }
+        => _yosysService.AssembleAsync(project, fpga);
 
     private string RemoveLine(string file, string find)
     {

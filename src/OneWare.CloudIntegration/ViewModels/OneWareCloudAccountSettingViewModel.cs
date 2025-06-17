@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GitCredentialManager;
 using OneWare.CloudIntegration.Settings;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.Views;
 
@@ -10,19 +11,30 @@ namespace OneWare.CloudIntegration.ViewModels;
 
 public class OneWareCloudAccountSettingViewModel : ObservableObject
 {
-    public OneWareCloudAccountSetting Setting { get; }
+    private readonly ISettingsService _settingsService;
+    private readonly ILogger _logger;
+    private readonly IWindowService _windowService;
+    private readonly IPaths _paths;
+    private readonly AuthenticateCloudViewModel _authenticateCloudViewModel;
+    public OneWareCloudAccountSetting Setting { get; set; }
 
-    public OneWareCloudAccountSettingViewModel(OneWareCloudAccountSetting setting)
+
+    public OneWareCloudAccountSettingViewModel( ISettingsService settingsService, ILogger logger, IWindowService windowService, IPaths paths, AuthenticateCloudViewModel authenticateCloudViewModel)
     {
-        Setting = setting;
+        
+        _settingsService = settingsService;
+        _logger = logger;
+        _windowService = windowService;
+        _paths = paths;
+        _authenticateCloudViewModel = authenticateCloudViewModel;
     }
 
     public Task LoginAsync(Control owner)
     {
-        return Dispatcher.UIThread.InvokeAsync(() => ContainerLocator.Container.Resolve<IWindowService>()
+        return Dispatcher.UIThread.InvokeAsync(() => _windowService
             .ShowDialogAsync(new AuthenticateCloudView()
             {
-                DataContext = ContainerLocator.Container.Resolve<AuthenticateCloudViewModel>()
+                DataContext = _authenticateCloudViewModel
             }, TopLevel.GetTopLevel(owner) as Window));
     }
 
@@ -32,7 +44,9 @@ public class OneWareCloudAccountSettingViewModel : ObservableObject
         store.Remove("https://one-ware.com", Setting.Value.ToString());
         Setting.Value = string.Empty;
 
-        ContainerLocator.Container.Resolve<ISettingsService>()
-            .Save(ContainerLocator.Container.Resolve<IPaths>().SettingsPath);
+        _settingsService
+            .Save(_paths.SettingsPath); 
     }
+
+   
 }

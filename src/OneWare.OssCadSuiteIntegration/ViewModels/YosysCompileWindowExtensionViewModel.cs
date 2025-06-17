@@ -17,24 +17,30 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
-    
-    private bool _isVisible;
+    private readonly ILogger _logger;
 
-    public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
-        IWindowService windowService, IProjectExplorerService projectExplorerService, FpgaService fpgaService)
+    private bool _isVisible;
+    private IDisposable? _disposable;
+
+    public YosysCompileWindowExtensionViewModel(
+        UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
+        IWindowService windowService,
+        IProjectExplorerService projectExplorerService,
+        FpgaService fpgaService,
+        ILogger logger)  // Inject ILogger here
     {
         _pinPlannerViewModel = pinPlannerViewModel;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
+        _logger = logger;
 
-        IDisposable? disposable = null;
-        projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(x =>
+        _disposable = projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(x =>
         {
+            _disposable?.Dispose();
             if (x is UniversalFpgaProjectRoot fpgaProjectRoot)
             {
-                disposable?.Dispose();
-                disposable = fpgaProjectRoot.WhenValueChanged(y => y.Toolchain).Subscribe(z =>
+                _disposable = fpgaProjectRoot.WhenValueChanged(y => y.Toolchain).Subscribe(z =>
                 {
                     IsVisible = z is YosysToolchain;
                 });
@@ -58,19 +64,20 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                 {
                     var selectedFpga = _pinPlannerViewModel.SelectedFpgaModel?.Fpga;
-                    
-                    if(selectedFpga == null) return;
-                    
+
+                    if (selectedFpga == null) return;
+
                     await _windowService.ShowDialogAsync(
                         new YosysCompileSettingsView
-                            { DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga) },
+                        {
+                            DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga)
+                        },
                         ownerWindow);
                 }
-               
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
         });
     }

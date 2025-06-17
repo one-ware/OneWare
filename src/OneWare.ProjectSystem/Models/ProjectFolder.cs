@@ -1,7 +1,9 @@
-﻿using Avalonia;
+﻿using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -11,9 +13,17 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header,
-        topFolder)
+    private readonly ILogger<ProjectFolder> _logger;
+    private readonly PlatformHelper _platformHelper;
+    
+    public ProjectFolder(string header, 
+                      IProjectFolder? topFolder,
+                      ILogger<ProjectFolder> logger,
+                      PlatformHelper platformHelper,
+                      bool defaultFolderAnimation = true) : base(header, topFolder)
     {
+        _logger = logger;
+        _platformHelper = platformHelper;
         if (defaultFolderAnimation)
         {
             IDisposable? iconDisposable = null;
@@ -83,7 +93,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             if (createNew)
                 try
                 {
-                    PlatformHelper.CreateFile(fullPath);
+                    _platformHelper.CreateFile(fullPath);
                 }
                 catch (Exception e)
                 {
@@ -194,17 +204,17 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         var destination = Path.Combine(FullPath, Path.GetFileName(path));
 
-        //Check if File exists
+        // Check if File exists
         if (!File.Exists(path))
         {
-            _logger.LogWaring($"Cannot import {path}. File does not exist");
+            _logger.LogWarning($"Cannot import {path}. File does not exist");
             return null;
         }
 
         try
         {
             if (!path.EqualPaths(destination))
-                PlatformHelper.CopyFile(path, destination, overwrite);
+                _platformHelper.CopyFile(path, destination, overwrite); // Use the instance to call CopyFile
 
             return AddFile(Path.GetFileName(destination));
         }
@@ -217,7 +227,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
     {
-        return new ProjectFolder(path, topFolder);
+        return new ProjectFolder(path, topFolder, _logger, _platformHelper);
     }
 
     protected virtual IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)

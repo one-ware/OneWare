@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Avalonia.Metadata;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 
 
@@ -15,7 +17,15 @@ public class TextMateSnippet(string label, string content, string? description)
 
 public class TextMateSnippetHelper
 {
-    public static List<TextMateSnippet> ParseVsCodeSnippets(string avaloniaResource)
+    private readonly ILogger<TextMateSnippetHelper> _logger;
+
+    public TextMateSnippetHelper(ILogger<TextMateSnippetHelper> logger)
+    {
+        _logger = logger;
+    }
+
+    public static List<TextMateSnippet> ParseVsCodeSnippets(string avaloniaResource
+                    , ILogger<TextMateSnippetHelper> logger)
     {
         var completionItems = new List<TextMateSnippet>();
 
@@ -43,7 +53,7 @@ public class TextMateSnippetHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger.LogError(e.Message, e);
             return completionItems;
         }
 

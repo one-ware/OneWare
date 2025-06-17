@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -10,11 +11,16 @@ namespace OneWare.ImageViewer.ViewModels;
 public class ImageViewModel : ExtendedDocument
 {
     private IImage? _image;
+    private readonly ILogger<ImageViewModel> _logger;
 
-    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
+    public ImageViewModel(string fullPath, 
+        IProjectExplorerService projectExplorerService,
+        ILogger<ImageViewModel> logger,
+        IDockService dockService,
         IWindowService windowService) :
         base(fullPath, projectExplorerService, dockService, windowService)
     {
+        _logger = logger;       
     }
 
     public IImage? Image
@@ -47,7 +53,7 @@ public class ImageViewModel : ExtendedDocument
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
             LoadingFailed = true;
         }
 

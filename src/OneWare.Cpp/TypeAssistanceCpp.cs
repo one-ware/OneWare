@@ -6,17 +6,24 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-
 namespace OneWare.Cpp;
 
 internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 {
-    public TypeAssistanceCpp(IEditor editor, LanguageServiceCpp ls) : base(editor, ls)
+    private readonly IErrorService _errorService;
+
+    public TypeAssistanceCpp(
+        IEditor editor,
+        LanguageServiceCpp ls,
+        IErrorService errorService) : base(editor, ls)
     {
-        CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
-        FoldingStrategy =
-            new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart,
-                FoldingRegexCpp.FoldingEnd); //new LspFoldingStrategy(ls, editor.CurrentFile);
+        _errorService = errorService;
+
+        CodeBox.TextArea.IndentationStrategy = IndentationStrategy =
+            new CSharpIndentationStrategy(CodeBox.Options);
+
+        FoldingStrategy = new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart, FoldingRegexCpp.FoldingEnd);
+
         LineCommentSequence = "//";
     }
 
@@ -28,23 +35,29 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile!)
+        var error = _errorService.GetErrorsForFile(Editor.CurrentFile!)
             .OrderBy(x => x.Type)
-            .FirstOrDefault(error => pos.Line >= error.StartLine
-                                     && pos.Line <= error.EndLine
-                                     && pos.Column >= error.StartColumn
-                                     && pos.Column <= error.EndColumn);
+            .FirstOrDefault(e =>
+                pos.Line >= e.StartLine &&
+                pos.Line <= e.EndLine &&
+                pos.Column >= e.StartColumn &&
+                pos.Column <= e.EndColumn);
+
         var info = "";
 
-        if (error != null) info += error.Description + "\n";
+        if (error != null)
+            info += error.Description + "\n";
 
         var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
             new Position(pos.Line - 1, pos.Column - 1));
+
         if (hover != null)
         {
             if (hover.Contents.HasMarkedStrings)
-                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-            if (hover.Contents.HasMarkupContent) info += $"```cpp\n{hover.Contents.MarkupContent?.Value}\n```";
+                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0];
+
+            if (hover.Contents.HasMarkupContent)
+                info += $"```cpp\n{hover.Contents.MarkupContent?.Value}\n```";
         }
 
         return string.IsNullOrWhiteSpace(info) ? null : info;

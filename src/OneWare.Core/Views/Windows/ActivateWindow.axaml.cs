@@ -1,15 +1,13 @@
 ﻿using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
 
-
 namespace OneWare.Core.Views.Windows;
 
 public partial class ActivateWindow : FlexibleWindow
 {
-    public ActivateWindow()
+    public ActivateWindow(ActivateWindowViewModel viewModel)
     {
-        DataContext = ContainerLocator.Container.Resolve<ActivateWindowViewModel>();
-
+        DataContext = viewModel;
         InitializeComponent();
     }
 }

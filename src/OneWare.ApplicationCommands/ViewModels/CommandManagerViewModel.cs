@@ -20,16 +20,25 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
+    private readonly IDockService _dockService;
+
+    private readonly PlatformHelper _platformHelper;
 
     [ObservableProperty] private CommandManagerTabBase _selectedTab;
 
-    public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService,
-        IProjectExplorerService projectExplorerService, IWindowService windowService)
+    public CommandManagerViewModel(ILogical logical, 
+                                   IApplicationCommandService commandService,
+                                   IProjectExplorerService projectExplorerService,
+                                   PlatformHelper platformHelper,
+                                   IWindowService windowService,
+                                   IDockService dockService)
     {
         ActiveFocus = logical;
         _projectExplorerService = projectExplorerService;
         _applicationCommandService = commandService;
         _windowService = windowService;
+        _platformHelper = platformHelper;
+        _dockService = dockService;
 
         Tabs.Add(new CommandManagerAllTab(logical)
         {
@@ -46,9 +55,11 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         });
 
         _selectedTab = Tabs.Last();
+        _dockService = dockService;
+
     }
 
-    public static KeyGesture ChangeShortcutGesture => new(Key.Enter, PlatformHelper.ControlKey);
+    public KeyGesture ChangeShortcutGesture => new(Key.Enter, _platformHelper.ControlKey);
 
     public ILogical ActiveFocus { get; }
     public ObservableCollection<CommandManagerTabBase> Tabs { get; } = new();
@@ -57,7 +68,12 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     {
         var collection = new ObservableCollection<IApplicationCommand>();
         foreach (var project in _projectExplorerService.Projects)
-            collection.AddRange(project.Files.Select(x => new OpenFileApplicationCommand(x)));
+        {
+            foreach (var file in project.Files)
+            {
+                collection.Add(new OpenFileApplicationCommand(file, _dockService));
+            }
+        }
         return collection;
     }
 

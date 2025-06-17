@@ -8,7 +8,6 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
-
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
@@ -16,14 +15,20 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
     private readonly IFpga? _fpga;
     private readonly UniversalFpgaProjectRoot _projectRoot;
     private readonly IWindowService _windowService;
+    private readonly ILogger _logger;
 
-    public OpenFpgaLoaderWindowExtensionViewModel(UniversalFpgaProjectRoot projectRoot, IWindowService windowService,
-        FpgaService fpgaService)
+    public OpenFpgaLoaderWindowExtensionViewModel(
+        UniversalFpgaProjectRoot projectRoot,
+        IWindowService windowService,
+        FpgaService fpgaService,
+        ILogger logger) // Inject ILogger here
     {
         _windowService = windowService;
         _projectRoot = projectRoot;
+        _logger = logger;
 
-        _fpga = fpgaService.FpgaPackages.FirstOrDefault(x => x.Name == projectRoot.GetProjectProperty("Fpga"))?.LoadFpga();
+        _fpga = fpgaService.FpgaPackages
+            .FirstOrDefault(x => x.Name == projectRoot.GetProjectProperty("Fpga"))?.LoadFpga();
 
         IsVisible = projectRoot.Loader is OpenFpgaLoader;
         IsEnabled = _fpga != null;
@@ -44,11 +49,14 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
             {
                 await _windowService.ShowDialogAsync(
                     new OpenFpgaLoaderSettingsView
-                        { DataContext = new OpenFpgaLoaderSettingsViewModel(_projectRoot, _fpga) }, ownerWindow);
+                    {
+                        DataContext = new OpenFpgaLoaderSettingsViewModel(_projectRoot, _fpga)
+                    },
+                    ownerWindow);
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                _logger.Error(e.Message, e);
             }
         });
     }

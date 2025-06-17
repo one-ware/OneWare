@@ -6,14 +6,18 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFile : ProjectEntry, IProjectFile
 {
-    public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
+    private readonly IFileIconService _fileIconService;
+
+    public ProjectFile(string header, IProjectFolder topFolder, IFileIconService fileIconService) : base(header, topFolder)
     {
+        _fileIconService = fileIconService;
+
         IDisposable? fileSubscription = null;
 
         this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
         {
             fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
+            var observable = _fileIconService.GetFileIcon(Extension);
             fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
         });
     }

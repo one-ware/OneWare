@@ -30,15 +30,25 @@ public class MainWindowViewModel : ObservableObject
     private readonly IApplicationCommandService _applicationCommandService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly PlatformHelper _platformHelper;
+    private readonly Func<ILogical, CommandManagerViewModel> _commandManagerFactory;
+    private readonly Func<ApplicationSettingsViewModel> _settingsViewModelFactory;
 
     private IEditor? _currentEditor;
     private FlexibleWindow? _lastManagerWindow;
 
     private string _title;
 
-    public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
-        ISettingsService settingsService, IApplicationCommandService applicationCommandService)
+    public MainWindowViewModel(
+        IPaths paths,
+        IApplicationStateService applicationStateService,
+        IWindowService windowService,
+        IDockService dockService,
+        ISettingsService settingsService,
+        PlatformHelper platformHelper,
+        IApplicationCommandService applicationCommandService,
+        Func<ILogical, CommandManagerViewModel> commandManagerFactory,
+        Func<ApplicationSettingsViewModel> settingsViewModelFactory)
     {
         _applicationCommandService = applicationCommandService;
         ApplicationStateService = applicationStateService;
@@ -46,6 +56,9 @@ public class MainWindowViewModel : ObservableObject
         DockService = dockService;
         Paths = paths;
         _settingsService = settingsService;
+        _platformHelper = platformHelper;
+        _commandManagerFactory = commandManagerFactory;
+        _settingsViewModelFactory = settingsViewModelFactory;
 
         RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
         LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
@@ -61,31 +74,33 @@ public class MainWindowViewModel : ObservableObject
             if (x != null)
             {
                 Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
-
                 CurrentEditor = x as IEditor;
             }
             else
             {
-                Title = $"{paths.AppName}";
+                Title = paths.AppName;
             }
         });
 
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new MenuItemViewModel("FindAll")
-        {
-            Header = "Find All",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
-            InputGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
-        }, new MenuItemViewModel("FindActions")
-        {
-            Header = "Find Actions",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
-            InputGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
-        }, new MenuItemViewModel("FindFiles")
-        {
-            Header = "Find Files",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
-            InputGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
-        });
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View",
+            new MenuItemViewModel("FindAll")
+            {
+                Header = "Find All",
+                Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
+                InputGesture = new KeyGesture(Key.T, _platformHelper.ControlKey)
+            },
+            new MenuItemViewModel("FindActions")
+            {
+                Header = "Find Actions",
+                Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
+                InputGesture = new KeyGesture(Key.P, _platformHelper.ControlKey | KeyModifiers.Shift)
+            },
+            new MenuItemViewModel("FindFiles")
+            {
+                Header = "Find Files",
+                Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
+                InputGesture = new KeyGesture(Key.A, _platformHelper.ControlKey | KeyModifiers.Shift)
+            });
 
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
     }
@@ -103,7 +118,7 @@ public class MainWindowViewModel : ObservableObject
     }
 
     private CompositeDisposable _currentEditorSubscriptionDisposable = new();
-    
+
     public IEditor? CurrentEditor
     {
         get => _currentEditor;
@@ -111,7 +126,7 @@ public class MainWindowViewModel : ObservableObject
         {
             _currentEditorSubscriptionDisposable.Dispose();
             _currentEditorSubscriptionDisposable = new CompositeDisposable();
-            
+
             SetProperty(ref _currentEditor, value);
 
             TypeAssistanceQuickOptions.Clear();
@@ -130,7 +145,6 @@ public class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
-    
     public ObservableCollection<UiExtension> RightToolBarExtension { get; }
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
@@ -156,7 +170,7 @@ public class MainWindowViewModel : ObservableObject
         }
         else
         {
-            var manager = ContainerLocator.Container.Resolve<CommandManagerViewModel>((typeof(ILogical), logical));
+            var manager = _commandManagerFactory(logical);
             manager.SelectedTab = manager.Tabs.First(t => t.Title == startTab);
             _lastManagerWindow = new CommandManagerView
             {
@@ -183,7 +197,7 @@ public class MainWindowViewModel : ObservableObject
     {
         return _windowService.ShowDialogAsync(new ApplicationSettingsView
         {
-            DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+            DataContext = _settingsViewModelFactory()
         });
     }
 

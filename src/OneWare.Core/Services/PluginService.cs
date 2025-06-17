@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Models;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -13,18 +15,25 @@ public class PluginService : IPluginService
 {
     private readonly IModuleCatalog _moduleCatalog;
     private readonly IModuleManager _moduleManager;
+    private readonly ILogger<PluginService> _logger;
+    private readonly PlatformHelper _platformHelper;
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
 
     private List<Assembly> _initAssemblies;
 
-    public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
+    public PluginService(IModuleCatalog moduleCatalog, 
+                         IModuleManager moduleManager,
+                         ILogger<PluginService> logger,
+                         PlatformHelper platformHelper,
+                         IPaths paths)
     {
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
-
+        _logger = logger;
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        _platformHelper = platformHelper;
 
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
         Directory.CreateDirectory(_pluginDirectory);
@@ -43,7 +52,7 @@ public class PluginService : IPluginService
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
-            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.Report}");
+            _logger.LogError($"Plugin {path} failed loading: \n {test.Report}");
             return plugin;
         }
 
@@ -52,7 +61,7 @@ public class PluginService : IPluginService
         try
         {
             var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
-            PlatformHelper.CopyDirectory(path, realPath);
+            _platformHelper.CopyDirectory(path, realPath);
 
             var catalog = new DirectoryModuleCatalog
             {
@@ -66,15 +75,14 @@ public class PluginService : IPluginService
                 if (_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized)
                     _moduleManager.LoadModule(module.ModuleName);
 
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
+                _logger.LogInformation($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
 
             SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
 
         return plugin;
@@ -89,7 +97,7 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -110,12 +118,12 @@ public class PluginService : IPluginService
             {
                 NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
                 {
-                    var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
+                    var libFileName = _platformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
 
                     if (!File.Exists(libPath))
                     {
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
+                        libPath = Path.Combine(pluginPath, "runtimes", _platformHelper.PlatformIdentifier, "native", libFileName);
                     }
 
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
@@ -137,7 +145,7 @@ public class PluginService : IPluginService
             catch (InvalidOperationException)
             {
                 // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Log(
+                _logger.LogInformation(
                     $"Skipping resolver setup for {assembly.FullName}, resolver already set.", 
                     ConsoleColor.DarkYellow, true);
             }

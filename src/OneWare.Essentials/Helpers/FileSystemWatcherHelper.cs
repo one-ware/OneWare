@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 
 
@@ -39,7 +40,7 @@ public class FileWatcher : IDisposable
 
 public static class FileSystemWatcherHelper
 {
-    public static IDisposable? WatchFile(string path, Action onChanged)
+    public static IDisposable? WatchFile(string path, Action onChanged, Microsoft.Extensions.Logging.ILogger? logger = null)
     {
         try
         {
@@ -47,8 +48,8 @@ public static class FileSystemWatcherHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger?.LogError(e, "Error watching file {Path}", path);
+            return null;
         }
-        return null;
     }
 }

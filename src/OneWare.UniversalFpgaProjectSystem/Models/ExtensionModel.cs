@@ -2,57 +2,56 @@
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 
-
-namespace OneWare.UniversalFpgaProjectSystem.Models;
-
-public class ExtensionModel : ObservableObject, IHardwareModel
+namespace OneWare.UniversalFpgaProjectSystem.Models
 {
-    private HardwareInterfaceModel? _parentInterfaceModel;
-
-    private bool _isSelected;
-    
-    public ExtensionModel(IFpgaExtension fpgaExtension)
+    public class ExtensionModel : ObservableObject, IHardwareModel
     {
-        FpgaExtension = fpgaExtension;
-    }
+        private readonly ILogger _logger;
+        private HardwareInterfaceModel? _parentInterfaceModel;
+        private bool _isSelected;
 
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set => SetProperty(ref _isSelected, value);
-    }
-    
-    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
-    
-    public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
-    
-    public IFpgaExtension FpgaExtension { get; }
-
-    public HardwareInterfaceModel? ParentInterfaceModel
-    {
-        get => _parentInterfaceModel;
-        set
+        public ExtensionModel(IFpgaExtension fpgaExtension, ILogger logger)
         {
-            SetProperty(ref _parentInterfaceModel, value);
+            FpgaExtension = fpgaExtension;
+            _logger = logger;
+        }
 
-            try
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
+
+        public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
+
+        public IFpgaExtension FpgaExtension { get; }
+
+        public HardwareInterfaceModel? ParentInterfaceModel
+        {
+            get => _parentInterfaceModel;
+            set
             {
-                if (_parentInterfaceModel != null)
+                if (SetProperty(ref _parentInterfaceModel, value) && _parentInterfaceModel != null)
                 {
-                    foreach (var pin in FpgaExtension.Pins)
+                    try
                     {
-                        PinModels[pin.Name] = _parentInterfaceModel.TranslatedPins[pin.InterfacePin!];
+                        foreach (var pin in FpgaExtension.Pins)
+                        {
+                            PinModels[pin.Name] = _parentInterfaceModel.TranslatedPins[pin.InterfacePin!];
+                        }
+                        foreach (var fpgaInterface in FpgaExtension.Interfaces)
+                        {
+                            InterfaceModels.TryAdd(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this));
+                            InterfaceModels[fpgaInterface.Name].TranslatePins();
+                        }
                     }
-                    foreach (var fpgaInterface in FpgaExtension.Interfaces)
+                    catch (Exception e)
                     {
-                        InterfaceModels.TryAdd(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this));
-                        InterfaceModels[fpgaInterface.Name].TranslatePins();
+                        _logger.Error(e.Message, e);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
             }
         }
     }

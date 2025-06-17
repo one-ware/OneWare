@@ -19,8 +19,14 @@ namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
+    private readonly MainWindow _mainWindow;
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
+
+    public WindowService(MainWindow mainWindow)
+    {
+        _mainWindow = mainWindow;
+    }
 
     public void RegisterUiExtension(string key, UiExtension extension)
     {
@@ -96,7 +102,7 @@ public class WindowService : IWindowService
     {
         owner ??= Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime
             ? null
-            : ContainerLocator.Container.Resolve<MainWindow>();
+            : _mainWindow;
         window.Show(owner);
         window.Focus();
     }
@@ -105,10 +111,10 @@ public class WindowService : IWindowService
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            owner ??= ContainerLocator.Container.Resolve<MainWindow>();
+            owner ??= _mainWindow;
             await window.ShowDialogAsync(owner);
         }
-        else await ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
+        else await _mainWindow.ShowVirtualDialogAsync(window);
         
         window.Focus();
     }
@@ -180,7 +186,7 @@ public class WindowService : IWindowService
     {
         var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(5));
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager
+        _mainWindow.NotificationManager
             ?.Show(model);
     }
 
@@ -190,7 +196,7 @@ public class WindowService : IWindowService
     {
         var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10), buttonText, buttonAction, icon);
 
-        ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
+        _mainWindow.NotificationManager?.Show(model);
     }
 
     private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)

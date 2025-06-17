@@ -1,5 +1,6 @@
 ﻿using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 
 
@@ -7,14 +8,16 @@ namespace OneWare.Essentials.EditorExtensions;
 
 public class FoldingStrategyBase : IFoldingStrategy
 {
+    private readonly ILogger<FoldingStrategyBase> _logger;
     protected readonly List<FoldingEntry> Foldings = new();
 
     /// <summary>
     ///     Logic how code collapsing should work
     ///     Works but could be better ;)
     /// </summary>
-    public FoldingStrategyBase()
+    public FoldingStrategyBase(ILogger<FoldingStrategyBase> logger)
     {
+        _logger = logger;
     }
 
     public void UpdateFoldings(FoldingManager manager, TextDocument document)
@@ -35,7 +38,7 @@ public class FoldingStrategyBase : IFoldingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 

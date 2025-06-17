@@ -15,13 +15,19 @@ namespace OneWare.Output.Views;
 public partial class OutputView : OutputBaseView
 {
     private readonly TextModificationService _modificationService;
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly PlatformHelper _platformHelper;
+    private readonly IDockService _dockService;
 
     private PointerEventArgs? _lastMovedArgs;
     
     private SearchResult? _searchResult;
     
-    public OutputView()
+    public OutputView(IProjectExplorerService projectExplorerService, IDockService dockService, PlatformHelper platformHelper)
     {
+        _projectExplorerService = projectExplorerService;
+        _dockService = dockService;
+        _platformHelper = platformHelper;
         InitializeComponent();
         
         _modificationService = new TextModificationService(Output.TextArea.TextView);
@@ -38,7 +44,7 @@ public partial class OutputView : OutputBaseView
 
         _lastMovedArgs = e;
 
-        if (e.KeyModifiers == PlatformHelper.ControlKey)
+        if (e.KeyModifiers == _platformHelper.ControlKey)
         {
             SearchPath();
         }
@@ -50,7 +56,7 @@ public partial class OutputView : OutputBaseView
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if(e.KeyModifiers == PlatformHelper.ControlKey)
+        if(e.KeyModifiers == _platformHelper.ControlKey)
         {
             SearchPath();
         }
@@ -59,7 +65,7 @@ public partial class OutputView : OutputBaseView
     
     protected override void OnKeyUp(KeyEventArgs e)
     {
-        if(e.KeyModifiers == PlatformHelper.ControlKey)
+        if(e.KeyModifiers == _platformHelper.ControlKey)
         {
             ResetControlModification();
         }
@@ -77,12 +83,11 @@ public partial class OutputView : OutputBaseView
     {
         if(_searchResult == null) return;
         
-        var result = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-            .ActiveProject?.SearchRelativePath(_searchResult.Path);
+        var result = _projectExplorerService.ActiveProject?.SearchRelativePath(_searchResult.Path);
 
         if (result is IFile file)
         {
-            var doc = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            var doc = await _dockService.OpenFileAsync(file);
             if (doc is not IEditor evb) return;
 
             var offset = evb.CurrentDocument.GetOffset(_searchResult.Line, _searchResult.Column);

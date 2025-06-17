@@ -1,6 +1,7 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Services;
 using IFile = OneWare.Essentials.Models.IFile;
@@ -13,13 +14,19 @@ public class LspIndentationStrategy : IIndentationStrategy
 {
     private readonly IFile _file;
     private readonly LanguageServiceLsp _languageService;
+    private readonly ILogger<LspIndentationStrategy> _logger;
     private string _indentationString = "\t";
 
-    public LspIndentationStrategy(TextEditorOptions options, LanguageServiceLsp languageS, IFile file)
+
+    public LspIndentationStrategy(TextEditorOptions options,
+                                ILogger<LspIndentationStrategy> logger,
+                                 LanguageServiceLsp languageS, 
+                                 IFile file)
     {
         IndentationString = options.IndentationString;
         _languageService = languageS;
         _file = file;
+        _logger = logger;
     }
 
     /// <summary>

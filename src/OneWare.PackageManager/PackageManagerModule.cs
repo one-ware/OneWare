@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System.Runtime.CompilerServices;
+using Autofac;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Models;
@@ -13,7 +15,9 @@ namespace OneWare.PackageManager;
 
 public class PackageManagerModule 
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    private readonly IAuto _containerProvider;
+
+    public void RegisterTypes(IContainer containerRegistry)
     {
         containerRegistry.RegisterSingleton<IPackageService, PackageService>();
         containerRegistry.RegisterSingleton<PackageManagerViewModel>();
