@@ -30,10 +30,9 @@ public class OneWareCloudAccountSettingViewModel : ObservableObject
 
     public void Logout()
     {
+        ContainerLocator.Container.Resolve<OneWareCloudLoginService>().Logout(Setting.Value.ToString()!);
         _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
         
-        var store = CredentialManager.Create("oneware");
-        store.Remove("https://one-ware.com", Setting.Value.ToString());
         Setting.Value = string.Empty;
 
         ContainerLocator.Container.Resolve<ISettingsService>()
