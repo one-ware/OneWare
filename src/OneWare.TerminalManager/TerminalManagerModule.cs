@@ -1,33 +1,39 @@
-﻿using Avalonia;
+﻿using Autofac;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.TerminalManager.ViewModels;
-using Prism.Modularity;
 
-namespace OneWare.TerminalManager;
-
-public class TerminalManagerModule 
+namespace OneWare.TerminalManager
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public class TerminalManagerModule : Module
     {
-        containerRegistry.RegisterSingleton<TerminalManagerViewModel>();
-    }
+        protected override void Load(ContainerBuilder builder)
+        {
+            // Register types with Autofac
+            builder.RegisterType<TerminalManagerViewModel>().SingleInstance();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        containerProvider.Resolve<IDockService>()
-            .RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Terminal")
-            {
-                Header = "Terminal",
-                Command = new RelayCommand(() =>
-                    containerProvider.Resolve<IDockService>()
-                        .Show(containerProvider.Resolve<TerminalManagerViewModel>())),
-                IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
-            });
+            base.Load(builder);
+        }
+
+        public void OnInitialized(IComponentContext context)
+        {
+            var dockService = context.Resolve<IDockService>();
+            var windowService = context.Resolve<IWindowService>();
+
+            dockService.RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
+
+            windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+                new MenuItemViewModel("Terminal")
+                {
+                    Header = "Terminal",
+                    Command = new RelayCommand(() =>
+                        dockService.Show(context.Resolve<TerminalManagerViewModel>())),
+                    IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
+                });
+        }
     }
 }

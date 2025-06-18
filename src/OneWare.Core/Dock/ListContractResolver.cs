@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Autofac;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using OneWare.Core.Adapters;
 
 namespace OneWare.Core.Dock
 {
     public class ListContractResolver : DefaultContractResolver
     {
         private readonly Type _type;
-        private readonly IContainerAdapter _container;
+        private readonly IContainer _container;
 
         /// <summary>
-        /// Constructor accepts type and container adapter instance
+        /// Constructor accepts type and container instance
         /// </summary>
         /// <param name="type">Type to use for IList<> resolution</param>
-        /// <param name="container">Container adapter used for resolving types</param>
-        public ListContractResolver(Type type, IContainerAdapter container)
+        /// <param name="container">Container used for resolving types</param>
+        public ListContractResolver(Type type, IContainer container)
         {
             _type = type ?? throw new ArgumentNullException(nameof(type));
             _container = container ?? throw new ArgumentNullException(nameof(container));
@@ -41,7 +41,7 @@ namespace OneWare.Core.Dock
                 {
                     co.OverrideCreator = parameters =>
                     {
-                        // Currently ignoring parameters because IContainerAdapter.Resolve signature does not support them
+                        // Currently ignoring parameters because IContainer.Resolve signature does not support them
                         // You can extend the interface if you need to pass constructor parameters
                         var resolvedInstance = _container.Resolve(type);
                         return resolvedInstance;

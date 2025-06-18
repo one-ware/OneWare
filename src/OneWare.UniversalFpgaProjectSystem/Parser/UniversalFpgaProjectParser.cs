@@ -5,63 +5,62 @@ using Avalonia.Threading;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
-
-namespace OneWare.UniversalFpgaProjectSystem.Parser;
-
-public static class UniversalFpgaProjectParser
+namespace OneWare.UniversalFpgaProjectSystem.Parser
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
+    public static class UniversalFpgaProjectParser
     {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true
-    };
-
-    public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path)
-    {
-        try
+        private static readonly JsonSerializerOptions SerializerOptions = new()
         {
-            return await Dispatcher.UIThread.Invoke(async () =>
-            {
-                await using var stream = File.OpenRead(path);
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            AllowTrailingCommas = true
+        };
 
-                var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+        public static async Task<UniversalFpgaProjectRoot?> DeserializeAsync(string path, ILogger logger)
+        {
+            try
+            {
+                return await Dispatcher.UIThread.Invoke(async () =>
                 {
-                    AllowTrailingCommas = true
+                    await using var stream = File.OpenRead(path);
+
+                    var properties = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+                    {
+                        AllowTrailingCommas = true
+                    });
+
+                    var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
+                    return root;
                 });
-                
-                var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
-                return root;
-            });
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-            return null;
-        }
-    }
-
-    public static async Task<bool> SerializeAsync(UniversalFpgaProjectRoot root)
-    {
-        try
-        {
-            await Dispatcher.UIThread.Invoke(async () =>
+            }
+            catch (Exception e)
             {
-                await using (var stream = File.OpenWrite(root.ProjectFilePath))
-                {
-                    stream.SetLength(0);
-                    await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
-                }
-            });
-
-            root.LastSaveTime = DateTime.Now;
-
-            return true;
+                logger.Error(e.Message, e);
+                return null;
+            }
         }
-        catch (Exception e)
+
+        public static async Task<bool> SerializeAsync(UniversalFpgaProjectRoot root, ILogger logger)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-            return false;
+            try
+            {
+                await Dispatcher.UIThread.Invoke(async () =>
+                {
+                    await using (var stream = File.OpenWrite(root.ProjectFilePath))
+                    {
+                        stream.SetLength(0);
+                        await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
+                    }
+                });
+
+                root.LastSaveTime = DateTime.Now;
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message, e);
+                return false;
+            }
         }
     }
 }

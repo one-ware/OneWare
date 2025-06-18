@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
-using ImTools;
+using System.Linq;
+using Autofac;
+using OneWare.Core.Services;
 using OneWare.Cpp;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
@@ -11,58 +13,62 @@ using OneWare.TerminalManager;
 using OneWare.Updater;
 using OneWare.Verilog;
 using OneWare.Vhdl;
-using Prism.Modularity;
 
-namespace OneWare.Studio.Desktop;
-
-public class DesktopStudioApp : StudioApp
+namespace OneWare.Studio.Desktop
 {
-    private IContainerProvider Container { get; }
-
-    public DesktopStudioApp(IContainerProvider containerProvider)
+    public class DesktopStudioApp
     {
-        Container = containerProvider;
-    }
+        private readonly IContainer _container;
+        private readonly ILogger _logger;
 
-    public DesktopStudioApp()
-    {
-        // Initialization logic if needed
-    }
-
-    // Existing methods remain unchanged
-    public void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
-    {
-        base.ConfigureModuleCatalog(moduleCatalog);
-
-        moduleCatalog.AddModule<UpdaterModule>();
-        moduleCatalog.AddModule<PackageManagerModule>();
-        moduleCatalog.AddModule<TerminalManagerModule>();
-        moduleCatalog.AddModule<SourceControlModule>();
-        moduleCatalog.AddModule<SerialMonitorModule>();
-        moduleCatalog.AddModule<CppModule>();
-        moduleCatalog.AddModule<VhdlModule>();
-        moduleCatalog.AddModule<VerilogModule>();
-        moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
-
-        try
+        public DesktopStudioApp(IPluginService pluginService, ILogger logger)
         {
-            var commandLineArgs = Environment.GetCommandLineArgs();
-            if (commandLineArgs.Length > 1)
+            _logger = logger;
+            var builder = new ContainerBuilder();
+
+            // Register individual modules
+            builder.RegisterModule<UpdaterModule>();
+            builder.RegisterModule<PackageManagerModule>();
+            builder.RegisterModule<TerminalManagerModule>();
+            builder.RegisterModule<SourceControlModule>();
+            builder.RegisterModule<SerialMonitorModule>();
+            builder.RegisterModule<CppModule>();
+            builder.RegisterModule<VhdlModule>();
+            builder.RegisterModule<VerilogModule>();
+            builder.RegisterModule<OssCadSuiteIntegrationModule>();
+
+            // Register services
+            builder.RegisterInstance(pluginService).As<IPluginService>();
+            builder.RegisterInstance(logger).As<ILogger>();
+
+            _container = builder.Build();
+        }
+
+        public void Configure()
+        {
+            try
             {
-                var m = commandLineArgs.IndexOf(x => x == "--modules");
-                if (m >= 0 && m < commandLineArgs.Length - 1)
+                var commandLineArgs = Environment.GetCommandLineArgs();
+                if (commandLineArgs.Length > 1)
                 {
-                    var path = commandLineArgs[m + 1];
-                    Container.Resolve<IPluginService>().AddPlugin(path);
+                    var m = Array.FindIndex(commandLineArgs, x => x == "--modules");
+                    if (m >= 0 && m < commandLineArgs.Length - 1)
+                    {
+                        var path = commandLineArgs[m + 1];
+                        _container.Resolve<IPluginService>().AddPlugin(path);
+                    }
+                }
+
+                var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
+                foreach (var module in plugins)
+                {
+                    _container.Resolve<IPluginService>().AddPlugin(module);
                 }
             }
-
-            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
-        }
-        catch (Exception e)
-        {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+            }
         }
     }
 }

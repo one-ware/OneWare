@@ -1,39 +1,45 @@
-﻿using Avalonia;
+﻿using Autofac;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SerialMonitor.ViewModels;
-using Prism.Modularity;
 
-namespace OneWare.SerialMonitor;
-
-public class SerialMonitorModule 
+namespace OneWare.SerialMonitor
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public class SerialMonitorModule : Module
     {
-        containerRegistry.RegisterManySingleton<SerialMonitorViewModel>(typeof(ISerialMonitorService),
-            typeof(SerialMonitorViewModel));
-    }
-
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        var windowService = containerProvider.Resolve<IWindowService>();
-        var dockService = containerProvider.Resolve<IDockService>();
-        var settingsService = containerProvider.Resolve<ISettingsService>();
-
-        settingsService.Register("SerialMonitor_SelectedBaudRate", 9600);
-        settingsService.Register("SerialMonitor_SelectedLineEncoding", "ASCII");
-        settingsService.Register("SerialMonitor_SelectedLineEnding", @"\r\n");
-
-        dockService.RegisterLayoutExtension<ISerialMonitorService>(DockShowLocation.Bottom);
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SerialMonitor")
+        protected override void Load(ContainerBuilder builder)
         {
-            Header = "Serial Monitor",
-            Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<ISerialMonitorService>())),
-            IconObservable = Application.Current!.GetResourceObservable(SerialMonitorViewModel.IconKey)
-        });
+            // Register types with Autofac
+            builder.RegisterType<SerialMonitorViewModel>()
+                   .As<ISerialMonitorService>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            base.Load(builder);
+        }
+
+        public void OnInitialized(IComponentContext context)
+        {
+            var windowService = context.Resolve<IWindowService>();
+            var dockService = context.Resolve<IDockService>();
+            var settingsService = context.Resolve<ISettingsService>();
+
+            settingsService.Register("SerialMonitor_SelectedBaudRate", 9600);
+            settingsService.Register("SerialMonitor_SelectedLineEncoding", "ASCII");
+            settingsService.Register("SerialMonitor_SelectedLineEnding", @"\r\n");
+
+            dockService.RegisterLayoutExtension<ISerialMonitorService>(DockShowLocation.Bottom);
+
+            windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SerialMonitor")
+            {
+                Header = "Serial Monitor",
+                Command = new RelayCommand(() => dockService.Show(context.Resolve<ISerialMonitorService>())),
+                IconObservable = Application.Current!.GetResourceObservable(SerialMonitorViewModel.IconKey)
+            });
+        }
     }
 }

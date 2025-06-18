@@ -4,81 +4,87 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 
-namespace OneWare.UniversalFpgaProjectSystem.Parser;
-
-public static class FpgaSettingsParser
+namespace OneWare.UniversalFpgaProjectSystem.Parser
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
+    public static class FpgaSettingsParser
     {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true
-    };
-
-    private static string GetSettingPath(IProjectRoot project, string fpgaName)
-    {
-        return Path.Combine(project.FullPath, "device-settings", fpgaName + ".deviceconf");
-    }
-
-    public static void WriteDefaultSettingsIfEmpty(IProjectRoot project, IFpga fpga)
-    {
-        var path = GetSettingPath(project, fpga.Name);
-        if (!File.Exists(path))
+        private static readonly JsonSerializerOptions SerializerOptions = new()
         {
-            SaveSettings(project, fpga.Name, fpga.Properties);
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            AllowTrailingCommas = true
+        };
+
+        private static string GetSettingPath(IProjectRoot project, string fpgaName)
+        {
+            return Path.Combine(project.FullPath, "device-settings", fpgaName + ".deviceconf");
         }
-        else
-        {
-            var settings = LoadSettings(project, fpga.Name);
-            foreach (var (key, value) in fpga.Properties) settings.TryAdd(key, value);
-            SaveSettings(project, fpga.Name, settings);
-        }
-    }
 
-    public static Dictionary<string, string> LoadSettings(IProjectRoot project, string fpgaName)
-    {
-        try
+        public static void WriteDefaultSettingsIfEmpty(IProjectRoot project, IFpga fpga, ILogger logger)
         {
-            var path = GetSettingPath(project, fpgaName);
-            if (File.Exists(path))
+            var path = GetSettingPath(project, fpga.Name);
+            if (!File.Exists(path))
             {
-                using var stream = File.OpenRead(path);
-                var settings = JsonSerializer.Deserialize<Dictionary<string, string>>(stream, SerializerOptions);
-
-                return settings ?? [];
+                SaveSettings(project, fpga.Name, fpga.Properties, logger);
+            }
+            else
+            {
+                var settings = LoadSettings(project, fpga.Name, logger);
+                foreach (var (key, value) in fpga.Properties)
+                {
+                    settings.TryAdd(key, value);
+                }
+                SaveSettings(project, fpga.Name, settings, logger);
             }
         }
-        catch (Exception e)
+
+        public static Dictionary<string, string> LoadSettings(IProjectRoot project, string fpgaName, ILogger logger)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            try
+            {
+                var path = GetSettingPath(project, fpgaName);
+                if (File.Exists(path))
+                {
+                    using var stream = File.OpenRead(path);
+                    var settings = JsonSerializer.Deserialize<Dictionary<string, string>>(stream, SerializerOptions);
+
+                    return settings ?? new Dictionary<string, string>();
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message, e);
+            }
+
+            return new Dictionary<string, string>();
         }
 
-        return [];
-    }
-
-    public static bool SaveSettings(IProjectRoot project, string fpgaName, IReadOnlyDictionary<string, string> settings)
-    {
-        try
+        public static bool SaveSettings(IProjectRoot project, string fpgaName, IReadOnlyDictionary<string, string> settings, ILogger logger)
         {
-            var path = GetSettingPath(project, fpgaName);
+            try
+            {
+                var path = GetSettingPath(project, fpgaName);
 
-            var folder = Path.GetDirectoryName(path);
-            if (folder == null) throw new NullReferenceException(nameof(folder));
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                var folder = Path.GetDirectoryName(path);
+                if (folder == null) throw new NullReferenceException(nameof(folder));
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-            var filteredSettings = settings
-                .Where(x => string.IsNullOrEmpty(x.Value) == false)
-                .ToDictionary(x => x.Key, x => x.Value);
+                var filteredSettings = settings
+                    .Where(x => !string.IsNullOrEmpty(x.Value))
+                    .ToDictionary(x => x.Key, x => x.Value);
 
-            using var stream = File.OpenWrite(path);
-            stream.SetLength(0);
-            JsonSerializer.Serialize(stream, filteredSettings, SerializerOptions);
-            return true;
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-            return false;
+                using (var stream = File.OpenWrite(path))
+                {
+                    stream.SetLength(0);
+                    JsonSerializer.Serialize(stream, filteredSettings, SerializerOptions);
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message, e);
+                return false;
+            }
         }
     }
 }
