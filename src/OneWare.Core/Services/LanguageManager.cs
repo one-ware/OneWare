@@ -1,4 +1,7 @@
-﻿using System.Reactive.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
@@ -11,6 +14,7 @@ using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 using IFile = OneWare.Essentials.Models.IFile;
+using Path = System.IO.Path; // Ensure Path is resolved correctly
 
 namespace OneWare.Core.Services;
 
@@ -28,26 +32,40 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
     private IRawTheme _currentEditorTheme;
 
-    public LanguageManager(ISettingsService settingsService)
+    // Inject the new factories
+    private readonly ILanguageServiceFactory _languageServiceFactory;
+    private readonly ITypeAssistanceFactory _typeAssistanceFactory;
+    private readonly ISettingsService _settingsService; // Keep this for theme subscriptions
+
+    public LanguageManager(
+        ISettingsService settingsService,
+        ILanguageServiceFactory languageServiceFactory, // Inject language service factory
+        ITypeAssistanceFactory typeAssistanceFactory // Inject type assistance factory
+    )
     {
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _languageServiceFactory = languageServiceFactory ?? throw new ArgumentNullException(nameof(languageServiceFactory));
+        _typeAssistanceFactory = typeAssistanceFactory ?? throw new ArgumentNullException(nameof(typeAssistanceFactory));
+
         _currentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
 
+        // Subscribe to theme changes using the injected settingsService
         IDisposable? sub = null;
-        var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
+        var generalTheme = _settingsService.GetSettingObservable<string>("General_SelectedTheme")
             .Select(x => x == "Dark"
                 ? "Editor_SyntaxTheme_Dark"
                 : "Editor_SyntaxTheme_Light")
             .Subscribe(x =>
             {
                 sub?.Dispose();
-                sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
+                sub = _settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
                 {
                     CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
                     SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
                 });
             });
 
-        //Hoverbox hack
+        // Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
     }
 
@@ -118,13 +136,12 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _extensionLinks.TryGetValue(file.Extension, out var extensionLink);
         if (_workspaceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type2))
         {
-            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ??
-                            "";
+            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ?? "";
 
             if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
-            if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not
-                ILanguageService newInstance)
-                throw new TypeLoadException(nameof(type2) + " is not " + nameof(ILanguageService));
+
+            // Use the injected factory here
+            ILanguageService newInstance = _languageServiceFactory.CreateWorkspaceDependentService(type2, workspace);
 
             _workspaceServers[type2].Add(workspace, newInstance);
             return newInstance;
@@ -133,8 +150,9 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         if (_singleInstanceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type))
         {
             if (_singleInstanceServers.TryGetValue(type, out var service)) return service;
-            if (ContainerLocator.Container.Resolve(type) is not ILanguageService newInstance)
-                throw new TypeLoadException(nameof(type2) + " is not " + nameof(ILanguageService));
+
+            // Use the injected factory here
+            ILanguageService newInstance = _languageServiceFactory.CreateSingleInstanceService(type);
 
             _singleInstanceServers.Add(type, newInstance);
             return newInstance;
@@ -153,8 +171,9 @@ internal class LanguageManager : ObservableObject, ILanguageManager
             _extensionLinks.TryGetValue(editor.CurrentFile.Extension, out var extensionLink);
             if (!_standAloneTypeAssistance.TryGetValue(extensionLink ?? editor.CurrentFile.Extension, out var type))
                 return null;
-            if (ContainerLocator.Container.Resolve(type, (typeof(IEditor), editor)) is not ITypeAssistance newInstance)
-                throw new TypeLoadException(nameof(type) + " is not " + nameof(ITypeAssistance));
+
+            // Use the injected factory here
+            ITypeAssistance newInstance = _typeAssistanceFactory.CreateStandaloneTypeAssistance(type, editor);
             return newInstance;
         }
 

@@ -1,19 +1,22 @@
-﻿using OneWare.Essentials.Services;
+﻿// OneWare.ImageViewer/ImageViewerModuleInitializer.cs
+using OneWare.Essentials.Services;
 using OneWare.ImageViewer.ViewModels;
+using System;
 
-using Prism.Modularity;
-
-namespace OneWare.ImageViewer;
-
-public class ImageViewerModule 
+namespace OneWare.ImageViewer
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public class ImageViewerModuleInitializer
     {
-        containerRegistry.Register<ImageViewModel>();
-    }
+        private readonly IDockService _dockService;
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        containerProvider.Resolve<IDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
+        public ImageViewerModuleInitializer(IDockService dockService)
+        {
+            _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
+        }
+
+        public void Initialize()
+        {
+            _dockService.RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
+        }
     }
 }

@@ -1,7 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿// OneWare.PackageManager/Services/PackageService.cs
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Enums;
@@ -9,6 +15,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
+using OneWare.PackageManager; // Add this using directive for PackageModelFactory
 
 namespace OneWare.PackageManager.Services
 {
@@ -30,18 +37,21 @@ namespace OneWare.PackageManager.Services
         private readonly Lock _installLock = new();
         private CancellationTokenSource? _cancellationTokenSource;
 
+        // Inject the delegate factory instead of the Func
+        private readonly PackageModelFactory _packageModelFactory; // Changed from Func
+
         public PackageService(
             IHttpService httpService,
             ISettingsService settingsService,
             ILogger logger,
             IPaths paths,
-            Func<Type, object, object> resolveServiceWithParameter)
+            PackageModelFactory packageModelFactory) // Inject the factory
         {
-            _httpService = httpService;
-            _settingsService = settingsService;
-            _logger = logger;
-            _paths = paths;
-            _resolveServiceWithParameter = resolveServiceWithParameter;
+            _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+            _packageModelFactory = packageModelFactory ?? throw new ArgumentNullException(nameof(packageModelFactory)); // Assign the factory
 
             PackageDataBasePath = Path.Combine(paths.PackagesDirectory,
                 $"{paths.AppName.ToLower().Replace(" ", "")}-packages.json");
@@ -65,7 +75,7 @@ namespace OneWare.PackageManager.Services
 
         public Dictionary<string, PackageModel> Packages { get; } = new();
 
-        private readonly Func<Type, object, object> _resolveServiceWithParameter;
+        // Removed the private _resolveServiceWithParameter field
 
         public void RegisterPackageRepository(string url)
         {
@@ -133,8 +143,8 @@ namespace OneWare.PackageManager.Services
             }
 
             foreach (var removedPackage in Packages.Select(x => x.Value.Package)
-                         .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
-                         .ToArray())
+                                 .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
+                                 .ToArray())
             {
                 Packages.Remove(removedPackage.Id!);
             }
@@ -180,14 +190,8 @@ namespace OneWare.PackageManager.Services
                 return;
             }
 
-            PackageModel model = package.Type switch
-            {
-                "Plugin" => (PackageModel)_resolveServiceWithParameter(typeof(PluginPackageModel), package),
-                "NativeTool" => (PackageModel)_resolveServiceWithParameter(typeof(NativeToolPackageModel), package),
-                "Hardware" => (PackageModel)_resolveServiceWithParameter(typeof(HardwarePackageModel), package),
-                "Library" => (PackageModel)_resolveServiceWithParameter(typeof(LibraryPackageModel), package),
-                _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
-            };
+            // Use the injected factory to create the correct PackageModel type
+            PackageModel model = _packageModelFactory(package);
 
             model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Autofac;
+using Autofac; // Using Autofac's ILifetimeScope
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -10,41 +10,61 @@ namespace OneWare.Core.Dock
 {
     public class ListContractResolver : DefaultContractResolver
     {
-        private readonly Type _type;
-        private readonly IContainer _container;
+        private readonly Type _concreteListType; // Renamed for clarity: this is the concrete list type (e.g., typeof(List<>))
+        private readonly ILifetimeScope _lifetimeScope; // Changed from IContainer to ILifetimeScope
 
         /// <summary>
-        /// Constructor accepts type and container instance
+        /// Constructor accepts concrete list type and Autofac lifetime scope instance
         /// </summary>
-        /// <param name="type">Type to use for IList<> resolution</param>
-        /// <param name="container">Container used for resolving types</param>
-        public ListContractResolver(Type type, IContainer container)
+        /// <param name="concreteListType">The concrete generic list type (e.g., typeof(List&lt;&gt;)) to use for IList&lt;&gt; resolution.</param>
+        /// <param name="lifetimeScope">The Autofac lifetime scope used for resolving types during deserialization.</param>
+        public ListContractResolver(Type concreteListType, ILifetimeScope lifetimeScope)
         {
-            _type = type ?? throw new ArgumentNullException(nameof(type));
-            _container = container ?? throw new ArgumentNullException(nameof(container));
+            _concreteListType = concreteListType ?? throw new ArgumentNullException(nameof(concreteListType));
+            _lifetimeScope = lifetimeScope ?? throw new ArgumentNullException(nameof(lifetimeScope));
         }
 
         /// <inheritdoc />
         public override JsonContract ResolveContract(Type type)
         {
+            // Handle IList<T> by resolving to the concrete List<T>
             if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
             {
-                // Handle IList<T> by resolving to the concrete List<T>
-                return base.ResolveContract(_type.MakeGenericType(type.GenericTypeArguments[0]));
+                // Ensure the concrete list type is itself a generic type definition
+                if (!_concreteListType.IsGenericTypeDefinition)
+                {
+                    throw new InvalidOperationException($"The provided concreteListType ({_concreteListType.Name}) must be a generic type definition (e.g., typeof(List<>)).");
+                }
+                return base.ResolveContract(_concreteListType.MakeGenericType(type.GenericTypeArguments[0]));
             }
 
             var contract = base.ResolveContract(type);
 
             if (contract is JsonObjectContract co)
             {
-                if (_container.IsRegistered(type))
+                // Check if the type is registered in the current lifetime scope
+                // Using TryResolve avoids exceptions for unregistered types
+                if (_lifetimeScope.IsRegistered(type))
                 {
                     co.OverrideCreator = parameters =>
                     {
-                        // Currently ignoring parameters because IContainer.Resolve signature does not support them
-                        // You can extend the interface if you need to pass constructor parameters
-                        var resolvedInstance = _container.Resolve(type);
-                        return resolvedInstance;
+                        // Note: If you need to pass specific constructor parameters from JSON,
+                        // this approach will need to be enhanced (e.g., using a custom JsonConverter
+                        // for the specific type, or a factory that can interpret 'parameters').
+                        // For now, it will resolve dependencies as usual via Autofac's constructor injection.
+                        try
+                        {
+                            // Resolve the type from the lifetime scope. Autofac will handle its dependencies.
+                            var resolvedInstance = _lifetimeScope.Resolve(type);
+                            return resolvedInstance;
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the error if a type cannot be resolved during deserialization
+                            // You might want to inject a logger into this class for better logging
+                            Console.WriteLine($"Error resolving type {type.FullName} during deserialization: {ex.Message}");
+                            throw; // Re-throw to indicate a deserialization failure
+                        }
                     };
                 }
             }

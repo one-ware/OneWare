@@ -1,12 +1,13 @@
-﻿using System;
+﻿// OneWare.Core.Dock/DockSerializer.cs
+using System;
 using System.IO;
 using System.Text;
 using Dock.Model.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using OneWare.Core.Adapters;
-using OneWare.Essentials.Converters;
-using OneWare.Essentials.Services;
+using OneWare.Essentials.Converters; // Ensure this points to your modified ListContractResolver
+using OneWare.Essentials.Services; // If ILogger or other services are needed here
+using Autofac; // Add this for ILifetimeScope
 
 namespace OneWare.Core.Dock;
 
@@ -21,16 +22,18 @@ public sealed class DockSerializer : IDockSerializer
     /// Initializes a new instance of the <see cref="DockSerializer"/> class.
     /// </summary>
     /// <param name="listType">The generic list type to support for Dock serialization.</param>
-    /// <param name="container">The DI container adapter.</param>
-    public DockSerializer(Type listType, IContainerAdapter container)
+    /// <param name="lifetimeScope">The Autofac lifetime scope for resolving dependencies during deserialization.</param>
+    public DockSerializer(Type listType, ILifetimeScope lifetimeScope) // Use ILifetimeScope
     {
+        // No longer using IContainerAdapter, but Autofac's ILifetimeScope
         _settings = new JsonSerializerSettings
         {
             Formatting = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Objects,
             PreserveReferencesHandling = PreserveReferencesHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-            ContractResolver = new ListContractResolver(listType, container),
+            // Pass the ILifetimeScope directly to ListContractResolver
+            ContractResolver = new ListContractResolver(listType, lifetimeScope),
             NullValueHandling = NullValueHandling.Ignore,
             Converters =
             {

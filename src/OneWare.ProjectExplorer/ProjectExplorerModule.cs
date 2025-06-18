@@ -1,70 +1,29 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
+﻿// OneWare.ProjectExplorer/ProjectExplorerModule.cs
+using Autofac; // Essential for Autofac.Module
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
-using OneWare.ProjectExplorer.Views;
-using Prism.Modularity;
 
 namespace OneWare.ProjectExplorer;
 
-public class ProjectExplorerModule 
+public class ProjectExplorerModule : Module // Inherit from Autofac.Module
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void Load(ContainerBuilder builder)
     {
-        containerRegistry.RegisterSingleton<IFileWatchService, FileWatchService>();
-        containerRegistry.RegisterManySingleton<ProjectExplorerViewModel>(typeof(IProjectExplorerService),
-            typeof(ProjectExplorerViewModel));
+        // Register types with Autofac
+        builder.RegisterType<FileWatchService>().As<IFileWatchService>().SingleInstance();
+
+        // Register ProjectExplorerViewModel as a singleton, implementing IProjectExplorerService
+        builder.RegisterType<ProjectExplorerViewModel>()
+               .AsSelf() // Register as ProjectExplorerViewModel
+               .As<IProjectExplorerService>() // Also register as IProjectExplorerService
+               .SingleInstance();
+
+        // Register the initializer for this module as a singleton
+        builder.RegisterType<ProjectExplorerModuleInitializer>().AsSelf().SingleInstance();
+
+        base.Load(builder);
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        if (containerProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
-
-        var dockService = containerProvider.Resolve<IDockService>();
-        var windowService = containerProvider.Resolve<IWindowService>();
-
-        dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);
-
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new UiExtension(x =>
-            new ProjectExplorerMainWindowToolBarExtension
-            {
-                DataContext = vm
-            }));
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("File")
-        {
-            Priority = -10,
-            Header = "File"
-        });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("File")
-            {
-                Header = "File",
-                Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
-            });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemViewModel("File")
-            {
-                Header = "File",
-                Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
-            });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Project Explorer")
-            {
-                Header = "Project Explorer",
-                Command =
-                    new RelayCommand(() => dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
-                IconObservable = Application.Current!.GetResourceObservable(ProjectExplorerViewModel.IconKey)
-            });
-    }
+    // The OnInitialized method will be removed from here.
+    // Its logic will be moved to ProjectExplorerModuleInitializer.
 }

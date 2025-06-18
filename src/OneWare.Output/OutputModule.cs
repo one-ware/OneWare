@@ -1,45 +1,24 @@
-using Avalonia;
-using Avalonia.Controls;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Enums;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
+// OneWare.Output/OutputModule.cs
+using Autofac; // Essential for Autofac.Module
 using OneWare.Output.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using OneWare.Essentials.Services; // For IOutputService
 
 namespace OneWare.Output;
 
-public class OutputModule : IModule
+public class OutputModule : Module // Inherit from Autofac.Module
 {
-    private readonly IDockService _dockService;
-    private readonly ISettingsService _settingsService;
-    private readonly IWindowService _windowService;
-
-    public OutputModule(ISettingsService settingsService, IDockService dockService, IWindowService windowService)
+    protected override void Load(ContainerBuilder builder)
     {
-        _settingsService = settingsService;
-        _windowService = windowService;
-        _dockService = dockService;
-    }
+        // Register OutputViewModel as a singleton, implementing IOutputService
+        // Original: containerRegistry.RegisterManySingleton<OutputViewModel>(typeof(IOutputService), typeof(OutputViewModel));
+        builder.RegisterType<OutputViewModel>()
+               .AsSelf() // Register as OutputViewModel
+               .As<IOutputService>() // Also register as IOutputService
+               .SingleInstance();
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
-    {
-        containerRegistry.RegisterManySingleton<OutputViewModel>(typeof(IOutputService),
-            typeof(OutputViewModel));
-    }
+        // Register the initializer for this module as a singleton
+        builder.RegisterType<OutputModuleInitializer>().AsSelf().SingleInstance();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        _dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
-
-        _settingsService.Register("Output_Autoscroll", true);
-
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
-        {
-            Header = "Output",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
-            IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
-        });
+        base.Load(builder);
     }
 }

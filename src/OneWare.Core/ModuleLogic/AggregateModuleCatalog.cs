@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using OneWare.Essentials.Services;
+using System.Linq;
+using OneWare.Essentials.Services; // Ensure this is the correct namespace for ILogger
 using Prism.Modularity;
 
 namespace OneWare.Core.ModuleLogic;
@@ -7,19 +10,22 @@ namespace OneWare.Core.ModuleLogic;
 public class AggregateModuleCatalog : IModuleCatalog
 {
     private readonly List<IModuleCatalog> _catalogs = new();
+    private readonly ILogger _logger; // Declare a private field for the injected logger
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AggregateModuleCatalog" /> class
+    /// Initializes a new instance of the <see cref="AggregateModuleCatalog" /> class.
     /// </summary>
-    public AggregateModuleCatalog()
+    /// <param name="logger">The logger service to use for reporting errors during module initialization.</param>
+    public AggregateModuleCatalog(ILogger logger) // Inject ILogger via constructor
     {
-        _catalogs.Add(new ModuleCatalog());
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _catalogs.Add(new ModuleCatalog()); // Keep the default ModuleCatalog
     }
 
     public ReadOnlyCollection<IModuleCatalog> Catalogs => _catalogs.AsReadOnly();
 
     /// <summary>
-    ///     Gets all the <see cref="ModuleInfo" /> classes that are in the case <see cref="ModuleCatalog" />
+    /// Gets all the <see cref="ModuleInfo" /> classes that are in the case <see cref="ModuleCatalog" />
     /// </summary>
     public IEnumerable<IModuleInfo> Modules
     {
@@ -29,29 +35,31 @@ public class AggregateModuleCatalog : IModuleCatalog
     IEnumerable<IModuleInfo> IModuleCatalog.Modules => Modules;
 
     /// <summary>
-    ///     Returns the list of <see cref="ModuleInfo" /> that
-    ///     <param name="moduleInfo" />
-    ///     depends on
+    /// Returns the list of <see cref="ModuleInfo" /> that
+    /// <param name="moduleInfo" />
+    /// depends on
     /// </summary>
     /// <param name="moduleInfo">The <see cref="ModuleInfo" /> to get</param>
     /// <returns>
-    ///     An enumeration of <see cref="ModuleInfo" /> that <paramref name="moduleInfo" /> depends on
+    /// An enumeration of <see cref="ModuleInfo" /> that <paramref name="moduleInfo" /> depends on
     /// </returns>
     public IEnumerable<IModuleInfo> GetDependentModules(IModuleInfo moduleInfo)
     {
+        // This line might throw if moduleInfo is not found in any catalog.
+        // Consider adding error handling or returning an empty enumerable.
         var catalog = _catalogs.Single(x => x.Modules.Contains(moduleInfo));
         return catalog.GetDependentModules(moduleInfo);
     }
 
     /// <summary>
-    ///     Returns the collection of <see cref="ModuleInfo" /> that contain both the <see cref="ModuleInfo" />s in
-    ///     <paramref name="modules" />, but also all the modules they depend on
+    /// Returns the collection of <see cref="ModuleInfo" /> that contain both the <see cref="ModuleInfo" />s in
+    /// <paramref name="modules" />, but also all the modules they depend on
     /// </summary>
     /// <param name="modules">The modules to get the dependencies for</param>
     /// <returns>
-    ///     A collection of <see cref="ModuleInfo" /> that contains both all <see cref="ModuleInfo" />s in
-    ///     <paramref name="modules" />
-    ///     and also all the <see cref="ModuleInfo" /> they depend on
+    /// A collection of <see cref="ModuleInfo" /> that contains both all <see cref="ModuleInfo" />s in
+    /// <paramref name="modules" />
+    /// and also all the <see cref="ModuleInfo" /> they depend on
     /// </returns>
     public IEnumerable<IModuleInfo> CompleteListWithDependencies(IEnumerable<IModuleInfo> modules)
     {
@@ -61,7 +69,7 @@ public class AggregateModuleCatalog : IModuleCatalog
     }
 
     /// <summary>
-    ///     Initializes the catalog, which may load and validate the modules
+    /// Initializes the catalog, which may load and validate the modules
     /// </summary>
     public void Initialize()
     {
@@ -73,27 +81,30 @@ public class AggregateModuleCatalog : IModuleCatalog
             }
             catch (Exception e)
             {
-                ContainerLocator.Current.Resolve<ILogger>().Error(e.Message, e);
+                // Use the injected logger instead of static service locator
+                _logger.Error($"Failed to initialize module catalog: {e.Message}", e);
             }
         });
     }
 
     /// <summary>
-    ///     Adds a <see cref="ModuleInfo" /> to the <see cref="ModuleCatalog" />
+    /// Adds a <see cref="ModuleInfo" /> to the <see cref="ModuleCatalog" />
     /// </summary>
     /// <param name="moduleInfo">The <see cref="ModuleInfo" /> to add</param>
     public IModuleCatalog AddModule(IModuleInfo moduleInfo)
     {
+        // This adds to the first ModuleCatalog in the list. Consider if this is the desired behavior
+        // if you add multiple ModuleCatalog instances to _catalogs later.
         return _catalogs[0].AddModule(moduleInfo);
     }
 
     /// <summary>
-    ///     Adds the catalog to the list of catalogs
+    /// Adds the catalog to the list of catalogs
     /// </summary>
     /// <param name="catalog">The catalog to add</param>
     public void AddCatalog(IModuleCatalog catalog)
     {
-        if (catalog == null) throw new ArgumentException(nameof(catalog));
+        if (catalog == null) throw new ArgumentNullException(nameof(catalog));
 
         _catalogs.Add(catalog);
     }

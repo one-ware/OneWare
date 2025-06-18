@@ -1,12 +1,14 @@
+using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
-using OneWare.Core.Data;
+using OneWare.Core.Data; // Assuming Global and other data classes are here
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
+using OneWare.Essentials.Services; // Ensure these interfaces are correctly mapped to your project
 
 namespace OneWare.Core.Services;
 
@@ -14,24 +16,31 @@ public class Logger : ILogger
 {
     private static readonly DateTime AppStart = DateTime.Now;
 
-    private static TextWriter? _log;
+    private static TextWriter? _log; // Consider making this non-static if you want multiple loggers for different purposes.
+                                     // For a single application logger, static might be acceptable but manage its lifecycle carefully.
 
     private readonly IPaths _paths;
+    private readonly IOutputService _outputService; // Injected dependency
+    private readonly IDockService _dockService;     // Injected dependency
+    private readonly IWindowService _windowService; // Injected dependency
 
-    public Logger(IPaths paths)
+    public Logger(IPaths paths, IOutputService outputService, IDockService dockService, IWindowService windowService)
     {
-        _paths = paths;
+        _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+        _outputService = outputService ?? throw new ArgumentNullException(nameof(outputService));
+        _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
+        _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
+
         Init();
     }
 
-    private string LogFilePath =>
-        Path.Combine(_paths.DocumentsDirectory, "IDELog.txt");
+    private string LogFilePath => Path.Combine(_paths.DocumentsDirectory, "IDELog.txt");
 
     public void WriteLogFile(string value)
     {
         var date = DateTimeOffset.Now;
         if (_log != null)
-            lock (_log)
+            lock (_log) // Lock for thread safety on static TextWriter
             {
                 _log.WriteLine($"{date:dd-MMM-yyyy HH:mm:ss.fff}> {value}");
                 _log.Flush();
@@ -67,8 +76,11 @@ public class Logger : ILogger
         Console.WriteLine(message);
         if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = default;
 #endif
-        if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message.ToString() ?? "", outputBrush);
+        // Use the injected _outputService directly
+        if (writeOutput) // No need to check IsRegistered, because it's injected (assuming it's always needed)
+        {
+            _outputService.WriteLine(message.ToString() ?? "", outputBrush);
+        }
         WriteLogFile(message?.ToString() ?? "");
     }
 
@@ -78,37 +90,36 @@ public class Logger : ILogger
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Red);
 
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
+        if (showOutput) // No need to check IsRegistered, it's injected
+        {
             Dispatcher.UIThread.Post(() =>
             {
-                ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Red);
-                ContainerLocator.Current.Resolve<IDockService>()
-                    .Show(ContainerLocator.Current.Resolve<IOutputService>());
+                _outputService.WriteLine(output, Brushes.Red); // Use injected service
+                _dockService.Show(_outputService);           // Use injected service
             });
+        }
 
         if (showDialog)
             Dispatcher.UIThread.Post(() =>
             {
-                _ = ContainerLocator.Current.Resolve<IWindowService>()
-                    .ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner);
+                _ = _windowService.ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner); // Use injected service
             });
     }
 
-    public void Warning(string message, IProjectRoot? project, Exception? exception = null,   bool showOutput = true,
+    public void Warning(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Yellow);
 
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
+        if (showOutput)
         {
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Orange);
-            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            _outputService.WriteLine(output, Brushes.Orange); // Use injected service
+            _dockService.Show(_outputService);               // Use injected service
         }
 
         if (showDialog)
-            _ = ContainerLocator.Current.Resolve<IWindowService>()
-                .ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner);
+            _ = _windowService.ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner); // Use injected service
     }
 
     private void Init()
@@ -117,14 +128,16 @@ public class Logger : ILogger
         {
             Directory.CreateDirectory(_paths.DocumentsDirectory);
             _log = File.CreateText(LogFilePath);
-            PlatformHelper.ChmodFile(LogFilePath);
+            PlatformHelper.ChmodFile(LogFilePath); // Ensure PlatformHelper exists and is accessible
 
             Log(
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine("Can't create/access log file!");
+            // Fallback for logging if file creation fails.
+            // Avoid using the injected logger here as it's still being initialized.
+            Console.WriteLine($"Can't create/access log file! Error: {ex.Message}");
         }
     }
 }

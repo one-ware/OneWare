@@ -1,44 +1,25 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
+﻿// OneWare.SearchList/SearchListModule.cs
+using Autofac; // Essential for Autofac.Module
 using OneWare.SearchList.ViewModels;
-using Prism.Modularity;
 
 namespace OneWare.SearchList;
 
-public class SearchListModule 
+public class SearchListModule : Module // Inherit from Autofac.Module
 {
-    private readonly IDockService _dockService;
-    private readonly IWindowService _windowService;
+    // The constructor taking IDockService and IWindowService will be removed from here.
+    // Module.Load is where registrations happen, not initialization.
 
-    public SearchListModule(IWindowService windowService, IDockService dockService)
+    protected override void Load(ContainerBuilder builder)
     {
-        _windowService = windowService;
-        _dockService = dockService;
+        // Register types with Autofac
+        builder.RegisterType<SearchListViewModel>().AsSelf().SingleInstance(); // Register as self for direct injection
+
+        // Register the initializer for this module as a singleton
+        builder.RegisterType<SearchListModuleInitializer>().AsSelf().SingleInstance();
+
+        base.Load(builder);
     }
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
-    {
-        containerRegistry.RegisterSingleton<SearchListViewModel>();
-    }
-
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
-        {
-            Header = "Search",
-            Command = new RelayCommand(() =>
-            {
-                var vm = containerProvider.Resolve<SearchListViewModel>();
-                vm.SearchString = string.Empty;
-                _dockService.Show(vm);
-            }),
-            IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
-            InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
-        });
-    }
+    // The OnInitialized method will be removed from here.
+    // Its logic will be moved to SearchListModuleInitializer.
 }
