@@ -5,6 +5,7 @@ using GitCredentialManager;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
+using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.ViewModels;
 using RestSharp;
 
@@ -16,10 +17,10 @@ namespace OneWare.SourceControl.Settings
         private IImage? _image;
         private readonly IHttpService _httpService;
 
-        public GitHubAccountSetting(IHttpService httpService) : base(string.Empty)
+        public GitHubAccountSetting(IHttpService httpService, IWindowService windowService, GithubLoginProvider githubLoginProvider, ISettingsService settingsService, IPaths paths) : base(string.Empty)
         {
             _httpService = httpService;
-            Control = new GitHubAccountSettingViewModel(this);
+            Control = new GitHubAccountSettingViewModel(this, windowService, githubLoginProvider, settingsService, paths);
             _value = string.Empty;
         }
 

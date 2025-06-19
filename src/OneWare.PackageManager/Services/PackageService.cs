@@ -1,24 +1,18 @@
 ﻿// OneWare.PackageManager/Services/PackageService.cs
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using OneWare.PackageManager.Models;
-using OneWare.PackageManager; // Add this using directive for PackageModelFactory
 
 namespace OneWare.PackageManager.Services
 {
+    public delegate PackageModel PackageModelFactory(Package package);
     public partial class PackageService : ObservableObject, IPackageService
     {
         private static readonly JsonSerializerOptions SerializerOptions = new()

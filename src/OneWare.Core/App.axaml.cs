@@ -51,12 +51,26 @@ namespace OneWare.Core
 {
     public class App : Application
     {
+        private readonly ILogger<App> _logger;
+        private readonly AggregateModuleCatalog _aggregateModuleCatalog;
+        private readonly BackupService _backupService;
+        private readonly IPaths _paths;
+        private readonly IWindowService _windowService;
+        private readonly ISettingsService _settingsService;
+        private readonly IProjectExplorerService _projectExplorerService;
+        private readonly IOutputService _outputService;
+        private readonly IPluginService _pluginService;
+        private readonly IEnvironmentService _environmentService;
+        private readonly ILanguageManager _languageManager;
+        private readonly IDockService _dockService;
+        private readonly IApplicationStateService _applicationStateService;
+        private readonly IChildProcessService _childProcessService;
+
+
         public static IContainerAdapter ContainerAdapter { get; private set; }
-
-
-
+        
         protected bool _tempMode = false;
-        protected AggregateModuleCatalog ModuleCatalog { get; } = new();
+        
 
         protected virtual string GetDefaultLayoutName => "Default";
 
@@ -66,13 +80,25 @@ namespace OneWare.Core
             InitializeContainer();
         }
 
-        public App()
+        public App(ILogger<App> logger, 
+                   AggregateModuleCatalog aggregateModuleCatalog,
+                   IDockService dockService,
+                   ISettingsService settingsService,
+                   IWindowService windowService,
+                   IPaths paths)
         {
             // Start with lightweight container
             var initial = new PureContainerAdapter();
 
             // Proxy to defer actual container switch
             ContainerAdapter = new ContainerTransitionProxy(initial);
+            _logger = logger;
+            _aggregateModuleCatalog = aggregateModuleCatalog;
+            _paths = paths;
+            _dockService = dockService;
+            _settingsService = settingsService;
+            _windowService = windowService;
+
         }
 
         protected virtual void InitializeContainer()
@@ -107,7 +133,11 @@ namespace OneWare.Core
             container.Register<IApplicationStateService, ApplicationStateService>(isSingleton: true);
             container.Register<IDockService, DockService>(isSingleton: true);
             container.Register<IModuleTracker, ModuleTracker>(isSingleton: true);
-            container.RegisterInstance<BackupService>(new BackupService(ContainerAdapter.Resolve<IPaths>(), ContainerAdapter.Resolve<IDockService>(), ContainerAdapter.Resolve<ISettingsService>(), ContainerAdapter.Resolve<Essentials.Services.ILogger>(), ContainerAdapter.Resolve<IWindowService>()));
+            container.RegisterInstance<BackupService>(new BackupService(_paths, 
+                                                                        _dockService,
+                                                                        _settingsService,
+                                                                        _logger, 
+                                                                        _windowService));
             container.Register<IChildProcessService, ChildProcessService>(isSingleton: true);
             container.Register<IFileIconService, FileIconService>(isSingleton: true);
             container.Register<IEnvironmentService, EnvironmentService>(isSingleton: true);

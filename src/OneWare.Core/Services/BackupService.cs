@@ -185,12 +185,12 @@ public class BackupService : IBackupService
 
                             evm.CurrentDocument.Text = backupText;
 
-                            _logger.Log("File " + file.Name + " restored from backup!",
+                            _logger.LogInformation("File " + file.Name + " restored from backup!",
                                 ConsoleColor.Green, true, Brushes.Green);
                         }
                         catch (Exception e)
                         {
-                            _logger.Error(
+                            _logger.LogError(
                                 "Restoring file " + file.Name +
                                 " failed! More information can be found in the program log", e, true, true);
                         }
