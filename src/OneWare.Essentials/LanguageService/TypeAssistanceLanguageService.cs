@@ -58,15 +58,16 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     
 
     private TimeSpan _lastEditTime = DateTime.Now.TimeOfDay;
-    
-    protected TypeAssistanceLanguageService(IEditor evm,
-                                            ILogger<TypeAssistanceLanguageService> logger,
-                                            IErrorService errorService,
-                                            IProjectExplorerService projectExplorerService,
-                                            ISettingsService settingsService,
-                                            IDockService dockService,
-                                            ILanguageManager languageManager,
-                                            ILanguageService langService) : base(evm, settingsService)
+
+    protected TypeAssistanceLanguageService(
+    IEditor evm,
+    ILogger<TypeAssistanceLanguageService> logger,
+    IErrorService errorService, // <-- This is the 3rd parameter
+    IProjectExplorerService projectExplorerService,
+    ISettingsService settingsService,
+    IDockService dockService,
+    ILanguageManager languageManager,
+    ILanguageService langService) : base(evm, settingsService)
     {
         Service = langService;
         _errorService = errorService;

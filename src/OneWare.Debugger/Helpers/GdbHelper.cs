@@ -6,9 +6,15 @@ namespace OneWare.Debugger.Helpers;
 
 public class GdbHelper
 {
+    private static PlatformHelper _platformHelper;
+
+    public GdbHelper(PlatformHelper platformHelper)
+    {
+        _platformHelper = platformHelper;
+    }
     public static int SendCtrlC(int pid)
     {
-        switch (PlatformHelper.Platform)
+        switch (_platformHelper.Platform)
         {
             case PlatformId.WinX64:
             {

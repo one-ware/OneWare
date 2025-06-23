@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
@@ -19,13 +21,16 @@ namespace OneWare.SourceControl
         private readonly IWindowService _windowService;
         private readonly IDockService _dockService;
         private readonly SourceControlViewModel _sourceControlViewModel;
+        private readonly GitHubAccountSetting _gitHubAccountSetting ;
 
         public SourceControlModuleInitializer(
+            GitHubAccountSetting gitHubAccountSetting,
             ISettingsService settingsService,
             IWindowService windowService,
             IDockService dockService,
             SourceControlViewModel sourceControlViewModel)
         {
+            _gitHubAccountSetting = gitHubAccountSetting;
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
@@ -37,7 +42,7 @@ namespace OneWare.SourceControl
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
 
-            _settingsService.RegisterCustom("Team Explorer", "GitHub", SourceControlModule.GitHubAccountNameKey, new GitHubAccountSetting());
+            _settingsService.RegisterCustom("Team Explorer", "GitHub", SourceControlModule.GitHubAccountNameKey, _gitHubAccountSetting);
 
             _settingsService.RegisterSettingCategory("Team Explorer", 10, "VsImageLib.Team16X");
             _settingsService.RegisterTitled("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",

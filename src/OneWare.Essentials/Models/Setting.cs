@@ -97,7 +97,7 @@ public class ComboBoxSetting : TitledSetting
 
 public class ListBoxSetting : TitledSetting
 {
-    public ListBoxSetting(string title, params string[] defaultValue) : base(title, new ObservableCollection<string>(defaultValue))
+    public ListBoxSetting(string title, ObservableCollection<string> observableCollection, params string[] defaultValue) : base(title, new ObservableCollection<string>(defaultValue))
     {
     }
 
@@ -109,7 +109,7 @@ public class ListBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ListBoxSetting(this.Title, ((ObservableCollection<string>)this.DefaultValue).ToArray());
+        return new ListBoxSetting(this.Title, new ObservableCollection<string>(((ObservableCollection<string>)this.DefaultValue)), ((ObservableCollection<string>)this.DefaultValue).ToArray());
     }
 }
 

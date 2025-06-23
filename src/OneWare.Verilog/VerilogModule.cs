@@ -1,15 +1,13 @@
-using OneWare.Essentials.Helpers;
+// OneWare.Verilog/VerilogModule.cs
+using Autofac; // Changed from Prism.Modularity
+using OneWare.Essentials.Models; // Ensure this is present for Package and related types
 using OneWare.Essentials.PackageManager;
-using OneWare.Essentials.Services;
-using OneWare.UniversalFpgaProjectSystem.Services;
-using OneWare.Verilog.Parsing;
-using OneWare.Verilog.Templates;
-using OneWare.Core.Adapters;
-using Prism.Modularity;
+using System.IO; // Ensure this is present for Path.Combine
 
 namespace OneWare.Verilog;
 
-public class VerilogModule : IModule
+// Now inherits from Autofac.Module
+public class VerilogModule : Module
 {
     public const string LspName = "Verible";
     public const string LspPathSetting = "VerilogModule_VeriblePath";
@@ -98,7 +96,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-win64.zip",
                         AutoSetting =
                         [
@@ -113,7 +111,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -148,7 +146,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-win64.zip",
                         AutoSetting =
                         [
@@ -163,7 +161,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -193,32 +191,18 @@ public class VerilogModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerAdapter containerAdapter)
+    // This method is for registering types with Autofac
+    protected override void Load(ContainerBuilder builder)
     {
+        // Register the LanguageServiceVerilog if it's a service meant to be resolved by the DI container.
+        builder.RegisterType<LanguageServiceVerilog>().AsSelf().SingleInstance(); // Or whatever lifecycle is appropriate
+
+        // Register the initializer as a singleton so it can be resolved and its Initialize method called
+        builder.RegisterType<VerilogModuleInitializer>().AsSelf().SingleInstance();
+
+        base.Load(builder); // Call the base Autofac.Module Load method
     }
 
-    public void OnInitialized(IContainerAdapter containerAdapter)
-    {
-        containerAdapter.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
-
-        var settingsService = containerAdapter.Resolve<ISettingsService>();
-        settingsService.RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
-            "Verible Path", "Path for Verible executable", "",
-            null, containerAdapter.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
-        
-        settingsService.RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
-            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
-
-        containerAdapter.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        
-        var languageManager = containerAdapter.Resolve<ILanguageManager>();
-        languageManager.RegisterTextMateLanguage("verilog",
-            "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v", ".sv");
-        languageManager.RegisterService(typeof(LanguageServiceVerilog), true, ".v", ".sv");
-
-        var fpgaService = containerAdapter.Resolve<FpgaService>();
-        fpgaService.RegisterNodeProvider<VerilogNodeProvider>(".v", ".sv");
-        fpgaService.RegisterTemplate<VerilogBlinkTemplate>();
-        fpgaService.RegisterTemplate<VerilogBlinkSimulationTemplate>();
-    }
+    // The RegisterTypes and OnInitialized methods (from Prism's IModule) are removed
+    // as they are replaced by Autofac's Load method and a separate initializer class.
 }

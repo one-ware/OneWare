@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -29,7 +30,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu = new();
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
-    private readonly ILogger _logger;
+    private readonly IFileIconService _fileIconService;
+    private readonly ILogger<ProjectExplorerViewModel> _logger;
+    private readonly PlatformHelper _platformHelper;
 
     private IProjectRoot? _activeProject;
 
@@ -41,8 +44,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         ISettingsService settingsService,
         IProjectManagerService projectManagerService,
         IFileWatchService fileWatchService,
+        IFileIconService fileIconService,
         ILanguageManager languageManager,
-        ILogger logger)
+        PlatformHelper platformHelper,
+        ILogger<ProjectExplorerViewModel> logger)
         : base(IconKey)
     {
         ApplicationStateService = applicationStateService;
@@ -53,6 +58,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _projectManagerService = projectManagerService;
         _fileWatchService = fileWatchService;
         _languageManager = languageManager;
+        _fileIconService = fileIconService;
+        _platformHelper = platformHelper;
         _logger = logger;
 
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
@@ -82,7 +89,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public IFile GetTemporaryFile(string path)
     {
         if (TemporaryFiles.TryGetValue(path, out var file)) return file;
-        var externalFile = new ExternalFile(path);
+        var externalFile = new ExternalFile(path, _fileIconService);
         _fileWatchService.Register(externalFile);
         TemporaryFiles.Add(path, externalFile);
         return TemporaryFiles[path];
@@ -271,7 +278,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 menuItems.Add(new MenuItemViewModel("OpenFileViewer")
                 {
                     Header = "Open in File Manager",
-                    Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
+                    Command = new RelayCommand(() => _platformHelper.OpenExplorerPath(entry.FullPath)),
                     IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16Xc")
                 });
             }
@@ -471,7 +478,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            _logger.Error("File / Directory could not be deleted from storage!" + e);
+            _logger.LogError("File / Directory could not be deleted from storage!" + e);
         }
 
         await RemoveAsync(new[] { entry });
@@ -531,7 +538,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
                     var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameDirectory();
-                    if (copy) PlatformHelper.CopyDirectory(path, destPath);
+                    if (copy) _platformHelper.CopyDirectory(path, destPath);
                     else Directory.Move(path, destPath);
                 }
                 else
@@ -540,13 +547,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     if (askForInclude)
                         await AskForIncludeDialogAsync(destination.Root,
                             Path.GetRelativePath(destination.Root.FullPath, destPath));
-                    if (copy) PlatformHelper.CopyFile(path, destPath);
+                    if (copy) _platformHelper.CopyFile(path, destPath);
                     else File.Move(path, destPath);
                 }
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message, e);
+                _logger.LogError(e.Message, e);
             }
         }
     }
@@ -600,7 +607,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (!entry.IsValid())
         {
-            _logger.Error("Tried to reload invalid entry (no root) " + entry.Header);
+            _logger.LogError("Tried to reload invalid entry (no root) " + entry.Header);
             return entry;
         }
 
@@ -611,7 +618,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (manager == null)
             {
                 entry.LoadingFailed = true;
-                _logger.Error($"Cannot reload {entry.Header}. Manager not found!");
+                _logger.LogError($"Cannot reload {entry.Header}. Manager not found!");
             }
 
             var proj = manager != null ? await manager.LoadProjectAsync(root.ProjectPath) : null;
@@ -781,7 +788,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task SaveLastProjectsFileAsync()
     {
-        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+        if (_platformHelper.Platform is PlatformId.Wasm) return;
 
         try
         {
@@ -803,7 +810,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task OpenLastProjectsFileAsync()
     {
-        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+        if (_platformHelper.Platform is PlatformId.Wasm) return;
 
         if (!File.Exists(_lastProjectsFile)) return;
         try
@@ -820,7 +827,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (manager != null)
                     loadProjectTasks.Add(LoadProjectAsync(l.Path, manager, l.IsExpanded, l.IsActive));
                 else
-                    _logger.Warning(
+                    _logger.LogWarning(
                         $"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
             }
 

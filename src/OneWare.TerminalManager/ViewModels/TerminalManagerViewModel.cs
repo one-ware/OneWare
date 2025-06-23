@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -15,17 +16,25 @@ public class TerminalManagerViewModel : ExtendedTool
     public const string IconKey = "Material.Console";
     private readonly IDockService _dockService;
     private readonly IPaths _paths;
+    private readonly PlatformHelper _platformHelper;
+    private readonly ILogger<TerminalManagerViewModel> _logger;
 
     private readonly IProjectExplorerService _projectExplorerService;
 
     private TerminalTabModel? _selectedTerminalTab;
 
-    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService,
-        IProjectExplorerService projectExplorerService, IPaths paths) : base(IconKey)
+    public TerminalManagerViewModel(ISettingsService settingsService, 
+        IDockService dockService,
+        IProjectExplorerService projectExplorerService,
+        PlatformHelper platformHelper,
+        ILogger<TerminalManagerViewModel> logger,
+        IPaths paths) : base(IconKey)
     {
         _projectExplorerService = projectExplorerService;
         _dockService = dockService;
         _paths = paths;
+        _platformHelper = platformHelper;
+        _logger = logger;
 
         Title = "Terminal";
         Id = "Terminal";
@@ -90,7 +99,7 @@ public class TerminalManagerViewModel : ExtendedTool
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) throw new NotImplementedException();
 
-            PlatformHelper.ExecBash("chmod u+x " + scriptPath);
+            _platformHelper.ExecBash("chmod u+x " + scriptPath);
 
             var sudo = elevated ? "sudo " : "";
             var terminal = new TerminalViewModel(_paths.DocumentsDirectory);

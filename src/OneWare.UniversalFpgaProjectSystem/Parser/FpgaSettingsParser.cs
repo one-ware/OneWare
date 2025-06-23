@@ -1,4 +1,8 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -22,6 +26,11 @@ namespace OneWare.UniversalFpgaProjectSystem.Parser
 
         public static void WriteDefaultSettingsIfEmpty(IProjectRoot project, IFpga fpga, ILogger logger)
         {
+            if (project == null)
+                throw new ArgumentNullException(nameof(project));
+            if (fpga == null)
+                throw new ArgumentNullException(nameof(fpga));
+
             var path = GetSettingPath(project, fpga.Name);
             if (!File.Exists(path))
             {
@@ -47,15 +56,13 @@ namespace OneWare.UniversalFpgaProjectSystem.Parser
                 {
                     using var stream = File.OpenRead(path);
                     var settings = JsonSerializer.Deserialize<Dictionary<string, string>>(stream, SerializerOptions);
-
                     return settings ?? new Dictionary<string, string>();
                 }
             }
             catch (Exception e)
             {
-                logger.Error(e.Message, e);
+                logger.Error($"Error loading settings for {fpgaName}: {e.Message}", e);
             }
-
             return new Dictionary<string, string>();
         }
 
@@ -64,10 +71,11 @@ namespace OneWare.UniversalFpgaProjectSystem.Parser
             try
             {
                 var path = GetSettingPath(project, fpgaName);
-
                 var folder = Path.GetDirectoryName(path);
-                if (folder == null) throw new NullReferenceException(nameof(folder));
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                if (folder == null)
+                    throw new NullReferenceException(nameof(folder));
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 var filteredSettings = settings
                     .Where(x => !string.IsNullOrEmpty(x.Value))
@@ -82,7 +90,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Parser
             }
             catch (Exception e)
             {
-                logger.Error(e.Message, e);
+                logger.Error($"Error saving settings for {fpgaName}: {e.Message}", e);
                 return false;
             }
         }

@@ -25,18 +25,22 @@ public class BackupService : IBackupService
     private readonly ILogger<BackupService> _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly PlatformHelper _platformHelper;
 
     private List<BackupFile> _backups = new();
 
     private DispatcherTimer? _timer;
 
-    public BackupService(IPaths paths, IDockService dockService, ISettingsService settingsService,
-        ILogger<BackupService> logger, IWindowService windowService)
+    public BackupService(IPaths paths, 
+                        IDockService dockService, 
+                        ISettingsService settingsService,                     
+                        PlatformHelper platformHelper,
+                        IWindowService windowService)
     {
         _dockService = dockService;
-        _logger = logger;
         _windowService = windowService;
         _settingsService = settingsService;
+        _platformHelper = platformHelper;
 
         _backupFolder = Path.Combine(paths.AppDataDirectory, "Backups");
         _backupRegistryFile = Path.Combine(_backupFolder, "BackupRegistry.json");
@@ -103,7 +107,7 @@ public class BackupService : IBackupService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 
@@ -132,7 +136,7 @@ public class BackupService : IBackupService
 
                     if (!_backups.Contains(backup)) _backups.Add(backup);
 
-                    PlatformHelper.WriteTextFile(backup.BackupPath, evm.CurrentDocument.Text);
+                    _platformHelper.WriteTextFile(backup.BackupPath, evm.CurrentDocument.Text);
                 }
                 catch (Exception e)
                 {

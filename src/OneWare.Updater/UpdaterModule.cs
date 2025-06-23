@@ -12,11 +12,19 @@ namespace OneWare.Updater
 {
     public class UpdaterModule : Module
     {
+        private readonly PlatformHelper _platformHelper;
+        private readonly IDockService _dockService;
+
+        // Constructor to inject PlatformHelper
+        public UpdaterModule(PlatformHelper platformHelper)
+        {
+            _platformHelper = platformHelper;
+        }
+
         protected override void Load(ContainerBuilder builder)
         {
             // Register types with Autofac
             builder.RegisterType<UpdaterViewModel>().SingleInstance();
-
             base.Load(builder);
         }
 
@@ -24,8 +32,8 @@ namespace OneWare.Updater
         {
             var windowService = container.Resolve<IWindowService>();
 
-            if (PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64
-                or PlatformId.OsxArm64)
+            // Use the instance of PlatformHelper to access the Platform property
+            if (_platformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64 or PlatformId.OsxArm64)
             {
                 windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Update")
                 {
@@ -33,7 +41,7 @@ namespace OneWare.Updater
                     Command = new RelayCommand(() =>
                     {
                         var vm = container.Resolve<UpdaterViewModel>();
-                        windowService.Show(new UpdaterView
+                        windowService.Show(new UpdaterView(_dockService)
                         {
                             DataContext = vm
                         });

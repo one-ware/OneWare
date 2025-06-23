@@ -65,6 +65,7 @@ namespace OneWare.Core
         private readonly IDockService _dockService;
         private readonly IApplicationStateService _applicationStateService;
         private readonly IChildProcessService _childProcessService;
+        private readonly PlatformHelper _platformHelper;
 
 
         public static IContainerAdapter ContainerAdapter { get; private set; }
@@ -85,6 +86,8 @@ namespace OneWare.Core
                    IDockService dockService,
                    ISettingsService settingsService,
                    IWindowService windowService,
+                   PlatformHelper platformHelper,
+                   BackupService backupService,
                    IPaths paths)
         {
             // Start with lightweight container
@@ -98,6 +101,8 @@ namespace OneWare.Core
             _dockService = dockService;
             _settingsService = settingsService;
             _windowService = windowService;
+            _platformHelper = platformHelper;
+            _backupService = backupService ?? throw new ArgumentNullException(nameof(backupService));
 
         }
 
@@ -133,11 +138,7 @@ namespace OneWare.Core
             container.Register<IApplicationStateService, ApplicationStateService>(isSingleton: true);
             container.Register<IDockService, DockService>(isSingleton: true);
             container.Register<IModuleTracker, ModuleTracker>(isSingleton: true);
-            container.RegisterInstance<BackupService>(new BackupService(_paths, 
-                                                                        _dockService,
-                                                                        _settingsService,
-                                                                        _logger, 
-                                                                        _windowService));
+            container.RegisterInstance<BackupService>(_backupService);
             container.Register<IChildProcessService, ChildProcessService>(isSingleton: true);
             container.Register<IFileIconService, FileIconService>(isSingleton: true);
             container.Register<IEnvironmentService, EnvironmentService>(isSingleton: true);
@@ -305,14 +306,18 @@ namespace OneWare.Core
                 var unsavedFiles = new List<IExtendedDocument>();
 
                 foreach (var tab in ContainerAdapter.Resolve<IDockService>().OpenFiles)
-                if (tab.Value is { IsDirty: true } evm)
-                    unsavedFiles.Add(evm);
+                {
+                    if (tab.Value is { IsDirty: true } evm)
+                        unsavedFiles.Add(evm);
+                }
 
                 var mainWin = ContainerAdapter.Resolve<MainWindow>() as Window;
                 if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-            var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
 
-            if (shutdownReady) await ShutdownAsync();
+                var windowHelper = ContainerAdapter.Resolve<WindowHelper>();
+                var shutdownReady = await windowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
+
+                if (shutdownReady) await ShutdownAsync();
             }
             catch (Exception ex)
             {

@@ -25,13 +25,19 @@ public class UpdaterViewModel : ObservableObject
     private readonly IPackageService _packageService;
     private readonly IPaths _paths;
     private readonly IWindowService _windowService;
+    private readonly PlatformHelper _platformHelper;
 
     private int _progress;
 
     private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
 
-    public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
-        IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
+    public UpdaterViewModel(IHttpService httpService, 
+                            IPaths paths,
+                            ILogger logger,
+                            IApplicationStateService applicationStateService,
+                            IWindowService windowService,
+                            PlatformHelper platformHelper,
+                            IPackageService packageService)
     {
         _httpService = httpService;
         _paths = paths;
@@ -39,6 +45,7 @@ public class UpdaterViewModel : ObservableObject
         _applicationStateService = applicationStateService;
         _packageService = packageService;
         _windowService = windowService;
+        _platformHelper = platformHelper;
 
         applicationStateService.RegisterShutdownAction(PerformRestartAction);
     }
@@ -84,7 +91,7 @@ public class UpdaterViewModel : ObservableObject
 
     public string? DownloadLink { get; private set; }
 
-    private string DownloadLocation => PlatformHelper.Platform switch
+    private string DownloadLocation => _platformHelper.Platform switch
     {
         PlatformId.WinX64 or PlatformId.WinArm64 => Path.Combine(_paths.TempDirectory,
             $"{_paths.AppName.Replace(" ", "")}_{NewVersion}.msi"),
@@ -95,7 +102,7 @@ public class UpdaterViewModel : ObservableObject
 
     public async Task<bool> CheckForUpdateAsync()
     {
-        var versionStr = PlatformHelper.Platform switch
+        var versionStr = _platformHelper.Platform switch
         {
             PlatformId.WinX64 => "win-x64",
             PlatformId.WinArm64 => "win-arm64",
@@ -217,7 +224,7 @@ public class UpdaterViewModel : ObservableObject
             return;
         }
 
-        switch (PlatformHelper.Platform)
+        switch (_platformHelper.Platform)
         {
             case PlatformId.WinX64 or PlatformId.WinArm64:
             {

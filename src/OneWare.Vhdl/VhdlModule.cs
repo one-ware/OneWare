@@ -1,14 +1,13 @@
-﻿using OneWare.Essentials.Helpers;
+﻿// OneWare.Vhdl/VhdlModule.cs
+using Autofac; // Changed from Prism.Modularity
+using OneWare.Essentials.Models; // Ensure this is present for Package and related types
 using OneWare.Essentials.PackageManager;
-using OneWare.Essentials.Services;
-using OneWare.UniversalFpgaProjectSystem.Services;
-using OneWare.Vhdl.Parsing;
-using OneWare.Vhdl.Templates;
-using Prism.Modularity;
+using System.IO; // Ensure this is present for Path.Combine
 
 namespace OneWare.Vhdl;
 
-public class VhdlModule 
+// Now inherits from Autofac.Module
+public class VhdlModule : Module
 {
     public const string LspName = "RustHDL";
     public const string LspPathSetting = "VhdlModule_RustHdlPath";
@@ -50,7 +49,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -64,7 +63,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -78,7 +77,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -99,7 +98,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -113,7 +112,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -127,7 +126,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -160,7 +159,7 @@ public class VhdlModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -188,42 +187,19 @@ public class VhdlModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    // This method is for registering types with Autofac
+    protected override void Load(ContainerBuilder builder)
     {
+        // Register the LanguageServiceVhdl if it's a service meant to be resolved by the DI container.
+        // Assuming it has a public constructor and its dependencies are also registered.
+        builder.RegisterType<LanguageServiceVhdl>().AsSelf().SingleInstance(); // Or whatever lifecycle is appropriate
+
+        // Register the initializer as a singleton so it can be resolved and its Initialize method called
+        builder.RegisterType<VhdlModuleInitializer>().AsSelf().SingleInstance();
+
+        base.Load(builder); // Call the base Autofac.Module Load method
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        containerProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
-
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "VHDL", LspPathSetting,
-            "RustHDL Path", "Path for RustHDL executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
-        
-        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "VHDL", EnableSnippetsSetting,
-            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
-
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
-            "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
-        containerProvider.Resolve<ILanguageManager>()
-            .RegisterService(typeof(LanguageServiceVhdl), true, ".vhd", ".vhdl");
-
-        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
-
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkTemplate>();
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkSimulationTemplate>();
-
-        // containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
-        // {
-        //     if (x is [UniversalProjectRoot root])
-        //     {
-        //         l.Add(new MenuItemViewModel("Refresh_Toml")
-        //         {
-        //             Header = "Refresh VHDL_LS Toml",
-        //             Command = new RelayCommand(() => TomlCreator.RefreshToml(root)),
-        //         });
-        //     }
-        // });
-    }
+    // The OnInitialized method is removed from here as it's part of Prism's IModule,
+    // and its logic is now handled by VhdlModuleInitializer.
 }

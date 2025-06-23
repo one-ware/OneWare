@@ -1,4 +1,5 @@
 ﻿using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
@@ -15,9 +16,9 @@ public class PluginPackageModel : PackageModel
     private IPlugin? _plugin;
 
     public PluginPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths,
-        IApplicationStateService applicationStateService, IPluginService pluginService)
-        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger,
-            applicationStateService)
+    IApplicationStateService applicationStateService, IPluginService pluginService, PlatformHelper platformHelper)
+    : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, null,
+        applicationStateService, platformHelper)
     {
         _pluginService = pluginService;
 

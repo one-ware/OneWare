@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Autofac;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Cpp;
 using OneWare.Essentials.Services;
@@ -19,9 +20,10 @@ namespace OneWare.Studio.Desktop
     public class DesktopStudioApp
     {
         private readonly IContainer _container;
-        private readonly ILogger _logger;
+        private readonly ILogger<DesktopStudioApp> _logger;
+        private readonly IPaths _paths;
 
-        public DesktopStudioApp(IPluginService pluginService, ILogger logger)
+        public DesktopStudioApp(IPluginService pluginService, ILogger<DesktopStudioApp> logger)
         {
             _logger = logger;
             var builder = new ContainerBuilder();
@@ -39,7 +41,8 @@ namespace OneWare.Studio.Desktop
 
             // Register services
             builder.RegisterInstance(pluginService).As<IPluginService>();
-            builder.RegisterInstance(logger).As<ILogger>();
+            
+
 
             _container = builder.Build();
         }
@@ -59,7 +62,7 @@ namespace OneWare.Studio.Desktop
                     }
                 }
 
-                var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
+                var plugins = Directory.GetDirectories(_paths.PluginsDirectory);
                 foreach (var module in plugins)
                 {
                     _container.Resolve<IPluginService>().AddPlugin(module);
@@ -67,7 +70,7 @@ namespace OneWare.Studio.Desktop
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message, e);
+                _logger.LogError(e.Message, e);
             }
         }
     }

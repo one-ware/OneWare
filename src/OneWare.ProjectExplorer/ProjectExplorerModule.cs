@@ -1,5 +1,6 @@
 ﻿// OneWare.ProjectExplorer/ProjectExplorerModule.cs
 using Autofac; // Essential for Autofac.Module
+using OneWare.Essentials.Services;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 

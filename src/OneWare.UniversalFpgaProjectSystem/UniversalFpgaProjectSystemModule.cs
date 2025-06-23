@@ -1,106 +1,45 @@
-using Avalonia;
-using Avalonia.Controls;
+// OneWare.UniversalFpgaProjectSystem/UniversalFpgaProjectSystemModule.cs
 using Avalonia.Media.Imaging;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Converters;
+using Avalonia.Controls;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using OneWare.UniversalFpgaProjectSystem.Views;
+using Prism.Ioc;
 using Prism.Modularity;
+using System;
 
 
 namespace OneWare.UniversalFpgaProjectSystem;
 
-public class UniversalFpgaProjectSystemModule 
+// The class itself doesn't need to implement IModule explicitly in your snippet,
+// but for Prism to find it, it usually does. Assuming it implicitly does or is configured.
+public class UniversalFpgaProjectSystemModule : IModule // Explicitly implement for clarity
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
         containerRegistry.RegisterSingleton<FpgaService>();
+
+        containerRegistry.RegisterSingleton<UniversalFpgaProjectToolBarViewModel>();
+        containerRegistry.Register<UniversalFpgaProjectTestBenchToolBarViewModel>(); // Register the VM itself
+
+        // === Keep the Func factory registration as is, this is Prism's way ===
+        // Within Prism's IContainerRegistry, this is the standard way to provide
+        // a factory that uses the container to create an instance with parameters.
+        // The `Resolve` here is within the *framework's* factory generation lambda,
+        // not your core application logic.
+        containerRegistry.Register<Func<IFile, UniversalFpgaProjectTestBenchToolBarViewModel>>(containerProvider =>
+        {
+            return new Func<IFile, UniversalFpgaProjectTestBenchToolBarViewModel>(file =>
+                containerProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>(
+                    (typeof(IFile), file)));
+        });
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var containerAdapter = containerProvider.Resolve<IContainerAdapter>();
-        var manager = containerAdapter.Resolve<UniversalFpgaProjectManager>();
-        var windowService = containerAdapter.Resolve<IWindowService>();
-        var settingsService = containerAdapter.Resolve<ISettingsService>();
-
-        settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
-
-        containerAdapter
-            .Resolve<IProjectManagerService>()
-            .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
-
-        containerAdapter.Resolve<ILanguageManager>()
-            .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemViewModel("FpgaProject")
-            {
-                Header = "Project",
-                Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
-                Icon = SharedConverters.PathToBitmapConverter.Convert(
-                    containerAdapter.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
-            });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("FpgaProject")
-            {
-                Header = "Project",
-                Command = new AsyncRelayCommand(() => containerAdapter.Resolve<IProjectExplorerService>()
-                    .LoadProjectFileDialogAsync(manager,
-                        new FilePickerFileType(
-                            $"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
-                        {
-                            Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
-                        })),
-                Icon = SharedConverters.PathToBitmapConverter.Convert(
-                    containerAdapter.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
-            });
-
-        var toolBarViewModel = containerAdapter.Resolve<UniversalFpgaProjectToolBarViewModel>();
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu",
-            new MenuItemViewModel("FPGA")
-            {
-                Header = "FPGA",
-                Priority = 200
-            });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
-        [
-            new MenuItemViewModel("Download")
-            {
-                Header = "Download",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
-            },
-            new MenuItemViewModel("Compile")
-            {
-                Header = "Compile",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
-            }
-        ]);
-
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
-            new UiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
-
-        windowService.RegisterUiExtension("EditView_Top", new UiExtension(x =>
-        {
-            if (x is IFile)
-                return new UniversalFpgaProjectTestBenchToolBarView
-                {
-                    DataContext =
-                        containerAdapter.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
-                };
-            return null;
-        }));
+        // Still no direct Resolve calls in OnInitialized itself.
+        containerProvider.Resolve<UniversalFpgaProjectSystemModuleInitializer>().Initialize();
     }
 }

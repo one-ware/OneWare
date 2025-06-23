@@ -7,6 +7,7 @@ namespace OneWare.Cpp
 {
     public class CppModule : Module
     {
+        private readonly PlatformHelper _platformHelper;
         public const string LspName = "clangd";
         public const string LspPathSetting = "CppModule_ClangdPath";
 
@@ -151,7 +152,7 @@ namespace OneWare.Cpp
             settingsService.RegisterTitledFilePath(
                 "Languages", "C++", LspPathSetting,
                 "Clangd Path", "Path for clangd executable", "",
-                null, paths.NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile);
+                null, paths.NativeToolsDirectory, File.Exists, _platformHelper.ExeFile);
 
             errorService.RegisterErrorSource(LspName);
 

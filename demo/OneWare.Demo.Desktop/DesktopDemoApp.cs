@@ -32,6 +32,11 @@ public class DesktopDemoApp : DemoApp
     public readonly ISettingsService _settingsService;
     public readonly IPaths _paths;
 
+    public DesktopDemoApp()
+    {
+        // Initialization logic if needed
+    }
+
     public DesktopDemoApp(IPluginService pluginService,
                            SplashWindowViewModel splashWindowViewModel,
                            IProjectExplorerService projectExplorerService,

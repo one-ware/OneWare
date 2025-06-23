@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Text.Json;
 using Avalonia.Platform.Storage;
 using DynamicData.Binding;
@@ -150,7 +151,7 @@ public class SettingsService : ISettingsService
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ListBoxSetting(title, defaultValue)
+            new ListBoxSetting(title, new ObservableCollection<string>(defaultValue))
             {
                 HoverDescription = description
             });

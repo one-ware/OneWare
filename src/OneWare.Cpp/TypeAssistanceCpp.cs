@@ -5,6 +5,7 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Microsoft.Extensions.Logging; // Make sure you have this using directive for ILogger
 
 namespace OneWare.Cpp;
 
@@ -12,12 +13,20 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 {
     private readonly IErrorService _errorService;
 
+    // IMPORTANT: All parameters required by TypeAssistanceLanguageService's constructor
+    // must be accepted here and passed to the base constructor in the correct order.
     public TypeAssistanceCpp(
         IEditor editor,
-        LanguageServiceCpp ls,
-        IErrorService errorService) : base(editor, ls)
+        LanguageServiceCpp ls, // This corresponds to ILanguageService langService at the end
+        IErrorService errorService, // Corresponds to IErrorService errorService
+        ILogger<TypeAssistanceLanguageService> logger, // Corresponds to ILogger<TypeAssistanceLanguageService> logger
+        IProjectExplorerService projectExplorerService, // Corresponds to IProjectExplorerService
+        ISettingsService settingsService, // Corresponds to ISettingsService
+        IDockService dockService, // Corresponds to IDockService
+        ILanguageManager languageManager) // Corresponds to ILanguageManager
+        : base(editor, logger, errorService, projectExplorerService, settingsService, dockService, languageManager, ls) // PASS ALL 8 PARAMETERS IN ORDER
     {
-        _errorService = errorService;
+        _errorService = errorService; // You keep this for internal use in TypeAssistanceCpp if needed
 
         CodeBox.TextArea.IndentationStrategy = IndentationStrategy =
             new CSharpIndentationStrategy(CodeBox.Options);

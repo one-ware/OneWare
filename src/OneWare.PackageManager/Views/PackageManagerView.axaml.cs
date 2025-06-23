@@ -1,11 +1,14 @@
 ﻿using OneWare.Essentials.Controls;
+using OneWare.Essentials.Services; // Assuming IDockService is defined in this namespace
 
-namespace OneWare.PackageManager.Views;
-
-public partial class PackageManagerView : FlexibleWindow
+namespace OneWare.PackageManager.Views
 {
-    public PackageManagerView()
+    public partial class PackageManagerView : FlexibleWindow
     {
-        InitializeComponent();
+        public PackageManagerView(IDockService dockService) : base(dockService)
+        {
+            InitializeComponent();
+            // Additional initialization code can go here
+        }
     }
 }

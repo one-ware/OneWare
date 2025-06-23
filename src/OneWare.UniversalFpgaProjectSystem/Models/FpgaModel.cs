@@ -8,6 +8,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public sealed class FpgaModel : ObservableObject, IHardwareModel
 {
+    private readonly HardwareInterfaceModel _hardwareInterfaceModel;
     private string _searchTextNodes = string.Empty;
 
     private string _searchTextPins = string.Empty;
@@ -18,9 +19,11 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     private ExtensionModel? _selectedExtensionModel;
 
-    public FpgaModel(IFpga fpga)
+    public FpgaModel(IFpga fpga,
+                      HardwareInterfaceModel hardwareInterfaceModel)
     {
         Fpga = fpga;
+        _hardwareInterfaceModel = hardwareInterfaceModel;
 
         foreach (var pin in fpga.Pins) AddPin(pin);
 
@@ -215,8 +218,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     private void AddInterface(HardwareInterface fpgaInterface)
     {
-        var model = new HardwareInterfaceModel(fpgaInterface, this);
-        InterfaceModels.Add(fpgaInterface.Name, model);
+        InterfaceModels.Add(fpgaInterface.Name, _hardwareInterfaceModel);
     }
 
     public override string ToString()

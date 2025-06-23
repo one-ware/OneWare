@@ -1,24 +1,57 @@
-﻿// OneWare.PackageManager/PackageManagerModule.cs
-using Autofac; // Essential for Autofac.Module
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Autofac;
+using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Services;
 using OneWare.PackageManager.ViewModels;
+using OneWare.PackageManager.Views;
 
-namespace OneWare.PackageManager;
-
-public class PackageManagerModule : Module // Already inherits from Autofac.Module
+namespace OneWare.PackageManager
 {
-    protected override void Load(ContainerBuilder builder)
+    public class PackageManagerModule : Module
     {
-        // Register types with Autofac
-        builder.RegisterType<PackageService>().As<IPackageService>().SingleInstance();
-        builder.RegisterType<PackageManagerViewModel>().AsSelf().SingleInstance(); // Register as self for direct injection
+        protected override void Load(ContainerBuilder builder)
+        {
+            // Register types with Autofac
+            builder.RegisterType<PackageService>().As<IPackageService>().SingleInstance();
+            builder.RegisterType<PackageManagerViewModel>().SingleInstance();
 
-        // Register the initializer for this module as a singleton
-        builder.RegisterType<PackageManagerModuleInitializer>().AsSelf().SingleInstance();
+            base.Load(builder);
+        }
 
-        base.Load(builder);
-    }
+        public void OnInitialized(IComponentContext context)
+        {
+            var windowService = context.Resolve<IWindowService>();
+            var settingsService = context.Resolve<ISettingsService>();
 
-    // The OnInitialized method will be removed from here.
-    // Its logic will be moved to PackageManagerModuleInitializer.
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
+            {
+                Header = "Extensions",
+                Command = new RelayCommand(() => windowService.Show(new PackageManagerView
+                {
+                    DataContext = context.Resolve<PackageManagerViewModel>()
+                })),
+                IconObservable = Application.Current!.GetResourceObservable("PackageManager")
+            });
+
+            settingsService.RegisterSettingCategory("Package Manager", 0, "PackageManager");
+
+            settingsService.RegisterSetting("Package Manager", "Sources", "PackageManager_Sources",
+    new ListBoxSetting("Custom Package Sources", new ObservableCollection<string>())
+    {
+        MarkdownDocumentation = @"
+            Add custom package sources to the package manager. These sources will be used to search for and install packages.
+            You can add either:
+            - A Package Repository
+            - A Direct link to a package manifest
+        ",
+    });
+     }
 }
+}
+

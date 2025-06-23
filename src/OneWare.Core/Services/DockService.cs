@@ -11,7 +11,6 @@ using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
-using OneWare.Core.Adapters;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -20,7 +19,8 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-
+using Autofac; // Add Autofac namespace
+using System; // For NullReferenceException
 
 namespace OneWare.Core.Services;
 
@@ -38,6 +38,7 @@ public class DockService : Factory, IDockService
 
     private readonly IPaths _paths;
     private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
+    private readonly ILifetimeScope _lifetimeScope; // Autofac's lifetime scope
 
     public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new();
 
@@ -49,23 +50,34 @@ public class DockService : Factory, IDockService
 
     public DockService(IPaths paths,
                        ILogger<DockService> logger,
-                       IWindowService windowService, 
+                       IWindowService windowService,
                        WelcomeScreenViewModel welcomeScreenViewModel,
                        MainDocumentDockViewModel mainDocumentDockViewModel,
                        MainWindow mainWindow,
                        AdvancedHostWindow advancedHostWindow,
                        DefaultLayout defaultLayout,
-                       IContainerAdapter containerAdapter)
+                       ILifetimeScope lifetimeScope) // Changed from IContainerAdapter
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
-        _serializer = new DockSerializer(typeof(ObservableCollection<>), containerAdapter);
+
+        // Initialize DockSerializer with an Autofac scope or a custom service provider wrapper
+        // Assuming DockSerializer needs a way to resolve types.
+        // If DockSerializer's constructor is flexible, you might pass `lifetimeScope.Resolve` as a Func<Type, object>
+        // Or you might need to create a custom IServiceProvider adapter around Autofac.
+        // For simplicity, let's assume DockSerializer can take an IComponentContext or similar.
+        // If DockSerializer truly needed IContainerAdapter, you'd need to re-evaluate its implementation
+        // or provide a wrapper for Autofac's IComponentContext.
+        // A common pattern is to pass a Func<Type, object> for resolving.
+        _serializer = new DockSerializer(typeof(ObservableCollection<>), lifetimeScope); // Pass ILifetimeScope directly
+
         _logger = logger;
         _mainWindow = mainWindow;
         _advancedHostWindow = advancedHostWindow;
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
-        _defaultLayout = defaultLayout;
+        _defaultLayout = defaultLayout; // DefaultLayout should now receive ILifetimeScope in its constructor
+        _lifetimeScope = lifetimeScope; // Store the lifetime scope
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
             new MenuItemViewModel("ResetLayout")
@@ -112,7 +124,7 @@ public class DockService : Factory, IDockService
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
     }
 
-    public void RegisterFileOpenOverwrite(Func<IFile,bool> action, params string[] extensions)
+    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions)
     {
         foreach (var extension in extensions) _fileOpenOverwrites.TryAdd(extension, action);
     }
@@ -129,9 +141,9 @@ public class DockService : Factory, IDockService
         {
             // If overwrite executes successfully, return null
             // This means that the file is open in an external program
-            if(overwrite.Invoke(pf)) return null;
+            if (overwrite.Invoke(pf)) return null;
         }
-        
+
         if (OpenFiles.ContainsKey(pf))
         {
             Show(OpenFiles[pf]);
@@ -141,9 +153,12 @@ public class DockService : Factory, IDockService
 
         _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
         type ??= typeof(EditViewModel);
-        var viewModel = _defaultLayout.ServiceProvider.GetRequiredService(type) as IExtendedDocument;
 
-        if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
+        // Resolve the view model using the Autofac lifetime scope
+        // This replaces _defaultLayout.ServiceProvider.GetRequiredService(type)
+        var viewModel = _lifetimeScope.Resolve(type) as IExtendedDocument;
+
+        if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved from Autofac lifetime scope!");
 
         Show(viewModel, DockShowLocation.Document);
 
@@ -256,8 +271,9 @@ public class DockService : Factory, IDockService
     {
         if (Layout == null) throw new NullReferenceException(nameof(Layout));
 
-        var container = _defaultLayout.ServiceProvider.GetRequiredService(typeof(T)) as T;
-        if (container == null) throw new NullReferenceException($"Could not resolve type {typeof(T)} from the service provider.");
+        // Resolve the container using Autofac lifetime scope
+        var container = _lifetimeScope.Resolve<T>();
+        if (container == null) throw new NullReferenceException($"Could not resolve type {typeof(T)} from the Autofac lifetime scope.");
 
         Show(container, location);
     }
@@ -268,7 +284,7 @@ public class DockService : Factory, IDockService
         {
             UnpinDockable(dockable);
         }
-        
+
         //Check if dockable already exists
         if (SearchView(dockable) is { } result)
         {
@@ -298,7 +314,7 @@ public class DockService : Factory, IDockService
 
                 if (window != null)
                 {
-                    
+
                     AddWindow(Layout, window);
                     window.Height = 400;
                     window.Width = 600;
@@ -341,9 +357,11 @@ public class DockService : Factory, IDockService
 
         if (layout == null)
         {
+            // The DefaultLayout's GetDefaultLayout method should now accept an ILifetimeScope or equivalent
+            // so it can create new dockables via Autofac.
             layout = name switch
             {
-                _ => _defaultLayout.GetDefaultLayout(this)
+                _ => _defaultLayout.GetDefaultLayout(this) // Pass 'this' (DockService) which is a Factory
             };
             OpenFiles.Clear();
             Show(_welcomeScreenViewModel, DockShowLocation.Document);
@@ -378,3 +396,52 @@ public class DockService : Factory, IDockService
 
     #endregion
 }
+
+// Custom adapter to make Autofac's ILifetimeScope compatible with IDockSerializer
+// assuming IDockSerializer expects an IServiceProvider or a similar resolution mechanism.
+// If DockSerializer expects IContainerAdapter, you might need to adjust DockSerializer itself.
+public class AutofacServiceProviderAdapter : IServiceProvider // Or a custom interface that DockSerializer expects
+{
+    private readonly ILifetimeScope _lifetimeScope;
+
+    public AutofacServiceProviderAdapter(ILifetimeScope lifetimeScope)
+    {
+        _lifetimeScope = lifetimeScope ?? throw new ArgumentNullException(nameof(lifetimeScope));
+    }
+
+    public object? GetService(Type serviceType)
+    {
+        // Autofac's TryResolve is safer here to avoid exceptions during deserialization
+        // if a type can't be found.
+        if (_lifetimeScope.TryResolve(serviceType, out var instance))
+        {
+            return instance;
+        }
+        return null;
+    }
+}
+
+// You will also need to update DefaultLayout.cs to accept ILifetimeScope in its constructor
+// if it creates view models directly using a service provider.
+/*
+// Example of how DefaultLayout.cs constructor might look (conceptual)
+public class DefaultLayout
+{
+    private readonly ILifetimeScope _lifetimeScope;
+
+    public DefaultLayout(ILifetimeScope lifetimeScope)
+    {
+        _lifetimeScope = lifetimeScope;
+    }
+
+    // In methods like GetDefaultLayout, you would use _lifetimeScope.Resolve<T>()
+    // instead of ServiceProvider.GetRequiredService.
+    public RootDock GetDefaultLayout(IFactory factory)
+    {
+        // Example:
+        var solutionExplorer = _lifetimeScope.Resolve<SolutionExplorerViewModel>();
+        // ... build your layout using resolved view models
+        return new RootDock();
+    }
+}
+*/

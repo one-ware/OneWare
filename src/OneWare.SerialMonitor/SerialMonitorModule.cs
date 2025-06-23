@@ -1,5 +1,6 @@
 ﻿// OneWare.SerialMonitor/SerialMonitorModule.cs
 using Autofac; // Essential for Autofac.Module
+using OneWare.Essentials.Services;
 using OneWare.SerialMonitor.ViewModels;
 
 namespace OneWare.SerialMonitor;

@@ -4,140 +4,145 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
-using OneWare.Core.Data; // Assuming Global and other data classes are here
+using OneWare.Core.Data;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Services; // Ensure these interfaces are correctly mapped to your project
+using OneWare.Essentials.Services;
 
-namespace OneWare.Core.Services;
-
-public class Logger : ILogger
+namespace OneWare.Core.Services
 {
-    private static readonly DateTime AppStart = DateTime.Now;
-
-    private static TextWriter? _log; // Consider making this non-static if you want multiple loggers for different purposes.
-                                     // For a single application logger, static might be acceptable but manage its lifecycle carefully.
-
-    private readonly IPaths _paths;
-    private readonly IOutputService _outputService; // Injected dependency
-    private readonly IDockService _dockService;     // Injected dependency
-    private readonly IWindowService _windowService; // Injected dependency
-
-    public Logger(IPaths paths, IOutputService outputService, IDockService dockService, IWindowService windowService)
+    public class Logger : ILogger
     {
-        _paths = paths ?? throw new ArgumentNullException(nameof(paths));
-        _outputService = outputService ?? throw new ArgumentNullException(nameof(outputService));
-        _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
-        _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
+        private static readonly DateTime AppStart = DateTime.Now;
+        private readonly PlatformHelper _platformHelper;
+        private TextWriter? _log;
+        private readonly IPaths _paths;
+        private readonly IOutputService _outputService;
+        private readonly IDockService _dockService;
+        private readonly IWindowService _windowService;
 
-        Init();
-    }
+        public Logger(IPaths paths, IOutputService outputService, IDockService dockService, IWindowService windowService, PlatformHelper platformHelper)
+        {
+            _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+            _outputService = outputService ?? throw new ArgumentNullException(nameof(outputService));
+            _dockService = dockService ?? throw new ArgumentNullException(nameof(dockService));
+            _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
+            _platformHelper = platformHelper ?? throw new ArgumentNullException(nameof(platformHelper));
 
-    private string LogFilePath => Path.Combine(_paths.DocumentsDirectory, "IDELog.txt");
+            Init();
+        }
 
-    public void WriteLogFile(string value)
-    {
-        var date = DateTimeOffset.Now;
-        if (_log != null)
-            lock (_log) // Lock for thread safety on static TextWriter
+        private string LogFilePath => Path.Combine(_paths.DocumentsDirectory, "IDELog.txt");
+
+        public void WriteLogFile(string value)
+        {
+            var date = DateTimeOffset.Now;
+            if (_log != null)
             {
-                _log.WriteLine($"{date:dd-MMM-yyyy HH:mm:ss.fff}> {value}");
-                _log.Flush();
+                lock (_log)
+                {
+                    _log.WriteLine($"{date:dd-MMM-yyyy HH:mm:ss.fff}> {value}");
+                    _log.Flush();
+                }
             }
-    }
+        }
 
-    public void Log(object message, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null)
-    {
-        Log(message, null, color, showOutput, outputBrush);
-    }
+        public void Log(object message, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null)
+        {
+            Log(message, null, color, showOutput, outputBrush);
+        }
 
-    public void Warning(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
-        Window? dialogOwner = null)
-    {
-        Warning(message, null, exception, showOutput, showDialog, dialogOwner);
-    }
+        public void Warning(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
+        {
+            Warning(message, null, exception, showOutput, showDialog, dialogOwner);
+        }
 
-    public void Error(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
-        Window? dialogOwner = null)
-    {
-        Error(message, null, exception, showOutput, showDialog, dialogOwner);
-    }
+        public void Error(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
+        {
+            Error(message, null, exception, showOutput, showDialog, dialogOwner);
+        }
 
-    public void Log(object message, IProjectRoot? project, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
-    {
-        var appRun = DateTime.Now - AppStart;
+        public void Log(object message, IProjectRoot? project, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
+        {
+            var appRun = DateTime.Now - AppStart;
 #if DEBUG
-        if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm)
-            Console.ForegroundColor = ConsoleColor.Magenta;
-        Console.Write(@"[" + string.Format("{0:D2}:{1:D2}:{2:D2}", (int)appRun.TotalHours,
-            (int)appRun.TotalMinutes, appRun.Seconds) + @"] ");
-        if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = color;
-        Console.WriteLine(message);
-        if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = default;
+            if (RuntimeInformation.ProcessArchitecture != Architecture.Wasm)
+                Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write(@"[" + string.Format("{0:D2}:{1:D2}:{2:D2}", (int)appRun.TotalHours, (int)appRun.TotalMinutes, appRun.Seconds) + @"] ");
+            if (RuntimeInformation.ProcessArchitecture != Architecture.Wasm)
+                Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            if (RuntimeInformation.ProcessArchitecture != Architecture.Wasm)
+                Console.ResetColor();
 #endif
-        // Use the injected _outputService directly
-        if (writeOutput) // No need to check IsRegistered, because it's injected (assuming it's always needed)
-        {
-            _outputService.WriteLine(message.ToString() ?? "", outputBrush);
-        }
-        WriteLogFile(message?.ToString() ?? "");
-    }
-
-    public void Error(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true,
-        bool showDialog = false, Window? dialogOwner = null)
-    {
-        var output = message + (exception != null ? $"\n{exception}" : "");
-        Log(output, project, ConsoleColor.Red);
-
-        if (showOutput) // No need to check IsRegistered, it's injected
-        {
-            Dispatcher.UIThread.Post(() =>
+            if (writeOutput)
             {
-                _outputService.WriteLine(output, Brushes.Red); // Use injected service
-                _dockService.Show(_outputService);           // Use injected service
-            });
+                _outputService.WriteLine(message?.ToString() ?? string.Empty, outputBrush);
+            }
+            WriteLogFile(message?.ToString() ?? string.Empty);
         }
 
-        if (showDialog)
-            Dispatcher.UIThread.Post(() =>
+        public void Error(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
+        {
+            var output = message + (exception != null ? $"\n{exception}" : "");
+            Log(output, project, ConsoleColor.Red);
+
+            if (showOutput)
             {
-                _ = _windowService.ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner); // Use injected service
-            });
-    }
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _outputService.WriteLine(output, Brushes.Red);
+                    _dockService.Show(_outputService);
+                });
+            }
 
-    public void Warning(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true,
-        bool showDialog = false, Window? dialogOwner = null)
-    {
-        var output = message + (exception != null ? $"\n{exception}" : "");
-        Log(output, project, ConsoleColor.Yellow);
-
-        if (showOutput)
-        {
-            _outputService.WriteLine(output, Brushes.Orange); // Use injected service
-            _dockService.Show(_outputService);               // Use injected service
+            if (showDialog)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _windowService.ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner);
+                });
+            }
         }
 
-        if (showDialog)
-            _ = _windowService.ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner); // Use injected service
-    }
-
-    private void Init()
-    {
-        try
+        public void Warning(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
         {
-            Directory.CreateDirectory(_paths.DocumentsDirectory);
-            _log = File.CreateText(LogFilePath);
-            PlatformHelper.ChmodFile(LogFilePath); // Ensure PlatformHelper exists and is accessible
+            var output = message + (exception != null ? $"\n{exception}" : "");
+            Log(output, project, ConsoleColor.Yellow);
 
-            Log(
-                $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
+            if (showOutput)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _outputService.WriteLine(output, Brushes.Orange);
+                    _dockService.Show(_outputService);
+                });
+            }
+
+            if (showDialog)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _windowService.ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner);
+                });
+            }
         }
-        catch (Exception ex)
+
+        private void Init()
         {
-            // Fallback for logging if file creation fails.
-            // Avoid using the injected logger here as it's still being initialized.
-            Console.WriteLine($"Can't create/access log file! Error: {ex.Message}");
+            try
+            {
+                Directory.CreateDirectory(_paths.DocumentsDirectory);
+                _log = File.CreateText(LogFilePath);
+                _platformHelper.ChmodFile(LogFilePath);
+
+                Log($"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}", ConsoleColor.Cyan);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Can't create/access log file! Error: {ex.Message}");
+            }
         }
     }
 }
