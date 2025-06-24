@@ -1,62 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
+using DryIoc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using OneWare.Core.Adapters;
+using Prism.DryIoc;
+using Prism.Ioc;
 
-namespace OneWare.Core.Dock
+namespace OneWare.Core.Dock;
+
+public class ListContractResolver : DefaultContractResolver
 {
-    public class ListContractResolver : DefaultContractResolver
+    private readonly Type _type;
+
+    /// <summary>
+    /// </summary>
+    /// <param name="type"></param>
+    public ListContractResolver(Type type)
     {
-        private readonly Type _type;
-        private readonly IContainerAdapter _container;
+        _type = type;
+    }
 
-        /// <summary>
-        /// Constructor accepts type and container adapter instance
-        /// </summary>
-        /// <param name="type">Type to use for IList<> resolution</param>
-        /// <param name="container">Container adapter used for resolving types</param>
-        public ListContractResolver(Type type, IContainerAdapter container)
-        {
-            _type = type ?? throw new ArgumentNullException(nameof(type));
-            _container = container ?? throw new ArgumentNullException(nameof(container));
-        }
+    /// <inheritdoc />
+    public override JsonContract ResolveContract(Type type)
+    {
+        if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+            return base.ResolveContract(_type.MakeGenericType(type.GenericTypeArguments[0]));
 
-        /// <inheritdoc />
-        public override JsonContract ResolveContract(Type type)
-        {
-            if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
-            {
-                // Handle IList<T> by resolving to the concrete List<T>
-                return base.ResolveContract(_type.MakeGenericType(type.GenericTypeArguments[0]));
-            }
+        var contract = base.ResolveContract(type);
 
-            var contract = base.ResolveContract(type);
-
-            if (contract is JsonObjectContract co)
-            {
-                if (_container.IsRegistered(type))
+        if (contract is JsonObjectContract co)
+            if (ContainerLocator.Container.GetContainer().IsRegistered(type))
+                co.OverrideCreator = parameters =>
                 {
-                    co.OverrideCreator = parameters =>
-                    {
-                        // Currently ignoring parameters because IContainerAdapter.Resolve signature does not support them
-                        // You can extend the interface if you need to pass constructor parameters
-                        var resolvedInstance = _container.Resolve(type);
-                        return resolvedInstance;
-                    };
-                }
-            }
+                    var resolveParameters = parameters
+                        .Where(x => x != null)
+                        .Select(x => (x?.GetType(), x))
+                        .ToArray();
 
-            return contract;
-        }
+                    var resolve = ContainerLocator.Container.Resolve(type, resolveParameters);
+                    return resolve;
+                };
+        return contract;
+    }
 
-        /// <inheritdoc />
-        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-        {
-            // Only serialize properties that have setters (are writable)
-            return base.CreateProperties(type, memberSerialization).Where(p => p.Writable).ToList();
-        }
+    /// <inheritdoc />
+    protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+    {
+        return base.CreateProperties(type, memberSerialization).Where(p => p.Writable).ToList();
     }
 }

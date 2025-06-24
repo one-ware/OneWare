@@ -189,6 +189,56 @@ public class VerilogModule : IModule
                         ]
                     }
                 ]
+            },
+            new PackageVersion()
+            {
+                Version = "0.0.4003",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = 
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-win64.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4003-gd42da6b9-win64",
+                                    "verible-verilog-ls.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = 
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-linux-static-x86_64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4003-gd42da6b9", "bin", "verible-verilog-ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-macOS.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4003-gd42da6b9-macOS", "bin",
+                                    "verible-verilog-ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     };

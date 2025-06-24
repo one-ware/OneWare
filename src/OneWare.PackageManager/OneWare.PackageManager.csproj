@@ -1,26 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props" />
-    <Import Project="..\..\build\props\OneWare.Module.props" />
-    <Import Project="..\..\build\props\Markdown.Avalonia.props" />
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Markdown.Avalonia.props"/>
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Compatibility\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Autofac" Version="8.3.0" />
-      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.5" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />
-      <PackageReference Include="Serilog" Version="4.3.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
-      <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-      <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-      <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 </Project>

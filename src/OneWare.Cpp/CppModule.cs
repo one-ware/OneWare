@@ -129,6 +129,52 @@ public class CppModule : IModule
                         ]
                     }
                 ]
+            },
+            new PackageVersion
+            {
+                Version = "19.1.2",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/19.1.2/clangd-windows-19.1.2.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("clangd_19.1.2", "bin", "clangd.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/19.1.2/clangd-linux-19.1.2.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_19.1.2/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/18.1.3/clangd-mac-19.1.2.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_19.1.2/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     };
