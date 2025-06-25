@@ -38,10 +38,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     private IProjectRoot? _activeProject;
     
-    public ProjectExplorerViewModel(IApplicationStateService applicationStateService, IPaths paths,
+    public ProjectExplorerViewModel(IApplicationStateService applicationStateService,
+        IPaths paths,
         IDockService dockService,
-        IWindowService windowService, ISettingsService settingsService,
-        IProjectManagerService projectManagerService, IFileWatchService fileWatchService,
+        IWindowService windowService,
+        ISettingsService settingsService,
+        IProjectManagerService projectManagerService,
+        IFileWatchService fileWatchService,
         ILanguageManager languageManager)
         : base(IconKey)
     {

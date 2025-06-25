@@ -37,59 +37,63 @@ public class MainWindowViewModel : ObservableObject
 
     private string _title;
 
-    public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
-        ISettingsService settingsService, IApplicationCommandService applicationCommandService)
+    public MainWindowViewModel()
     {
-        _applicationCommandService = applicationCommandService;
-        ApplicationStateService = applicationStateService;
-        _windowService = windowService;
-        DockService = dockService;
-        Paths = paths;
-        _settingsService = settingsService;
-
-        RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
-        LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
-        RightToolBarExtension = windowService.GetUiExtensions("MainWindow_RightToolBarExtension");
-        BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
-
-        MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
-
-        _title = paths.AppName;
-
-        DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
-        {
-            if (x != null)
-            {
-                Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
-
-                CurrentEditor = x as IEditor;
-            }
-            else
-            {
-                Title = $"{paths.AppName}";
-            }
-        });
-
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new MenuItemViewModel("FindAll")
-        {
-            Header = "Find All",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
-            InputGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
-        }, new MenuItemViewModel("FindActions")
-        {
-            Header = "Find Actions",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
-            InputGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
-        }, new MenuItemViewModel("FindFiles")
-        {
-            Header = "Find Files",
-            Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
-            InputGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
-        });
-
-        MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
+        
     }
+    //public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
+    //    IWindowService windowService, IDockService dockService,
+    //    ISettingsService settingsService, IApplicationCommandService applicationCommandService)
+    //{
+    //    _applicationCommandService = applicationCommandService;
+    //    ApplicationStateService = applicationStateService;
+    //    _windowService = windowService;
+    //    DockService = dockService;
+    //    Paths = paths;
+    //    _settingsService = settingsService;
+
+    //    RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
+    //    LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
+    //    RightToolBarExtension = windowService.GetUiExtensions("MainWindow_RightToolBarExtension");
+    //    BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
+
+    //    MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
+
+    //    _title = paths.AppName;
+
+    //    DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
+    //    {
+    //        if (x != null)
+    //        {
+    //            Title = $"{paths.AppName} - {Path.GetFileName(x.FullPath)}";
+
+    //            CurrentEditor = x as IEditor;
+    //        }
+    //        else
+    //        {
+    //            Title = $"{paths.AppName}";
+    //        }
+    //    });
+
+    //    _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new MenuItemViewModel("FindAll")
+    //    {
+    //        Header = "Find All",
+    //        Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
+    //        InputGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
+    //    }, new MenuItemViewModel("FindActions")
+    //    {
+    //        Header = "Find Actions",
+    //        Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
+    //        InputGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
+    //    }, new MenuItemViewModel("FindFiles")
+    //    {
+    //        Header = "Find Files",
+    //        Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
+    //        InputGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
+    //    });
+
+    //    MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
+    //}
 
     public IDockService DockService { get; }
     public IApplicationStateService ApplicationStateService { get; }

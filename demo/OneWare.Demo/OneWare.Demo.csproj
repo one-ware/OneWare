@@ -1,32 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\build\props\Base.props"/>
-    <Import Project="..\..\build\props\OneWare.Module.props"/>
+	<!-- OneWare Base Configuration -->
+	<Import Project="..\..\build\props\Base.props" />
+	<Import Project="..\..\build\props\OneWare.Module.props" />
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
-    </ItemGroup>
+	<!-- Third-Party Integrations -->
+	<Import Project="..\..\build\props\Autofac.props" />
+	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
+	<Import Project="..\..\build\props\Serilog.props" />
 
-    <ItemGroup>
-        <Content Include="Assets\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<!-- Assets -->
+	<ItemGroup>
+		<!-- Avalonia resources for XAML styles, images, etc. -->
+		<AvaloniaResource Include="Assets\**" />
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Json\OneWare.Json.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Toml\OneWare.Toml.csproj"/>
-    </ItemGroup>
+		<!-- Static content files to be copied to output -->
+		<Content Include="Assets\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup>
-      <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcd" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcdconf" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VerilogTest.v" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VhdlTest.vhd" />
-    </ItemGroup>
+	<!-- Project References -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.Json\OneWare.Json.csproj" />
+		<ProjectReference Include="..\..\src\OneWare.Toml\OneWare.Toml.csproj" />
+	</ItemGroup>
+
+	<!-- Up-to-Date Check: Ignore DemoFiles -->
+	<ItemGroup>
+		<UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\out.svg" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcd" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcdconf" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\VerilogTest.v" />
+		<UpToDateCheckInput Remove="Assets\DemoFiles\VhdlTest.vhd" />		
+	</ItemGroup>
 
 </Project>

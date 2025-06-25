@@ -192,7 +192,8 @@ public class SettingsService : ISettingsService
     {
         _settings.TryGetValue(key, out var value);
         if (value != null) return value.WhenValueChanged(x => x.Value)!.Cast<T>();
-        throw new ArgumentException($"Setting {key} is not registered!");
+        return null;
+      //  throw new ArgumentException($"Setting {key} is not registered!");
     }
 
     public void Load(string path)

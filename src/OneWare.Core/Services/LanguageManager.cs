@@ -15,7 +15,7 @@ using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Core.Services;
 
-internal class LanguageManager : ObservableObject, ILanguageManager
+public class LanguageManager : ObservableObject, ILanguageManager
 {
     private readonly Dictionary<string, string> _extensionLinks = new();
     private readonly Dictionary<Type, ILanguageService> _singleInstanceServers = new();
@@ -34,20 +34,27 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _currentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
 
         IDisposable? sub = null;
-        var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
-            .Select(x => x == "Dark"
-                ? "Editor_SyntaxTheme_Dark"
-                : "Editor_SyntaxTheme_Light")
-            .Subscribe(x =>
-            {
-                sub?.Dispose();
-                sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
-                {
-                    CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
-                    SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
-                });
-            });
+        try
+        {
+            var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
+             .Select(x => x == "Dark"
+                 ? "Editor_SyntaxTheme_Dark"
+                 : "Editor_SyntaxTheme_Light")
+             .Subscribe(x =>
+             {
+                 sub?.Dispose();
+                 sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
+                 {
+                     CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
+                     SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
+                 });
+             });
 
+        }
+        catch (Exception)
+        {
+
+        }
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
     }

@@ -8,7 +8,7 @@ namespace OneWare.Demo.Desktop.ViewModels;
 
 public class SplashWindowViewModel
 {
-    public SplashWindowViewModel(IPaths paths)
+    public SplashWindowViewModel()
     {
         SplashScreen = new Bitmap(AssetLoader.Open(new Uri("avares://OneWare.Demo.Desktop/Assets/Startup.jpg")));
     }

@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Core", "src\OneWare.Core\OneWare.Core.csproj", "{142377AB-78D8-429E-8403-C89CC8988C09}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{3782EFDF-2990-4B2C-907F-12739A839A3C}"
@@ -32,36 +35,41 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Demo.Desktop", "dem
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{26CFC267-21D3-4965-B340-0CEB0138CBE5}"
 	ProjectSection(SolutionItems) = preProject
-		build\props\Avalonia.Desktop.props = build\props\Avalonia.Desktop.props
-		build\props\Avalonia.Diagnostics.props = build\props\Avalonia.Diagnostics.props
-		build\props\Base.props = build\props\Base.props
-		build\props\OneWare.Module.props = build\props\OneWare.Module.props
-		build\props\RestSharp.props = build\props\RestSharp.props
-		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
-		build\props\Avalonia.Themes.Simple.props = build\props\Avalonia.Themes.Simple.props
-		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
-		build\props\XUnit.props = build\props\XUnit.props
-		build\props\MsBuildUncompressTask.props = build\props\MsBuildUncompressTask.props
-		build\props\NodeEditorAvalonia.props = build\props\NodeEditorAvalonia.props
 		build\props\Asmichi.ChildProcess.props = build\props\Asmichi.ChildProcess.props
+		build\props\Autofac.props = build\props\Autofac.props
+		build\props\Avalonia.Browser.props = build\props\Avalonia.Browser.props
 		build\props\Avalonia.Controls.ColorPicker.props = build\props\Avalonia.Controls.ColorPicker.props
 		build\props\Avalonia.Controls.DataGrid.props = build\props\Avalonia.Controls.DataGrid.props
-		build\props\PanAndZoom.props = build\props\PanAndZoom.props
+		build\props\Avalonia.Desktop.props = build\props\Avalonia.Desktop.props
+		build\props\Avalonia.Diagnostics.props = build\props\Avalonia.Diagnostics.props
+		build\props\Avalonia.Fonts.Inter.props = build\props\Avalonia.Fonts.Inter.props
 		build\props\Avalonia.props = build\props\Avalonia.props
+		build\props\Avalonia.ReactiveUI.props = build\props\Avalonia.ReactiveUI.props
+		build\props\Avalonia.Themes.Simple.props = build\props\Avalonia.Themes.Simple.props
 		build\props\AvaloniaEdit.props = build\props\AvaloniaEdit.props
 		build\props\AvaloniaEdit.TextMate.props = build\props\AvaloniaEdit.TextMate.props
+		build\props\Base.props = build\props\Base.props
 		build\props\CommunityToolkit.Mvvm.props = build\props\CommunityToolkit.Mvvm.props
-		build\props\Dock.Avalonia.props = build\props\Dock.Avalonia.props
-		build\props\Jint.props = build\props\Jint.props
-		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
-		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
-		build\props\Xaml.Behaviors.Avalonia.props = build\props\Xaml.Behaviors.Avalonia.props
-		build\props\DynamicData.props = build\props\DynamicData.props
-		build\props\Avalonia.ReactiveUI.props = build\props\Avalonia.ReactiveUI.props
-		build\props\SharpCompress.props = build\props\SharpCompress.props
-		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
 		build\props\Devlooped.CredentialManager.props = build\props\Devlooped.CredentialManager.props
+		build\props\Dock.Avalonia.props = build\props\Dock.Avalonia.props
+		build\props\DynamicData.props = build\props\DynamicData.props
+		build\props\Jint.props = build\props\Jint.props
+		build\props\Markdown.Avalonia.props = build\props\Markdown.Avalonia.props
+		build\props\Microsoft.AspNetCore.props = build\props\Microsoft.AspNetCore.props
+		build\props\Microsoft.Extensions.Configuration.props = build\props\Microsoft.Extensions.Configuration.props
+		build\props\Mono.Posix.props = build\props\Mono.Posix.props
+		build\props\MsBuildUncompressTask.props = build\props\MsBuildUncompressTask.props
+		build\props\NodeEditorAvalonia.props = build\props\NodeEditorAvalonia.props
+		build\props\OmniSharp.Extensions.Language.props = build\props\OmniSharp.Extensions.Language.props
+		build\props\OneWare.Module.props = build\props\OneWare.Module.props
+		build\props\PanAndZoom.props = build\props\PanAndZoom.props
+		build\props\Prism.Avalonia.props = build\props\Prism.Avalonia.props
+		build\props\RestSharp.props = build\props\RestSharp.props
+		build\props\Serilog.props = build\props\Serilog.props
+		build\props\SharpCompress.props = build\props\SharpCompress.props
 		build\props\Svg.Controls.Skia.Avalonia.props = build\props\Svg.Controls.Skia.Avalonia.props
+		build\props\Xaml.Behaviors.Avalonia.props = build\props\Xaml.Behaviors.Avalonia.props
+		build\props\XUnit.props = build\props\XUnit.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectSystem", "ProjectSystem", "{0AD88B48-CA52-4A71-BA09-DD41BCCD5BB7}"
@@ -90,17 +98,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.ImageViewer", "src\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{60A1DF89-0129-42B7-A509-D717A887667C}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\test.yml = .github\workflows\test.yml
 		.github\workflows\publish-nuget.yml = .github\workflows\publish-nuget.yml
-		.github\workflows\snapcraft.yml = .github\workflows\snapcraft.yml
+		.github\workflows\publish-studio-all.yml = .github\workflows\publish-studio-all.yml
 		.github\workflows\publish-studio-linux-flathub.yml = .github\workflows\publish-studio-linux-flathub.yml
 		.github\workflows\publish-studio-linux-snap.yml = .github\workflows\publish-studio-linux-snap.yml
-		.github\workflows\publish-studio-macos.yml = .github\workflows\publish-studio-macos.yml
-		.github\workflows\publish-studio-windows.yml = .github\workflows\publish-studio-windows.yml
-		.github\workflows\publish-studio-all.yml = .github\workflows\publish-studio-all.yml
-		.github\workflows\publish-studio-web.yml = .github\workflows\publish-studio-web.yml
-		.github\workflows\publish-studio-winget.yml = .github\workflows\publish-studio-winget.yml
 		.github\workflows\publish-studio-linux.yaml = .github\workflows\publish-studio-linux.yaml
+		.github\workflows\publish-studio-macos.yml = .github\workflows\publish-studio-macos.yml
+		.github\workflows\publish-studio-web.yml = .github\workflows\publish-studio-web.yml
+		.github\workflows\publish-studio-windows.yml = .github\workflows\publish-studio-windows.yml
+		.github\workflows\publish-studio-winget.yml = .github\workflows\publish-studio-winget.yml
+		.github\workflows\snapcraft.yml = .github\workflows\snapcraft.yml
+		.github\workflows\test.yml = .github\workflows\test.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.Debugger", "src\OneWare.Debugger\OneWare.Debugger.csproj", "{3223BF61-BDAB-440D-9158-98C248B971A5}"
@@ -354,16 +362,21 @@ Global
 		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F08B36E8-AB80-42CD-BD47-6B05E96DA390} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{12BBB9B2-9CCC-44D2-9A0B-C1634C57C709} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{BC09D83D-9EE5-499F-BF2F-E811D2E1028D} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{F40DC391-3EB3-43C9-9645-3E9509F85E8B} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{26C8F73A-21D7-48F2-94F3-87AEA35E7363} = {0761690C-7DA0-4554-9F6B-211088412DCD}
-		{09A7F503-8517-4D41-A396-C193931636A4} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{72255666-0FCD-4EA9-BB06-784BFDF833FF} = {09A7F503-8517-4D41-A396-C193931636A4}
+		{09A7F503-8517-4D41-A396-C193931636A4} = {0761690C-7DA0-4554-9F6B-211088412DCD}
+		{FA5D65B7-7396-4FAE-9761-AAD3664011B6} = {4E0B6C8D-B846-4B95-B356-A1B8BDE16B52}
 		{DB8BEF56-1C1D-4B6E-9A1C-6BABCD87EEEA} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{EB5E9D9F-E3E7-4E19-83BF-41EDE282B6B7} = {0761690C-7DA0-4554-9F6B-211088412DCD}
+		{420AB56D-4886-490A-BF50-F0ABBB92AD51} = {4E0B6C8D-B846-4B95-B356-A1B8BDE16B52}
 		{26CFC267-21D3-4965-B340-0CEB0138CBE5} = {3782EFDF-2990-4B2C-907F-12739A839A3C}
 		{0AD88B48-CA52-4A71-BA09-DD41BCCD5BB7} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
 		{A769C1DA-7B4A-4C3E-AEF7-EEF1D8488D3B} = {0761690C-7DA0-4554-9F6B-211088412DCD}
@@ -379,8 +392,6 @@ Global
 		{60A1DF89-0129-42B7-A509-D717A887667C} = {3782EFDF-2990-4B2C-907F-12739A839A3C}
 		{3223BF61-BDAB-440D-9158-98C248B971A5} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{2504C4C6-9F71-4C77-AB0D-FB1281CC8A66} = {EB783E04-C3C8-45F8-B810-24798DAE2450}
-		{FA5D65B7-7396-4FAE-9761-AAD3664011B6} = {4E0B6C8D-B846-4B95-B356-A1B8BDE16B52}
-		{420AB56D-4886-490A-BF50-F0ABBB92AD51} = {4E0B6C8D-B846-4B95-B356-A1B8BDE16B52}
 		{BABC7A6C-9C36-4544-8B32-561A01F1BDF2} = {614F8A02-432E-46B4-B296-6AC04632A86C}
 		{67A6D0B8-4F0E-48B4-8E10-8A40D7737C62} = {614F8A02-432E-46B4-B296-6AC04632A86C}
 		{265D2A95-FB84-4ED3-8AF8-15D263207F8B} = {614F8A02-432E-46B4-B296-6AC04632A86C}
@@ -408,5 +419,8 @@ Global
 		{01BC6288-6AD8-4D70-9360-F84601CCBA56} = {53C7F88A-3B98-4AB4-992B-71C1F91F1BA7}
 		{2E44F2EC-6C27-4E44-8F03-E6D95C9B8B34} = {0761690C-7DA0-4554-9F6B-211088412DCD}
 		{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC} = {6FF7E7F6-DA3F-477E-AAD7-47E3655FA34D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {81AE72F1-A1F3-41DD-94F2-F8C5BE14F140}
 	EndGlobalSection
 EndGlobal
