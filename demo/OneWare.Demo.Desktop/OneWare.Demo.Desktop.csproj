@@ -2,6 +2,9 @@
 
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\Avalonia.Desktop.props"/>
+	<Import Project="..\..\build\props\Autofac.props" />
+	<Import Project="..\..\build\props\Serilog.props" />
+	<Import Project="..\..\build\props\Microsoft.Extensions.Configuration.props" />
 
     <PropertyGroup>
         <ApplicationManifest>app.manifest</ApplicationManifest>
