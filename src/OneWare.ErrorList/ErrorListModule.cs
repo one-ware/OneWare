@@ -30,6 +30,7 @@ public class ErrorListModule : IModule
     {
         containerRegistry.RegisterManySingleton<ErrorListViewModel>(typeof(IErrorService),
             typeof(ErrorListViewModel));
+    
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
