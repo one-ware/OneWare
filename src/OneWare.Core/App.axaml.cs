@@ -9,7 +9,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -18,6 +17,7 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Debugger;
 using OneWare.ErrorList;
+using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
@@ -30,7 +30,6 @@ using OneWare.Json;
 using OneWare.LibraryExplorer;
 using OneWare.Output;
 using OneWare.ProjectExplorer;
-using OneWare.ProjectSystem.Services;
 using OneWare.SearchList;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
@@ -49,44 +48,57 @@ public class App : PrismApplication
 
     protected virtual string GetDefaultLayoutName => "Default";
 
+
+    private static IContainerAdapter _containerAdapter;
+
+    // Static method to set the container adapter
+    public static void SetContainerAdapter(IContainerAdapter containerAdapter)
+    {
+        _containerAdapter = containerAdapter;
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
         base.Initialize();
     }
 
+
+
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
 
         //Services
-        containerRegistry.RegisterSingleton<IPluginService, PluginService>();
-        containerRegistry.RegisterSingleton<IHttpService, HttpService>();
-        containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
-        containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
-        containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
-        containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
-        containerRegistry.RegisterSingleton<IDockService, DockService>();
-        containerRegistry.RegisterSingleton<IWindowService, WindowService>();
-        containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
-        containerRegistry.RegisterSingleton<BackupService>();
-        containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
-        containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
-        containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
+        //containerRegistry.RegisterSingleton<IPluginService, PluginService>();
+        //containerRegistry.RegisterSingleton<IHttpService, HttpService>();
+        //containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
+        //containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
+        //containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
+        //containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
+        //containerRegistry.RegisterSingleton<IDockService, DockService>();
+        //containerRegistry.RegisterSingleton<IWindowService, WindowService>();
+        //containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
+        //containerRegistry.RegisterSingleton<BackupService>();
+        //containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
+        //containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
+        //containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
 
-        //ViewModels - Singletons
-        containerRegistry.RegisterSingleton<MainWindowViewModel>();
-        containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
+        ////ViewModels - Singletons
+        //containerRegistry.RegisterSingleton<MainWindowViewModel>();
+        //containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
 
-        //ViewModels Transients
-        containerRegistry.Register<WelcomeScreenViewModel>();
-        containerRegistry.Register<EditViewModel>();
-        containerRegistry.Register<ChangelogViewModel>();
-        containerRegistry.Register<AboutViewModel>();
+        ////ViewModels Transients
+        //containerRegistry.Register<WelcomeScreenViewModel>();
+        //containerRegistry.Register<EditViewModel>();
+        //containerRegistry.Register<ChangelogViewModel>();
+        //containerRegistry.Register<AboutViewModel>();
 
-        //Windows
-        containerRegistry.RegisterSingleton<MainWindow>();
-        containerRegistry.RegisterSingleton<MainView>();
+        ////Windows
+        //containerRegistry.RegisterSingleton<MainWindow>();
+        //containerRegistry.RegisterSingleton<MainView>();
+
+        //containerRegistry.RegisterSingleton<IContainerAdapter, AutofacContainerAdapter>();
     }
 
     protected override AvaloniaObject CreateShell()
@@ -104,10 +116,10 @@ public class App : PrismApplication
                 new NativeMenuItem
                 {
                     Header = $"About {Name}",
-                    Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                    Command = new RelayCommand(() => _containerAdapter.Resolve<IWindowService>().Show(
                         new AboutView
                         {
-                            DataContext = Container.Resolve<AboutViewModel>()
+                            DataContext = _containerAdapter.Resolve<AboutViewModel>()
                         }))
                 },
                 new NativeMenuItemSeparator(),
@@ -117,7 +129,7 @@ public class App : PrismApplication
                     Command = new AsyncRelayCommand(() => Container.Resolve<IWindowService>().ShowDialogAsync(
                         new ApplicationSettingsView
                         {
-                            DataContext = Container.Resolve<ApplicationSettingsViewModel>()
+                            DataContext = _containerAdapter.Resolve<ApplicationSettingsViewModel>()
                         }))
                 }
             }

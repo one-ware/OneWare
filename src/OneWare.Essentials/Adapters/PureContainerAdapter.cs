@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace OneWare.Core.Adapters
+namespace OneWare.Essentials.Adapters
 {
     public class PureContainerAdapter : IContainerAdapter
     {

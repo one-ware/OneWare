@@ -36,8 +36,4 @@
         <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Adapters\" />
-    </ItemGroup>
-
 </Project>

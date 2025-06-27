@@ -3,8 +3,9 @@
 using System;
 using System.Reflection; // Keep this
 using Autofac;
+using OneWare.Essentials.Adapters;
 
-namespace OneWare.Core.Adapters
+namespace OneWare.Essentials.Adapters
 {
     public class AutofacContainerAdapter : IContainerAdapter
     {

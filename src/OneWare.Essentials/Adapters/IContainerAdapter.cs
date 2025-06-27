@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection; // Add this for Assembly type
 
-namespace OneWare.Core.Adapters
+namespace OneWare.Essentials.Adapters
 {
     public interface IContainerAdapter
     {
