@@ -11,6 +11,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
+using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
@@ -22,7 +23,7 @@ public class PackageViewModel : ObservableObject
 
     private bool _isTabsResolved;
 
-    private AsyncRelayCommand? _mainButtonCommand;
+    private AsyncRelayCommand<Control?>? _mainButtonCommand;
 
     private PackageModel _packageModel;
 
@@ -40,16 +41,16 @@ public class PackageViewModel : ObservableObject
     protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
     {
         _packageModel = packageModel;
-        _httpService = httpService;
+        _httpService = httpService;                     
 
-        RemoveCommand = new AsyncRelayCommand(PackageModel.RemoveAsync,
-            () => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+        RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
+            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
 
-        InstallCommand = new AsyncRelayCommand(() => PackageModel.DownloadAsync(SelectedVersionModel!.Version),
-            () => PackageModel.Status is PackageStatus.Available);
+        InstallCommand = new AsyncRelayCommand<Control?>(x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
+            x => PackageModel.Status is PackageStatus.Available);
 
-        UpdateCommand = new AsyncRelayCommand(() => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
-            () => PackageModel.Status is PackageStatus.UpdateAvailable);
+        UpdateCommand = new AsyncRelayCommand<Control?>(x => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
+            x => PackageModel.Status is PackageStatus.UpdateAvailable);
 
         PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
@@ -104,17 +105,17 @@ public class PackageViewModel : ObservableObject
         private set => SetProperty(ref _primaryButtonBrush, value);
     }
 
-    public AsyncRelayCommand? MainButtonCommand
+    public AsyncRelayCommand<Control?>? MainButtonCommand
     {
         get => _mainButtonCommand;
         set => SetProperty(ref _mainButtonCommand, value);
     }
 
-    public AsyncRelayCommand RemoveCommand { get; }
+    public AsyncRelayCommand<Control?> RemoveCommand { get; }
 
-    public AsyncRelayCommand InstallCommand { get; }
+    public AsyncRelayCommand<Control?> InstallCommand { get; }
 
-    public AsyncRelayCommand UpdateCommand { get; }
+    public AsyncRelayCommand<Control?> UpdateCommand { get; }
 
     private void InitPackage()
     {
@@ -173,7 +174,7 @@ public class PackageViewModel : ObservableObject
                 break;
             case PackageStatus.NeedRestart:
                 PrimaryButtonText = "Restart Required";
-                MainButtonCommand = new AsyncRelayCommand(() => Task.CompletedTask, () => false);
+                MainButtonCommand = new AsyncRelayCommand<Control?>(x => Task.CompletedTask, x => false);
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlLowBrush");
                 break;
         }
@@ -187,6 +188,23 @@ public class PackageViewModel : ObservableObject
         RemoveCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
+    }
+
+    private async Task ConfirmLicenseAndDownloadAsync(Control? control, PackageModel model, PackageVersion version)
+    {
+        if (model.Package.AcceptLicenseBeforeDownload)
+        {
+            if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
+            
+            var topLevel = TopLevel.GetTopLevel(control);
+
+            var result = await ContainerLocator.Container.Resolve<IWindowService>()
+                .ShowYesNoAsync("Confirm License", licenseTab.Content, MessageBoxIcon.Info, topLevel as Window);
+
+            if (result != MessageBoxStatus.Yes) return;
+        }
+
+        await _packageModel.DownloadAsync(version);
     }
 
     private async Task ResolveIconAsync()

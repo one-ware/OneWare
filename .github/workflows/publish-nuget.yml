@@ -33,6 +33,7 @@ jobs:
       - run: dotnet pack ./src/OneWare.Essentials/OneWare.Essentials.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.Settings/OneWare.Settings.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.Output/OneWare.Output.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.OssCadSuiteIntegration/OneWare.OssCadSuiteIntegration.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj --configuration Release --output ${{ env.NuGetDirectory }}

@@ -14,6 +14,8 @@ public class Package
 
     public string? License { get; init; }
 
+    public bool AcceptLicenseBeforeDownload { get; init; }
+
     public string? IconUrl { get; init; }
     
     public string? SourceUrl { get; init; }

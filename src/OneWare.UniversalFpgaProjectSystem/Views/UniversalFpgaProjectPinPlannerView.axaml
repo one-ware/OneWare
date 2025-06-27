@@ -120,7 +120,7 @@
                                             AssociatedDataGrid="{Binding #VisiblePinDataGrid}" />
                                     </Interaction.Behaviors>
                                 </controls:SearchBox>
-                                <DataGrid Name="VisiblePinDataGrid" CanUserSortColumns="False"
+                                <DataGrid x:Name="VisiblePinDataGrid" CanUserSortColumns="False"
                                           CanUserReorderColumns="False" CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"
                                           RowBackground="Transparent" IsReadOnly="True"
@@ -216,7 +216,7 @@
                                             AssociatedDataGrid="{Binding #VisibleNodeDataGrid}" />
                                     </Interaction.Behaviors>
                                 </controls:SearchBox>
-                                <DataGrid Name="VisibleNodeDataGrid" CanUserSortColumns="False"
+                                <DataGrid x:Name="VisibleNodeDataGrid" CanUserSortColumns="False"
                                           CanUserReorderColumns="False"
                                           CanUserResizeColumns="True"
                                           Background="{DynamicResource ThemeControlLowBrush}"

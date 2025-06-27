@@ -84,7 +84,7 @@ public class AdvancedWindow : Window
         if (change.Property == WindowStateProperty)
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                //ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
+                ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
             }
     }
 

@@ -5,6 +5,7 @@
                          mc:Ignorable="d"
                          xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
                          x:Class="OneWare.Core.Views.Windows.MessageBoxWindow"
                          SizeToContent="Height"
                          MinHeight="100"
@@ -17,8 +18,9 @@
 
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
-            <TextBlock Margin="2" Background="Transparent" Name="Message" TextWrapping="Wrap"
-                       Text="{Binding Message}" />
+            
+            <mdxaml:MarkdownScrollViewer Margin="2" Markdown="{Binding Message}" MaxHeight="300" />
+            
             <Border Classes="RoundToolBar" IsVisible="{Binding ShowInput}" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
                 <DockPanel>
                     <DockPanel>

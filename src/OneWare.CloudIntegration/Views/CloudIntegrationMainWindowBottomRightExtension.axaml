@@ -1,0 +1,38 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:viewModels1="clr-namespace:OneWare.CloudIntegration.ViewModels"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:client="clr-namespace:Microsoft.AspNetCore.SignalR.Client;assembly=Microsoft.AspNetCore.SignalR.Client.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Margin="5 0"
+             x:Class="OneWare.CloudIntegration.Views.CloudIntegrationMainWindowBottomRightExtension"
+             x:DataType="viewModels1:CloudIntegrationMainWindowBottomRightExtensionViewModel">
+
+    <Button Cursor="Hand"
+            ToolTip.Tip="{Binding ConnectionState, StringFormat='OneWare Cloud - {0}'}">
+        <Button.Flyout>
+            <MenuFlyout Placement="Top">
+                <MenuItem Header="Connect" 
+                          Command="{Binding ConnectAsync}"
+                          IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Disconnected}}" />
+                <MenuItem Header="Disconnect" 
+                          Command="{Binding DisconnectAsync}"
+                          IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
+            </MenuFlyout>
+        </Button.Flyout>
+        <Panel>
+            <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="16" Height="16" 
+                   IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Disconnected}}" />
+            
+            <Image Source="{DynamicResource VsImageLib.Connect16X}" Width="16" Height="16" 
+                   IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
+            
+            <controls:Spinner Foreground="White" Height="13"
+                              CustomIcon="{DynamicResource VsCode.SyncWhite}"
+                              IsIntermediate="True"
+                              IsVisible="{Binding IsConnecting}" />
+        </Panel>
+    </Button>
+</UserControl>
