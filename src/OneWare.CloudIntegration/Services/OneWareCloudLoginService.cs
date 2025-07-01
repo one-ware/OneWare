@@ -158,9 +158,16 @@ public class OneWareCloudLoginService
             Expiration = DateTime.Now.AddMinutes(15)
         };
 
-        var store = CredentialManager.Create("oneware");
-        store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
-
+        try
+        {
+            var store = CredentialManager.Create("oneware");
+            store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+        
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
     }
 

@@ -82,8 +82,6 @@ public class OneWareCloudAccountSetting : CustomSetting
         {
             Image = await httpService.DownloadImageAsync(avatarUrl);
 
-            Console.WriteLine(avatarUrl);
-
             //TODO Move this to somewhere else
             await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
         }
