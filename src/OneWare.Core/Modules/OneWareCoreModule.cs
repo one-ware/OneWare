@@ -6,6 +6,7 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Adapters;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Services;
 using Serilog;
@@ -14,7 +15,7 @@ using ILogger = Serilog.ILogger;
 
 namespace OneWare.Core.Modules
 {
-    public class OneWareCoreModule
+    public class OneWareCoreModule : IOneWareModule
     {
         private readonly IContainerAdapter _containerAdapter;
         private IConfiguration _configuration;
@@ -24,7 +25,12 @@ namespace OneWare.Core.Modules
             _containerAdapter = containerAdapter;
         }
 
-        public void Load()
+        public void OnExecute()
+        {
+           
+        }
+
+        public void RegisterTypes()
         {
             _configuration = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory()) // Set base path to application's executable directory

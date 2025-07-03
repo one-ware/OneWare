@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -11,18 +12,11 @@ using Prism.Ioc;
 
 namespace OneWare.Debugger.Modules
 {
-    public class DebuggerModule
+    public class DebuggerModule(IContainerAdapter containerAdapter) : IOneWareModule
     {
-        private readonly IContainerAdapter _containerAdapter;
-      
+        private readonly IContainerAdapter _containerAdapter = containerAdapter;
 
-
-        public DebuggerModule(IContainerAdapter containerAdapter)
-        {
-            _containerAdapter = containerAdapter;
-        }
-
-        public void Load()
+        public void RegisterTypes()
         {
             var dockService = _containerAdapter.Resolve<IDockService>();
             //dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
@@ -36,10 +30,10 @@ namespace OneWare.Debugger.Modules
                     IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
                 });
 
-            Register();
+            OnExecute();
         }
 
-        private void Register()
+        public void OnExecute()
         {
 
         }

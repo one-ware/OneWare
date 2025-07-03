@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -10,7 +11,7 @@ using Prism.Ioc;
 
 namespace OneWare.Toml.Modules
 {
-    public class TomlModule
+    public class TomlModule :IOneWareModule
     {
         private readonly IContainerAdapter _containerAdapter;
 
@@ -19,13 +20,13 @@ namespace OneWare.Toml.Modules
             _containerAdapter = containerAdapter;
         }
 
-        public void Load()
+        public void RegisterTypes()
         {
 
-            Register();
+            OnExecute();
         }
 
-        private void Register()
+        public void OnExecute()
         {
             _containerAdapter.Resolve<ILanguageManager>()
     .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceToml), ".toml");

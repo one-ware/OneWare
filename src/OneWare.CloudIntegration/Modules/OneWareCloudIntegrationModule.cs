@@ -3,11 +3,12 @@ using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Adapters;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Services;
 
 namespace OneWare.CloudIntegration.Modules
 {
-    public class OneWareCloudIntegrationModule(IContainerAdapter containerAdapter)
+    public class OneWareCloudIntegrationModule(IContainerAdapter containerAdapter) : IOneWareModule
     {
         private readonly IContainerAdapter _containerAdapter = containerAdapter;
 
@@ -16,16 +17,16 @@ namespace OneWare.CloudIntegration.Modules
         public const string CredentialStore = "https://cloud.one-ware.com";
 
 
-        public void Load()
+        public void RegisterTypes()
         {
             _containerAdapter.Register<OneWareCloudAccountSettingViewModel, OneWareCloudAccountSettingViewModel>(isSingleton:true);
             _containerAdapter.Register<OneWareCloudLoginService, OneWareCloudLoginService > (isSingleton: true);
             _containerAdapter.Register<OneWareCloudNotificationService, OneWareCloudNotificationService>(isSingleton: true);
 
-            Register();
+            OnExecute();
         }
 
-        private void Register()
+        public void OnExecute()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");

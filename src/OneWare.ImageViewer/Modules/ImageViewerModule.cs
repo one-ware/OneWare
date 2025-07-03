@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -12,23 +13,18 @@ using Prism.Ioc;
 
 namespace OneWare.ImageViewer.Modules
 {
-    public class ImageViewerModule
+    public class ImageViewerModule(IContainerAdapter containerAdapter) : IOneWareModule
     {
-        private readonly IContainerAdapter _containerAdapter;
+        private readonly IContainerAdapter _containerAdapter = containerAdapter;
 
-        public ImageViewerModule(IContainerAdapter containerAdapter)
-        {
-            _containerAdapter = containerAdapter;
-        }
-
-        public void Load()
+        public void RegisterTypes()
         {
             _containerAdapter.Register<ImageViewModel, ImageViewModel>();
 
-            Register();
+            OnExecute();
         }
 
-        private void Register()
+        public void OnExecute()
         {
             _containerAdapter.Resolve<IDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
         }

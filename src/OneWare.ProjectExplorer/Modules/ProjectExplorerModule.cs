@@ -1,8 +1,10 @@
-﻿using Avalonia;
+﻿using Autofac.Core;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -13,25 +15,18 @@ using OneWare.ProjectExplorer.Views;
 
 namespace OneWare.ProjectExplorer.Modules
 {
-    public class ProjectExplorerModule
+    public class ProjectExplorerModule(IContainerAdapter containerAdapter) : IOneWareModule
     {
         public const string KeyErrorListFilterMode = "ErrorList_FilterMode";
         public const string KeyErrorListShowExternalErrors = "ErrorList_ShowExternalErrors";
         public const string KeyErrorListVisibleSource = "ErrorList_VisibleSource";
 
-        private readonly IContainerAdapter _containerAdapter;
+        private readonly IContainerAdapter _containerAdapter = containerAdapter;
         private IDockService? _dockService; // Removed readonly modifier
         private IWindowService? _windowService; // Removed readonly modifier
         private ISettingsService? _settingsService;
 
-
-
-        public ProjectExplorerModule(IContainerAdapter containerAdapter)
-        {
-            _containerAdapter = containerAdapter;
-        }
-
-        public void Load()
+        public void RegisterTypes()
         {
             _dockService = _containerAdapter.Resolve<IDockService>();
             _windowService = _containerAdapter.Resolve<IWindowService>();
@@ -41,10 +36,10 @@ namespace OneWare.ProjectExplorer.Modules
 
             _containerAdapter.Register<IProjectExplorerService, ProjectExplorerViewModel>(isSingleton: true);
             _containerAdapter.Register<ProjectExplorerViewModel, ProjectExplorerViewModel>(isSingleton: true);
-            Register();
+            OnExecute();
         }
 
-        private void Register()
+      public void OnExecute()
         {
             if (_containerAdapter.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
 

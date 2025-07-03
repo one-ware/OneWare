@@ -1,15 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\..\build\props\Base.props"/>
-    <Import Project="..\..\build\props\OneWare.Module.props"/>
-    <Import Project="..\..\build\props\RestSharp.props"/>
-    <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\RestSharp.props" />
+    <Import Project="..\..\build\props\Devlooped.CredentialManager.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DiffPlex" Version="1.7.2"/>
-        <PackageReference Include="LibGit2Sharp" Version="0.31.0"/>
+        <PackageReference Include="DiffPlex" Version="1.7.2" />
+        <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     </ItemGroup>
 </Project>
