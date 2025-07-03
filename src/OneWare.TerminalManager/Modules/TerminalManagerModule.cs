@@ -40,5 +40,4 @@ namespace OneWare.TerminalManager.Modules
                 });
         }
     }
-    }
 }
