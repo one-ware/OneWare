@@ -1,4 +1,7 @@
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -15,12 +18,14 @@ public class OneWareCloudLoginService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingService;
     private readonly IHttpService _httpService;
-
-    public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService)
+    private readonly string _tokenPath;
+    
+    public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService, IPaths paths)
     {
         _logger = logger;
         _settingService = settingService;
         _httpService = httpService;
+        _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
     }
     
     public RestClient GetRestClient()
@@ -62,10 +67,27 @@ public class OneWareCloudLoginService
     {
         try
         {
-            var store = CredentialManager.Create("oneware");
+            string? refreshToken = null;
+            
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
 
-            var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
-            var refreshToken = cred?.Password;
+                if (File.Exists(tokenPath))
+                {
+                    var encrypted = await File.ReadAllBytesAsync(tokenPath);
+                    var plaintext = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+                    refreshToken = Encoding.UTF8.GetString(plaintext);
+                }
+            }
+            else
+            {
+                var store = CredentialManager.Create("oneware");
+
+                var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
+                refreshToken = cred?.Password ;
+            }
+            
 
             if (refreshToken == null) return (false, HttpStatusCode.Unauthorized);
             
@@ -138,10 +160,20 @@ public class OneWareCloudLoginService
 
     public void Logout(string email)
     {
+        
         try
         {
-            var store = CredentialManager.Create("oneware");
-            store.Remove(OneWareCloudIntegrationModule.CredentialStore, email);
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
+                if(File.Exists(tokenPath)) 
+                    File.Delete(tokenPath);
+            }
+            else
+            {
+                var store = CredentialManager.Create("oneware");
+                store.Remove(OneWareCloudIntegrationModule.CredentialStore, email);
+            }
             _jwtTokenCache.Remove(email);
         }
         catch (Exception e)
@@ -158,9 +190,28 @@ public class OneWareCloudLoginService
             Expiration = DateTime.Now.AddMinutes(15)
         };
 
-        var store = CredentialManager.Create("oneware");
-        store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
-
+        try
+        {
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Directory.CreateDirectory(_tokenPath);
+                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
+                
+                var plaintext = Encoding.UTF8.GetBytes(refreshToken);
+                var encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(tokenPath, encrypted);
+            }
+            else
+            {
+                var store = CredentialManager.Create("oneware");
+                store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+        
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
     }
 
