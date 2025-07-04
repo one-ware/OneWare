@@ -105,6 +105,7 @@ public class App : PrismApplication
 
     protected override AvaloniaObject CreateShell()
     {
+        
         //Register IDE Settings
         var settingsService = Container.Resolve<ISettingsService>();
         var paths = Container.Resolve<IPaths>();

@@ -73,7 +73,7 @@ internal abstract class Program
 
             // Create and load the CoreModuleAdapter
             var coreModuleAdapter = new OneWareCoreModule(containerAdapter);
-            coreModuleAdapter.Load();
+            coreModuleAdapter.RegisterTypes();
 
             // Build the container
             containerAdapter.Build();

@@ -9,6 +9,7 @@ using OneWare.Essentials.Adapters;
 using OneWare.Essentials.Interfaces;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Services;
+using Prism.Modularity;
 using Serilog;
 using Serilog.Extensions.Autofac.DependencyInjection;
 using ILogger = Serilog.ILogger;
@@ -60,7 +61,8 @@ namespace OneWare.Core.Modules
             }
 
             // RegisterInstance<IModuleCatalog>(ModuleCatalog)
-           // _containerAdapter.RegisterInstance<IModuleCatalog>(ModuleCatalog);
+            _containerAdapter.Register<IModuleCatalog, ModuleCatalog>();
+            // _containerAdapter.RegisterInstance<IModuleCatalog>(ModuleCatalog);
 
             // Services (RegisterSingleton<IService, Service>())
             _containerAdapter.Register<IPluginService, PluginService>(isSingleton: true);
