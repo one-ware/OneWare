@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Numerics;
 using System.Text;
 using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Parser.Helpers;
@@ -23,7 +24,7 @@ public static class SignalConverter
                 if (!CanConvert(bits)) return "XXX";
 
                 if (input is float or double) return input.ToString() ?? "error";
-                var resultUnsigned = Convert.ToUInt64(bits, 2);
+                var resultUnsigned = ConvertToUnsignedInt(bits); 
                 if (model.FixedPointShift != 0)
                     return PerformFixedPointShift(resultUnsigned, model.FixedPointShift)
                         .ToString(CultureInfo.InvariantCulture);
@@ -32,7 +33,7 @@ public static class SignalConverter
                 if (!CanConvert(bits)) return "XXX";
 
                 if (input is float or double) return input.ToString() ?? "error";
-                var resultSigned = ConvertToSignedInt64(bits, model.Signal.BitWidth);
+                var resultSigned = ConvertToSignedInt(bits);
                 if (model.FixedPointShift != 0)
                     return PerformFixedPointShift(resultSigned, model.FixedPointShift)
                         .ToString(CultureInfo.InvariantCulture);
@@ -128,25 +129,33 @@ public static class SignalConverter
         return ToLiteral(result.ToString());
     }
 
-    public static long ConvertToSignedInt64(string bitString, int bitWidth)
+    public static BigInteger ConvertToSignedInt(string bitString)
     {
-        if (string.IsNullOrEmpty(bitString) || bitString.Length > 64)
-            throw new ArgumentException("Ungültige Eingabe: Der Bit-String muss zwischen 1 und 64 Zeichen lang sein.");
-
-        bitString = bitString.PadLeft(64, bitString.Length < bitWidth ? '0' : bitString[0]);
-
-        return Convert.ToInt64(bitString, 2);
+        if (string.IsNullOrEmpty(bitString))
+            throw new ArgumentException("Invalid input: The bit string must be at least 1 bit long");
+        return BigInteger.Parse(bitString, NumberStyles.AllowBinarySpecifier);
     }
 
-    public static double PerformFixedPointShift(long value, int shift)
+    public static BigInteger ConvertToUnsignedInt(string bitString)
     {
-        return value / Math.Pow(2, shift);
+        if (string.IsNullOrEmpty(bitString))
+            throw new ArgumentException("Invalid input: The bit string must be at least 1 bit long");
+
+        var value = BigInteger.Zero;
+        foreach (var bit in bitString)
+        {
+            value <<= 1;
+            if (bit == '1') value += 1;
+        }
+        
+        return value;
     }
 
-    public static double PerformFixedPointShift(ulong value, int shift)
+    public static double PerformFixedPointShift(BigInteger value, int shift)
     {
-        return value / Math.Pow(2, shift);
+        return (double) value / Math.Pow(2, shift);
     }
+    
 
     private static string ToLiteral(string input)
     {
