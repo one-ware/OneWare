@@ -13,8 +13,6 @@ public abstract class OutputBaseViewModel : ExtendedTool
 
     private const int Maxlinelength = 1000;
 
-    private readonly object _synclock = new();
-
     private bool _autoScroll = true;
 
     private int _caretIndex;
@@ -62,49 +60,43 @@ public abstract class OutputBaseViewModel : ExtendedTool
         Write(text + "\n", textColor);
     }
 
-    public void Write(string text, IBrush? textColor = null, IProjectRoot owner = null)
+    public void Write(string text, IBrush? textColor = null, IProjectRoot? owner = null)
     {
-        lock (_synclock)
+        if (string.IsNullOrEmpty(text)) return;
+
+        OutputDocument.BeginUpdate();
+
+        for (var i = 0; i < text.Length; i++)
         {
-            _ = Dispatcher.UIThread.InvokeAsync(() =>
+            if (text[i] == '\n')
             {
-                if (string.IsNullOrEmpty(text)) return;
-
-                OutputDocument.BeginUpdate();
-
-                for (var i = 0; i < text.Length; i++)
+                _currentLineNumber++;
+                LineContexts.Add(new LineContext()
                 {
-                    if (text[i] == '\n')
-                    {
-                        _currentLineNumber++;
-                        LineContexts.Add(new LineContext()
-                        {
-                            LineColor = textColor,
-                            Owner = owner
-                        });
-                        _currentLineLength = 0;
-                    }
-                    else
-                    {
-                        _currentLineLength++;
-                    }
+                    LineColor = textColor,
+                    Owner = owner
+                });
+                _currentLineLength = 0;
+            }
+            else
+            {
+                _currentLineLength++;
+            }
 
-                    if (_currentLineLength > Maxlinelength && i != text.Length - 1) text = text.Insert(i + 1, "\n");
-                }
-
-                OutputDocument.Insert(OutputDocument.TextLength, text);
-
-                if (OutputDocument.TextLength > Maxoutputlength)
-                {
-                    var removeLines = OutputDocument.Text[..(OutputDocument.TextLength - Maxoutputlength)]
-                        .Split('\n').Length - 1;
-                    for (var i = 0; i < removeLines; i++) LineContexts.RemoveAt(0);
-                    OutputDocument.Remove(0, OutputDocument.TextLength - Maxoutputlength);
-                }
-
-                OutputDocument.EndUpdate();
-            }, DispatcherPriority.Background);
+            if (_currentLineLength > Maxlinelength && i != text.Length - 1) text = text.Insert(i + 1, "\n");
         }
+
+        OutputDocument.Insert(OutputDocument.TextLength, text);
+
+        if (OutputDocument.TextLength > Maxoutputlength)
+        {
+            var removeLines = OutputDocument.Text[..(OutputDocument.TextLength - Maxoutputlength)]
+                .Split('\n').Length - 1;
+            for (var i = 0; i < removeLines; i++) LineContexts.RemoveAt(0);
+            OutputDocument.Remove(0, OutputDocument.TextLength - Maxoutputlength);
+        }
+
+        OutputDocument.EndUpdate();
     }
 
     public void Clear()

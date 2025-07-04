@@ -3,8 +3,11 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using AvaloniaEdit.Rendering;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Output.ViewModels;
+using Prism.Ioc;
 
 namespace OneWare.Output.Views;
 
@@ -59,7 +62,11 @@ public abstract class OutputBaseView : UserControl
                 }, DispatcherPriority.Background);
             });
 
-            viewModel.LineContexts.ToObservableChangeSet().Subscribe(_ => UpdateLineColors(viewModel));
+            viewModel.LineContexts.CollectionChanged += (sender, args) =>
+            {
+                //TODO Optimize
+                UpdateLineColors(viewModel);
+            };
 
             AddHandler(PointerMovedEvent, (_, i) =>
             {
@@ -77,10 +84,17 @@ public abstract class OutputBaseView : UserControl
     protected void UpdateLineColors(OutputBaseViewModel evm)
     {
         if (_output == null) throw new NullReferenceException(nameof(_output));
-        for(var i = 2; i < _output.TextArea.TextView.LineTransformers.Count; i++)
-            _output.TextArea.TextView.LineTransformers.RemoveAt(i);
+        for (var i = 0; i < _output.TextArea.TextView.LineTransformers.Count; i++)
+        {
+            if (_output.TextArea.TextView.LineTransformers[i] is LineColorizer)
+            {
+                _output.TextArea.TextView.LineTransformers.RemoveAt(i);
+            }
+        }
+
         for (var i = 0; i < evm.LineContexts.Count; i++)
             if (evm.LineContexts[i].LineColor != null)
-                _output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1, evm.LineContexts[i].LineColor));
+                _output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1,
+                    evm.LineContexts[i].LineColor));
     }
 }
