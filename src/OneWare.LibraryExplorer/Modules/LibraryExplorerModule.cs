@@ -42,7 +42,7 @@ namespace OneWare.LibraryExplorer.Modules
                     Header = "Library Explorer",
                     Command =
                         new RelayCommand(() => _dockService.Show(_containerAdapter.Resolve<LibraryExplorerViewModel>())),
-                    IconObservable = Application.Current!.GetResourceObservable(LibraryExplorerViewModel.IconKey)
+               //     IconObservable = Application.Current!.GetResourceObservable(LibraryExplorerViewModel.IconKey)
                 });
         }
     }

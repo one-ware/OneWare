@@ -27,7 +27,7 @@ public class DesktopDemoApp : DemoApp
         base.ConfigureModuleCatalog(moduleCatalog);
 
         moduleCatalog.AddModule<PackageManagerModule>();
-        moduleCatalog.AddModule<TerminalManagerModule>();
+         moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
 
         try

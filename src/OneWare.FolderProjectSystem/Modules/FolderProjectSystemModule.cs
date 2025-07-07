@@ -38,7 +38,7 @@ namespace OneWare.FolderProjectSystem.Modules
                     Header = "Folder",
                     Command = new RelayCommand(() =>
                         _ = _containerAdapter.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
-                    IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16X")
+                 //   IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16X")
                 });
         }
     }

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
 
@@ -32,6 +32,10 @@
 
     <ItemGroup>
         <None Include="readme.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
     </ItemGroup>
 
 </Project> 

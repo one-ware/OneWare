@@ -39,7 +39,7 @@ public class SearchListModule(IContainerAdapter containerAdapter) : IOneWareModu
                 vm.SearchString = string.Empty;
                 _dockService.Show(vm);
             }),
-            IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
+           // IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }

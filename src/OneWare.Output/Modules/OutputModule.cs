@@ -47,8 +47,8 @@ namespace OneWare.Output.Modules
             _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
             {
                 Header = "Output",
-                Command = new RelayCommand(() => _dockService.Show(_containerAdapter.Resolve<IOutputService>())),
-                IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
+                Command = new RelayCommand(() => _dockService.Show(_containerAdapter.Resolve<IOutputService>()))
+             //   IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
             });
         }
     }

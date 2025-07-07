@@ -27,7 +27,7 @@ namespace OneWare.Debugger.Modules
                     Header = "Debugger",
                     Command = new RelayCommand(() =>
                         dockService.Show(_containerAdapter.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
-                    IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
+                //    IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
                 });
 
             OnExecute();
