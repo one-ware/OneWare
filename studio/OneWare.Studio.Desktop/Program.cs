@@ -10,6 +10,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 using System.CommandLine;
+using System.Linq;
 
 namespace OneWare.Studio.Desktop;
 
@@ -73,6 +74,10 @@ internal abstract class Program
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
             
+            if(args.LastOrDefault() is "--help" or "-h")
+            {
+                return 0;
+            }
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
