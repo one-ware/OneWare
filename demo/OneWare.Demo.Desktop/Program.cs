@@ -8,6 +8,7 @@ using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
+using System.CommandLine;
 
 namespace OneWare.Demo.Desktop;
 
@@ -45,6 +46,19 @@ internal abstract class Program
     {
         try
         {
+            Option<string> moduleOption = new("--modules") 
+                { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
+            RootCommand rootCommand = new() { Options = { moduleOption } };
+            
+            rootCommand.SetAction((parseResult) =>
+            {
+                var moduleValue = parseResult.GetValue(moduleOption);
+                if (!string.IsNullOrEmpty(moduleValue))
+                    Environment.SetEnvironmentVariable("MODULES", moduleValue);
+            });
+            var commandLineParseResult = rootCommand.Parse(args);
+            commandLineParseResult.Invoke();
+            
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
