@@ -9,6 +9,7 @@ using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
+using System.CommandLine;
 
 namespace OneWare.Studio.Desktop;
 
@@ -46,6 +47,32 @@ internal abstract class Program
     {
         try
         {
+            Option<string> dirOption = new("--oneware-dir") 
+                { Description = "Path to documents directory for OneWare Studio. (optional)" };
+            Option<string> appdataDirOption = new("--oneware-appdata-dir") 
+                { Description = "Path to application data directory for OneWare Studio. (optional)" };
+
+            RootCommand rootCommand = new()
+            {
+                Options = { 
+                    dirOption, 
+                    appdataDirOption 
+                },
+            };
+        
+            rootCommand.SetAction((parseResult) =>
+            {
+                var dirValue = parseResult.GetValue(dirOption);
+                if (!string.IsNullOrEmpty(dirValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_DIR", Path.GetFullPath(dirValue));
+
+                var appdataDirValue = parseResult.GetValue(appdataDirOption);
+                if (!string.IsNullOrEmpty(appdataDirValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
+            });
+            var commandLineParseResult = rootCommand.Parse(args);
+            commandLineParseResult.Invoke();
+            
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)

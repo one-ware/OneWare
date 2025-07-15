@@ -17,6 +17,7 @@ using OneWare.SourceControl;
 using OneWare.TerminalManager;
 using Prism.Ioc;
 using Prism.Modularity;
+using System.CommandLine;
 
 namespace OneWare.Demo.Desktop;
 
@@ -39,16 +40,10 @@ public class DesktopDemoApp : DemoApp
         {
             Container.Resolve<ILogger>().Error(e.Message, e);
         }
-
-        var commandLineArgs = Environment.GetCommandLineArgs();
-        if (commandLineArgs.Length > 1)
+        
+        if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
         {
-            var m = commandLineArgs.IndexOf(x => x == "--modules");
-            if (m >= 0 && m < commandLineArgs.Length - 1)
-            {
-                var path = commandLineArgs[m + 1];
-                Container.Resolve<IPluginService>().AddPlugin(path);
-            }
+            Container.Resolve<IPluginService>().AddPlugin(pluginPath);
         }
     }
 
