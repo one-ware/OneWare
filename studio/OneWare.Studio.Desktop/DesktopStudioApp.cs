@@ -56,17 +56,12 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
 
+ 
         try
         {
-            var commandLineArgs = Environment.GetCommandLineArgs();
-            if (commandLineArgs.Length > 1)
+            if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
             {
-                var m = commandLineArgs.IndexOf(x => x == "--modules");
-                if (m >= 0 && m < commandLineArgs.Length - 1)
-                {
-                    var path = commandLineArgs[m + 1];
-                    Container.Resolve<IPluginService>().AddPlugin(path);
-                }
+                Container.Resolve<IPluginService>().AddPlugin(pluginPath);
             }
 
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);

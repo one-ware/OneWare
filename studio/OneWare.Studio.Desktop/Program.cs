@@ -52,15 +52,18 @@ internal abstract class Program
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
             Option<string> appdataDirOption = new("--oneware-appdata-dir") 
                 { Description = "Path to application data directory for OneWare Studio. (optional)" };
+            Option<string> moduleOption = new("--modules") 
+                { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
 
             RootCommand rootCommand = new()
             {
                 Options = { 
                     dirOption, 
-                    appdataDirOption 
+                    appdataDirOption,
+                    moduleOption
                 },
             };
-        
+            
             rootCommand.SetAction((parseResult) =>
             {
                 var dirValue = parseResult.GetValue(dirOption);
@@ -70,6 +73,10 @@ internal abstract class Program
                 var appdataDirValue = parseResult.GetValue(appdataDirOption);
                 if (!string.IsNullOrEmpty(appdataDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
+                
+                var moduleValue = parseResult.GetValue(moduleOption);
+                if (!string.IsNullOrEmpty(moduleValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_MODULES", moduleValue);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
