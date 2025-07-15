@@ -17,9 +17,9 @@ public class Paths : IPaths
         AppName = appName;
         AppIconPath = appIconPath;
         AppFolderName = appName.Replace(" ", "");
-        AppDataDirectory = Environment.GetEnvironmentVariable("ONEWARE_DIR") ?? 
+        DocumentsDirectory = Environment.GetEnvironmentVariable("ONEWARE_DIR") ?? 
                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
-        DocumentsDirectory = Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR") ?? 
+        AppDataDirectory = Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR") ?? 
                              Path.Combine(Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) 
                                  ? Environment.SpecialFolder.LocalApplicationData 
                                  : Environment.SpecialFolder.ApplicationData), AppFolderName);
