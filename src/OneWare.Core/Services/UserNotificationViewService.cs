@@ -43,8 +43,18 @@ public class UserNotificationViewService : IUserNotificationReceiver
             
             if (notification.ShowWindow) 
             {
-                var icon = notification.NotificationKind == UserNotificationKind.Warning ? MessageBoxIcon.Warning : MessageBoxIcon.Error;
-                var title = notification.NotificationKind == UserNotificationKind.Warning ? "Warning" : "Error";
+                var icon = notification.NotificationKind switch
+                {
+                    UserNotificationKind.Warning => MessageBoxIcon.Warning,
+                    UserNotificationKind.Error => MessageBoxIcon.Error,
+                    _ => MessageBoxIcon.Info
+                };
+                var title = notification.NotificationKind switch
+                {
+                    UserNotificationKind.Warning => "Warning",
+                    UserNotificationKind.Error => "Error",
+                    _ => "Information"
+                };
                 _ = _windowService.ShowMessageAsync(title, notification.Message, icon, notification.WindowOwner);
             }
         });
