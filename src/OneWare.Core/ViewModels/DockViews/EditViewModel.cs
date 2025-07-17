@@ -375,7 +375,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+                ?.Error($"Failed loading file {CurrentFile.FullPath}", e);
 
             success = false;
         }

@@ -502,9 +502,14 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (destination == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(
-                "Can't import folder if there is no active project selected. Please select an active project first",
-                null, true, true);
+            string errorMsg =
+                "Can't import folder if there is no active project selected. Please select an active project first";
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow()
+                .Send();
+            
             return;
         }
 
@@ -521,9 +526,14 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (destination == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(
-                "Can't import files if there is no active project selected. Please select an active project first",
-                null, true, true);
+            string errorMsg =
+                "Can't import files if there is no active project selected. Please select an active project first";
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow()
+                .Send();
+            
             return;
         }
 

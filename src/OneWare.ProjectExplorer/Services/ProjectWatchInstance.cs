@@ -177,7 +177,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e, false);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 }

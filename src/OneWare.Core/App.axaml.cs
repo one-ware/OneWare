@@ -73,6 +73,10 @@ public class App : PrismApplication
         containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
         containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
         containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
+        containerRegistry.RegisterSingleton<UserNotificationViewService>(x => new UserNotificationViewService(
+            x.Resolve<IOutputService>(), 
+            x.Resolve<IDockService>(), 
+            x.Resolve<IWindowService>()));
 
         //ViewModels - Singletons
         containerRegistry.RegisterSingleton<MainWindowViewModel>();
@@ -355,7 +359,7 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-
+        
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
@@ -364,6 +368,7 @@ public class App : PrismApplication
         });
 
         Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+        Container.Resolve<UserNotificationViewService>().Attach();
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
         Container.Resolve<BackupService>().Init();

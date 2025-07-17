@@ -22,6 +22,11 @@ internal class LoginWindowViewModel : FlexibleWindowViewModelBase
 
         var result = await client.ExecuteAsync(request);
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Error("RES: " + result.Content, null, true, true, window);
+        string errorMsg = "RES: " + result.Content;
+        ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg, null);
+        UserNotification.NewError(errorMsg)
+            .ViaOutput()
+            .ViaWindow(window)
+            .Send();
     }
 }

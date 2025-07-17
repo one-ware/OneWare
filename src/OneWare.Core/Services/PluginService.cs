@@ -67,8 +67,11 @@ public class PluginService : IPluginService
                 if (_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized)
                     _moduleManager.LoadModule(module.ModuleName);
 
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
+                string logMsg = $"Module {module.ModuleName} loaded";
+                ContainerLocator.Container.Resolve<ILogger>().Log(logMsg, ConsoleColor.Cyan);
+                UserNotification.NewInformation(logMsg)
+                    .ViaOutput()
+                    .Send();
             }
 
             SetupNativeImports(realPath);
@@ -138,9 +141,12 @@ public class PluginService : IPluginService
             catch (InvalidOperationException)
             {
                 // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.", 
-                    ConsoleColor.DarkYellow, true);
+                string logMsg = $"Skipping resolver setup for {assembly.FullName}, resolver already set.";
+                ContainerLocator.Container.Resolve<ILogger>().Log(logMsg, 
+                    ConsoleColor.DarkYellow);
+                UserNotification.NewInformation(logMsg)
+                    .ViaOutput()
+                    .Send();
             }
         }
     }

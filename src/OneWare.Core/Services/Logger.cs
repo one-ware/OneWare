@@ -39,24 +39,22 @@ public class Logger : ILogger
             }
     }
 
-    public void Log(object message, ConsoleColor color = default, bool showOutput = false, IBrush? outputBrush = null)
+    public void Log(object message, ConsoleColor color = default)
     {
-        Log(message, null, color, showOutput, outputBrush);
+        Log(message, null, color);
     }
 
-    public void Warning(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
-        Window? dialogOwner = null)
+    public void Warning(string message, Exception? exception = null)
     {
-        Warning(message, null, exception, showOutput, showDialog, dialogOwner);
+        Warning(message, null, exception);
     }
 
-    public void Error(string message, Exception? exception = null, bool showOutput = true, bool showDialog = false,
-        Window? dialogOwner = null)
+    public void Error(string message, Exception? exception = null)
     {
-        Error(message, null, exception, showOutput, showDialog, dialogOwner);
+        Error(message, null, exception);
     }
 
-    public void Log(object message, IProjectRoot? project, ConsoleColor color = default, bool writeOutput = false, IBrush? outputBrush = null)
+    public void Log(object message, IProjectRoot? project, ConsoleColor color = default)
     {
         var appRun = DateTime.Now - AppStart;
 #if DEBUG
@@ -68,48 +66,19 @@ public class Logger : ILogger
         Console.WriteLine(message);
         if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = default;
 #endif
-        if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message.ToString() ?? "", outputBrush);
         WriteLogFile(message?.ToString() ?? "");
     }
 
-    public void Error(string message, IProjectRoot? project, Exception? exception = null, bool showOutput = true,
-        bool showDialog = false, Window? dialogOwner = null)
+    public void Error(string message, IProjectRoot? project, Exception? exception = null)
     {
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Red);
-
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
-            Dispatcher.UIThread.Post(() =>
-            {
-                ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Red);
-                ContainerLocator.Current.Resolve<IDockService>()
-                    .Show(ContainerLocator.Current.Resolve<IOutputService>());
-            });
-
-        if (showDialog)
-            Dispatcher.UIThread.Post(() =>
-            {
-                _ = ContainerLocator.Current.Resolve<IWindowService>()
-                    .ShowMessageAsync("Error", output, MessageBoxIcon.Error, dialogOwner);
-            });
     }
 
-    public void Warning(string message, IProjectRoot? project, Exception? exception = null,   bool showOutput = true,
-        bool showDialog = false, Window? dialogOwner = null)
+    public void Warning(string message, IProjectRoot? project, Exception? exception = null)
     {
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Yellow);
-
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
-        {
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Orange);
-            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
-        }
-
-        if (showDialog)
-            _ = ContainerLocator.Current.Resolve<IWindowService>()
-                .ShowMessageAsync("Warning", output, MessageBoxIcon.Warning, dialogOwner);
     }
 
     private void Init()

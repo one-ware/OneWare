@@ -361,7 +361,11 @@ public class SourceControlViewModel : ExtendedTool
 
             _ = RefreshAsync();
 
-            _logger.Log("Switched to branch '" + branch.FriendlyName + "'", ConsoleColor.Green, true, Brushes.Green);
+            string infoMsg = "Switched to branch '" + branch.FriendlyName + "'";
+            _logger.Log(infoMsg);
+            UserNotification.NewInformation(infoMsg)
+                .ViaOutput(Brushes.Green)
+                .Send();
         }
         catch (Exception e)
         {
@@ -626,8 +630,12 @@ public class SourceControlViewModel : ExtendedTool
             var author = await GetSignatureAsync(repository);
             var committer = author;
             var commit = repository.Commit(CommitMessage, author, committer);
-
-            _logger.Log($"Commit {commit.Message}", ConsoleColor.Green, true, Brushes.Green);
+            
+            string infoMsg = $"Commit {commit.Message}";
+            _logger.Log(infoMsg);
+            UserNotification.NewInformation(infoMsg)
+                .ViaOutput(Brushes.Green)
+                .Send();
             CommitMessage = "";
         }
         catch (Exception e)
@@ -729,7 +737,12 @@ public class SourceControlViewModel : ExtendedTool
 
         if (result != null)
         {
-            _logger.Log($"Pull Status: {result.Status}", default, true);
+            string infoMsg = $"Pull Status: {result.Status}";
+            _logger.Log(infoMsg);
+            UserNotification.NewInformation(infoMsg)
+                .ViaOutput()
+                .Send();
+            
             PublishMergeResult(result);
         }
 
@@ -1180,7 +1193,12 @@ public class SourceControlViewModel : ExtendedTool
 
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
         {
-            _logger.Error("Username and/or email can't be empty", null, false, true);
+            string errorMsg = "Username and/or email can't be empty";
+            _logger.Error(errorMsg);
+            UserNotification.NewError(errorMsg)
+                .ViaWindow()
+                .Send();
+            
             return null;
         }
 

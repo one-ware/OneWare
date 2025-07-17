@@ -93,7 +93,7 @@ internal abstract class Program
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
 
             if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
+                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex);
             else Console.WriteLine(crashReport);
 
             PlatformHelper.WriteTextFile(
