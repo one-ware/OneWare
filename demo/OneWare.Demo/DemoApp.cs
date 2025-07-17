@@ -16,7 +16,7 @@ public class DemoApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Demo", "avares://OneWare.Demo/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Path.Combine(Paths.DocumentsDirectory, "Logs"));
+    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Paths.LoggingDirectory);
 
     static DemoApp()
     {

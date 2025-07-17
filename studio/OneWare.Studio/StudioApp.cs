@@ -24,7 +24,7 @@ public class StudioApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Path.Combine(Paths.DocumentsDirectory, "Logs"));
+    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Paths.LoggingDirectory);
 
     static StudioApp()
     {

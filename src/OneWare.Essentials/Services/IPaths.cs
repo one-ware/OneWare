@@ -16,6 +16,7 @@ public interface IPaths
     public string PackagesDirectory { get; }
     public string NativeToolsDirectory { get; }
     public string PluginsDirectory { get; }
+    public string LoggingDirectory { get; }
     public string ChangelogUrl { get; }
     public string UpdateInfoUrl { get; }
 }
