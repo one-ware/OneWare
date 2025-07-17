@@ -21,7 +21,6 @@ public class BackupService
     private readonly string _backupRegistryFile;
 
     private readonly IDockService _dockService;
-    private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
@@ -29,11 +28,12 @@ public class BackupService
 
     private DispatcherTimer? _timer;
 
-    public BackupService(IPaths paths, IDockService dockService, ISettingsService settingsService,
-        ILogger logger, IWindowService windowService)
+    public BackupService(IPaths paths, 
+        IDockService dockService, 
+        ISettingsService settingsService, 
+        IWindowService windowService)
     {
         _dockService = dockService;
-        _logger = logger;
         _windowService = windowService;
         _settingsService = settingsService;
 
@@ -71,7 +71,7 @@ public class BackupService
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.LogWarning(e, "Loading BackupRegistry failed");
+                AppServices.Logger.LogWarning(e, "Loading BackupRegistry failed");
             }
     }
 
@@ -89,7 +89,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, "Saving BackupRegistry failed");
+            AppServices.Logger.LogError(e, "Saving BackupRegistry failed");
         }
     }
 
@@ -102,7 +102,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -135,8 +135,7 @@ public class BackupService
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()
-                        ?.LogError(e, $"Backup failed for {doc.Value.Title}:\n{e.Message}");
+                    AppServices.Logger.LogError(e, $"Backup failed for {doc.Value.Title}:\n{e.Message}");
                 }
 
         SaveAutoSaveFile();
@@ -153,7 +152,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         SaveAutoSaveFile();
@@ -186,7 +185,7 @@ public class BackupService
                             evm.CurrentDocument.Text = backupText;
 
                             string infoMsg = "File " + file.Name + " restored from backup!";
-                            _logger.LogInformation(infoMsg);
+                            AppServices.Logger.LogInformation(infoMsg);
                             UserNotification.NewInformation(infoMsg)
                                 .ViaOutput(Brushes.Green)
                                 .Send();
@@ -195,7 +194,7 @@ public class BackupService
                         {
                             string errorMsg = "Restoring file " + file.Name +
                                               " failed! More information can be found in the program log";
-                            _logger.LogError(e, e.Message);
+                            AppServices.Logger.LogError(e, e.Message);
                             UserNotification.NewError(errorMsg)
                                 .ViaOutput()
                                 .ViaWindow()

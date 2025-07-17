@@ -44,7 +44,7 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
         {
             if(Parent.PinModels.TryGetValue(Bind, out var model))
                 PinModel = model;
-            else ContainerLocator.Container.Resolve<ILogger>().LogError("Pin not found: " + Bind);
+            else AppServices.Logger.LogError("Pin not found: " + Bind);
         }
     }
 }

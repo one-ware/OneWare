@@ -43,8 +43,9 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         if (ExecutablePath == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
-                $"Tried to activate Language Server {Name} without executable!", new NotSupportedException());
+            AppServices.Logger.LogWarning(
+                $"Tried to activate Language Server {Name} without executable!", 
+                new NotSupportedException());
             return;
         }
 
@@ -65,7 +66,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
 
                 IsActivated = false;
                 return;
@@ -74,8 +75,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         if (!PlatformHelper.Exists(ExecutablePath))
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.LogWarning($"{Name} language server not found! {ExecutablePath}");
+            AppServices.Logger.LogWarning($"{Name} language server not found! {ExecutablePath}");
             return;
         }
 
@@ -112,7 +112,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             IsActivated = false;
         }
     }
@@ -133,7 +133,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
             ContainerLocator.Container.Resolve<IErrorService>()?.Clear(Name);
@@ -161,14 +161,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.OnWorkDoneProgressCreate(CreateWorkDoneProgress);
                 options.OnProgress(OnProgress);
                 options.OnLogTrace(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.Message));
+                    AppServices.Logger.LogInformation(x.Message));
                 options.OnPublishDiagnostics(PublishDiag);
                 options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
                 options.OnShowMessage(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.Message));
+                    AppServices.Logger.LogInformation(x.Message));
                 options.OnTelemetryEvent(x =>
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.ToString());
+                    AppServices.Logger.LogInformation(x.ToString());
                 });
 
                 options.WithCapability(new TextSynchronizationCapability
@@ -314,7 +314,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         var cancelToken = new CancellationToken();
 
-        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("Preinit finished " + Name);
+        AppServices.Logger.LogInformation("Preinit finished " + Name);
 
         try
         {
@@ -322,12 +322,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, $"Initializing {Name} failed! {e.Message}");
+            AppServices.Logger.LogError(e, $"Initializing {Name} failed! {e.Message}");
 
             return;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("init finished " + Name);
+        AppServices.Logger.LogInformation("init finished " + Name);
 
         IsLanguageServiceReady = true;
         await base.ActivateAsync();
@@ -492,7 +492,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -515,7 +515,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -547,8 +547,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         catch (Exception e)
         {
             if (e is TaskCanceledException)
-                ContainerLocator.Container.Resolve<ILogger>()?.LogWarning("Completion timed out!");
-            else ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+                AppServices.Logger.LogWarning("Completion timed out!");
+            else AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -565,7 +565,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -589,7 +589,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -612,7 +612,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -635,7 +635,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -658,7 +658,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -686,7 +686,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -710,7 +710,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -763,7 +763,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -785,7 +785,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -809,7 +809,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -832,7 +832,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -856,7 +856,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -876,7 +876,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -900,7 +900,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -923,7 +923,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;

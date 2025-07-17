@@ -85,7 +85,7 @@ public abstract class FpgaExtensionBase : IFpgaExtension
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

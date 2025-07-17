@@ -83,7 +83,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     {
         if (ProjectExplorerService.ActiveProject is not UniversalFpgaProjectRoot project)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning("No Active Project");
+            AppServices.Logger.LogWarning("No Active Project");
             return (null, null);
         }
 
@@ -91,7 +91,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         var fpgaPackage = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
         if (fpgaPackage == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning("No FPGA Selected, open Pin Planner first");
+            AppServices.Logger.LogWarning("No FPGA Selected, open Pin Planner first");
             return (project, null);
         }
 

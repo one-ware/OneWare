@@ -6,7 +6,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Verilog.Templates;
 
-public class VerilogBlinkTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
+public class VerilogBlinkTemplate(IDockService dockService) : IFpgaProjectTemplate
 {
     public string Name => "Verilog Blink";
 
@@ -25,7 +25,7 @@ public class VerilogBlinkTemplate(ILogger logger, IDockService dockService) : IF
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

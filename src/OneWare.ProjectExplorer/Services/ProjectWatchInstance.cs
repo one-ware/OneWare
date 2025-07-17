@@ -19,7 +19,7 @@ public class ProjectWatchInstance : IDisposable
     private DispatcherTimer? _timer;
 
     public ProjectWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
-        IDockService dockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
+        IDockService dockService, ISettingsService settingsService, IWindowService windowService)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
@@ -62,7 +62,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -178,7 +178,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

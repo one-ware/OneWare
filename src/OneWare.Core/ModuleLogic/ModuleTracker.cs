@@ -8,12 +8,8 @@ namespace OneWare.Core.ModuleLogic;
 
 internal class ModuleTracker : IModuleTracker
 {
-    private readonly ILogger _logger;
-
-
-    public ModuleTracker(ILogger logger, IModuleCatalog moduleCatalog, IModuleManager moduleManager)
+    public ModuleTracker(IModuleCatalog moduleCatalog, IModuleManager moduleManager)
     {
-        _logger = logger;
         ModuleCatalog = moduleCatalog;
         ModuleManager = moduleManager;
     }
@@ -24,7 +20,7 @@ internal class ModuleTracker : IModuleTracker
 
     public void RecordModuleLoaded(string moduleName)
     {
-        _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module loaded.", moduleName));
+        AppServices.Logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module loaded.", moduleName));
     }
 
     public void RecordModuleConstructed(string moduleName)
@@ -33,7 +29,7 @@ internal class ModuleTracker : IModuleTracker
         if (moduleTrackingState != null)
             moduleTrackingState.ModuleInitializationStatus = ModuleInitializationStatus.Constructed;
 
-        _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module constructed.", moduleName));
+        AppServices.Logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module constructed.", moduleName));
     }
 
     public void RecordModuleInitialized(string moduleName)
@@ -42,7 +38,7 @@ internal class ModuleTracker : IModuleTracker
         if (moduleTrackingState != null)
             moduleTrackingState.ModuleInitializationStatus = ModuleInitializationStatus.Initialized;
 
-        _logger?.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module initialized.", moduleName));
+        AppServices.Logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module initialized.", moduleName));
     }
 
     private ModuleTrackingState? GetModuleTrackingState(string moduleName)

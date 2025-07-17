@@ -10,9 +10,7 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
-public class ChildProcessService(
-    ILogger logger,
-    IApplicationStateService applicationStateService,
+public class ChildProcessService(IApplicationStateService applicationStateService,
     IOutputService outputService)
     : IChildProcessService
 {
@@ -46,7 +44,7 @@ public class ChildProcessService(
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
     }
 
@@ -69,7 +67,7 @@ public class ChildProcessService(
 
         string infoMsg =
             $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}";
-        logger.LogInformation(infoMsg);
+        AppServices.Logger.LogInformation(infoMsg);
         UserNotification.NewInformation(infoMsg)
             .ViaOutput(Brushes.CornflowerBlue)
             .Send();
@@ -136,7 +134,7 @@ public class ChildProcessService(
                             }
 
                             success = false;
-                            logger.LogError(errorLine);
+                            AppServices.Logger.LogError(errorLine);
                             output += errorLine + '\n';
                         }
                     }
@@ -155,7 +153,7 @@ public class ChildProcessService(
             {
                 string cancelMsg =
                     $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!";
-                logger.LogInformation(cancelMsg);
+                AppServices.Logger.LogInformation(cancelMsg);
                 UserNotification.NewInformation(cancelMsg)
                     .ViaOutput(Brushes.DarkOrange)
                     .Send();
@@ -171,7 +169,7 @@ public class ChildProcessService(
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             success = false;
         }
 

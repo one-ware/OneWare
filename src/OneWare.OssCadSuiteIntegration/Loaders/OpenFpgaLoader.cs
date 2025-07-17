@@ -7,7 +7,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Loaders;
 
-public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService settingsService, ILogger logger)
+public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService settingsService)
     : IFpgaLoader
 {
     public string Name => "OpenFpgaLoader";
@@ -34,7 +34,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService 
         }
         else
         {
-            logger.LogError("Board/Cable not supported/configured for openFPGALoader!");
+            AppServices.Logger.LogError("Board/Cable not supported/configured for openFPGALoader!");
             return;
         }
 

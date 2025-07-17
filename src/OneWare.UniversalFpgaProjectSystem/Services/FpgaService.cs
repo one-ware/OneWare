@@ -9,9 +9,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class FpgaService
 {
-    private readonly ILogger _logger;
-
-    public FpgaService(IPaths paths, ILogger logger)
+    public FpgaService(IPaths paths)
     {
         HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
         Directory.CreateDirectory(HardwareDirectory);
@@ -20,8 +18,6 @@ public class FpgaService
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local"));
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "FPGA"));
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "Extensions"));
-        
-        _logger = logger;
         
         LoadGenericHardware();
     }
@@ -149,7 +145,7 @@ public class FpgaService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

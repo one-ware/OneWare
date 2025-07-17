@@ -18,7 +18,6 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
     private readonly FolderPathSetting _folderPathSetting;
     private readonly FpgaService _fpgaService;
     private readonly ComboBoxSetting _loaderSetting;
-    private readonly ILogger _logger;
     private readonly UniversalFpgaProjectManager _manager;
 
     private readonly TextBoxSetting _nameSetting;
@@ -27,11 +26,10 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
     private readonly ComboBoxSetting _toolchainSetting;
 
     public UniversalFpgaProjectCreatorViewModel(IPaths paths, IProjectExplorerService projectExplorerService,
-        ILogger logger, FpgaService fpgaService, UniversalFpgaProjectManager manager)
+        FpgaService fpgaService, UniversalFpgaProjectManager manager)
     {
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
-        _logger = logger;
         _manager = manager;
         Paths = paths;
 
@@ -97,7 +95,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         if (string.IsNullOrWhiteSpace(name))
         {
             string errorMsg = "Invalid project name!";
-            _logger.LogError(errorMsg, null);
+            AppServices.Logger.LogError(errorMsg, null);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow(window.Host)
@@ -109,7 +107,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
         {
             string errorMsg = "Invalid project folder!";
-            _logger.LogError(errorMsg, null);
+            AppServices.Logger.LogError(errorMsg, null);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow(window.Host)
@@ -163,7 +161,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e.Message, e);
+            AppServices.Logger.LogError(e.Message, e);
         }
     }
 }

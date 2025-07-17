@@ -13,12 +13,10 @@ namespace OneWare.Core.Services;
 public class HttpService : IHttpService
 {
     private readonly HttpClientHandler _handler;
-    private readonly ILogger _logger;
     private readonly IPaths _paths;
 
-    public HttpService(ILogger logger, IPaths paths)
+    public HttpService(IPaths paths)
     {
-        _logger = logger;
         _paths = paths;
         _handler = new HttpClientHandler();
     }
@@ -39,7 +37,7 @@ public class HttpService : IHttpService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }
@@ -76,11 +74,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.LogInformation(e, e.Message);
+            AppServices.Logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -107,11 +105,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.LogInformation(e, e.Message);
+            AppServices.Logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return null;
@@ -127,11 +125,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.LogInformation(e, e.Message);
+            AppServices.Logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return false;
@@ -175,8 +173,8 @@ public class HttpService : IHttpService
         catch (Exception e)
         {
             if (e is not HttpRequestException)
-                _logger.LogError(e, e.Message);
-            else _logger.LogInformation(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
+            else AppServices.Logger.LogInformation(e, e.Message);
             try
             {
                 Directory.Delete(location);

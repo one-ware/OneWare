@@ -15,8 +15,6 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageManagerViewModel : ObservableObject
 {
     private readonly IPackageService _packageService;
-    
-    private readonly ILogger _logger;
 
     private string _filter = string.Empty;
 
@@ -29,10 +27,9 @@ public class PackageManagerViewModel : ObservableObject
 
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger)
+    public PackageManagerViewModel(IPackageService packageService)
     {
         _packageService = packageService;
-        _logger = logger;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
             Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
@@ -168,7 +165,7 @@ public class PackageManagerViewModel : ObservableObject
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
         FilterPackages();

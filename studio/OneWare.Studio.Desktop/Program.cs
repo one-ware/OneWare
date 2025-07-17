@@ -93,10 +93,7 @@ internal abstract class Program
             var crashReport =
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
 
-            if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.LogError(ex, ex.Message);
-            else Console.WriteLine(crashReport);
-
+            AppServices.Logger.LogError(ex, ex.Message);
             PlatformHelper.WriteTextFile(
                 Path.Combine(StudioApp.Paths.CrashReportsDirectory,
                     "crash_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", DateTimeFormatInfo.InvariantInfo) +

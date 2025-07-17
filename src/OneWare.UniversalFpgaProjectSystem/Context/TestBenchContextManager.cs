@@ -34,7 +34,7 @@ public static class TestBenchContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
         return new TestBenchContext(file, new JsonObject());
@@ -55,7 +55,7 @@ public static class TestBenchContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }

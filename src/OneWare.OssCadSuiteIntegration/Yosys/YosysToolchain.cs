@@ -32,7 +32,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
                         var parts = trimmedLine.Split(' ');
                         if (parts.Length != 3)
                         {
-                            ContainerLocator.Container.Resolve<ILogger>().LogWarning("PCF Line invalid: " + trimmedLine);
+                            AppServices.Logger.LogWarning("PCF Line invalid: " + trimmedLine);
                             continue;
                         }
 
@@ -48,7 +48,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -74,7 +74,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 

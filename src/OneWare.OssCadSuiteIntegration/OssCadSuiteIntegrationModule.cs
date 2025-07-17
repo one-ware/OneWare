@@ -285,8 +285,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
                                         if (selectedFpgaPackage == null)
                                         {
-                                            containerProvider.Resolve<ILogger>()
-                                                .LogWarning("No FPGA Selected. Open Pin Planner first!");
+                                            AppServices.Logger.LogWarning("No FPGA Selected. Open Pin Planner first!");
                                             return;
                                         }
 
@@ -328,7 +327,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
             if (!IsOssPathValid(x))
             {
-                containerProvider.Resolve<ILogger>().LogWarning("OSS CAD Suite path invalid", null);
+                AppServices.Logger.LogWarning("OSS CAD Suite path invalid");
                 return;
             }
 

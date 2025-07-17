@@ -40,7 +40,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Project already loaded");
+            AppServices.Logger.LogError("Project already loaded");
             return;
         }
 

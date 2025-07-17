@@ -267,7 +267,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -286,7 +286,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
         finally
         {

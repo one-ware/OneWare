@@ -52,6 +52,7 @@ public class StudioApp : App
 
     public override void Initialize()
     {
+        AppServices.InitLogger(Logger);
         var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
 

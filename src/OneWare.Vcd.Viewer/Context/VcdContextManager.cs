@@ -22,7 +22,7 @@ public static class VcdContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
         return null;
@@ -39,7 +39,7 @@ public static class VcdContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }

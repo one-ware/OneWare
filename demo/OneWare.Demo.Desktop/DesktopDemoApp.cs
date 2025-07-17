@@ -39,7 +39,7 @@ public class DesktopDemoApp : DemoApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
         
         if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
@@ -75,7 +75,7 @@ public class DesktopDemoApp : DemoApp
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.LogInformation("Could not load file " + fileName);
+                    AppServices.Logger.LogInformation("Could not load file " + fileName);
                 }
             }
         }
@@ -97,7 +97,7 @@ public class DesktopDemoApp : DemoApp
         try
         {
             var settingsService = Container.Resolve<ISettingsService>();
-            Container.Resolve<ILogger>()?.LogInformation("Loading last projects finished!");
+            AppServices.Logger.LogInformation("Loading last projects finished!");
 
             if (settingsService.GetSettingValue<string>("LastVersion") != Global.VersionCode)
             {
@@ -116,7 +116,7 @@ public class DesktopDemoApp : DemoApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

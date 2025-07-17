@@ -89,10 +89,7 @@ internal abstract class Program
         }
         catch (Exception ex)
         {
-            if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.LogError(ex, ex.Message);
-            else Console.WriteLine(ex.ToString());
-
+            AppServices.Logger.LogError(ex, ex.Message);
             PlatformHelper.WriteTextFile(
                 Path.Combine(DemoApp.Paths.CrashReportsDirectory,
                     "crash_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", DateTimeFormatInfo.InvariantInfo) +

@@ -420,7 +420,7 @@ public class App : PrismApplication
         }
         catch (Exception ex)
         {
-            Container.Resolve<ILogger>().LogError(ex, ex.Message);
+            AppServices.Logger.LogError(ex, ex.Message);
         }
     }
 

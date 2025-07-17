@@ -6,7 +6,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Vhdl.Templates;
 
-public class VhdlBlinkSimulationTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
+public class VhdlBlinkSimulationTemplate(IDockService dockService) : IFpgaProjectTemplate
 {
     public string Name => "VHDL Blink with Simulation";
 
@@ -31,7 +31,7 @@ public class VhdlBlinkSimulationTemplate(ILogger logger, IDockService dockServic
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

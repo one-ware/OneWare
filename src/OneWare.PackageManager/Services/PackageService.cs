@@ -34,15 +34,13 @@ public partial class PackageService : ObservableObject, IPackageService
     private readonly ISettingsService _settingsService;
 
     private readonly Lock _installLock = new();
-
-    private readonly ILogger _logger;
+    
     private CancellationTokenSource? _cancellationTokenSource;
 
-    public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
+    public PackageService(IHttpService httpService, ISettingsService settingsService, IPaths paths)
     {
         _httpService = httpService;
         _settingsService = settingsService;
-        _logger = logger;
 
         PackageDataBasePath = Path.Combine(paths.PackagesDirectory,
             $"{paths.AppName.ToLower().Replace(" ", "")}-packages.json");
@@ -163,7 +161,7 @@ public partial class PackageService : ObservableObject, IPackageService
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
                         string infoMsg = $"Downloading {model.Package.Name}...";
-                        _logger.LogInformation(infoMsg);
+                        AppServices.Logger.LogInformation(infoMsg);
                         UserNotification.NewInformation(infoMsg)
                             .ViaOutput(Brushes.DarkCyan)
                             .Send();
@@ -260,14 +258,14 @@ public partial class PackageService : ObservableObject, IPackageService
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, e.Message);
+                            AppServices.Logger.LogError(e, e.Message);
                         }
                     }
                 else throw new Exception("Packages empty");
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
                 return null;
             }
         }
@@ -330,7 +328,7 @@ public partial class PackageService : ObservableObject, IPackageService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
 
@@ -355,7 +353,7 @@ public partial class PackageService : ObservableObject, IPackageService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 

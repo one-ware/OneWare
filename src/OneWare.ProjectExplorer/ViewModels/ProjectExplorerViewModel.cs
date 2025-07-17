@@ -486,8 +486,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.LogError(e, "File / Directory could not be deleted from storage!");
+            AppServices.Logger.LogError(e, "File / Directory could not be deleted from storage!");
         }
 
         await RemoveAsync(new[] { entry });
@@ -505,7 +504,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             string errorMsg =
                 "Can't import folder if there is no active project selected. Please select an active project first";
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(errorMsg);
+            AppServices.Logger.LogError(errorMsg);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()
@@ -529,7 +528,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             string errorMsg =
                 "Can't import files if there is no active project selected. Please select an active project first";
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(errorMsg);
+            AppServices.Logger.LogError(errorMsg);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()
@@ -576,7 +575,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
         }
     }
@@ -595,7 +594,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (!newName.IsValidFileName() || (entry is IProjectFolder && Path.HasExtension(newName)) ||
             pathBase == null || entry.TopFolder == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError($"Can't rename {entry.Header} to {newName}!");
+            AppServices.Logger.LogError($"Can't rename {entry.Header} to {newName}!");
             return entry;
         }
 
@@ -620,7 +619,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return entry;
@@ -630,8 +629,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (!entry.IsValid())
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                .LogError("Tried to reload invalid entry (no root) " + entry.Header);
+            AppServices.Logger.LogError("Tried to reload invalid entry (no root) " + entry.Header);
             return entry;
         }
 
@@ -642,8 +640,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (manager == null)
             {
                 entry.LoadingFailed = true;
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .LogError($"Cannot reload {entry.Header}. Manager not found!");
+                AppServices.Logger.LogError($"Cannot reload {entry.Header}. Manager not found!");
             }
 
             var proj = manager != null ? await manager.LoadProjectAsync(root.ProjectPath) : null;
@@ -830,7 +827,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -853,8 +850,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (manager != null)
                     loadProjectTasks.Add(LoadProjectAsync(l.Path, manager, l.IsExpanded, l.IsActive));
                 else
-                    ContainerLocator.Container.Resolve<ILogger>()?
-                        .LogWarning(
+                    AppServices.Logger.LogWarning(
                             $"Could not load project of type: {l.ProjectType}. No Manager Registered. Are you missing a plugin?");
             }
 
@@ -862,7 +858,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 

@@ -16,7 +16,6 @@ namespace OneWare.CloudIntegration.ViewModels;
 public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 {
     private readonly ISettingsService _settingService;
-    private readonly ILogger _logger;
     private readonly OneWareCloudLoginService _loginService;
 
     private string? _errorText;
@@ -27,10 +26,9 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 
     private bool _isLoading = false;
     
-    public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger, OneWareCloudLoginService loginService)
+    public AuthenticateCloudViewModel(ISettingsService settingsService, OneWareCloudLoginService loginService)
     {
         _settingService = settingsService;
-        _logger = logger;
         _loginService = loginService;
         
         Title = $"Login to OneWare Cloud";
