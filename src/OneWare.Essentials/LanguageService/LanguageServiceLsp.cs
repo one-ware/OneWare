@@ -43,7 +43,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         if (ExecutablePath == null)
         {
             ContainerLocator.Container.Resolve<ILogger>().Warning(
-                $"Tried to activate Language Server {Name} without executable!", new NotSupportedException(), false);
+                $"Tried to activate Language Server {Name} without executable!", new NotSupportedException());
             return;
         }
 
@@ -514,7 +514,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e, false);
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
         return null;
@@ -855,7 +855,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e, false);
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
 
         return null;

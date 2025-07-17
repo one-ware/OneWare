@@ -181,7 +181,13 @@ public class UpdaterViewModel : ObservableObject
 
                 if (!updateResult.All(x => true))
                 {
-                    _logger.Error("At least one package update have failed", null, true, true, topLevelWindow);
+                    string errorMsg = "At least one package update have failed";
+                    _logger.Error(errorMsg);
+                    UserNotification.NewError(errorMsg)
+                        .ViaOutput()
+                        .ViaWindow(topLevelWindow)
+                        .Send();
+                    
                     Status = UpdaterStatus.UpdateAvailable;
                     return;
                 }

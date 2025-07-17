@@ -130,8 +130,12 @@ public static class PlatformHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error("Failed open: " + link + " | " + e.Message, e, true, true);
+            string errorMsg = "Failed open: " + link + " | " + e.Message;
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg, e);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow()
+                .Send();
         }
     }
 
@@ -164,8 +168,13 @@ public static class PlatformHelper
         }
         catch (Exception e)
         {
+            string errorMsg = "Can't open " + path + " in explorer. ";
             ContainerLocator.Container.Resolve<ILogger>()
-                .Error("Can't open " + path + " in explorer. " + e, e, true, true);
+                .Error(errorMsg, e);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow()
+                .Send();
         }
     }
 

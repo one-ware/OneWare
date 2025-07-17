@@ -327,7 +327,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
             if (!IsOssPathValid(x))
             {
-                containerProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null, false);
+                containerProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null);
                 return;
             }
 

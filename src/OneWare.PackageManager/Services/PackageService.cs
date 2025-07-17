@@ -161,8 +161,12 @@ public partial class PackageService : ObservableObject, IPackageService
                 switch (model.Status)
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true,
-                            Brushes.DarkCyan);
+                        string infoMsg = $"Downloading {model.Package.Name}...";
+                        _logger.Log(infoMsg, ConsoleColor.DarkCyan);
+                        UserNotification.NewInformation(infoMsg)
+                            .ViaOutput(Brushes.DarkCyan)
+                            .Send();
+                        
                         return model.DownloadAsync(model.Package.Versions.Last());
                     case PackageStatus.Installing:
                         if (_activeInstalls.TryGetValue(model.Package, out var task)) return task;

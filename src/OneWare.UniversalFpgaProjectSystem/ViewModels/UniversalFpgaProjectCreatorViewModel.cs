@@ -95,13 +95,25 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            _logger.Error("Invalid project name!", null, true, true, window.Host);
+            string errorMsg = "Invalid project name!";
+            _logger.Error(errorMsg, null);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow(window.Host)
+                .Send();
+            
             return;
         }
 
         if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
         {
-            _logger.Error("Invalid project folder!", null, true, true, window.Host);
+            string errorMsg = "Invalid project folder!";
+            _logger.Error(errorMsg, null);
+            UserNotification.NewError(errorMsg)
+                .ViaOutput()
+                .ViaWindow(window.Host)
+                .Send();
+            
             return;
         }
 

@@ -89,7 +89,7 @@ internal abstract class Program
         catch (Exception ex)
         {
             if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
+                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex);
             else Console.WriteLine(ex.ToString());
 
             PlatformHelper.WriteTextFile(

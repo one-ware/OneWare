@@ -184,14 +184,21 @@ public class BackupService
 
                             evm.CurrentDocument.Text = backupText;
 
-                            _logger.Log("File " + file.Name + " restored from backup!",
-                                ConsoleColor.Green, true, Brushes.Green);
+                            string infoMsg = "File " + file.Name + " restored from backup!";
+                            _logger.Log(infoMsg, ConsoleColor.Green);
+                            UserNotification.NewInformation(infoMsg)
+                                .ViaOutput(Brushes.Green)
+                                .Send();
                         }
                         catch (Exception e)
                         {
-                            _logger.Error(
-                                "Restoring file " + file.Name +
-                                " failed! More information can be found in the program log", e, true, true);
+                            string errorMsg = "Restoring file " + file.Name +
+                                              " failed! More information can be found in the program log";
+                            _logger.Error(errorMsg, e);
+                            UserNotification.NewError(errorMsg)
+                                .ViaOutput()
+                                .ViaWindow()
+                                .Send();
                         }
 
                     _backups.Remove(backup);
