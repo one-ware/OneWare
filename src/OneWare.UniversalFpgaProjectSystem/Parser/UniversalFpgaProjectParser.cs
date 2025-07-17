@@ -37,7 +37,7 @@ public static class UniversalFpgaProjectParser
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }
@@ -61,7 +61,7 @@ public static class UniversalFpgaProjectParser
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }

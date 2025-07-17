@@ -15,9 +15,9 @@ public class PluginPackageModel : PackageModel
 
     private IPlugin? _plugin;
 
-    public PluginPackageModel(Package package, IHttpService httpService, ILogger logger, IPaths paths,
+    public PluginPackageModel(Package package, IHttpService httpService, IPaths paths,
         IApplicationStateService applicationStateService, IPluginService pluginService)
-        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService, logger,
+        : base(package, "Plugin", Path.Combine(paths.PluginsDirectory, package.Id!), httpService,
             applicationStateService)
     {
         _pluginService = pluginService;

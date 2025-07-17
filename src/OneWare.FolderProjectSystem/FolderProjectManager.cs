@@ -8,11 +8,8 @@ namespace OneWare.FolderProjectSystem;
 
 public class FolderProjectManager : IProjectManager
 {
-    private readonly ILogger _logger;
-
-    public FolderProjectManager(ILogger logger)
+    public FolderProjectManager()
     {
-        _logger = logger;
     }
 
     public string Extension => "";

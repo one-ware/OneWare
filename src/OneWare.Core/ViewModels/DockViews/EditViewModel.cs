@@ -40,7 +40,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     private ITypeAssistance? _typeAssistance;
 
-    public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
+    public EditViewModel(string fullPath, ISettingsService settingsService,
         IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
         BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
@@ -58,7 +58,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.LogInformation("Initializing " + fullPath + "");
+        AppServices.Logger.LogInformation("Initializing " + fullPath + "");
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -150,8 +150,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             DisableEditViewEvents = CurrentDocument.TextLength > 100000;
             if (DisableEditViewEvents)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .LogWarning("Some features are disabled for this large file to reduce performance loss");
+                AppServices.Logger.LogWarning("Some features are disabled for this large file to reduce performance loss");
             }
             else
             {
@@ -329,12 +328,11 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()
-            ?.LogInformation($"Saved {CurrentFile.Name}!");
+        AppServices.Logger.LogInformation($"Saved {CurrentFile.Name}!");
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;
@@ -375,8 +373,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.LogError(e, $"Failed loading file {CurrentFile.FullPath}");
+            AppServices.Logger.LogError(e, $"Failed loading file {CurrentFile.FullPath}");
 
             success = false;
         }

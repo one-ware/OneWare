@@ -22,7 +22,6 @@ public class UpdaterViewModel : ObservableObject
 {
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
-    private readonly ILogger _logger;
     private readonly IPackageService _packageService;
     private readonly IPaths _paths;
     private readonly IWindowService _windowService;
@@ -31,12 +30,11 @@ public class UpdaterViewModel : ObservableObject
 
     private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
 
-    public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
+    public UpdaterViewModel(IHttpService httpService, IPaths paths, 
         IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
     {
         _httpService = httpService;
         _paths = paths;
-        _logger = logger;
         _applicationStateService = applicationStateService;
         _packageService = packageService;
         _windowService = windowService;
@@ -183,7 +181,7 @@ public class UpdaterViewModel : ObservableObject
                 if (!updateResult.All(x => true))
                 {
                     string errorMsg = "At least one package update have failed";
-                    _logger.LogError(errorMsg);
+                    AppServices.Logger.LogError(errorMsg);
                     UserNotification.NewError(errorMsg)
                         .ViaOutput()
                         .ViaWindow(topLevelWindow)
@@ -220,7 +218,7 @@ public class UpdaterViewModel : ObservableObject
 
         if (!File.Exists(DownloadLocation))
         {
-            _logger.LogError($"Update file not found at {DownloadLocation}!");
+            AppServices.Logger.LogError($"Update file not found at {DownloadLocation}!");
             return;
         }
 

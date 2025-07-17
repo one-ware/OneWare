@@ -15,15 +15,13 @@ namespace OneWare.CloudIntegration.Services;
 public class OneWareCloudLoginService
 {
     private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
-
-    private readonly ILogger _logger;
+    
     private readonly ISettingsService _settingService;
     private readonly IHttpService _httpService;
     private readonly string _tokenPath;
     
-    public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService, IPaths paths)
+    public OneWareCloudLoginService(ISettingsService settingService, IHttpService httpService, IPaths paths)
     {
-        _logger = logger;
         _settingService = settingService;
         _httpService = httpService;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
@@ -117,7 +115,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return (false, HttpStatusCode.NoContent);
         }
     }
@@ -153,7 +151,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return false;
@@ -179,7 +177,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -210,7 +208,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
         
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);

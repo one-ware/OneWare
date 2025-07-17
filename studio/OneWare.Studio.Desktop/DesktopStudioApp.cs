@@ -70,7 +70,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -127,7 +127,7 @@ public class DesktopStudioApp : StudioApp
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.LogWarning("Could not load file/directory " + fileName);
+                    AppServices.Logger.LogWarning("Could not load file/directory " + fileName);
                 }
             }
         }
@@ -140,7 +140,7 @@ public class DesktopStudioApp : StudioApp
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
                 Container.Resolve<IDockService>().InitializeContent();
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-                Container.Resolve<ILogger>()?.LogInformation("Loading last projects finished!");
+                AppServices.Logger.LogInformation("Loading last projects finished!");
             }
         }
 
@@ -205,7 +205,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

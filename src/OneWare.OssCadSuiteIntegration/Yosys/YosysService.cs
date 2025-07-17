@@ -11,7 +11,6 @@ namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysService(
     IChildProcessService childProcessService,
-    ILogger logger,
     IOutputService outputService,
     IDockService dockService)
 {
@@ -71,7 +70,7 @@ public class YosysService(
                 {
                     if (x.StartsWith("Error:"))
                     {
-                        logger.LogError(x);
+                        AppServices.Logger.LogError(x);
                         return false;
                     }
 
@@ -83,7 +82,7 @@ public class YosysService(
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }

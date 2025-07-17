@@ -17,7 +17,7 @@ public class FileWatchInstance : IDisposable
     private DispatcherTimer? _timer;
 
     public FileWatchInstance(IFile file, IDockService dockService, ISettingsService settingsService,
-        IWindowService windowService, ILogger logger)
+        IWindowService windowService)
     {
         _file = file;
         _dockService = dockService;
@@ -57,7 +57,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -113,7 +113,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 }

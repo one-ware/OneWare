@@ -39,7 +39,6 @@ public abstract class GdbSession(
     string gdbExecutable,
     string elfFile,
     bool asyncMode,
-    ILogger logger,
     IProjectExplorerService projectExplorerService,
     IDockService dockService)
 {
@@ -94,7 +93,7 @@ public abstract class GdbSession(
 
             if (_process == null || _process.HasExited)
             {
-                logger.LogError("Debugging failed: process could not start");
+                AppServices.Logger.LogError("Debugging failed: process could not start");
                 return false;
             }
 
@@ -118,7 +117,7 @@ public abstract class GdbSession(
             if (await Task.WhenAny(task, Task.Delay(timeout)) != task)
             {
                 // task completed after timeout
-                logger.LogError("GDB timed out!");
+                AppServices.Logger.LogError("GDB timed out!");
                 return false;
             }
 
@@ -134,7 +133,7 @@ public abstract class GdbSession(
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return false;
         }
     }
@@ -171,7 +170,7 @@ public abstract class GdbSession(
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return activeProcess;
@@ -201,7 +200,7 @@ public abstract class GdbSession(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                AppServices.Logger.LogError(ex, ex.Message);
             }
         }
     }
@@ -260,7 +259,7 @@ public abstract class GdbSession(
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, ex.Message);
+                        AppServices.Logger.LogError(ex, ex.Message);
                     }
                 }, DispatcherPriority.Input);
 
@@ -363,7 +362,7 @@ public abstract class GdbSession(
                         if (e is ObjectDisposedException)
                             return new GdbCommandResult("") { Status = CommandStatus.Error };
 
-                        logger.LogError(e, e.Message);
+                        AppServices.Logger.LogError(e, e.Message);
                     }
 
                     return _lastResult ?? _timeout;

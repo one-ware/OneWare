@@ -107,7 +107,7 @@ public class TerminalViewModel : ObservableObject
 
                 if (terminal == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().LogError("Error creating terminal!");
+                    AppServices.Logger.LogError("Error creating terminal!");
                     return;
                 }
 

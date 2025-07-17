@@ -89,7 +89,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+                    AppServices.Logger.LogError(e, e.Message);
                 }
             else
                 projFile.LoadingFailed = true;
@@ -128,7 +128,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
         var pf = ConstructNewProjectFolder(path, this);
@@ -199,7 +199,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Check if File exists
         if (!File.Exists(path))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogWarning($"Cannot import {path}. File does not exist");
+            AppServices.Logger.LogWarning($"Cannot import {path}. File does not exist");
             return null;
         }
 
@@ -212,7 +212,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             return null;
         }
     }

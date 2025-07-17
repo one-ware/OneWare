@@ -45,7 +45,7 @@ public class PluginService : IPluginService
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
-            ContainerLocator.Container.Resolve<ILogger>().LogError($"Plugin {path} failed loading: \n {test.Report}");
+            AppServices.Logger.LogError($"Plugin {path} failed loading: \n {test.Report}");
             return plugin;
         }
 
@@ -69,7 +69,7 @@ public class PluginService : IPluginService
                     _moduleManager.LoadModule(module.ModuleName);
 
                 string logMsg = $"Module {module.ModuleName} loaded";
-                ContainerLocator.Container.Resolve<ILogger>().LogInformation(logMsg);
+                AppServices.Logger.LogInformation(logMsg);
                 UserNotification.NewInformation(logMsg)
                     .ViaOutput()
                     .Send();
@@ -79,7 +79,7 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
 
         return plugin;
@@ -94,7 +94,7 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
@@ -143,7 +143,7 @@ public class PluginService : IPluginService
             {
                 // This assembly already has a resolver — log and continue
                 string logMsg = $"Skipping resolver setup for {assembly.FullName}, resolver already set.";
-                ContainerLocator.Container.Resolve<ILogger>().LogInformation(logMsg);
+                AppServices.Logger.LogInformation(logMsg);
                 UserNotification.NewInformation(logMsg)
                     .ViaOutput()
                     .Send();

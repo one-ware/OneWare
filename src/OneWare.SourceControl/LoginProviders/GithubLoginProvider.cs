@@ -7,7 +7,7 @@ using RestSharp;
 
 namespace OneWare.SourceControl.LoginProviders;
 
-public class GithubLoginProvider(ISettingsService settingsService, ILogger logger) : ILoginProvider
+public class GithubLoginProvider(ISettingsService settingsService) : ILoginProvider
 {
     public string Name => "GitHub";
     
@@ -41,7 +41,7 @@ public class GithubLoginProvider(ISettingsService settingsService, ILogger logge
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
         return false;
     }

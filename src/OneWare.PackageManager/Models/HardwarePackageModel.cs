@@ -10,10 +10,9 @@ namespace OneWare.PackageManager.Models;
 public class HardwarePackageModel(
     Package package,
     IHttpService httpService,
-    ILogger logger,
     IPaths paths,
     IApplicationStateService applicationStateService)
-    : PackageModel(package, "Hardware", Path.Combine(paths.PackagesDirectory, "Hardware", package.Id!), httpService, logger,
+    : PackageModel(package, "Hardware", Path.Combine(paths.PackagesDirectory, "Hardware", package.Id!), httpService,
         applicationStateService)
 {
     protected override void Install(PackageTarget target)

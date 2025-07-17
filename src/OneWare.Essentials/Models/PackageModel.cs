@@ -11,7 +11,6 @@ namespace OneWare.Essentials.Models;
 public abstract class PackageModel : ObservableObject
 {
     private readonly IApplicationStateService _applicationStateService;
-    private readonly ILogger _logger;
     private PackageVersion? _installedVersion;
     private Package _package;
 
@@ -28,12 +27,10 @@ public abstract class PackageModel : ObservableObject
         string packageType,
         string extractionFolder,
         IHttpService httpService,
-        ILogger logger,
         IApplicationStateService applicationStateService)
     {
         _package = package;
         HttpService = httpService;
-        _logger = logger;
         _applicationStateService = applicationStateService;
         ExtractionFolder = extractionFolder;
         PackageType = packageType;
@@ -101,7 +98,7 @@ public abstract class PackageModel : ObservableObject
 
         if (!compat.IsCompatible)
         {
-            _logger.LogError(compat.Report!);
+            AppServices.Logger.LogError(compat.Report!);
             return false;
         }
         
@@ -181,7 +178,7 @@ public abstract class PackageModel : ObservableObject
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             Status = PackageStatus.Available;
             return false;
         }
@@ -226,7 +223,7 @@ public abstract class PackageModel : ObservableObject
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
                 return false;
             }
 

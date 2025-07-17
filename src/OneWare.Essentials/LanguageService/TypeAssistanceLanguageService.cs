@@ -250,7 +250,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Placeholder Range renaming not supported yet!");
+            AppServices.Logger.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -258,8 +258,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         if (Regex.IsMatch(newName, @"\W"))
         {
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.LogError($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
+            AppServices.Logger.LogError($"Can't rename symbol to {newName}! " +
+                                        $"Only letters, numbers and underscore allowed!");
             return;
         }
 
@@ -272,7 +272,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Placeholder Range renaming not supported yet!");
+            AppServices.Logger.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -312,7 +312,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("Location link not supported"); //TODO   
+        AppServices.Logger.LogInformation("Location link not supported"); //TODO   
     }
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
@@ -357,7 +357,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 

@@ -7,12 +7,10 @@ namespace OneWare.Core.ViewModels.Windows;
 
 internal class ActivateWindowViewModel : ObservableObject
 {
-    private ILogger _logger;
     private readonly IPaths _paths;
 
-    public ActivateWindowViewModel(ILogger logger, IPaths paths)
+    public ActivateWindowViewModel(IPaths paths)
     {
-        _logger = logger;
         _paths = paths;
     }
 
