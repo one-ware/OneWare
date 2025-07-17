@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -88,7 +89,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                    ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
                 }
             else
                 projFile.LoadingFailed = true;
@@ -127,7 +128,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             }
 
         var pf = ConstructNewProjectFolder(path, this);
@@ -198,7 +199,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Check if File exists
         if (!File.Exists(path))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {path}. File does not exist");
+            ContainerLocator.Container.Resolve<ILogger>()?.LogWarning($"Cannot import {path}. File does not exist");
             return null;
         }
 
@@ -211,7 +212,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }

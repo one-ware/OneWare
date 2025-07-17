@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
@@ -48,7 +49,7 @@ public class FileIconService : IFileIconService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
     }
 

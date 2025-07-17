@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Core;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -26,7 +27,7 @@ public class ViewLocator : IDataTemplate
             }
             catch (Exception e)
             {
-                ContainerLocator.Current.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Current.Resolve<ILogger>().LogError(e, e.Message);
             }
 
             return new TextBlock { Text = "Create Instance Failed: " + type.FullName };

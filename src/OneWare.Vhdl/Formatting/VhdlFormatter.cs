@@ -1,6 +1,7 @@
 using Avalonia.Platform;
 using AvaloniaEdit.Document;
 using Jint;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -55,7 +56,7 @@ public class VhdlFormatter : IFormattingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             return null;
         }
     }

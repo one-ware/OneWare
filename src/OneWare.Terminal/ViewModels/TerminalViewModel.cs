@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
@@ -106,7 +107,7 @@ public class TerminalViewModel : ObservableObject
 
                 if (terminal == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    ContainerLocator.Container.Resolve<ILogger>().LogError("Error creating terminal!");
                     return;
                 }
 

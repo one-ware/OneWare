@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -106,7 +107,7 @@ public class TerminalManagerViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
     }
 }

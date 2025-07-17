@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Models;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -44,7 +45,7 @@ public class PluginService : IPluginService
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
-            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.Report}");
+            ContainerLocator.Container.Resolve<ILogger>().LogError($"Plugin {path} failed loading: \n {test.Report}");
             return plugin;
         }
 
@@ -68,7 +69,7 @@ public class PluginService : IPluginService
                     _moduleManager.LoadModule(module.ModuleName);
 
                 string logMsg = $"Module {module.ModuleName} loaded";
-                ContainerLocator.Container.Resolve<ILogger>().Log(logMsg, ConsoleColor.Cyan);
+                ContainerLocator.Container.Resolve<ILogger>().LogInformation(logMsg);
                 UserNotification.NewInformation(logMsg)
                     .ViaOutput()
                     .Send();
@@ -78,7 +79,7 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
 
         return plugin;
@@ -93,7 +94,7 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 
@@ -142,8 +143,7 @@ public class PluginService : IPluginService
             {
                 // This assembly already has a resolver — log and continue
                 string logMsg = $"Skipping resolver setup for {assembly.FullName}, resolver already set.";
-                ContainerLocator.Container.Resolve<ILogger>().Log(logMsg, 
-                    ConsoleColor.DarkYellow);
+                ContainerLocator.Container.Resolve<ILogger>().LogInformation(logMsg);
                 UserNotification.NewInformation(logMsg)
                     .ViaOutput()
                     .Send();

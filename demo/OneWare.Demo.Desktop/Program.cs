@@ -10,6 +10,7 @@ using OneWare.Essentials.Services;
 using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Demo.Desktop;
 
@@ -89,7 +90,7 @@ internal abstract class Program
         catch (Exception ex)
         {
             if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex);
+                ContainerLocator.Container?.Resolve<ILogger>()?.LogError(ex, ex.Message);
             else Console.WriteLine(ex.ToString());
 
             PlatformHelper.WriteTextFile(

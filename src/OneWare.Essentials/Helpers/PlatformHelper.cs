@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -131,7 +132,7 @@ public static class PlatformHelper
         catch (Exception e)
         {
             string errorMsg = "Failed open: " + link + " | " + e.Message;
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()
@@ -170,7 +171,7 @@ public static class PlatformHelper
         {
             string errorMsg = "Can't open " + path + " in explorer. ";
             ContainerLocator.Container.Resolve<ILogger>()
-                .Error(errorMsg, e);
+                .LogError(e, errorMsg);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()

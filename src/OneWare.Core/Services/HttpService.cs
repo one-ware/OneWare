@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Essentials.Services;
 using SharpCompress.Common;
@@ -38,7 +39,7 @@ public class HttpService : IHttpService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
             return false;
         }
     }
@@ -75,11 +76,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
 
         return null;
@@ -106,11 +107,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
 
         return null;
@@ -126,11 +127,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.LogInformation(e, e.Message);
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
 
         return false;
@@ -174,8 +175,8 @@ public class HttpService : IHttpService
         catch (Exception e)
         {
             if (e is not HttpRequestException)
-                _logger.Error(e.Message, e);
-            else _logger.Log(e.Message, ConsoleColor.Yellow);
+                _logger.LogError(e, e.Message);
+            else _logger.LogInformation(e, e.Message);
             try
             {
                 Directory.Delete(location);

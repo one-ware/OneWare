@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -39,7 +40,7 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Project already loaded");
             return;
         }
 

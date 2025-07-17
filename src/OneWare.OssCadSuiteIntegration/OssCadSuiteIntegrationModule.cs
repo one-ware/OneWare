@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -285,7 +286,7 @@ public class OssCadSuiteIntegrationModule : IModule
                                         if (selectedFpgaPackage == null)
                                         {
                                             containerProvider.Resolve<ILogger>()
-                                                .Warning("No FPGA Selected. Open Pin Planner first!");
+                                                .LogWarning("No FPGA Selected. Open Pin Planner first!");
                                             return;
                                         }
 
@@ -327,7 +328,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
             if (!IsOssPathValid(x))
             {
-                containerProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null);
+                containerProvider.Resolve<ILogger>().LogWarning("OSS CAD Suite path invalid", null);
                 return;
             }
 

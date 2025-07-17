@@ -11,6 +11,7 @@ using OneWare.Essentials.Services;
 using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Studio.Desktop;
 
@@ -93,7 +94,7 @@ internal abstract class Program
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
 
             if (ContainerLocator.Container.IsRegistered<ILogger>())
-                ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex);
+                ContainerLocator.Container?.Resolve<ILogger>()?.LogError(ex, ex.Message);
             else Console.WriteLine(crashReport);
 
             PlatformHelper.WriteTextFile(

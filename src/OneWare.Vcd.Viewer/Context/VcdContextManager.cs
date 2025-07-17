@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -21,7 +22,7 @@ public static class VcdContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             }
 
         return null;
@@ -38,7 +39,7 @@ public static class VcdContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             return false;
         }
     }

@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
+using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
@@ -15,7 +16,7 @@ public class DemoApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Demo", "avares://OneWare.Demo/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new Logger(Paths);
+    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Paths.LoggingDirectory);
 
     static DemoApp()
     {

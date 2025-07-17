@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -162,7 +163,7 @@ public partial class PackageService : ObservableObject, IPackageService
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
                         string infoMsg = $"Downloading {model.Package.Name}...";
-                        _logger.Log(infoMsg, ConsoleColor.DarkCyan);
+                        _logger.LogInformation(infoMsg);
                         UserNotification.NewInformation(infoMsg)
                             .ViaOutput(Brushes.DarkCyan)
                             .Send();
@@ -259,14 +260,14 @@ public partial class PackageService : ObservableObject, IPackageService
                         }
                         catch (Exception e)
                         {
-                            _logger.Error(e.Message, e);
+                            _logger.LogError(e, e.Message);
                         }
                     }
                 else throw new Exception("Packages empty");
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message, e);
+                _logger.LogError(e, e.Message);
                 return null;
             }
         }
@@ -329,7 +330,7 @@ public partial class PackageService : ObservableObject, IPackageService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
             return false;
         }
 
@@ -354,7 +355,7 @@ public partial class PackageService : ObservableObject, IPackageService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
     }
 

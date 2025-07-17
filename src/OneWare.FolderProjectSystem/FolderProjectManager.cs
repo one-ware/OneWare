@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Models;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;

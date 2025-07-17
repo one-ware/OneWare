@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
@@ -31,7 +32,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
                         var parts = trimmedLine.Split(' ');
                         if (parts.Length != 3)
                         {
-                            ContainerLocator.Container.Resolve<ILogger>().Warning("PCF Line invalid: " + trimmedLine);
+                            ContainerLocator.Container.Resolve<ILogger>().LogWarning("PCF Line invalid: " + trimmedLine);
                             continue;
                         }
 
@@ -47,7 +48,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 
@@ -73,7 +74,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 

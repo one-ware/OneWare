@@ -2,6 +2,7 @@
 using System.Reflection;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -182,7 +183,7 @@ public class UpdaterViewModel : ObservableObject
                 if (!updateResult.All(x => true))
                 {
                     string errorMsg = "At least one package update have failed";
-                    _logger.Error(errorMsg);
+                    _logger.LogError(errorMsg);
                     UserNotification.NewError(errorMsg)
                         .ViaOutput()
                         .ViaWindow(topLevelWindow)
@@ -219,7 +220,7 @@ public class UpdaterViewModel : ObservableObject
 
         if (!File.Exists(DownloadLocation))
         {
-            _logger.Error($"Update file not found at {DownloadLocation}!");
+            _logger.LogError($"Update file not found at {DownloadLocation}!");
             return;
         }
 

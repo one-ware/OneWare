@@ -1,5 +1,6 @@
 ﻿using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -70,7 +71,7 @@ public class YosysService(
                 {
                     if (x.StartsWith("Error:"))
                     {
-                        logger.Error(x);
+                        logger.LogError(x);
                         return false;
                     }
 
@@ -82,7 +83,7 @@ public class YosysService(
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
             return false;
         }
     }

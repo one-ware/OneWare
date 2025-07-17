@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
@@ -100,7 +101,7 @@ public abstract class PackageModel : ObservableObject
 
         if (!compat.IsCompatible)
         {
-            _logger.Error(compat.Report!);
+            _logger.LogError(compat.Report!);
             return false;
         }
         
@@ -180,7 +181,7 @@ public abstract class PackageModel : ObservableObject
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
             Status = PackageStatus.Available;
             return false;
         }
@@ -225,7 +226,7 @@ public abstract class PackageModel : ObservableObject
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message, e);
+                _logger.LogError(e, e.Message);
                 return false;
             }
 
