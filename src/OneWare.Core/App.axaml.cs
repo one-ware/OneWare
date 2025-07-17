@@ -359,9 +359,7 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-
-        var test = Container.Resolve<UserNotificationViewService>();
-
+        
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
