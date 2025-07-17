@@ -16,6 +16,7 @@ using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Markdown.Avalonia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
@@ -106,7 +107,7 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         TopLevel.GetTopLevel(this)?.AddDisposableHandler(KeyDownEvent, (o, e) =>
@@ -236,7 +237,7 @@ public partial class EditView : UserControl
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
     }
 

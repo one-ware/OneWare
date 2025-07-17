@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
@@ -59,7 +60,7 @@ public class WebStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -33,7 +34,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService 
         }
         else
         {
-            logger.Error("Board/Cable not supported/configured for openFPGALoader!");
+            logger.LogError("Board/Cable not supported/configured for openFPGALoader!");
             return;
         }
 

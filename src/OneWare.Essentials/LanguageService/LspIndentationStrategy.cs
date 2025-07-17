@@ -1,6 +1,7 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -107,7 +108,7 @@ public class LspIndentationStrategy : IIndentationStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
     }
 }

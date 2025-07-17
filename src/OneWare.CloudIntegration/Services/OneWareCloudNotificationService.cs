@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -72,7 +73,7 @@ public class OneWareCloudNotificationService
             ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
 
             string infoMsg = "Connected to OneWare Cloud";
-            _logger.Log(infoMsg, ConsoleColor.Green);
+            _logger.LogInformation(infoMsg);
             UserNotification.NewInformation(infoMsg)
                 .ViaOutput(Brushes.Lime)
                 .Send();
@@ -82,7 +83,7 @@ public class OneWareCloudNotificationService
         catch (Exception e)
         {
             string warningMsg = "Failed to connect to OneWare Cloud";
-            _logger.Warning(warningMsg, null);
+            _logger.LogWarning(warningMsg);
             UserNotification.NewWarning(warningMsg)
                 .ViaOutput()
                 .Send();

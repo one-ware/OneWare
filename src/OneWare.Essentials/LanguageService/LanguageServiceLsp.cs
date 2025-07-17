@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using Nerdbank.Streams;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
@@ -42,7 +43,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         if (ExecutablePath == null)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Warning(
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
                 $"Tried to activate Language Server {Name} without executable!", new NotSupportedException());
             return;
         }
@@ -64,7 +65,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
 
                 IsActivated = false;
                 return;
@@ -74,7 +75,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         if (!PlatformHelper.Exists(ExecutablePath))
         {
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Warning($"{Name} language server not found! {ExecutablePath}");
+                ?.LogWarning($"{Name} language server not found! {ExecutablePath}");
             return;
         }
 
@@ -111,7 +112,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             IsActivated = false;
         }
     }
@@ -132,7 +133,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             }
 
             ContainerLocator.Container.Resolve<IErrorService>()?.Clear(Name);
@@ -160,14 +161,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.OnWorkDoneProgressCreate(CreateWorkDoneProgress);
                 options.OnProgress(OnProgress);
                 options.OnLogTrace(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.Red));
+                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.Message));
                 options.OnPublishDiagnostics(PublishDiag);
                 options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
                 options.OnShowMessage(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
+                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.Message));
                 options.OnTelemetryEvent(x =>
                 {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta);
+                    ContainerLocator.Container.Resolve<ILogger>()?.LogInformation(x.ToString());
                 });
 
                 options.WithCapability(new TextSynchronizationCapability
@@ -313,7 +314,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         var cancelToken = new CancellationToken();
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name, ConsoleColor.DarkCyan);
+        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("Preinit finished " + Name);
 
         try
         {
@@ -321,12 +322,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error($"Initializing {Name} failed! {e.Message}", e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, $"Initializing {Name} failed! {e.Message}");
 
             return;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name, ConsoleColor.DarkCyan);
+        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("init finished " + Name);
 
         IsLanguageServiceReady = true;
         await base.ActivateAsync();
@@ -491,7 +492,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -514,7 +515,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -546,8 +547,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         catch (Exception e)
         {
             if (e is TaskCanceledException)
-                ContainerLocator.Container.Resolve<ILogger>()?.Warning("Completion timed out!");
-            else ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>()?.LogWarning("Completion timed out!");
+            else ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -564,7 +565,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -588,7 +589,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -611,7 +612,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -634,7 +635,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -657,7 +658,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -685,7 +686,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -709,7 +710,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return null;
         }
     }
@@ -762,7 +763,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -784,7 +785,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -808,7 +809,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -831,7 +832,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -855,7 +856,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -875,7 +876,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -899,7 +900,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;
@@ -922,7 +923,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         return null;

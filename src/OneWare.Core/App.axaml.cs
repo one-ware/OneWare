@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.ModuleLogic;
@@ -367,7 +368,7 @@ public class App : PrismApplication
             TypeAssistanceIconStore.Instance.Load();
         });
 
-        Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+        Container.Resolve<ILogger>().LogInformation("Framework initialization complete!");
         Container.Resolve<UserNotificationViewService>().Attach();
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
@@ -419,7 +420,7 @@ public class App : PrismApplication
         }
         catch (Exception ex)
         {
-            Container.Resolve<ILogger>().Error(ex.Message, ex);
+            Container.Resolve<ILogger>().LogError(ex, ex.Message);
         }
     }
 
@@ -438,7 +439,7 @@ public class App : PrismApplication
 
         //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
 
-        Container.Resolve<ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
+        Container.Resolve<ILogger>()?.LogInformation("Closed!");
 
         //Save active layout
         if (!_tempMode) Container.Resolve<IDockService>().SaveLayout();

@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LibGit2Sharp;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -168,7 +169,7 @@ public class GitRepositoryModel : ObservableObject
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
 
         StagedChanges.Merge(stagedChanges, (a, b) =>

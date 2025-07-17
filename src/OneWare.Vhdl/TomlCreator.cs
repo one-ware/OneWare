@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Extensions;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -74,7 +75,7 @@ public class TomlCreator
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
     }
 }

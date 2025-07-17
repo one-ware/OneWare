@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -74,7 +75,7 @@ public class AggregateModuleCatalog : IModuleCatalog
             }
             catch (Exception e)
             {
-                ContainerLocator.Current.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Current.Resolve<ILogger>().LogError(e, e.Message);
             }
         });
     }

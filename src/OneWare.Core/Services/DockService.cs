@@ -10,6 +10,7 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -315,7 +316,7 @@ public class DockService : Factory, IDockService
             catch (Exception e)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
-                    ?.Log("Could not load layout from file! Loading default layout..." + e, ConsoleColor.Red);
+                    ?.LogError(e, "Could not load layout from file! Loading default layout...");
             }
 
         if (layout == null)

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -43,7 +44,7 @@ public class TextMateSnippetHelper
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             return completionItems;
         }
 

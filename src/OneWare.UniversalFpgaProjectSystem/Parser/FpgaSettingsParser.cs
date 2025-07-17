@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -51,7 +52,7 @@ public static class FpgaSettingsParser
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
 
         return [];
@@ -78,7 +79,7 @@ public static class FpgaSettingsParser
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             return false;
         }
     }

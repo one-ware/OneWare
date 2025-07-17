@@ -7,6 +7,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -57,7 +58,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+        logger.LogInformation("Initializing " + fullPath + "");
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -150,7 +151,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             if (DisableEditViewEvents)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
-                    .Warning("Some features are disabled for this large file to reduce performance loss");
+                    .LogWarning("Some features are disabled for this large file to reduce performance loss");
             }
             else
             {
@@ -328,12 +329,12 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
             return false;
         }
 
         ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
+            ?.LogInformation($"Saved {CurrentFile.Name}!");
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;
@@ -375,7 +376,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Failed loading file {CurrentFile.FullPath}", e);
+                ?.LogError(e, $"Failed loading file {CurrentFile.FullPath}");
 
             success = false;
         }

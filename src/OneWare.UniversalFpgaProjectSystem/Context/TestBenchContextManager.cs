@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -33,7 +34,7 @@ public static class TestBenchContextManager
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             }
 
         return new TestBenchContext(file, new JsonObject());
@@ -54,7 +55,7 @@ public static class TestBenchContextManager
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             return false;
         }
     }

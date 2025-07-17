@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DeviceId;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.Windows;

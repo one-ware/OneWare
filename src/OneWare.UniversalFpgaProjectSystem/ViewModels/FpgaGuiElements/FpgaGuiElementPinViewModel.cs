@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
@@ -43,7 +44,7 @@ public class FpgaGuiElementPinViewModel : FpgaGuiElementRectViewModel
         {
             if(Parent.PinModels.TryGetValue(Bind, out var model))
                 PinModel = model;
-            else ContainerLocator.Container.Resolve<ILogger>().Error("Pin not found: " + Bind);
+            else ContainerLocator.Container.Resolve<ILogger>().LogError("Pin not found: " + Bind);
         }
     }
 }

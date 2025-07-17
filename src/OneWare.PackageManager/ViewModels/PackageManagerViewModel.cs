@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -167,7 +168,7 @@ public class PackageManagerViewModel : ObservableObject
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message, e);
+                _logger.LogError(e, e.Message);
             }
 
         FilterPackages();

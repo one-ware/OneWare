@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -145,7 +146,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     default:
 
-                        logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
+                        logger.LogError($"Unknown setting of type: {localCopy.GetType().Name}");
                         continue;
                 }
             }

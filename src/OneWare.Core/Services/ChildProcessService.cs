@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -45,7 +46,7 @@ public class ChildProcessService(
             }
             catch (Exception e)
             {
-                logger.Error(e.Message, e);
+                logger.LogError(e, e.Message);
             }
     }
 
@@ -68,7 +69,7 @@ public class ChildProcessService(
 
         string infoMsg =
             $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}";
-        logger.Log(infoMsg, ConsoleColor.DarkCyan);
+        logger.LogInformation(infoMsg);
         UserNotification.NewInformation(infoMsg)
             .ViaOutput(Brushes.CornflowerBlue)
             .Send();
@@ -135,7 +136,7 @@ public class ChildProcessService(
                             }
 
                             success = false;
-                            logger.Error(errorLine);
+                            logger.LogError(errorLine);
                             output += errorLine + '\n';
                         }
                     }
@@ -154,7 +155,7 @@ public class ChildProcessService(
             {
                 string cancelMsg =
                     $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!";
-                logger.Log(cancelMsg, ConsoleColor.DarkYellow);
+                logger.LogInformation(cancelMsg);
                 UserNotification.NewInformation(cancelMsg)
                     .ViaOutput(Brushes.DarkOrange)
                     .Send();
@@ -170,7 +171,7 @@ public class ChildProcessService(
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
             success = false;
         }
 

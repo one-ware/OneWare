@@ -1,4 +1,5 @@
 ﻿using AvaloniaEdit.Document;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -15,7 +16,7 @@ public class JsonFormatter : IFormattingStrategy
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 

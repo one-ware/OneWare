@@ -18,6 +18,7 @@ using OneWare.TerminalManager;
 using Prism.Ioc;
 using Prism.Modularity;
 using System.CommandLine;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Demo.Desktop;
 
@@ -38,7 +39,7 @@ public class DesktopDemoApp : DemoApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Container.Resolve<ILogger>().LogError(e, e.Message);
         }
         
         if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
@@ -74,7 +75,7 @@ public class DesktopDemoApp : DemoApp
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
+                    Container.Resolve<ILogger>()?.LogInformation("Could not load file " + fileName);
                 }
             }
         }
@@ -96,7 +97,7 @@ public class DesktopDemoApp : DemoApp
         try
         {
             var settingsService = Container.Resolve<ISettingsService>();
-            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            Container.Resolve<ILogger>()?.LogInformation("Loading last projects finished!");
 
             if (settingsService.GetSettingValue<string>("LastVersion") != Global.VersionCode)
             {
@@ -115,7 +116,7 @@ public class DesktopDemoApp : DemoApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

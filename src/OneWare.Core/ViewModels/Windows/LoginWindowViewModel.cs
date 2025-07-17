@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
@@ -23,7 +24,7 @@ internal class LoginWindowViewModel : FlexibleWindowViewModelBase
         var result = await client.ExecuteAsync(request);
 
         string errorMsg = "RES: " + result.Content;
-        ContainerLocator.Container.Resolve<ILogger>()?.Error(errorMsg, null);
+        ContainerLocator.Container.Resolve<ILogger>()?.LogError(errorMsg);
         UserNotification.NewError(errorMsg)
             .ViaOutput()
             .ViaWindow(window)

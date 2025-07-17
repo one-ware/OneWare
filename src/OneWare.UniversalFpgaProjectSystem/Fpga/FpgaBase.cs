@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -97,7 +98,7 @@ public abstract class FpgaBase : IFpga
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message,e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

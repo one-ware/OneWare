@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
+using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
@@ -23,7 +24,7 @@ public class StudioApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new Logger(Paths);
+    private static readonly ILogger Logger = new LoggerBuilder().CreateLogger(Path.Combine(Paths.DocumentsDirectory, "Logs"));
 
     static StudioApp()
     {

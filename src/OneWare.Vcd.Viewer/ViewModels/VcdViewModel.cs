@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -152,7 +153,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             LoadingFailed = true;
         }
 

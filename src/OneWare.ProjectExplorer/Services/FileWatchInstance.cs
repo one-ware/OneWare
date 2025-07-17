@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -56,7 +57,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
         }
     }
 
@@ -112,7 +113,7 @@ public class FileWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

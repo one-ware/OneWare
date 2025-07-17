@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -61,7 +62,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                 }
                 catch (Exception e)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                    ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
                 }
             }
         }

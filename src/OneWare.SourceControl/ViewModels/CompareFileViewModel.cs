@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using DiffPlex;
 using Dock.Model.Mvvm.Controls;
 using LibGit2Sharp;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -105,7 +106,7 @@ public class CompareFileViewModel : Document, IWaitForContent
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
 
         IsLoading = false;

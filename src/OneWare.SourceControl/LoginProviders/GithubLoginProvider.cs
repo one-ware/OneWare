@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GitCredentialManager;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using RestSharp;
 
@@ -40,7 +41,7 @@ public class GithubLoginProvider(ISettingsService settingsService, ILogger logge
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
         }
         return false;
     }

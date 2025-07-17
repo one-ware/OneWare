@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
@@ -71,7 +72,7 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             }
         });
     }

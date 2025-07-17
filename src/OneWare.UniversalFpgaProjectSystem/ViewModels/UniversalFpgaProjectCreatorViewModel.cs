@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -96,7 +97,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         if (string.IsNullOrWhiteSpace(name))
         {
             string errorMsg = "Invalid project name!";
-            _logger.Error(errorMsg, null);
+            _logger.LogError(errorMsg, null);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow(window.Host)
@@ -108,7 +109,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
         {
             string errorMsg = "Invalid project folder!";
-            _logger.Error(errorMsg, null);
+            _logger.LogError(errorMsg, null);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow(window.Host)
@@ -162,7 +163,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e.Message, e);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
@@ -70,7 +71,7 @@ public class BackupService
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()?.Warning("Loading BackupRegistry failed", e);
+                ContainerLocator.Container.Resolve<ILogger>()?.LogWarning(e, "Loading BackupRegistry failed");
             }
     }
 
@@ -88,7 +89,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Saving BackupRegistry failed", e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, "Saving BackupRegistry failed");
         }
     }
 
@@ -101,7 +102,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
     }
 
@@ -135,7 +136,7 @@ public class BackupService
                 catch (Exception e)
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
-                        ?.Error($"Backup failed for {doc.Value.Title}:\n{e.Message}", e);
+                        ?.LogError(e, $"Backup failed for {doc.Value.Title}:\n{e.Message}");
                 }
 
         SaveAutoSaveFile();
@@ -152,7 +153,7 @@ public class BackupService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
 
         SaveAutoSaveFile();
@@ -185,7 +186,7 @@ public class BackupService
                             evm.CurrentDocument.Text = backupText;
 
                             string infoMsg = "File " + file.Name + " restored from backup!";
-                            _logger.Log(infoMsg, ConsoleColor.Green);
+                            _logger.LogInformation(infoMsg);
                             UserNotification.NewInformation(infoMsg)
                                 .ViaOutput(Brushes.Green)
                                 .Send();
@@ -194,7 +195,7 @@ public class BackupService
                         {
                             string errorMsg = "Restoring file " + file.Name +
                                               " failed! More information can be found in the program log";
-                            _logger.Error(errorMsg, e);
+                            _logger.LogError(e, e.Message);
                             UserNotification.NewError(errorMsg)
                                 .ViaOutput()
                                 .ViaWindow()

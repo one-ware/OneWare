@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -61,7 +62,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
         }
     }
 
@@ -177,7 +178,7 @@ public class ProjectWatchInstance : IDisposable
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

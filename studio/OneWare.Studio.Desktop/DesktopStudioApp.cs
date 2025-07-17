@@ -13,6 +13,7 @@ using Avalonia.Threading;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using ImTools;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
@@ -69,7 +70,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 
@@ -126,7 +127,7 @@ public class DesktopStudioApp : StudioApp
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
+                    Container.Resolve<ILogger>()?.LogWarning("Could not load file/directory " + fileName);
                 }
             }
         }
@@ -139,7 +140,7 @@ public class DesktopStudioApp : StudioApp
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
                 Container.Resolve<IDockService>().InitializeContent();
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-                Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+                Container.Resolve<ILogger>()?.LogInformation("Loading last projects finished!");
             }
         }
 
@@ -204,7 +205,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Container.Resolve<ILogger>().LogError(e, e.Message);
         }
     }
 }

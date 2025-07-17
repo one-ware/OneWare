@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Views;
@@ -48,7 +49,7 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+                ContainerLocator.Container.Resolve<ILogger>().LogError(e, e.Message);
             }
         });
     }

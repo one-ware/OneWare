@@ -14,6 +14,7 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
@@ -249,7 +250,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -258,7 +259,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (Regex.IsMatch(newName, @"\W"))
         {
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
+                ?.LogError($"Can't rename symbol to {newName}! Only letters, numbers and underscore allowed!");
             return;
         }
 
@@ -271,7 +272,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError("Placeholder Range renaming not supported yet!");
         }
     }
 
@@ -311,7 +312,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
+        ContainerLocator.Container.Resolve<ILogger>()?.LogInformation("Location link not supported"); //TODO   
     }
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
@@ -356,7 +357,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
         }
     }
 

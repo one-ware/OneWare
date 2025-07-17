@@ -26,6 +26,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
@@ -93,7 +94,7 @@ public abstract class GdbSession(
 
             if (_process == null || _process.HasExited)
             {
-                logger.Error("Debugging failed: process could not start");
+                logger.LogError("Debugging failed: process could not start");
                 return false;
             }
 
@@ -117,7 +118,7 @@ public abstract class GdbSession(
             if (await Task.WhenAny(task, Task.Delay(timeout)) != task)
             {
                 // task completed after timeout
-                logger.Error("GDB timed out!");
+                logger.LogError("GDB timed out!");
                 return false;
             }
 
@@ -133,7 +134,7 @@ public abstract class GdbSession(
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
             return false;
         }
     }
@@ -170,7 +171,7 @@ public abstract class GdbSession(
         }
         catch (Exception e)
         {
-            logger.Error(e.Message, e);
+            logger.LogError(e, e.Message);
         }
 
         return activeProcess;
@@ -200,7 +201,7 @@ public abstract class GdbSession(
             }
             catch (Exception ex)
             {
-                logger.Error(ex.Message, ex);
+                logger.LogError(ex, ex.Message);
             }
         }
     }
@@ -259,7 +260,7 @@ public abstract class GdbSession(
                     }
                     catch (Exception ex)
                     {
-                        logger.Error(ex.Message, ex);
+                        logger.LogError(ex, ex.Message);
                     }
                 }, DispatcherPriority.Input);
 
@@ -362,7 +363,7 @@ public abstract class GdbSession(
                         if (e is ObjectDisposedException)
                             return new GdbCommandResult("") { Status = CommandStatus.Error };
 
-                        logger.Error(e.Message, e);
+                        logger.LogError(e, e.Message);
                     }
 
                     return _lastResult ?? _timeout;

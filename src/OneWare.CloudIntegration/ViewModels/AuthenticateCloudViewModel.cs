@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GitCredentialManager;
+using Microsoft.Extensions.Logging;
 using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Helpers;

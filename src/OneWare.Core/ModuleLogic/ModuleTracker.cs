@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using Prism.Modularity;
@@ -23,7 +24,7 @@ internal class ModuleTracker : IModuleTracker
 
     public void RecordModuleLoaded(string moduleName)
     {
-        _logger.Log(string.Format(CultureInfo.CurrentCulture, "'{0}' module loaded.", moduleName));
+        _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module loaded.", moduleName));
     }
 
     public void RecordModuleConstructed(string moduleName)
@@ -32,7 +33,7 @@ internal class ModuleTracker : IModuleTracker
         if (moduleTrackingState != null)
             moduleTrackingState.ModuleInitializationStatus = ModuleInitializationStatus.Constructed;
 
-        _logger.Log(string.Format(CultureInfo.CurrentCulture, "'{0}' module constructed.", moduleName));
+        _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module constructed.", moduleName));
     }
 
     public void RecordModuleInitialized(string moduleName)
@@ -41,7 +42,7 @@ internal class ModuleTracker : IModuleTracker
         if (moduleTrackingState != null)
             moduleTrackingState.ModuleInitializationStatus = ModuleInitializationStatus.Initialized;
 
-        _logger?.Log(string.Format(CultureInfo.CurrentCulture, "'{0}' module initialized.", moduleName));
+        _logger?.LogInformation(string.Format(CultureInfo.CurrentCulture, "'{0}' module initialized.", moduleName));
     }
 
     private ModuleTrackingState? GetModuleTrackingState(string moduleName)

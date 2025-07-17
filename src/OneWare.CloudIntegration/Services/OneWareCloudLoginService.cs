@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GitCredentialManager;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using RestSharp;
 
@@ -116,7 +117,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
             return (false, HttpStatusCode.NoContent);
         }
     }
@@ -152,7 +153,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
 
         return false;
@@ -178,7 +179,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
     }
 
@@ -209,7 +210,7 @@ public class OneWareCloudLoginService
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.LogError(e, e.Message);
         }
         
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
