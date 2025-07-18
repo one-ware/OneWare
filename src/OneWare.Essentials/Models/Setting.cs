@@ -12,6 +12,8 @@ public class Setting : ObservableObject
 {
     private object _value;
 
+    public int Priority { get; set; } = 0;
+
     public Setting(object defaultValue)
     {
         DefaultValue = defaultValue;
@@ -39,7 +41,7 @@ public abstract class TitledSetting : Setting
     {
         Title = title;
     }
-
+    
     public string Title { get; }
     
     public string? HoverDescription { get; init; }
@@ -215,27 +217,38 @@ public class ColorSetting : TitledSetting
     }
 }
 
-public class ProjectSetting
+public class ProjectSetting(
+    string key,
+    TitledSetting setting,
+    Func<IProjectRootWithFile, bool> activationFunction,
+    string? category = null,
+    int displayOrder = 0)
 {
-    public ProjectSetting(string key, TitledSetting setting, Func<IProjectRootWithFile, bool> activationFunction)
-    {
-        this.Key = key;
-        this.Setting = setting;
-        this.ActivationFunction = activationFunction;
-    }
+    public string Category { get; } = category ?? "General";
+
+    public string Key { get; } = key;
+    public TitledSetting Setting { get; } = setting;
+    public Func<IProjectRootWithFile, bool> ActivationFunction { get; } = activationFunction;
     
-    public string Key { get; }
-    public TitledSetting Setting { get; }
-    
-    public Func<IProjectRootWithFile, bool> ActivationFunction { get; }
+    /// <summary>
+    /// Determines the display priority of the setting in the UI.
+    /// Higher values appear further up in the list. Default is 0.
+    /// </summary>
+    public int DisplayOrder {get;} = 0;
+}
+
+
+public class CategorySetting(string key, string name)
+{
+    public string Key { get; } = key;
+    public string Name { get; } = name;
 }
 
 public abstract class CustomSetting : Setting
 {
+    public object? Control { get; init; }
     public CustomSetting(object defaultValue) : base(defaultValue)
     {
         
     }
-    
-    public object? Control { get; init; }
 }

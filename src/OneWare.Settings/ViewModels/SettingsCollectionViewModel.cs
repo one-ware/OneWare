@@ -30,7 +30,7 @@ public class SettingsCollectionViewModel : ObservableObject
 
         Application.Current.GetResourceObservable(iconKey).Subscribe(x => { Icon = x as IImage; });
     }
-
+    
     public bool ShowTitle { get; set; } = true;
     public IImage? Icon { get; set; }
 
@@ -83,5 +83,21 @@ public class SettingsCollectionViewModel : ObservableObject
                     break;
             }
         }
+        
+        var sorted = new ObservableCollection<SettingViewModel>(
+            SettingViewModels.OrderBy<SettingViewModel, int>(s => s.Setting.Priority) 
+        );
+        SettingViewModels.Clear();
+        foreach (var item in sorted)
+            SettingViewModels.Add(item);
+    }
+    
+    /// <summary>
+    /// Clears all settings and their view models.
+    /// </summary>
+    public void Clear()
+    {
+        SettingModels.Clear();
+        SettingViewModels.Clear();
     }
 }
