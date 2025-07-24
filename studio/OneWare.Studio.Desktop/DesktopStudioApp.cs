@@ -55,8 +55,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
-
- 
+        
         try
         {
             if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
@@ -75,8 +74,7 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime &&
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             _splashWindow = new SplashWindow
             {
@@ -144,7 +142,7 @@ public class DesktopStudioApp : StudioApp
         }
 
         await Task.Delay(1000);
-
+        
         _splashWindow?.Close();
 
         try

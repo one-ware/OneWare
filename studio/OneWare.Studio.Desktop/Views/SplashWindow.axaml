@@ -4,12 +4,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:OneWare.Studio.Desktop.ViewModels"
         SystemDecorations="None"
-        CanResize="False" Width="540" Height="338"
+        CanResize="False" Width="540" Height="304"
         mc:Ignorable="d" ClipToBounds="False"
         WindowStartupLocation="CenterScreen"
         x:Class="OneWare.Studio.Desktop.Views.SplashWindow"
         Title="SplashScreen" x:DataType="viewModels:SplashWindowViewModel">
     <Border BoxShadow="5 5 10 0 DarkGray">
-        <Image Width="540" Height="338" Source="{Binding SplashScreen}" />
+        <Image Width="540" Height="304" Source="{Binding SplashScreen}" />
     </Border>
 </Window>
