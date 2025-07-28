@@ -22,7 +22,7 @@ public class SliderSettingViewModel : TitledSettingViewModel
         get => Math.Round((double)Setting.Value, GetPrecision(Setting.Step));
         set
         {
-            if (value == 0)
+            if (value < Setting.Min || value > Setting.Max)
                 throw new ArgumentException();
             
             Setting.Value = Math.Round(value, GetPrecision(Setting.Step));
