@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.SliderSettingView"
              x:DataType="settingTypes:SliderSettingViewModel" IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
@@ -27,7 +28,12 @@
             <TextBox DockPanel.Dock="Right"
                      Width="100"
                      IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                     Text="{Binding TextBoxValue}" />
+                     Text="{Binding TextBoxValue}" >
+                <Interaction.Behaviors>
+                    <behaviors:ClearValidationErrorsLostFocusBehavior Text="{Binding TextBoxValue, Mode=OneWay}">
+                    </behaviors:ClearValidationErrorsLostFocusBehavior>
+                </Interaction.Behaviors>
+            </TextBox>
             <Slider DockPanel.Dock="Left"
                     IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                     Minimum="{Binding Setting.Min}"
