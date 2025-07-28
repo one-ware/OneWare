@@ -20,8 +20,13 @@ public class SliderSettingViewModel : TitledSettingViewModel
     public double TextBoxValue
     {
         get => Math.Round((double)Setting.Value, GetPrecision(Setting.Step));
-        set => Setting.Value = Math.Round(value, GetPrecision(Setting.Step));
-
+        set
+        {
+            if (value == 0)
+                throw new ArgumentException();
+            
+            Setting.Value = Math.Round(value, GetPrecision(Setting.Step));
+        }
     }
 
     // Helper method: how many decimals do we need?
