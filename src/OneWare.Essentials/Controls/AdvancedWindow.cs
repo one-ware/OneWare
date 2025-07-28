@@ -90,7 +90,7 @@ public class AdvancedWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase vm } flexibleWindow)
+        if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase {IsDirty: true} vm } flexibleWindow)
         {
             e.Cancel = true;
             vm.Close(flexibleWindow);
