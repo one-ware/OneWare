@@ -23,7 +23,7 @@
                       Padding="0">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="3" />
+                    <StackPanel Spacing="5" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
