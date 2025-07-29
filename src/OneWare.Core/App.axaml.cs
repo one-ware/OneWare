@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
@@ -15,6 +16,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
+using OneWare.Core.Views.Extensions;
 using OneWare.Core.Views.Windows;
 using OneWare.Debugger;
 using OneWare.ErrorList;
@@ -53,6 +55,8 @@ public class App : PrismApplication
     {
         AvaloniaXamlLoader.Load(this);
         base.Initialize();
+        
+        Animation.RegisterCustomAnimator<string, CustomStringAnimator>();
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
