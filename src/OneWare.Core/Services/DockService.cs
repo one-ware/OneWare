@@ -315,8 +315,7 @@ public class DockService : Factory, IDockService
             }
             catch (Exception e)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    ?.LogError(e, "Could not load layout from file! Loading default layout...");
+                AppServices.Logger.LogError(e, "Could not load layout from file! Loading default layout...");
             }
 
         if (layout == null)

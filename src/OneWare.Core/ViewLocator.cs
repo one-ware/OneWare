@@ -27,7 +27,7 @@ public class ViewLocator : IDataTemplate
             }
             catch (Exception e)
             {
-                ContainerLocator.Current.Resolve<ILogger>().LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
 
             return new TextBlock { Text = "Create Instance Failed: " + type.FullName };

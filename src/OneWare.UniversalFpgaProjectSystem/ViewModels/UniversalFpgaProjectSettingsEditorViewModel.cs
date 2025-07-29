@@ -38,7 +38,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService,
-        IProjectSettingsService projectSettingsService, ILogger logger)
+        IProjectSettingsService projectSettingsService)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
@@ -146,7 +146,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     default:
 
-                        logger.LogError($"Unknown setting of type: {localCopy.GetType().Name}");
+                        AppServices.Logger.LogError($"Unknown setting of type: {localCopy.GetType().Name}");
                         continue;
                 }
             }

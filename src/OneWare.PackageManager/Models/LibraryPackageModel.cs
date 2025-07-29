@@ -9,10 +9,9 @@ namespace OneWare.PackageManager.Models;
 public class LibraryPackageModel(
     Package package,
     IHttpService httpService,
-    ILogger logger,
     IPaths paths,
     IApplicationStateService applicationStateService)
-    : PackageModel(package, "Libraries", Path.Combine(paths.PackagesDirectory, "Libraries", package.Id!), httpService, logger,
+    : PackageModel(package, "Libraries", Path.Combine(paths.PackagesDirectory, "Libraries", package.Id!), httpService,
         applicationStateService)
 {
     protected override void Install(PackageTarget target)

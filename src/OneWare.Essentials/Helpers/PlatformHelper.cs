@@ -132,7 +132,7 @@ public static class PlatformHelper
         catch (Exception e)
         {
             string errorMsg = "Failed open: " + link + " | " + e.Message;
-            ContainerLocator.Container.Resolve<ILogger>()?.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()
@@ -170,8 +170,7 @@ public static class PlatformHelper
         catch (Exception e)
         {
             string errorMsg = "Can't open " + path + " in explorer. ";
-            ContainerLocator.Container.Resolve<ILogger>()
-                .LogError(e, errorMsg);
+            AppServices.Logger.LogError(e, errorMsg);
             UserNotification.NewError(errorMsg)
                 .ViaOutput()
                 .ViaWindow()

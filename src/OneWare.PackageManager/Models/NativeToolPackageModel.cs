@@ -10,12 +10,11 @@ namespace OneWare.PackageManager.Models;
 public class NativeToolPackageModel(
     Package package,
     IHttpService httpService,
-    ILogger logger,
     IPaths paths,
     ISettingsService settingsService,
     IApplicationStateService applicationStateService,
     IChildProcessService childProcessService)
-    : PackageModel(package, "NativeTool", Path.Combine(paths.NativeToolsDirectory, package.Id!), httpService, logger,
+    : PackageModel(package, "NativeTool", Path.Combine(paths.NativeToolsDirectory, package.Id!), httpService,
         applicationStateService)
 {
     protected override PackageTarget? SelectTarget(PackageVersion version)

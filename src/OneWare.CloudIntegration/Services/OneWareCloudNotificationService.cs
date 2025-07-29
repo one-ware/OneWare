@@ -13,7 +13,6 @@ public class OneWareCloudNotificationService
 {
     private readonly OneWareCloudLoginService _loginService;
     private readonly ISettingsService _settingsService;
-    private readonly ILogger _logger;
     
     private HubConnection? _connection;
     private readonly List<HubSubscription> _subscriptions = [];
@@ -22,11 +21,10 @@ public class OneWareCloudNotificationService
 
     public event EventHandler<HubConnectionState>? ConnectionStateChanged;
     
-    public OneWareCloudNotificationService(OneWareCloudLoginService loginService, ISettingsService settingsService, ILogger logger)
+    public OneWareCloudNotificationService(OneWareCloudLoginService loginService, ISettingsService settingsService)
     {
         _loginService = loginService;
         _settingsService = settingsService;
-        _logger = logger;
 
         // Reset connection if host setting changes
         _settingsService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
@@ -73,7 +71,7 @@ public class OneWareCloudNotificationService
             ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
 
             string infoMsg = "Connected to OneWare Cloud";
-            _logger.LogInformation(infoMsg);
+            AppServices.Logger.LogInformation(infoMsg);
             UserNotification.NewInformation(infoMsg)
                 .ViaOutput(Brushes.Lime)
                 .Send();
@@ -83,7 +81,7 @@ public class OneWareCloudNotificationService
         catch (Exception e)
         {
             string warningMsg = "Failed to connect to OneWare Cloud";
-            _logger.LogWarning(warningMsg);
+            AppServices.Logger.LogWarning(warningMsg);
             UserNotification.NewWarning(warningMsg)
                 .ViaOutput()
                 .Send();

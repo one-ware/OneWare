@@ -75,7 +75,7 @@ public class AggregateModuleCatalog : IModuleCatalog
             }
             catch (Exception e)
             {
-                ContainerLocator.Current.Resolve<ILogger>().LogError(e, e.Message);
+                AppServices.Logger.LogError(e, e.Message);
             }
         });
     }

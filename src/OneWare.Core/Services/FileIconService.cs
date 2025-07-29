@@ -10,12 +10,9 @@ namespace OneWare.Core.Services;
 public class FileIconService : IFileIconService
 {
     private readonly Dictionary<string, IObservable<IImage>> _iconStore = new();
-    private readonly ILogger _logger;
 
-    public FileIconService(ILogger logger)
+    public FileIconService()
     {
-        _logger = logger;
-
         RegisterFileIcon("VsImageLib.File16X", ".*");
         RegisterFileIcon("GhdpFileIcon", ".ghdp");
         RegisterFileIcon("VhdpFileIcon", ".vhdp");
@@ -49,7 +46,7 @@ public class FileIconService : IFileIconService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            AppServices.Logger.LogError(e, e.Message);
         }
     }
 
