@@ -1405,7 +1405,7 @@
                          Geometry="M0.8814,16 C0.6352,16 0.4004,15.89 0.2344,15.71 C0.06535,15.53 -0.01867,15.28 0.003494,15.04 L0.2186,12.67 L10.16,2.74 L13.26,5.845 L3.327,15.78 L0.9613,15.99 C0.9341,15.99 0.9069,16 0.8814,16 z M13.88,5.224 L10.78,2.12 L12.64,0.2575 C12.8,0.09264 13.03,-3.014E-007 13.26,-3.014E-007 C13.49,-3.014E-007 13.72,0.09264 13.88,0.2575 L15.74,2.12 C15.91,2.284 16,2.508 16,2.741 C16,2.974 15.91,3.197 15.74,3.362 L13.88,5.224 z" />
     </DrawingImage>
     <DrawingImage x:Key="Cool.CheckBold">
-        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="M5.333,13.04 L-3.597E-009,7.705 L2.372,5.333 L5.333,8.303 L13.63,1.439E-007 L16,2.372 L5.333,13.04 z"   />
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}" Geometry="M5.333,13.04 L-3.597E-009,7.705 L2.372,5.333 L5.333,8.303 L13.63,1.439E-007 L16,2.372 L5.333,13.04 z"   />
     </DrawingImage>
 
     <DrawingImage x:Key="BoxIcons.RegularExport">
