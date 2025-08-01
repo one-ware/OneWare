@@ -154,9 +154,6 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private void SetupMenu()
     {
-        // Not the right place, not the right class 
-        // Maybe: UniversalFpgaProjectSystemModule.cs
-        
         var value = _root.Properties["VHDL_Standard"] == null ? "" : _root.Properties["VHDL_Standard"]!.ToString();
         ComboBoxSetting vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
         
