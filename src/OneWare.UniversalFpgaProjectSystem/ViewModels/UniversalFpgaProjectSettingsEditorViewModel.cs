@@ -1,6 +1,8 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Media;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -19,70 +21,61 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private readonly IProjectSettingsService _projectSettingsService;
 
+    private readonly ILogger _logger;
+
     public SettingsCollectionViewModel SettingsCollection { get; } = new("")
     {
         ShowTitle = false
     };
 
     private UniversalFpgaProjectRoot _root;
-
-    private ComboBoxSetting _toolchain;
-    private ComboBoxSetting _loader;
-    private ComboBoxSetting? _vhdlStandard;
-
-    private ListBoxSetting _includesSettings;
-    private ListBoxSetting _excludesSettings;
-
+    
     private Dictionary<TitledSetting, string> _dynamicSettingsKeys = new();
+
+    public ObservableCollection<string> SettingCategories { get; }
+    
+    private string? _selectedCategory;
+    public string? SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            SetProperty(ref _selectedCategory, value);
+            if (value != null)
+            {
+                LoadSettingsForCategory(value);
+            }
+        }
+    }
 
     public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService,
         IProjectSettingsService projectSettingsService, ILogger logger)
     {
         _root = root;
+        _logger = logger;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
         _projectSettingsService = projectSettingsService;
         Title = $"{_root.Name} Settings";
+        
+        SetupMenu();
+        SettingCategories = new ObservableCollection<string>(projectSettingsService.GetProjectCategories());
+        LoadSettingsForCategory(projectSettingsService.GetDefaultProjectCategory());
+        
+    }
 
-        if (root.TopEntity != null && (root.TopEntity.Name.Contains("vhd") || root.TopEntity.Name.Contains("vhdl")))
-        {
-            var standard = _root.Properties["VHDL_Standard"];
-            var value = standard == null ? "" : standard.ToString();
-            _vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
-        }
 
-        var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
-        var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
-
-        var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Name);
-        var currentToolchain = _root.Properties["Toolchain"]!.ToString();
-        _toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
-
-        var loader = ContainerLocator.Container.Resolve<FpgaService>().Loaders.Select(loader => loader.Name);
-        var currentLoader = _root.Properties["Loader"]!.ToString();
-        _loader = new ComboBoxSetting("Loader", currentLoader, loader);
-
-        _includesSettings = new ListBoxSetting("Files to Include", includes);
-        _excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
-
-        SettingsCollection.SettingModels.Add(_toolchain);
-        SettingsCollection.SettingModels.Add(_loader);
-
-        if (_vhdlStandard != null)
-        {
-            SettingsCollection.SettingModels.Add(_vhdlStandard);
-        }
-
-        SettingsCollection.SettingModels.Add(_includesSettings);
-        SettingsCollection.SettingModels.Add(_excludesSettings);
-
-        foreach (ProjectSetting setting in _projectSettingsService.GetProjectSettingsList())
+    private void LoadSettingsForCategory(string category)
+    {
+        SettingsCollection.Clear();
+        _dynamicSettingsKeys.Clear();
+        
+        foreach (ProjectSetting setting in _projectSettingsService.GetProjectSettingsList(category))
         {
             TitledSetting localCopy = setting.Setting;
 
-            if (setting.ActivationFunction(root) == false)
+            if (setting.ActivationFunction(_root) == false)
             {
                 continue;
             }
@@ -145,43 +138,99 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     default:
 
-                        logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
+                        _logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
                         continue;
                 }
+                localCopy.Priority = setting.Setting.Priority;
             }
-
+            
             _dynamicSettingsKeys.Add(localCopy, setting.Key);
-
             SettingsCollection.SettingModels.Add(localCopy);
+            
         }
+        
+        // OnPropertyChanged();
     }
 
-    private async Task SaveAsync()
+    private void SetupMenu()
     {
-        var tcString = _toolchain.Value.ToString();
-        if (tcString != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == tcString) is { } tc)
-            _root.Toolchain = tc;
+        var value = _root.Properties["VHDL_Standard"] == null ? "" : _root.Properties["VHDL_Standard"]!.ToString();
+        ComboBoxSetting vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
+        
+        var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
+        var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
 
-        var loaderString = _loader.Value.ToString();
-        if (loaderString != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loaderString) is { } loader)
-            _root.Loader = loader;
+        var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
+            .Select(toolchain => toolchain.Name);
+        var currentToolchain = _root.Properties["Toolchain"]!.ToString();
+        var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
-        _root.SetProjectPropertyArray("Include", _includesSettings.Items.Select(item => item.ToString()).ToArray());
-        _root.SetProjectPropertyArray("Exclude", _excludesSettings.Items.Select(item => item.ToString()).ToArray());
+        var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders.Select(loader => loader.Name);
+        var currentLoader = _root.Properties["Loader"]!.ToString();
+        var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
-        if (_vhdlStandard?.Value.ToString() != null)
-            _root.SetProjectProperty("VHDL_Standard", _vhdlStandard.Value.ToString()!);
+        var includesSettings = new ListBoxSetting("Files to Include", includes);
+        var excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
 
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("Toolchain")
+                .WithSetting(toolchain)
+                .WithDisplayOrder(100)
+                .Build()
+        );
+
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("Loader")
+                .WithDisplayOrder(90)
+                .WithSetting(loader)
+                .Build()
+        );
+
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("VHDL_Standard")
+                .WithDisplayOrder(80)
+                .WithSetting(vhdlStandard)
+                .WithActivation(file =>
+                {
+                    if (file is UniversalFpgaProjectRoot root)
+                    {
+                        if (root.TopEntity is not null)
+                        {
+                            return Path.GetExtension(root.TopEntity.FullPath) is ".vhd";
+                        }
+                        return root.Files.Exists(projectFile => Path.GetExtension(projectFile.FullPath) is ".vhd");
+                    }
+                    return false;
+                })
+                .Build()
+        );
+
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("Include")
+                .WithSetting(includesSettings)
+                .WithDisplayOrder(200)
+                .WithCategory("Project")
+                .Build()
+        );
+
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("Exclude")
+                .WithSetting(excludesSettings)
+                .WithDisplayOrder(100)
+                .WithCategory("Project")
+                .Build()
+        );
+    }
+    
+    public async Task SaveAsync()
+    {
         foreach (var toSave in SettingsCollection.SettingModels)
         {
-            if (toSave == _toolchain || toSave == _loader || toSave == _includesSettings ||
-                toSave == _excludesSettings || toSave == _vhdlStandard)
-            {
-                // Hardcoded; Skip for now
-
-                continue;
-            }
-
             if (toSave is not TitledSetting)
             {
                 continue;
