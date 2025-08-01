@@ -45,9 +45,7 @@ public class ProjectSettingsService : IProjectSettingsService
     /// <inheritdoc/>
     public List<ProjectSetting> GetProjectSettingsList(string category)
     {
-        return ProjectSettingsByCategory[category]
-            .OrderByDescending(s => s.DisplayOrder)
-            .ThenBy(s => s.Key, StringComparer.OrdinalIgnoreCase).ToList();
+        return ProjectSettingsByCategory[category];
     }
 
     public string GetDefaultProjectCategory()

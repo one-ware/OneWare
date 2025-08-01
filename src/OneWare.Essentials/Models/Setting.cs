@@ -229,12 +229,6 @@ public class ProjectSetting(
     public string Key { get; } = key;
     public TitledSetting Setting { get; } = setting;
     public Func<IProjectRootWithFile, bool> ActivationFunction { get; } = activationFunction;
-    
-    /// <summary>
-    /// Determines the display priority of the setting in the UI.
-    /// Higher values appear further up in the list. Default is 0.
-    /// </summary>
-    public int DisplayOrder {get;} = 0;
 }
 
 
