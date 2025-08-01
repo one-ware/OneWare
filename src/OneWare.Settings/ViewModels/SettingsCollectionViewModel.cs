@@ -85,11 +85,11 @@ public class SettingsCollectionViewModel : ObservableObject
         }
         
         var sorted = new ObservableCollection<SettingViewModel>(
-            SettingViewModels.OrderBy<SettingViewModel, int>(s => s.Setting.Priority) 
+            SettingViewModels.OrderBy(s => s.Setting.Priority) 
         );
         SettingViewModels.Clear();
-        foreach (var item in sorted)
-            SettingViewModels.Add(item);
+        SettingViewModels.AddRange(sorted);
+
     }
     
     /// <summary>

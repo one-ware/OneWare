@@ -69,6 +69,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private void LoadSettingsForCategory(string category)
     {
         SettingsCollection.Clear();
+        _dynamicSettingsKeys.Clear();
         
         foreach (ProjectSetting setting in _projectSettingsService.GetProjectSettingsList(category))
         {
@@ -140,6 +141,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         _logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
                         continue;
                 }
+                localCopy.Priority = setting.Setting.Priority;
             }
             
             _dynamicSettingsKeys.Add(localCopy, setting.Key);
@@ -153,15 +155,11 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private void SetupMenu()
     {
         // Not the right place, not the right class 
-        ComboBoxSetting? vhdlStandard = null;
-
-        if (_root.TopEntity != null && (_root.TopEntity.Name.Contains("vhd") || _root.TopEntity.Name.Contains("vhdl")))
-        {
-            var standard = _root.Properties["VHDL_Standard"];
-            var value = standard == null ? "" : standard.ToString();
-            vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
-        }
-
+        // Maybe: UniversalFpgaProjectSystemModule.cs
+        
+        var value = _root.Properties["VHDL_Standard"] == null ? "" : _root.Properties["VHDL_Standard"]!.ToString();
+        ComboBoxSetting vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
+        
         var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
         var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
 
@@ -193,22 +191,31 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 .Build()
         );
 
-        if (vhdlStandard != null)
-        {
-            _projectSettingsService.AddProjectSettingIfNotExists(
-                new ProjectSettingBuilder()
-                    .WithKey("VHDL_Standard")
-                    .WithDisplayOrder(80)
-                    .WithSetting(vhdlStandard)
-                    .Build()
-            );
-        }
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("VHDL_Standard")
+                .WithDisplayOrder(80)
+                .WithSetting(vhdlStandard)
+                .WithActivation(file =>
+                {
+                    if (file is UniversalFpgaProjectRoot root)
+                    {
+                        if (root.TopEntity is not null)
+                        {
+                            return Path.GetExtension(root.TopEntity.FullPath) is ".vhd";
+                        }
+                        return root.Files.Exists(projectFile => Path.GetExtension(projectFile.FullPath) is ".vhd");
+                    }
+                    return false;
+                })
+                .Build()
+        );
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
                 .WithKey("Include")
                 .WithSetting(includesSettings)
-                .WithDisplayOrder(100)
+                .WithDisplayOrder(200)
                 .WithCategory("Project")
                 .Build()
         );
@@ -217,7 +224,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             new ProjectSettingBuilder()
                 .WithKey("Exclude")
                 .WithSetting(excludesSettings)
-                .WithDisplayOrder(200)
+                .WithDisplayOrder(100)
                 .WithCategory("Project")
                 .Build()
         );
@@ -278,8 +285,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         }
 
         await _projectExplorerService.SaveProjectAsync(_root);
-        // TODO: Why to use Reload at all?
-        // await _projectExplorerService.ReloadAsync(_root);
+        await _projectExplorerService.ReloadAsync(_root);
     }
 
     public async Task SaveAndCloseAsync(FlexibleWindow window)
