@@ -19,7 +19,7 @@ public class YosysService(
     {
         return await CompileAsync(project, fpgaModel, null);
     }
-    public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles) //Nullable lassen?
+    public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles)
     {
         var buildDir = Path.Combine(project.FullPath, "build");
         Directory.CreateDirectory(buildDir);
