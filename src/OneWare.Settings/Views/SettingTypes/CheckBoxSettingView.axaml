@@ -6,8 +6,7 @@
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
-             x:DataType="settingTypes:CheckBoxSettingViewModel"
-             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
+             x:DataType="settingTypes:CheckBoxSettingViewModel">
     <Border Padding="0 3">
         <StackPanel Orientation="Horizontal" Spacing="3">
             <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"

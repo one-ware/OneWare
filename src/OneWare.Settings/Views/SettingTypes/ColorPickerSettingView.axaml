@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.ColorPickerSettingView"
              x:DataType="settingTypes:ColorPickerSettingViewModel"
-             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
+             >
     <StackPanel Orientation="Horizontal" Spacing="3">
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding Setting.Title}"
