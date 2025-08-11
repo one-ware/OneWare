@@ -9,7 +9,7 @@
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DiffPlex" Version="1.7.2"/>
+        <PackageReference Include="DiffPlex" Version="1.8.0" />
         <PackageReference Include="LibGit2Sharp" Version="0.31.0"/>
     </ItemGroup>
 </Project>
