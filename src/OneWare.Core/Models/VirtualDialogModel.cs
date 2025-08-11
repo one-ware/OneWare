@@ -15,7 +15,7 @@ public class VirtualDialogModel
     public void Close()
     {
         if (Dialog is { DataContext: FlexibleWindowViewModelBase vm })
-            vm.Close(Dialog);
+            if(vm.OnWindowClosing(Dialog)) vm.Close(Dialog);
         else Dialog.Close();
     }
 }

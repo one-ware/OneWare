@@ -190,14 +190,15 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         IsDirty = false;
     }
 
-    public override void Close(FlexibleWindow window)
+    public override bool OnWindowClosing(FlexibleWindow window)
     {
         if (!IsDirty)
         {
             SelectedFpgaPackage = null;
-            window.Close();
+            return true;
         }
-        else _ = SafeQuitAsync(window);
+        _ = SafeQuitAsync(window);
+        return false;
     }
 
     private async Task SafeQuitAsync(FlexibleWindow window)
@@ -212,7 +213,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                 return;
             case MessageBoxStatus.No:
                 IsDirty = false;
-                window.Close();
+                Close(window);
                 return;
             case MessageBoxStatus.Canceled:
                 return;
