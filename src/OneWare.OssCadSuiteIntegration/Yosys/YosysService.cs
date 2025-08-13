@@ -14,7 +14,12 @@ public class YosysService(
     IOutputService outputService,
     IDockService dockService)
 {
+
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    {
+        return await CompileAsync(project, fpgaModel, null);
+    }
+    public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles)
     {
         var buildDir = Path.Combine(project.FullPath, "build");
         Directory.CreateDirectory(buildDir);
@@ -25,7 +30,7 @@ public class YosysService(
             
         outputService.WriteLine("Compiling...\n==================");
         
-        var success = await SynthAsync(project, fpgaModel);
+        var success = await SynthAsync(project, fpgaModel, mandatoryFiles);
         success = success && await FitAsync(project, fpgaModel);
         success = success && await AssembleAsync(project, fpgaModel);
         
@@ -41,8 +46,12 @@ public class YosysService(
 
         return success;
     }
-    
+
     public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    {
+        return await SynthAsync(project, fpgaModel, null);
+    }
+    public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles) 
     {
         try
         {
@@ -61,9 +70,14 @@ public class YosysService(
 
             List<string> yosysArguments =
                 ["-q", "-p", $"{yosysSynthTool} -json build/synth.json"];
+            
             yosysArguments.AddRange(properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
+            
             yosysArguments.AddRange(includedFiles);
+            
+            
+            yosysArguments.AddRange(mandatoryFiles ?? []);
 
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>

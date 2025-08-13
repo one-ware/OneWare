@@ -7,8 +7,7 @@
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.ComboBoxSearchSettingView"
-             x:DataType="settingTypes:ComboBoxSearchSettingViewModel"
-             IsVisible="{Binding Setting.IsVisibleObservable^, FallbackValue={x:True}}">
+             x:DataType="settingTypes:ComboBoxSearchSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding Setting.Title}"

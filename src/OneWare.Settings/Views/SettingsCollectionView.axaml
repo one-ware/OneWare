@@ -26,6 +26,11 @@
                     <StackPanel Spacing="5" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerTheme>
+                <ControlTheme TargetType="ContentPresenter" x:DataType="settingTypes1:TitledSettingViewModel">
+                    <Setter Property="IsVisible" Value="{Binding Setting.IsVisibleObservable^}" />
+                </ControlTheme>
+            </ItemsControl.ItemContainerTheme>
         </ItemsControl>
     </DockPanel>
 </UserControl>

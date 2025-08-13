@@ -15,24 +15,51 @@
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
                          Name="UniversalFpgaProjectCompileViewView">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+    
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" /> 
-            <RowDefinition Height="Auto" /> 
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="0">
+        <!-- Linke Spalte -->
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <TextBlock Text="Categories" FontWeight="Bold" Margin="5"/>
+            <ListBox
+                Margin="5"
+                ItemsSource="{Binding SettingCategories}"
+                SelectedItem="{Binding SelectedCategory}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+
+        <!-- Rechte Spalte -->
+        <ScrollViewer Grid.Row="0" Grid.Column="1">
             <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
         </ScrollViewer>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="8" Classes="WindowButtons"
+        <StackPanel Grid.Row="1" Grid.Column="1"
+                    Orientation="Horizontal"
+                    Margin="8"
+                    Classes="WindowButtons"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
+            <Button Command="{Binding SaveAsync}"
+                    Background="{DynamicResource HighlightBrush}">
+                <TextBlock Text="Apply" Margin="5 0"/>
+            </Button>
             <Button Command="{Binding SaveAndCloseAsync}"
                     Background="{DynamicResource HighlightBrush}"
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
-                <TextBlock Text="Save and Close" Margin="5 0" />
+                <TextBlock Text="Save and Close" Margin="5 0"/>
             </Button>
         </StackPanel>
-        
     </Grid>
 </controls:FlexibleWindow>

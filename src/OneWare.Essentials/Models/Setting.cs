@@ -12,6 +12,8 @@ public class Setting : ObservableObject
 {
     private object _value;
 
+    public int Priority { get; set; } = 0;
+
     public Setting(object defaultValue)
     {
         DefaultValue = defaultValue;
@@ -39,7 +41,7 @@ public abstract class TitledSetting : Setting
     {
         Title = title;
     }
-
+    
     public string Title { get; }
     
     public string? HoverDescription { get; init; }
@@ -67,12 +69,18 @@ public class CheckBoxSetting : TitledSetting
 
 public class TextBoxSetting : TitledSetting
 {
+    private string? _watermark;
+    
     public TextBoxSetting(string title, object defaultValue, string? watermark) : base(title, defaultValue)
     {
-        Watermark = watermark;
+        _watermark = watermark;
     }
 
-    public string? Watermark { get; }
+    public string? Watermark
+    {
+        get => _watermark;
+        set => SetProperty(ref _watermark, value);
+    }
     
     public override TitledSetting Clone()
     {
@@ -82,12 +90,18 @@ public class TextBoxSetting : TitledSetting
 
 public class ComboBoxSetting : TitledSetting
 {
+    private object[] _options;
+    
     public ComboBoxSetting(string title, object defaultValue, IEnumerable<object> options) : base(title, defaultValue)
     {
-        Options = options.ToArray();
+        _options = options.ToArray();
     }
-    
-    public object[] Options { get; }
+
+    public object[] Options
+    {
+        get => _options;
+        set => SetProperty(ref _options, value);
+    }
     
     public override TitledSetting Clone()
     {
@@ -118,19 +132,37 @@ public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerabl
 
 public class SliderSetting : TitledSetting
 {
+    private double _min;
+    
+    private double _max;
+    
+    private double _step;
+    
     public SliderSetting(string title, double defaultValue, double min, double max, double step) : base(
         title, defaultValue)
     {
-        Min = min;
-        Max = max;
-        Step = step;
+        _min = min;
+        _max = max;
+        _step = step;
     }
 
-    public double Min { get; }
+    public double Min
+    {
+        get => _min;
+        set => SetProperty(ref _min, value);
+    }
 
-    public double Max { get; }
+    public double Max
+    {
+        get => _max;
+        set => SetProperty(ref _max, value);
+    }
 
-    public double Step { get; }
+    public double Step
+    {
+        get => _step;
+        set => SetProperty(ref _step, value);
+    }
     
     public override TitledSetting Clone()
     {
@@ -151,7 +183,10 @@ public abstract class PathSetting : TextBoxSetting
         if (checkPath != null)
         {
             CanVerify = true;
-            this.WhenValueChanged(x => x.Value).Subscribe(x => { IsValid = checkPath.Invoke((x as string)!); });
+            this.WhenValueChanged(x => x.Value).Subscribe(x =>
+            {
+                IsValid = checkPath.Invoke((x as string)!);
+            });
         }
     }
 
@@ -215,27 +250,32 @@ public class ColorSetting : TitledSetting
     }
 }
 
-public class ProjectSetting
+public class ProjectSetting(
+    string key,
+    TitledSetting setting,
+    Func<IProjectRootWithFile, bool> activationFunction,
+    string? category = null,
+    int displayOrder = 0)
 {
-    public ProjectSetting(string key, TitledSetting setting, Func<IProjectRootWithFile, bool> activationFunction)
-    {
-        this.Key = key;
-        this.Setting = setting;
-        this.ActivationFunction = activationFunction;
-    }
-    
-    public string Key { get; }
-    public TitledSetting Setting { get; }
-    
-    public Func<IProjectRootWithFile, bool> ActivationFunction { get; }
+    public string Category { get; } = category ?? "General";
+
+    public string Key { get; } = key;
+    public TitledSetting Setting { get; } = setting;
+    public Func<IProjectRootWithFile, bool> ActivationFunction { get; } = activationFunction;
+}
+
+
+public class CategorySetting(string key, string name)
+{
+    public string Key { get; } = key;
+    public string Name { get; } = name;
 }
 
 public abstract class CustomSetting : Setting
 {
+    public object? Control { get; init; }
     public CustomSetting(object defaultValue) : base(defaultValue)
     {
         
     }
-    
-    public object? Control { get; init; }
 }
