@@ -4,8 +4,10 @@ namespace OneWare.Essentials.Services;
 
 public interface IToolExecutionDispatcherService
 {
-    public void Register(string toolName, IToolExecutionStrategy strategy, string? projectName = null);
-    public void Unregister(string toolName, string? projectName = null);
+    public void Register(string toolKey, IToolExecutionStrategy strategy);
+    public void Unregister(string strategyKey);
 
-    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, string? projectName = null);
+    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, ToolConfiguration configuration);
+    
+    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, string strategyKey);
 }

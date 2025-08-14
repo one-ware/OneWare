@@ -5,55 +5,45 @@ namespace OneWare.Core.Services;
 
 public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
 {
-    private readonly Dictionary<string, IToolExecutionStrategy> _globalStrategies = new();
-    private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _projectStrategies = new();
-    
-    public void Register(string toolName, IToolExecutionStrategy strategy, string? projectName = null)
+    private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _toolStrategies = new();
+
+
+    public void Register(string toolKey, IToolExecutionStrategy strategy)
     {
-        if (projectName is null)
+        if (!_toolStrategies.TryGetValue(toolKey, out var strategyMap))
         {
-            _globalStrategies[toolName] = strategy;
-        } 
-        else 
+            strategyMap = new Dictionary<string, IToolExecutionStrategy>();
+            _toolStrategies[toolKey] = strategyMap;
+        }
+        
+        // TODO: IDK if this makes sense if the strategy has the key in itself: Think about it
+        strategyMap[strategy.GetStrategyKey()] = strategy;
+    }
+
+    public void Unregister(string strategyKey)
+    {
+        foreach (var toolEntry in _toolStrategies)
         {
-            if (!_projectStrategies.ContainsKey(projectName))
-            {
-                _projectStrategies[projectName] = new Dictionary<string, IToolExecutionStrategy>();
-            }
-            _projectStrategies[projectName][toolName] = strategy;
+            var strategyMap = toolEntry.Value;
+            strategyMap.Remove(strategyKey);
         }
     }
 
-    public void Unregister(string toolName, string? projectName = null)
+    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, ToolConfiguration configuration)
     {
-        if (projectName is null)
-        {
-            _globalStrategies.Remove(toolName);
-        }
-        else
-        {
-            _projectStrategies[projectName].Remove(toolName);
-        }
+        var strategyKey = configuration.ToolToStrategyMapping[command.ToolName];
+        return ExecuteAsync(command, strategyKey);
     }
 
-    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, string? projectName = null)
+    public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, string strategyKey)
     {
-        // Projekt-spezifische Strategie?
-        if (projectName is not null &&
-            _projectStrategies.TryGetValue(projectName, out var strategiesForProject) &&
-            strategiesForProject.TryGetValue(command.ToolName, out var projectStrategy))
+        if (_toolStrategies.TryGetValue(command.ToolName, out var strategies) &&
+            strategies.TryGetValue(strategyKey, out var strategy))
         {
-            return projectStrategy.ExecuteAsync(command);
+            return strategy.ExecuteAsync(command);
         }
-
-        // Fallback auf global
-        if (_globalStrategies.TryGetValue(command.ToolName, out var globalStrategy))
-        {
-            return globalStrategy.ExecuteAsync(command);
-        }
-
+        
         throw new InvalidOperationException(
-            $"No execution strategy registered for tool '{command.ToolName}'" +
-            (projectName is not null ? $" in project '{projectName}'" : string.Empty));
+            $"No execution strategy found for tool '{command.ToolName}' and strategy '{strategyKey}'");
     }
 }
