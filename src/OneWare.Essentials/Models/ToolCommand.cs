@@ -39,3 +39,16 @@ public class ToolCommand
         };
     }
 }
+
+
+public class ToolDescription
+{
+    public string Name { get; init; }
+    public string Description { get; init; }
+    public string Key { get; init; }
+}
+
+public class ToolConfiguration
+{
+    public readonly Dictionary<string, string> StrategyMapping = new();
+}

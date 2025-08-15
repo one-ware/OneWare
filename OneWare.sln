@@ -167,7 +167,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.LibraryExplorer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.CloudIntegration", "src\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj", "{6E25EF0B-C2EC-4F1D-9606-EB0D919D1ABC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.ToolEngine", "OneWare.ToolEngine\OneWare.ToolEngine.csproj", "{60DAD476-E69A-4A8E-963E-FACE888488C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneWare.ToolEngine", "src\OneWare.ToolEngine\OneWare.ToolEngine.csproj", "{60DAD476-E69A-4A8E-963E-FACE888488C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

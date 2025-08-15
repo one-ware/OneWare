@@ -1,7 +1,7 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
-namespace OneWare.Core.Services;
+namespace OneWare.ToolEngine.Services;
 
 public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
 {
@@ -31,7 +31,7 @@ public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
 
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, ToolConfiguration configuration)
     {
-        var strategyKey = configuration.ToolToStrategyMapping[command.ToolName];
+        var strategyKey = configuration.StrategyMapping[command.ToolName];
         return ExecuteAsync(command, strategyKey);
     }
 

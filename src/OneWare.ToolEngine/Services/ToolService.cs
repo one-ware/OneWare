@@ -1,7 +1,7 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
-namespace OneWare.Core.Services;
+namespace OneWare.ToolEngine.Services;
 
 public class ToolService : IToolService
 {
@@ -19,7 +19,7 @@ public class ToolService : IToolService
 
     public void Unregister(string toolKey)
     {
-        var tool = _tools.FirstOrDefault(t => t.ToolKey == toolKey);
+        var tool = _tools.FirstOrDefault(t => t.Key == toolKey);
         
         if (tool is null)
         {
