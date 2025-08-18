@@ -352,7 +352,12 @@ public class DockService : Factory, IDockService
     public void InitializeContent()
     {
         var extendedDocs = SearchView<IWaitForContent>();
-        foreach (var extendedDocument in extendedDocs) extendedDocument.InitializeContent();
+        foreach (var extendedDocument in extendedDocs) 
+            extendedDocument.InitializeContent();
+        
+        //the current document won't be set during initialization because the 
+        //focus event does not necessarily get triggered
+        CurrentDocument = _mainDocumentDockViewModel.ActiveDockable as IExtendedDocument;
     }
 
     #endregion
