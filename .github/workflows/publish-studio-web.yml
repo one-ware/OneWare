@@ -25,7 +25,7 @@ jobs:
         with:
           protocol: sftp
           host: 5017617850.ssh.w2.strato.hosting
-          username: su165987
+          username: ${{ secrets.ONEWARE_SFTP_USER }}
           password: ${{ secrets.ONEWARE_SFTP_PW }}
           local_dir: ./out/wwwroot/
           remote_dir: studio.one-ware.com/
