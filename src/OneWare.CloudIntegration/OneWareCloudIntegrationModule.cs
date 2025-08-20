@@ -18,7 +18,8 @@ public class OneWareCloudIntegrationModule : IModule
     
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        containerRegistry.RegisterSingleton<OneWareCloudAccountSettingViewModel>();
+        containerRegistry.RegisterSingleton<OneWareCloudAccountSetting>();
+        containerRegistry.RegisterSingleton<OneWareCloudAccountFlyoutViewModel>();
         containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
         containerRegistry.RegisterSingleton<OneWareCloudNotificationService>();
     }
@@ -27,11 +28,9 @@ public class OneWareCloudIntegrationModule : IModule
     {
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
-        
+
         containerProvider.Resolve<ISettingsService>().RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
-        
-        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, new OneWareCloudAccountSetting());
-        
+        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, containerProvider.Resolve<OneWareCloudAccountSetting>());
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x =>
             new CloudIntegrationMainWindowBottomRightExtension()
             {

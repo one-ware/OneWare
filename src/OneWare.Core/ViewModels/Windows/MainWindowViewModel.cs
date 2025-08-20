@@ -12,6 +12,7 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
+using OneWare.CloudIntegration.ViewModels;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Controls;
@@ -128,6 +129,8 @@ public class MainWindowViewModel : ObservableObject
             }
         }
     }
+    
+    public OneWareCloudAccountFlyoutViewModel? OneWareAccountFlyout { get; private set; }
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
@@ -136,6 +139,13 @@ public class MainWindowViewModel : ObservableObject
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
 
+
+    public void InitAccountFlyout(OneWareCloudAccountFlyoutViewModel vm)
+    {
+        OneWareAccountFlyout = vm;
+        OnPropertyChanged(nameof(OneWareAccountFlyout));
+    }
+    
     #region MainWindowButtons
 
     private Control GetMainView()

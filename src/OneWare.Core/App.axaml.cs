@@ -12,6 +12,7 @@ using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
+using OneWare.CloudIntegration.ViewModels;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -360,6 +361,8 @@ public class App : PrismApplication
             };
         }
 
+        Container.Resolve<MainWindowViewModel>().InitAccountFlyout(Container.Resolve<OneWareCloudAccountFlyoutViewModel>());
+        
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>

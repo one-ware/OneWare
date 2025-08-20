@@ -17,5 +17,9 @@
         <DependentUpon>SourceControlMainWindowBottomRightExtension.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\OneWareCloudAccountFlyoutView.axaml.cs">
+        <DependentUpon>OneWareCloudAccountFlyoutView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>
