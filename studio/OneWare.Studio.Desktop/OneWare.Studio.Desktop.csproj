@@ -45,5 +45,11 @@
     <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Views\AIReleaseWindow.axaml.cs">
+        <DependentUpon>AIReleaseWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
 </Project>

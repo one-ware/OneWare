@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
@@ -13,6 +14,7 @@ using Avalonia.Threading;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using ImTools;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Core.Data;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
@@ -85,6 +87,20 @@ public class DesktopStudioApp : StudioApp
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    {
+        base.RegisterTypes(containerRegistry);
+
+        containerRegistry.RegisterSingleton<AiReleaseViewModel>();
+    }
+
+    protected override void InitializeShell(AvaloniaObject shell)
+    {
+        base.InitializeShell(shell);
+        
+        Container.Resolve<ISettingsService>().Register(AiReleaseViewModel.ShowReleaseNotificationKey, true);
     }
 
     protected override async Task LoadContentAsync()
@@ -189,6 +205,7 @@ public class DesktopStudioApp : StudioApp
             var canUpdate = await ideUpdater.CheckForUpdateAsync();
 
             if (canUpdate)
+            {
                 Dispatcher.UIThread.Post(() =>
                 {
                     Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
@@ -199,6 +216,17 @@ public class DesktopStudioApp : StudioApp
                             }),
                         Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 });
+            }
+            else if (Container.Resolve<ISettingsService>().GetSettingValue<bool>(AiReleaseViewModel.ShowReleaseNotificationKey))
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Container.Resolve<IWindowService>().Show(new AIReleaseWindow()
+                    {
+                        DataContext = Container.Resolve<AiReleaseViewModel>()
+                    });
+                });
+            }
         }
         catch (Exception e)
         {
