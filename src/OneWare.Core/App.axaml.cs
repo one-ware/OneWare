@@ -360,8 +360,6 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-
-        Container.Resolve<MainWindowViewModel>().InitAccountFlyout(Container.Resolve<OneWareCloudAccountFlyoutViewModel>());
         
         Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
