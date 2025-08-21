@@ -2,43 +2,48 @@ using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
-using OneWare.SourceControl.Views;
-using Prism.Ioc;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
 public class OneWareCloudAccountFlyoutViewModel : ObservableObject
 {
-    private const string BaseUrl = "https://cloud.one-ware.com";
-    private const string RegisterUrl = $"{BaseUrl}/Account/Register";
-    private const string ManageAccountUrl = $"{BaseUrl}/Account/Manage";
-    
+    private bool _Initialized;
+    private const string RegisterPath = "/account/register";
+    private const string ManageAccountPath = "/account/manage";
+
     private string? _urlLabel;
     private string? _url;
 
-    public OneWareCloudAccountFlyoutViewModel(OneWareCloudAccountSetting setting)
+    public OneWareCloudAccountFlyoutViewModel(
+        OneWareCloudLoginService loginService,
+        OneWareCloudNotificationService cloudNotificationService, 
+        OneWareCloudAccountSetting setting)
     {
+        const string baseUrl = OneWareCloudIntegrationModule.CredentialStore;
         SettingViewModel = new OneWareCloudAccountSettingViewModel(setting);
+        
+        CreditBalanceSetting creditBalanceSetting = new("Credit balance", (Application.Current?.FindResource("Credit") as IImage)!);
+        creditBalanceSetting.SubscribeToHub(cloudNotificationService, loginService);
+        Information.Add(creditBalanceSetting);
         
         setting.WhenValueChanged(x => x.IsLoggedIn)
             .Subscribe(value =>
             {
                 if (value)
                 {
+                    _ = creditBalanceSetting.OnLoginAsync(loginService);
                     UrlLabel = "Manage your account";
-                    Url = ManageAccountUrl;
+                    Url = $"{baseUrl}{ManageAccountPath}";
                 }
                 else
                 {
+                    creditBalanceSetting.Value = string.Empty;
                     UrlLabel = "Create an account";
-                    Url = RegisterUrl;
+                    Url = $"{baseUrl}{RegisterPath}";
                 }
 
                 //the account information are only visible, if the user is logged in
