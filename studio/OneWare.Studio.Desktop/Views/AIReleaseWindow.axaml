@@ -24,7 +24,7 @@
                         get features like annotation, model training and real-time camera checking.
                     </TextBlock>
                     <controls:HyperLink HorizontalAlignment="Left" 
-                                        Url="https://one-ware.com/docs/one-ai/services/#one-ai-extension-for-one-ware-studio" 
+                                        Url="https://one-ware.com/one-ai" 
                                         Label="Show more information.">
                     </controls:HyperLink>
                 </StackPanel>
