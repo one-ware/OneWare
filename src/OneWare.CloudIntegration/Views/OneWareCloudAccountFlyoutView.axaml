@@ -32,7 +32,7 @@
             </DockPanel>
         </Button.Content>
         <Button.Flyout>
-            <Flyout Placement="BottomEdgeAlignedLeft">
+            <Flyout Placement="BottomEdgeAlignedLeft" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4,0">
                     <Button ToolTip.Tip="Settings" Height="26" HorizontalContentAlignment="Left" Padding="0" 
                             Command="{Binding HandleAuthAsync}"

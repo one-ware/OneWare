@@ -19,7 +19,6 @@ public class OneWareCloudIntegrationModule : IModule
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<OneWareCloudAccountSetting>();
-        containerRegistry.RegisterSingleton<OneWareCloudAccountFlyoutViewModel>();
         containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
         containerRegistry.RegisterSingleton<OneWareCloudNotificationService>();
     }
@@ -35,6 +34,13 @@ public class OneWareCloudIntegrationModule : IModule
             new CloudIntegrationMainWindowBottomRightExtension()
             {
                 DataContext = containerProvider.Resolve<CloudIntegrationMainWindowBottomRightExtensionViewModel>()
+            }));
+        
+        
+        containerProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_RightToolBarExtension", new UiExtension(x =>
+            new OneWareCloudAccountFlyoutView()
+            {
+                DataContext = containerProvider.Resolve<OneWareCloudAccountFlyoutViewModel>()
             }));
     }
 }

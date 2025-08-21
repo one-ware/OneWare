@@ -68,7 +68,6 @@
 
             <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
                 <sdkControls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
-                <ContentControl Content="{Binding OneWareAccountFlyout}"></ContentControl>
                 <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
                     <Button.Content>
                         <Image Source="{DynamicResource Material.SettingsOutline}" />
