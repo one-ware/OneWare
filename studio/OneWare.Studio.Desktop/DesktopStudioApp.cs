@@ -203,7 +203,6 @@ public class DesktopStudioApp : StudioApp
         }
         
         //close the loading splash screen
-        await Task.Delay(1000);
         _splashWindow?.Close();
 
         try
