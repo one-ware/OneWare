@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,6 +21,7 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
@@ -157,19 +159,58 @@ public class DesktopStudioApp : StudioApp
             }
         }
 
-        await Task.Delay(1000);
+        var settingsService = Container.Resolve<ISettingsService>();
+        var packageService = Container.Resolve<IPackageService>();
+        var ideUpdater = Container.Resolve<UpdaterViewModel>();
         
+        bool versionGotUpdated = false;
+        List<PackageModel>? updatePackages = null;
+        bool canUpdate = false;
+        bool showOneWareAiNotification = false;
+        
+        try
+        {
+            //step 1: IDE got updated
+            //check if the current version is newer than the previous
+            if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
+                lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
+            {
+                //update the version in settings
+                settingsService.SetSettingValue("LastVersion", Global.VersionCode);
+                versionGotUpdated = true;
+            }
+            
+            //step 2: Load the installed plugins
+            await packageService.LoadPackagesAsync();
+
+            //step 3: Get dated plugins
+            updatePackages = packageService.Packages
+                .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
+                .Select(x => x.Value)
+                .ToList();
+            
+            //step 4: Check if there is any IDE update
+            canUpdate = await ideUpdater.CheckForUpdateAsync();
+            
+            //step 5: Check if the OneWare.AI notification should be shown
+            //the setting refer to the dialog option "Don't show this again"
+            showOneWareAiNotification =
+                SettingsService.GetSettingValue<bool>(AiReleaseViewModel.ShowReleaseNotificationKey);
+        }
+        catch (Exception e)
+        {
+            Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+        
+        //close the loading splash screen
+        await Task.Delay(1000);
         _splashWindow?.Close();
 
         try
         {
-            var settingsService = Container.Resolve<ISettingsService>();
-
-            if (Version.TryParse(settingsService.GetSettingValue<string>("LastVersion"), out var lastVersion) &&
-                lastVersion < Assembly.GetExecutingAssembly().GetName().Version)
+            //step 1: IDE got updated
+            if (versionGotUpdated)
             {
-                settingsService.SetSettingValue("LastVersion", Global.VersionCode);
-
                 Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
                     $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
                     () =>
@@ -182,16 +223,9 @@ public class DesktopStudioApp : StudioApp
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
             }
 
-            var packageService = Container.Resolve<IPackageService>();
-
-            await packageService.LoadPackagesAsync();
-
-            var updatePackages = packageService.Packages
-                .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
-                .Select(x => x.Value)
-                .ToList();
-
-            if (updatePackages.Count > 0)
+            //step 2: Ask to update the outdated plugins
+            if (updatePackages?.Count > 0)
+            {
                 Container.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
                     $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
                     "Download", () => Container.Resolve<IWindowService>().Show(new PackageManagerView
@@ -199,11 +233,9 @@ public class DesktopStudioApp : StudioApp
                         DataContext = Container.Resolve<PackageManagerViewModel>()
                     }),
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-
-            var ideUpdater = Container.Resolve<UpdaterViewModel>();
-
-            var canUpdate = await ideUpdater.CheckForUpdateAsync();
-
+            }
+            
+            //step 3: Ask to update the IDE
             if (canUpdate)
             {
                 Dispatcher.UIThread.Post(() =>
@@ -217,13 +249,20 @@ public class DesktopStudioApp : StudioApp
                         Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 });
             }
-            else if (Container.Resolve<ISettingsService>().GetSettingValue<bool>(AiReleaseViewModel.ShowReleaseNotificationKey))
+            //step 4: Ask to install the OneWare.AI extension
+            else if (showOneWareAiNotification)
             {
+                AiReleaseViewModel aiReleaseVm = Container.Resolve<AiReleaseViewModel>();
+                //check if the specified extension is already installed
+                if (aiReleaseVm.ExtensionIsAlreadyInstalled())
+                    return;
+                
+                //if not, notify the user that the OneWare.AI extension is available
                 Dispatcher.UIThread.Post(() =>
                 {
                     Container.Resolve<IWindowService>().Show(new AIReleaseWindow()
                     {
-                        DataContext = Container.Resolve<AiReleaseViewModel>()
+                        DataContext = aiReleaseVm
                     });
                 });
             }
