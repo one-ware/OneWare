@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:views="clr-namespace:OneWare.CloudIntegration.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView" 
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
@@ -18,41 +19,27 @@
         </DataTemplate>
     </UserControl.DataTemplates>
     
-    <Button Padding="4">
+    <Button Padding="1">
         <Button.Content>
             <DockPanel LastChildFill="True">
                 <Border Margin="4,0" DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
                     <Panel>
-                        <Image Source="{Binding Image}"/>
-                        <Image IsVisible="{Binding Image, FallbackValue={x:Null}, 
+                        <Image Source="{Binding SettingViewModel.Setting.Image}"/>
+                        <Image IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
                             Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="2"/>
                     </Panel>
                 </Border>
-                <TextBlock DockPanel.Dock="Right" Text="{Binding Email}" VerticalAlignment="Center"/>
             </DockPanel>
         </Button.Content>
         <Button.Flyout>
-            <Flyout Placement="BottomEdgeAlignedLeft" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+            <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4,0">
-                    <Button ToolTip.Tip="Settings" Height="26" HorizontalContentAlignment="Left" Padding="0" 
-                            Command="{Binding HandleAuthAsync}"
-                            CommandParameter="{Binding $parent[Button]}">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                                <Image Width="14" Height="14" Source="{DynamicResource Material.SettingsOutline}"/>
-                                <TextBlock Text="{Binding SettingLabel}">
-                                </TextBlock>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
+                    
+                    <ContentControl Content="{Binding SettingViewModel}" />
+                    
                     <Separator Margin="0" Padding="0"></Separator>
-                    <Panel Height="28">
-                        <Grid ColumnDefinitions="14,*,*" VerticalAlignment="Center">
-                            <Image Width="14" Height="14" Source="{DynamicResource CodeIcons.Account}"/>
-                            <TextBlock Text="{Binding Email}" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0"></TextBlock>
-                            <TextBlock Text="Email" Opacity=".5" Grid.Column="2" HorizontalAlignment="Right"></TextBlock>
-                        </Grid>
-                    </Panel>
+                    
                     <ItemsControl ItemCount="" ItemsSource="{Binding Information}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
