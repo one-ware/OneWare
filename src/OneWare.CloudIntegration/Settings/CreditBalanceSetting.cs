@@ -28,7 +28,7 @@ public class CreditBalanceSetting(string title, IImage icon) : ObservableObject,
         set => SetProperty(ref _isVisible, value);
     }
 
-    public async Task OnLoginAsync(OneWareCloudLoginService loginService)
+    public async Task UpdateBalanceAsync(OneWareCloudLoginService loginService)
     {
         var balance = await GetBalanceAsync(loginService);
         Value = balance.ToString();

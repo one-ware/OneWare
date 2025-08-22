@@ -129,8 +129,6 @@ public class MainWindowViewModel : ObservableObject
             }
         }
     }
-    
-    public OneWareCloudAccountFlyoutViewModel? OneWareAccountFlyout { get; private set; }
 
     public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
@@ -138,13 +136,6 @@ public class MainWindowViewModel : ObservableObject
     public ObservableCollection<UiExtension> RightToolBarExtension { get; }
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
-
-
-    public void InitAccountFlyout(OneWareCloudAccountFlyoutViewModel vm)
-    {
-        OneWareAccountFlyout = vm;
-        OnPropertyChanged(nameof(OneWareAccountFlyout));
-    }
     
     #region MainWindowButtons
 

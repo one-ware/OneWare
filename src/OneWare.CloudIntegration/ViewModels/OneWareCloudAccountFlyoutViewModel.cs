@@ -11,7 +11,6 @@ namespace OneWare.CloudIntegration.ViewModels;
 
 public class OneWareCloudAccountFlyoutViewModel : ObservableObject
 {
-    private bool _Initialized;
     private const string RegisterPath = "/account/register";
     private const string ManageAccountPath = "/account/manage";
 
@@ -30,26 +29,25 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
         creditBalanceSetting.SubscribeToHub(cloudNotificationService, loginService);
         Information.Add(creditBalanceSetting);
         
-        setting.WhenValueChanged(x => x.IsLoggedIn)
-            .Subscribe(value =>
+       setting.WhenValueChanged(x => x.IsLoggedIn).Subscribe(x =>
+        {
+            if (!x)
             {
-                if (value)
-                {
-                    _ = creditBalanceSetting.OnLoginAsync(loginService);
-                    UrlLabel = "Manage your account";
-                    Url = $"{baseUrl}{ManageAccountPath}";
-                }
-                else
-                {
-                    creditBalanceSetting.Value = string.Empty;
-                    UrlLabel = "Create an account";
-                    Url = $"{baseUrl}{RegisterPath}";
-                }
+                creditBalanceSetting.Value = string.Empty;
+                UrlLabel = "Create an account";
+                Url = $"{baseUrl}{RegisterPath}";
+            }
+            else
+            {
+                _ = creditBalanceSetting.UpdateBalanceAsync(loginService);
+                UrlLabel = "Manage your account";
+                Url = $"{baseUrl}{ManageAccountPath}";
+            }
 
-                //the account information are only visible, if the user is logged in
-                foreach (IOneWareCloudAccountFlyoutSetting item in Information)
-                    item.IsVisible = value;
-            });
+            //the account information are only visible, if the user is logged in
+            foreach (IOneWareCloudAccountFlyoutSetting item in Information)
+                item.IsVisible = x;
+        });
     }
 
     public OneWareCloudAccountSettingViewModel SettingViewModel { get; }
