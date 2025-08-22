@@ -4,8 +4,11 @@ namespace OneWare.Essentials.Services;
 
 public interface IToolService
 {
-    void Register(ToolDescription description);
+    void Register(EnvironmentDescription description);
     
-    void Unregister(ToolDescription description);
+    void Unregister(EnvironmentDescription description);
     void Unregister(string toolKey);
+    IReadOnlyList<EnvironmentDescription> GetAllTools(); 
+    
+    ToolConfiguration GetGlobalToolConfiguration();
 }

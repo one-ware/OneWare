@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ToolEngine.Services;
 using Prism.Ioc;
@@ -16,6 +18,11 @@ public class ToolEngineModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
-        settingsService.RegisterSettingSubCategory("Tool", "Execution Strategy");
+        settingsService.RegisterSettingSubCategory("Tools", "Execution Strategy");
+
+        var toolService = containerProvider.Resolve<IToolService>();
+        var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
+        
+        
     }
 }

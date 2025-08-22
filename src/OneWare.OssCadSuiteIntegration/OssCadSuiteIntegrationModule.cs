@@ -15,6 +15,7 @@ using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
+using OneWare.ToolEngine.Strategies;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -206,7 +207,24 @@ public class OssCadSuiteIntegrationModule : IModule
         var windowService = containerProvider.Resolve<IWindowService>();
         var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
-
+        
+        // var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
+        // TODO: Move NativeStrategy to an essentials 
+        // executionDispatcherService.Register("osscad", new NativeStrategy());
+        var toolService = containerProvider.Resolve<IToolService>();
+        toolService.Register(new EnvironmentDescription("yosys", "Synth Tool", "yosys"));
+        
+        toolService.Register(new EnvironmentDescription("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"));
+        toolService.Register(new EnvironmentDescription("nextpnr-generic", "Synth Tool", "nextpnr-generic"));
+        toolService.Register(new EnvironmentDescription("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"));
+        toolService.Register(new EnvironmentDescription("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"));
+        toolService.Register(new EnvironmentDescription("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"));
+        toolService.Register(new EnvironmentDescription("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"));
+        
+        toolService.Register(new EnvironmentDescription("openFPGALoader", "Synth Tool", "openFPGALoader"));
+        toolService.Register(new EnvironmentDescription("icepack", "Synth Tool", "icepack"));
+        toolService.Register(new EnvironmentDescription("iceprog", "Synth Tool", "iceprog"));
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",

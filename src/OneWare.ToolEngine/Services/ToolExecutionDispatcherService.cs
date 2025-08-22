@@ -1,5 +1,6 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.ToolEngine.Strategies;
 
 namespace OneWare.ToolEngine.Services;
 
@@ -20,6 +21,11 @@ public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
         strategyMap[strategy.GetStrategyKey()] = strategy;
     }
 
+    public void Register(string toolKey)
+    {
+        Register(toolKey, new NativeStrategy());
+    }
+
     public void Unregister(string strategyKey)
     {
         foreach (var toolEntry in _toolStrategies)
@@ -35,6 +41,7 @@ public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
         return ExecuteAsync(command, strategyKey);
     }
 
+    // TODO: Trennen von std:out & std:err 
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command, string strategyKey)
     {
         if (_toolStrategies.TryGetValue(command.ToolName, out var strategies) &&
@@ -45,5 +52,22 @@ public class ToolExecutionDispatcherService : IToolExecutionDispatcherService
         
         throw new InvalidOperationException(
             $"No execution strategy found for tool '{command.ToolName}' and strategy '{strategyKey}'");
+    }
+    
+    public IReadOnlyList<IToolExecutionStrategy> GetStrategies(string toolKey)
+    {
+        return _toolStrategies[toolKey].Values.ToList();
+    }
+    
+    public string[] GetStrategyKeys(string toolKey)
+    {
+        if (_toolStrategies.TryGetValue(toolKey, out var strategies))
+        {
+            return strategies.Values
+                .Select(s => s.GetStrategyKey())  // nur den Key nehmen
+                .ToArray();
+        }
+
+        return [];
     }
 }

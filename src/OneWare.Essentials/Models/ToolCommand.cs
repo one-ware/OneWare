@@ -41,11 +41,21 @@ public class ToolCommand
 }
 
 
-public class ToolDescription
+public class EnvironmentDescription
 {
     public string Name { get; init; }
     public string Description { get; init; }
     public string Key { get; init; }
+    
+    public List<string> ToolNames { get; init; }
+    
+    public EnvironmentDescription(string name, string description, string key,  List<string>? toolNames = null)
+    {
+        Name = name;
+        Description = description;
+        Key = key;
+        ToolNames = toolNames ?? [];
+    }
 }
 
 public class ToolConfiguration

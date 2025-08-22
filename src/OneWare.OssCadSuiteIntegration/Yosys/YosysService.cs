@@ -10,6 +10,8 @@ namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysService(
     IChildProcessService childProcessService,
+    IToolExecutionDispatcherService toolExecutionDispatcherService,
+    IToolService toolService,
     ILogger logger,
     IOutputService outputService,
     IDockService dockService)
@@ -79,6 +81,22 @@ public class YosysService(
             
             yosysArguments.AddRange(mandatoryFiles ?? []);
 
+            var command = ToolCommand.FromShellParams("yosys", yosysArguments, project.FullPath,
+                "Running yosys...", AppState.Loading, true, x =>
+                {
+                    if (x.StartsWith("Error:"))
+                    {
+                        logger.Error(x);
+                        return false;
+                    }
+
+                    outputService.WriteLine(x);
+                    return true;
+                });
+
+            var config = toolService.GetGlobalToolConfiguration();
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+            /*
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>
                 {
@@ -91,7 +109,7 @@ public class YosysService(
                     outputService.WriteLine(x);
                     return true;
                 });
-            
+            */
             return success;
         }
         catch (Exception e)
@@ -112,14 +130,26 @@ public class YosysService(
         nextPnrArguments.AddRange(properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?.Split(' ',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
         
+        var command = ToolCommand.FromShellParams(nextPnrTool, nextPnrArguments,
+            project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
+            {
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                return true;
+            });
+        
+        var config = toolService.GetGlobalToolConfiguration();
+        var status = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+        
+        /*
         var status = await childProcessService.ExecuteShellAsync(nextPnrTool, nextPnrArguments,
             project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
             {
                 Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                 return true;
             });
-
+        */
         return status.success;
+        
     }
 
     public async Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
