@@ -33,29 +33,12 @@ public class CreditBalanceSetting(string title, IImage icon) : ObservableObject,
         var balance = await GetBalanceAsync(loginService);
         Value = balance.ToString();
     }
-    public void SubscribeToHub(OneWareCloudNotificationService service, OneWareCloudLoginService loginService)
+    public void SubscribeToHub(OneWareCloudNotificationService service)
     {
         service.SubscribeToHubMethod<int>("Credits_Updated", creditBalance =>
         {
             Value = creditBalance.ToString();
         });
-        
-        Observable.FromEventPattern<HubConnectionState>(service, nameof(service.ConnectionStateChanged))
-            .Subscribe(x =>
-            {
-                if (service.ConnectionState == HubConnectionState.Connected)
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        var balance = await GetBalanceAsync(loginService);
-                        Value = balance.ToString();
-                    });
-                }
-                else
-                {
-                    Value = "Not connected";
-                }
-            });
     }
     private async Task<int> GetBalanceAsync(OneWareCloudLoginService cloudLoginService, CancellationToken cancellationToken = default)
     {

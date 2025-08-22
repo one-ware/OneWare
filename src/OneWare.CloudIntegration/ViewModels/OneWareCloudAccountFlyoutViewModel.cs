@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using Microsoft.AspNetCore.SignalR.Client;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 
@@ -26,7 +28,7 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
         SettingViewModel = new OneWareCloudAccountSettingViewModel(setting);
         
         CreditBalanceSetting creditBalanceSetting = new("Credit balance", (Application.Current?.FindResource("Credit") as IImage)!);
-        creditBalanceSetting.SubscribeToHub(cloudNotificationService, loginService);
+        creditBalanceSetting.SubscribeToHub(cloudNotificationService);
         Information.Add(creditBalanceSetting);
         
        setting.WhenValueChanged(x => x.IsLoggedIn).Subscribe(x =>
@@ -48,6 +50,24 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
             foreach (IOneWareCloudAccountFlyoutSetting item in Information)
                 item.IsVisible = x;
         });
+       
+        Observable.FromEventPattern<HubConnectionState>(cloudNotificationService, nameof(cloudNotificationService.ConnectionStateChanged))
+            .Subscribe(x =>
+            {
+                if (cloudNotificationService.ConnectionState == HubConnectionState.Connected)
+                {
+                    if (!setting.IsLoggedIn)
+                    {
+                        creditBalanceSetting.Value = string.Empty;
+                        return;
+                    }
+                    _ = creditBalanceSetting.UpdateBalanceAsync(loginService);
+                }
+                else
+                {
+                    creditBalanceSetting.Value = "Not connected";
+                }
+            });
     }
 
     public OneWareCloudAccountSettingViewModel SettingViewModel { get; }
