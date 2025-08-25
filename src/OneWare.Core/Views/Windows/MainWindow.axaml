@@ -66,12 +66,12 @@
 
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
-                
+            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
                 <sdkControls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
-                
-                <Button ToolTip.Tip="Settings" Command="{Binding OpenSettingsDialogAsync}">
-                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
+                    <Button.Content>
+                        <Image Source="{DynamicResource Material.SettingsOutline}" />
+                    </Button.Content>
                 </Button>
             </StackPanel>
         </DockPanel>

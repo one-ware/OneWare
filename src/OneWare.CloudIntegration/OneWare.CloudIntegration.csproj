@@ -11,11 +11,4 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\CloudIntegrationMainWindowBottomRightExtension.axaml.cs">
-        <DependentUpon>SourceControlMainWindowBottomRightExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
 </Project>
