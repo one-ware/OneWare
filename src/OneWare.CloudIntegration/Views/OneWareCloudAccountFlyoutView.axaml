@@ -34,13 +34,15 @@
         <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                 
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4,0">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="5">
+                    
+                    <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
                     
                     <ContentControl Content="{Binding SettingViewModel}" />
                     
                     <Separator Margin="0" Padding="0"></Separator>
                     
-                    <ItemsControl ItemCount="" ItemsSource="{Binding Information}">
+                    <ItemsControl ItemsSource="{Binding Information}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Panel />
@@ -52,7 +54,9 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Separator Margin="0" Padding="0"></Separator>
+                    
+                    <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
+                    
                     <controls:HyperLink Label="{Binding UrlLabel}" 
                                            Url="{Binding Url}"
                                            Margin="6,4, 6, 0" 
