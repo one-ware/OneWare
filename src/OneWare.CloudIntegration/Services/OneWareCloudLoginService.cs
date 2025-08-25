@@ -11,7 +11,7 @@ using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
-public sealed class OneWareCloudLoginService : IDisposable
+public sealed class OneWareCloudLoginService
 {
     private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
     private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
@@ -28,8 +28,6 @@ public sealed class OneWareCloudLoginService : IDisposable
         _httpService = httpService;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
     }
-    
-    public void Dispose() => _semaphoreSlim.Dispose();
     
     public RestClient GetRestClient()
     {
