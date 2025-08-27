@@ -55,7 +55,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                 Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(
-                            $"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
+                            $"Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
