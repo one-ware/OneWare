@@ -11,7 +11,7 @@
                           Title="{Binding Title}"
                           Icon="avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png"
                           CustomIcon="{DynamicResource VsImageLib.StatusInformation16X}"
-                          WindowStartupLocation="CenterScreen"
+                          WindowStartupLocation="CenterOwner"
                           x:DataType="windows1:AboutViewModel">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
