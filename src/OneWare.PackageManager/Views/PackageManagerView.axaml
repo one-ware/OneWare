@@ -101,7 +101,7 @@
                                 <DockPanel>
                                     <Grid DockPanel.Dock="Left" Width="60" Height="60">
                                         <Image
-                                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             Source="{Binding Image}" Height="50" Width="50" />
                                         <controls:Spinner

@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:views="clr-namespace:OneWare.CloudIntegration.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView" 
+             x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
+    
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="viewModels:IOneWareCloudAccountFlyoutSetting">
+            <Grid ColumnDefinitions="14,*,*" VerticalAlignment="Center">
+                <Image Source="{Binding Icon}"></Image>
+                <TextBlock Text="{Binding Value}" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0"></TextBlock>
+                <TextBlock Text="{Binding Title}" Opacity=".5" Grid.Column="2" HorizontalAlignment="Right"></TextBlock>
+            </Grid>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+    
+    <Button Padding="1">
+        <Button.Content>
+            <DockPanel LastChildFill="True">
+                <Border Margin="4,0" DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
+                    <Panel>
+                        <Image Source="{Binding SettingViewModel.Setting.Image}"/>
+                        <Image IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
+                            Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="2"/>
+                    </Panel>
+                </Border>
+            </DockPanel>
+        </Button.Content>
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="5">
+                    
+                    <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
+                    
+                    <ContentControl Content="{Binding SettingViewModel}" />
+                    
+                    <Separator Margin="0" Padding="0"></Separator>
+                    
+                    <ItemsControl ItemsSource="{Binding Information}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Panel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ContentControl Height="28" Content="{Binding .}" IsVisible="{Binding IsVisible}"></ContentControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                    <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
+                    
+                    <controls:HyperLink Label="{Binding UrlLabel}" 
+                                           Url="{Binding Url}"
+                                           Margin="6,4, 6, 0" 
+                                           HorizontalContentAlignment="Center" HorizontalAlignment="Center">
+                    </controls:HyperLink>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>
