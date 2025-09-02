@@ -10,6 +10,7 @@ using OneWare.FolderProjectSystem;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 using Prism.Ioc;
+using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.LibraryExplorer.ViewModels;
 
