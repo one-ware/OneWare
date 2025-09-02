@@ -20,8 +20,8 @@
                 </Panel>
                 <StackPanel Orientation="Vertical" Spacing="4">
                     <TextBlock TextWrapping="Wrap" MaxWidth="250">
-                        Within this plugin you can create and manage oneai projects and 
-                        get features like annotation, model training and real-time camera checking.
+                        Within this plugin you can manage your oneai projects and get
+                        features like annotation, model training and real-time camera checking.
                     </TextBlock>
                     <controls:HyperLink HorizontalAlignment="Left" 
                                         Url="https://one-ware.com/one-ai" 

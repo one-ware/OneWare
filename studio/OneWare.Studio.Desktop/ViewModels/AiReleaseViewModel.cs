@@ -5,6 +5,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.ViewModels;
+using OneWare.PackageManager.Views;
 
 namespace OneWare.Studio.Desktop.ViewModels;
 
@@ -14,18 +15,22 @@ public class AiReleaseViewModel : ObservableObject
     private const string ExtensionId = "OneWare.AI";
     
     private readonly ISettingsService _settingsService;
-    private readonly IPackageService _packageService;
+    private readonly IWindowService _windowService;
+    private readonly PackageManagerViewModel _packageManagerVm;
     private readonly PackageModel _aiPackage;
     private readonly IPaths _paths;
     private bool _hideNextTime;
     private bool _isLoading;
     
-    public AiReleaseViewModel(IPaths paths, ISettingsService settingsService, IPackageService packageService)
+    public AiReleaseViewModel(IPaths paths, ISettingsService settingsService, 
+        IWindowService windowService, PackageManagerViewModel packageManagerVm)
     {
         _paths = paths;
+        _windowService = windowService;
         _settingsService = settingsService;
-        _packageService = packageService;
-        _aiPackage = packageService.Packages[ExtensionId];
+        _packageManagerVm = packageManagerVm;
+        
+        
     }
 
     public bool HideNextTime
@@ -39,9 +44,9 @@ public class AiReleaseViewModel : ObservableObject
         set => SetProperty(ref _isLoading, value);
     }
 
-    public bool ExtensionIsAlreadyInstalled()
+    public bool ExtensionIsAlreadyInstalled(IPackageService packageService)
     {
-        return _packageService.Packages[ExtensionId].Status == PackageStatus.Installed;
+        return packageService.Packages[ExtensionId].Status == PackageStatus.Installed;
     }
     public async Task InstallPluginAsync(Control control)
     {
@@ -50,14 +55,21 @@ public class AiReleaseViewModel : ObservableObject
         
         try
         {
-            IsLoading = true;
-            await _packageService.InstallAsync(_aiPackage.Package);
+            Close(control);
+            if (await _packageManagerVm.ShowSpecificPluginAsync("Plugins", ExtensionId) is { } pvm)
+            {
+                var view = new PackageManagerView
+                {
+                    DataContext = _packageManagerVm
+                };
+                _windowService.Show(view);
+                await pvm.InstallCommand.ExecuteAsync(view);
+            }
         }
         finally
         {
             IsLoading = false;
         }
-        Close(control);
     }
     public void Close(Control control)
     {

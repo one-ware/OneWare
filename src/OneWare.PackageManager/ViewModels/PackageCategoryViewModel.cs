@@ -7,11 +7,17 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageCategoryViewModel(string header, IObservable<object?>? iconObservable = null) : ObservableObject
 {
     private bool _isExpanded = true;
+    private PackageViewModel? _selectedPackage;
 
     public bool IsExpanded
     {
         get => _isExpanded;
         set => SetProperty(ref _isExpanded, value);
+    }
+    public PackageViewModel? SelectedPackage
+    {
+        get => _selectedPackage;
+        set => SetProperty(ref _selectedPackage, value);
     }
 
     public List<PackageViewModel> Packages { get; } = [];
