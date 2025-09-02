@@ -8,6 +8,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.Models;
+using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.SearchList.ViewModels;
 

@@ -19,6 +19,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
+using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Core.Services;
 

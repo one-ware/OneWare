@@ -35,6 +35,7 @@ using OneWare.Verilog;
 using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
+using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Studio.Desktop;
 
