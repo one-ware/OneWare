@@ -254,7 +254,7 @@ public class DesktopStudioApp : StudioApp
             {
                 AiReleaseViewModel aiReleaseVm = Container.Resolve<AiReleaseViewModel>();
                 //check if the specified extension is already installed
-                if (aiReleaseVm.ExtensionIsAlreadyInstalled(Container.Resolve<IPackageService>()))
+                if (aiReleaseVm.ExtensionIsAlreadyInstalled(Container.Resolve<IPluginService>()))
                     return;
                 
                 //if not, notify the user that the OneWare.AI extension is available

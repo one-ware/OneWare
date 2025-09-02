@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -44,9 +45,9 @@ public class AiReleaseViewModel : ObservableObject
         set => SetProperty(ref _isLoading, value);
     }
 
-    public bool ExtensionIsAlreadyInstalled(IPackageService packageService)
+    public bool ExtensionIsAlreadyInstalled(IPluginService pluginService)
     {
-        return packageService.Packages[ExtensionId].Status == PackageStatus.Installed;
+        return pluginService.InstalledPlugins.FirstOrDefault(x => x.Id == ExtensionId) != null;
     }
     public async Task InstallPluginAsync(Control control)
     {
