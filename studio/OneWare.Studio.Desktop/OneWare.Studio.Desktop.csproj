@@ -34,7 +34,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
-        <AvaloniaResource Include="Assets\OneAI_Iso.png" />
     </ItemGroup>
 
     <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">

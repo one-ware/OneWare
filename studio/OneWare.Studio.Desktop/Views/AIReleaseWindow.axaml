@@ -15,8 +15,8 @@
             <TextBlock FontWeight="Bold" FontSize="18">OneAI is now available</TextBlock>
             <TextBlock FontWeight="SemiBold" FontSize="14">Enhance your experience with advanced AI capabilities.</TextBlock>
             <StackPanel Orientation="Horizontal" Spacing="4">
-                <Panel Width="130" Height="100">
-                    <Image Source="../Assets/OneAI_Iso.png"></Image>
+                <Panel Width="100" Height="100">
+                    <Image Margin="10" Source="{DynamicResource AI_Img}"></Image>
                 </Panel>
                 <StackPanel Orientation="Vertical" Spacing="4">
                     <TextBlock TextWrapping="Wrap" MaxWidth="250">
