@@ -36,7 +36,6 @@
                 <CheckBox IsChecked="{Binding HideNextTime}" Content="Don't show this again"></CheckBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="WindowButtons">
-                <controls:Spinner IsVisible="{Binding IsLoading}" Height="18" Width="18" />
                 <Button Command="{Binding Close}"
                         CommandParameter="{Binding $self}">Close</Button>
                 <Button Background="{DynamicResource ThemeAccentBrush}"

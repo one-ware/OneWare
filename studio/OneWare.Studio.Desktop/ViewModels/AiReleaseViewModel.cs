@@ -18,10 +18,8 @@ public class AiReleaseViewModel : ObservableObject
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
     private readonly PackageManagerViewModel _packageManagerVm;
-    private readonly PackageModel _aiPackage;
     private readonly IPaths _paths;
     private bool _hideNextTime;
-    private bool _isLoading;
     
     public AiReleaseViewModel(IPaths paths, ISettingsService settingsService, 
         IWindowService windowService, PackageManagerViewModel packageManagerVm)
@@ -30,8 +28,6 @@ public class AiReleaseViewModel : ObservableObject
         _windowService = windowService;
         _settingsService = settingsService;
         _packageManagerVm = packageManagerVm;
-        
-        
     }
 
     public bool HideNextTime
@@ -39,44 +35,28 @@ public class AiReleaseViewModel : ObservableObject
         get =>  _hideNextTime;
         set => SetProperty(ref _hideNextTime, value);
     }
-    public bool IsLoading
-    {
-        get =>  _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
 
     public bool ExtensionIsAlreadyInstalled(IPluginService pluginService)
     {
         return pluginService.InstalledPlugins.FirstOrDefault(x => x.Id == ExtensionId) != null;
     }
+
     public async Task InstallPluginAsync(Control control)
     {
-        if (IsLoading)
-            return;
-        
-        try
+        Close(control);
+        if (await _packageManagerVm.ShowSpecificPluginAsync("Plugins", ExtensionId) is { } pvm)
         {
-            Close(control);
-            if (await _packageManagerVm.ShowSpecificPluginAsync("Plugins", ExtensionId) is { } pvm)
+            var view = new PackageManagerView
             {
-                var view = new PackageManagerView
-                {
-                    DataContext = _packageManagerVm
-                };
-                _windowService.Show(view);
-                await pvm.InstallCommand.ExecuteAsync(view);
-            }
-        }
-        finally
-        {
-            IsLoading = false;
+                DataContext = _packageManagerVm
+            };
+            _windowService.Show(view);
+            await pvm.InstallCommand.ExecuteAsync(view);
         }
     }
+
     public void Close(Control control)
     {
-        if (IsLoading)
-            return;
-        
         if (HideNextTime)
         {
             _settingsService.SetSettingValue(ShowReleaseNotificationKey, !HideNextTime);
