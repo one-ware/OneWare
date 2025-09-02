@@ -131,6 +131,28 @@ public class PackageManagerViewModel : ObservableObject
         await _packageService.LoadPackagesAsync();
     }
 
+    public async Task<PackageViewModel?> ShowSpecificPluginAsync(string category, string packageId)
+    {
+        PackageCategoryViewModel? categoryVm = PackageCategories
+            .FirstOrDefault(x => x.Header == category);
+
+        if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out PackageModel? packageModel))
+        {
+            PackageViewModel? packageVm = categoryVm.VisiblePackages
+                .FirstOrDefault(x => x.PackageModel == packageModel);
+            
+            if (packageVm == null)
+                return null;
+            
+            SelectedCategory = categoryVm;
+            SelectedCategory.SelectedPackage = packageVm;
+
+            await packageVm.ResolveTabsAsync();
+            return packageVm;
+        }
+        return null;
+    }
+
     private void ConstructPackageViewModels()
     {
         foreach (var category in PackageCategories)

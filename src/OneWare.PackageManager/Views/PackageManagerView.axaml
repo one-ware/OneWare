@@ -83,7 +83,8 @@
                 </Border>
                 <Grid DockPanel.Dock="Top">
                     <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Background="Transparent" BorderThickness="0"
+                             Background="Transparent" BorderThickness="0" 
+                             SelectedItem="{Binding SelectedCategory.SelectedPackage, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisiblePackages, FallbackValue={x:Null}}">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="SelectionChanged">
