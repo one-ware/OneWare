@@ -177,6 +177,7 @@ public class App : PrismApplication
             "Notify external changes", "Notifies the user when external happen and ask for reload", false);
 
         //TypeAssistance
+        
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",
             "Enable Hover Information", "Enable Hover Information", true);
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
@@ -184,6 +185,12 @@ public class App : PrismApplication
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
             "Enable Auto Formatting", "Enable automatic formatting", true);
 
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_DisableLargeFile_Min",
+            new SliderSetting("Disable Assistance for Large Files", 100000, 50000, 1000000, 1000)
+            {
+                MarkdownDocumentation = "If a document is larger than the specified amount of chars, assistance will be disabled for performance reasons" 
+            });
+        
         var windowService = Container.Resolve<IWindowService>();
         var commandService = Container.Resolve<IApplicationCommandService>();
 
