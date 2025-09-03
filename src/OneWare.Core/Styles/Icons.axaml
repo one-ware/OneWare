@@ -1,6 +1,163 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
+    <DrawingImage x:Key="AI_Img">
+        <DrawingGroup>
+            <DrawingGroup>
+                <DrawingGroup.Transform>
+                    <MatrixTransform Matrix="0.9983772,0,0,0.9983772,0,0" />
+                </DrawingGroup.Transform>
+                <GeometryDrawing Brush="{StaticResource HighlightBrush}"
+                                 Geometry="F1 M143.76 154.54L118.52 154.54L113.54 166.22L103.88 166.22L126.6 115.74L135.83 115.74L158.62 166.22L148.81 166.22L143.76 154.54L143.76 154.54ZM140.65 147.18L131.13 125.11L121.68 147.18L140.64 147.18L140.65 147.18Z" />
+                <GeometryDrawing Brush="{StaticResource HighlightBrush}"
+                                 Geometry="F1 M165.02 115.74L174.39 115.74L174.39 166.22L165.02 166.22L165.02 115.74L165.02 115.74Z" />
+                <GeometryDrawing Geometry="F1 M85.88 84.44L198.95 84.44L198.95 197.51L85.88 197.51L85.88 84.44Z">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="{StaticResource ThemeControlVeryHighBrush}" Thickness="6.55" LineJoin="Miter" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M126.03 57.25L133.88 57.25L133.88 78.3L126.03 78.3L126.03 57.25Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,179.87,-57.52" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M114.77 46L122.62 46L122.62 76.36L114.77 76.36L114.77 46Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,164.69,-42.34" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M97.6 55.26L109.42 55.26L109.42 67.08L97.6 67.08L97.6 55.26Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,8.742278E-08,-8.742278E-08,-1,309.82,135.55" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M150.99 57.25L158.84 57.25L158.84 78.3L150.99 78.3L150.99 57.25Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,227.34,-104.98999" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M162.24 46L170.09 46L170.09 76.36L162.24 76.36L162.24 46Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,242.52,-120.16999" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M175.43 55.26L187.25 55.26L187.25 67.08L175.43 67.08L175.43 55.26Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,-8.742278E-08,8.742278E-08,-1,309.82,431.38" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M150.99 205.17L158.84 205.17L158.84 226.22L150.99 226.22L150.99 205.17Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,-56.12,388.45996" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M162.24 207.11L170.09 207.11L170.09 237.47L162.24 237.47L162.24 207.11Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,-40.94,403.63" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M175.43 216.38L187.25 216.38L187.25 228.2L175.43 228.2L175.43 216.38Z" />
+                </DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M126.03 205.17L133.88 205.17L133.88 226.22L126.03 226.22L126.03 205.17Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,-103.6,340.98" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M114.77 207.11L122.62 207.11L122.62 237.47L114.77 237.47L114.77 207.11Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,-118.78,325.8" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M97.6 216.38L109.42 216.38L109.42 228.2L97.6 228.2L97.6 216.38Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,-87.52,220.9" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M62.77 143.69L70.62 143.69L70.62 164.74L62.77 164.74L62.77 143.69Z" />
+                </DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M56.17 150.29L64.02 150.29L64.02 180.65L56.17 180.65L56.17 150.29Z" />
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M54.18 174.74L66 174.74L66 186.56L54.18 186.56L54.18 174.74Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,195.93999,62.56" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M62.77 118.73L70.62 118.73L70.62 139.78L62.77 139.78L62.77 118.73Z" />
+                </DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M56.17 102.82L64.02 102.82L64.02 133.18L56.17 133.18L56.17 102.82Z" />
+                <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                 Geometry="F1 M54.18 96.91L66 96.91L66 108.73L54.18 108.73L54.18 96.91Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,1,-1,-4.371139E-08,346.03,-87.52" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M212.85 118.73L220.7 118.73L220.7 139.78L212.85 139.78L212.85 118.73Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,8.742278E-08,-8.742278E-08,-1,446.75,235.99" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M219.45 102.82L227.3 102.82L227.3 133.18L219.45 133.18L219.45 102.82Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,8.742278E-08,-8.742278E-08,-1,446.75,205.63" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M217.46 96.91L229.28 96.91L229.28 108.73L217.46 108.73L217.46 96.91Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-4.371139E-08,-1,1,-4.371139E-08,62.56,370.98996" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M212.85 143.69L220.7 143.69L220.7 164.74L212.85 164.74L212.85 143.69Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,8.742278E-08,-8.742278E-08,-1,446.75,330.94" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M219.45 150.29L227.3 150.29L227.3 180.65L219.45 180.65L219.45 150.29Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="-1,8.742278E-08,-8.742278E-08,-1,446.75,361.3" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                                     Geometry="F1 M217.46 174.74L229.28 174.74L229.28 186.56L217.46 186.56L217.46 174.74Z" />
+                </DrawingGroup>
+            </DrawingGroup>
+        </DrawingGroup>
+    </DrawingImage>
+    
     <DrawingImage x:Key="Credit">
         <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="M5.5,9.511 C5.576,10.47 6.33,11.21 7.682,11.3 L7.682,12 L8.282,12 L8.282,11.29 C9.682,11.19 10.5,10.45 10.5,9.359 C10.5,8.372 9.874,7.863 8.755,7.599 L8.282,7.487 L8.282,5.57 C8.882,5.638 9.264,5.966 9.356,6.42 L10.41,6.42 C10.33,5.501 9.544,4.782 8.282,4.704 L8.282,4 L7.682,4 L7.682,4.719 C6.487,4.836 5.672,5.555 5.672,6.572 C5.672,7.472 6.278,8.044 7.285,8.279 L7.682,8.377 L7.682,10.41 C7.067,10.32 6.66,9.981 6.568,9.511 L5.5,9.511 z M7.677,7.345 C7.087,7.208 6.767,6.929 6.767,6.509 C6.767,6.039 7.112,5.687 7.682,5.584 L7.682,7.344 L7.677,7.344 z M8.369,8.538 C9.086,8.704 9.417,8.973 9.417,9.448 C9.417,9.99 9.005,10.36 8.282,10.43 L8.282,8.518 L8.369,8.538 z M8,15 A7,-7 0 1 1 8,1 A7,-7 0 0 1 8,15 z M8,16 A8,-8 0 1 0 8,0 A8,-8 0 0 0 8,16 z M8,13.5 A5.5,-5.5 0 1 1 8,2.5 A5.5,-5.5 0 0 1 8,13.5 z M8,14 A6,-6 0 1 0 8,2 A6,-6 0 0 0 8,14 z"   />
     </DrawingImage>
