@@ -96,14 +96,14 @@ public class DesktopStudioApp : StudioApp
     {
         base.RegisterTypes(containerRegistry);
 
-        containerRegistry.RegisterSingleton<AiReleaseViewModel>();
+        containerRegistry.RegisterSingleton<AiReleaseWindowViewModel>();
     }
 
     protected override void InitializeShell(AvaloniaObject shell)
     {
         base.InitializeShell(shell);
         
-        Container.Resolve<ISettingsService>().Register(AiReleaseViewModel.ShowReleaseNotificationKey, true);
+        Container.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
     }
 
     protected override async Task LoadContentAsync()
@@ -196,7 +196,7 @@ public class DesktopStudioApp : StudioApp
             //step 5: Check if the OneWare.AI notification should be shown
             //the setting refer to the dialog option "Don't show this again"
             showOneWareAiNotification =
-                SettingsService.GetSettingValue<bool>(AiReleaseViewModel.ShowReleaseNotificationKey);
+                SettingsService.GetSettingValue<bool>(AiReleaseWindowViewModel.ShowReleaseNotificationKey);
         }
         catch (Exception e)
         {
@@ -252,17 +252,17 @@ public class DesktopStudioApp : StudioApp
             //step 4: Ask to install the OneWare.AI extension
             else if (showOneWareAiNotification)
             {
-                AiReleaseViewModel aiReleaseVm = Container.Resolve<AiReleaseViewModel>();
+                AiReleaseWindowViewModel aiReleaseWindowVm = Container.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed
-                if (aiReleaseVm.ExtensionIsAlreadyInstalled(Container.Resolve<IPluginService>()))
+                if (aiReleaseWindowVm.ExtensionIsAlreadyInstalled(Container.Resolve<IPluginService>()))
                     return;
                 
                 //if not, notify the user that the OneWare.AI extension is available
                 Dispatcher.UIThread.Post(() =>
                 {
-                    Container.Resolve<IWindowService>().Show(new AIReleaseWindow()
+                    Container.Resolve<IWindowService>().Show(new AiReleaseWindow()
                     {
-                        DataContext = aiReleaseVm
+                        DataContext = aiReleaseWindowVm
                     });
                 });
             }

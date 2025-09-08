@@ -8,8 +8,8 @@
                          Width="420" SizeToContent="WidthAndHeight"
                          Title="A new plugin is available"
                          mc:Ignorable="d" WindowStartupLocation="CenterOwner"
-                         x:Class="OneWare.Studio.Desktop.Views.AIReleaseWindow"
-                         x:DataType="viewModels:AiReleaseViewModel">
+                         x:Class="OneWare.Studio.Desktop.Views.AiReleaseWindow"
+                         x:DataType="viewModels:AiReleaseWindowViewModel">
     <DockPanel Margin="8">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
             <TextBlock FontWeight="Bold" FontSize="18">OneAI is now available</TextBlock>

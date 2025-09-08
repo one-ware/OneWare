@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -74,9 +75,15 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 
         IsLoading = false;
 
-        if (!result)
+        if (!result.success)
         {
-            ErrorText = "Login failed!";
+            ErrorText = result.status switch
+            {
+                0 => "Connection Failed",
+                HttpStatusCode.Unauthorized => "Invalid email or password",
+                HttpStatusCode.TooManyRequests => "Too many login attempts, please try again later",
+                _ => "Unknown error"
+            };
             return;
         }
         

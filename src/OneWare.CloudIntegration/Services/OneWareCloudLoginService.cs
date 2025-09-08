@@ -126,7 +126,7 @@ public sealed class OneWareCloudLoginService
         }
     }
 
-    public async Task<bool> LoginAsync(string email, string password)
+    public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
     {
         try
         {
@@ -150,17 +150,21 @@ public sealed class OneWareCloudLoginService
 
                 SaveCredentials(email, token, refreshToken);
 
-                return true;
+                return (true, HttpStatusCode.OK);
+            }
+            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                return (false, response.StatusCode);
             }
 
-            return false;
+            return (false, response.StatusCode);
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
         }
 
-        return false;
+        return (false, HttpStatusCode.NoContent);
     }
 
     public void Logout(string email)

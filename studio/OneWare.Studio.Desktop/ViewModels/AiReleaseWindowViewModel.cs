@@ -10,7 +10,7 @@ using OneWare.PackageManager.Views;
 
 namespace OneWare.Studio.Desktop.ViewModels;
 
-public class AiReleaseViewModel : ObservableObject
+public class AiReleaseWindowViewModel : ObservableObject
 {
     public const string ShowReleaseNotificationKey = "OneAI_ShowReleaseNotification";
     private const string ExtensionId = "OneWare.AI";
@@ -21,7 +21,7 @@ public class AiReleaseViewModel : ObservableObject
     private readonly IPaths _paths;
     private bool _hideNextTime;
     
-    public AiReleaseViewModel(IPaths paths, ISettingsService settingsService, 
+    public AiReleaseWindowViewModel(IPaths paths, ISettingsService settingsService, 
         IWindowService windowService, PackageManagerViewModel packageManagerVm)
     {
         _paths = paths;
