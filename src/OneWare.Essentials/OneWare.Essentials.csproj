@@ -31,4 +31,8 @@
         <None Include="readme.md" Pack="true" PackagePath=""/>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Update="Svg.Controls.Skia.Avalonia" Version="11.3.0.4" />
+    </ItemGroup>
+
 </Project> 

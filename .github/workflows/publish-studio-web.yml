@@ -21,11 +21,14 @@ jobs:
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj -c Release -o ./out
       - name: Sync Files
-        uses: pontago/lftp-deploy-action@master
+        uses: Black-HOST/deployer@v1
         with:
           protocol: sftp
-          host: 5017617850.ssh.w2.strato.hosting
+          server: 5017617850.ssh.w2.strato.hosting
           username: ${{ secrets.ONEWARE_SFTP_USER }}
           password: ${{ secrets.ONEWARE_SFTP_PW }}
-          local_dir: ./out/wwwroot/
-          remote_dir: studio.one-ware.com/
+          local_dir: "./out/wwwroot/"
+          remote_dir: "studio.one-ware.com/."
+          exclude: ".htaccess"
+          delete: true
+          only_newer: true
