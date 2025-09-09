@@ -20,9 +20,7 @@ public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 
         if (g == null) return _defaultRegistryOptions.GetGrammar(scopeName);
         using var s = new StreamReader(AssetLoader.Open(new Uri(g.GrammarPath)));
-        {
-            return GrammarReader.ReadGrammarSync(s);
-        }
+        return GrammarReader.ReadGrammarSync(s);
     }
 
     public ICollection<string> GetInjections(string scopeName)
