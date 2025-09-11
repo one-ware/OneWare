@@ -146,7 +146,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         {
             var result = await LoadAsync();
 
-            var disableAfterSetting = _settingsService.GetSettingValue<int>("TypeAssistance_DisableLargeFile_Min");
+            var disableAfterSetting = (int)_settingsService.GetSettingValue<double>("TypeAssistance_DisableLargeFile_Min");
             DisableEditViewEvents = CurrentDocument.TextLength > disableAfterSetting;
             if (DisableEditViewEvents)
             {
