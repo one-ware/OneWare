@@ -7,10 +7,13 @@ namespace OneWare.Python;
 
 public class LanguageServicePython : LanguageServiceLsp
 {
-    public LanguageServicePython()
+    public LanguageServicePython(ISettingsService settingsService)
         : base(PythonModule.LspName, null)
     {
-        
+        settingsService.GetSettingObservable<string>(PythonModule.LspPathSetting).Subscribe(x =>
+        {
+            ExecutablePath = x;
+        });
     }
 
     public override ITypeAssistance GetTypeAssistance(IEditor editor)
