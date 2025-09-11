@@ -19,11 +19,12 @@ public partial class ProjectExplorerView : UserControl
             AddHandler(SearchBox.SearchEvent, (o, i) => { vm.OnSearch(); }, RoutingStrategies.Bubble);
         });
 
+        /*
         TreeViewContextMenu.Opening += (sender, args) =>
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null && DataContext is ProjectExplorerViewModel vm)
                 vm.ConstructContextMenu(topLevel);
-        };
+        };*/
     }
 }

@@ -6,6 +6,8 @@ public interface IProjectFolder : IProjectEntry
 
     public void Remove(IProjectEntry entry);
 
+    public void SetIsExpanded(bool newValue);
+    
     public IProjectFile AddFile(string path, bool createNew = false);
 
     public IProjectFolder AddFolder(string path, bool createNew = false);

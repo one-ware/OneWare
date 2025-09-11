@@ -7,6 +7,8 @@
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
+             xmlns:conv="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls.TreeDataGrid"
+             xmlns:views="clr-namespace:OneWare.ProjectExplorer.Views"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -29,6 +31,8 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
+        
+        <StyleInclude Source="ProjectExplorerTheme.axaml"></StyleInclude>
 
     </UserControl.Styles>
 
@@ -45,6 +49,29 @@
                                 SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
+        
+        <TreeDataGrid CanUserSortColumns="False" 
+                      ShowColumnHeaders="False" 
+                      CanUserResizeColumns="False"
+                      Source="{Binding Source}" Grid.Row="1">
+            <TreeDataGrid.Resources>
+                <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Image Source="{Binding Icon}" VerticalAlignment="Center"></Image>
+                        <TextBlock Text="{Binding Header}" VerticalAlignment="Center"></TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeDataGrid.Resources>
+            <TreeDataGrid.Styles>
+                <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
+                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded}"/>
+                </Style>
+                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
+                    <Setter Property="Command" Value="{Binding SetIsExpanded}" />
+                </Style>
+            </TreeDataGrid.Styles>
+        </TreeDataGrid>
+        <!--
         <TreeView AutoScrollToSelectedItem="True"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
                   SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree"
@@ -115,15 +142,6 @@
                                 </ItemsControl>
                             </Grid>
 
-                            <!--
-                        <Grid DockPanel.Dock="Right" Width="11">
-                            <TextBlock HorizontalAlignment="Center"
-                                       ToolTip.Tip="{Binding GitChangeStatus, Converter={StaticResource EnumToStringConverter}}"
-                                       Text="{Binding GitChangeStatus, Converter={StaticResource ChangeStatusCharConverter}}"
-                                       FontWeight="Bold"
-                                       Foreground="{Binding GitChangeStatus, Converter={StaticResource ChangeStatusBrushConverter}}" />
-                        </Grid>-->
-
                             <controls:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}"
                                                       VerticalAlignment="Center"
                                                       IsEnabled="False" x:Name="RenamingTextBox"
@@ -134,7 +152,7 @@
                     </DockPanel>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>
-        </TreeView>
+        </TreeView>-->
     </Grid>
 
 

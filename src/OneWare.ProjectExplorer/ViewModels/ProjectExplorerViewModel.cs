@@ -137,9 +137,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var project = await manager.LoadProjectAsync(path);
 
-        if (project == null) return null;
+        if (project == null) 
+            return null;
 
-        if (expand) project.IsExpanded = expand;
+        project.SetIsExpanded(expand);
 
         Insert(project);
 

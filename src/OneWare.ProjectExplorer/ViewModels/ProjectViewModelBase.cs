@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Media;
 using Avalonia.Styling;
 using OneWare.Essentials.Extensions;
@@ -11,12 +12,25 @@ using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
-public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKey)
+public abstract class ProjectViewModelBase : ExtendedTool
 {
     private string _searchString = "";
     public bool EnableDragDrop = true;
     private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
 
+    public ProjectViewModelBase(string iconKey) : base(iconKey)
+    {
+        Source = new HierarchicalTreeDataGridSource<IProjectExplorerNode>(Projects)
+        {
+            Columns =
+            {
+                new HierarchicalExpanderColumn<IProjectExplorerNode>(
+                    new TemplateColumn<IProjectExplorerNode>("Header", "ProjectExplorerColumnTemplate", null,
+                        GridLength.Star), x => x.Children),
+            }
+        };
+    }
+    
     public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
     {
         get => _treeViewContextMenu;
@@ -34,6 +48,9 @@ public abstract class ProjectViewModelBase(string iconKey) : ExtendedTool(iconKe
     public ObservableCollection<IProjectExplorerNode> SelectedItems { get; } = new();
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
+    
+    public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
+    
 
     public virtual void Insert(IProjectRoot entry)
     {
