@@ -17,7 +17,7 @@ public abstract class TreeDataGridExtension : AvaloniaObject
     private static void HandleIsExpandedChanged(TreeDataGridExpanderCell element, AvaloniaPropertyChangedEventArgs args)
     {
         bool value = args.GetNewValue<bool>();
-        if (value != element.IsExpanded)
+        if (value && value != element.IsExpanded)
             element.IsExpanded = value;
     }
 }

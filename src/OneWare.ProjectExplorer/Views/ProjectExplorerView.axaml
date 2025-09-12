@@ -121,22 +121,23 @@
             <TreeDataGrid.Styles>
                 <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="Background" Value="{Binding Background}"/>
-                </Style>
-                <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
-                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="DragDrop.AllowDrop" Value="True" />
                     <Setter Property="Interaction.Behaviors">
                         <BehaviorCollectionTemplate>
                             <BehaviorCollection>
-                                <behaviors1:TreeDragBehavior />
+                                <views:TreeDataGridDragBehavior />
                             </BehaviorCollection>
                         </BehaviorCollectionTemplate>
                     </Setter>
+                </Style>
+                <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
+                    <Setter Property="Opacity" Value="1" />
                 </Style>
                 <!-- Manual two-way binding to Property IsExpanded -->
                 <!-- If IsExpanded is bound directly, an unhandled exception when measuring the UI will occur -->
                 <!-- Furthermore, it doesn't work to use the Func<bool> isExpanded property in the HierarchicalDataSource -->
                 <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
-                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded}"/>
+                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded, Mode=OneWay}"/>
                 </Style>
                 <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
                     <Setter Property="Command" Value="{Binding SetIsExpandedFromView}" />
