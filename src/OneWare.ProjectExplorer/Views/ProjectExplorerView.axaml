@@ -106,18 +106,13 @@
                                 </ItemsControl>
                             </Grid>
 
-                            <controls:RenamingTextBox Classes.IsActive="{Binding (models:IProjectRoot).IsActive}" 
+                            <controls:RenamingTextBox FontWeight="{Binding FontWeight}"
                                                       ToolTip.Tip="{Binding Header}"
                                                       VerticalAlignment="Center"
                                                       IsEnabled="False" x:Name="RenamingTextBox"
                                                       Text="{Binding Header, Mode=OneWay}"
                                                       RenameAction="{Binding (models:IProjectEntry).RequestRename}"
                                                       Opacity="{Binding TextOpacity}" >
-                                <controls:RenamingTextBox.Styles>
-                                    <Style Selector="controls|RenamingTextBox.IsActive">
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                    </Style>
-                                </controls:RenamingTextBox.Styles>
                             </controls:RenamingTextBox>
                         </StackPanel>
                     </DockPanel>
@@ -137,11 +132,14 @@
                         </BehaviorCollectionTemplate>
                     </Setter>
                 </Style>
+                <!-- Manual two-way binding to Property IsExpanded -->
+                <!-- If IsExpanded is bound directly, an unhandled exception when measuring the UI will occur -->
+                <!-- Furthermore, it doesn't work to use the Func<bool> isExpanded property in the HierarchicalDataSource -->
                 <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
                     <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded}"/>
                 </Style>
                 <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
-                    <Setter Property="Command" Value="{Binding SetIsExpanded}" />
+                    <Setter Property="Command" Value="{Binding SetIsExpandedFromView}" />
                 </Style>
             </TreeDataGrid.Styles>
         </TreeDataGrid>

@@ -140,7 +140,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (project == null) 
             return null;
 
-        project.SetIsExpanded(expand);
+        if (expand)
+            project.IsExpanded = true;
 
         Insert(project);
 

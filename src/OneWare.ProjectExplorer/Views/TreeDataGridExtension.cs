@@ -4,7 +4,7 @@ using Avalonia.Data;
 
 namespace OneWare.ProjectExplorer.Views;
 
-public sealed class TreeDataGridExtension : AvaloniaObject
+public abstract class TreeDataGridExtension : AvaloniaObject
 {
     static TreeDataGridExtension()
     {
@@ -12,11 +12,12 @@ public sealed class TreeDataGridExtension : AvaloniaObject
     }
     
     public static readonly AttachedProperty<bool> IsExpandedExtensionProperty = AvaloniaProperty.RegisterAttached<TreeDataGridExtension, TreeDataGridExpanderCell, bool>(
-        "IsExpandedExtension", false, false, BindingMode.OneTime);
+        "IsExpandedExtension", false, false, BindingMode.OneWay);
 
     private static void HandleIsExpandedChanged(TreeDataGridExpanderCell element, AvaloniaPropertyChangedEventArgs args)
     {
-        if (args.GetNewValue<bool>())
-            element.IsExpanded = true;
+        bool value = args.GetNewValue<bool>();
+        if (value != element.IsExpanded)
+            element.IsExpanded = value;
     }
 }

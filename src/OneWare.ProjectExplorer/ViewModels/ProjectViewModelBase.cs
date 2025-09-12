@@ -128,14 +128,10 @@ public abstract class ProjectViewModelBase : ExtendedTool
         if (SearchString.Length < 3) return;
 
         SearchResult.AddRange(DeepSearchName(SearchString));
-
-        CollapseAll(Projects);
-
+        
         foreach (var r in SearchResult)
         {
-            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
-                           Brushes.Transparent;
-            ExpandToRoot(r);
+            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ?? Brushes.Transparent;
         }
     }
 

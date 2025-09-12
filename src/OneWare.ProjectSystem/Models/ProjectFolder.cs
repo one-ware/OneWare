@@ -55,8 +55,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Collapse folder if empty
         if (Children.Count == 0) IsExpanded = false;
     }
-
-    public virtual void SetIsExpanded(bool newValue)
+    
+    public void SetIsExpandedFromView(bool newValue)
     {
         IsExpanded = newValue;
     }
