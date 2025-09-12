@@ -7,7 +7,6 @@
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
-             xmlns:conv="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls.TreeDataGrid"
              xmlns:views="clr-namespace:OneWare.ProjectExplorer.Views"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
@@ -51,44 +50,10 @@
         </Border>
 
         <TreeDataGrid Grid.Row="1" CanUserSortColumns="False" 
-                      ShowColumnHeaders="False"
+                      ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       CanUserResizeColumns="False"
                       Source="{Binding Source}" 
                        >
-            <TreeDataGrid.ContextMenu>
-                <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
-                             ItemsSource="{Binding TreeViewContextMenu}" />
-            </TreeDataGrid.ContextMenu>
-            <TreeDataGrid.Resources>
-                <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Image Source="{Binding Icon}" VerticalAlignment="Center"></Image>
-                        <!--<TextBlock Text="{Binding Header}" VerticalAlignment="Center"></TextBlock>
-                        -->
-                        <controls:RenamingTextBox
-                            FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}"
-                            VerticalAlignment="Center"
-                            IsEnabled="False" x:Name="RenamingTextBox"
-                            Text="{Binding Header, Mode=OneWay}"
-                            RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                            Opacity="{Binding TextOpacity}" />
-                    </StackPanel>
-                </DataTemplate>
-            </TreeDataGrid.Resources>
-            <TreeDataGrid.Styles>
-                <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
-                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded}"/>
-                </Style>
-                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
-                    <Setter Property="Command" Value="{Binding SetIsExpanded}" />
-                </Style>
-            </TreeDataGrid.Styles>
-        </TreeDataGrid>
-        <!--
-        <TreeView AutoScrollToSelectedItem="True"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
-                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree"
-                  ItemsSource="{Binding Projects}">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
@@ -96,25 +61,12 @@
                 <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialog}"
                                                        TriggerKey="Delete"/>
             </Interaction.Behaviors>
-            <TreeView.ContextMenu>
+            <TreeDataGrid.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
                              ItemsSource="{Binding TreeViewContextMenu}" />
-            </TreeView.ContextMenu>
-            <TreeView.Styles>
-                <Style Selector="TreeViewItem" x:DataType="models:IProjectExplorerNode">
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
-                    <Setter Property="Background" Value="{Binding Background}" />
-                    <Setter Property="Interaction.Behaviors">
-                        <BehaviorCollectionTemplate>
-                            <BehaviorCollection>
-                                <behaviors1:TreeDragBehavior />
-                            </BehaviorCollection>
-                        </BehaviorCollectionTemplate>
-                    </Setter>
-                </Style>
-            </TreeView.Styles>
-            <TreeView.DataTemplates>
-                <TreeDataTemplate DataType="models:IProjectExplorerNode" ItemsSource="{Binding Children}">
+            </TreeDataGrid.ContextMenu>
+            <TreeDataGrid.Resources>
+                <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <DockPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                             <ItemsControl ItemsSource="{Binding RightIcons}">
@@ -130,8 +82,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
-
-                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
+                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
                             <Interaction.Behaviors>
                                 <behaviors:CommandOnDoubleTapBehavior
                                     Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
@@ -155,17 +106,45 @@
                                 </ItemsControl>
                             </Grid>
 
-                            <controls:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}"
+                            <controls:RenamingTextBox Classes.IsActive="{Binding (models:IProjectRoot).IsActive}" 
+                                                      ToolTip.Tip="{Binding Header}"
                                                       VerticalAlignment="Center"
                                                       IsEnabled="False" x:Name="RenamingTextBox"
                                                       Text="{Binding Header, Mode=OneWay}"
                                                       RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                                                      Opacity="{Binding TextOpacity}" />
+                                                      Opacity="{Binding TextOpacity}" >
+                                <controls:RenamingTextBox.Styles>
+                                    <Style Selector="controls|RenamingTextBox.IsActive">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </Style>
+                                </controls:RenamingTextBox.Styles>
+                            </controls:RenamingTextBox>
                         </StackPanel>
                     </DockPanel>
-                </TreeDataTemplate>
-            </TreeView.DataTemplates>
-        </TreeView>-->
+                </DataTemplate>
+            </TreeDataGrid.Resources>
+            <TreeDataGrid.Styles>
+                <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
+                    <Setter Property="Background" Value="{Binding Background}"/>
+                </Style>
+                <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="Interaction.Behaviors">
+                        <BehaviorCollectionTemplate>
+                            <BehaviorCollection>
+                                <behaviors1:TreeDragBehavior />
+                            </BehaviorCollection>
+                        </BehaviorCollectionTemplate>
+                    </Setter>
+                </Style>
+                <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
+                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded}"/>
+                </Style>
+                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
+                    <Setter Property="Command" Value="{Binding SetIsExpanded}" />
+                </Style>
+            </TreeDataGrid.Styles>
+        </TreeDataGrid>
     </Grid>
 
 

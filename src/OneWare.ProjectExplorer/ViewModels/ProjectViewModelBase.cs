@@ -89,12 +89,34 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public void AddToSelection(IProjectExplorerNode node)
     {
-        //Not implemented yet
+        List<int>? indexPath = null;
+        if (node.Parent == null)
+            indexPath = [0];
+
+        try
+        {
+            indexPath = GetIndexPathFromNode(node);
+            if (indexPath.Count == 0) 
+                return;
+            
+            indexPath.Reverse();
+            Source.RowSelection?.Select(new IndexPath(indexPath));
+        }
+        catch
+        {
+            return;
+        }
     }
 
-    public void RemoveFromSelection(IProjectExplorerNode node)
+    private List<int> GetIndexPathFromNode(IProjectExplorerNode node)
     {
-        //not implemented yet
+        List<int> indexPath = [];
+        if (node.Parent != null)
+        {
+            indexPath.Add(node.Parent.Children.IndexOf(node)); 
+            indexPath.AddRange(GetIndexPathFromNode(node.Parent));
+        }
+        return indexPath;
     }
 
     public void OnSearch()

@@ -44,5 +44,4 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 
     public void ClearSelection();
     public void AddToSelection(IProjectExplorerNode node);
-    public void RemoveFromSelection(IProjectExplorerNode node);
 }

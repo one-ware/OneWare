@@ -14,6 +14,7 @@ public class FolderProjectRoot : ProjectRoot
 
     public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
     {
+        WatchDirectory(this);
     }
 
     public override string ProjectPath => RootFolderPath;
@@ -52,37 +53,8 @@ public class FolderProjectRoot : ProjectRoot
                         folder.Children.Add(new LoadingDummyNode());
                 }
             });
-
-            //Console.WriteLine("watch folder: " + folder.FullPath);
-
+            
             _registeredFolders.Add(folder, subscription);
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
-    }
-    
-    public override void SetIsExpanded(bool newValue)
-    {
-        try
-        {
-            IsExpanded = newValue;
-            if (IsExpanded)
-            {
-                if (Children.FirstOrDefault() is LoadingDummyNode) Children.RemoveAt(0);
-                FolderProjectManager.LoadFolder(this);
-            }
-            else
-            {
-                if (Entities.Count > 0)
-                    foreach (var subEntity in Entities.ToArray())
-                        Remove(subEntity);
-                if (Directory.Exists(FullPath) &&
-                    Directory.EnumerateFileSystemEntries(FullPath).Any())
-                    Children.Add(new LoadingDummyNode());
-            }
-
         }
         catch (Exception e)
         {
