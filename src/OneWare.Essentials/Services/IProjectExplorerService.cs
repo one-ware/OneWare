@@ -10,7 +10,7 @@ namespace OneWare.Essentials.Services;
 public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 {
     public ObservableCollection<IProjectRoot> Projects { get; }
-    public ObservableCollection<IProjectExplorerNode> SelectedItems { get; }
+    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
     public event EventHandler<IFile>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
@@ -41,4 +41,8 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 
     public void RegisterConstructContextMenu(
         Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct);
+
+    public void ClearSelection();
+    public void AddToSelection(IProjectExplorerNode node);
+    public void RemoveFromSelection(IProjectExplorerNode node);
 }

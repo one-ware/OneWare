@@ -27,8 +27,14 @@ public abstract class ProjectViewModelBase : ExtendedTool
                 new HierarchicalExpanderColumn<IProjectExplorerNode>(
                     new TemplateColumn<IProjectExplorerNode>("Header", "ProjectExplorerColumnTemplate", null,
                         GridLength.Star), x => x.Children),
-            }
+            },
         };
+
+        if (Source.RowSelection != null)
+        {
+            Source.RowSelection.SingleSelect = false;
+            SelectedItems = Source.RowSelection.SelectedItems!;
+        }
     }
     
     public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
@@ -45,7 +51,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
-    public ObservableCollection<IProjectExplorerNode> SelectedItems { get; } = new();
+    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
     
@@ -76,9 +82,24 @@ public abstract class ProjectViewModelBase : ExtendedTool
     {
     }
 
+    public void ClearSelection()
+    {
+        Source.RowSelection?.Clear();
+    }
+
+    public void AddToSelection(IProjectExplorerNode node)
+    {
+        //Not implemented yet
+    }
+
+    public void RemoveFromSelection(IProjectExplorerNode node)
+    {
+        //not implemented yet
+    }
+
     public void OnSearch()
     {
-        SelectedItems.Clear();
+        ClearSelection();
         ResetSearch();
         foreach (var s in SearchResult) s.Background = Brushes.Transparent;
         SearchResult.Clear();

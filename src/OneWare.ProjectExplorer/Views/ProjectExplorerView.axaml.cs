@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using System.ComponentModel;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using DynamicData.Binding;
 using OneWare.Essentials.Controls;
@@ -19,12 +20,12 @@ public partial class ProjectExplorerView : UserControl
             AddHandler(SearchBox.SearchEvent, (o, i) => { vm.OnSearch(); }, RoutingStrategies.Bubble);
         });
 
-        /*
+        
         TreeViewContextMenu.Opening += (sender, args) =>
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel != null && DataContext is ProjectExplorerViewModel vm)
                 vm.ConstructContextMenu(topLevel);
-        };*/
+        };
     }
 }

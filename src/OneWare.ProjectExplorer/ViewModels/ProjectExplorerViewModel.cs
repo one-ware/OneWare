@@ -415,7 +415,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             Projects.Remove(proj);
 
             if (Projects.Count == 0) //Avalonia bugfix
-                SelectedItems.Clear();
+                ClearSelection();
 
             if (activeProj)
                 ActiveProject = Projects.Count > 0 ? Projects[0] : null;

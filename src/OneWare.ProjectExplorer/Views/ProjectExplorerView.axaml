@@ -49,16 +49,29 @@
                                 SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
-        
-        <TreeDataGrid CanUserSortColumns="False" 
-                      ShowColumnHeaders="False" 
+
+        <TreeDataGrid Grid.Row="1" CanUserSortColumns="False" 
+                      ShowColumnHeaders="False"
                       CanUserResizeColumns="False"
-                      Source="{Binding Source}" Grid.Row="1">
+                      Source="{Binding Source}" 
+                       >
+            <TreeDataGrid.ContextMenu>
+                <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
+                             ItemsSource="{Binding TreeViewContextMenu}" />
+            </TreeDataGrid.ContextMenu>
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <Image Source="{Binding Icon}" VerticalAlignment="Center"></Image>
-                        <TextBlock Text="{Binding Header}" VerticalAlignment="Center"></TextBlock>
+                        <!--<TextBlock Text="{Binding Header}" VerticalAlignment="Center"></TextBlock>
+                        -->
+                        <controls:RenamingTextBox
+                            FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}"
+                            VerticalAlignment="Center"
+                            IsEnabled="False" x:Name="RenamingTextBox"
+                            Text="{Binding Header, Mode=OneWay}"
+                            RenameAction="{Binding (models:IProjectEntry).RequestRename}"
+                            Opacity="{Binding TextOpacity}" />
                     </StackPanel>
                 </DataTemplate>
             </TreeDataGrid.Resources>
