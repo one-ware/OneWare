@@ -52,8 +52,8 @@
         <TreeDataGrid Grid.Row="1" CanUserSortColumns="False" 
                       ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       CanUserResizeColumns="False"
-                      Source="{Binding Source}" 
-                       >
+                      AutoDragDropRows="False"
+                      Source="{Binding Source}">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
@@ -68,6 +68,12 @@
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <DockPanel>
+                        <Interaction.Behaviors>
+                            <behaviors:CommandOnDoubleTapBehavior
+                                Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
+                                CommandParameter="{Binding}" />
+                        </Interaction.Behaviors>
+                        
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                             <ItemsControl ItemsSource="{Binding RightIcons}">
                                 <ItemsControl.ItemsPanel>
@@ -83,11 +89,6 @@
                             </ItemsControl>
                         </StackPanel>
                          <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
-                            <Interaction.Behaviors>
-                                <behaviors:CommandOnDoubleTapBehavior
-                                    Command="{Binding $parent[TreeView].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
-                                    CommandParameter="{Binding}" />
-                            </Interaction.Behaviors>
 
                             <Grid VerticalAlignment="Center">
                                 <Image Height="16" Width="16"
@@ -121,7 +122,6 @@
             <TreeDataGrid.Styles>
                 <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="Background" Value="{Binding Background}"/>
-                    <Setter Property="DragDrop.AllowDrop" Value="True" />
                     <Setter Property="Interaction.Behaviors">
                         <BehaviorCollectionTemplate>
                             <BehaviorCollection>
