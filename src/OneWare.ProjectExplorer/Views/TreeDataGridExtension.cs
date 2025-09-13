@@ -16,8 +16,12 @@ public abstract class TreeDataGridExtension : AvaloniaObject
 
     private static void HandleIsExpandedChanged(TreeDataGridExpanderCell element, AvaloniaPropertyChangedEventArgs args)
     {
+        //the changed event gets triggered, even when no change occur
+        //this behavior only occurs when DataContext is null
+        if (element.DataContext == null) return;
+        
         bool value = args.GetNewValue<bool>();
-        if (value && value != element.IsExpanded)
+        if (value != element.IsExpanded)
             element.IsExpanded = value;
     }
 }
