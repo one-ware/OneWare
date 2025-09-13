@@ -326,8 +326,8 @@ public class SourceControlViewModel : ExtendedTool
     {
         _dockService.Show(_projectExplorerService);
         _projectExplorerService.ExpandToRoot(entry);
-        _projectExplorerService.SelectedItems.Clear();
-        _projectExplorerService.SelectedItems.Add(entry);
+        _projectExplorerService.ClearSelection();
+        _projectExplorerService.AddToSelection(entry);
     }
 
     #endregion

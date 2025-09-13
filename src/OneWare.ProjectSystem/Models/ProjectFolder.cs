@@ -55,6 +55,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Collapse folder if empty
         if (Children.Count == 0) IsExpanded = false;
     }
+    
+    public void SetIsExpandedFromView(bool newValue)
+    {
+        IsExpanded = newValue;
+    }
 
     public IProjectFile AddFile(string path, bool createNew = false)
     {
@@ -129,7 +134,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
-
+            
         var pf = ConstructNewProjectFolder(path, this);
 
         Insert(pf);

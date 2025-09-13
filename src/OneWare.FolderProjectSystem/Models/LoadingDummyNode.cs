@@ -17,6 +17,6 @@ public class LoadingDummyNode : IProjectExplorerNode
     public ObservableCollection<IImage> RightIcons { get; } = new();
     public bool IsExpanded { get; set; }
     public IBrush Background { get; set; } = Brushes.Transparent;
-    public FontWeight FontWeight { get; set; }
+    public FontWeight FontWeight { get; set; } = FontWeight.Regular;
     public float TextOpacity { get; set; } = 1f;
 }
