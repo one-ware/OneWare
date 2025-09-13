@@ -16,7 +16,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         if (targetContext is not ProjectExplorerViewModel vm
             || treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
             return false;
-
+        
         var targetParent = targetNode as IProjectFolder ?? targetNode.Parent as IProjectFolder;
 
         if (targetParent == null) return false;
@@ -41,7 +41,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         if (!sourceNodes.All(x => x is IProjectEntry)) return false;
 
         var sourceEntities = sourceNodes.Cast<IProjectEntry>().ToArray();
-
+        
         foreach (var sourceNode in sourceEntities)
         {
             if (targetParent == sourceNode.Parent) return false;
@@ -52,7 +52,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             if (sourceNode is IProjectFolder sourceFolder && targetParent.FullPath.StartsWith(sourceFolder.FullPath))
                 return false;
         }
-
+        
         switch (e.DragEffects)
         {
             case DragDropEffects.Copy:
@@ -63,6 +63,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 return true;
             }
             case DragDropEffects.Move:
+            case DragDropEffects.None:
             {
                 if (bExecute)
                     _ = vm.DropAsync(targetParent, true, false, sourceEntities.Select(x => x.FullPath).ToArray());
@@ -82,7 +83,11 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         object? state)
     {
         if (e.Source is Control && sender is TreeDataGrid treeView)
-            return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
+        {
+            var status = Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
+            return status;
+        }
+        
         return false;
     }
 
@@ -91,6 +96,6 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
     {
         if (e.Source is Control && sender is TreeDataGrid treeView)
             return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, true);
-        return false;
+        return true;
     }
 }
