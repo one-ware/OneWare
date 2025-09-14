@@ -7,7 +7,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using Avalonia.Xaml.Interactivity;
 
-namespace OneWare.ProjectExplorer.Views;
+namespace OneWare.ProjectExplorer.Behaviors;
 
 /// <summary>
 /// </summary>

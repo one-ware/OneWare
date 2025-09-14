@@ -8,6 +8,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
              xmlns:views="clr-namespace:OneWare.ProjectExplorer.Views"
+             xmlns:projectExplorer="clr-namespace:OneWare.ProjectExplorer"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.ProjectExplorer.Views.ProjectExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -30,7 +31,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
-        
+
         <StyleInclude Source="ProjectExplorerTheme.axaml"></StyleInclude>
 
     </UserControl.Styles>
@@ -49,7 +50,7 @@
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
 
-        <TreeDataGrid Grid.Row="1" CanUserSortColumns="False" 
+        <projectExplorer:TreeDataGridCustom Grid.Row="1" CanUserSortColumns="False"
                       ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       CanUserResizeColumns="False"
                       AutoDragDropRows="False"
@@ -59,7 +60,7 @@
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
                 <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
                 <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialog}"
-                                                       TriggerKey="Delete"/>
+                                                       TriggerKey="Delete" />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
@@ -72,8 +73,9 @@
                             <behaviors:CommandOnDoubleTapBehavior
                                 Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding}" />
+                            <behaviors1:TreeDataGridDragBehavior />
                         </Interaction.Behaviors>
-                        
+
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                             <ItemsControl ItemsSource="{Binding RightIcons}">
                                 <ItemsControl.ItemsPanel>
@@ -88,7 +90,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
-                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Background="Transparent">
 
                             <Grid VerticalAlignment="Center">
                                 <Image Height="16" Width="16"
@@ -113,7 +115,7 @@
                                                       IsEnabled="False" x:Name="RenamingTextBox"
                                                       Text="{Binding Header, Mode=OneWay}"
                                                       RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                                                      Opacity="{Binding TextOpacity}" >
+                                                      Opacity="{Binding TextOpacity}">
                             </controls:RenamingTextBox>
                         </StackPanel>
                     </DockPanel>
@@ -121,14 +123,7 @@
             </TreeDataGrid.Resources>
             <TreeDataGrid.Styles>
                 <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
-                    <Setter Property="Background" Value="{Binding Background}"/>
-                    <Setter Property="Interaction.Behaviors">
-                        <BehaviorCollectionTemplate>
-                            <BehaviorCollection>
-                                <views:TreeDataGridDragBehavior />
-                            </BehaviorCollection>
-                        </BehaviorCollectionTemplate>
-                    </Setter>
+                    <Setter Property="Background" Value="{Binding Background}" />
                 </Style>
                 <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
                     <Setter Property="Opacity" Value="1" />
@@ -137,13 +132,15 @@
                 <!-- If IsExpanded is bound directly, an unhandled exception when measuring the UI will occur -->
                 <!-- Furthermore, it doesn't work to use the Func<bool> isExpanded property in the HierarchicalDataSource -->
                 <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
-                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension" Value="{Binding IsExpanded, Mode=OneWay}"/>
+                    <Setter Property="views:TreeDataGridExtension.IsExpandedExtension"
+                            Value="{Binding IsExpanded, Mode=OneWay}" />
                 </Style>
-                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton" x:DataType="models:IProjectFolder">
+                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton"
+                       x:DataType="models:IProjectFolder">
                     <Setter Property="Command" Value="{Binding SetIsExpandedFromView}" />
                 </Style>
             </TreeDataGrid.Styles>
-        </TreeDataGrid>
+        </projectExplorer:TreeDataGridCustom>
     </Grid>
 
 

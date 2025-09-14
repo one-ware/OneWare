@@ -63,7 +63,6 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                 return true;
             }
             case DragDropEffects.Move:
-            case DragDropEffects.None:
             {
                 if (bExecute)
                     _ = vm.DropAsync(targetParent, true, false, sourceEntities.Select(x => x.FullPath).ToArray());
