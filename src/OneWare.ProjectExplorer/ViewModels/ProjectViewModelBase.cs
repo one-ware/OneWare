@@ -15,7 +15,6 @@ namespace OneWare.ProjectExplorer.ViewModels;
 public abstract class ProjectViewModelBase : ExtendedTool
 {
     private string _searchString = "";
-    public bool EnableDragDrop = true;
     private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
 
     public ProjectViewModelBase(string iconKey) : base(iconKey)
@@ -51,7 +50,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
-    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
+    public IReadOnlyList<IProjectExplorerNode>? SelectedItems { get; }
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
     
