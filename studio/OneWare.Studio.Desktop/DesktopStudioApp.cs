@@ -27,6 +27,7 @@ using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
+using OneWare.Python;
 using OneWare.SerialMonitor;
 using OneWare.SourceControl;
 using OneWare.Studio.Desktop.ViewModels;
@@ -60,6 +61,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
+        moduleCatalog.AddModule<PythonModule>();
         
         try
         {
