@@ -33,15 +33,17 @@ public class FolderProjectManager : IProjectManager
 
     public static void LoadFolder(IProjectFolder folder)
     {
+        folder.Children.Clear();
+        folder.Entities.Clear();
+        
         var options = new EnumerationOptions
         {
             AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
             IgnoreInaccessible = true,
             RecurseSubdirectories = false
         };
-        
         var directoryMatches = Directory.EnumerateDirectories(folder.FullPath, "*", options);
-
+        
         foreach (var match in directoryMatches)
         {
             var newFolder = new ProjectFolder(Path.GetFileName(match), folder);
