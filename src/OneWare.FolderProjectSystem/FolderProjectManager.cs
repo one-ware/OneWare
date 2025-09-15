@@ -2,6 +2,7 @@
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
+using OneWare.ProjectSystem.Models;
 
 namespace OneWare.FolderProjectSystem;
 
@@ -32,17 +33,29 @@ public class FolderProjectManager : IProjectManager
 
     public static void LoadFolder(IProjectFolder folder)
     {
-        var matches = Directory.EnumerateFileSystemEntries(folder.FullPath);
-
-        foreach (var match in matches)
+        var options = new EnumerationOptions
         {
-            var relativePath = Path.GetRelativePath(folder.FullPath, match);
-            var attributes = File.GetAttributes(match);
-            if (attributes.HasFlag(FileAttributes.Hidden)) continue;
-            if (attributes.HasFlag(FileAttributes.Directory))
-                folder.AddFolder(relativePath);
-            else
-                folder.AddFile(relativePath);
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = false
+        };
+        
+        var directoryMatches = Directory.EnumerateDirectories(folder.FullPath, "*", options);
+
+        foreach (var match in directoryMatches)
+        {
+            var newFolder = new ProjectFolder(Path.GetFileName(match), folder);
+            folder.Children.Add(newFolder);
+            (folder.Root as FolderProjectRoot)!.RegisterEntry(newFolder);
+        }
+        
+        var fileMatches = Directory.EnumerateFiles(folder.FullPath, "*.*", options);
+        
+        foreach (var match in fileMatches)
+        {
+            var newFile = new ProjectFile(Path.GetFileName(match), folder);
+            folder.Children.Add(newFile);
+            (folder.Root as FolderProjectRoot)!.RegisterEntry(newFile);
         }
     }
 
