@@ -53,9 +53,7 @@ public class FolderProjectRoot : ProjectRoot
                         folder.Children.Add(new LoadingDummyNode());
                 }
             });
-
-            //Console.WriteLine("watch folder: " + folder.FullPath);
-
+            
             _registeredFolders.Add(folder, subscription);
         }
         catch (Exception e)

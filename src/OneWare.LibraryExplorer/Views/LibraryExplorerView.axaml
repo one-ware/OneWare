@@ -7,6 +7,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
              xmlns:viewModels="clr-namespace:OneWare.LibraryExplorer.ViewModels"
+             xmlns:views1="clr-namespace:OneWare.ProjectExplorer.Views;assembly=OneWare.ProjectExplorer"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.LibraryExplorer.Views.LibraryExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
@@ -17,7 +18,6 @@
              BorderThickness="0">
 
     <UserControl.Styles>
-
         <Style Selector="TextBox">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -26,6 +26,7 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
+        <StyleInclude Source="avares://OneWare.ProjectExplorer/Views/ProjectExplorerTheme.axaml"></StyleInclude>
     </UserControl.Styles>
 
     <Grid>
@@ -41,22 +42,36 @@
                                 SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
-        <TreeView AutoScrollToSelectedItem="True"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="Multiple"
-                  SelectedItems="{Binding SelectedItems, Mode=TwoWay}" Grid.Row="1" Name="ProjectTree"
-                  ItemsSource="{Binding Projects}">
-            <TreeView.ContextMenu>
+        <TreeDataGrid Name="ProjectTree" Grid.Row="1" CanUserSortColumns="False"
+                      ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      CanUserResizeColumns="False"
+                      AutoDragDropRows="False"
+                      Source="{Binding Source}">
+            <TreeDataGrid.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
                              ItemsSource="{Binding TreeViewContextMenu}" />
-            </TreeView.ContextMenu>
-            <TreeView.Styles>
-                <Style Selector="TreeViewItem" x:DataType="models:IProjectExplorerNode">
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+            </TreeDataGrid.ContextMenu>
+            <TreeDataGrid.Styles>
+                <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="Background" Value="{Binding Background}" />
                 </Style>
-            </TreeView.Styles>
-            <TreeView.DataTemplates>
-                <TreeDataTemplate DataType="models:IProjectExplorerNode" ItemsSource="{Binding Children}">
+                <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
+                    <Setter Property="Opacity" Value="1" />
+                </Style>
+                <!-- Manual two-way binding to Property IsExpanded -->
+                <!-- If IsExpanded is bound directly, an unhandled exception when measuring the UI will occur -->
+                <!-- Furthermore, it doesn't work to use the Func<bool> isExpanded property in the HierarchicalDataSource -->
+                <Style Selector="TreeDataGridExpanderCell" x:DataType="models:IProjectFolder">
+                    <Setter Property="views1:TreeDataGridExtension.IsExpandedExtension"
+                            Value="{Binding IsExpanded, Mode=OneWay}" />
+                </Style>
+                <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton"
+                       x:DataType="models:IProjectFolder">
+                    <Setter Property="Command" Value="{Binding SetIsExpandedFromView}" />
+                </Style>
+            </TreeDataGrid.Styles>
+            <TreeDataGrid.Resources>
+                <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <DockPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                             <ItemsControl ItemsSource="{Binding RightIcons}">
@@ -97,15 +112,6 @@
                                 </ItemsControl>
                             </Grid>
 
-                            <!--
-                        <Grid DockPanel.Dock="Right" Width="11">
-                            <TextBlock HorizontalAlignment="Center"
-                                       ToolTip.Tip="{Binding GitChangeStatus, Converter={StaticResource EnumToStringConverter}}"
-                                       Text="{Binding GitChangeStatus, Converter={StaticResource ChangeStatusCharConverter}}"
-                                       FontWeight="Bold"
-                                       Foreground="{Binding GitChangeStatus, Converter={StaticResource ChangeStatusBrushConverter}}" />
-                        </Grid>-->
-
                             <controls:RenamingTextBox FontWeight="{Binding FontWeight}" ToolTip.Tip="{Binding Header}"
                                                       VerticalAlignment="Center"
                                                       IsEnabled="False" x:Name="RenamingTextBox"
@@ -114,9 +120,9 @@
                                                       Opacity="{Binding TextOpacity}" />
                         </StackPanel>
                     </DockPanel>
-                </TreeDataTemplate>
-            </TreeView.DataTemplates>
-        </TreeView>
+                </DataTemplate>
+            </TreeDataGrid.Resources>
+        </TreeDataGrid>
     </Grid>
 
 

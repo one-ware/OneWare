@@ -137,9 +137,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var project = await manager.LoadProjectAsync(path);
 
-        if (project == null) return null;
+        if (project == null) 
+            return null;
 
-        if (expand) project.IsExpanded = expand;
+        if (expand)
+            project.IsExpanded = true;
 
         Insert(project);
 
@@ -414,7 +416,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             Projects.Remove(proj);
 
             if (Projects.Count == 0) //Avalonia bugfix
-                SelectedItems.Clear();
+                ClearSelection();
 
             if (activeProj)
                 ActiveProject = Projects.Count > 0 ? Projects[0] : null;

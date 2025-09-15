@@ -1,5 +1,9 @@
-﻿using Avalonia.Controls;
+﻿using System.ComponentModel;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using DynamicData.Binding;
 using OneWare.Essentials.Controls;
 using OneWare.ProjectExplorer.ViewModels;
@@ -11,7 +15,7 @@ public partial class ProjectExplorerView : UserControl
     public ProjectExplorerView()
     {
         InitializeComponent();
-
+        
         this.WhenValueChanged(x => x.DataContext).Subscribe(x =>
         {
             if (x is not ProjectExplorerViewModel vm) return;
@@ -19,6 +23,7 @@ public partial class ProjectExplorerView : UserControl
             AddHandler(SearchBox.SearchEvent, (o, i) => { vm.OnSearch(); }, RoutingStrategies.Bubble);
         });
 
+        
         TreeViewContextMenu.Opening += (sender, args) =>
         {
             var topLevel = TopLevel.GetTopLevel(this);
