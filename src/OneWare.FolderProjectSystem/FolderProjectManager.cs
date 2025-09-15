@@ -46,6 +46,7 @@ public class FolderProjectManager : IProjectManager
         {
             var newFolder = new ProjectFolder(Path.GetFileName(match), folder);
             folder.Children.Add(newFolder);
+            folder.Entities.Add(newFolder);
             (folder.Root as FolderProjectRoot)!.RegisterEntry(newFolder);
         }
         
@@ -55,6 +56,7 @@ public class FolderProjectManager : IProjectManager
         {
             var newFile = new ProjectFile(Path.GetFileName(match), folder);
             folder.Children.Add(newFile);
+            folder.Entities.Add(newFile);
             (folder.Root as FolderProjectRoot)!.RegisterEntry(newFile);
         }
     }

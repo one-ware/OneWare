@@ -99,7 +99,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
             menuItems.Add(new MenuItemViewModel("Refresh")
             {
                 Header = "Refresh",
-                Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
+                Command = new AsyncRelayCommand(async() => await LoadAsync())
             });
             menuItems.Add(new MenuItemViewModel("Open Library Folder")
             {

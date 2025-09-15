@@ -112,9 +112,9 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get => _isExpanded;
         set
         {
+            if (this is IProjectFolder { Children.Count: 0 }) value = false;
             if (value != _isExpanded)
-            {
-                if (this is IProjectFolder { Children.Count: 0 }) value = false;
+            { 
                 SetProperty(ref _isExpanded, value);
             }
         }

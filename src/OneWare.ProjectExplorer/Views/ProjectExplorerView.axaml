@@ -33,7 +33,6 @@
         </Style>
 
         <StyleInclude Source="ProjectExplorerTheme.axaml"></StyleInclude>
-
     </UserControl.Styles>
 
     <Grid>
