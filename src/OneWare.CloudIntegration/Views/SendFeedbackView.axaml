@@ -1,0 +1,71 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
+                         xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="360" Padding="4"
+                         x:Class="OneWare.CloudIntegration.Views.SendFeedbackView"
+                         x:DataType="viewModels:FeedbackViewModel"
+                         CustomIcon="{DynamicResource VSImageLib.FeedbackBubble_16x}"
+                         WindowStartupLocation="CenterOwner" MinHeight="340"
+                         Title="{Binding Title}">
+
+    <Interaction.Behaviors>
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Routes="Bubble"
+                                               Command="{Binding SendFeedbackAsync}"
+                                               CommandParameter="{Binding $parent[controls:FlexibleWindow]}" />
+    </Interaction.Behaviors>
+    
+    <DockPanel Margin="4" LastChildFill="True">
+        
+        <DockPanel DockPanel.Dock="Bottom">
+            <StackPanel VerticalAlignment="Center" Margin="0 8 0 0" DockPanel.Dock="Right" HorizontalAlignment="Right" Classes="WindowButtons">
+                
+                <controls:Spinner Height="16"
+                                  IsVisible="{Binding IsLoading}" />
+                
+                <Button Command="{Binding Cancel}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        Content="Cancel" />
+                <Button Background="{DynamicResource HighlightBrush}"
+                        Command="{Binding SendFeedbackAsync}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        Content="Send" />
+
+            </StackPanel>
+            
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                <TextBlock DockPanel.Dock="Left" 
+                           Text="{Binding ErrorText}" Margin="0 0 5 0" Foreground="OrangeRed"
+                           IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            </StackPanel>
+        </DockPanel>
+        
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
+            <TextBlock TextWrapping="Wrap">We value your feedback! 
+                Please let us know about any issues, suggestions, or general 
+                comments you have about OneWare Cloud or OneWare AI.
+            </TextBlock>
+            
+            <StackPanel Spacing="3" Orientation="Vertical">
+                <TextBlock Text="Header:" />
+                <TextBox Text="{Binding Header}" Watermark="Subject"/>
+            </StackPanel>
+            
+            <StackPanel Spacing="3" Orientation="Vertical">
+                <TextBlock Text="Category:" />
+                <ComboBox ItemsSource="{Binding Categories}" 
+                          SelectedItem="{Binding Category}" />
+            </StackPanel>
+            
+        </StackPanel>
+        
+        <DockPanel LastChildFill="True" Margin="0,3">
+            <TextBlock Text="Message:" DockPanel.Dock="Top" Margin="0,3"/>
+            <TextBox Text="{Binding Message}" AcceptsReturn="True" TextWrapping="Wrap" Watermark="Enter your message" DockPanel.Dock="Bottom"/>
+        </DockPanel>
+        
+    </DockPanel>
+</controls:FlexibleWindow>
