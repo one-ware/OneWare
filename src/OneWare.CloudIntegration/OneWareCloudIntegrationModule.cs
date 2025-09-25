@@ -1,10 +1,15 @@
 ﻿using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.CloudIntegration.Views;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 
@@ -42,5 +47,31 @@ public class OneWareCloudIntegrationModule : IModule
             {
                 DataContext = containerProvider.Resolve<OneWareCloudAccountFlyoutViewModel>()
             }));
+
+        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Feedback")
+        {
+            Header = "Send Feedback",
+            IconObservable = Application.Current!.GetResourceObservable("VSImageLib.FeedbackBubble_16x"),
+            Command = new AsyncRelayCommand(async () =>
+            {
+                var windowService = containerProvider.Resolve<IWindowService>();
+                var loginService = containerProvider.Resolve<OneWareCloudLoginService>();
+                        
+                var dataContext = new FeedbackViewModel(loginService);
+                await windowService.ShowDialogAsync(new SendFeedbackView()
+                {
+                    DataContext = dataContext
+                });
+
+                if (!dataContext.Result.HasValue)
+                    return;
+        
+                string msg = "";
+                msg = dataContext.Result == true
+                    ? "We received your feedback and process the request as soon as possible." 
+                    : "Something went wrong. Please retry it later.";
+                await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
+            })
+        });
     }
 }

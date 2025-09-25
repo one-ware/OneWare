@@ -190,6 +190,41 @@ public sealed class OneWareCloudLoginService
             _logger.Error(e.Message, e);
         }
     }
+    
+    public async Task<bool> SendFeedbackAsync(string header, string category, string message)
+    {
+        try
+        {
+            RestRequest? request;
+            (string? jwt, HttpStatusCode status) = await GetLoggedInJwtTokenAsync();
+            if (jwt == null)
+            {
+                request = new RestRequest("/api/feedback/anonymous");
+            }
+            else
+            {
+                request = new RestRequest("/api/feedback");
+                request.AddHeader("Authorization", $"Bearer {jwt}");
+            }
+            
+            request.AddHeader("Accept", "application/json");
+            request.AddJsonBody(new
+            {
+                Header = header,
+                Category = category,
+                Message = message
+            });
+            
+            var response = await GetRestClient().ExecutePostAsync(request);
+            return response.IsSuccessful;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+
+        return false;
+    }
 
     private void SaveCredentials(string email, string token, string refreshToken)
     {
