@@ -46,7 +46,7 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
             <TextBlock TextWrapping="Wrap">We value your feedback! 
                 Please let us know about any issues, suggestions, or general 
-                comments you have about OneWare Cloud or OneWare AI.
+                comments you have about OneWare Studio.
             </TextBlock>
             
             <StackPanel Spacing="3" Orientation="Vertical">
