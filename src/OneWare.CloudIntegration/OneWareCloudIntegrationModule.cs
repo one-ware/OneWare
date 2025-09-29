@@ -65,9 +65,8 @@ public class OneWareCloudIntegrationModule : IModule
 
                 if (!dataContext.Result.HasValue)
                     return;
-        
-                string msg = "";
-                msg = dataContext.Result == true
+                
+                string msg = dataContext.Result == true
                     ? "We received your feedback and process the request as soon as possible." 
                     : "Something went wrong. Please retry it later.";
                 await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
