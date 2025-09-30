@@ -78,13 +78,20 @@ public class App : PrismApplication
         containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
         containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
         containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
+        containerRegistry.RegisterSingleton<IWelcomeScreenService>(provider =>
+        {
+            var service = new WelcomeScreenService();
+            service.RegisterReceiver(provider.Resolve<WelcomeScreenViewModel>());
+
+            return service;
+        });
 
         //ViewModels - Singletons
+        containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
         containerRegistry.RegisterSingleton<MainWindowViewModel>();
         containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
 
         //ViewModels Transients
-        containerRegistry.Register<WelcomeScreenViewModel>();
         containerRegistry.Register<EditViewModel>();
         containerRegistry.Register<ChangelogViewModel>();
         containerRegistry.Register<AboutViewModel>();
@@ -303,6 +310,65 @@ public class App : PrismApplication
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
         
+        
+        var welcomeScreenService = Container.Resolve<IWelcomeScreenService>();
+        welcomeScreenService.RegisterItemToNew("new_project",
+            new WelcomeScreenStartItem("new_file", "New project...", "VsImageLib.MakefileProject16X.Geometry",
+                new RelayCommand(() =>
+                {
+                    var command = windowService.GetMenuItems("MainWindow_MainMenu")
+                        .FirstOrDefault(x => x.Header == "File")?.Items?
+                        .FirstOrDefault(x => x.Header == "New")?.Items?
+                        .FirstOrDefault(x => x.Header == "Project")?.Command;
+                    
+                    command?.Execute(null);
+                })));
+
+        welcomeScreenService.RegisterItemToNew("new_file",
+            new WelcomeScreenStartItem("new_file", "New file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
+            {
+                var command = windowService.GetMenuItems("MainWindow_MainMenu")
+                    .FirstOrDefault(x => x.Header == "File")?.Items?
+                    .FirstOrDefault(x => x.Header == "New")?.Items?
+                    .FirstOrDefault(x => x.Header == "File")?.Command;
+                    
+                command?.Execute(null);
+            })));
+        
+        welcomeScreenService.RegisterItemToOpen("open_project", 
+            new WelcomeScreenStartItem("open_project", "Open project...", "VsImageLib.MakefileProject16X.Geometry", new RelayCommand(() =>
+            {
+                var command = windowService.GetMenuItems("MainWindow_MainMenu")
+                    .FirstOrDefault(x => x.Header == "File")?.Items?
+                    .FirstOrDefault(x => x.Header == "Open")?.Items?
+                    .FirstOrDefault(x => x.Header == "Project")?.Command;
+                    
+                command?.Execute(null);
+            })));
+        
+        welcomeScreenService.RegisterItemToOpen("open_folder", 
+            new WelcomeScreenStartItem("open_folder", "Open folder...", "VsImageLib.Folder16X.Geometry", new RelayCommand(() =>
+            {
+                var command = windowService.GetMenuItems("MainWindow_MainMenu")
+                    .FirstOrDefault(x => x.Header == "File")?.Items?
+                    .FirstOrDefault(x => x.Header == "Open")?.Items?
+                    .FirstOrDefault(x => x.Header == "Folder")?.Command;
+                    
+                command?.Execute(null);
+            })));
+        
+        welcomeScreenService.RegisterItemToOpen("open_file", 
+            new WelcomeScreenStartItem("open_file", "Open file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
+            {
+                var command = windowService.GetMenuItems("MainWindow_MainMenu")
+                    .FirstOrDefault(x => x.Header == "File")?.Items?
+                    .FirstOrDefault(x => x.Header == "Open")?.Items?
+                    .FirstOrDefault(x => x.Header == "File")?.Command;
+                    
+                command?.Execute(null);
+            })));
+        
+        
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
         //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
         //
@@ -378,6 +444,7 @@ public class App : PrismApplication
         Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
+        Container.Resolve<WelcomeScreenViewModel>().UpdateRecentFiles();
         Container.Resolve<BackupService>().Init();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
@@ -441,7 +508,11 @@ public class App : PrismApplication
 
         await Container.Resolve<LanguageManager>().CleanResourcesAsync();
 
-        if (!_tempMode) await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
+        if (!_tempMode)
+        {
+            await Container.Resolve<IProjectExplorerService>().SaveRecentProjectsFileAsync();
+            await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
+        }
 
         //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
 

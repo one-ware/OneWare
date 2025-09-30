@@ -5,28 +5,119 @@
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:services="clr-namespace:OneWare.Core.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
+    
+    <UserControl.DataTemplates>
+        
+        <DataTemplate x:DataType="services:WelcomeScreenStartItem">
+             <HyperlinkButton Command="{Binding Command}">
+                 <HyperlinkButton.Content>
+                     <StackPanel Orientation="Horizontal">
+                         <Panel Width="18" Height="18" Margin="0,2,6,2">
+                             <PathIcon Classes.Hidden="{Binding !IconIsGeometry}" 
+                                       Foreground="{DynamicResource ThemeAccentBrush}" 
+                                       Data="{Binding Icon}">
+                                 <PathIcon.Styles>
+                                     <Style Selector="PathIcon">
+                                         <Setter Property="IsVisible" Value="True"/>
+                                     </Style>
+                                     <Style Selector="PathIcon.Hidden">
+                                         <Setter Property="IsVisible" Value="False"/>
+                                     </Style>
+                                 </PathIcon.Styles>
+                             </PathIcon>
+                             <Image Classes.Hidden="{Binding IconIsGeometry}"
+                                       Source="{Binding Icon}">
+                                 <Image.Styles>
+                                     <Style Selector="Image">
+                                         <Setter Property="IsVisible" Value="True"/>
+                                     </Style>
+                                     <Style Selector="Image.Hidden">
+                                         <Setter Property="IsVisible" Value="False"/>
+                                     </Style>
+                                 </Image.Styles>
+                             </Image>
+                         </Panel>
+                         <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}"></TextBlock>
+                     </StackPanel>
+                 </HyperlinkButton.Content>
+             </HyperlinkButton>
+        </DataTemplate>
+        
+        <DataTemplate x:DataType="dockViews:RecentFileViewModel">
+            <DockPanel>
+                <HyperlinkButton DockPanel.Dock="Left" Margin="0,0,8,0" Content="{Binding Name}"
+                    Command="{Binding $parent[UserControl].((dockViews:WelcomeScreenViewModel)DataContext).OpenRecentFileAsync, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding .}">
+                </HyperlinkButton>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ShortenPath}" ToolTip.Tip="{Binding Path}">
+                </TextBlock>
+            </DockPanel>
+        </DataTemplate>
+        
+    </UserControl.DataTemplates>
+    <Panel Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+            <Grid.Styles>
+                <Style Selector="TextBlock.header">
+                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="Margin" Value="0,0,0,2"/>
+                </Style>
+                <Style Selector="HyperlinkButton">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0,2"/>
+                </Style>
+            </Grid.Styles>
+            
+            <!-- HEADER -->
+            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                           Height="50" Width="50" />
+                    <StackPanel Orientation="Vertical" Margin="10,0">
+                        <TextBlock Text="{Binding AppName}" FontSize="24"  />
+                        <TextBlock Text="{Binding VersionInfo}" />
+                    </StackPanel>
+                </StackPanel>
+                <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" HorizontalAlignment="Left" Margin="0,0,0,6"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
+                <!-- NEW -->
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="New" Classes="header"></TextBlock>
+                    <ItemsControl ItemsSource="{Binding NewItems}"></ItemsControl>
+                </StackPanel>
+                
+                <!-- OPEN -->
+                <StackPanel Orientation="Vertical" Margin="0,10">
+                    <TextBlock Text="Open" Classes="header"></TextBlock>
+                    <ItemsControl ItemsSource="{Binding OpenItems}"></ItemsControl>
+                </StackPanel>
+                
+                <!-- RECENTS -->
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Recents" Classes="header"></TextBlock>
+                    <ItemsControl ItemsSource="{Binding RecentFiles}"></ItemsControl>
+                </StackPanel>
+            </StackPanel>
 
-    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
-            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
-                   Height="70" Width="70" />
-            <TextBlock Text="{Binding AppName}" FontSize="30" Margin="10, 20, 10, 20" />
-        </StackPanel>
-
-        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfo}" />
-
-        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding Platform}" />
-
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
-            <TextBlock Text="Home Page: " />
-            <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" />
-        </StackPanel>
-
-        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True"
-                 Background="{DynamicResource ThemeControlLowBrush}"
-                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" />
-    </DockPanel>
+            <!-- WALKTHROUGH -->
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
+                <TextBlock Text="Walkthrough" Classes="header"></TextBlock>
+                <ItemsControl ItemsSource="{Binding WalkthroughItems}"></ItemsControl>
+            </StackPanel>
+        </Grid>
+        
+        <Canvas>
+            <StackPanel Canvas.Right="0" Canvas.Bottom="0" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+                <TextBlock Text="OneWare Studio is licensed under the " />
+                <controls:HyperLink Label="GPL 3.0 license" Url="https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#"></controls:HyperLink>
+            </StackPanel>
+        </Canvas>
+    </Panel>
 </UserControl>

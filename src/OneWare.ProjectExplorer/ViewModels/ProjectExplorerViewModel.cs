@@ -26,10 +26,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly ILanguageManager _languageManager;
 
     private readonly string _lastProjectsFile;
+    private readonly string _recentProjectsFile;
 
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManagerService;
 
+    private readonly Queue<string> _recentProjects = new(5);
     private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
         new();
 
@@ -55,6 +57,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _languageManager = languageManager;
 
         _lastProjectsFile = Path.Combine(_paths.AppDataDirectory, "LastProjects.json");
+        _recentProjectsFile = Path.Combine(_paths.AppDataDirectory, "RecentProjects.json");
 
         Id = "ProjectExplorer";
         Title = "Project Explorer";
@@ -114,6 +117,27 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _ = SaveLastProjectsFileAsync();
 
         return result;
+    }
+
+    public IEnumerable<string> LoadRecentProjects()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm || !File.Exists(_recentProjectsFile)) 
+            return [];
+
+        try
+        {
+            using var stream = File.OpenRead(_recentProjectsFile);
+            string[] recentFiles = JsonSerializer.Deserialize<string[]>(stream) ?? [];
+            for (int i = 0; i < Math.Min(_recentProjects.Capacity, recentFiles.Length); i++)
+            {
+                _recentProjects.Enqueue(recentFiles[i]);
+            }
+            return recentFiles;
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     public async Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager,
@@ -417,6 +441,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             if (Projects.Count == 0) //Avalonia bugfix
                 ClearSelection();
+            
+            if (_recentProjects.Count == _recentProjects.Capacity)
+                _recentProjects.Dequeue();
+            if (!_recentProjects.Contains(proj.ProjectPath))
+                _recentProjects.Enqueue(proj.ProjectPath);
 
             if (activeProj)
                 ActiveProject = Projects.Count > 0 ? Projects[0] : null;
@@ -803,6 +832,25 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     #region LastProjectsFile
 
+    public async Task SaveRecentProjectsFileAsync()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm) 
+            return;
+
+        try
+        {
+            var serialization = _recentProjects.ToArray();
+            await using var stream = File.OpenWrite(_recentProjectsFile);
+            stream.SetLength(0);
+            await JsonSerializer.SerializeAsync(stream, serialization, 
+                new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+    }
+    
     public async Task SaveLastProjectsFileAsync()
     {
         if (PlatformHelper.Platform is PlatformId.Wasm) return;

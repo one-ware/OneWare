@@ -35,6 +35,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task ImportAsync(IProjectFolder destination, bool copy, bool askForInclude, params string[] paths);
     public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
     public Task SaveProjectAsync(IProjectRoot project);
+    public Task SaveRecentProjectsFileAsync();
     public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);
@@ -44,4 +45,5 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 
     public void ClearSelection();
     public void AddToSelection(IProjectExplorerNode node);
+    public IEnumerable<string> LoadRecentProjects();
 }
