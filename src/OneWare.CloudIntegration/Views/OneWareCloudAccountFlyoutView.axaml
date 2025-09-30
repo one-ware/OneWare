@@ -34,7 +34,7 @@
         <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                 
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="5">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
                     
                     <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
                     
@@ -59,7 +59,7 @@
                     
                     <controls:HyperLink Label="{Binding UrlLabel}" 
                                            Url="{Binding Url}"
-                                           Margin="6,4, 6, 0" 
+                                           Margin="6,0, 6, 0" 
                                            HorizontalContentAlignment="Center" HorizontalAlignment="Center">
                     </controls:HyperLink>
                 </StackPanel>
