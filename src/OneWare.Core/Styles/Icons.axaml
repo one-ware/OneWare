@@ -1,6 +1,15 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
+    <DrawingImage x:Key="VSImageLib.FeedbackBubble_16x">
+        <DrawingGroup   >
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="F1M2.9997,1.0006L2.9997,6.0586 -0.000300000000000189,6.0586 -0.000300000000000189,14.0256 1.9947,14.0256 1.9947,15.9996 3.6637,15.9996 5.8637,13.9946 10.8697,13.9846 10.8697,12.5206 12.9967,14.0966 12.9967,9.9996 16.0007,9.9996 16.0007,1.0006z" />
+            <GeometryDrawing Brush="#FF424242" Geometry="F1M11,7L6,7 6,6 11,6z M13,5L6,5 6,4 13,4z M4,2L4,9 8.404,9 12,11.972 12,9 15,9 15,2z M9,3L14,3 14,8 11.998,8 11,8 11,8.999 11,10.179 9.112,8.292 8.818,8 8.404,8 5,8 5,3 M10,11.877L10,13 5.915,13 3,14.931 3,13 1,13 1,7 3,7 3,8 2,8 2,12 4,12 4,13.085 5.501,12 9,12 9,11.137z" />
+            <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="F1M13,5L6,5 6,4 13,4z M11,7L6,7 6,6 11,6z M9,3L5,3 5,8 8.404,8 8.818,8 9.112,8.292 11,10.179 11,8.999 11,8 11.998,8 14,8 14,3z M9,11.137L9,12 5.501,12 4,13.085 4,12 2,12 2,8 3,8 3,9.999 7.464,9.999z" />
+        </DrawingGroup>
+    </DrawingImage>
+    
     <DrawingImage x:Key="AI_Img">
         <DrawingGroup>
             <DrawingGroup>
