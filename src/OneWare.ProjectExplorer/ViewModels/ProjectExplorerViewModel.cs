@@ -131,9 +131,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             string[] recentFiles = JsonSerializer.Deserialize<string[]>(stream) ?? [];
             for (int i = 0; i < Math.Min(_recentProjectsCapacity, recentFiles.Length); i++)
             {
-                _recentProjects.AddLast(recentFiles[i]);
+                string path = recentFiles[i];
+                if (!File.Exists(path) && !Directory.Exists(path))
+                    continue;
+                
+                _recentProjects.AddLast(path);
             }
-            return recentFiles;
+            return _recentProjects;
         }
         catch
         {
