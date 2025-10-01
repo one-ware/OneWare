@@ -162,7 +162,7 @@
                 <!-- RECENTS -->
                 <StackPanel Orientation="Vertical" MinWidth="360">
                     <TextBlock Text="Recents" Classes="header"></TextBlock>
-                    <TextBlock Text="No recent projects has been found..." Foreground="{DynamicResource ThemeControlHighColor}"
+                    <TextBlock Text="No recent projects were found..." Foreground="{DynamicResource ThemeControlHighColor}"
                                Classes.Hide="{Binding !RecentProjectsAreEmpty}">
                         <TextBlock.Styles>
                             <Style Selector="TextBlock">
