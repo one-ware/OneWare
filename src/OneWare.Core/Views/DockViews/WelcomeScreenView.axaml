@@ -58,9 +58,68 @@
             </DockPanel>
         </DataTemplate>
         
+        <DataTemplate x:DataType="services:WelcomeScreenWalkthroughItem">
+            <Button Padding="0" Margin="0" Command="{Binding Command}"
+                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                <Button.Styles>
+                    <Style Selector="Button">
+                        <Setter Property="Cursor" Value="Hand"></Setter>
+                        <Style Selector="^:pointerover">
+                            <Setter Property="Background" Value="{x:Null}" />
+                        </Style>
+                        <Style Selector="^:pressed  /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{x:Null}" />
+                        </Style>
+                    </Style>
+                </Button.Styles>
+                <Panel>
+                    <Border CornerRadius="6"
+                            Opacity=".4" Background="{DynamicResource ThemeControlMidColor}">
+                    </Border>
+                    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="40,*" Margin="6">
+                        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" FontWeight="SemiBold" Text="{Binding Name}"></TextBlock>
+                        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Classes.Hide="{Binding HideDescription}" 
+                                   Text="{Binding Description}" 
+                                   TextWrapping="Wrap" Name="DescriptionContainer" >
+                            <TextBlock.Styles>
+                                <Style Selector="TextBlock.Hide">
+                                    <Setter Property="IsVisible" Value="False"></Setter>
+                                </Style>
+                            </TextBlock.Styles> 
+                        </TextBlock>
+                        <Panel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes.Hidden="{Binding !IconIsGeometry}" 
+                                      Foreground="{DynamicResource ThemeAccentBrush}" 
+                                      Data="{Binding Icon}">
+                                <PathIcon.Styles>
+                                    <Style Selector="PathIcon">
+                                        <Setter Property="IsVisible" Value="True"/>
+                                    </Style>
+                                    <Style Selector="PathIcon.Hidden">
+                                        <Setter Property="IsVisible" Value="False"/>
+                                    </Style>
+                                </PathIcon.Styles>
+                            </PathIcon>
+                            <Image Classes.Hidden="{Binding IconIsGeometry}"
+                                   Source="{Binding Icon}">
+                                <Image.Styles>
+                                    <Style Selector="Image">
+                                        <Setter Property="IsVisible" Value="True"/>
+                                    </Style>
+                                    <Style Selector="Image.Hidden">
+                                        <Setter Property="IsVisible" Value="False"/>
+                                    </Style>
+                                </Image.Styles>
+                            </Image>
+                        </Panel>
+                    </Grid>
+                </Panel>
+            </Button>
+        </DataTemplate>
+        
     </UserControl.DataTemplates>
     <Panel Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,20,Auto">
             <Grid.Styles>
                 <Style Selector="TextBlock.header">
                     <Setter Property="FontSize" Value="16"/>
@@ -79,7 +138,7 @@
                     <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
                            Height="50" Width="50" />
                     <StackPanel Orientation="Vertical" Margin="10,0">
-                        <TextBlock Text="{Binding AppName}" FontSize="24"  />
+                        <TextBlock Text="{Binding AppName}" FontSize="28"  />
                         <TextBlock Text="{Binding VersionInfo}" />
                     </StackPanel>
                 </StackPanel>
@@ -100,16 +159,33 @@
                 </StackPanel>
                 
                 <!-- RECENTS -->
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" MinWidth="220">
                     <TextBlock Text="Recents" Classes="header"></TextBlock>
-                    <ItemsControl ItemsSource="{Binding RecentFiles}"></ItemsControl>
+                    <TextBlock Text="No recent projects has been found..." Foreground="{DynamicResource ThemeControlHighColor}"
+                               Classes.Hide="{Binding !RecentProjectsAreEmpty}">
+                        <TextBlock.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="IsVisible" Value="True"></Setter>
+                            </Style>
+                            <Style Selector="TextBlock.Hide">
+                                <Setter Property="IsVisible" Value="False"></Setter>
+                            </Style>
+                        </TextBlock.Styles>
+                    </TextBlock>
+                    <ItemsControl ItemsSource="{Binding RecentProjects}" MinWidth="180"></ItemsControl>
                 </StackPanel>
             </StackPanel>
 
             <!-- WALKTHROUGH -->
-            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
-                <TextBlock Text="Walkthrough" Classes="header"></TextBlock>
-                <ItemsControl ItemsSource="{Binding WalkthroughItems}"></ItemsControl>
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="2">
+                <TextBlock Text="Walkthrough" Classes="header" Margin="0,0,0,4"></TextBlock>
+                <ItemsControl ItemsSource="{Binding WalkthroughItems}" MinWidth="320">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" Spacing="6"></StackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
             </StackPanel>
         </Grid>
         

@@ -16,6 +16,8 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManager;
 
+    private bool _recentProjectsAreEmpty = true;
+
     public WelcomeScreenViewModel(IPaths paths, IProjectManagerService projectManager)
     {
         _paths = paths;
@@ -27,19 +29,26 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
     public ObservableCollection<IWelcomeScreenStartItem> NewItems { get; set; } = [];
     public ObservableCollection<IWelcomeScreenStartItem> OpenItems { get; set; } = [];
     public ObservableCollection<IWelcomeScreenWalkthroughItem> WalkthroughItems { get; set; } = [];
-    public ObservableCollection<RecentFileViewModel> RecentFiles { get; set; } = [];
+    public ObservableCollection<RecentFileViewModel> RecentProjects { get; set; } = [];
 
     public string Icon => _paths.AppIconPath;
     public string AppName => _paths.AppName;
     public string VersionInfo => $"Version {Global.VersionCode} {RuntimeInformation.ProcessArchitecture}";
 
-    public void UpdateRecentFiles()
+    public bool RecentProjectsAreEmpty
+    {
+        get => _recentProjectsAreEmpty;
+        set => SetProperty(ref _recentProjectsAreEmpty, value);
+    }
+    
+    public void UpdateRecentProjects()
     {
         var explorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
         foreach (var item in explorerService.LoadRecentProjects())
         {
-            RecentFiles.Add(new RecentFileViewModel(item));
+            RecentProjects.Add(new RecentFileViewModel(item));
         }
+        RecentProjectsAreEmpty = RecentProjects.Count == 0;
     }
     public async Task OpenRecentFileAsync(RecentFileViewModel item)
     {

@@ -31,7 +31,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManagerService;
 
-    private readonly Queue<string> _recentProjects = new(5);
+    private readonly LinkedList<string> _recentProjects = new();
+    private readonly int _recentProjectsCapacity = 4;
     private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
         new();
 
@@ -128,9 +129,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             using var stream = File.OpenRead(_recentProjectsFile);
             string[] recentFiles = JsonSerializer.Deserialize<string[]>(stream) ?? [];
-            for (int i = 0; i < Math.Min(_recentProjects.Capacity, recentFiles.Length); i++)
+            for (int i = 0; i < Math.Min(_recentProjectsCapacity, recentFiles.Length); i++)
             {
-                _recentProjects.Enqueue(recentFiles[i]);
+                _recentProjects.AddLast(recentFiles[i]);
             }
             return recentFiles;
         }
@@ -442,10 +443,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (Projects.Count == 0) //Avalonia bugfix
                 ClearSelection();
             
-            if (_recentProjects.Count == _recentProjects.Capacity)
-                _recentProjects.Dequeue();
+            if (_recentProjects.Count == _recentProjectsCapacity)
+                _recentProjects.RemoveLast();
             if (!_recentProjects.Contains(proj.ProjectPath))
-                _recentProjects.Enqueue(proj.ProjectPath);
+                _recentProjects.AddFirst(proj.ProjectPath);
 
             if (activeProj)
                 ActiveProject = Projects.Count > 0 ? Projects[0] : null;

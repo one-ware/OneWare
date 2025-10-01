@@ -13,9 +13,10 @@ public sealed class WelcomeScreenStartItem(string id, string name, string? icon,
 {
 }
 
-public sealed class WelcomeScreenWalkthroughItem(string id, string name, string description, string? icon, ICommand? command) 
+public sealed class WelcomeScreenWalkthroughItem(string id, string name, string? description, string? icon, ICommand? command) 
     : WelcomeScreenItem(id, name, icon, command), IWelcomeScreenWalkthroughItem
 {
+    public bool HideDescription { get; } = description == null;
     public string? Description { get; } = description;
 }
 

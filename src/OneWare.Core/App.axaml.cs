@@ -368,6 +368,12 @@ public class App : PrismApplication
                 command?.Execute(null);
             })));
         
+        welcomeScreenService.RegisterItemToWalkthrough("fundamentals", 
+            new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals", 
+                null, "FluentIconsFilled.LightbulbFilled", new RelayCommand(() =>
+                {
+                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
+                })));
         
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
         //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
@@ -444,7 +450,7 @@ public class App : PrismApplication
         Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
-        Container.Resolve<WelcomeScreenViewModel>().UpdateRecentFiles();
+        Container.Resolve<WelcomeScreenViewModel>().UpdateRecentProjects();
         Container.Resolve<BackupService>().Init();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
