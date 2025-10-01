@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.CloudIntegration.ViewModels;
+using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;

@@ -6,13 +6,14 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:services="clr-namespace:OneWare.Core.Services"
+             xmlns:models="clr-namespace:OneWare.Core.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
     
     <UserControl.DataTemplates>
         
-        <DataTemplate x:DataType="services:WelcomeScreenStartItem">
+        <DataTemplate x:DataType="models:WelcomeScreenStartItem">
              <HyperlinkButton Command="{Binding Command}">
                  <HyperlinkButton.Content>
                      <StackPanel Orientation="Horizontal">
@@ -58,7 +59,7 @@
             </DockPanel>
         </DataTemplate>
         
-        <DataTemplate x:DataType="services:WelcomeScreenWalkthroughItem">
+        <DataTemplate x:DataType="models:WelcomeScreenWalkthroughItem">
             <Button Padding="0" Margin="0" Command="{Binding Command}"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <Button.Styles>
