@@ -41,7 +41,7 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
         set => SetProperty(ref _recentProjectsAreEmpty, value);
     }
     
-    public void UpdateRecentProjects()
+    public void LoadRecentProjects()
     {
         var explorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
         foreach (var item in explorerService.LoadRecentProjects())

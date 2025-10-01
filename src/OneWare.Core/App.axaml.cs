@@ -451,7 +451,7 @@ public class App : PrismApplication
         Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Container.Resolve<BackupService>().LoadAutoSaveFile();
         Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
-        Container.Resolve<WelcomeScreenViewModel>().UpdateRecentProjects();
+        Container.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Container.Resolve<BackupService>().Init();
 
         Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
