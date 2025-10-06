@@ -435,7 +435,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             foreach (var tab in openFiles)
                 if (!await _dockService.CloseFileAsync(tab.Key))
                     return;
-
+            
             ProjectRemoved?.Invoke(this, proj);
             _fileWatchService.Unregister(proj);
             _languageManager.RemoveProject(proj);
@@ -634,13 +634,15 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 if (File.Exists(newPath)) throw new Exception($"File {newPath} does already exist!");
                 File.Move(oldPath, newPath);
                 file.LastSaveTime = DateTime.Now;
-                file.Name = newName;
+                //file.Name = newName;
+                //DO NOT Rename here manually, let the FileWatcher handle it
             }
             else if (entry is IProjectFolder folder)
             {
                 if (Directory.Exists(newPath)) throw new Exception($"Folder {newPath} does already exist!");
                 Directory.Move(oldPath, newPath);
-                folder.Name = newName;
+                //folder.Name = newName;
+                //DO NOT Rename here manually, let the FileWatcher handle it
             }
         }
         catch (Exception e)

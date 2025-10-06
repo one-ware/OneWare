@@ -178,13 +178,18 @@ public class PackageManagerViewModel : ObservableObject
                 };
 
                 if (category == null) continue;
-
+                
                 var subCategory = category.SubCategories.FirstOrDefault(x =>
                     x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
-
-                if (subCategory != null)
-                    subCategory.Add(model);
-                else
+                
+                if (subCategory == null && packageModel.Package.Category != null && packageModel.Package.Category.Equals(packageModel.Package.Type, StringComparison.OrdinalIgnoreCase))
+                {
+                    subCategory = new PackageCategoryViewModel(packageModel.Package.Category);
+                    category.SubCategories.Add(subCategory);    
+                }
+                subCategory?.Add(model);
+                
+                if (subCategory == null)
                     category.Add(model);
             }
             catch (Exception e)
