@@ -42,7 +42,7 @@ public class PackageManagerViewModel : ObservableObject
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
             Application.Current!.GetResourceObservable("Material.Pulse")));
         PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
+            .Add(new PackageCategoryViewModel("Tools", Application.Current!.GetResourceObservable("Module")));
 
         var hardwareCategory =
             new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
@@ -178,13 +178,17 @@ public class PackageManagerViewModel : ObservableObject
                 };
 
                 if (category == null) continue;
+
+                var wantedCategory = packageModel.Package.Category;
+
+                if (wantedCategory is "Misc") wantedCategory = "Tools";
                 
                 var subCategory = category.SubCategories.FirstOrDefault(x =>
-                    x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
+                    x.Header.Equals(wantedCategory, StringComparison.OrdinalIgnoreCase));
                 
-                if (subCategory == null && packageModel.Package.Category != null && packageModel.Package.Category.Equals(packageModel.Package.Type, StringComparison.OrdinalIgnoreCase))
+                if (subCategory == null && wantedCategory != null)
                 {
-                    subCategory = new PackageCategoryViewModel(packageModel.Package.Category);
+                    subCategory = new PackageCategoryViewModel(wantedCategory);
                     category.SubCategories.Add(subCategory);    
                 }
                 subCategory?.Add(model);
