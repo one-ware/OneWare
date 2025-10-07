@@ -376,6 +376,13 @@ public class App : PrismApplication
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
                 })));
         
+        welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai", 
+            new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI", 
+                null, "AI_Img", new RelayCommand(() =>
+                {
+                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
+                })));
+        
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
         //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
         //
