@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -13,7 +14,7 @@ namespace OneWare.CloudIntegration.Services;
 
 public sealed class OneWareCloudLoginService
 {
-    private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
+    private readonly Dictionary<string, JwtSecurityToken> _jwtTokenCache = new();
     private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
     private readonly ILogger _logger;
@@ -44,30 +45,39 @@ public sealed class OneWareCloudLoginService
 
     /// <summary>
     /// Gives a JWT Token that has at least 5 minutes left before expiration
+    /// TODO Change this to return the full token implementation
     /// </summary>
     public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
     {
-        if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+        await _semaphoreSlim.WaitAsync();
         
-        _jwtTokenCache.TryGetValue(email, out var existingToken);
-
-        if (existingToken?.Expiration > DateTime.Now.AddMinutes(5))
+        try
         {
-            return (existingToken.Token, HttpStatusCode.NoContent);
+            if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+            
+            _jwtTokenCache.TryGetValue(email, out var existingToken);
+
+            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(5))
+            {
+                return (existingToken.RawData, HttpStatusCode.NoContent);
+            }
+
+            var (result, status) = await RefreshAsync(email);
+            
+            if (!result) return (null, status);
+
+            if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
+
+            return (regeneratedToken.RawData, status);
         }
-
-        var (result, status) = await RefreshAsync(email);
-        if (!result) return (null, status);
-
-        if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
-
-        return (regeneratedToken.Token, status);
+        finally
+        {
+            _semaphoreSlim.Release();
+        }
     }
 
     public async Task<(bool success, HttpStatusCode status)> RefreshAsync(string email)
     {
-        await _semaphoreSlim.WaitAsync();
-        
         try
         {
             string? refreshToken = null;
@@ -119,10 +129,6 @@ public sealed class OneWareCloudLoginService
         {
             _logger.Error(e.Message, e);
             return (false, HttpStatusCode.NoContent);
-        }
-        finally
-        {
-            _semaphoreSlim.Release();
         }
     }
 
@@ -228,11 +234,10 @@ public sealed class OneWareCloudLoginService
 
     private void SaveCredentials(string email, string token, string refreshToken)
     {
-        _jwtTokenCache[email] = new JwtToken()
-        {
-            Token = token,
-            Expiration = DateTime.Now.AddMinutes(15)
-        };
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        _jwtTokenCache[email] = jwt;
 
         try
         {
@@ -269,12 +274,5 @@ public sealed class OneWareCloudLoginService
     private class RefreshModel
     {
         [JsonPropertyName("refreshToken")] public string RefreshToken { get; set; }
-    }
-
-    private class JwtToken
-    {
-        public required string Token { get; init; }
-
-        public required DateTime Expiration { get; init; }
     }
 }
