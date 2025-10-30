@@ -325,7 +325,7 @@ public class OssCadSuiteIntegrationModule : IModule
                             },
                             new MenuItem()
                             {
-                                Header = "Run Fit - Test",
+                                Header = "Run Fit",
                                 Command = new AsyncRelayCommand(async () =>
                                 {
                                     await projectExplorerService.SaveOpenFilesForProjectAsync(root);
