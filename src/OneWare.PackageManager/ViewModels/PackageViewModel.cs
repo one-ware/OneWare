@@ -41,12 +41,13 @@ public class PackageViewModel : ObservableObject
     protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
     {
         _packageModel = packageModel;
-        _httpService = httpService;                     
+        _httpService = httpService;
 
         RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
             x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
 
-        InstallCommand = new AsyncRelayCommand<Control?>(x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
+        InstallCommand = new AsyncRelayCommand<Control?>(
+            x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
             x => PackageModel.Status is PackageStatus.Available);
 
         UpdateCommand = new AsyncRelayCommand<Control?>(x => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
@@ -55,7 +56,7 @@ public class PackageViewModel : ObservableObject
         PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
     }
-    
+
     public bool IsTabsResolved
     {
         get => _isTabsResolved;
@@ -132,10 +133,14 @@ public class PackageViewModel : ObservableObject
                     return new Version(int.MaxValue, 0);
                 })
                 .Select(x => new PackageVersionModel(x)));
+
+        var includePrerelease = PackageModel.InstalledVersion?.IsPrerelease ?? false;
         
-        SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version.MinStudioVersion == null || Version.TryParse(x.Version.MinStudioVersion, out var minVersion) 
-            && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion);
-        
+        SelectedVersionModel = PackageVersionModels.Where(x => includePrerelease || !x.Version.IsPrerelease)
+            .FirstOrDefault(x => x.Version.MinStudioVersion == null
+                                 || Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
+                                 && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion);
+
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
         UpdateStatus();
@@ -192,11 +197,19 @@ public class PackageViewModel : ObservableObject
 
     private async Task ConfirmLicenseAndDownloadAsync(Control? control, PackageModel model, PackageVersion version)
     {
+        var topLevel = TopLevel.GetTopLevel(control);
+
+        if (version.IsPrerelease)
+        {
+            var warningResult = await ContainerLocator.Container.Resolve<IWindowService>()
+                .ShowYesNoAsync("Install Prerelease", "The selected version is a prerelease version. Bugs are expected. Do you want to continue?", MessageBoxIcon.Warning, topLevel as Window);
+            
+            if(warningResult != MessageBoxStatus.Yes) return;
+        }
+        
         if (model.Package.AcceptLicenseBeforeDownload)
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
-            
-            var topLevel = TopLevel.GetTopLevel(control);
 
             var result = await ContainerLocator.Container.Resolve<IWindowService>()
                 .ShowYesNoAsync("Confirm License", licenseTab.Content, MessageBoxIcon.Info, topLevel as Window);
@@ -248,9 +261,10 @@ public class PackageViewModel : ObservableObject
 
     public async Task CheckSelectedVersionCompatibilityAsync()
     {
-        if(SelectedVersionModel == null) return;
+        if (SelectedVersionModel == null) return;
 
-        if(SelectedVersionModel.CompatibilityReport == null)
-            SelectedVersionModel.CompatibilityReport = await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
+        if (SelectedVersionModel.CompatibilityReport == null)
+            SelectedVersionModel.CompatibilityReport =
+                await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
     }
 }

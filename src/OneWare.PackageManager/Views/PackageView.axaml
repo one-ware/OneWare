@@ -99,6 +99,12 @@
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MaxHeight="300">
                         <StackPanel Spacing="5" Orientation="Vertical"
                                     IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
+                            <StackPanel IsVisible="{Binding SelectedVersionModel.Version.IsPrerelease, FallbackValue={x:False}}" Orientation="Horizontal" Spacing="5">
+                                <Image HorizontalAlignment="Left"
+                                       Source="{DynamicResource VsImageLib.StatusWarning16X}" Height="12" Width="12"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="This version is a prerelease. Please report any bugs!" />
+                            </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="5"
                                         IsVisible="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
                                 <Image HorizontalAlignment="Left"
@@ -117,6 +123,7 @@
                                 <TextBlock
                                     Text="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
                             </StackPanel>
+                            
                         </StackPanel>
                     </ScrollViewer>
                 </StackPanel>
