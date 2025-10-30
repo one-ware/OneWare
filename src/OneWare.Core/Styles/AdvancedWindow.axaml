@@ -71,7 +71,7 @@
                             </Panel>
                             <ContentControl Margin="8 0" Name="TitleBarContent"
                                             Content="{TemplateBinding TitleBarContent}" VerticalAlignment="Top"
-                                            HorizontalAlignment="Left" />
+                                            HorizontalAlignment="Stretch" />
                         </Panel>
                     </VisualLayerManager>
                 </Panel>
