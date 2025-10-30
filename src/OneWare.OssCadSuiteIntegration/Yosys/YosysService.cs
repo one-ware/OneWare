@@ -101,21 +101,45 @@ public class YosysService(
         }
     }
 
-    public async Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+        => RunNextpnrAsync(project, fpgaModel, withGui: false);
+
+    public Task<bool> OpenNextpnrGui(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+        => RunNextpnrAsync(project, fpgaModel, withGui: true);
+    
+    private async Task<bool> RunNextpnrAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, bool withGui)
     {
         var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
-        
-        var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool") ??
-                          throw new Exception("NextPnr Tool not set!");
-        List<string> nextPnrArguments =
-            ["--json", "./build/synth.json", "--pcf", "project.pcf", "--asc", "./build/nextpnr.asc"];
-        nextPnrArguments.AddRange(properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?.Split(' ',
-            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-        
-        var status = await childProcessService.ExecuteShellAsync(nextPnrTool, nextPnrArguments,
-            project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
+
+        var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
+                          ?? throw new Exception("NextPnr Tool not set!");
+
+        var nextPnrArguments = new List<string>
+        {
+            "--json", "./build/synth.json",
+            "--pcf", "project.pcf",
+            "--asc", "./build/nextpnr.asc"
+        };
+
+        if (withGui)
+            nextPnrArguments.Add("--gui");
+
+        nextPnrArguments.AddRange(properties
+                                      .GetValueOrDefault("yosysToolchainNextPnrFlags")?
+                                      .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                                  ?? Array.Empty<string>());
+
+        var status = await childProcessService.ExecuteShellAsync(
+            nextPnrTool,
+            nextPnrArguments,
+            project.FullPath,
+            $"Running {nextPnrTool}...",
+            AppState.Loading,
+            true,
+            null,
+            s =>
             {
-                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                Dispatcher.UIThread.Post(() => outputService.WriteLine(s));
                 return true;
             });
 
