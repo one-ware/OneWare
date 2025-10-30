@@ -50,10 +50,10 @@ internal abstract class Program
         {
             Option<string> dirOption = new("--oneware-dir") 
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
-            Option<string> appdataDirOption = new("--oneware-appdata-dir") 
-                { Description = "Path to application data directory for OneWare Studio. (optional)" };
             Option<string> projectsDirOption = new("--oneware-projects-dir") 
                 { Description = "Path to default projects directory for OneWare Studio. (optional)" };
+            Option<string> appdataDirOption = new("--oneware-appdata-dir") 
+                { Description = "Path to application data directory for OneWare Studio. (optional)" };
             Option<string> moduleOption = new("--modules") 
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
 
@@ -73,13 +73,13 @@ internal abstract class Program
                 if (!string.IsNullOrEmpty(dirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_DIR", Path.GetFullPath(dirValue));
 
-                var appdataDirValue = parseResult.GetValue(projectsDirOption);
-                if (!string.IsNullOrEmpty(appdataDirValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
-                
                 var projectsDirValue = parseResult.GetValue(projectsDirOption);
                 if (!string.IsNullOrEmpty(projectsDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_PROJECTS_DIR", Path.GetFullPath(projectsDirValue));
+                
+                var appdataDirValue = parseResult.GetValue(projectsDirOption);
+                if (!string.IsNullOrEmpty(appdataDirValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
                 
                 var moduleValue = parseResult.GetValue(moduleOption);
                 if (!string.IsNullOrEmpty(moduleValue))
