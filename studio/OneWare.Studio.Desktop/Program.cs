@@ -77,7 +77,7 @@ internal abstract class Program
                 if (!string.IsNullOrEmpty(projectsDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_PROJECTS_DIR", Path.GetFullPath(projectsDirValue));
                 
-                var appdataDirValue = parseResult.GetValue(projectsDirOption);
+                var appdataDirValue = parseResult.GetValue(appdataDirOption);
                 if (!string.IsNullOrEmpty(appdataDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
                 
