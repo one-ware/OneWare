@@ -136,7 +136,7 @@ public class PackageViewModel : ObservableObject
 
         var includePrerelease = PackageModel.InstalledVersion?.IsPrerelease ?? false;
         
-        SelectedVersionModel = PackageVersionModels.Where(x => includePrerelease || !x.Version.IsPrerelease)
+        SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
             .FirstOrDefault(x => x.Version.MinStudioVersion == null
                                  || Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
                                  && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion);
