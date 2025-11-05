@@ -242,10 +242,18 @@ public abstract class PackageModel : ObservableObject
     {
         if(Status == PackageStatus.NeedRestart) return;
         
-        var lV = Version.TryParse(Package.Versions?.OrderBy(x => x.IsPrerelease).LastOrDefault()?.Version, out var lastVersion);
+        var updateToPrerelease = InstalledVersion?.IsPrerelease == true;
+        
+        var lastPrerelease = Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
+        var lastStable = Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
+        
+        var lV = Version.TryParse(lastStable?.Version, out var lastVersion);
+        var lpV = Version.TryParse(lastPrerelease?.Version, out var lastPrereleaseVersion);
         var iV = Version.TryParse(InstalledVersion?.Version ?? "", out var installedVersion);
-
+        
         if (lV && iV && lastVersion > installedVersion)
+            Status = PackageStatus.UpdateAvailable;
+        else if (iV && lpV && updateToPrerelease && lastPrereleaseVersion > installedVersion)
             Status = PackageStatus.UpdateAvailable;
         else if (iV)
             Status = PackageStatus.Installed;
