@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GitCredentialManager;
 using OneWare.Essentials.Services;
+using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
@@ -28,6 +30,13 @@ public sealed class OneWareCloudLoginService
         _settingService = settingService;
         _httpService = httpService;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
+        
+        settingService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+            .Skip(1)
+            .Subscribe(x =>
+            {
+                Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey));
+            });
     }
     
     public RestClient GetRestClient()
@@ -175,6 +184,8 @@ public sealed class OneWareCloudLoginService
 
     public void Logout(string email)
     {
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, "");
+        _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
         
         try
         {

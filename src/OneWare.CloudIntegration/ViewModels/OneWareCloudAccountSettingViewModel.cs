@@ -31,7 +31,6 @@ public class OneWareCloudAccountSettingViewModel : ObservableObject
     public void Logout()
     {
         ContainerLocator.Container.Resolve<OneWareCloudLoginService>().Logout(Setting.Value.ToString()!);
-        _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
         
         Setting.Value = string.Empty;
 
