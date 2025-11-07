@@ -375,6 +375,21 @@ public class OssCadSuiteIntegrationModule : IModule
                                             });
                                     }
                                 })
+                            },
+                            new MenuItem()
+                            {
+                                Header = "Open nextpnr GUI",
+                                Command = new AsyncRelayCommand(async () =>
+                                {
+                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                    await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                }, () => fpga != null),
+                                Icon = new Image()
+                                {
+                                    Source = Application.Current!.FindResource(
+                                        Application.Current!.RequestedThemeVariant,
+                                        "BoxIcons.RegularOpenGui") as IImage
+                                },
                             }
                         }
                     };
@@ -412,6 +427,8 @@ public class OssCadSuiteIntegrationModule : IModule
             environmentService.SetPath("oss_bin", Path.Combine(x, "bin"));
             environmentService.SetPath("oss_pythonBin", Path.Combine(x, "py3bin"));
             environmentService.SetPath("oss_lib", Path.Combine(x, "lib"));
+            environmentService.SetEnvironmentVariable("QT_PLUGIN_PATH",
+                Path.Combine(x, "lib", "qt5", "plugins"));
             environmentService.SetEnvironmentVariable("OPENFPGALOADER_SOJ_DIR",
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",
