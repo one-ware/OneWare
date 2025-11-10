@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 using System.Text.RegularExpressions;
 using OneWare.Essentials.Models;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -18,139 +19,165 @@ public partial class VhdlNodeProvider : INodeProvider
     private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
         var nodes = new List<FpgaNode>();
-        
-        // First, extract generics
+
+        // Extract generics first (safe)
         var generics = ExtractGenerics(vhdlCode);
 
-        // Extract port declarations
-        ExtractPorts(vhdlCode, nodes, generics);
+        // Extract ports safely (no regex recursion)
+        var portContent = ExtractBlock(vhdlCode, "port");
+        if (!string.IsNullOrEmpty(portContent))
+            ExtractPorts(portContent, nodes, generics);
 
         return nodes;
     }
 
+    // ----------------- SAFE BLOCK EXTRACTION -----------------
+    private static string? ExtractBlock(string code, string keyword)
+    {
+        var keywordIndex = code.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
+        if (keywordIndex == -1)
+            return null;
+
+        var start = code.IndexOf('(', keywordIndex);
+        if (start == -1)
+            return null;
+
+        int depth = 0;
+        for (int i = start; i < code.Length; i++)
+        {
+            if (code[i] == '(') depth++;
+            else if (code[i] == ')')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    // Extract content inside parentheses
+                    var end = i;
+                    return code.Substring(start + 1, end - start - 1);
+                }
+            }
+        }
+
+        // Unbalanced parentheses -> return until end of file
+        return code.Substring(start + 1);
+    }
+
+    // ----------------- GENERIC EXTRACTION -----------------
     private static Dictionary<string, int> ExtractGenerics(string vhdlCode)
     {
         var genericValues = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        
-        var genericMatch = GenericMatch().Match(vhdlCode);
-        if (genericMatch.Success)
+
+        var genericContent = ExtractBlock(vhdlCode, "generic");
+        if (string.IsNullOrEmpty(genericContent))
+            return genericValues;
+
+        var genericDeclarations = GenericDeclarationMatch().Matches(genericContent);
+        foreach (Match match in genericDeclarations)
         {
-            var genericContent = genericMatch.Groups[1].Value;
-            var genericDeclarations = GenericDeclarationMatch().Matches(genericContent);
-            
-            foreach (Match match in genericDeclarations)
-            {
-                var name = match.Groups[1].Value.Trim();
-                var value = match.Groups[2].Value.Trim();
-                if (int.TryParse(value, out int intValue))
-                {
-                    genericValues[name] = intValue;
-                }
-            }
+            var name = match.Groups[1].Value.Trim();
+            var value = match.Groups[2].Value.Trim();
+            if (int.TryParse(value, out int intValue))
+                genericValues[name] = intValue;
         }
 
         return genericValues;
     }
 
-    private static void ExtractPorts(string vhdlCode, List<FpgaNode> nodes, Dictionary<string, int> genericValues)
+    // ----------------- PORT EXTRACTION -----------------
+    private static void ExtractPorts(string portContent, List<FpgaNode> nodes, Dictionary<string, int> genericValues)
     {
-        var portMatch = PortMatch().Match(vhdlCode);
-        if (!portMatch.Success) return;
-
-        var portContent = portMatch.Groups[1].Value;
         var portDeclarations = portContent.Split(';', StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var declaration in portDeclarations)
+        foreach (var decl in portDeclarations)
         {
+            var declaration = decl.Trim();
             if (string.IsNullOrWhiteSpace(declaration)) continue;
 
-            // Match for vector declarations
+            // Match vector first
             var vectorMatch = VectorMatch().Match(declaration);
-
-            // Match for single std_logic declarations
+            // Match scalar logic
             var logicMatch = LogicMatch().Match(declaration);
 
+            // ---------------- VECTOR PORTS ----------------
             if (vectorMatch.Success)
             {
-                var name = vectorMatch.Groups[1].Value.Trim();
+                var namesPart = vectorMatch.Groups[1].Value.Trim();
                 var direction = vectorMatch.Groups[2].Value.ToUpper().Trim();
                 var upperBoundExpr = vectorMatch.Groups[3].Value.Trim();
                 var directionType = vectorMatch.Groups[4].Value.Trim();
                 var lowerBoundExpr = vectorMatch.Groups[5].Value.Trim();
 
+                var names = namesPart.Split(',',
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
                 try
                 {
-                    var upperBound = EvaluateExpression(upperBoundExpr, genericValues);
-                    var lowerBound = EvaluateExpression(lowerBoundExpr, genericValues);
+                    var upper = EvaluateExpression(upperBoundExpr, genericValues);
+                    var lower = EvaluateExpression(lowerBoundExpr, genericValues);
 
-                    // Create nodes for each bit in the vector
-                    if (directionType.Equals("to", StringComparison.CurrentCultureIgnoreCase))
+                    foreach (var name in names)
                     {
-                        for (var i = upperBound; i <= lowerBound; i++)
+                        if (directionType.Equals("to", StringComparison.OrdinalIgnoreCase))
                         {
-                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
+                            for (int i = upper; i <= lower; i++)
+                                nodes.Add(new FpgaNode($"{name}[{i}]", direction));
                         }
-                    }
-                    else if(directionType.Equals("downTo", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        for (var i = upperBound; i >= lowerBound; i--)
+                        else if (directionType.Equals("downto", StringComparison.OrdinalIgnoreCase))
                         {
-                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
+                            for (int i = upper; i >= lower; i--)
+                                nodes.Add(new FpgaNode($"{name}[{i}]", direction));
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing vector {name}: {ex.Message}");
+                    Console.WriteLine($"Error parsing vector {namesPart}: {ex.Message}");
                 }
             }
+
+            // ---------------- SCALAR PORTS ----------------
             else if (logicMatch.Success)
             {
-                var name = logicMatch.Groups[1].Value.Trim();
+                var namesPart = logicMatch.Groups[1].Value.Trim();
                 var direction = logicMatch.Groups[2].Value.ToUpper().Trim();
-                nodes.Add(new FpgaNode(name, direction));
+                var names = namesPart.Split(',',
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                foreach (var name in names)
+                    nodes.Add(new FpgaNode(name, direction));
             }
         }
     }
 
-    private static int EvaluateExpression(string expression, Dictionary<string, int> genericValues)
+
+    // ----------------- EXPRESSION EVALUATION -----------------
+    private static int EvaluateExpression(string expr, Dictionary<string, int> generics)
     {
-        // Replace generic constants with their values
-        foreach (var generic in genericValues.OrderByDescending(x => x.Key.Length))
+        foreach (var g in generics.OrderByDescending(x => x.Key.Length))
         {
-            expression = Regex.Replace(expression, 
-                $@"\b{generic.Key}\b", 
-                generic.Value.ToString(), 
-                RegexOptions.IgnoreCase);
+            expr = Regex.Replace(expr, $@"\b{g.Key}\b", g.Value.ToString(), RegexOptions.IgnoreCase);
         }
 
-        // Clean up the expression
-        expression = expression.Replace(" ", "");
-
+        expr = expr.Replace(" ", "");
         try
         {
             var dt = new DataTable();
-            var result = dt.Compute(expression, "");
+            var result = dt.Compute(expr, "");
             return Convert.ToInt32(result);
         }
-        catch (Exception)
+        catch
         {
-            throw new ArgumentException($"Unable to evaluate expression: {expression}");
+            throw new ArgumentException($"Unable to evaluate expression: {expr}");
         }
     }
 
-    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase, "en-US")]
+    // ----------------- REGEX DEFINITIONS -----------------
+    [GeneratedRegex(@"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase)]
     private static partial Regex LogicMatch();
-    
-    [GeneratedRegex(@"port\s*\(((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*)\)\s*;", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-US")]
-    private static partial Regex PortMatch();
-    
-    [GeneratedRegex(@"Generic\s*\((.*?)\)", RegexOptions.IgnoreCase | RegexOptions.Singleline, "en-US")]
-    private static partial Regex GenericMatch();
-    
-    [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)")]
-    private static partial Regex GenericDeclarationMatch();
-    
-    [GeneratedRegex(@"(\w+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+?)\s*(to|downto)\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase, "en-US")]
+
+    [GeneratedRegex(@"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+?)\s*(to|downto)\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase)]
     private static partial Regex VectorMatch();
+
+    [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex GenericDeclarationMatch();
 }
