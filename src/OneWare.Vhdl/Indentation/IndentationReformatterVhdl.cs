@@ -423,14 +423,15 @@ internal sealed class IndentationReformatterVhdl
 
     private static char NextChar(string text, int pos)
     {
-        pos++;
-        
         while (pos< text.Length)
         {
-            if(text[pos] == ' ') continue; 
+            if (text[pos] == ' ')
+            {
+                pos++;
+                continue;
+            } 
             return text[pos];
         }
-        
         return '\0';
     }
     
