@@ -426,7 +426,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         //await Task.WhenAll(roots.Select(x => ProjectManager.SaveAsync(x)));
     }
 
-    private async Task RemoveAsync(IProjectEntry entry)
+    private async Task RemoveAsync(IProjectEntry entry, bool reopen = false)
     {
         if (entry is IProjectRoot proj)
         {
@@ -435,7 +435,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             foreach (var tab in openFiles)
                 if (!await _dockService.CloseFileAsync(tab.Key))
                     return;
-            
+                else if (reopen)
+                    await _dockService.OpenFileAsync(tab.Key);
+
             ProjectRemoved?.Invoke(this, proj);
             _fileWatchService.Unregister(proj);
             _languageManager.RemoveProject(proj);
@@ -682,7 +684,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             var expanded = root.IsExpanded;
             var active = root.IsActive;
-            await RemoveAsync(root);
+            await RemoveAsync(root, true);
             Insert(proj);
             proj.IsExpanded = expanded;
             if (active) ActiveProject = proj;
