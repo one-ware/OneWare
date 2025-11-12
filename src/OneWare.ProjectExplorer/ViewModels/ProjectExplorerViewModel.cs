@@ -679,13 +679,47 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 entry.LoadingFailed = true;
                 return entry;
             }
-
+            
+            //TODO make reload working without fully replacing the project
+            //For now we just re-initialize the files that are open from the project and still included
+            
+            var filesOpenInProject = _dockService.OpenFiles
+                .Where(x => x.Key is IProjectFile pf && pf.Root == root)
+                .Select(x => new {File = (x.Key as IProjectFile)!, ViewModel = x.Value})
+                .ToList();
+            
+            var refreshedFiles = new List<IProjectFile>();
+            
+            foreach (var openFile in filesOpenInProject)
+            {
+                if (proj.SearchRelativePath(openFile.File.RelativePath) is IProjectFile newFile)
+                {
+                    _dockService.OpenFiles.Remove(openFile.File);
+                    _dockService.OpenFiles.Add(newFile, openFile.ViewModel);
+                    refreshedFiles.Add(newFile);
+                }
+            }
+                
             var expanded = root.IsExpanded;
             var active = root.IsActive;
             await RemoveAsync(root);
             Insert(proj);
-            proj.IsExpanded = expanded;
+
+            //Re-initialize the files that didn't get removed after swapping project
+            foreach (var refreshed in refreshedFiles)
+            {
+                if (_dockService.OpenFiles.TryGetValue(refreshed, out var vm))
+                {
+                    vm.InitializeContent();
+                }
+            }
+            
             if (active) ActiveProject = proj;
+
+            //TODO: This delay is currently needed to make TreeDataGrid work. Check back later if still needed
+            await Task.Delay(10);
+            proj.IsExpanded = expanded;
+            
             return proj;
         }
 
