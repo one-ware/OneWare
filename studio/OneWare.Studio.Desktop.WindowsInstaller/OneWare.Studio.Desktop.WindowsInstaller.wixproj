@@ -1,67 +1,83 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2" InitialTargets="BeforeBuild">
-	<PropertyGroup>
-		<InstallerPlatform>x64</InstallerPlatform>
-		<OutputName>OneWareStudio.WindowsInstaller</OutputName>
-		<OutputType>Package</OutputType>
-		<StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
-		<StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-		<StudioPublish>./publish</StudioPublish>
-	</PropertyGroup>
-	<ItemGroup>
-		<Content Include="res/**/**"/>
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
-		<PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
-	</ItemGroup>
-	<ItemGroup>
-		<BindPath Include="$(StudioPublish)">
-			<BindName>publish</BindName>
-		</BindPath>
-	</ItemGroup>
-	<Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
-		<!-- Clean previous build folder -->
-		<Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
-		<!-- Publish OneWare Studio -->
-		<Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
-		<!-- Sign published binaries only after dotnet publish -->
-		<CallTarget Targets="SignPublishedBinaries" />
-		<!-- Get assembly version -->
-		<GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
-			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
-		</GetAssemblyIdentity>
-		<PropertyGroup>
-			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
-		</PropertyGroup>
-	</Target>
-	<Target Name="SignPublishedBinaries" Condition="'$(DesignTimeBuild)' != 'true'">
-		<ItemGroup>
-			<MyBinaries Include="$(StudioPublish)\OneWare*.dll" />
-			<MyBinaries Include="$(StudioPublish)\OneWareStudio.exe" />
-			<MyBinaries Include="$(StudioPublish)\Assets\SIGINT.exe" />
-			<!-- Include installer MSI if it exists -->
-			<MyBinaries Include="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
-		</ItemGroup>
-		<!-- Locate signtool -->
-		<PropertyGroup>
-			<SignToolCmd>signtool.exe</SignToolCmd>
-		</PropertyGroup>
-		<Exec Command="where signtool.exe"
-        IgnoreExitCode="true"
-        StandardOutputImportance="Low"
-        StandardErrorImportance="Low">
-			<Output TaskParameter="ExitCode" PropertyName="WhereSigntoolExitCode" />
-		</Exec>
-		<PropertyGroup>
-			<SignToolAvailable Condition="'$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
-		</PropertyGroup>
-		<!-- Sign if available -->
-		<Exec
-    Condition="'$(SignToolAvailable)' == 'true'"
-    Command='"$(SignToolCmd)" sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(MyBinaries.Identity)"' />
-		<!-- Otherwise just warn -->
-		<Warning
-    Condition="'$(SignToolAvailable)' != 'true'"
-    Text="signtool.exe not found — skipping code signing for %(MyBinaries.Identity)" />
-	</Target>
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <OutputName>OneWareStudio.WindowsInstaller</OutputName>
+    <OutputType>Package</OutputType>
+    <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
+    <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
+    <StudioPublish>./publish</StudioPublish>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="res/**/**"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BindPath Include="$(StudioPublish)">
+      <BindName>publish</BindName>
+    </BindPath>
+  </ItemGroup>
+
+  <!-- Publish and sign before building the MSI -->
+  <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
+    <!-- Clean previous build folder -->
+    <Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
+
+    <!-- Publish OneWare Studio -->
+    <Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
+
+    <!-- Sign all published binaries -->
+    <CallTarget Targets="SignPublishedBinaries" />
+
+    <!-- Get assembly version -->
+    <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)\OneWareStudio.dll">
+      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+    </GetAssemblyIdentity>
+
+    <PropertyGroup>
+      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Sign all binaries (and later the MSI) -->
+  <Target Name="SignPublishedBinaries" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <!-- Include all EXE and DLL files recursively -->
+      <MyBinaries Include="$(StudioPublish)\**\*.exe" />
+      <MyBinaries Include="$(StudioPublish)\**\*.dll" />
+      <!-- Include installer MSI if it exists -->
+      <MyBinaries Include="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
+    </ItemGroup>
+
+    <!-- Locate signtool -->
+    <PropertyGroup>
+      <SignToolCmd>signtool.exe</SignToolCmd>
+    </PropertyGroup>
+
+    <Exec Command="where signtool.exe"
+          IgnoreExitCode="true"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low">
+      <Output TaskParameter="ExitCode" PropertyName="WhereSigntoolExitCode" />
+    </Exec>
+
+    <PropertyGroup>
+      <SignToolAvailable Condition="'$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
+    </PropertyGroup>
+
+    <!-- Sign all files -->
+    <Exec
+      Condition="'$(SignToolAvailable)' == 'true'"
+      Command='"$(SignToolCmd)" sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(MyBinaries.Identity)"' />
+
+    <!-- Warn instead of failing if signtool is missing -->
+    <Warning
+      Condition="'$(SignToolAvailable)' != 'true'"
+      Text="signtool.exe not found — skipping code signing for %(MyBinaries.Identity)" />
+  </Target>
 </Project>
