@@ -21,48 +21,47 @@
 	</ItemGroup>
 	<Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
 		<!-- Clean previous build folder -->
-		<Exec Command="rd /s /q $(StudioPublish)" />
-		<!-- Publish Oneware Studio -->
+		<Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
+		<!-- Publish OneWare Studio -->
 		<Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
+		<!-- Sign published binaries only after dotnet publish -->
+		<CallTarget Targets="SignPublishedBinaries" />
 		<!-- Get assembly version -->
 		<GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
 			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
 		</GetAssemblyIdentity>
-		<!-- Define some variables we need -->
 		<PropertyGroup>
 			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
 		</PropertyGroup>
 	</Target>
-	<Target Name="SignPublishedBinaries" AfterTargets="CustomBeforeBuild">
+	<Target Name="SignPublishedBinaries" Condition="'$(DesignTimeBuild)' != 'true'">
 		<ItemGroup>
 			<MyBinaries Include="$(StudioPublish)\OneWare*.dll" />
 			<MyBinaries Include="$(StudioPublish)\OneWareStudio.exe" />
-			<MyBinaries Include="$(StudioPublish)\SIGINT.exe" />
+			<MyBinaries Include="$(StudioPublish)\Assets\SIGINT.exe" />
+			<!-- Include installer MSI if it exists -->
+			<MyBinaries Include="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
 		</ItemGroup>
+		<!-- Locate signtool -->
 		<PropertyGroup>
-			<!-- If not set, fall back to looking it up on PATH -->
-			<SignToolCmd Condition="'$(SignToolPath)' != '' and Exists('$(SignToolPath)')">$(SignToolPath)</SignToolCmd>
-			<SignToolCmd Condition="'$(SignToolCmd)' == ''">signtool.exe</SignToolCmd>
+			<SignToolCmd>signtool.exe</SignToolCmd>
 		</PropertyGroup>
-		<!-- Detect whether signtool is available on PATH -->
 		<Exec Command="where signtool.exe"
         IgnoreExitCode="true"
         StandardOutputImportance="Low"
         StandardErrorImportance="Low">
 			<Output TaskParameter="ExitCode" PropertyName="WhereSigntoolExitCode" />
 		</Exec>
-		<!-- Consolidated availability flag: either explicit path exists or where succeeded -->
 		<PropertyGroup>
-			<SignToolAvailable Condition="Exists('$(SignToolPath)')">true</SignToolAvailable>
-			<SignToolAvailable Condition="'$(SignToolAvailable)' == '' and '$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
+			<SignToolAvailable Condition="'$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
 		</PropertyGroup>
-		<!-- Sign each file when signtool is available -->
+		<!-- Sign if available -->
 		<Exec
     Condition="'$(SignToolAvailable)' == 'true'"
     Command='"$(SignToolCmd)" sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(MyBinaries.Identity)"' />
-		<!-- Otherwise warn once per intended file -->
+		<!-- Otherwise just warn -->
 		<Warning
     Condition="'$(SignToolAvailable)' != 'true'"
-    Text="Skipping code signing because signtool.exe was not found. Intended file: %(MyBinaries.Identity)" />
+    Text="signtool.exe not found — skipping code signing for %(MyBinaries.Identity)" />
 	</Target>
 </Project>
