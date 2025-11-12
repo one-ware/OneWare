@@ -1,42 +1,68 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2" InitialTargets="BeforeBuild">
-
-  <PropertyGroup>
-    <InstallerPlatform>x64</InstallerPlatform>
-    <OutputName>OneWareStudio.WindowsInstaller</OutputName>
-    <OutputType>Package</OutputType>
-    <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
-    <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-    <StudioPublish>./publish</StudioPublish>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="res/**/**"/>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <BindPath Include="$(StudioPublish)">
-      <BindName>publish</BindName>
-    </BindPath>
-  </ItemGroup>
-  
-  <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
-    <!-- Clean previous build folder -->
-    <Exec Command="rd /s /q $(StudioPublish)" />
-    <!-- Publish Oneware Studio -->
-    <Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
-    <!-- Get assembly version -->
-    <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
-      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
-    </GetAssemblyIdentity>
-    <!-- Define some variables we need -->
-    <PropertyGroup>
-      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
-    </PropertyGroup>
-  </Target>
-
+	<PropertyGroup>
+		<InstallerPlatform>x64</InstallerPlatform>
+		<OutputName>OneWareStudio.WindowsInstaller</OutputName>
+		<OutputType>Package</OutputType>
+		<StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
+		<StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
+		<StudioPublish>./publish</StudioPublish>
+	</PropertyGroup>
+	<ItemGroup>
+		<Content Include="res/**/**"/>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+		<PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<BindPath Include="$(StudioPublish)">
+			<BindName>publish</BindName>
+		</BindPath>
+	</ItemGroup>
+	<Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
+		<!-- Clean previous build folder -->
+		<Exec Command="rd /s /q $(StudioPublish)" />
+		<!-- Publish Oneware Studio -->
+		<Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
+		<!-- Get assembly version -->
+		<GetAssemblyIdentity AssemblyFiles="$(StudioPublish)/OneWareStudio.dll">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<!-- Define some variables we need -->
+		<PropertyGroup>
+			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+		</PropertyGroup>
+	</Target>
+	<Target Name="SignPublishedBinaries" AfterTargets="CustomBeforeBuild">
+		<ItemGroup>
+			<MyBinaries Include="$(StudioPublish)\OneWare*.dll" />
+			<MyBinaries Include="$(StudioPublish)\OneWareStudio.exe" />
+			<MyBinaries Include="$(StudioPublish)\SIGINT.exe" />
+		</ItemGroup>
+		<PropertyGroup>
+			<!-- If not set, fall back to looking it up on PATH -->
+			<SignToolCmd Condition="'$(SignToolPath)' != '' and Exists('$(SignToolPath)')">$(SignToolPath)</SignToolCmd>
+			<SignToolCmd Condition="'$(SignToolCmd)' == ''">signtool.exe</SignToolCmd>
+		</PropertyGroup>
+		<!-- Detect whether signtool is available on PATH -->
+		<Exec Command="where signtool.exe"
+        IgnoreExitCode="true"
+        StandardOutputImportance="Low"
+        StandardErrorImportance="Low">
+			<Output TaskParameter="ExitCode" PropertyName="WhereSigntoolExitCode" />
+		</Exec>
+		<!-- Consolidated availability flag: either explicit path exists or where succeeded -->
+		<PropertyGroup>
+			<SignToolAvailable Condition="Exists('$(SignToolPath)')">true</SignToolAvailable>
+			<SignToolAvailable Condition="'$(SignToolAvailable)' == '' and '$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
+		</PropertyGroup>
+		<!-- Sign each file when signtool is available -->
+		<Exec
+    Condition="'$(SignToolAvailable)' == 'true'"
+    Command='"$(SignToolCmd)" sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(MyBinaries.Identity)"' />
+		<!-- Otherwise warn once per intended file -->
+		<Warning
+    Condition="'$(SignToolAvailable)' != 'true'"
+    Text="Skipping code signing because signtool.exe was not found. Intended file: %(MyBinaries.Identity)" />
+	</Target>
 </Project>
