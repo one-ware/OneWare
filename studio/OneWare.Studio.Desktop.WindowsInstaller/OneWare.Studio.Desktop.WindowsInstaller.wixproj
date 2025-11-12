@@ -3,13 +3,18 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <OutputName>OneWareStudio.WindowsInstaller</OutputName>
     <OutputType>Package</OutputType>
+
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
     <StudioPublish>./publish</StudioPublish>
+
+    <!-- Enable WiX signing hook -->
+    <SignOutput>true</SignOutput>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="res/**/**"/>
+    <None Include="SignIfUnsigned.ps1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +28,9 @@
     </BindPath>
   </ItemGroup>
 
-  <!-- Publish and sign before building the MSI -->
+  <!-- ========================================================= -->
+  <!-- 1. Publish and sign before building the MSI               -->
+  <!-- ========================================================= -->
   <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
     <!-- Clean previous build folder -->
     <Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
@@ -31,8 +38,12 @@
     <!-- Publish OneWare Studio -->
     <Exec Command="dotnet publish $(StudioProj) -f net9.0 -c Release -r win-x64 -o $(StudioPublish)" />
 
-    <!-- Sign all published binaries -->
-    <CallTarget Targets="SignPublishedBinaries" />
+    <!-- Sign all published binaries using PowerShell script -->
+    <Exec
+      Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
+      ConsoleToMSBuild="true"
+      StandardOutputImportance="High"
+      StandardErrorImportance="High" />
 
     <!-- Get assembly version -->
     <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)\OneWareStudio.dll">
@@ -44,40 +55,14 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Sign all binaries (and later the MSI) -->
-  <Target Name="SignPublishedBinaries" Condition="'$(DesignTimeBuild)' != 'true'">
-    <ItemGroup>
-      <!-- Include all EXE and DLL files recursively -->
-      <MyBinaries Include="$(StudioPublish)\**\*.exe" />
-      <MyBinaries Include="$(StudioPublish)\**\*.dll" />
-      <!-- Include installer MSI if it exists -->
-      <MyBinaries Include="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
-    </ItemGroup>
-
-    <!-- Locate signtool -->
-    <PropertyGroup>
-      <SignToolCmd>signtool.exe</SignToolCmd>
-    </PropertyGroup>
-
-    <Exec Command="where signtool.exe"
-          IgnoreExitCode="true"
-          StandardOutputImportance="Low"
-          StandardErrorImportance="Low">
-      <Output TaskParameter="ExitCode" PropertyName="WhereSigntoolExitCode" />
-    </Exec>
-
-    <PropertyGroup>
-      <SignToolAvailable Condition="'$(WhereSigntoolExitCode)' == '0'">true</SignToolAvailable>
-    </PropertyGroup>
-
-    <!-- Sign all files -->
+  <!-- ========================================================= -->
+  <!-- 2. Sign MSI automatically via SignMsi hook                 -->
+  <!-- ========================================================= -->
+  <Target Name="SignMsi">
+    <Message Importance="High" Text="Signing MSI: @(SignMsi)" />
     <Exec
-      Condition="'$(SignToolAvailable)' == 'true'"
-      Command='"$(SignToolCmd)" sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(MyBinaries.Identity)"' />
-
-    <!-- Warn instead of failing if signtool is missing -->
-    <Warning
-      Condition="'$(SignToolAvailable)' != 'true'"
-      Text="signtool.exe not found — skipping code signing for %(MyBinaries.Identity)" />
+      Command='signtool.exe sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(SignMsi.FullPath)"'
+      StandardOutputImportance="High"
+      StandardErrorImportance="High" />
   </Target>
 </Project>
