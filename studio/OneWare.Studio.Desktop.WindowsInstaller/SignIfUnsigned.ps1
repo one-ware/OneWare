@@ -4,7 +4,7 @@ param(
 )
 
 # === CONFIGURATION ===
-$companyPrefix = 'OneWare'   # Change this to your company/namespace prefix
+$companyPrefix = 'OneWare'
 $timestampUrl  = 'http://timestamp.digicert.com'
 
 # Check for signtool
