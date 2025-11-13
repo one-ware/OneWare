@@ -2,9 +2,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <StudioVersion>0.21.15.0</StudioVersion>
-        <CoreVersion>0.31.8.0</CoreVersion>
-        <UniversalFpgaProjectSystemVersion>0.41.8.0</UniversalFpgaProjectSystemVersion>
-        <EssentialsVersion>0.11.7.0</EssentialsVersion>
+        <CoreVersion>0.31.8.1</CoreVersion>
+        <UniversalFpgaProjectSystemVersion>0.41.8.1</UniversalFpgaProjectSystemVersion>
+        <EssentialsVersion>0.11.7.1</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
