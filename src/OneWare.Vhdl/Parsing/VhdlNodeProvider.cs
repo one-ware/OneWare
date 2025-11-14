@@ -15,6 +15,16 @@ public partial class VhdlNodeProvider : INodeProvider
         return ExtractNodes(code);
     }
 
+    public string GetDisplayName()
+    {
+        return "Basic VHDLNodeProvider";
+    }
+
+    public string GetKey()
+    {
+        return "BasicVHDLNodeProvider";
+    }
+
     private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
         var nodes = new List<FpgaNode>();

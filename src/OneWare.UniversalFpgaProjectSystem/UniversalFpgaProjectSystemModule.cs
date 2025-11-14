@@ -22,6 +22,7 @@ public class UniversalFpgaProjectSystemModule : IModule
     {
         containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
         containerRegistry.RegisterSingleton<FpgaService>();
+        containerRegistry.RegisterSingleton<INodeProviderRegistry, NodeProviderRegistry>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
@@ -29,6 +30,7 @@ public class UniversalFpgaProjectSystemModule : IModule
         var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
         var windowService = containerProvider.Resolve<IWindowService>();
         var settingsService = containerProvider.Resolve<ISettingsService>();
+        
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
 
@@ -104,5 +106,6 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
+        
     }
 }

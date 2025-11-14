@@ -1,4 +1,6 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -250,10 +252,13 @@ public class VerilogModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
-
+        /*
         containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
             "Verible Path", "Path for Verible executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
+            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile); */
+        var pathSetting = new FilePathSetting("Verible Path", "", null, containerProvider.Resolve<IPaths>().PackagesDirectory,
+            File.Exists, PlatformHelper.ExeFile);
+        containerProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "Verilog", LspPathSetting, pathSetting);
         
         containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
             "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
@@ -268,5 +273,7 @@ public class VerilogModule : IModule
 
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkSimulationTemplate>();
+        
+        containerProvider.Resolve<INodeProviderRegistry>().Register(LanguageType.Verilog, new VerilogNodeProvider());
     }
 }

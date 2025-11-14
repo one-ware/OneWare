@@ -25,6 +25,16 @@ public class VerilogNodeProvider : INodeProvider
         return new List<FpgaNode>();
     }
 
+    public string GetDisplayName()
+    {
+        return "BasicVerilogNodeProvider";
+    }
+
+    public string GetKey()
+    {
+        return "VerilogNodeProvider";
+    }
+
     private static IEnumerable<FpgaNode> ExtractAndPrintPorts(string portSection)
     {
         // Regex, um einzelne Port-Deklarationen zu identifizieren

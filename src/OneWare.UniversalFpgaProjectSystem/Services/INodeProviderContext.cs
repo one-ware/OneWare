@@ -1,13 +1,9 @@
-﻿using OneWare.Essentials.Models;
+using OneWare.Essentials.Models;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 
-public interface INodeProvider
+public interface INodeProviderContext
 {
     public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file);
-    
-    public string GetDisplayName();
-
-    public string GetKey();
 }

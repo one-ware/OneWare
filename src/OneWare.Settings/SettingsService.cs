@@ -51,6 +51,11 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key, setting);
     }
 
+    public void UpdateSetting(string key, TitledSetting setting)
+    {
+        throw new NotImplementedException();
+    }
+
     public IObservable<T> Bind<T>(string key, IObservable<T> observable)
     {
         if (!_settings.TryGetValue(key, out var setting))

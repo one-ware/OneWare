@@ -46,6 +46,8 @@ public interface ISettingsService
 
     public void RegisterSetting(string cateogory, string subCategory, string key, TitledSetting setting);
 
+    public void UpdateSetting(string key, TitledSetting setting);
+    
     public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting);
 
     public T GetSettingValue<T>(string key);
