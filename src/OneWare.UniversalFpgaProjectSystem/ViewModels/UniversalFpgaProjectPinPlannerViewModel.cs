@@ -241,7 +241,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public void SaveAndCompile(FlexibleWindow window)
     {
-        SaveAndClose(window);
         if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
+        SaveAndClose(window);
     }
 }

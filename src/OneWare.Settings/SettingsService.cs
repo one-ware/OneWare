@@ -166,6 +166,12 @@ public class SettingsService : ISettingsService
         AddSetting(category, subCategory, key, customSetting);
     }
 
+    public Setting GetSetting(string key)
+    {
+        _settings.TryGetValue(key, out var value);
+        return value ?? throw new ArgumentException($"Setting {key} is not registered!");
+    }
+
     public T GetSettingValue<T>(string key)
     {
         _settings.TryGetValue(key, out var value);
