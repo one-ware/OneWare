@@ -17,9 +17,9 @@ public class InlayHint
 
 internal class InlayHintWithAnchor
 {
-    public InlayHint Hint { get; init; }
-    public TextAnchor Anchor { get; set; }
-    public Control Control { get; set; }
+    public required InlayHint Hint { get; init; }
+    public required TextAnchor Anchor { get; set; }
+    public required Control Control { get; set; }
 }
 
 public class InlayHintGenerator : VisualLineElementGenerator
@@ -52,13 +52,12 @@ public class InlayHintGenerator : VisualLineElementGenerator
                 Margin = new Thickness(1, 0, 5, 0),
                 Background = background,
                 CornerRadius = new CornerRadius(3),
-                VerticalAlignment = VerticalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
                 Child = new TextBlock
                 {
                     Text = x.Text,
                     Foreground = foreground,
                     Margin = new Thickness(2, 0),
-                    VerticalAlignment = VerticalAlignment.Center
                 }
             }
         }));
