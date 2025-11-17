@@ -257,6 +257,7 @@ public class VhdlModule : IModule
             .RegisterService(typeof(LanguageServiceVhdl), true, ".vhd", ".vhdl");
 
         containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
+        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions([".vhd", ".vhdl"], LanguageType.Vhdl);
 
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkSimulationTemplate>();

@@ -172,6 +172,11 @@ public class SettingsService : ISettingsService
         return value ?? throw new ArgumentException($"Setting {key} is not registered!");
     }
 
+    public bool HasSetting(string key)
+    {
+        return _settings.ContainsKey(key);
+    }
+
     public T GetSettingValue<T>(string key)
     {
         _settings.TryGetValue(key, out var value);

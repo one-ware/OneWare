@@ -7,7 +7,7 @@ namespace OneWare.Verilog.Parsing;
 
 public class VerilogNodeProvider : INodeProvider
 {
-    public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
         var fileContent = File.ReadAllText(file.FullPath);
 
@@ -19,15 +19,15 @@ public class VerilogNodeProvider : INodeProvider
         {
             // Extrahieren der Ports innerhalb des Moduls
             var portSection = moduleMatch.Groups[1].Value;
-            return ExtractAndPrintPorts(portSection);
+            return Task.FromResult(ExtractAndPrintPorts(portSection));
         }
 
-        return new List<FpgaNode>();
+        return Task.FromResult<IEnumerable<FpgaNode>>(new List<FpgaNode>());
     }
 
     public string GetDisplayName()
     {
-        return "BasicVerilogNodeProvider";
+        return "Basic VerilogNodeProvider";
     }
 
     public string GetKey()
