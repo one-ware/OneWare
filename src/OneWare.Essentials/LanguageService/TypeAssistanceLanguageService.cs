@@ -470,7 +470,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             Editor.Editor.InlayHintGenerator.SetInlineHints(inlayHintContainer.Select(x => new InlayHint
             {
                 Offset = Editor.CurrentDocument.GetOffset(x.Position.Line + 1, x.Position.Character + 1),
-                Text = x.Label.ToString()
+                Text = x.Label.HasInlayHintLabelParts ? (x.Label.InlayHintLabelParts?.FirstOrDefault()?.Value ?? "") : x.Label.String ?? ""
             }));
         else
             Editor.Editor.InlayHintGenerator.ClearInlineHints();
