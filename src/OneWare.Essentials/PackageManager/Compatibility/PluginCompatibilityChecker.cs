@@ -48,7 +48,7 @@ public class PluginCompatibilityChecker
                 var versionString = parts[1].Trim();
 
                 var dependencyVersionFull = Version.Parse(NormalizeVersion(versionString));
-                var dependencyVersion = TrimTo3Parts(dependencyVersionFull);
+                var dependencyVersion = TrimTo2Parts(dependencyVersionFull);
 
                 switch (dependencyName)
                 {
@@ -66,7 +66,7 @@ public class PluginCompatibilityChecker
                     continue;
                 }
 
-                var coreVersion = TrimTo3Parts(coreDep.Version);
+                var coreVersion = TrimTo2Parts(coreDep.Version);
 
                 var cmp = coreVersion.CompareTo(dependencyVersion);
 
@@ -143,10 +143,8 @@ public class PluginCompatibilityChecker
         return result;
     }
     
-    private static Version TrimTo3Parts(Version v)
+    private static Version TrimTo2Parts(Version v)
     {
-        // Build can be -1 if the original version was like "1.0"
-        var build = v.Build < 0 ? 0 : v.Build;
-        return new Version(v.Major, v.Minor, build);
+        return new Version(v.Major, v.Minor);
     }
 }
