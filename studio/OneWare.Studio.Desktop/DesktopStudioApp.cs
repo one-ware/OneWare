@@ -110,6 +110,8 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
+        await base.LoadContentAsync();
+        
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
 
