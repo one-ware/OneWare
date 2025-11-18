@@ -15,6 +15,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
 
+    private readonly List<Action<string?>> _autoLaunchActions = new();
     private readonly List<Action> _shutdownActions = new();
     private readonly IWindowService _windowService;
 
@@ -88,9 +89,19 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         }
     }
 
+    public void RegisterAutoLaunchAction(Action<string?> action)
+    {
+        _autoLaunchActions.Add(action);
+    }
+
     public void RegisterShutdownAction(Action action)
     {
         _shutdownActions.Add(action);
+    }
+
+    public void ExecuteAutoLaunchActions(string? value)
+    {
+        foreach (var action in _autoLaunchActions) action.Invoke(value);
     }
 
     public void ExecuteShutdownActions()

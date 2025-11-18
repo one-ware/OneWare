@@ -57,7 +57,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
-        moduleCatalog.AddModule<CppModule>();
+        //moduleCatalog.AddModule<CppModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
@@ -110,6 +110,8 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
+        await base.LoadContentAsync();
+        
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
 

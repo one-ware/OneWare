@@ -13,7 +13,11 @@ public interface IApplicationStateService
 
     public Task TerminateActiveDialogAsync();
 
+    public void RegisterAutoLaunchAction(Action<string?> action);
+    
     public void RegisterShutdownAction(Action action);
+    
+    public void ExecuteAutoLaunchActions(string? value);
 
     public void ExecuteShutdownActions();
 

@@ -56,6 +56,8 @@ internal abstract class Program
                 { Description = "Path to application data directory for OneWare Studio. (optional)" };
             Option<string> moduleOption = new("--modules") 
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
+            Option<string> oneAiAutoLaunch = new("--autolaunch") 
+                { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
 
             RootCommand rootCommand = new()
             {
@@ -84,6 +86,10 @@ internal abstract class Program
                 var moduleValue = parseResult.GetValue(moduleOption);
                 if (!string.IsNullOrEmpty(moduleValue))
                     Environment.SetEnvironmentVariable("ONEWARE_MODULES", moduleValue);
+                
+                var autoLaunchValue = parseResult.GetValue(oneAiAutoLaunch);
+                if (!string.IsNullOrEmpty(autoLaunchValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();

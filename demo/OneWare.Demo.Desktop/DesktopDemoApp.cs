@@ -49,6 +49,8 @@ public class DesktopDemoApp : DemoApp
 
     protected override async Task LoadContentAsync()
     {
+        await base.LoadContentAsync();
+        
         var arguments = Environment.GetCommandLineArgs();
 
         Window? splashWindow = null;
