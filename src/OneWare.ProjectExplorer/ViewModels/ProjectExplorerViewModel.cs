@@ -33,6 +33,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     private readonly LinkedList<string> _recentProjects = new();
     private readonly int _recentProjectsCapacity = 4;
+
     private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
         new();
 
@@ -40,7 +41,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly IWindowService _windowService;
 
     private IProjectRoot? _activeProject;
-    
+
     public ProjectExplorerViewModel(IApplicationStateService applicationStateService, IPaths paths,
         IDockService dockService,
         IWindowService windowService, ISettingsService settingsService,
@@ -122,7 +123,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public IEnumerable<string> LoadRecentProjects()
     {
-        if (PlatformHelper.Platform is PlatformId.Wasm || !File.Exists(_recentProjectsFile)) 
+        if (PlatformHelper.Platform is PlatformId.Wasm || !File.Exists(_recentProjectsFile))
             return [];
 
         try
@@ -134,9 +135,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 string path = recentFiles[i];
                 if (!File.Exists(path) && !Directory.Exists(path))
                     continue;
-                
+
                 _recentProjects.AddLast(path);
             }
+
             return _recentProjects;
         }
         catch
@@ -166,7 +168,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var project = await manager.LoadProjectAsync(path);
 
-        if (project == null) 
+        if (project == null)
             return null;
 
         if (expand)
@@ -435,7 +437,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             foreach (var tab in openFiles)
                 if (!await _dockService.CloseFileAsync(tab.Key))
                     return;
-            
+
             ProjectRemoved?.Invoke(this, proj);
             _fileWatchService.Unregister(proj);
             _languageManager.RemoveProject(proj);
@@ -446,7 +448,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             if (Projects.Count == 0) //Avalonia bugfix
                 ClearSelection();
-            
+
             if (_recentProjects.Count == _recentProjectsCapacity)
                 _recentProjects.RemoveLast();
             if (!_recentProjects.Contains(proj.ProjectPath))
@@ -475,15 +477,16 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task DeleteDialogAsync(params IProjectEntry[] entries)
     {
-        if(entries.Length < 1) return;
-        
+        if (entries.Length < 1) return;
+
         var message = string.Empty;
-        
+
         if (entries.Length == 1)
         {
             message = entries[0] switch
             {
-                IProjectRoot => $"Are you sure you want to delete the project {entries[0].Header} permanently? This will also delete all included files and folders",
+                IProjectRoot =>
+                    $"Are you sure you want to delete the project {entries[0].Header} permanently? This will also delete all included files and folders",
                 IProjectFolder => $"Are you sure you want to delete the folder {entries[0].Header} permanently?",
                 IProjectFile => $"Are you sure you want to delete {entries[0].Header} permanently?",
                 _ => message
@@ -497,9 +500,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var result = await _windowService.ShowYesNoAsync("Warning", message, MessageBoxIcon.Warning,
             _dockService.GetWindowOwner(this));
 
-        if (result == MessageBoxStatus.No) return;
-
-        await DeleteAsync(entries);
+        if (result == MessageBoxStatus.Yes)
+            await DeleteAsync(entries);
     }
 
     public async Task DeleteAsync(params IProjectEntry[] entries)
@@ -679,17 +681,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 entry.LoadingFailed = true;
                 return entry;
             }
-            
+
             //TODO make reload working without fully replacing the project
             //For now we just re-initialize the files that are open from the project and still included
-            
+
             var filesOpenInProject = _dockService.OpenFiles
                 .Where(x => x.Key is IProjectFile pf && pf.Root == root)
-                .Select(x => new {File = (x.Key as IProjectFile)!, ViewModel = x.Value})
+                .Select(x => new { File = (x.Key as IProjectFile)!, ViewModel = x.Value })
                 .ToList();
-            
+
             var refreshedFiles = new List<IProjectFile>();
-            
+
             foreach (var openFile in filesOpenInProject)
             {
                 if (proj.SearchRelativePath(openFile.File.RelativePath) is IProjectFile newFile)
@@ -699,7 +701,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     refreshedFiles.Add(newFile);
                 }
             }
-                
+
             var expanded = root.IsExpanded;
             var active = root.IsActive;
             await RemoveAsync(root);
@@ -713,13 +715,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     vm.InitializeContent();
                 }
             }
-            
+
             if (active) ActiveProject = proj;
 
             //TODO: This delay is currently needed to make TreeDataGrid work. Check back later if still needed
             await Task.Delay(10);
             proj.IsExpanded = expanded;
-            
+
             return proj;
         }
 
@@ -750,12 +752,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (manager == null) throw new NullReferenceException(nameof(manager));
         return manager.SaveProjectAsync(project);
     }
-    
+
     public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
     {
         var saveTasks = _dockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
             .Select(x => x.Value.SaveAsync());
-            
+
         var results = await Task.WhenAll(saveTasks);
 
         return results.All(x => x);
@@ -865,17 +867,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public Task DeleteSelectedDialog()
     {
         if (SelectedItems.Count == 0 || SelectedItems.Any(x => x is not IProjectEntry)) return Task.CompletedTask;
-        
+
         return this.DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
     }
-    
+
     #endregion
 
     #region LastProjectsFile
 
     public async Task SaveRecentProjectsFileAsync()
     {
-        if (PlatformHelper.Platform is PlatformId.Wasm) 
+        if (PlatformHelper.Platform is PlatformId.Wasm)
             return;
 
         try
@@ -883,7 +885,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             var serialization = _recentProjects.ToArray();
             await using var stream = File.OpenWrite(_recentProjectsFile);
             stream.SetLength(0);
-            await JsonSerializer.SerializeAsync(stream, serialization, 
+            await JsonSerializer.SerializeAsync(stream, serialization,
                 new JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception e)
@@ -891,7 +893,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
     }
-    
+
     public async Task SaveLastProjectsFileAsync()
     {
         if (PlatformHelper.Platform is PlatformId.Wasm) return;
