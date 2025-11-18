@@ -485,6 +485,10 @@ public class App : PrismApplication
 
     protected virtual Task LoadContentAsync()
     {
+        var autoLaunchValue = Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH");
+        
+        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(autoLaunchValue);
+        
         return Task.CompletedTask;
     }
 

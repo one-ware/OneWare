@@ -30,6 +30,8 @@ public class WebStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
+        await base.LoadContentAsync();
+        
         try
         {
             var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "DemoProject");
