@@ -57,7 +57,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
-        //moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<CppModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
