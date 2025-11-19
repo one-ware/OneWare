@@ -85,14 +85,21 @@ public class FolderProjectRoot : ProjectRoot
     {
         var parentPath = Path.GetDirectoryName(path);
 
-        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder {IsExpanded: true})
+        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder folder)
         {
-            var relativePath = Path.GetRelativePath(FullPath, path);
+            if (folder.IsExpanded)
+            {
+                var relativePath = Path.GetRelativePath(FullPath, path);
 
-            if (attributes.HasFlag(FileAttributes.Directory))
-                AddFolder(relativePath);
-            else
-                AddFile(relativePath);
+                if (attributes.HasFlag(FileAttributes.Directory))
+                    AddFolder(relativePath);
+                else
+                    AddFile(relativePath);
+            }
+            else if(folder.Children.Count == 0)
+            {
+                folder.Children.Add(new LoadingDummyNode());
+            }
         }
     }
 }
