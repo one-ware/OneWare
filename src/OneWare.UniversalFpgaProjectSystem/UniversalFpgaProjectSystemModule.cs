@@ -45,8 +45,9 @@ public class UniversalFpgaProjectSystemModule : IModule
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemViewModel("FpgaProject")
             {
-                Header = "Project",
+                Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
+                Priority = 1,
                 Icon = SharedConverters.PathToBitmapConverter.Convert(
                     ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
