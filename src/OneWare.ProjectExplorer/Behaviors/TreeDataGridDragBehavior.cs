@@ -123,10 +123,6 @@ public class TreeDataGridDragBehavior : Behavior<Control>
                 _triggerEvent = e;
                 _lock = true;
                 _captured = true;
-
-                //Manipulate selection behavior. Remove once fixed by avalonia
-                var treeView = control.FindLogicalAncestorOfType<TreeDataGrid>();
-                if (treeView?.RowSelection?.SelectedItems.Count > 1 && e.KeyModifiers == KeyModifiers.None) e.Handled = true;
             }
     }
 
@@ -144,11 +140,6 @@ public class TreeDataGridDragBehavior : Behavior<Control>
                     _triggerEvent = e;
                     _lock = true;
                     _captured = true;
-
-                    //Manipulate selection behavior. Remove once fixed by avalonia
-                    /*var treeView = control.FindLogicalAncestorOfType<TreeDataGrid>();
-                    if (treeView != null && e.KeyModifiers == KeyModifiers.None)
-                        treeView.SelectedItem = AssociatedObject!.DataContext;*/
                 }
             }
 
