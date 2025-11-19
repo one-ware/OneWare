@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -256,10 +257,13 @@ public class VhdlModule : IModule
             .RegisterService(typeof(LanguageServiceVhdl), true, ".vhd", ".vhdl");
 
         containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
+        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions([".vhd", ".vhdl"], LanguageType.Vhdl);
 
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkSimulationTemplate>();
 
+        containerProvider.Resolve<INodeProviderRegistry>().Register(LanguageType.Vhdl, new VhdlNodeProvider());
+        
         // containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
         // {
         //     if (x is [UniversalProjectRoot root])

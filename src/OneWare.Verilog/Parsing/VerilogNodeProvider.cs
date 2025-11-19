@@ -32,10 +32,11 @@ namespace OneWare.Verilog.Parsing
             @"[ \t]*(?<names>[\w$]+(?:[ \t]*,[ \t]*[\w$]+)*)",
             RegexOptions.Multiline | RegexOptions.Compiled);
 
-        public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
+
+        public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
         {
             if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
-                return Array.Empty<FpgaNode>();
+                return Task.FromResult<IEnumerable<FpgaNode>>(Array.Empty<FpgaNode>());
 
             string fileContent = File.ReadAllText(file.FullPath);
             string cleaned = RemoveComments(fileContent);
@@ -64,7 +65,7 @@ namespace OneWare.Verilog.Parsing
                 }
             }
 
-            return result;
+            return Task.FromResult<IEnumerable<FpgaNode>>(result);
         }
 
         private static string RemoveComments(string text)
@@ -114,6 +115,7 @@ namespace OneWare.Verilog.Parsing
                         else if (text[i] == ')') depth--;
                         i++;
                     }
+
                     if (depth != 0) break;
 
                     pos = i;
@@ -136,6 +138,7 @@ namespace OneWare.Verilog.Parsing
                     else if (text[j] == ')') d--;
                     j++;
                 }
+
                 if (d != 0)
                     break;
 
@@ -214,7 +217,20 @@ namespace OneWare.Verilog.Parsing
             int to = Math.Max(a, b);
 
             return Enumerable.Range(from, to - from + 1)
-                             .Select(i => $"{baseName}[{i}]");
+                .Select(i => $"{baseName}[{i}]");
+        }
+
+        public string GetDisplayName()
+        {
+            return "Basic VerilogNodeProvider";
+        }
+
+        public string GetKey()
+        {
+            return "VerilogNodeProvider";
         }
     }
 }
+    
+    
+

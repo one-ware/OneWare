@@ -10,10 +10,21 @@ namespace OneWare.Vhdl.Parsing;
 // ReSharper disable once ClassNeverInstantiated.Global
 public partial class VhdlNodeProvider : INodeProvider
 {
-    public IEnumerable<FpgaNode> ExtractNodes(IProjectFile file)
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
         var code = File.ReadAllText(file.FullPath);
-        return ExtractNodes(code);
+        return Task.FromResult<IEnumerable<FpgaNode>>(ExtractNodes(code));
+    }
+
+    
+    public string GetDisplayName()
+    {
+        return "Basic VHDLNodeProvider";
+    }
+
+    public string GetKey()
+    {
+        return "BasicVHDLNodeProvider";
     }
 
     private static List<FpgaNode> ExtractNodes(string vhdlCode)

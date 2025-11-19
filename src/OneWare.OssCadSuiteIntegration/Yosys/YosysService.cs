@@ -1,8 +1,11 @@
-﻿using Avalonia.Media;
+﻿using System.Text.Json;
+using Avalonia.Media;
 using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.OssCadSuiteIntegration.Models;
+using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 
@@ -183,5 +186,64 @@ public class YosysService(
             Path.GetDirectoryName(verilog.FullPath)!, "Create Netlist...");
         
         return result.success;
+    }
+
+    public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
+    {
+        await childProcessService.ExecuteShellAsync("yosys", ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
+            file.Root.FullPath, "Running Yosys...", AppState.Loading, true);
+        return ReadJson(Path.Combine(file.Root.FullPath, "build/yosys_nodes.json"));
+    }
+    
+    private List<FpgaNode> ReadJson(string filePath)
+    {
+        try
+        {
+            var jsonString = File.ReadAllText(filePath);
+            
+            var yosysData = JsonSerializer.Deserialize<YosysOutput>(jsonString);
+
+            if (yosysData != null && yosysData.Modules.Count > 0)
+            {
+                List<FpgaNode> nodes = [];
+                var firstModule = yosysData.Modules.Values.First();
+
+                foreach (var portEntry in firstModule.Ports)
+                {
+                    var baseName = portEntry.Key;
+                    var port = portEntry.Value;
+                    var width = port.Bits.Count; 
+                    
+                    if (width > 1)
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            string vectorName = $"{baseName}[{i}]";
+                            nodes.Add(new FpgaNode(vectorName, port.Direction));
+                        }
+                    }
+                    else
+                    {
+                        nodes.Add(new FpgaNode(baseName, port.Direction));
+                    }
+                }
+
+                return nodes;
+            }
+        }
+        catch (FileNotFoundException)
+        {
+            logger.Error($"The file '{filePath} could not be found.");
+        }
+        catch (JsonException)
+        {
+            logger.Error("The Yosys output didn't contain a valid JSON file.");
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"There is a unkown error: {ex.Message}");
+        }
+
+        return [];
     }
 }

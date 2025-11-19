@@ -31,7 +31,13 @@
             Command="{Binding Save}" />
     </Interaction.Behaviors>
 
-    <Grid RowDefinitions="*, Auto">
+    <Grid>
+        <ProgressBar IsVisible="{Binding IsLoading}" 
+                     IsIndeterminate="True"
+                     HorizontalAlignment="Center" 
+                     VerticalAlignment="Center"
+                     Width="100" Height="100"/>
+        <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}">
         <Border Padding="4">
             <Grid RowDefinitions="Auto, *">
                 <DockPanel DockPanel.Dock="Top">
@@ -282,5 +288,6 @@
             </Button>
         </StackPanel>
 
+    </Grid>
     </Grid>
 </controls:FlexibleWindow>

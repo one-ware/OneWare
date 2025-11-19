@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -284,7 +285,10 @@ public class OssCadSuiteIntegrationModule : IModule
         var windowService = containerProvider.Resolve<IWindowService>();
         var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
+        var nodeProviderRegistry = containerProvider.Resolve<INodeProviderRegistry>();
 
+        nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
