@@ -85,7 +85,7 @@ public class FolderProjectRoot : ProjectRoot
     {
         var parentPath = Path.GetDirectoryName(path);
 
-        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder parent)
+        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder {IsExpanded: true})
         {
             var relativePath = Path.GetRelativePath(FullPath, path);
 
