@@ -6,5 +6,5 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface INodeProviderContext
 {
-    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(LanguageType type, IProjectFile file);
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(string language, IProjectFile file);
 }

@@ -287,7 +287,7 @@ public class OssCadSuiteIntegrationModule : IModule
         var fpgaService = containerProvider.Resolve<FpgaService>();
         var nodeProviderRegistry = containerProvider.Resolve<INodeProviderRegistry>();
 
-        nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
+        nodeProviderRegistry.Register<YosysNodeProvider>("Verilog");
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 

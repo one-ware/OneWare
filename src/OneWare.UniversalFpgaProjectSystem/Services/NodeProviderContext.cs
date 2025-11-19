@@ -7,8 +7,7 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class NodeProviderContext(INodeProviderRegistry nodeProviderRegistry): INodeProviderContext
 {
-    
-    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(LanguageType type, IProjectFile file)
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(string type, IProjectFile file)
     {
         return nodeProviderRegistry.GetNodeProvider(type).ExtractNodesAsync(file);
     }

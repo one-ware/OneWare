@@ -318,10 +318,10 @@ public class VerilogModule : IModule
         containerProvider.Resolve<ILanguageManager>()
             .RegisterService(typeof(LanguageServiceVerilog), true, VerilogExtensions);
         
-        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions(VerilogExtensions, LanguageType.Verilog);
+        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions(VerilogExtensions, "Verilog");
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkSimulationTemplate>();
         
-        containerProvider.Resolve<INodeProviderRegistry>().Register<VerilogNodeProvider>(LanguageType.Verilog);
+        containerProvider.Resolve<INodeProviderRegistry>().Register<VerilogNodeProvider>("Verilog");
     }
 }

@@ -31,7 +31,7 @@ public class FpgaService
     [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")]
     public Dictionary<string, Type> NodeProviders { get; } = new();
 
-    public Dictionary<string, LanguageType> LanguageTypes { get; } = new();
+    public Dictionary<string, string> LanguageTypes { get; } = new();
     
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
 
@@ -72,7 +72,7 @@ public class FpgaService
         foreach (var ext in extensions) NodeProviders[ext] = typeof(T);
     }
 
-    public void RegisterLanguageExtensions(string[] extensions, LanguageType language)
+    public void RegisterLanguageExtensions(string[] extensions, string language)
     {
         foreach (var ext in extensions) LanguageTypes[ext] = language;
     }
@@ -115,7 +115,7 @@ public class FpgaService
         return null;
     }
 
-    public LanguageType GetLanguageType(string extension)
+    public string? GetLanguageType(string extension)
     {
         LanguageTypes.TryGetValue(extension, out var languageType);
         return languageType;

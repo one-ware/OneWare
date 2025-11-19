@@ -8,9 +8,9 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public class NodeProviderRegistry(ISettingsService settingsService) : INodeProviderRegistry
 {
-    private readonly Dictionary<LanguageType, Dictionary<string, INodeProvider>> _providerMap = new();
+    private readonly Dictionary<string, Dictionary<string, INodeProvider>> _providerMap = new();
     
-    public void Register(LanguageType type, INodeProvider nodeProvider)
+    public void Register(string type, INodeProvider nodeProvider)
     {
         if (!_providerMap.ContainsKey(type))
         {
@@ -21,47 +21,31 @@ public class NodeProviderRegistry(ISettingsService settingsService) : INodeProvi
         UpdateSetting(type);
     }
 
-    public void Register<TNodeProvider>(LanguageType type) where TNodeProvider : INodeProvider
+    public void Register<TNodeProvider>(string type) where TNodeProvider : INodeProvider
     {
         Register(type, ContainerLocator.Container.Resolve<TNodeProvider>());
     }
 
-    private void UpdateSetting(LanguageType type)
+    private void UpdateSetting(string type)
     {
         var providers = GetNodeProviders(type);
         var providerKeys = providers
             .Select(p => p.GetDisplayName()) 
             .ToArray<object>();
         
-        if (type == LanguageType.Verilog)
-        {   
-            if (settingsService.HasSetting("verilog-node-exporter"))
-            {
-                var setting = (ComboBoxSetting) settingsService.GetSetting("verilog-node-exporter");
-                setting.Options = providerKeys;
-            }
-            else
-            {
-                var box = new ComboBoxSetting("Node Provider", providerKeys[0], providerKeys);
-                settingsService.RegisterSetting("Languages", "Verilog", "verilog-node-exporter", box);    
-            }
-        } else if (type == LanguageType.Vhdl)
+        if (settingsService.HasSetting($"{type}-node-provider"))
         {
-            if (settingsService.HasSetting("vhdl-node-exporter"))
-            {
-                var setting = (ComboBoxSetting) settingsService.GetSetting("vhdl-node-exporter");
-                setting.Options = providerKeys;
-            }
-            else
-            {
-                var box = new ComboBoxSetting("Node Provider", providerKeys[0], providerKeys);
-                settingsService.RegisterSetting("Languages", "VHDL", "vhdl-node-exporter", box);    
-            }
+            var setting = (ComboBoxSetting) settingsService.GetSetting($"{type}-node-provider");
+            setting.Options = providerKeys;
         }
-        
+        else
+        {
+            var box = new ComboBoxSetting("Node Provider", providerKeys[0], providerKeys);
+            settingsService.RegisterSetting("Languages", type, $"{type}-node-provider", box);    
+        }
     }
 
-    public void Unregister(LanguageType type, string nodeExporterKey)
+    public void Unregister(string type, string nodeExporterKey)
     {
         if (_providerMap.TryGetValue(type, out var innerMap))
         {
@@ -69,28 +53,15 @@ public class NodeProviderRegistry(ISettingsService settingsService) : INodeProvi
         }
     }
 
-    public List<INodeProvider> GetNodeProviders(LanguageType type)
+    public List<INodeProvider> GetNodeProviders(string type)
     {
         return _providerMap.TryGetValue(type, out var innerMap) ? innerMap.Values.ToList() : [];
     }
 
-    public INodeProvider GetNodeProvider(LanguageType type)
+    public INodeProvider GetNodeProvider(string type)
     {
-        var name = settingsService.GetSettingValue<string>(GetKey(type));
+        var name = settingsService.GetSettingValue<string>(type);
         var foundProvider = GetNodeProviders(type).FirstOrDefault(p => p.GetDisplayName() == name);
         return foundProvider ?? throw new KeyNotFoundException($"Could not foud NodeProvider with Name '{name}'");
-    }
-
-    private string GetKey(LanguageType type)
-    {
-        switch (type)
-        {
-            case LanguageType.Verilog:
-                return "verilog-node-exporter";
-            case LanguageType.Vhdl:
-                return "vhdl-node-exporter";
-        }
-
-        throw new ArgumentException($"Unknown LanguageType  '{type}'");
     }
 }

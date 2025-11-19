@@ -82,10 +82,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error("Fehler bei der Initialisierung des Pin Planners.", e);
-            
-            //await _windowService.ShowMessageBoxAsync("Fehler", $"Knoten konnten nicht geladen werden: {e.Message}", MessageBoxIcon.Error);
-            
+            ContainerLocator.Container.Resolve<ILogger>().Error("Error initializing pin planner", e);
         }
         finally
         {
@@ -160,7 +157,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
         get => _selectedViewModel;
-        private set { SetProperty(ref _selectedViewModel, value); }
+        private set => SetProperty(ref _selectedViewModel, value);
     }
 
     public bool HideExtensions

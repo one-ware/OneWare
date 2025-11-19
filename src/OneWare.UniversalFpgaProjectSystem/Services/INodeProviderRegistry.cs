@@ -4,13 +4,13 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface INodeProviderRegistry
 {
-    void Register(LanguageType type,  INodeProvider nodeProvider);
+    void Register(string type,  INodeProvider nodeProvider);
     
-    void Register<TNodeProvider>(LanguageType type) where TNodeProvider : INodeProvider;
+    void Register<TNodeProvider>(string type) where TNodeProvider : INodeProvider;
     
-    void Unregister(LanguageType type, string nodeExporterKey);
+    void Unregister(string type, string nodeExporterKey);
     
-    List<INodeProvider> GetNodeProviders(LanguageType type);
+    List<INodeProvider> GetNodeProviders(string type);
 
-    INodeProvider GetNodeProvider(LanguageType type);
+    INodeProvider GetNodeProvider(string type);
 }
