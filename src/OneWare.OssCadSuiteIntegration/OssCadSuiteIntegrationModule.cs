@@ -1,6 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Logging;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
@@ -289,6 +292,20 @@ public class OssCadSuiteIntegrationModule : IModule
 
         nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
         
+        projectExplorerService.Projects.CollectionChanged += (sender, e) =>
+        {
+            if (sender is ObservableCollection<IProjectRoot> collection)
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (var project in collection)
+                    {
+                        YosysSettingHelper.SetConstraintOverlay(project);
+                    }
+                }
+            }
+        };
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
@@ -470,8 +487,33 @@ public class OssCadSuiteIntegrationModule : IModule
                     Command = new RelayCommand(() =>
                         containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
                 });
+            if (x is [IProjectFile { Extension: ".pcf" } pcf])
+            {
+                if (pcf.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
+                {
+                    if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath) {
+                        l.Add(new MenuItemViewModel("ccf")
+                        {
+                            Header = "Unset as Projects Constraint File",
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                        });
+                    }
+                    else
+                    {
+                        l.Add(new MenuItemViewModel("ccf")
+                        {
+                            Header = "Set as Projects Constraint File",
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                            
+                        });
+                    }
+                }
+            }
         });
-
+        
+        containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X", 
+            ".pcf");
+        
         containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
         {
             containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
