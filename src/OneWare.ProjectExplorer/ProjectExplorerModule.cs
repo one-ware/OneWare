@@ -56,6 +56,7 @@ public class ProjectExplorerModule : IModule
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
+                Priority = 10,           
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
             });
 
