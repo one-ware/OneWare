@@ -16,7 +16,7 @@ public class VerilogModule : IModule
     public const string LspName = "Verible";
     public const string LspPathSetting = "VerilogModule_VeriblePath";
     public const string EnableSnippetsSetting = "VerilogModule_EnableSnippets";
-    public static readonly string[] VerilogExtensions = [".v", ".sv"];
+    public static readonly string[] SupportedExtensions = [".v", ".sv"];
 
     public static readonly Package VeriblePackage = new()
     {
@@ -303,6 +303,9 @@ public class VerilogModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
+        var fpgaService = containerProvider.Resolve<FpgaService>();
+        
+        fpgaService.RegisterLanguage("VHDL", SupportedExtensions);
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 
@@ -314,14 +317,13 @@ public class VerilogModule : IModule
         
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",
-            "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", VerilogExtensions);
+            "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", SupportedExtensions);
         containerProvider.Resolve<ILanguageManager>()
-            .RegisterService(typeof(LanguageServiceVerilog), true, VerilogExtensions);
+            .RegisterService(typeof(LanguageServiceVerilog), true, SupportedExtensions);
         
-        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions(VerilogExtensions, "Verilog");
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkTemplate>();
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkSimulationTemplate>();
+        fpgaService.RegisterTemplate<VerilogBlinkTemplate>();
+        fpgaService.RegisterTemplate<VerilogBlinkSimulationTemplate>();
         
-        containerProvider.Resolve<INodeProviderRegistry>().Register<VerilogNodeProvider>("Verilog");
+        fpgaService.RegisterNodeProvider<VerilogNodeProvider>();
     }
 }

@@ -22,7 +22,6 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
-    private readonly INodeProviderContext _nodeProviderContext;
 
     private CompositeDisposable? _compositeDisposable;
 
@@ -39,12 +38,11 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private bool _isLoading;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
-        IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project, INodeProviderContext nodeProviderContext)
+        IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
-        _nodeProviderContext = nodeProviderContext;
         Project = project;
 
         TopRightExtension = windowService.GetUiExtensions("CompileWindow_TopRightExtension");
@@ -69,9 +67,17 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                 return; 
             }
             
-            var language = _fpgaService.GetLanguageType(file.Extension);
+            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
             
-            var nodesEnumerable = await _nodeProviderContext.ExtractNodesAsync(language, file);
+            if (nodeProvider == null)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .Error($"No node provider found for extension {file.Extension}");
+                return;
+            }
+            
+            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
+            
             _nodes = nodesEnumerable.ToArray();
             RefreshHardware();
             
