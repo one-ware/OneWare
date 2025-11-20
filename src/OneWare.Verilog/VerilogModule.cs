@@ -305,7 +305,7 @@ public class VerilogModule : IModule
         var settingsService = containerProvider.Resolve<ISettingsService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
         
-        fpgaService.RegisterLanguage("VHDL", SupportedExtensions);
+        fpgaService.RegisterLanguage("Verilog", SupportedExtensions);
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 

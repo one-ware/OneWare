@@ -190,9 +190,11 @@ public class YosysService(
 
     public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
+        var buildpath = Path.Combine(file.Root.FullPath, "build");
+        Directory.CreateDirectory(buildpath);
         await childProcessService.ExecuteShellAsync("yosys", ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
             file.Root.FullPath, "Running Yosys...", AppState.Loading, true);
-        return ReadJson(Path.Combine(file.Root.FullPath, "build/yosys_nodes.json"));
+        return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
     }
     
     private List<FpgaNode> ReadJson(string filePath)
