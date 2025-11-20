@@ -10,24 +10,14 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Tools;
 
-public class YosysNodeProvider(YosysService service): INodeProvider
+public class YosysNodeProvider(YosysService service) : INodeProvider
 {
-  
-   public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
-   {
-       return await service.ExtractNodesAsync(file);
-   }
+    public string Name => "Verilog_Yosys";
 
-    public string GetDisplayName()
-    {
-        return "Yosys NodeProvider";
-    }
+    public string[] SupportedLanguages => ["Verilog"];
 
-    public string GetKey()
+    public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
-        return "YosysNodeProvider";
+        return await service.ExtractNodesAsync(file);
     }
 }
-
-
-

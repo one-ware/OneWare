@@ -11,6 +11,10 @@ namespace OneWare.Verilog.Parsing
 {
     public class VerilogNodeProvider : INodeProvider
     {
+        public string Name => "Verilog_Basic";
+
+        public string[] SupportedLanguages => ["Verilog"];
+        
         // Strip /* ... */ block comments
         private static readonly Regex BlockCommentRegex = new(
             @"/\*.*?\*/",
@@ -31,7 +35,6 @@ namespace OneWare.Verilog.Parsing
             @"[ \t]*(?<range>\[[^]]+\])?" +
             @"[ \t]*(?<names>[\w$]+(?:[ \t]*,[ \t]*[\w$]+)*)",
             RegexOptions.Multiline | RegexOptions.Compiled);
-
 
         public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
         {
@@ -218,16 +221,6 @@ namespace OneWare.Verilog.Parsing
 
             return Enumerable.Range(from, to - from + 1)
                 .Select(i => $"{baseName}[{i}]");
-        }
-
-        public string GetDisplayName()
-        {
-            return "Basic VerilogNodeProvider";
-        }
-
-        public string GetKey()
-        {
-            return "VerilogNodeProvider";
         }
     }
 }
