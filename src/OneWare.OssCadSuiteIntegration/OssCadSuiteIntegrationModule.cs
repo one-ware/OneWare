@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Core;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -21,7 +20,6 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
 // ReSharper disable StringLiteralTypo
@@ -288,6 +286,24 @@ public class OssCadSuiteIntegrationModule : IModule
         var nodeProviderRegistry = containerProvider.Resolve<INodeProviderRegistry>();
 
         nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
+        
+        
+        // var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
+        // TODO: Move NativeStrategy to an essentials 
+        // executionDispatcherService.Register("osscad", new NativeStrategy());
+        var toolService = containerProvider.Resolve<IToolService>();
+        toolService.Register(new EnvironmentDescription("yosys", "Synth Tool", "yosys"));
+        
+        toolService.Register(new EnvironmentDescription("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"));
+        toolService.Register(new EnvironmentDescription("nextpnr-generic", "Synth Tool", "nextpnr-generic"));
+        toolService.Register(new EnvironmentDescription("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"));
+        toolService.Register(new EnvironmentDescription("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"));
+        toolService.Register(new EnvironmentDescription("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"));
+        toolService.Register(new EnvironmentDescription("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"));
+        
+        toolService.Register(new EnvironmentDescription("openFPGALoader", "Synth Tool", "openFPGALoader"));
+        toolService.Register(new EnvironmentDescription("icepack", "Synth Tool", "icepack"));
+        toolService.Register(new EnvironmentDescription("iceprog", "Synth Tool", "iceprog"));
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 

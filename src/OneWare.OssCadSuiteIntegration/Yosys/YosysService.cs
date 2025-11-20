@@ -5,6 +5,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Models;
+using OneWare.ToolEngine.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -15,7 +16,9 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService)
+    IDockService dockService, 
+    ToolService toolService,
+    ToolExecutionDispatcherService toolExecutionDispatcherService)
 {
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
@@ -82,6 +85,22 @@ public class YosysService(
             
             yosysArguments.AddRange(mandatoryFiles ?? []);
 
+            var command = ToolCommand.FromShellParams("yosys", yosysArguments, project.FullPath,
+                "Running yosys...", AppState.Loading, true, x =>
+                {
+                    if (x.StartsWith("Error:"))
+                    {
+                        logger.Error(x);
+                        return false;
+                    }
+
+                    outputService.WriteLine(x);
+                    return true;
+                });
+
+            var config = toolService.GetGlobalToolConfiguration();
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+            /*
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>
                 {
@@ -94,7 +113,7 @@ public class YosysService(
                     outputService.WriteLine(x);
                     return true;
                 });
-            
+            */
             return success;
         }
         catch (Exception e)
@@ -131,7 +150,17 @@ public class YosysService(
                                       .GetValueOrDefault("yosysToolchainNextPnrFlags")?
                                       .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
                                   ?? Array.Empty<string>());
-
+        
+        var command = ToolCommand.FromShellParams(nextPnrTool, nextPnrArguments,
+            project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
+            {
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                return true;
+            });
+        
+        var config = toolService.GetGlobalToolConfiguration();
+        var status = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+        /*
         var status = await childProcessService.ExecuteShellAsync(
             nextPnrTool,
             nextPnrArguments,
@@ -142,10 +171,10 @@ public class YosysService(
             null,
             s =>
             {
-                Dispatcher.UIThread.Post(() => outputService.WriteLine(s));
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                 return true;
             });
-
+        */
         return status.success;
     }
 
