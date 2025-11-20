@@ -10,19 +10,19 @@ namespace OneWare.ProjectExplorer.Behaviors;
 
 public class ProjectExplorerViewDropHandler : DropHandlerBase
 {
-    private bool Validate<T>(TreeView treeView, DragEventArgs e, object? sourceContext, object? targetContext,
+    private bool Validate<T>(TreeDataGrid treeView, DragEventArgs e, object? sourceContext, object? targetContext,
         bool bExecute) where T : IProjectExplorerNode
     {
         if (targetContext is not ProjectExplorerViewModel vm
             || treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
             return false;
-
+        
         var targetParent = targetNode as IProjectFolder ?? targetNode.Parent as IProjectFolder;
 
         if (targetParent == null) return false;
 
         //Import files or folders from outside
-        if (sourceContext is not ICollection<T> sourceNodes)
+        if (sourceContext is not IReadOnlyList<T> sourceNodes)
         {
             if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
             {
@@ -41,7 +41,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         if (!sourceNodes.All(x => x is IProjectEntry)) return false;
 
         var sourceEntities = sourceNodes.Cast<IProjectEntry>().ToArray();
-
+        
         foreach (var sourceNode in sourceEntities)
         {
             if (targetParent == sourceNode.Parent) return false;
@@ -52,7 +52,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             if (sourceNode is IProjectFolder sourceFolder && targetParent.FullPath.StartsWith(sourceFolder.FullPath))
                 return false;
         }
-
+        
         switch (e.DragEffects)
         {
             case DragDropEffects.Copy:
@@ -81,16 +81,20 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
     public override bool Validate(object? sender, DragEventArgs e, object? sourceContext, object? targetContext,
         object? state)
     {
-        if (e.Source is Control && sender is TreeView treeView)
-            return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
+        if (e.Source is Control && sender is TreeDataGrid treeView)
+        {
+            var status = Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
+            return status;
+        }
+        
         return false;
     }
 
     public override bool Execute(object? sender, DragEventArgs e, object? sourceContext, object? targetContext,
         object? state)
     {
-        if (e.Source is Control && sender is TreeView treeView)
+        if (e.Source is Control && sender is TreeDataGrid treeView)
             return Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, true);
-        return false;
+        return true;
     }
 }

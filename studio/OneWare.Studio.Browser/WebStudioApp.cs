@@ -7,6 +7,7 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
 using Prism.Ioc;
+using Prism.Modularity;
 
 namespace OneWare.Studio.Browser;
 
@@ -21,9 +22,16 @@ public class WebStudioApp : StudioApp
         using var writer = File.OpenWrite(location);
         stream.CopyTo(writer);
     }
-    
+
+    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    {
+        base.ConfigureModuleCatalog(moduleCatalog);
+    }
+
     protected override async Task LoadContentAsync()
     {
+        await base.LoadContentAsync();
+        
         try
         {
             var testProj = Path.Combine(Container.Resolve<IPaths>().ProjectsDirectory, "DemoProject");

@@ -116,7 +116,7 @@ public class WindowService : IWindowService
 
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        return ShowDialogAsync(new MessageBoxWindow(title, message, MessageBoxMode.OnlyOk, MessageBoxIcon.Info), owner);
+        return ShowDialogAsync(new MessageBoxWindow(title, message, MessageBoxMode.OnlyOk, icon), owner);
     }
 
     public async Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon, Window? owner)

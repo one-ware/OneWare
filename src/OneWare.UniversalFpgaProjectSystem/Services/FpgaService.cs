@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -27,8 +28,11 @@ public class FpgaService
 
     public string HardwareDirectory { get; }
 
+    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")]
     public Dictionary<string, Type> NodeProviders { get; } = new();
 
+    public Dictionary<string, LanguageType> LanguageTypes { get; } = new();
+    
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
 
     public ObservableCollection<IFpgaExtensionPackage> FpgaExtensionPackages { get; } = new();
@@ -62,9 +66,15 @@ public class FpgaService
             (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
 
+    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")]
     public void RegisterNodeProvider<T>(params string[] extensions) where T : INodeProvider
     {
         foreach (var ext in extensions) NodeProviders[ext] = typeof(T);
+    }
+
+    public void RegisterLanguageExtensions(string[] extensions, LanguageType language)
+    {
+        foreach (var ext in extensions) LanguageTypes[ext] = language;
     }
 
     public void RegisterToolchain<T>() where T : IFpgaToolchain
@@ -97,11 +107,18 @@ public class FpgaService
         return PreCompileSteps.FirstOrDefault(x => x.Name == name);
     }
 
+    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")] 
     public INodeProvider? GetNodeProvider(string extension)
     {
         NodeProviders.TryGetValue(extension, out var provider);
         if (provider != null) return ContainerLocator.Container.Resolve(provider) as INodeProvider;
         return null;
+    }
+
+    public LanguageType GetLanguageType(string extension)
+    {
+        LanguageTypes.TryGetValue(extension, out var languageType);
+        return languageType;
     }
 
     public void LoadGenericHardware()

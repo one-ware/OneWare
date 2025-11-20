@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -7,13 +9,15 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GitCredentialManager;
 using OneWare.Essentials.Services;
+using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
-public class OneWareCloudLoginService
+public sealed class OneWareCloudLoginService
 {
-    private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
+    private readonly Dictionary<string, JwtSecurityToken> _jwtTokenCache = new();
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
     private readonly ILogger _logger;
     private readonly ISettingsService _settingService;
@@ -26,6 +30,13 @@ public class OneWareCloudLoginService
         _settingService = settingService;
         _httpService = httpService;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
+        
+        settingService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+            .Skip(1)
+            .Subscribe(x =>
+            {
+                Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey));
+            });
     }
     
     public RestClient GetRestClient()
@@ -43,24 +54,35 @@ public class OneWareCloudLoginService
 
     /// <summary>
     /// Gives a JWT Token that has at least 5 minutes left before expiration
+    /// TODO Change this to return the full token implementation
     /// </summary>
     public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
     {
-        if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+        await _semaphoreSlim.WaitAsync();
         
-        _jwtTokenCache.TryGetValue(email, out var existingToken);
-
-        if (existingToken?.Expiration > DateTime.Now.AddMinutes(5))
+        try
         {
-            return (existingToken.Token, HttpStatusCode.NoContent);
+            if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+            
+            _jwtTokenCache.TryGetValue(email, out var existingToken);
+
+            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(5))
+            {
+                return (existingToken.RawData, HttpStatusCode.NoContent);
+            }
+
+            var (result, status) = await RefreshAsync(email);
+            
+            if (!result) return (null, status);
+
+            if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
+
+            return (regeneratedToken.RawData, status);
         }
-
-        var (result, status) = await RefreshAsync(email);
-        if (!result) return (null, status);
-
-        if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
-
-        return (regeneratedToken.Token, status);
+        finally
+        {
+            _semaphoreSlim.Release();
+        }
     }
 
     public async Task<(bool success, HttpStatusCode status)> RefreshAsync(string email)
@@ -68,11 +90,9 @@ public class OneWareCloudLoginService
         try
         {
             string? refreshToken = null;
-            
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
-
                 if (File.Exists(tokenPath))
                 {
                     var encrypted = await File.ReadAllBytesAsync(tokenPath);
@@ -85,12 +105,12 @@ public class OneWareCloudLoginService
                 var store = CredentialManager.Create("oneware");
 
                 var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
-                refreshToken = cred?.Password ;
+                refreshToken = cred?.Password;
             }
             
+            if (refreshToken == null) 
+                return (false, HttpStatusCode.Unauthorized);
 
-            if (refreshToken == null) return (false, HttpStatusCode.Unauthorized);
-            
             var request = new RestRequest("/api/auth/refresh");
             request.AddJsonBody(new RefreshModel()
             {
@@ -101,11 +121,11 @@ public class OneWareCloudLoginService
             if (response.IsSuccessful)
             {
                 var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-
                 var token = data["token"]?.GetValue<string>();
                 refreshToken = data["refreshToken"]?.GetValue<string>();
 
-                if (token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
+                if (token == null || refreshToken == null) 
+                    throw new Exception("Token or refresh token not found");
 
                 SaveCredentials(email, token, refreshToken);
 
@@ -121,7 +141,7 @@ public class OneWareCloudLoginService
         }
     }
 
-    public async Task<bool> LoginAsync(string email, string password)
+    public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
     {
         try
         {
@@ -145,21 +165,27 @@ public class OneWareCloudLoginService
 
                 SaveCredentials(email, token, refreshToken);
 
-                return true;
+                return (true, HttpStatusCode.OK);
+            }
+            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                return (false, response.StatusCode);
             }
 
-            return false;
+            return (false, response.StatusCode);
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
         }
 
-        return false;
+        return (false, HttpStatusCode.NoContent);
     }
 
     public void Logout(string email)
     {
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, "");
+        _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
         
         try
         {
@@ -181,14 +207,48 @@ public class OneWareCloudLoginService
             _logger.Error(e.Message, e);
         }
     }
+    
+    public async Task<bool> SendFeedbackAsync(string header, string category, string message)
+    {
+        try
+        {
+            RestRequest? request;
+            (string? jwt, HttpStatusCode status) = await GetLoggedInJwtTokenAsync();
+            if (jwt == null)
+            {
+                request = new RestRequest("/api/feedback/anonymous");
+            }
+            else
+            {
+                request = new RestRequest("/api/feedback");
+                request.AddHeader("Authorization", $"Bearer {jwt}");
+            }
+            
+            request.AddHeader("Accept", "application/json");
+            request.AddJsonBody(new
+            {
+                Header = header,
+                Category = category,
+                Message = message
+            });
+            
+            var response = await GetRestClient().ExecutePostAsync(request);
+            return response.IsSuccessful;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+
+        return false;
+    }
 
     private void SaveCredentials(string email, string token, string refreshToken)
     {
-        _jwtTokenCache[email] = new JwtToken()
-        {
-            Token = token,
-            Expiration = DateTime.Now.AddMinutes(15)
-        };
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        _jwtTokenCache[email] = jwt;
 
         try
         {
@@ -225,12 +285,5 @@ public class OneWareCloudLoginService
     private class RefreshModel
     {
         [JsonPropertyName("refreshToken")] public string RefreshToken { get; set; }
-    }
-
-    private class JwtToken
-    {
-        public required string Token { get; init; }
-
-        public required DateTime Expiration { get; init; }
     }
 }

@@ -83,7 +83,8 @@
                 </Border>
                 <Grid DockPanel.Dock="Top">
                     <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Background="Transparent" BorderThickness="0"
+                             Background="Transparent" BorderThickness="0" 
+                             SelectedItem="{Binding SelectedCategory.SelectedPackage, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisiblePackages, FallbackValue={x:Null}}">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="SelectionChanged">
@@ -101,7 +102,7 @@
                                 <DockPanel>
                                     <Grid DockPanel.Dock="Left" Width="60" Height="60">
                                         <Image
-                                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             Source="{Binding Image}" Height="50" Width="50" />
                                         <controls:Spinner

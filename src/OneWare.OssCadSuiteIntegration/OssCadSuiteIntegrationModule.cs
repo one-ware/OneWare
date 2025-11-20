@@ -3,7 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Core;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -15,7 +15,6 @@ using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
-using OneWare.ToolEngine.Strategies;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -207,6 +206,10 @@ public class OssCadSuiteIntegrationModule : IModule
         var windowService = containerProvider.Resolve<IWindowService>();
         var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
+        var nodeProviderRegistry = containerProvider.Resolve<INodeProviderRegistry>();
+
+        nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
+        
         
         // var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
         // TODO: Move NativeStrategy to an essentials 
@@ -315,6 +318,21 @@ public class OssCadSuiteIntegrationModule : IModule
                                             });
                                     }
                                 })
+                            },
+                            new MenuItem()
+                            {
+                                Header = "Open nextpnr GUI",
+                                Command = new AsyncRelayCommand(async () =>
+                                {
+                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                    await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                }, () => fpga != null),
+                                Icon = new Image()
+                                {
+                                    Source = Application.Current!.FindResource(
+                                        Application.Current!.RequestedThemeVariant,
+                                        "BoxIcons.RegularOpenGui") as IImage
+                                },
                             }
                         }
                     };
@@ -352,6 +370,8 @@ public class OssCadSuiteIntegrationModule : IModule
             environmentService.SetPath("oss_bin", Path.Combine(x, "bin"));
             environmentService.SetPath("oss_pythonBin", Path.Combine(x, "py3bin"));
             environmentService.SetPath("oss_lib", Path.Combine(x, "lib"));
+            environmentService.SetEnvironmentVariable("QT_PLUGIN_PATH",
+                Path.Combine(x, "lib", "qt5", "plugins"));
             environmentService.SetEnvironmentVariable("OPENFPGALOADER_SOJ_DIR",
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",

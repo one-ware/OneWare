@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -11,7 +11,7 @@ namespace OneWare.ProjectExplorer.Behaviors;
 
 /// <summary>
 /// </summary>
-public class TreeDragBehavior : Behavior<Control>
+public class TreeDataGridDragBehavior : Behavior<Control>
 {
     /// <summary>
     /// </summary>
@@ -123,10 +123,6 @@ public class TreeDragBehavior : Behavior<Control>
                 _triggerEvent = e;
                 _lock = true;
                 _captured = true;
-
-                //Manipulate selection behavior. Remove once fixed by avalonia
-                var treeView = control.FindLogicalAncestorOfType<TreeView>();
-                if (treeView?.SelectedItems.Count > 1 && e.KeyModifiers == KeyModifiers.None) e.Handled = true;
             }
     }
 
@@ -144,11 +140,6 @@ public class TreeDragBehavior : Behavior<Control>
                     _triggerEvent = e;
                     _lock = true;
                     _captured = true;
-
-                    //Manipulate selection behavior. Remove once fixed by avalonia
-                    var treeView = control.FindLogicalAncestorOfType<TreeView>();
-                    if (treeView != null && e.KeyModifiers == KeyModifiers.None)
-                        treeView.SelectedItem = AssociatedObject!.DataContext;
                 }
             }
 
@@ -175,7 +166,7 @@ public class TreeDragBehavior : Behavior<Control>
                 else
                     return;
 
-                var context = AssociatedObject.FindLogicalAncestorOfType<TreeView>()?.SelectedItems;
+                var context = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection?.SelectedItems;
 
                 Handler?.BeforeDragDrop(sender, _triggerEvent, context);
 

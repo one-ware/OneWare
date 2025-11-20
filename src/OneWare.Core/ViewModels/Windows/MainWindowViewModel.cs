@@ -12,6 +12,7 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
+using OneWare.CloudIntegration.ViewModels;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Controls;
@@ -135,7 +136,7 @@ public class MainWindowViewModel : ObservableObject
     public ObservableCollection<UiExtension> RightToolBarExtension { get; }
     public ObservableCollection<UiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
-
+    
     #region MainWindowButtons
 
     private Control GetMainView()

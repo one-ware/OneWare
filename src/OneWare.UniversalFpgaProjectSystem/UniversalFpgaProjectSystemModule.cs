@@ -22,6 +22,8 @@ public class UniversalFpgaProjectSystemModule : IModule
     {
         containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
         containerRegistry.RegisterSingleton<FpgaService>();
+        containerRegistry.RegisterSingleton<INodeProviderRegistry, NodeProviderRegistry>();
+        containerRegistry.RegisterSingleton<INodeProviderContext, NodeProviderContext>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
@@ -29,6 +31,7 @@ public class UniversalFpgaProjectSystemModule : IModule
         var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
         var windowService = containerProvider.Resolve<IWindowService>();
         var settingsService = containerProvider.Resolve<ISettingsService>();
+        
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
 
@@ -42,8 +45,9 @@ public class UniversalFpgaProjectSystemModule : IModule
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
             new MenuItemViewModel("FpgaProject")
             {
-                Header = "Project",
+                Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
+                Priority = 1,
                 Icon = SharedConverters.PathToBitmapConverter.Convert(
                     ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
             });
@@ -55,7 +59,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                 Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(
-                            $"Universal FPGA Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
+                            $"Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
@@ -104,5 +108,6 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
+        
     }
 }

@@ -17,9 +17,9 @@ namespace OneWare.Studio;
 
 public class StudioApp : App
 {
-    public static readonly ISettingsService SettingsService = new SettingsService();
-
     public static readonly IProjectSettingsService ProjectSettingsService = new ProjectSettingsService();
+    
+    public static readonly ISettingsService SettingsService = new SettingsService();
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 

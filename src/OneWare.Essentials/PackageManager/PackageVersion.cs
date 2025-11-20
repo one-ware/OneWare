@@ -4,6 +4,8 @@ public class PackageVersion
 {
     public string? Version { get; init; }
     
+    public bool IsPrerelease { get; init; }
+    
     public string? MinStudioVersion { get; init; }
 
     public PackageTarget[]? Targets { get; init; }

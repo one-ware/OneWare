@@ -9,13 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\CloudIntegrationMainWindowBottomRightExtension.axaml.cs">
-        <DependentUpon>SourceControlMainWindowBottomRightExtension.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     </ItemGroup>
 </Project>

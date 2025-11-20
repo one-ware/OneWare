@@ -50,17 +50,23 @@ internal abstract class Program
         {
             Option<string> dirOption = new("--oneware-dir") 
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
+            Option<string> projectsDirOption = new("--oneware-projects-dir") 
+                { Description = "Path to default projects directory for OneWare Studio. (optional)" };
             Option<string> appdataDirOption = new("--oneware-appdata-dir") 
                 { Description = "Path to application data directory for OneWare Studio. (optional)" };
             Option<string> moduleOption = new("--modules") 
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
+            Option<string> autoLaunchOption = new("--autolaunch") 
+                { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
 
             RootCommand rootCommand = new()
             {
                 Options = { 
                     dirOption, 
                     appdataDirOption,
-                    moduleOption
+                    projectsDirOption,
+                    moduleOption,
+                    autoLaunchOption
                 },
             };
             
@@ -70,6 +76,10 @@ internal abstract class Program
                 if (!string.IsNullOrEmpty(dirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_DIR", Path.GetFullPath(dirValue));
 
+                var projectsDirValue = parseResult.GetValue(projectsDirOption);
+                if (!string.IsNullOrEmpty(projectsDirValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_PROJECTS_DIR", Path.GetFullPath(projectsDirValue));
+                
                 var appdataDirValue = parseResult.GetValue(appdataDirOption);
                 if (!string.IsNullOrEmpty(appdataDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
@@ -77,6 +87,10 @@ internal abstract class Program
                 var moduleValue = parseResult.GetValue(moduleOption);
                 if (!string.IsNullOrEmpty(moduleValue))
                     Environment.SetEnvironmentVariable("ONEWARE_MODULES", moduleValue);
+                
+                var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
+                if (!string.IsNullOrEmpty(autoLaunchValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();

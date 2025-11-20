@@ -164,7 +164,7 @@ public class UpdaterViewModel : ObservableObject
                 updatablePackages.Select(x => x.Package.Name + " -> " + x.Package.Versions!.Last().Version).ToArray());
 
             var resultContinue = await _windowService.ShowYesNoCancelAsync("Update Packages",
-                $"There are package updates available:\n{updateString}\nIt is recommended to install these for compatibility! Do you want to update them now?",
+                $"There are package updates available:\n{updateString}\nDo you want to update them now?",
                 MessageBoxIcon.Warning, topLevelWindow);
 
             if (resultContinue == MessageBoxStatus.Canceled)

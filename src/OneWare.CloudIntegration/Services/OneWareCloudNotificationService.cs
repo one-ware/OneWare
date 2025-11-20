@@ -26,13 +26,6 @@ public class OneWareCloudNotificationService
         _loginService = loginService;
         _settingsService = settingsService;
         _logger = logger;
-
-        // Reset connection if host setting changes
-        _settingsService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
-            .Subscribe(x =>
-            {
-                _ = DisconnectAsync();
-            });
     }
 
     private async Task<string?> GetTokenAsync()

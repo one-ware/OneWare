@@ -142,10 +142,19 @@ public class ProjectWatchInstance : IDisposable
                             if (oldEntry is IProjectFile file)
                             {
                                 _dockService.OpenFiles.TryGetValue(file, out var tab);
-
+                                _dockService.OpenFiles.Remove(file);
+                                
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
-                                //TODO dont remove tab and Initialize Current Tab
+
+                                if (tab is not null)
+                                {
+                                    tab.FullPath = path;
+                                    tab.InitializeContent();
+                                    
+                                    if(tab.CurrentFile != null) 
+                                        _dockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
+                                }
                             }
                             else
                             {

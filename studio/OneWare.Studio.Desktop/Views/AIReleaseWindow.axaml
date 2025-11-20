@@ -1,0 +1,47 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.Studio.Desktop.ViewModels"
+                         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         Width="420" SizeToContent="WidthAndHeight"
+                         Title="A new plugin is available"
+                         mc:Ignorable="d" WindowStartupLocation="CenterOwner"
+                         x:Class="OneWare.Studio.Desktop.Views.AiReleaseWindow"
+                         x:DataType="viewModels:AiReleaseWindowViewModel">
+    <DockPanel Margin="8">
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
+            <TextBlock FontWeight="Bold" FontSize="18">OneAI is now available</TextBlock>
+            <TextBlock FontWeight="SemiBold" FontSize="14">Enhance your experience with advanced AI capabilities.</TextBlock>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Panel Width="100" Height="100">
+                    <Image Margin="10" Source="{DynamicResource AI_Img}"></Image>
+                </Panel>
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <TextBlock TextWrapping="Wrap" MaxWidth="250">
+                        Within this plugin you can manage your oneai projects and get
+                        features like annotation, model training and real-time camera checking.
+                    </TextBlock>
+                    <controls:HyperLink HorizontalAlignment="Left" 
+                                        Url="https://one-ware.com/one-ai" 
+                                        Label="Show more information.">
+                    </controls:HyperLink>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock>Click below to download and get started.</TextBlock>
+        </StackPanel>
+        <Panel DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="4" VerticalAlignment="Center">
+                <CheckBox IsChecked="{Binding HideNextTime}" Content="Don't show this again"></CheckBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="WindowButtons">
+                <Button Command="{Binding Close}"
+                        CommandParameter="{Binding $self}">Close</Button>
+                <Button Background="{DynamicResource ThemeAccentBrush}"
+                        Command="{Binding InstallPluginAsync}" 
+                        CommandParameter="{Binding $self}">Install now</Button>
+            </StackPanel>
+        </Panel>
+    </DockPanel>
+</controls:FlexibleWindow>

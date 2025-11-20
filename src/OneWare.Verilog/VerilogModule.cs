@@ -1,4 +1,6 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -14,6 +16,7 @@ public class VerilogModule : IModule
     public const string LspName = "Verible";
     public const string LspPathSetting = "VerilogModule_VeriblePath";
     public const string EnableSnippetsSetting = "VerilogModule_EnableSnippets";
+    public static readonly string[] VerilogExtensions = [".v", ".sv"];
 
     public static readonly Package VeriblePackage = new()
     {
@@ -239,6 +242,56 @@ public class VerilogModule : IModule
                         ]
                     }
                 ]
+            },
+            new PackageVersion()
+            {
+                Version = "0.0.4023",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = 
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-win64.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4023-gc1271a00-win64",
+                                    "verible-verilog-ls.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = 
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-linux-static-x86_64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4023-gc1271a00", "bin", "verible-verilog-ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-macOS.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("verible-v0.0-4023-gc1271a00-macOS", "bin",
+                                    "verible-verilog-ls"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     };
@@ -249,24 +302,26 @@ public class VerilogModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
+        var settingsService = containerProvider.Resolve<ISettingsService>();
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Verilog", LspPathSetting,
-            "Verible Path", "Path for Verible executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
+        var pathSetting = new FilePathSetting("Verible Path", "", null, containerProvider.Resolve<IPaths>().PackagesDirectory,
+            File.Exists, PlatformHelper.ExeFile);
+        settingsService.RegisterSetting("Languages", "Verilog", LspPathSetting, pathSetting);
+        settingsService.RegisterSetting("Languages", "Verilog", EnableSnippetsSetting, 
+            new CheckBoxSetting("Enable Snippets", true));
         
-        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "Verilog", EnableSnippetsSetting,
-            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
-
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",
-            "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", ".v", ".sv");
+            "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", VerilogExtensions);
         containerProvider.Resolve<ILanguageManager>()
-            .RegisterService(typeof(LanguageServiceVerilog), true, ".v", ".sv");
-
-        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VerilogNodeProvider>(".v", ".sv");
-
+            .RegisterService(typeof(LanguageServiceVerilog), true, VerilogExtensions);
+        
+        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions(VerilogExtensions, LanguageType.Verilog);
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkTemplate>();
         containerProvider.Resolve<FpgaService>().RegisterTemplate<VerilogBlinkSimulationTemplate>();
+        
+        containerProvider.Resolve<INodeProviderRegistry>().Register<VerilogNodeProvider>(LanguageType.Verilog);
     }
 }

@@ -17,6 +17,8 @@ public class OneWareCloudAccountSetting : CustomSetting
     private object _value;
 
     private IImage? _image;
+    
+    private bool _isLoggedIn;
 
     public OneWareCloudAccountSetting() : base(string.Empty)
     {
@@ -31,7 +33,7 @@ public class OneWareCloudAccountSetting : CustomSetting
         {
             if (SetProperty(ref _value, value))
             {
-                OnPropertyChanged(nameof(IsLoggedIn));
+                IsLoggedIn = !string.IsNullOrWhiteSpace(value.ToString());
                 OnPropertyChanged(nameof(Email));
                 _ = ResolveAsync();
             }
@@ -44,8 +46,12 @@ public class OneWareCloudAccountSetting : CustomSetting
         set => SetProperty(ref _image, value);
     }
 
-    public bool IsLoggedIn => !string.IsNullOrEmpty(Value.ToString());
-
+    public bool IsLoggedIn
+    {
+        get => _isLoggedIn;
+        set => SetProperty(ref _isLoggedIn, value);
+    }
+    
     public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
 
     private async Task ResolveAsync()

@@ -42,7 +42,7 @@ public class PackageManagerViewModel : ObservableObject
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
             Application.Current!.GetResourceObservable("Material.Pulse")));
         PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Misc", Application.Current!.GetResourceObservable("Module")));
+            .Add(new PackageCategoryViewModel("Tools", Application.Current!.GetResourceObservable("Module")));
 
         var hardwareCategory =
             new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
@@ -131,6 +131,28 @@ public class PackageManagerViewModel : ObservableObject
         await _packageService.LoadPackagesAsync();
     }
 
+    public async Task<PackageViewModel?> ShowSpecificPluginAsync(string category, string packageId)
+    {
+        PackageCategoryViewModel? categoryVm = PackageCategories
+            .FirstOrDefault(x => x.Header == category);
+
+        if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out PackageModel? packageModel))
+        {
+            PackageViewModel? packageVm = categoryVm.VisiblePackages
+                .FirstOrDefault(x => x.PackageModel == packageModel);
+            
+            if (packageVm == null)
+                return null;
+            
+            SelectedCategory = categoryVm;
+            SelectedCategory.SelectedPackage = packageVm;
+
+            await packageVm.ResolveTabsAsync();
+            return packageVm;
+        }
+        return null;
+    }
+
     private void ConstructPackageViewModels()
     {
         foreach (var category in PackageCategories)
@@ -157,12 +179,21 @@ public class PackageManagerViewModel : ObservableObject
 
                 if (category == null) continue;
 
-                var subCategory = category.SubCategories.FirstOrDefault(x =>
-                    x.Header.Equals(packageModel.Package.Category, StringComparison.OrdinalIgnoreCase));
+                var wantedCategory = packageModel.Package.Category;
 
-                if (subCategory != null)
-                    subCategory.Add(model);
-                else
+                if (wantedCategory is "Misc") wantedCategory = "Tools";
+                
+                var subCategory = category.SubCategories.FirstOrDefault(x =>
+                    x.Header.Equals(wantedCategory, StringComparison.OrdinalIgnoreCase));
+                
+                if (subCategory == null && wantedCategory != null)
+                {
+                    subCategory = new PackageCategoryViewModel(wantedCategory);
+                    category.SubCategories.Add(subCategory);    
+                }
+                subCategory?.Add(model);
+                
+                if (subCategory == null)
                     category.Add(model);
             }
             catch (Exception e)

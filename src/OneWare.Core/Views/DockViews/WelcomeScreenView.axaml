@@ -5,28 +5,205 @@
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:services="clr-namespace:OneWare.Core.Services"
+             xmlns:models="clr-namespace:OneWare.Core.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
-    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
-            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
-                   Height="70" Width="70" />
-            <TextBlock Text="{Binding AppName}" FontSize="30" Margin="10, 20, 10, 20" />
+    <UserControl.DataTemplates>
+
+        <DataTemplate x:DataType="models:WelcomeScreenStartItem">
+            <HyperlinkButton Command="{Binding Command}">
+                <HyperlinkButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <Panel Width="18" Height="18" Margin="0,2,6,2">
+                            <PathIcon Classes.Hidden="{Binding !IconIsGeometry}"
+                                      Foreground="{DynamicResource ThemeAccentBrush}"
+                                      Data="{Binding Icon}">
+                                <PathIcon.Styles>
+                                    <Style Selector="PathIcon">
+                                        <Setter Property="IsVisible" Value="True" />
+                                    </Style>
+                                    <Style Selector="PathIcon.Hidden">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </Style>
+                                </PathIcon.Styles>
+                            </PathIcon>
+                            <Image Classes.Hidden="{Binding IconIsGeometry}"
+                                   Source="{Binding Icon}">
+                                <Image.Styles>
+                                    <Style Selector="Image">
+                                        <Setter Property="IsVisible" Value="True" />
+                                    </Style>
+                                    <Style Selector="Image.Hidden">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </Style>
+                                </Image.Styles>
+                            </Image>
+                        </Panel>
+                        <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}"></TextBlock>
+                    </StackPanel>
+                </HyperlinkButton.Content>
+            </HyperlinkButton>
+        </DataTemplate>
+
+        <DataTemplate x:DataType="dockViews:RecentFileViewModel">
+            <DockPanel>
+                <HyperlinkButton DockPanel.Dock="Left" Margin="0,0,8,0" Content="{Binding Name}"
+                                 Command="{Binding $parent[UserControl].((dockViews:WelcomeScreenViewModel)DataContext).OpenRecentFileAsync, FallbackValue={x:Null}}"
+                                 CommandParameter="{Binding .}">
+                </HyperlinkButton>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ShortenPath}" ToolTip.Tip="{Binding Path}">
+                </TextBlock>
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate x:DataType="models:WelcomeScreenWalkthroughItem">
+            <Button Padding="0" Margin="0" Command="{Binding Command}"
+                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                <Button.Styles>
+                    <Style Selector="Button">
+                        <Setter Property="Cursor" Value="Hand"></Setter>
+                        <Style Selector="^:pointerover">
+                            <Setter Property="Background" Value="{x:Null}" />
+                        </Style>
+                        <Style Selector="^:pressed  /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{x:Null}" />
+                        </Style>
+                    </Style>
+                </Button.Styles>
+                <Panel>
+                    <Border CornerRadius="6"
+                            Opacity=".4" Background="{DynamicResource ThemeControlMidColor}">
+                    </Border>
+                    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="40,*" Margin="6">
+                        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" FontWeight="SemiBold"
+                                   Text="{Binding Name}">
+                        </TextBlock>
+                        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
+                                   Classes.Hide="{Binding HideDescription}"
+                                   Text="{Binding Description}"
+                                   TextWrapping="Wrap" Name="DescriptionContainer">
+                            <TextBlock.Styles>
+                                <Style Selector="TextBlock.Hide">
+                                    <Setter Property="IsVisible" Value="False"></Setter>
+                                </Style>
+                            </TextBlock.Styles>
+                        </TextBlock>
+                        <Panel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Width="18" Height="18"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes.Hidden="{Binding !IconIsGeometry}"
+                                      Foreground="{DynamicResource ThemeAccentBrush}"
+                                      Data="{Binding Icon}">
+                                <PathIcon.Styles>
+                                    <Style Selector="PathIcon">
+                                        <Setter Property="IsVisible" Value="True" />
+                                    </Style>
+                                    <Style Selector="PathIcon.Hidden">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </Style>
+                                </PathIcon.Styles>
+                            </PathIcon>
+                            <Image Classes.Hidden="{Binding IconIsGeometry}"
+                                   Source="{Binding Icon}">
+                                <Image.Styles>
+                                    <Style Selector="Image">
+                                        <Setter Property="IsVisible" Value="True" />
+                                    </Style>
+                                    <Style Selector="Image.Hidden">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </Style>
+                                </Image.Styles>
+                            </Image>
+                        </Panel>
+                    </Grid>
+                </Panel>
+            </Button>
+        </DataTemplate>
+
+    </UserControl.DataTemplates>
+    <Panel Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" RowDefinitions="Auto,Auto,Auto"
+              ColumnDefinitions="Auto,30,Auto">
+            <Grid.Styles>
+                <Style Selector="TextBlock.header">
+                    <Setter Property="FontSize" Value="16" />
+                    <Setter Property="Margin" Value="0,0,0,2" />
+                </Style>
+                <Style Selector="HyperlinkButton">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0,2" />
+                </Style>
+            </Grid.Styles>
+
+            <!-- HEADER -->
+            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0, 20">
+                    <Image
+                        Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                        Height="50" Width="50" />
+                    <StackPanel Orientation="Vertical" Margin="10,0">
+                        <TextBlock Text="{Binding AppName}" FontSize="28" />
+                        <TextBlock Text="{Binding VersionInfo}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
+                <!-- NEW -->
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="New" Classes="header"></TextBlock>
+                    <ItemsControl ItemsSource="{Binding NewItems}"></ItemsControl>
+                </StackPanel>
+
+                <!-- OPEN -->
+                <StackPanel Orientation="Vertical" Margin="0,10">
+                    <TextBlock Text="Open" Classes="header"></TextBlock>
+                    <ItemsControl ItemsSource="{Binding OpenItems}"></ItemsControl>
+                </StackPanel>
+
+                <!-- RECENTS -->
+                <StackPanel Orientation="Vertical" MinWidth="360">
+                    <TextBlock Text="Recents" Classes="header"></TextBlock>
+                    <TextBlock Text="No recent projects were found..."
+                               Foreground="{DynamicResource ThemeControlHighColor}"
+                               Classes.Hide="{Binding !RecentProjectsAreEmpty}">
+                        <TextBlock.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="IsVisible" Value="True"></Setter>
+                            </Style>
+                            <Style Selector="TextBlock.Hide">
+                                <Setter Property="IsVisible" Value="False"></Setter>
+                            </Style>
+                        </TextBlock.Styles>
+                    </TextBlock>
+                    <ItemsControl ItemsSource="{Binding RecentProjects}" MinWidth="180"></ItemsControl>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- WALKTHROUGH -->
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="2">
+                <TextBlock Text="Walkthrough" Classes="header" Margin="0,0,0,4"></TextBlock>
+                <ItemsControl ItemsSource="{Binding WalkthroughItems}" MinWidth="320">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" Spacing="6"></StackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+            <TextBlock Text="OneWare Studio is licensed under the " />
+            <controls:HyperLink Label="GPL 3.0 license"
+                                Url="https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#">
+            </controls:HyperLink>
         </StackPanel>
 
-        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding VersionInfo}" />
-
-        <TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding Platform}" />
-
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
-            <TextBlock Text="Home Page: " />
-            <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" />
-        </StackPanel>
-
-        <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True"
-                 Background="{DynamicResource ThemeControlLowBrush}"
-                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" />
-    </DockPanel>
+        <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom" />
+    </Panel>
 </UserControl>

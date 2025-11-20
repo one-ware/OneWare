@@ -25,6 +25,9 @@
         Id="APPLICATIONFOLDER_REGSEARCH" Name="PrivateDir" />
     </Property>
 
+    <!--Fix for WIX removing dlls on upgrade? -->
+    <SetProperty Id="REINSTALLMODE" Value="amus" Before="FindRelatedProducts" Sequence="first" />
+
     <UIRef Id="UI" />
 
     <Feature Id="OneWareStudio" Title="OneWare Studio" Description="Installs all the files needed for OneWare Studio" Level="1" ConfigurableDirectory="INSTALLFOLDER">

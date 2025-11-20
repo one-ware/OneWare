@@ -10,7 +10,7 @@ namespace OneWare.Essentials.Services;
 public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 {
     public ObservableCollection<IProjectRoot> Projects { get; }
-    public ObservableCollection<IProjectExplorerNode> SelectedItems { get; }
+    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
     public event EventHandler<IFile>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
@@ -35,10 +35,15 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task ImportAsync(IProjectFolder destination, bool copy, bool askForInclude, params string[] paths);
     public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
     public Task SaveProjectAsync(IProjectRoot project);
+    public Task SaveRecentProjectsFileAsync();
     public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);
 
     public void RegisterConstructContextMenu(
         Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct);
+
+    public void ClearSelection();
+    public void AddToSelection(IProjectExplorerNode node);
+    public IEnumerable<string> LoadRecentProjects();
 }

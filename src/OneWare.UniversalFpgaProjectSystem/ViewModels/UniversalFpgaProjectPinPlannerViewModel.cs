@@ -22,6 +22,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
     private readonly FpgaService _fpgaService;
+    private readonly INodeProviderContext _nodeProviderContext;
 
     private CompositeDisposable? _compositeDisposable;
 
@@ -33,14 +34,17 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     private FpgaViewModelBase? _selectedViewModel;
 
-    private readonly FpgaNode[]? _nodes;
+    private FpgaNode[]? _nodes;
+    
+    private bool _isLoading;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
-        IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
+        IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project, INodeProviderContext nodeProviderContext)
     {
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _fpgaService = fpgaService;
+        _nodeProviderContext = nodeProviderContext;
         Project = project;
 
         TopRightExtension = windowService.GetUiExtensions("CompileWindow_TopRightExtension");
@@ -50,28 +54,49 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
-        if (Project.TopEntity is IProjectFile file)
+        _ = InitializeAsync();
+    }
+    
+    private async Task InitializeAsync()
+    {
+        try
         {
-            var provider = fpgaService.GetNodeProvider(file.Extension);
-            if (provider is not null)
+            IsLoading = true; 
+
+            IProjectFile? file = Project.TopEntity as IProjectFile;
+            if (file == null)
             {
-                try
-                {
-                    _nodes = provider.ExtractNodes(file).ToArray();
-                }
-                catch (Exception e)
-                {
-                    ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-                }
+                return; 
             }
+            
+            var language = _fpgaService.GetLanguageType(file.Extension);
+            
+            var nodesEnumerable = await _nodeProviderContext.ExtractNodesAsync(language, file);
+            _nodes = nodesEnumerable.ToArray();
+            RefreshHardware();
+            
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.GetProjectProperty("Fpga")) ??
+                                  FpgaPackages.FirstOrDefault();
+
+            IsDirty = false;
         }
-
-        RefreshHardware();
-
-        SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == project.GetProjectProperty("Fpga")) ??
-                              FpgaPackages.FirstOrDefault();
-
-        IsDirty = false;
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error("Fehler bei der Initialisierung des Pin Planners.", e);
+            
+            //await _windowService.ShowMessageBoxAsync("Fehler", $"Knoten konnten nicht geladen werden: {e.Message}", MessageBoxIcon.Error);
+            
+        }
+        finally
+        {
+            IsLoading = false; 
+        }
+    }
+    
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set => SetProperty(ref _isLoading, value);
     }
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
@@ -241,7 +266,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public void SaveAndCompile(FlexibleWindow window)
     {
-        SaveAndClose(window);
         if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
+        SaveAndClose(window);
     }
 }

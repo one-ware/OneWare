@@ -53,9 +53,7 @@ public class FolderProjectRoot : ProjectRoot
                         folder.Children.Add(new LoadingDummyNode());
                 }
             });
-
-            //Console.WriteLine("watch folder: " + folder.FullPath);
-
+            
             _registeredFolders.Add(folder, subscription);
         }
         catch (Exception e)
@@ -87,14 +85,21 @@ public class FolderProjectRoot : ProjectRoot
     {
         var parentPath = Path.GetDirectoryName(path);
 
-        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder parent)
+        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder folder)
         {
-            var relativePath = Path.GetRelativePath(FullPath, path);
+            if (folder.IsExpanded)
+            {
+                var relativePath = Path.GetRelativePath(FullPath, path);
 
-            if (attributes.HasFlag(FileAttributes.Directory))
-                AddFolder(relativePath);
-            else
-                AddFile(relativePath);
+                if (attributes.HasFlag(FileAttributes.Directory))
+                    AddFolder(relativePath);
+                else
+                    AddFile(relativePath);
+            }
+            else if(folder.Children.Count == 0)
+            {
+                folder.Children.Add(new LoadingDummyNode());
+            }
         }
     }
 }

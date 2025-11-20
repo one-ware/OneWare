@@ -40,13 +40,15 @@ public class PluginCompatibilityChecker
             var depsList = deps.Trim().Split('\n');
 
             var coreDeps = GetReferencedAssembliesRecursive(Assembly.GetEntryAssembly()!);
-            
+
             foreach (var dep in depsList)
             {
                 var parts = dep.Split(':');
                 var dependencyName = parts[0].Trim();
                 var versionString = parts[1].Trim();
-                var dependencyVersion = Version.Parse(NormalizeVersion(versionString));
+
+                var dependencyVersionFull = Version.Parse(NormalizeVersion(versionString));
+                var dependencyVersion = TrimTo2Parts(dependencyVersionFull);
 
                 switch (dependencyName)
                 {
@@ -57,20 +59,27 @@ public class PluginCompatibilityChecker
                     case "OneWare.AvaloniaEdit.TextMate":
                         continue;
                 }
-                
-                if (!coreDeps.TryGetValue(dependencyName, out var coreDep))
+
+                if (!coreDeps.TryGetValue(dependencyName, out var coreDep) || coreDep.Version == null)
                 {
                     compatibilityIssues += $"Dependency {dependencyName} not found\n";
-                    
                     continue;
                 }
 
-                if (coreDep.Version < dependencyVersion)
+                var coreVersion = TrimTo2Parts(coreDep.Version);
+
+                var cmp = coreVersion.CompareTo(dependencyVersion);
+
+                if (cmp < 0)
+                {
                     compatibilityIssues +=
-                        $"Required {dependencyName} : {dependencyVersion} > {coreDep.Version}\n";
-                if (coreDep.Version > dependencyVersion)
+                        $"Required {dependencyName} : {dependencyVersion} > {coreVersion}\n";
+                }
+                else if (cmp > 0)
+                {
                     compatibilityIssues +=
-                        $"Required {dependencyName} : {dependencyVersion} < {coreDep.Version}\n";
+                        $"Required {dependencyName} : {dependencyVersion} < {coreVersion}\n";
+                }
             }
 
             return new CompatibilityReport(compatibilityIssues.Length == 0, compatibilityIssues);
@@ -132,5 +141,10 @@ public class PluginCompatibilityChecker
         }
 
         return result;
+    }
+    
+    private static Version TrimTo2Parts(Version v)
+    {
+        return new Version(v.Major, v.Minor);
     }
 }
