@@ -5,6 +5,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Models;
+using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -117,10 +118,12 @@ public class YosysService(
         var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
                           ?? throw new Exception("NextPnr Tool not set!");
 
+        var pcfFile = YosysSettingHelper.GetConstraintFile(project);
+        
         var nextPnrArguments = new List<string>
         {
             "--json", "./build/synth.json",
-            "--pcf", "project.pcf",
+            "--pcf", pcfFile,
             "--asc", "./build/nextpnr.asc"
         };
 
