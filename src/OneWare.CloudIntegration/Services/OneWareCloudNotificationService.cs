@@ -134,20 +134,27 @@ public class OneWareCloudNotificationService
     /// </summary>
     public IDisposable SubscribeToHubMethod<T>(string methodName, Action<T> handler)
     {
+        IDisposable? hubUnsubscribe = null;
+        
         var subscription = new HubSubscription
         {
             MethodName = methodName,
             RawHandler = handler,
-            Attach = connection => connection.On(methodName, handler)
+            Attach = connection => hubUnsubscribe = connection.On(methodName, handler)
         };
 
         _subscriptions.Add(subscription);
-
-        _connection?.On(methodName, handler); // attach immediately if live
+        
+        // Attach immediately if live and capture the unsubscriber
+        if (_connection != null)
+        {
+            hubUnsubscribe = _connection.On(methodName, handler);
+        }
 
         return new Subscription(() =>
         {
             _subscriptions.Remove(subscription);
+            hubUnsubscribe?.Dispose();
         });
     }
     
