@@ -110,8 +110,6 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        await base.LoadContentAsync();
-        
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
 
@@ -163,6 +161,9 @@ public class DesktopStudioApp : StudioApp
                 Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             }
         }
+
+        // trigger AutoLaunch Actions
+        await base.LoadContentAsync();
 
         var settingsService = Container.Resolve<ISettingsService>();
         var packageService = Container.Resolve<IPackageService>();
