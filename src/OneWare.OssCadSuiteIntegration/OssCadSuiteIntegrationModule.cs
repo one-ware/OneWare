@@ -492,7 +492,7 @@ public class OssCadSuiteIntegrationModule : IModule
                 if (pcf.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
                 {
                     if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath) {
-                        l.Add(new MenuItemViewModel("ccf")
+                        l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
                             Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
@@ -500,7 +500,7 @@ public class OssCadSuiteIntegrationModule : IModule
                     }
                     else
                     {
-                        l.Add(new MenuItemViewModel("ccf")
+                        l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
                             Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
