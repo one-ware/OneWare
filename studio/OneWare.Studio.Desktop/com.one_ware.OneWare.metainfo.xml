@@ -98,4 +98,9 @@
         <release version="0.18.0.0" date="2024-07-10" type="stable"/>
         <release version="0.17.7.0" date="2024-07-05" type="stable"/>
     </releases>
+    <keywords>
+        <keyword>electronics ide</keyword>
+        <keyword>vhdl editor</keyword>
+        <keyword>verilog simulator</keyword>
+    </keywords>
 </component>
