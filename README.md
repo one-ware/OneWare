@@ -46,7 +46,7 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 ## Build
 
-1. Install [.NET SDK 9.0](https://dotnet.microsoft.com/en-us/download)
+1. Install [.NET SDK 10.0](https://dotnet.microsoft.com/en-us/download)
 2. Clone this repo `git clone --recursive https://github.com/one-ware/OneWare.git`
 3. `cd OneWare/studio/OneWare.Studio.Desktop`
 4. `dotnet run`
