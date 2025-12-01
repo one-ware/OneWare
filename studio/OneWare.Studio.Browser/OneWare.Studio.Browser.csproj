@@ -6,7 +6,7 @@
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
-        <TargetFramework>net9.0-browser</TargetFramework>
+        <TargetFramework>net10.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
         <!--Enable Threading once dotnet runtime issues are resolved
         <WasmEnableThreads>false</WasmEnableThreads>-->
