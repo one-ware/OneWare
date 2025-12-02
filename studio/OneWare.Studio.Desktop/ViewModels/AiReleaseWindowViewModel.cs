@@ -17,17 +17,17 @@ public class AiReleaseWindowViewModel : ObservableObject
     
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
-    private readonly PackageManagerViewModel _packageManagerVm;
+    private readonly IPackageWindowService _packageWindowManager;
     private readonly IPaths _paths;
     private bool _hideNextTime;
     
     public AiReleaseWindowViewModel(IPaths paths, ISettingsService settingsService, 
-        IWindowService windowService, PackageManagerViewModel packageManagerVm)
+        IWindowService windowService, IPackageWindowService packageWindowManager)
     {
         _paths = paths;
         _windowService = windowService;
         _settingsService = settingsService;
-        _packageManagerVm = packageManagerVm;
+        _packageWindowManager = packageWindowManager;
     }
 
     public bool HideNextTime
@@ -44,15 +44,7 @@ public class AiReleaseWindowViewModel : ObservableObject
     public async Task InstallPluginAsync(Control control)
     {
         Close(control);
-        if (await _packageManagerVm.ShowSpecificPluginAsync("Plugins", ExtensionId) is { } pvm)
-        {
-            var view = new PackageManagerView
-            {
-                DataContext = _packageManagerVm
-            };
-            _windowService.Show(view);
-            await pvm.InstallCommand.ExecuteAsync(view);
-        }
+        await _packageWindowManager.ShowExtensionManagerAndTryInstallAsync("Plugins", ExtensionId);
     }
 
     public void Close(Control control)
