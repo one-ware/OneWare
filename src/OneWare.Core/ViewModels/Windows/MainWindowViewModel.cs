@@ -12,7 +12,7 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
-using OneWare.CloudIntegration.ViewModels;
+using OneWare.CloudIntegration;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Controls;
@@ -187,6 +187,11 @@ public class MainWindowViewModel : ObservableObject
         {
             DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
         });
+    }
+    
+    public async Task OpenFeedbackDialogAsync()
+    {
+        OneWareCloudIntegrationModule.OpenFeedbackDialogAsync();
     }
 
     #endregion
