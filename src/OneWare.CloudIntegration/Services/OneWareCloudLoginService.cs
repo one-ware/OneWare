@@ -208,7 +208,7 @@ public sealed class OneWareCloudLoginService
         }
     }
     
-    public async Task<bool> SendFeedbackAsync(string header, string category, string message)
+    public async Task<bool> SendFeedbackAsync(string category, string message)
     {
         try
         {
@@ -227,7 +227,6 @@ public sealed class OneWareCloudLoginService
             request.AddHeader("Accept", "application/json");
             request.AddJsonBody(new
             {
-                Header = header,
                 Category = category,
                 Message = message
             });

@@ -50,11 +50,6 @@
             </TextBlock>
             
             <StackPanel Spacing="3" Orientation="Vertical">
-                <TextBlock Text="Header:" />
-                <TextBox Text="{Binding Header}" Watermark="Subject"/>
-            </StackPanel>
-            
-            <StackPanel Spacing="3" Orientation="Vertical">
                 <TextBlock Text="Category:" />
                 <ComboBox ItemsSource="{Binding Categories}" 
                           SelectedItem="{Binding Category}" />
