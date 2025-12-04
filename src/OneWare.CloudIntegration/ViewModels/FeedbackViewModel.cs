@@ -39,11 +39,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         get => _isLoading;
         set => SetProperty(ref _isLoading, value);
     }
-    public string Header
-    {
-        get => _header;
-        set => SetProperty(ref _header, value);
-    }
+
     public string Message
     {
         get => _message;
@@ -62,8 +58,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
 
     public async Task SendFeedbackAsync(Window window)
     {
-        if (string.IsNullOrWhiteSpace(Header) ||
-            string.IsNullOrWhiteSpace(Message) ||
+        if (string.IsNullOrWhiteSpace(Message) ||
             string.IsNullOrWhiteSpace(Category))
         {
             ErrorText = "Please fill out the form";
@@ -71,7 +66,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         }
 
         IsLoading = true;
-        Result = await _loginService.SendFeedbackAsync(Header, Category, Message);
+        Result = await _loginService.SendFeedbackAsync(Category, Message);
         IsLoading = false;
         window.Close();
     }

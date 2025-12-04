@@ -37,11 +37,13 @@ public sealed class OneWareCloudLoginService
             {
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey));
             });
+        
+        OneWareCloudIsUsed = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) == OneWareCloudIntegrationModule.CredentialStore;
     }
     
-    public RestClient GetRestClient()
+    public RestClient GetRestClient(bool loadClientFromSettings = true)
     {
-        var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+        var baseUrl = loadClientFromSettings? _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) : OneWareCloudIntegrationModule.CredentialStore;
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
     
@@ -208,12 +210,16 @@ public sealed class OneWareCloudLoginService
         }
     }
     
-    public async Task<bool> SendFeedbackAsync(string header, string category, string message)
+    public async Task<bool> SendFeedbackAsync(string category, string message)
     {
         try
         {
             RestRequest? request;
-            (string? jwt, HttpStatusCode status) = await GetLoggedInJwtTokenAsync();
+            string? jwt = null;
+            if (OneWareCloudIsUsed)
+            {
+                (jwt, _) = await GetLoggedInJwtTokenAsync();
+            }
             if (jwt == null)
             {
                 request = new RestRequest("/api/feedback/anonymous");
@@ -227,12 +233,11 @@ public sealed class OneWareCloudLoginService
             request.AddHeader("Accept", "application/json");
             request.AddJsonBody(new
             {
-                Header = header,
                 Category = category,
                 Message = message
             });
             
-            var response = await GetRestClient().ExecutePostAsync(request);
+            var response = await GetRestClient(false).ExecutePostAsync(request);
             return response.IsSuccessful;
         }
         catch (Exception e)
@@ -286,4 +291,6 @@ public sealed class OneWareCloudLoginService
     {
         [JsonPropertyName("refreshToken")] public string RefreshToken { get; set; }
     }
+    
+    public bool OneWareCloudIsUsed { get; }
 }
