@@ -40,7 +40,7 @@
                     
                     <ContentControl Content="{Binding SettingViewModel}" />
                     
-                    <Separator Margin="0" Padding="0"></Separator>
+                    <Separator Margin="0" Padding="0" />
                     
                     <ItemsControl ItemsSource="{Binding Information}">
                         <ItemsControl.ItemsPanel>
@@ -54,6 +54,15 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    
+                    <Separator Margin="0" Padding="0" IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" />
+                        <controls:HyperLink Label="Get free credits"
+                                            Url="{Binding ChangeAddressLink}"
+                                            Margin="6,0, 6, 0" 
+                                            HorizontalContentAlignment="Center" HorizontalAlignment="Center"
+                                            IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" 
+                                            ToolTip.Tip="Your account is missing information. Enter your address and get free credits.">
+                        </controls:HyperLink>
                     
                     <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
                     

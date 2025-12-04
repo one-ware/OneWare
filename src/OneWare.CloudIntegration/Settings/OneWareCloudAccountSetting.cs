@@ -54,6 +54,8 @@ public class OneWareCloudAccountSetting : CustomSetting
     
     public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
 
+    public bool AddressIsVerified { get; set; } = true;
+
     private async Task ResolveAsync()
     {
         var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
@@ -91,5 +93,7 @@ public class OneWareCloudAccountSetting : CustomSetting
             //TODO Move this to somewhere else
             await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
         }
+        
+        AddressIsVerified = data["isAddressVerified"]?.GetValue<bool>() ?? true;
     }
 }
