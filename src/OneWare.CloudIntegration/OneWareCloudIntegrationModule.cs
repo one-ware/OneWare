@@ -52,25 +52,28 @@ public class OneWareCloudIntegrationModule : IModule
         {
             Header = "Send Feedback",
             IconObservable = Application.Current!.GetResourceObservable("VSImageLib.FeedbackBubble_16x"),
-            Command = new AsyncRelayCommand(async () =>
-            {
-                var windowService = containerProvider.Resolve<IWindowService>();
-                var loginService = containerProvider.Resolve<OneWareCloudLoginService>();
-                        
-                var dataContext = new FeedbackViewModel(loginService);
-                await windowService.ShowDialogAsync(new SendFeedbackView()
-                {
-                    DataContext = dataContext
-                });
-
-                if (!dataContext.Result.HasValue)
-                    return;
-                
-                string msg = dataContext.Result == true
-                    ? "We received your feedback and process the request as soon as possible." 
-                    : "Something went wrong. Please retry it later.";
-                await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
-            })
+            Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
         });
+
+    }
+    
+    public static async Task OpenFeedbackDialogAsync()
+    {
+        var windowService = ContainerLocator.Container.Resolve<IWindowService>();
+        var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
+                    
+        var dataContext = new FeedbackViewModel(loginService);
+        await windowService.ShowDialogAsync(new SendFeedbackView()
+        {
+            DataContext = dataContext
+        });
+
+        if (!dataContext.Result.HasValue)
+            return;
+            
+        string msg = dataContext.Result == true
+            ? "We received your feedback and process the request as soon as possible." 
+            : "Something went wrong. Please retry it later.";
+        await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
     }
 }

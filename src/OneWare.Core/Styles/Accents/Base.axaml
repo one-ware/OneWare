@@ -69,6 +69,8 @@
     <SolidColorBrush x:Key="SelectionBrush">#606e6e6e</SolidColorBrush>
     <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
     
+    <sys:Double x:Key="TextControlPlaceholderOpacity">0.5</sys:Double>
+    
     <ResourceDictionary.ThemeDictionaries>
 
         <ResourceDictionary x:Key="Default">

@@ -44,7 +44,7 @@ jobs:
         run: |
           curl -o flatpak-dotnet-generator.py https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/dotnet/flatpak-dotnet-generator.py
           chmod +x flatpak-dotnet-generator.py
-          ./flatpak-dotnet-generator.py oneware-nuget-sources.json ./source-repo/studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -d 9 -f 24.08 -r linux-x64
+          ./flatpak-dotnet-generator.py oneware-nuget-sources.json ./source-repo/studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -d 10 -f 24.08 -r linux-x64
           rm -f flatpak-dotnet-generator.py      
       - name: Delete the source repository
         run: rm -rf source-repo 

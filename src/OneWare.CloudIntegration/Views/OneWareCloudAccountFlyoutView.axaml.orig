@@ -18,6 +18,66 @@
             </Grid>
         </DataTemplate>
     </UserControl.DataTemplates>
+<<<<<<< HEAD
+    
+    <Button Padding="1">
+        <Button.Content>
+            <DockPanel LastChildFill="True">
+                <Border Margin="4,0" DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
+                    <Panel>
+                        <Image Source="{Binding SettingViewModel.Setting.Image}"/>
+                        <Image IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
+                            Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="2"/>
+                    </Panel>
+                </Border>
+            </DockPanel>
+        </Button.Content>
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
+                    
+                    <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
+                    
+                    <ContentControl Content="{Binding SettingViewModel}" />
+                    
+                    <Separator Margin="0" Padding="0" />
+                    
+                    <ItemsControl ItemsSource="{Binding Information}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Panel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ContentControl Height="28" Content="{Binding .}" IsVisible="{Binding IsVisible}"></ContentControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                    <Separator Margin="0" Padding="0" IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" />
+                        <controls:HyperLink Label="Get free credits"
+                                            Url="{Binding ChangeAddressLink}"
+                                            Margin="6,0, 6, 0" 
+                                            HorizontalContentAlignment="Center" HorizontalAlignment="Center"
+                                            IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" 
+                                            ToolTip.Tip="Your account is missing information. Enter your address and get free credits.">
+                        </controls:HyperLink>
+                    
+                    <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
+                    
+                    <controls:HyperLink Label="{Binding UrlLabel}" 
+                                           Url="{Binding Url}"
+                                           Margin="6,0, 6, 0" 
+                                           HorizontalContentAlignment="Center" HorizontalAlignment="Center">
+                    </controls:HyperLink>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>
+=======
 
     <StackPanel Orientation="Horizontal" Spacing="6">
         <Button Command="{Binding OpenFeedbackDialogAsync}"
@@ -79,3 +139,4 @@
     </StackPanel>
 
 </UserControl>
+>>>>>>> origin/main

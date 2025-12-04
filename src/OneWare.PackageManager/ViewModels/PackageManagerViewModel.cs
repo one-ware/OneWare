@@ -7,30 +7,28 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.PackageManager.Views;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageManagerViewModel : ObservableObject
+public class PackageManagerViewModel : ObservableObject, IPackageWindowService
 {
     private readonly IPackageService _packageService;
-    
+    private readonly IWindowService _windowService;
     private readonly ILogger _logger;
 
     private string _filter = string.Empty;
-
     private bool _isLoading;
     private PackageCategoryViewModel? _selectedCategory;
-
     private bool _showAvailable = true;
-
     private bool _showInstalled = true;
-
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger)
+    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService)
     {
         _packageService = packageService;
+        _windowService = windowService;
         _logger = logger;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
@@ -131,7 +129,57 @@ public class PackageManagerViewModel : ObservableObject
         await _packageService.LoadPackagesAsync();
     }
 
-    public async Task<PackageViewModel?> ShowSpecificPluginAsync(string category, string packageId)
+    public Control ShowExtensionManager()
+    {
+        var view = new PackageManagerView
+        {
+            DataContext = this
+        };
+        _windowService.Show(view);
+
+        return view;
+    }
+    
+    public Control? ShowExtensionManager(string category, string? subcategory)
+    {
+        if (!FocusCategory(category, subcategory))
+            return null;
+        
+        return ShowExtensionManager();
+    }
+    
+    public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string category, string packageId)
+    {
+        if (await FocusPluginAsync(category, packageId) is not { } pvm)
+            return false;
+        
+        var view = ShowExtensionManager();
+        await pvm.InstallCommand.ExecuteAsync(view);
+
+        return true;
+    }
+
+    private bool FocusCategory(string category, string? subcategory)
+    {
+        PackageCategoryViewModel? categoryVm = PackageCategories
+            .FirstOrDefault(x => x.Header == category);
+
+        if (categoryVm == null) 
+            return false;
+
+        if (subcategory != null)
+        {
+            categoryVm = categoryVm.SubCategories.FirstOrDefault(x => x.Header == subcategory);
+            if (categoryVm == null)
+                return false;
+        }
+        
+        SelectedCategory = categoryVm;
+        SelectedCategory.SelectedPackage = null;
+        return true;
+    }
+    
+    private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
     {
         PackageCategoryViewModel? categoryVm = PackageCategories
             .FirstOrDefault(x => x.Header == category);

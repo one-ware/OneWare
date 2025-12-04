@@ -88,12 +88,14 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
         set => SetProperty(ref _url, value);
     }
 
+<<<<<<< HEAD
+    public string ChangeAddressLink { get; }
+=======
     public async Task OpenFeedbackDialogAsync(Control parent)
     {
         await OneWareCloudIntegrationModule.OpenFeedbackDialogAsync();
     }
-
-    public string ChangeAddressLink { get; }
+>>>>>>> origin/main
 }
 
 public interface IOneWareCloudAccountFlyoutSetting

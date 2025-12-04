@@ -35,6 +35,9 @@ public class FolderProjectManager : IProjectManager
     {
         folder.Children.Clear();
         folder.Entities.Clear();
+
+        if (!Directory.Exists(folder.FullPath))
+            return;
         
         var options = new EnumerationOptions
         {
