@@ -41,9 +41,9 @@ public sealed class OneWareCloudLoginService
         OneWareCloudIsUsed = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) == OneWareCloudIntegrationModule.CredentialStore;
     }
     
-    public RestClient GetRestClient(bool loadClientFromSettings = true)
+    public RestClient GetRestClient()
     {
-        var baseUrl = loadClientFromSettings? _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) : OneWareCloudIntegrationModule.CredentialStore;
+        var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
     
@@ -236,8 +236,10 @@ public sealed class OneWareCloudLoginService
                 Category = category,
                 Message = message
             });
+
+            var restClient = new RestClient(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
             
-            var response = await GetRestClient(false).ExecutePostAsync(request);
+            var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;
         }
         catch (Exception e)
