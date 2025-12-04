@@ -188,11 +188,6 @@ public class MainWindowViewModel : ObservableObject
             DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
         });
     }
-    
-    public async Task OpenFeedbackDialogAsync()
-    {
-        OneWareCloudIntegrationModule.OpenFeedbackDialogAsync();
-    }
 
     #endregion
 }

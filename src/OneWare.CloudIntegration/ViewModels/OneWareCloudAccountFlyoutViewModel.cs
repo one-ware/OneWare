@@ -84,6 +84,11 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
         get => _url;
         set => SetProperty(ref _url, value);
     }
+
+    public async Task OpenFeedbackDialogAsync(Control parent)
+    {
+        await OneWareCloudIntegrationModule.OpenFeedbackDialogAsync();
+    }
 }
 
 public interface IOneWareCloudAccountFlyoutSetting

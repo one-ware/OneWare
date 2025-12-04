@@ -56,6 +56,7 @@ public class OneWareCloudIntegrationModule : IModule
         });
 
     }
+    
     public static async Task OpenFeedbackDialogAsync()
     {
         var windowService = ContainerLocator.Container.Resolve<IWindowService>();

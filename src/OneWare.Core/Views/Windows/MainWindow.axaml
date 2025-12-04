@@ -67,11 +67,6 @@
             </StackPanel>
 
             <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
-                <Button Command="{Binding OpenFeedbackDialogAsync}" ToolTip.Tip="Settings">
-                    <Button.Content>
-                        <TextBlock>Feedback</TextBlock>
-                    </Button.Content>
-                </Button>
                 <sdkControls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
                 <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
                     <Button.Content>
