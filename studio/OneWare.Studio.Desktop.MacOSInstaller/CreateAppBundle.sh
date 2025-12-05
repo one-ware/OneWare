@@ -19,28 +19,56 @@ VERSION=$(grep -o '<Version>[^<]*</Version>' ../../build/props/Base.props | sed 
 # FUNCTION TO SIGN AVALONIA APP (required)
 #############################################
 sign_app_bundle() {
-    APP_PATH="$1"
+    APP="$1"
+    ENT="$ENTITLEMENTS"
 
     echo "----------------------------------------"
-    echo "  Signing all components in $APP_PATH"
+    echo "  Cleaning problematic file permissions"
     echo "----------------------------------------"
 
-    # Sign every file inside Contents/MacOS
-    find "$APP_PATH/Contents/MacOS" -type f | while read file; do
-        echo "Signing: $file"
-        codesign --force --timestamp --options runtime \
-            --entitlements "$ENTITLEMENTS" \
-            --sign "$MAC_CERT_ID" "$file"
-    done
+    # Remove all executable bits from .dll, .pdb, .json etc.
+    find "$APP/Contents/MacOS" -type f \
+        \( -name "*.dll" -o -name "*.pdb" -o -name "*.json" -o -name "*.config" \) \
+        -exec chmod 644 {} \;
 
-    echo "Signing entire .app bundle"
-    codesign --force --timestamp --options runtime \
-        --entitlements "$ENTITLEMENTS" \
-        --sign "$MAC_CERT_ID" "$APP_PATH"
+    echo "----------------------------------------"
+    echo "  Signing ONLY Mach-O binaries"
+    echo "----------------------------------------"
 
-    echo "Verifying signature"
-    codesign --verify --verbose "$APP_PATH"
+    # Detect Mach-O binaries and sign only them
+    find "$APP/Contents/MacOS" -type f -exec file {} \; \
+        | grep "Mach-O" \
+        | cut -d: -f1 \
+        | while read file; do
+            echo "Signing Mach-O: $file"
+            codesign \
+                --force \
+                --timestamp \
+                --options runtime \
+                --entitlements "$ENT" \
+                --sign "$MAC_CERT_ID" \
+                "$file"
+        done
+
+    echo "----------------------------------------"
+    echo "  Signing APP bundle"
+    echo "----------------------------------------"
+
+    codesign \
+        --force \
+        --timestamp \
+        --options runtime \
+        --entitlements "$ENT" \
+        --sign "$MAC_CERT_ID" \
+        "$APP"
+
+    echo "----------------------------------------"
+    echo "  Final verification"
+    echo "----------------------------------------"
+
+    codesign --verify --strict --verbose=4 "$APP"
 }
+
 
 #############################################
 #               ARM64 BUILD
