@@ -12,6 +12,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6"/>
+        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6">
+            <ExcludeAssets Condition="!$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">
+                contentFiles;runtime;build
+            </ExcludeAssets>
+        </PackageReference>
     </ItemGroup>
+
 </Project>
