@@ -27,8 +27,9 @@ sign_app_bundle() {
     echo "  Signing binaries inside $APP"
     echo "----------------------------------------"
 
-    # Sign .dylib, .so, .dll files
-    find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.dll" -o -name "*.pdb" -o -name "*.json" \) -print0 | xargs -0 -I {} codesign \
+    # Sign all files in Contents/MacOS
+    # macOS expects files in this directory to be executable code, so we must sign everything found here.
+    find "$APP/Contents/MacOS" -type f -print0 | xargs -0 -I {} codesign \
         --force \
         --timestamp \
         --options runtime \
