@@ -1,9 +1,10 @@
 #!/bin/sh
 set -e
 
-ENTITLEMENTS="./OneWareStudio.entitlements"
+# Path to entitlements (relative to this script)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ENTITLEMENTS="$SCRIPT_DIR/OneWareStudio.entitlements"
 
-# Ensure certificate is known
 echo "Using signing identity: $MAC_CERT_ID"
 echo "Using entitlements: $ENTITLEMENTS"
 
@@ -16,59 +17,57 @@ VERSION=$(grep -o '<Version>[^<]*</Version>' ../../build/props/Base.props | sed 
 ./CreateInfoPlist.sh "$VERSION"
 
 #############################################
-# FUNCTION TO SIGN AVALONIA APP (required)
+# FUNCTION TO SIGN AVALONIA APP
 #############################################
 sign_app_bundle() {
     APP="$1"
-    ENT="$ENTITLEMENTS"
 
     echo "----------------------------------------"
-    echo "  Cleaning problematic file permissions"
+    echo "  Cleaning file permissions in $APP"
     echo "----------------------------------------"
 
-    # Remove all executable bits from .dll, .pdb, .json etc.
+    # Make sure non-native files are not executable
     find "$APP/Contents/MacOS" -type f \
         \( -name "*.dll" -o -name "*.pdb" -o -name "*.json" -o -name "*.config" \) \
         -exec chmod 644 {} \;
 
     echo "----------------------------------------"
-    echo "  Signing ONLY Mach-O binaries"
+    echo "  Signing ONLY Mach-O binaries in $APP"
     echo "----------------------------------------"
 
-    # Detect Mach-O binaries and sign only them
+    # Detect Mach-O binaries and sign ONLY those.
+    # We parse 'file' output as: <path>: <description>
     find "$APP/Contents/MacOS" -type f -exec file {} \; \
         | grep "Mach-O" \
-        | cut -d: -f1 \
-        | while read file; do
-            echo "Signing Mach-O: $file"
+        | while IFS=: read -r file_path _rest; do
+            echo "Signing Mach-O: $file_path"
             codesign \
                 --force \
                 --timestamp \
                 --options runtime \
-                --entitlements "$ENT" \
+                --entitlements "$ENTITLEMENTS" \
                 --sign "$MAC_CERT_ID" \
-                "$file"
+                "$file_path"
         done
 
     echo "----------------------------------------"
-    echo "  Signing APP bundle"
+    echo "  Signing .app bundle: $APP"
     echo "----------------------------------------"
 
     codesign \
         --force \
         --timestamp \
         --options runtime \
-        --entitlements "$ENT" \
+        --entitlements "$ENTITLEMENTS" \
         --sign "$MAC_CERT_ID" \
         "$APP"
 
     echo "----------------------------------------"
-    echo "  Final verification"
+    echo "  Verifying $APP"
     echo "----------------------------------------"
 
     codesign --verify --strict --verbose=4 "$APP"
 }
-
 
 #############################################
 #               ARM64 BUILD
@@ -83,7 +82,8 @@ mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 
-dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
+dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained \
+  ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 
 ARM_APP="source/OneWare Studio.app"
@@ -116,7 +116,8 @@ mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 
-dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
+dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained \
+  ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 
 X64_APP="source/OneWare Studio.app"
