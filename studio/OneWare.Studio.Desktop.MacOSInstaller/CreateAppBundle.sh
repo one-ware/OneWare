@@ -27,8 +27,8 @@ dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained ../OneWare.St
 
 PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
-echo "Removing executable flags from DLLs..."
-find "source/OneWare Studio.app/Contents/MacOS" -type f -name "*.dll" -exec chmod -x {} \;
+echo "Fixing executable flags on ALL DLLs recursively..."
+find "source/OneWare Studio.app" -type f -name "*.dll" -exec chmod 644 {} \;
 
 echo "Codesigning ARM64 app..."
 codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
@@ -68,8 +68,8 @@ dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained ../OneWare.Stud
 
 PACKAGENAME="publish/OneWareStudio-x64.dmg"
 
-echo "Removing executable flags from DLLs..."
-find "source/OneWare Studio.app/Contents/MacOS" -type f -name "*.dll" -exec chmod -x {} \;
+echo "Fixing executable flags on ALL DLLs recursively..."
+find "source/OneWare Studio.app" -type f -name "*.dll" -exec chmod 644 {} \;
 
 echo "Codesigning x64 app..."
 codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
