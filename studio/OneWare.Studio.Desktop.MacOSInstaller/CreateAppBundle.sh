@@ -28,8 +28,9 @@ sign_app_bundle() {
     echo "----------------------------------------"
 
     # Sign every file under the app bundle
-    find "$APP" -type f -print0 | while IFS= read -r -d '' file; do
-        echo "Signing: $file"
+    find "$APP_NAME/Contents/MacOS/"|while read fname; do
+      if [[ -f $fname ]]; then
+        echo "[INFO] Signing $fname"
         codesign \
             --force \
             --timestamp \
@@ -37,6 +38,7 @@ sign_app_bundle() {
             --entitlements "$ENT" \
             --sign "$MAC_CERT_ID" \
             "$file"
+      fi
     done
 
     echo "----------------------------------------"
