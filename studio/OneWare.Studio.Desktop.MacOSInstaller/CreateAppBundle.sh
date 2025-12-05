@@ -28,7 +28,7 @@ sign_app_bundle() {
     echo "----------------------------------------"
 
     # Sign .dylib, .so, .dll files
-    find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.dll" -o -name "*.pdb" \) -print0 | xargs -0 -I {} codesign \
+    find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.dll" -o -name "*.pdb" -o -name "*.json" \) -print0 | xargs -0 -I {} codesign \
         --force \
         --timestamp \
         --options runtime \
