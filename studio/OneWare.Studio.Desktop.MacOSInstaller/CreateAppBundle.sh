@@ -27,17 +27,17 @@ dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained ../OneWare.St
 
 PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
-echo "Codesigning ARM64 app..."
+echo "Removing executable flags from DLLs..."
+find "source/OneWare Studio.app/Contents/MacOS" -type f -name "*.dll" -exec chmod -x {} \;
 
-# Sign the .app bundle (no --deep, no DLL signing)
+echo "Codesigning ARM64 app..."
 codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
   "source/OneWare Studio.app"
 
-# Verify
+echo "Verifying ARM64 app signature..."
 codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
 
 echo "Creating ARM64 DMG..."
-
 create-dmg \
   --volname "Install OneWare Studio" \
   --window-pos 200 120 \
@@ -68,17 +68,17 @@ dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained ../OneWare.Stud
 
 PACKAGENAME="publish/OneWareStudio-x64.dmg"
 
-echo "Codesigning x64 app..."
+echo "Removing executable flags from DLLs..."
+find "source/OneWare Studio.app/Contents/MacOS" -type f -name "*.dll" -exec chmod -x {} \;
 
-# Sign the .app bundle (no --deep, no DLL signing)
+echo "Codesigning x64 app..."
 codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
   "source/OneWare Studio.app"
 
-# Verify
+echo "Verifying x64 app signature..."
 codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
 
 echo "Creating x64 DMG..."
-
 create-dmg \
   --volname "Install OneWare Studio" \
   --window-pos 200 120 \
