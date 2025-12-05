@@ -43,6 +43,7 @@ jobs:
           security default-keychain -s build.keychain
           security unlock-keychain -p "" build.keychain
           security set-keychain-settings -lut 21600 build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -k "" build.keychain
       - name: Export Signing Identity
         run: echo "MAC_CERT_ID=${{ secrets.MAC_CERT_ID }}" >> $GITHUB_ENV
       - name: Make Out Dir

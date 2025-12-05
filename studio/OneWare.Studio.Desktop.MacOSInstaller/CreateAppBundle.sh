@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+ENTITLEMENTS="./OneWareStudio.entitlements"
+
+# Ensure certificate is known
+echo "Using signing identity: $MAC_CERT_ID"
+echo "Using entitlements: $ENTITLEMENTS"
+
 rm -rf publish
 mkdir publish
 
@@ -8,6 +14,33 @@ VERSION=$(grep -o '<Version>[^<]*</Version>' ../../build/props/Base.props | sed 
 
 # Create Info.plist
 ./CreateInfoPlist.sh "$VERSION"
+
+#############################################
+# FUNCTION TO SIGN AVALONIA APP (required)
+#############################################
+sign_app_bundle() {
+    APP_PATH="$1"
+
+    echo "----------------------------------------"
+    echo "  Signing all components in $APP_PATH"
+    echo "----------------------------------------"
+
+    # Sign every file inside Contents/MacOS
+    find "$APP_PATH/Contents/MacOS" -type f | while read file; do
+        echo "Signing: $file"
+        codesign --force --timestamp --options runtime \
+            --entitlements "$ENTITLEMENTS" \
+            --sign "$MAC_CERT_ID" "$file"
+    done
+
+    echo "Signing entire .app bundle"
+    codesign --force --timestamp --options runtime \
+        --entitlements "$ENTITLEMENTS" \
+        --sign "$MAC_CERT_ID" "$APP_PATH"
+
+    echo "Verifying signature"
+    codesign --verify --verbose "$APP_PATH"
+}
 
 #############################################
 #               ARM64 BUILD
@@ -25,17 +58,10 @@ mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 
-PACKAGENAME="publish/OneWareStudio-arm64.dmg"
+ARM_APP="source/OneWare Studio.app"
+ARM_DMG="publish/OneWareStudio-arm64.dmg"
 
-echo "Fixing executable flags on ALL DLLs recursively..."
-find "source/OneWare Studio.app" -type f -name "*.dll" -exec chmod 644 {} \;
-
-echo "Codesigning ARM64 app..."
-codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
-  "source/OneWare Studio.app"
-
-echo "Verifying ARM64 app signature..."
-codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
+sign_app_bundle "$ARM_APP"
 
 echo "Creating ARM64 DMG..."
 create-dmg \
@@ -44,9 +70,8 @@ create-dmg \
   --window-size 800 400 \
   --icon-size 100 \
   --icon "OneWare Studio.app" 200 190 \
-  --hide-extension "OneWare Studio.app" \
   --app-drop-link 600 185 \
-  "$PACKAGENAME" \
+  "$ARM_DMG" \
   "source/"
 
 
@@ -66,17 +91,10 @@ mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 
-PACKAGENAME="publish/OneWareStudio-x64.dmg"
+X64_APP="source/OneWare Studio.app"
+X64_DMG="publish/OneWareStudio-x64.dmg"
 
-echo "Fixing executable flags on ALL DLLs recursively..."
-find "source/OneWare Studio.app" -type f -name "*.dll" -exec chmod 644 {} \;
-
-echo "Codesigning x64 app..."
-codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
-  "source/OneWare Studio.app"
-
-echo "Verifying x64 app signature..."
-codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
+sign_app_bundle "$X64_APP"
 
 echo "Creating x64 DMG..."
 create-dmg \
@@ -85,9 +103,8 @@ create-dmg \
   --window-size 800 400 \
   --icon-size 100 \
   --icon "OneWare Studio.app" 200 190 \
-  --hide-extension "OneWare Studio.app" \
   --app-drop-link 600 185 \
-  "$PACKAGENAME" \
+  "$X64_DMG" \
   "source/"
 
 echo "============================"
