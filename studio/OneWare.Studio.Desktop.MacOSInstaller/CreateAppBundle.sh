@@ -29,12 +29,6 @@ PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
 echo "Codesigning ARM64 app..."
 
-# Sign inner binaries
-find "source/OneWare Studio.app" -type f -perm +111 -print0 | while IFS= read -r -d '' file; do
-    echo "Signing inner binary: $file"
-    codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" "$file"
-done
-
 # Sign entire .app bundle
 codesign --force --options runtime --timestamp --deep --sign "$MAC_CERT_ID" "source/OneWare Studio.app"
 
@@ -74,12 +68,6 @@ dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained ../OneWare.Stud
 PACKAGENAME="publish/OneWareStudio-x64.dmg"
 
 echo "Codesigning x64 app..."
-
-# Sign inner binaries
-find "source/OneWare Studio.app" -type f -perm +111 -print0 | while IFS= read -r -d '' file; do
-    echo "Signing inner binary: $file"
-    codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" "$file"
-done
 
 # Sign entire .app bundle
 codesign --force --options runtime --timestamp --deep --sign "$MAC_CERT_ID" "source/OneWare Studio.app"
