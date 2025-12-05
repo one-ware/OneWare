@@ -21,53 +21,40 @@ VERSION=$(grep -o '<Version>[^<]*</Version>' ../../build/props/Base.props | sed 
 #############################################
 sign_app_bundle() {
     APP="$1"
+    ENT="$ENTITLEMENTS"
 
-    echo "----------------------------------------"
-    echo "  Cleaning file permissions in $APP"
-    echo "----------------------------------------"
-
-    # Make sure non-native files are not executable
+    echo "Cleaning non-executable file permissions"
     find "$APP/Contents/MacOS" -type f \
         \( -name "*.dll" -o -name "*.pdb" -o -name "*.json" -o -name "*.config" \) \
         -exec chmod 644 {} \;
 
-    echo "----------------------------------------"
-    echo "  Signing ONLY Mach-O binaries in $APP"
-    echo "----------------------------------------"
-
-    # Detect Mach-O binaries and sign ONLY those.
-    # We parse 'file' output as: <path>: <description>
-    find "$APP/Contents/MacOS" -type f -exec file {} \; \
-        | grep "Mach-O" \
-        | while IFS=: read -r file_path _rest; do
-            echo "Signing Mach-O: $file_path"
+    echo "Signing Mach-O binaries"
+    find "$APP/Contents/MacOS" -type f | while read file; do
+        if file "$file" | grep -q "Mach-O"; then
+            echo "Signing Mach-O: $file"
             codesign \
                 --force \
                 --timestamp \
                 --options runtime \
-                --entitlements "$ENTITLEMENTS" \
+                --entitlements "$ENT" \
                 --sign "$MAC_CERT_ID" \
-                "$file_path"
-        done
+                "$file"
+        fi
+    done
 
-    echo "----------------------------------------"
-    echo "  Signing .app bundle: $APP"
-    echo "----------------------------------------"
-
+    echo "Signing .app bundle"
     codesign \
         --force \
         --timestamp \
         --options runtime \
-        --entitlements "$ENTITLEMENTS" \
+        --entitlements "$ENT" \
         --sign "$MAC_CERT_ID" \
         "$APP"
 
-    echo "----------------------------------------"
-    echo "  Verifying $APP"
-    echo "----------------------------------------"
-
+    echo "Verifying .app bundle"
     codesign --verify --strict --verbose=4 "$APP"
 }
+
 
 #############################################
 #               ARM64 BUILD
