@@ -27,9 +27,9 @@ sign_app_bundle() {
     echo "  Signing binaries inside $APP"
     echo "----------------------------------------"
 
-    # Sign all files in Contents/MacOS
+    # Sign all files in Contents/MacOS EXCEPT the main executable (it gets signed last)
     # macOS expects files in this directory to be executable code, so we must sign everything found here.
-    find "$APP/Contents/MacOS" -type f -print0 | xargs -0 -I {} codesign \
+    find "$APP/Contents/MacOS" -type f ! -name "OneWareStudio" -print0 | xargs -0 -I {} codesign \
         --force \
         --timestamp \
         --options runtime \
