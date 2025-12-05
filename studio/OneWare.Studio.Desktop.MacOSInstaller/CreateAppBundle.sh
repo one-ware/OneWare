@@ -29,11 +29,12 @@ PACKAGENAME="publish/OneWareStudio-arm64.dmg"
 
 echo "Codesigning ARM64 app..."
 
-# Sign entire .app bundle
-codesign --force --options runtime --timestamp --deep --sign "$MAC_CERT_ID" "source/OneWare Studio.app"
+# Sign the .app bundle (no --deep, no DLL signing)
+codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
+  "source/OneWare Studio.app"
 
 # Verify
-codesign --verify --deep --strict --verbose=2 "source/OneWare Studio.app"
+codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
 
 echo "Creating ARM64 DMG..."
 
@@ -69,11 +70,12 @@ PACKAGENAME="publish/OneWareStudio-x64.dmg"
 
 echo "Codesigning x64 app..."
 
-# Sign entire .app bundle
-codesign --force --options runtime --timestamp --deep --sign "$MAC_CERT_ID" "source/OneWare Studio.app"
+# Sign the .app bundle (no --deep, no DLL signing)
+codesign --force --options runtime --timestamp --sign "$MAC_CERT_ID" --verbose=4 \
+  "source/OneWare Studio.app"
 
 # Verify
-codesign --verify --deep --strict --verbose=2 "source/OneWare Studio.app"
+codesign --verify --strict --verbose=4 "source/OneWare Studio.app"
 
 echo "Creating x64 DMG..."
 
