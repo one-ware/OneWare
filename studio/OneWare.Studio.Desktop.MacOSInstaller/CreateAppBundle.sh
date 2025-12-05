@@ -24,22 +24,29 @@ sign_app_bundle() {
     ENT="$ENTITLEMENTS"
 
     echo "----------------------------------------"
-    echo "  Signing ALL files inside $APP"
+    echo "  Signing binaries inside $APP"
     echo "----------------------------------------"
 
-    # Sign every file under the app bundle
-    find "$APP_NAME/Contents/MacOS/"|while read fname; do
-      if [[ -f $fname ]]; then
-        echo "[INFO] Signing $fname"
-        codesign \
-            --force \
-            --timestamp \
-            --options runtime \
-            --entitlements "$ENT" \
-            --sign "$MAC_CERT_ID" \
-            "$file"
-      fi
-    done
+    # Sign .dylib, .so, .dll files
+    find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.dll" \) -print0 | xargs -0 -I {} codesign \
+        --force \
+        --timestamp \
+        --options runtime \
+        --entitlements "$ENT" \
+        --sign "$MAC_CERT_ID" \
+        "{}"
+
+    echo "----------------------------------------"
+    echo "  Signing main executable"
+    echo "----------------------------------------"
+
+    codesign \
+        --force \
+        --timestamp \
+        --options runtime \
+        --entitlements "$ENT" \
+        --sign "$MAC_CERT_ID" \
+        "$APP/Contents/MacOS/OneWareStudio"
 
     echo "----------------------------------------"
     echo "  Signing .app bundle"
