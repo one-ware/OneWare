@@ -33,11 +33,45 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install create-dmg using Brew
         run: brew install create-dmg
+      - name: Import Apple Developer Certificate
+        shell: bash
+        run: |
+          echo "${{ secrets.MAC_CERT_P12 }}" | base64 --decode > Certificates.p12
+          security create-keychain -p "" build.keychain
+          security import Certificates.p12 -k build.keychain -P "${{ secrets.MAC_CERT_P12_PASSWORD }}" -T /usr/bin/codesign -T /usr/bin/security
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+      - name: Export Signing Identity
+        run: echo "MAC_CERT_ID=${{ secrets.MAC_CERT_ID }}" >> $GITHUB_ENV
       - name: Make Out Dir
         run: mkdir ./out
       - name: Create Bundles
         working-directory: ./studio/OneWare.Studio.Desktop.MacOSInstaller
         run: ./CreateAppBundle.sh
+      - name: Notarize ARM64 DMG
+        run: |
+          xcrun notarytool submit \
+            "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg" \
+            --apple-id "${{ secrets.AC_USERNAME }}" \
+            --password "${{ secrets.AC_PASSWORD }}" \
+            --team-id "${{ secrets.MAC_TEAM_ID }}" \
+            --wait
+      - name: Staple ARM64 DMG
+        run: |
+          xcrun stapler staple "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-arm64.dmg"
+      - name: Notarize x64 DMG
+        run: |
+          xcrun notarytool submit \
+            "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg" \
+            --apple-id "${{ secrets.AC_USERNAME }}" \
+            --password "${{ secrets.AC_PASSWORD }}" \
+            --team-id "${{ secrets.MAC_TEAM_ID }}" \
+            --wait
+      - name: Staple x64 DMG
+        run: |
+          xcrun stapler staple "./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg"
       - name: Rename Packages
         run: |
           mv ./studio/OneWare.Studio.Desktop.MacOSInstaller/publish/OneWareStudio-x64.dmg ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-osx-x64.dmg
