@@ -24,11 +24,11 @@ sign_app_bundle() {
     ENT="$ENTITLEMENTS"
 
     echo "----------------------------------------"
-    echo "  Signing ALL files in $APP/Contents/MacOS"
+    echo "  Signing ALL files inside $APP"
     echo "----------------------------------------"
 
-    # Sign every file under Contents/MacOS (DLLs, dylibs, exe, everything)
-    find "$APP/Contents/MacOS" -type f -print0 | while IFS= read -r -d '' file; do
+    # Sign every file under the app bundle
+    find "$APP" -type f -print0 | while IFS= read -r -d '' file; do
         echo "Signing: $file"
         codesign \
             --force \
@@ -40,7 +40,7 @@ sign_app_bundle() {
     done
 
     echo "----------------------------------------"
-    echo "  Signing .app bundle: $APP"
+    echo "  Signing .app bundle"
     echo "----------------------------------------"
 
     codesign \
@@ -55,10 +55,8 @@ sign_app_bundle() {
     echo "  Verifying .app bundle"
     echo "----------------------------------------"
 
-    # deep verify so we see any missed subcomponent
     codesign --verify --deep --strict --verbose=4 "$APP"
 }
-
 
 #############################################
 #               ARM64 BUILD
