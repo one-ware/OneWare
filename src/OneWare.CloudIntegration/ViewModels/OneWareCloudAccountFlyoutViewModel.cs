@@ -15,6 +15,7 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
 {
     private const string RegisterPath = "/account/register";
     private const string ManageAccountPath = "/account/manage";
+    private const string ChangeAddressPath = "/account/manage/changeAddress";
 
     private string? _urlLabel;
     private string? _url;
@@ -31,7 +32,7 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
         creditBalanceSetting.SubscribeToHub(cloudNotificationService);
         Information.Add(creditBalanceSetting);
         
-       setting.WhenValueChanged(x => x.IsLoggedIn).Subscribe(x =>
+        setting.WhenValueChanged(x => x.IsLoggedIn).Subscribe(x =>
         {
             if (!x)
             {
@@ -68,6 +69,7 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
                     creditBalanceSetting.Value = "Not connected";
                 }
             });
+        ChangeAddressLink = $"{baseUrl}{ChangeAddressPath}";
     }
 
     public OneWareCloudAccountSettingViewModel SettingViewModel { get; }
@@ -89,6 +91,8 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
     {
         await OneWareCloudIntegrationModule.OpenFeedbackDialogAsync();
     }
+    
+    public string ChangeAddressLink { get; }
 }
 
 public interface IOneWareCloudAccountFlyoutSetting
