@@ -23,26 +23,26 @@ sign_app_bundle() {
     APP="$1"
     ENT="$ENTITLEMENTS"
 
-    echo "Cleaning non-executable file permissions"
-    find "$APP/Contents/MacOS" -type f \
-        \( -name "*.dll" -o -name "*.pdb" -o -name "*.json" -o -name "*.config" \) \
-        -exec chmod 644 {} \;
+    echo "----------------------------------------"
+    echo "  Signing ALL files in $APP/Contents/MacOS"
+    echo "----------------------------------------"
 
-    echo "Signing Mach-O binaries"
-    find "$APP/Contents/MacOS" -type f | while read file; do
-        if file "$file" | grep -q "Mach-O"; then
-            echo "Signing Mach-O: $file"
-            codesign \
-                --force \
-                --timestamp \
-                --options runtime \
-                --entitlements "$ENT" \
-                --sign "$MAC_CERT_ID" \
-                "$file"
-        fi
+    # Sign every file under Contents/MacOS (DLLs, dylibs, exe, everything)
+    find "$APP/Contents/MacOS" -type f -print0 | while IFS= read -r -d '' file; do
+        echo "Signing: $file"
+        codesign \
+            --force \
+            --timestamp \
+            --options runtime \
+            --entitlements "$ENT" \
+            --sign "$MAC_CERT_ID" \
+            "$file"
     done
 
-    echo "Signing .app bundle"
+    echo "----------------------------------------"
+    echo "  Signing .app bundle: $APP"
+    echo "----------------------------------------"
+
     codesign \
         --force \
         --timestamp \
@@ -51,8 +51,12 @@ sign_app_bundle() {
         --sign "$MAC_CERT_ID" \
         "$APP"
 
-    echo "Verifying .app bundle"
-    codesign --verify --strict --verbose=4 "$APP"
+    echo "----------------------------------------"
+    echo "  Verifying .app bundle"
+    echo "----------------------------------------"
+
+    # deep verify so we see any missed subcomponent
+    codesign --verify --deep --strict --verbose=4 "$APP"
 }
 
 
