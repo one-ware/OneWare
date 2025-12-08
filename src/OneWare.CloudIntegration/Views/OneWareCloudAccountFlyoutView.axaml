@@ -64,15 +64,20 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <Separator Margin="0" Padding="0" 
-                                   IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" />
-                        <controls:HyperLink Label="Get free credits"
-                                            Url="{Binding ChangeAddressLink}"
-                                            Margin="6,0, 6, 0" 
-                                            HorizontalContentAlignment="Center" HorizontalAlignment="Center"
-                                            IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" 
-                                            ToolTip.Tip="Your account is missing information. Enter your address and get free credits.">
-                        </controls:HyperLink>
+                        
+                        <StackPanel Orientation="Vertical" Spacing="5">
+                            <Separator Margin="0" Padding="0" 
+                                       IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" />
+                            
+                            <TextBlock Foreground="Orange" Text="Your account is missing information. Enter your address and get free credits." TextWrapping="Wrap" MaxWidth="200" />
+                            <controls:HyperLink Label="Get free credits"
+                                                Url="{Binding ChangeAddressLink}"
+                                                HorizontalAlignment="Left" FontWeight="Bold"
+                                                IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" 
+                                                ToolTip.Tip="Your account is missing information. Enter your address and get free credits.">
+                            </controls:HyperLink>
+                        </StackPanel>
+                     
                         <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
 
                         <controls:HyperLink Label="{Binding UrlLabel}"
