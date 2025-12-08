@@ -1,0 +1,17 @@
+﻿$date
+  Mon Dec  8 23:39:51 2025
+$end
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module s $end
+$var integer 32 ! a $end
+$upscope $end
+$enddefinitions $end
+#0
+b1 !

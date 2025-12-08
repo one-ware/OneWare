@@ -484,6 +484,12 @@ public static partial class VcdParser
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentLogic);
                                     break;
                                 case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic[]):
+                                    if (currentVector.Count < signalRegister[id].BitWidth)
+                                    {
+                                        var padCount = signalRegister[id].BitWidth - currentVector.Count;
+                                        var padding = Enumerable.Repeat(StdLogic.Zero, padCount).ToList();
+                                        currentVector.InsertRange(0, padding);
+                                    }
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentVector.ToArray());
                                     break;
                                 case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic) && currentVector.Count == 1:
