@@ -65,6 +65,7 @@
     </provides>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.21.18.0" date="2025-12-04" type="stable"/>
         <release version="0.21.17.0" date="2025-12-04" type="stable"/>
         <release version="0.21.16.0" date="2025-11-20" type="stable"/>
         <release version="0.21.15.0" date="2025-11-12" type="stable"/>
