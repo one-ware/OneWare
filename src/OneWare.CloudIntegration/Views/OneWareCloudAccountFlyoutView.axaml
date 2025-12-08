@@ -65,9 +65,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         
-                        <StackPanel Orientation="Vertical" Spacing="5">
-                            <Separator Margin="0" Padding="0" 
-                                       IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" />
+                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}">
+                            <Separator Margin="0" Padding="0" />
                             
                             <TextBlock Foreground="Orange" Text="Your account is missing information. Enter your address and get free credits." TextWrapping="Wrap" MaxWidth="200" />
                             <controls:HyperLink Label="Get free credits"
