@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OneWare.Vcd.Parser.Data;
@@ -42,6 +43,11 @@ public class VcdParserTests
     private static string GetTestPath5()
     {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/trace.vcd");
+    }
+    
+    private static string GetTestPath6()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/integer_width.vcd");
     }
     
     [Fact]
@@ -153,6 +159,19 @@ public class VcdParserTests
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
         _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
+    
+    [Fact]
+    public void ParseTest6()
+    {
+        var result = VcdParser.ParseVcd(GetTestPath6());
+        var signal = result.GetSignal("!");
+        Assert.Equal(32, signal.BitWidth);
+        var expected = Enumerable.Repeat(StdLogic.Zero, 31)
+            .Append(StdLogic.Full)
+            .ToList();
+        Assert.Equal(expected, signal.GetValueFromOffset(0));
+    }
+
 
     [Fact]
     public void ParseTest5()
