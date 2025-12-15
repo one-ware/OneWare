@@ -252,7 +252,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
                     return true;
                 break;
             case ErrorListFilterMode.CurrentFile:
-                if ((_dockService.CurrentDocument as IEditor)?.CurrentFile == error.File) return true;
+                if (_dockService.CurrentDocument?.CurrentFile == error.File) return true;
                 break;
         }
 
