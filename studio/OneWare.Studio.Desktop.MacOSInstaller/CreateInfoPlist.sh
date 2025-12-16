@@ -6,7 +6,6 @@ if [ "$#" -ne 1 ]; then
 fi
 
 version="$1"
-
 plist_file="./Contents/Info.plist"
 
 cat > "$plist_file" <<EOF
@@ -16,24 +15,44 @@ cat > "$plist_file" <<EOF
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
+
     <key>CFBundleExecutable</key>
     <string>OneWareStudio</string>
+
     <key>CFBundleIconFile</key>
     <string>OneWare.icns</string>
+
     <key>CFBundleIdentifier</key>
     <string>oneware.onewarestudio</string>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>oneware</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>oneware</string>
+            </array>
+        </dict>
+    </array>
+
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+
     <key>CFBundleName</key>
     <string>OneWare Studio</string>
+
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+
     <key>CFBundleShortVersionString</key>
     <string>$version</string>
+
     <key>CFBundleVersion</key>
     <string>$version</string>
 </dict>
 </plist>
 EOF
 
-echo "info.plist got created"
+echo "Info.plist got created"
