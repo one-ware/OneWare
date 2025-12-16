@@ -127,26 +127,30 @@ internal abstract class Program
         return 0;
     }
     
+    private static bool IsLaunchUrl(string s)
+    {
+        return Uri.TryCreate(s, UriKind.Absolute, out var uri)
+               && !string.IsNullOrEmpty(uri.Scheme)
+               // be strict: only accept your scheme(s)
+               && uri.Scheme.Equals("oneware", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool TryExtractUrl(ref string[] args, out string? url)
     {
         url = null;
+        if (args.Length == 0) return false;
 
-        // 1. Explicit --url (highest priority)
-        for (int i = 0; i < args.Length - 1; i++)
+        // Prefer last argument (matches protocol launchers)
+        if (IsLaunchUrl(args[^1]))
         {
-            if (args[i] == "--url")
-            {
-                url = args[i + 1];
-                args = args.Where((_, idx) => idx != i && idx != i + 1).ToArray();
-                return true;
-            }
+            url = args[^1];
+            args = args.Take(args.Length - 1).ToArray();
+            return true;
         }
-
-        // 2. Positional URL (oneware://...)
+        
         for (int i = 0; i < args.Length; i++)
         {
-            if (Uri.TryCreate(args[i], UriKind.Absolute, out var uri) &&
-                !string.IsNullOrEmpty(uri.Scheme))
+            if (IsLaunchUrl(args[i]))
             {
                 url = args[i];
                 args = args.Where((_, idx) => idx != i).ToArray();
