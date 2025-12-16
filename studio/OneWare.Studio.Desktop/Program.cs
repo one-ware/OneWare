@@ -48,6 +48,11 @@ internal abstract class Program
     {
         try
         {
+            if (TryExtractUrl(ref args, out var detectedUrl))
+            {
+                Environment.SetEnvironmentVariable("ONEWARE_URL", detectedUrl);
+            }
+            
             Option<string> dirOption = new("--oneware-dir") 
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
             Option<string> projectsDirOption = new("--oneware-projects-dir") 
@@ -58,8 +63,6 @@ internal abstract class Program
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
             Option<string> autoLaunchOption = new("--autolaunch") 
                 { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
-            Option<string> urlOption = new("--url")
-                { Description = "Specifies URL parameter" };
             
             RootCommand rootCommand = new()
             {
@@ -69,7 +72,6 @@ internal abstract class Program
                     projectsDirOption,
                     moduleOption,
                     autoLaunchOption,
-                    urlOption
                 },
             };
             
@@ -94,10 +96,6 @@ internal abstract class Program
                 var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
                 if (!string.IsNullOrEmpty(autoLaunchValue))
                     Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
-                
-                var urlValue = parseResult.GetValue(urlOption);
-                if (!string.IsNullOrEmpty(urlValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_URL", urlValue);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
@@ -127,5 +125,39 @@ internal abstract class Program
         }
 
         return 0;
+    }
+    
+    private static bool IsLaunchUrl(string s)
+    {
+        return Uri.TryCreate(s, UriKind.Absolute, out var uri)
+               && !string.IsNullOrEmpty(uri.Scheme)
+               // be strict: only accept your scheme(s)
+               && uri.Scheme.Equals("oneware", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryExtractUrl(ref string[] args, out string? url)
+    {
+        url = null;
+        if (args.Length == 0) return false;
+
+        // Prefer last argument (matches protocol launchers)
+        if (IsLaunchUrl(args[^1]))
+        {
+            url = args[^1];
+            args = args.Take(args.Length - 1).ToArray();
+            return true;
+        }
+        
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (IsLaunchUrl(args[i]))
+            {
+                url = args[i];
+                args = args.Where((_, idx) => idx != i).ToArray();
+                return true;
+            }
+        }
+
+        return false;
     }
 }

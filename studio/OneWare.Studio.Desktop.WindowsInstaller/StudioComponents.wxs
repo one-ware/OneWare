@@ -42,19 +42,20 @@
 
                 <!-- Register url protocol -->
                 <RegistryKey Root="HKCR" Key="oneware">
-                    <RegistryValue Value="URL:oneware Protocol"
-                        Type="string" />
-                    <RegistryValue Name="URL Protocol" Value=""
-                        Type="string" />
+                    <RegistryValue Value="URL:oneware Protocol" Type="string" />
+                    <RegistryValue Name="URL Protocol" Value="" Type="string" />
                 </RegistryKey>
+
                 <RegistryKey Root="HKCR" Key="oneware\DefaultIcon">
-                    <RegistryValue Value="[#OneWareStudioExe],1"
-                        Type="string" />
+                    <RegistryValue Value="[#OneWareStudioExe],1" Type="string" />
                 </RegistryKey>
+
                 <RegistryKey Root="HKCR" Key="oneware\shell\open\command">
-                    <RegistryValue Value="&quot;[#OneWareStudioExe]&quot; --url &quot;%1&quot;"
+                    <RegistryValue
+                        Value="&quot;[#OneWareStudioExe]&quot; &quot;%1&quot;"
                         Type="string" />
                 </RegistryKey>
+
             </Component>
 
             <!-- Harvest Studio Files Automatically -->
