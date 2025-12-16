@@ -18,6 +18,7 @@ public interface IApplicationStateService
     public void RegisterShutdownAction(Action action);
     
     public void ExecuteAutoLaunchActions(string? value);
+    public void ExecuteUrlLaunchActions(string key, string? value);
 
     public void ExecuteShutdownActions();
 

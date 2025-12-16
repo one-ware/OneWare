@@ -12,7 +12,6 @@ using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
-using OneWare.CloudIntegration.ViewModels;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -486,6 +485,11 @@ public class App : PrismApplication
     protected virtual Task LoadContentAsync()
     {
         var autoLaunchValue = Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH");
+        if (Environment.GetEnvironmentVariable("ONEWARE_URL") is { } url)
+        {
+            var uri = new Uri(url);
+            Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri.Authority, uri.LocalPath);
+        }
         
         Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(autoLaunchValue);
         

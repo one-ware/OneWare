@@ -58,7 +58,9 @@ internal abstract class Program
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
             Option<string> autoLaunchOption = new("--autolaunch") 
                 { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
-
+            Option<string> urlOption = new("--url")
+                { Description = "Specifies URL parameter" };
+            
             RootCommand rootCommand = new()
             {
                 Options = { 
@@ -66,7 +68,8 @@ internal abstract class Program
                     appdataDirOption,
                     projectsDirOption,
                     moduleOption,
-                    autoLaunchOption
+                    autoLaunchOption,
+                    urlOption
                 },
             };
             
@@ -91,6 +94,10 @@ internal abstract class Program
                 var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
                 if (!string.IsNullOrEmpty(autoLaunchValue))
                     Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
+                
+                var urlValue = parseResult.GetValue(urlOption);
+                if (!string.IsNullOrEmpty(urlValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_URL", urlValue);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
