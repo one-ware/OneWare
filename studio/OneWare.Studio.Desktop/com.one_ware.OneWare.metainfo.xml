@@ -62,6 +62,7 @@
     <launchable type="desktop-id">com.one_ware.OneWare.desktop</launchable>
     <provides>
         <id>com.one_ware.OneWare.desktop</id>
+        <id type="x-scheme-handler">oneware</id>
     </provides>
     <content_rating type="oars-1.1"/>
     <releases>
