@@ -7,31 +7,19 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:services="clr-namespace:OneWare.Core.Services"
              xmlns:models="clr-namespace:OneWare.Core.Models"
+             xmlns:models1="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
     <UserControl.DataTemplates>
 
-        <DataTemplate x:DataType="models:WelcomeScreenStartItem">
+        <DataTemplate x:DataType="models1:WelcomeScreenStartItem">
             <HyperlinkButton Command="{Binding Command}">
                 <HyperlinkButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <Panel Width="18" Height="18" Margin="0,2,6,2">
-                            <PathIcon Classes.Hidden="{Binding !IconIsGeometry}"
-                                      Foreground="{DynamicResource ThemeAccentBrush}"
-                                      Data="{Binding Icon}">
-                                <PathIcon.Styles>
-                                    <Style Selector="PathIcon">
-                                        <Setter Property="IsVisible" Value="True" />
-                                    </Style>
-                                    <Style Selector="PathIcon.Hidden">
-                                        <Setter Property="IsVisible" Value="False" />
-                                    </Style>
-                                </PathIcon.Styles>
-                            </PathIcon>
-                            <Image Classes.Hidden="{Binding IconIsGeometry}"
-                                   Source="{Binding Icon}">
+                            <Image Source="{Binding Icon}">
                                 <Image.Styles>
                                     <Style Selector="Image">
                                         <Setter Property="IsVisible" Value="True" />
@@ -59,7 +47,7 @@
             </DockPanel>
         </DataTemplate>
 
-        <DataTemplate x:DataType="models:WelcomeScreenWalkthroughItem">
+        <DataTemplate x:DataType="models1:WelcomeScreenWalkthroughItem">
             <Button Padding="0" Margin="0" Command="{Binding Command}"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <Button.Styles>
@@ -93,29 +81,7 @@
                         </TextBlock>
                         <Panel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Width="18" Height="18"
                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <PathIcon Classes.Hidden="{Binding !IconIsGeometry}"
-                                      Foreground="{DynamicResource ThemeAccentBrush}"
-                                      Data="{Binding Icon}">
-                                <PathIcon.Styles>
-                                    <Style Selector="PathIcon">
-                                        <Setter Property="IsVisible" Value="True" />
-                                    </Style>
-                                    <Style Selector="PathIcon.Hidden">
-                                        <Setter Property="IsVisible" Value="False" />
-                                    </Style>
-                                </PathIcon.Styles>
-                            </PathIcon>
-                            <Image Classes.Hidden="{Binding IconIsGeometry}"
-                                   Source="{Binding Icon}">
-                                <Image.Styles>
-                                    <Style Selector="Image">
-                                        <Setter Property="IsVisible" Value="True" />
-                                    </Style>
-                                    <Style Selector="Image.Hidden">
-                                        <Setter Property="IsVisible" Value="False" />
-                                    </Style>
-                                </Image.Styles>
-                            </Image>
+                            <Image Source="{Binding Icon}" />
                         </Panel>
                     </Grid>
                 </Panel>

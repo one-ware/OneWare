@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
@@ -23,6 +24,15 @@ public class FolderProjectSystemModule : IModule
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
 
+        var welcomeScreenService = containerProvider.Resolve<IWelcomeScreenService>();
+        
+        welcomeScreenService.RegisterItemToOpen("open_folder", 
+            new WelcomeScreenStartItem("open_folder", "Open folder...", new RelayCommand(() =>
+                _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)))
+            {
+                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Folder16X")
+            });
+        
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemViewModel("Folder")
             {

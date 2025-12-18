@@ -29,7 +29,27 @@ public class UniversalFpgaProjectSystemModule : IModule
         var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
         var windowService = containerProvider.Resolve<IWindowService>();
         var settingsService = containerProvider.Resolve<ISettingsService>();
-        
+        var welcomeScreenService = containerProvider.Resolve<IWelcomeScreenService>();
+
+        welcomeScreenService.RegisterItemToNew("new_project",
+            new WelcomeScreenStartItem("new_file", "New FPGA Project...",
+                new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()))
+            {
+                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+            });
+
+        welcomeScreenService.RegisterItemToOpen("open_project",
+            new WelcomeScreenStartItem("open_project", "Open FPGA project...", new AsyncRelayCommand(() =>
+                containerProvider.Resolve<IProjectExplorerService>()
+                    .LoadProjectFileDialogAsync(manager,
+                        new FilePickerFileType(
+                            $"Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
+                        {
+                            Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
+                        })))
+            {
+                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+            });
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
 
@@ -46,14 +66,13 @@ public class UniversalFpgaProjectSystemModule : IModule
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
                 Priority = 1,
-                Icon = SharedConverters.PathToBitmapConverter.Convert(
-                    ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemViewModel("FpgaProject")
             {
-                Header = "Project",
+                Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(
@@ -61,8 +80,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
-                Icon = SharedConverters.PathToBitmapConverter.Convert(
-                    ContainerLocator.Container.Resolve<IPaths>().AppIconPath, typeof(Bitmap), null, null) as Bitmap
+                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
             });
 
         var toolBarViewModel = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
@@ -106,6 +124,5 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
-        
     }
 }
