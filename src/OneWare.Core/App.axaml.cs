@@ -434,14 +434,13 @@ public class App : PrismApplication
 
     protected virtual Task LoadContentAsync()
     {
-        var autoLaunchValue = Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH");
-        if (Environment.GetEnvironmentVariable("ONEWARE_URL") is { } url)
+        if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
             var uri = new Uri(url);
             Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri.Authority, uri.LocalPath);
         }
         
-        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(autoLaunchValue);
+        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
         
         return Task.CompletedTask;
     }

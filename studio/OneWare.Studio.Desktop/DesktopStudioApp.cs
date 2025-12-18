@@ -112,13 +112,11 @@ public class DesktopStudioApp : StudioApp
     {
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
-
-        var arguments = Environment.GetCommandLineArgs();
-
+        
         //TODO Rework this to support opening folders, or custom context
-        if (arguments.Skip(1).LastOrDefault() is {} lastArg && !lastArg.StartsWith("--") && !lastArg.StartsWith("oneware://"))
+        if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
         {
-            var fileName = lastArg;
+            var fileName = pathOpen;
             //Check file exists
             if (File.Exists(fileName))
             {
