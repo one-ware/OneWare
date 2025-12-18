@@ -111,6 +111,7 @@ public class PluginService : IPluginService
             {
                 NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
                 {
+                    // Try 1
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
 
@@ -118,7 +119,14 @@ public class PluginService : IPluginService
                     {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
                     }
-
+                    
+                    // Try 2: add lib infront of it
+                    if (!File.Exists(libPath))
+                    {
+                        libFileName = PlatformHelper.GetLibraryFileName($"lib{libraryName}");
+                        libPath = Path.Combine(pluginPath, libFileName);
+                    }
+                    
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
                     {
                         return customHandle;
@@ -129,7 +137,7 @@ public class PluginService : IPluginService
                         return handle;
                     }
 
-                    Console.WriteLine($"Loading native library {libPath} failed");
+                    Console.WriteLine($"Loading native library {libFileName} failed");
                     return IntPtr.Zero;
                 });
 

@@ -82,9 +82,9 @@ public static class PlatformHelper
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return $"{libraryName}.dll"; // Windows uses .dll
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            return $"lib{libraryName}.dylib"; // macOS uses .dylib
+            return $"{libraryName}.dylib"; // macOS uses .dylib
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return $"lib{libraryName}.so"; // Linux uses .so
+            return $"{libraryName}.so"; // Linux uses .so
 
         throw new PlatformNotSupportedException("Unsupported operating system.");
     }
