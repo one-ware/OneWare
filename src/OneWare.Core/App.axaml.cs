@@ -310,77 +310,27 @@ public class App : PrismApplication
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
         
-        
         var welcomeScreenService = Container.Resolve<IWelcomeScreenService>();
-        welcomeScreenService.RegisterItemToNew("new_project",
-            new WelcomeScreenStartItem("new_file", "New project...", "VsImageLib.MakefileProject16X.Geometry",
-                new RelayCommand(() =>
-                {
-                    var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                        .FirstOrDefault(x => x.Header == "File")?.Items?
-                        .FirstOrDefault(x => x.Header == "New")?.Items?
-                        .FirstOrDefault(x => x.Header == "Project")?.Command;
-                    
-                    command?.Execute(null);
-                })));
-
-        welcomeScreenService.RegisterItemToNew("new_file",
-            new WelcomeScreenStartItem("new_file", "New file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "New")?.Items?
-                    .FirstOrDefault(x => x.Header == "File")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_project", 
-            new WelcomeScreenStartItem("open_project", "Open project...", "VsImageLib.MakefileProject16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "Project")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_folder", 
-            new WelcomeScreenStartItem("open_folder", "Open folder...", "VsImageLib.Folder16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "Folder")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_file", 
-            new WelcomeScreenStartItem("open_file", "Open file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "File")?.Command;
-                    
-                command?.Execute(null);
-            })));
         
         welcomeScreenService.RegisterItemToWalkthrough("fundamentals", 
             new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals", 
-                null, "FluentIconsFilled.LightbulbFilled", new RelayCommand(() =>
+                null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
-                })));
+                }))
+            {
+                IconObservable = Application.Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
+            });
         
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai", 
             new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI", 
-                null, "AI_Img", new RelayCommand(() =>
+                null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
-                })));
+                }))
+            {
+                IconObservable =  Application.Current!.GetResourceObservable("AI_Img"),
+            });
         
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
         //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));

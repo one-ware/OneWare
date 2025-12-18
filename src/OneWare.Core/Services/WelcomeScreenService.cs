@@ -1,3 +1,4 @@
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
