@@ -22,6 +22,7 @@ public sealed class OneWareCloudLoginService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingService;
     private readonly IHttpService _httpService;
+    private readonly IPaths _paths;
     private readonly string _tokenPath;
     
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService, IPaths paths)
@@ -29,6 +30,7 @@ public sealed class OneWareCloudLoginService
         _logger = logger;
         _settingService = settingService;
         _httpService = httpService;
+        _paths = paths;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
         
         settingService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
@@ -167,6 +169,8 @@ public sealed class OneWareCloudLoginService
 
                 SaveCredentials(email, token, refreshToken);
 
+                _settingService.Save(_paths.SettingsPath);
+                
                 return (true, HttpStatusCode.OK);
             }
             else if (response.StatusCode == HttpStatusCode.TooManyRequests)
