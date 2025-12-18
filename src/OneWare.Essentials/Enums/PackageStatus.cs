@@ -7,5 +7,6 @@ public enum PackageStatus
     UpdateAvailable,
     Installing,
     Installed,
-    NeedRestart
+    NeedRestart,
+    UpdateAvailablePrerelease
 }

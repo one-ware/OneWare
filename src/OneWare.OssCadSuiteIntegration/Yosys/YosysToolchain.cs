@@ -1,4 +1,5 @@
 ﻿using OneWare.Essentials.Services;
+using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
@@ -11,15 +12,15 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 
     public void OnProjectCreated(UniversalFpgaProjectRoot project)
     {
+        YosysSettingHelper.UpdateProjectProperties(project, null);
     }
 
     public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         try
         {
-            var files = Directory.GetFiles(project.RootFolderPath);
-            var pcfPath = files.FirstOrDefault(x => Path.GetExtension(x) == ".pcf");
-            if (pcfPath != null)
+            var pcfPath = Path.Combine(project.FullPath, YosysSettingHelper.GetConstraintFile(project));
+            if (File.Exists(pcfPath))
             {
                 var pcf = File.ReadAllText(pcfPath);
                 var lines = pcf.Split('\n');
@@ -53,7 +54,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 
     public void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        var pcfPath = Path.Combine(project.FullPath, "project.pcf");
+        var pcfPath = Path.Combine(project.FullPath, YosysSettingHelper.GetConstraintFile(project));
 
         try
         {

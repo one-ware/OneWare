@@ -242,8 +242,6 @@ public abstract class PackageModel : ObservableObject
     {
         if(Status == PackageStatus.NeedRestart) return;
         
-        var updateToPrerelease = InstalledVersion?.IsPrerelease == true;
-        
         var lastPrerelease = Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
         var lastStable = Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
         
@@ -253,8 +251,8 @@ public abstract class PackageModel : ObservableObject
         
         if (lV && iV && lastVersion > installedVersion)
             Status = PackageStatus.UpdateAvailable;
-        else if (iV && lpV && updateToPrerelease && lastPrereleaseVersion > installedVersion)
-            Status = PackageStatus.UpdateAvailable;
+        else if (iV && lpV && lastPrereleaseVersion > installedVersion)
+            Status = PackageStatus.UpdateAvailablePrerelease;
         else if (iV)
             Status = PackageStatus.Installed;
         else if (!iV && lV)

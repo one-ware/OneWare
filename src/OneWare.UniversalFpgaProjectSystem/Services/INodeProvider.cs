@@ -5,9 +5,9 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface INodeProvider
 {
-    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file);
+    public string Name { get; }
     
-    public string GetDisplayName();
-
-    public string GetKey();
+    public string[] SupportedLanguages { get; }
+    
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file);
 }

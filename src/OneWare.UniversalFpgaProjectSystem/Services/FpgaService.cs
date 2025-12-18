@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using Acornima.Ast;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using Prism.Ioc;
@@ -10,9 +12,13 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 public class FpgaService
 {
     private readonly ILogger _logger;
+    private readonly ISettingsService _settingsService;
 
-    public FpgaService(IPaths paths, ILogger logger)
+    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService)
     {
+        _logger = logger;
+        _settingsService = settingsService;
+        
         HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
         Directory.CreateDirectory(HardwareDirectory);
         
@@ -21,17 +27,13 @@ public class FpgaService
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "FPGA"));
         Directory.CreateDirectory(Path.Combine(HardwareDirectory, "Local", "Extensions"));
         
-        _logger = logger;
-        
         LoadGenericHardware();
     }
 
     public string HardwareDirectory { get; }
-
-    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")]
-    public Dictionary<string, Type> NodeProviders { get; } = new();
-
-    public Dictionary<string, LanguageType> LanguageTypes { get; } = new();
+    
+    // Key: Language Name, Value: File Extensions
+    public Dictionary<string, string[]> FpgaLanguages { get; } = new();
     
     public ObservableCollection<IFpgaPackage> FpgaPackages { get; } = new();
 
@@ -46,7 +48,14 @@ public class FpgaService
     public ObservableCollection<IFpgaProjectTemplate> Templates { get; } = new();
 
     public ObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; } = new();
-
+    
+    public ObservableCollection<INodeProvider> NodeProviders { get; } = new();
+    
+    public void RegisterLanguage(string language, string[] extensions)
+    {
+        FpgaLanguages[language] = extensions;
+    }
+    
     public void RegisterFpgaPackage(IFpgaPackage fpga)
     {
         var existing = FpgaPackages.FirstOrDefault(x => x.Name == fpga.Name);
@@ -65,18 +74,7 @@ public class FpgaService
         FpgaExtensionPackages.InsertSorted(fpgaExtension,
             (x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
     }
-
-    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")]
-    public void RegisterNodeProvider<T>(params string[] extensions) where T : INodeProvider
-    {
-        foreach (var ext in extensions) NodeProviders[ext] = typeof(T);
-    }
-
-    public void RegisterLanguageExtensions(string[] extensions, LanguageType language)
-    {
-        foreach (var ext in extensions) LanguageTypes[ext] = language;
-    }
-
+    
     public void RegisterToolchain<T>() where T : IFpgaToolchain
     {
         Toolchains.Add(ContainerLocator.Container.Resolve<T>());
@@ -96,7 +94,47 @@ public class FpgaService
     {
         Templates.Add(ContainerLocator.Container.Resolve<T>());
     }
+    
+    public void RegisterNodeProvider<T>() where T : INodeProvider
+    {
+        var nodeProvider = ContainerLocator.Container.Resolve<T>();
+        NodeProviders.Add(nodeProvider);
+        
+        foreach (var language in nodeProvider.SupportedLanguages)
+        {
+            RegisterNodeProviderSetting(language);
+        }
+    }
 
+    private void RegisterNodeProviderSetting(string language)
+    {
+        var settingKey = $"UniversalFPGA_NodeProviderPreference_{language}";
+
+        var possibleNodeProviders = NodeProviders
+            .Where(x => x.SupportedLanguages.Contains(language))
+            .ToList();
+
+        var options = possibleNodeProviders
+            .Select(x => x.Name)
+            .ToList();
+
+        if (_settingsService.HasSetting(settingKey))
+        {
+            (_settingsService.GetSetting(settingKey) as ComboBoxSetting)!.Options = options.ToArray();
+        }
+        else
+        {
+            var nodeProviderComboSetting =
+                new ComboBoxSetting($"{language} Node Provider", options.FirstOrDefault() ?? "", options)
+                {
+                    MarkdownDocumentation =
+                        $"Node Provider used to extract FPGA nodes from {language} files. "
+                };
+        
+            _settingsService.RegisterSetting("Languages", language, settingKey, nodeProviderComboSetting);
+        }
+    }
+    
     public void RegisterPreCompileStep<T>() where T : IFpgaPreCompileStep
     {
         PreCompileSteps.Add(ContainerLocator.Container.Resolve<T>());
@@ -107,18 +145,40 @@ public class FpgaService
         return PreCompileSteps.FirstOrDefault(x => x.Name == name);
     }
 
-    [Obsolete("Please only register the language and assign the node provider to the language via the NodeProviderRegistry.")] 
-    public INodeProvider? GetNodeProvider(string extension)
+    public string? GetLanguage(string extension)
     {
-        NodeProviders.TryGetValue(extension, out var provider);
-        if (provider != null) return ContainerLocator.Container.Resolve(provider) as INodeProvider;
-        return null;
+        var language = FpgaLanguages.FirstOrDefault(x => x.Value.Contains(extension));
+
+        return language.Key;
     }
 
-    public LanguageType GetLanguageType(string extension)
+    public INodeProvider? GetNodeProviderByExtension(string extension)
     {
-        LanguageTypes.TryGetValue(extension, out var languageType);
-        return languageType;
+        if (GetLanguage(extension) is { } language)
+            return GetNodeProvider(language);
+        
+        return null;
+    }
+    
+    public INodeProvider? GetNodeProvider(string language)
+    {
+        var possibleNodeProviders = NodeProviders
+            .Where(x => x.SupportedLanguages.Contains(language))
+            .ToList();
+
+        var settingKey = $"UniversalFPGA_NodeProviderPreference_{language}";
+
+        if (_settingsService.HasSetting(settingKey))
+        {
+            var selectedNodeProviderName = _settingsService.GetSettingValue<string>(settingKey);
+            
+            var selectedNodeProvider = possibleNodeProviders
+                .FirstOrDefault(x => x.Name.Equals(selectedNodeProviderName, StringComparison.OrdinalIgnoreCase));
+            
+            return selectedNodeProvider ?? possibleNodeProviders.FirstOrDefault();
+        }
+        
+        return possibleNodeProviders.FirstOrDefault();
     }
 
     public void LoadGenericHardware()

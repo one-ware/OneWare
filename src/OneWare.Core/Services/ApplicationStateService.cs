@@ -16,6 +16,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
 
     private readonly List<Action<string?>> _autoLaunchActions = new();
+    private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly List<Action> _shutdownActions = new();
     private readonly IWindowService _windowService;
 
@@ -93,6 +94,11 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         _autoLaunchActions.Add(action);
     }
+    
+    public void RegisterUrlLaunchAction(string key, Action<string?> action)
+    {
+        _urlLaunchActions.Add(key, action);
+    }
 
     public void RegisterShutdownAction(Action action)
     {
@@ -102,6 +108,12 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     public void ExecuteAutoLaunchActions(string? value)
     {
         foreach (var action in _autoLaunchActions) action.Invoke(value);
+    }
+    
+    public void ExecuteUrlLaunchActions(string key, string? value)
+    {
+        if(_urlLaunchActions.TryGetValue(key, out var action))
+            action.Invoke(value);
     }
 
     public void ExecuteShutdownActions()

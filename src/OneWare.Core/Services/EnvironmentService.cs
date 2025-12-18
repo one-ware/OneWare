@@ -29,16 +29,14 @@ public class EnvironmentService : IEnvironmentService
 
     private void UpdateEnvironment()
     {
-        //var currentPath = Environment.GetEnvironmentVariable("PATH");
-
         var pathSeparator = PlatformHelper.Platform switch
         {
             PlatformId.WinArm64 or PlatformId.WinX64 => ';',
             _ => ':'
         };
 
-        var paths = string.Join(pathSeparator, _paths.Reverse().Select(x => x.Value));
-
+        var paths = string.Join(pathSeparator, _paths.Select(x => x.Value));
+        
         Environment.SetEnvironmentVariable("PATH", $"{paths}{pathSeparator}{InitialPath}");
     }
 }

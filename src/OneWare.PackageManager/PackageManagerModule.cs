@@ -17,7 +17,7 @@ public class PackageManagerModule : IModule
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<IPackageService, PackageService>();
-        containerRegistry.RegisterSingleton<PackageManagerViewModel>();
+        containerRegistry.RegisterManySingleton(typeof(PackageManagerViewModel), typeof(IPackageWindowService), typeof(PackageManagerViewModel));
     }
 
     public void OnInitialized(IContainerProvider containerProvider)

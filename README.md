@@ -3,7 +3,7 @@
 
 ## OneWare Studio - The Next Generation IDE for Electronics Development
 
-Using .NET 9.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
+Using .NET 10.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
 
 ![image](https://github.com/one-ware/OneWare/assets/25281882/584f637e-66b8-41a4-ae9d-7d5d31a281ff)
 
@@ -46,7 +46,7 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 ## Build
 
-1. Install [.NET SDK 9.0](https://dotnet.microsoft.com/en-us/download)
+1. Install [.NET SDK 10.0](https://dotnet.microsoft.com/en-us/download)
 2. Clone this repo `git clone --recursive https://github.com/one-ware/OneWare.git`
 3. `cd OneWare/studio/OneWare.Studio.Desktop`
 4. `dotnet run`

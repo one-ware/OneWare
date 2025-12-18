@@ -10,36 +10,53 @@ namespace OneWare.Vhdl.Parsing;
 // ReSharper disable once ClassNeverInstantiated.Global
 public partial class VhdlNodeProvider : INodeProvider
 {
+    public const string NodeProviderKey = "VHDL_Basic";
+
+    public string Name => NodeProviderKey;
+
+    public string[] SupportedLanguages => ["VHDL"];
+
     public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
         var code = File.ReadAllText(file.FullPath);
         return Task.FromResult<IEnumerable<FpgaNode>>(ExtractNodes(code));
     }
 
-    
-    public string GetDisplayName()
-    {
-        return "Basic VHDLNodeProvider";
-    }
-
-    public string GetKey()
-    {
-        return "BasicVHDLNodeProvider";
-    }
-
     private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
         var nodes = new List<FpgaNode>();
 
-        // Extract generics first (safe)
-        var generics = ExtractGenerics(vhdlCode);
+        // ✅ Strip comments FIRST
+        var cleanCode = StripComments(vhdlCode);
 
-        // Extract ports safely (no regex recursion)
-        var portContent = ExtractBlock(vhdlCode, "port");
+        // Extract generics
+        var generics = ExtractGenerics(cleanCode);
+
+        // Extract ports
+        var portContent = ExtractBlock(cleanCode, "port");
         if (!string.IsNullOrEmpty(portContent))
             ExtractPorts(portContent, nodes, generics);
 
         return nodes;
+    }
+
+    // ----------------- COMMENT STRIPPING -----------------
+    private static string StripComments(string code)
+    {
+        var sb = new StringBuilder(code.Length);
+        using var reader = new StringReader(code);
+
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            var commentIndex = line.IndexOf("--", StringComparison.Ordinal);
+            if (commentIndex >= 0)
+                sb.AppendLine(line.Substring(0, commentIndex));
+            else
+                sb.AppendLine(line);
+        }
+
+        return sb.ToString();
     }
 
     // ----------------- SAFE BLOCK EXTRACTION -----------------
@@ -62,14 +79,12 @@ public partial class VhdlNodeProvider : INodeProvider
                 depth--;
                 if (depth == 0)
                 {
-                    // Extract content inside parentheses
                     var end = i;
                     return code.Substring(start + 1, end - start - 1);
                 }
             }
         }
 
-        // Unbalanced parentheses -> return until end of file
         return code.Substring(start + 1);
     }
 
@@ -95,7 +110,10 @@ public partial class VhdlNodeProvider : INodeProvider
     }
 
     // ----------------- PORT EXTRACTION -----------------
-    private static void ExtractPorts(string portContent, List<FpgaNode> nodes, Dictionary<string, int> genericValues)
+    private static void ExtractPorts(
+        string portContent,
+        List<FpgaNode> nodes,
+        Dictionary<string, int> genericValues)
     {
         var portDeclarations = portContent.Split(';', StringSplitOptions.RemoveEmptyEntries);
 
@@ -104,9 +122,7 @@ public partial class VhdlNodeProvider : INodeProvider
             var declaration = decl.Trim();
             if (string.IsNullOrWhiteSpace(declaration)) continue;
 
-            // Match vector first
             var vectorMatch = VectorMatch().Match(declaration);
-            // Match scalar logic
             var logicMatch = LogicMatch().Match(declaration);
 
             // ---------------- VECTOR PORTS ----------------
@@ -121,36 +137,29 @@ public partial class VhdlNodeProvider : INodeProvider
                 var names = namesPart.Split(',',
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-                try
-                {
-                    var upper = EvaluateExpression(upperBoundExpr, genericValues);
-                    var lower = EvaluateExpression(lowerBoundExpr, genericValues);
+                var upper = EvaluateExpression(upperBoundExpr, genericValues);
+                var lower = EvaluateExpression(lowerBoundExpr, genericValues);
 
-                    foreach (var name in names)
+                foreach (var name in names)
+                {
+                    if (directionType.Equals("to", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (directionType.Equals("to", StringComparison.OrdinalIgnoreCase))
-                        {
-                            for (int i = upper; i <= lower; i++)
-                                nodes.Add(new FpgaNode($"{name}[{i}]", direction));
-                        }
-                        else if (directionType.Equals("downto", StringComparison.OrdinalIgnoreCase))
-                        {
-                            for (int i = upper; i >= lower; i--)
-                                nodes.Add(new FpgaNode($"{name}[{i}]", direction));
-                        }
+                        for (int i = upper; i <= lower; i++)
+                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
+                    }
+                    else // downto
+                    {
+                        for (int i = upper; i >= lower; i--)
+                            nodes.Add(new FpgaNode($"{name}[{i}]", direction));
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing vector {namesPart}: {ex.Message}");
-                }
             }
-
             // ---------------- SCALAR PORTS ----------------
             else if (logicMatch.Success)
             {
                 var namesPart = logicMatch.Groups[1].Value.Trim();
                 var direction = logicMatch.Groups[2].Value.ToUpper().Trim();
+
                 var names = namesPart.Split(',',
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -160,16 +169,20 @@ public partial class VhdlNodeProvider : INodeProvider
         }
     }
 
-
     // ----------------- EXPRESSION EVALUATION -----------------
     private static int EvaluateExpression(string expr, Dictionary<string, int> generics)
     {
         foreach (var g in generics.OrderByDescending(x => x.Key.Length))
         {
-            expr = Regex.Replace(expr, $@"\b{g.Key}\b", g.Value.ToString(), RegexOptions.IgnoreCase);
+            expr = Regex.Replace(
+                expr,
+                $@"\b{g.Key}\b",
+                g.Value.ToString(),
+                RegexOptions.IgnoreCase);
         }
 
         expr = expr.Replace(" ", "");
+
         try
         {
             var dt = new DataTable();
@@ -183,12 +196,18 @@ public partial class VhdlNodeProvider : INodeProvider
     }
 
     // ----------------- REGEX DEFINITIONS -----------------
-    [GeneratedRegex(@"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC(?:\s*:=\s*'[01]')?", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(
+        @"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC(?:\s*:=\s*'[01]')?",
+        RegexOptions.IgnoreCase)]
     private static partial Regex LogicMatch();
 
-    [GeneratedRegex(@"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+?)\s*(to|downto)\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(
+        @"([\w\s,]+)\s*:\s*(IN|OUT|INOUT|BUFFER)\s*STD_LOGIC_VECTOR\s*\(\s*([^)]+?)\s*(to|downto)\s*([^)]+)\s*\)(?:\s*:=\s*[^;]+)?",
+        RegexOptions.IgnoreCase)]
     private static partial Regex VectorMatch();
 
-    [GeneratedRegex(@"(\w+)\s*:\s*\w+\s*:=\s*(\d+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(
+        @"(\w+)\s*:\s*\w+\s*:=\s*(\d+)",
+        RegexOptions.IgnoreCase)]
     private static partial Regex GenericDeclarationMatch();
 }

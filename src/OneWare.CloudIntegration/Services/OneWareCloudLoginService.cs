@@ -22,6 +22,7 @@ public sealed class OneWareCloudLoginService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingService;
     private readonly IHttpService _httpService;
+    private readonly IPaths _paths;
     private readonly string _tokenPath;
     
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService, IPaths paths)
@@ -29,6 +30,7 @@ public sealed class OneWareCloudLoginService
         _logger = logger;
         _settingService = settingService;
         _httpService = httpService;
+        _paths = paths;
         _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
         
         settingService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
@@ -37,6 +39,8 @@ public sealed class OneWareCloudLoginService
             {
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey));
             });
+        
+        OneWareCloudIsUsed = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) == OneWareCloudIntegrationModule.CredentialStore;
     }
     
     public RestClient GetRestClient()
@@ -165,6 +169,8 @@ public sealed class OneWareCloudLoginService
 
                 SaveCredentials(email, token, refreshToken);
 
+                _settingService.Save(_paths.SettingsPath);
+                
                 return (true, HttpStatusCode.OK);
             }
             else if (response.StatusCode == HttpStatusCode.TooManyRequests)
@@ -208,12 +214,16 @@ public sealed class OneWareCloudLoginService
         }
     }
     
-    public async Task<bool> SendFeedbackAsync(string header, string category, string message)
+    public async Task<bool> SendFeedbackAsync(string category, string message)
     {
         try
         {
             RestRequest? request;
-            (string? jwt, HttpStatusCode status) = await GetLoggedInJwtTokenAsync();
+            string? jwt = null;
+            if (OneWareCloudIsUsed)
+            {
+                (jwt, _) = await GetLoggedInJwtTokenAsync();
+            }
             if (jwt == null)
             {
                 request = new RestRequest("/api/feedback/anonymous");
@@ -227,12 +237,13 @@ public sealed class OneWareCloudLoginService
             request.AddHeader("Accept", "application/json");
             request.AddJsonBody(new
             {
-                Header = header,
                 Category = category,
                 Message = message
             });
+
+            var restClient = new RestClient(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
             
-            var response = await GetRestClient().ExecutePostAsync(request);
+            var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;
         }
         catch (Exception e)
@@ -286,4 +297,6 @@ public sealed class OneWareCloudLoginService
     {
         [JsonPropertyName("refreshToken")] public string RefreshToken { get; set; }
     }
+    
+    public bool OneWareCloudIsUsed { get; }
 }

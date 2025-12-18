@@ -58,7 +58,12 @@ internal abstract class Program
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
             Option<string> autoLaunchOption = new("--autolaunch") 
                 { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
-
+            Argument<string?> openArgument = new("open")
+            {
+                Description = "File/Folder path or oneware:// URI to open",
+                DefaultValueFactory = (x) => null,
+            };
+            
             RootCommand rootCommand = new()
             {
                 Options = { 
@@ -68,6 +73,10 @@ internal abstract class Program
                     moduleOption,
                     autoLaunchOption
                 },
+                Arguments =
+                {
+                    openArgument
+                }
             };
             
             rootCommand.SetAction((parseResult) =>
@@ -91,6 +100,19 @@ internal abstract class Program
                 var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
                 if (!string.IsNullOrEmpty(autoLaunchValue))
                     Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
+                
+                var openValue = parseResult.GetValue(openArgument);
+                if (!string.IsNullOrEmpty(openValue))
+                {
+                    if (openValue.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", openValue);
+                    }
+                    else if (File.Exists(openValue) || Directory.Exists(openValue))
+                    {
+                        Environment.SetEnvironmentVariable("ONEWARE_OPEN_PATH", Path.GetFullPath(openValue));
+                    }
+                }
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();

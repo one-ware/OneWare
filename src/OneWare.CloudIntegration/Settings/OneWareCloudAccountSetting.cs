@@ -49,10 +49,16 @@ public class OneWareCloudAccountSetting : CustomSetting
     public bool IsLoggedIn
     {
         get => _isLoggedIn;
-        set => SetProperty(ref _isLoggedIn, value);
+        set
+        {
+            SetProperty(ref _isLoggedIn, value);
+            if (!value) AddressIsVerified = true;
+        }
     }
-    
+
     public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
+    
+    public bool AddressIsVerified { get; set; } = true;
 
     private async Task ResolveAsync()
     {
@@ -91,5 +97,7 @@ public class OneWareCloudAccountSetting : CustomSetting
             //TODO Move this to somewhere else
             await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
         }
+        
+        AddressIsVerified = data["isAddressVerified"]?.GetValue<bool>() ?? true;
     }
 }

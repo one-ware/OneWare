@@ -6,6 +6,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Models;
 using OneWare.ToolEngine.Services;
+using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -136,10 +137,12 @@ public class YosysService(
         var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
                           ?? throw new Exception("NextPnr Tool not set!");
 
+        var pcfFile = YosysSettingHelper.GetConstraintFile(project);
+        
         var nextPnrArguments = new List<string>
         {
             "--json", "./build/synth.json",
-            "--pcf", "project.pcf",
+            "--pcf", pcfFile,
             "--asc", "./build/nextpnr.asc"
         };
 
@@ -171,7 +174,7 @@ public class YosysService(
             null,
             s =>
             {
-                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                Dispatcher.UIThread.Post(() => outputService.WriteLine(s));
                 return true;
             });
         */
@@ -219,9 +222,11 @@ public class YosysService(
 
     public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
+        var buildpath = Path.Combine(file.Root.FullPath, "build");
+        Directory.CreateDirectory(buildpath);
         await childProcessService.ExecuteShellAsync("yosys", ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
             file.Root.FullPath, "Running Yosys...", AppState.Loading, true);
-        return ReadJson(Path.Combine(file.Root.FullPath, "build/yosys_nodes.json"));
+        return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
     }
     
     private List<FpgaNode> ReadJson(string filePath)

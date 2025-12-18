@@ -12,7 +12,6 @@ using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
-using OneWare.CloudIntegration.ViewModels;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -311,77 +310,27 @@ public class App : PrismApplication
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
         
-        
         var welcomeScreenService = Container.Resolve<IWelcomeScreenService>();
-        welcomeScreenService.RegisterItemToNew("new_project",
-            new WelcomeScreenStartItem("new_file", "New project...", "VsImageLib.MakefileProject16X.Geometry",
-                new RelayCommand(() =>
-                {
-                    var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                        .FirstOrDefault(x => x.Header == "File")?.Items?
-                        .FirstOrDefault(x => x.Header == "New")?.Items?
-                        .FirstOrDefault(x => x.Header == "Project")?.Command;
-                    
-                    command?.Execute(null);
-                })));
-
-        welcomeScreenService.RegisterItemToNew("new_file",
-            new WelcomeScreenStartItem("new_file", "New file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "New")?.Items?
-                    .FirstOrDefault(x => x.Header == "File")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_project", 
-            new WelcomeScreenStartItem("open_project", "Open project...", "VsImageLib.MakefileProject16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "Project")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_folder", 
-            new WelcomeScreenStartItem("open_folder", "Open folder...", "VsImageLib.Folder16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "Folder")?.Command;
-                    
-                command?.Execute(null);
-            })));
-        
-        welcomeScreenService.RegisterItemToOpen("open_file", 
-            new WelcomeScreenStartItem("open_file", "Open file...", "VsImageLib.File16X.Geometry", new RelayCommand(() =>
-            {
-                var command = windowService.GetMenuItems("MainWindow_MainMenu")
-                    .FirstOrDefault(x => x.Header == "File")?.Items?
-                    .FirstOrDefault(x => x.Header == "Open")?.Items?
-                    .FirstOrDefault(x => x.Header == "File")?.Command;
-                    
-                command?.Execute(null);
-            })));
         
         welcomeScreenService.RegisterItemToWalkthrough("fundamentals", 
             new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals", 
-                null, "FluentIconsFilled.LightbulbFilled", new RelayCommand(() =>
+                null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
-                })));
+                }))
+            {
+                IconObservable = Application.Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
+            });
         
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai", 
             new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI", 
-                null, "AI_Img", new RelayCommand(() =>
+                null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
-                })));
+                }))
+            {
+                IconObservable =  Application.Current!.GetResourceObservable("AI_Img"),
+            });
         
         // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
         //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
@@ -485,9 +434,13 @@ public class App : PrismApplication
 
     protected virtual Task LoadContentAsync()
     {
-        var autoLaunchValue = Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH");
+        if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
+        {
+            var uri = new Uri(url);
+            Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri.Authority, uri.LocalPath);
+        }
         
-        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(autoLaunchValue);
+        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
         
         return Task.CompletedTask;
     }

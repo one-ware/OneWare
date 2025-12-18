@@ -112,16 +112,13 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        await base.LoadContentAsync();
-        
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
-
-        var arguments = Environment.GetCommandLineArgs();
-
-        if (arguments.Length > 1 && !arguments[1].StartsWith("--"))
+        
+        //TODO Rework this to support opening folders, or custom context
+        if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
         {
-            var fileName = arguments[1];
+            var fileName = pathOpen;
             //Check file exists
             if (File.Exists(fileName))
             {
@@ -165,6 +162,9 @@ public class DesktopStudioApp : StudioApp
                 Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             }
         }
+
+        // trigger AutoLaunch Actions
+        await base.LoadContentAsync();
 
         var settingsService = Container.Resolve<ISettingsService>();
         var packageService = Container.Resolve<IPackageService>();

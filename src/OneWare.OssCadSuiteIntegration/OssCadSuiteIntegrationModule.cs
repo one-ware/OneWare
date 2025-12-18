@@ -1,8 +1,12 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Logging;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Model.Core;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -20,6 +24,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
+using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
 // ReSharper disable StringLiteralTypo
@@ -283,10 +288,22 @@ public class OssCadSuiteIntegrationModule : IModule
         var windowService = containerProvider.Resolve<IWindowService>();
         var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
-        var nodeProviderRegistry = containerProvider.Resolve<INodeProviderRegistry>();
 
-        nodeProviderRegistry.Register<YosysNodeProvider>(LanguageType.Verilog);
-        
+        fpgaService.RegisterNodeProvider<YosysNodeProvider>();
+
+        projectExplorerService.Projects.CollectionChanged += (sender, e) =>
+        {
+            if (sender is ObservableCollection<IProjectRoot> collection)
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (var project in collection)
+                    {
+                        YosysSettingHelper.SetConstraintOverlay(project);
+                    }
+                }
+            }
+        };
         
         // var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
         // TODO: Move NativeStrategy to an essentials 
@@ -304,6 +321,7 @@ public class OssCadSuiteIntegrationModule : IModule
         toolService.Register(new EnvironmentDescription("openFPGALoader", "Synth Tool", "openFPGALoader"));
         toolService.Register(new EnvironmentDescription("icepack", "Synth Tool", "icepack"));
         toolService.Register(new EnvironmentDescription("iceprog", "Synth Tool", "iceprog"));
+
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
 
@@ -320,100 +338,99 @@ public class OssCadSuiteIntegrationModule : IModule
             }));
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
-            new UiExtension(
-                x =>
+            new UiExtension(x =>
+            {
+                if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
+
+                var name = root.Properties["Fpga"]?.ToString();
+                var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
+                var fpga = fpgaPackage?.LoadFpga();
+
+                return new StackPanel()
                 {
-                    if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
-
-                    var name = root.Properties["Fpga"]?.ToString();
-                    var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
-                    var fpga = fpgaPackage?.LoadFpga();
-                    
-                    return new StackPanel()
+                    Orientation = Orientation.Vertical,
+                    Children =
                     {
-                        Orientation = Orientation.Vertical,
-                        Children =
+                        new MenuItem()
                         {
-                            new MenuItem()
+                            Header = "Run Synthesis",
+                            Command = new AsyncRelayCommand(async () =>
                             {
-                                Header = "Run Synthesis",
-                                Command = new AsyncRelayCommand(async () =>
-                                {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.SynthAsync(root, new FpgaModel(fpga!));
-                                }, () => fpga != null)
+                                await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                await yosysService.SynthAsync(root, new FpgaModel(fpga!));
+                            }, () => fpga != null)
+                        },
+                        new MenuItem()
+                        {
+                            Header = "Run Fit",
+                            Command = new AsyncRelayCommand(async () =>
+                            {
+                                await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                await yosysService.FitAsync(root, new FpgaModel(fpga!));
+                            }, () => fpga != null)
+                        },
+                        new MenuItem()
+                        {
+                            Header = "Run Assemble",
+                            Command = new AsyncRelayCommand(async () =>
+                            {
+                                await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
+                            }, () => fpga != null)
+                        },
+                        new Separator(),
+                        new MenuItem()
+                        {
+                            Header = "Yosys Settings",
+                            Icon = new Image()
+                            {
+                                Source = Application.Current!.FindResource(
+                                    Application.Current!.RequestedThemeVariant,
+                                    "Material.SettingsOutline") as IImage
                             },
-                            new MenuItem()
+                            Command = new AsyncRelayCommand(async () =>
                             {
-                                Header = "Run Fit",
-                                Command = new AsyncRelayCommand(async () =>
+                                if (projectExplorerService
+                                        .ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                                 {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.FitAsync(root, new FpgaModel(fpga!));
-                                }, () => fpga != null)
-                            },
-                            new MenuItem()
-                            {
-                                Header = "Run Assemble",
-                                Command = new AsyncRelayCommand(async () =>
-                                {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
-                                }, () => fpga != null)
-                            },
-                            new Separator(),
-                            new MenuItem()
-                            {
-                                Header = "Yosys Settings",
-                                Icon = new Image()
-                                {
-                                    Source = Application.Current!.FindResource(
-                                        Application.Current!.RequestedThemeVariant,
-                                        "Material.SettingsOutline") as IImage
-                                },
-                                Command = new AsyncRelayCommand(async () =>
-                                {
-                                    if (projectExplorerService
-                                            .ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
+                                    var selectedFpga = root.Properties["Fpga"]?.ToString();
+                                    var selectedFpgaPackage =
+                                        fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == selectedFpga);
+
+                                    if (selectedFpgaPackage == null)
                                     {
-                                        var selectedFpga = root.Properties["Fpga"]?.ToString();
-                                        var selectedFpgaPackage =
-                                            fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == selectedFpga);
-
-                                        if (selectedFpgaPackage == null)
-                                        {
-                                            containerProvider.Resolve<ILogger>()
-                                                .Warning("No FPGA Selected. Open Pin Planner first!");
-                                            return;
-                                        }
-
-                                        await windowService.ShowDialogAsync(
-                                            new YosysCompileSettingsView
-                                            {
-                                                DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot,
-                                                    selectedFpgaPackage.LoadFpga())
-                                            });
+                                        containerProvider.Resolve<ILogger>()
+                                            .Warning("No FPGA Selected. Open Pin Planner first!");
+                                        return;
                                     }
-                                })
-                            },
-                            new MenuItem()
+
+                                    await windowService.ShowDialogAsync(
+                                        new YosysCompileSettingsView
+                                        {
+                                            DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot,
+                                                selectedFpgaPackage.LoadFpga())
+                                        });
+                                }
+                            })
+                        },
+                        new MenuItem()
+                        {
+                            Header = "Open nextpnr GUI",
+                            Command = new AsyncRelayCommand(async () =>
                             {
-                                Header = "Open nextpnr GUI",
-                                Command = new AsyncRelayCommand(async () =>
-                                {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
-                                }, () => fpga != null),
-                                Icon = new Image()
-                                {
-                                    Source = Application.Current!.FindResource(
-                                        Application.Current!.RequestedThemeVariant,
-                                        "BoxIcons.RegularOpenGui") as IImage
-                                },
-                            }
+                                await projectExplorerService.SaveOpenFilesForProjectAsync(root);
+                                await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                            }, () => fpga != null),
+                            Icon = new Image()
+                            {
+                                Source = Application.Current!.FindResource(
+                                    Application.Current!.RequestedThemeVariant,
+                                    "BoxIcons.RegularOpenGui") as IImage
+                            },
                         }
-                    };
-                }));
+                    }
+                };
+            }));
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension(
             "UniversalFpgaToolBar_DownloaderConfigurationExtension", new UiExtension(x =>
@@ -445,14 +462,14 @@ public class OssCadSuiteIntegrationModule : IModule
             }
 
             environmentService.SetPath("oss_bin", Path.Combine(x, "bin"));
-            environmentService.SetPath("oss_pythonBin", Path.Combine(x, "py3bin"));
+            //environmentService.SetPath("oss_pythonBin", Path.Combine(x, "py3bin"));
             environmentService.SetPath("oss_lib", Path.Combine(x, "lib"));
             environmentService.SetEnvironmentVariable("QT_PLUGIN_PATH",
                 Path.Combine(x, "lib", "qt5", "plugins"));
             environmentService.SetEnvironmentVariable("OPENFPGALOADER_SOJ_DIR",
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",
-                Path.Combine(x, "py3bin", $"python3{PlatformHelper.ExecutableExtension}"));
+                Path.Combine(x, "lib", $"python3{PlatformHelper.ExecutableExtension}"));
             //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
             //    Path.Combine(x, "share", $"verilator"));
             environmentService.SetEnvironmentVariable("GHDL_PREFIX",
@@ -486,6 +503,28 @@ public class OssCadSuiteIntegrationModule : IModule
                     Command = new RelayCommand(() =>
                         containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
                 });
+            if (x is [IProjectFile { Extension: ".pcf" } pcf])
+            {
+                if (pcf.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
+                {
+                    if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath)
+                    {
+                        l.Add(new MenuItemViewModel("pcf")
+                        {
+                            Header = "Unset as Projects Constraint File",
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                        });
+                    }
+                    else
+                    {
+                        l.Add(new MenuItemViewModel("pcf")
+                        {
+                            Header = "Set as Projects Constraint File",
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                        });
+                    }
+                }
+            }
         });
 
         containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>

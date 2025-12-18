@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     name: Build
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-oneware-version.outputs.info }}
@@ -27,7 +28,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r linux-x64 -o ./out
       - name: Compress

@@ -10,19 +10,10 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.Services;
 
-public interface IWelcomeScreenStartItem : IWelcomeScreenItem
-{
-}
-
-public interface IWelcomeScreenWalkthroughItem : IWelcomeScreenItem
-{
-    
-}
-
 public interface IWelcomeScreenItem : INotifyPropertyChanged
 {
     string Name { get; }
-    object? Icon { get; }
+    IImage Icon { get; }
     ICommand? Command { get; }
 }
 

@@ -44,14 +44,14 @@ public class PackageViewModel : ObservableObject
         _httpService = httpService;
 
         RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
-            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable);
+            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
         InstallCommand = new AsyncRelayCommand<Control?>(
             x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
             x => PackageModel.Status is PackageStatus.Available);
 
         UpdateCommand = new AsyncRelayCommand<Control?>(x => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
-            x => PackageModel.Status is PackageStatus.UpdateAvailable);
+            x => PackageModel.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
         PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
@@ -135,7 +135,7 @@ public class PackageViewModel : ObservableObject
                 .Select(x => new PackageVersionModel(x)));
 
         var includePrerelease = PackageModel.InstalledVersion?.IsPrerelease ?? false;
-        
+
         SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
             .FirstOrDefault(x => x.Version.MinStudioVersion == null
                                  || Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
@@ -162,12 +162,14 @@ public class PackageViewModel : ObservableObject
                 MainButtonCommand = InstallCommand;
                 break;
             case PackageStatus.UpdateAvailable when sV > iV:
+            case PackageStatus.UpdateAvailablePrerelease when sV > iV:
                 PrimaryButtonText = "Update";
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeAccentBrush");
                 MainButtonCommand = UpdateCommand;
                 break;
             case PackageStatus.Installed:
             case PackageStatus.UpdateAvailable:
+            case PackageStatus.UpdateAvailablePrerelease:
                 PrimaryButtonText = "Remove";
                 MainButtonCommand = RemoveCommand;
                 break;
@@ -202,11 +204,13 @@ public class PackageViewModel : ObservableObject
         if (version.IsPrerelease)
         {
             var warningResult = await ContainerLocator.Container.Resolve<IWindowService>()
-                .ShowYesNoAsync("Install Prerelease", "The selected version is a prerelease version. Bugs are expected. Do you want to continue?", MessageBoxIcon.Warning, topLevel as Window);
-            
-            if(warningResult != MessageBoxStatus.Yes) return;
+                .ShowYesNoAsync("Install Prerelease",
+                    "The selected version is a prerelease version. Bugs are expected. Do you want to continue?",
+                    MessageBoxIcon.Warning, topLevel as Window);
+
+            if (warningResult != MessageBoxStatus.Yes) return;
         }
-        
+
         if (model.Package.AcceptLicenseBeforeDownload)
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;

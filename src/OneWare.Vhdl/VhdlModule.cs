@@ -1,5 +1,7 @@
-﻿using OneWare.Essentials.Enums;
+﻿using DynamicData.Binding;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -15,6 +17,7 @@ public class VhdlModule : IModule
     public const string LspName = "RustHDL";
     public const string LspPathSetting = "VhdlModule_RustHdlPath";
     public const string EnableSnippetsSetting = "VhdlModule_EnableSnippets";
+    public static readonly string[] SupportedExtensions = [".vhd", ".vhdl"];
 
     public static readonly Package RustHdlPackage = new()
     {
@@ -52,7 +55,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -66,7 +69,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -80,7 +83,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.78.1/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -101,7 +104,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
@@ -115,7 +118,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -129,7 +132,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.82.0/vhdl_ls-aarch64-apple-darwin.zip",
                         AutoSetting =
                         [
@@ -145,11 +148,13 @@ public class VhdlModule : IModule
             new PackageVersion()
             {
                 Version = "0.83.0",
-                Targets = [
+                Targets =
+                [
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -162,7 +167,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -176,8 +181,10 @@ public class VhdlModule : IModule
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-aarch64-apple-darwin.zip",
-                        AutoSetting = [
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.83.0/vhdl_ls-aarch64-apple-darwin.zip",
+                        AutoSetting =
+                        [
                             new PackageAutoSetting
                             {
                                 RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin", "vhdl_ls"),
@@ -190,11 +197,13 @@ public class VhdlModule : IModule
             new PackageVersion()
             {
                 Version = "0.85.0",
-                Targets = [
+                Targets =
+                [
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-x86_64-pc-windows-msvc.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -207,7 +216,7 @@ public class VhdlModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
                         AutoSetting =
                         [
@@ -221,8 +230,10 @@ public class VhdlModule : IModule
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-aarch64-apple-darwin.zip",
-                        AutoSetting = [
+                        Url =
+                            "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.85.0/vhdl_ls-aarch64-apple-darwin.zip",
+                        AutoSetting =
+                        [
                             new PackageAutoSetting
                             {
                                 RelativePath = Path.Combine("vhdl_ls-aarch64-apple-darwin", "bin", "vhdl_ls"),
@@ -241,29 +252,45 @@ public class VhdlModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
+        var fpgaService = containerProvider.Resolve<FpgaService>();
+        
+        fpgaService.RegisterLanguage("VHDL", SupportedExtensions);
+        
+        var settingsService = containerProvider.Resolve<ISettingsService>();
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "VHDL", LspPathSetting,
-            "RustHDL Path", "Path for RustHDL executable", "",
-            null, containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile);
-        
-        containerProvider.Resolve<ISettingsService>().RegisterTitled("Languages", "VHDL", EnableSnippetsSetting,
-            "Enable Snippets", "Enable snippets that provide rich completion. These are not smart or context based.", true);
+        settingsService.RegisterSetting("Languages", "VHDL", LspPathSetting,
+            new FilePathSetting("RustHDL Path", "", "",
+                containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile)
+            {
+                HoverDescription = "Path to the RustHDL Language Server executable.",
+            }
+        );
 
+        settingsService
+            .RegisterSetting("Languages", "VHDL", EnableSnippetsSetting, new CheckBoxSetting("Enable Snippets", true)
+            {
+                MarkdownDocumentation =
+                    "Enable snippets that provide rich completion. These are not smart or context based.",
+            });
+
+        var nodeProviderComboSetting =
+            new ComboBoxSetting("Node Provider", VhdlNodeProvider.NodeProviderKey, [VhdlNodeProvider.NodeProviderKey])
+            {
+
+            };
+        
         containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
-            "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", ".vhd", ".vhdl");
+            "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", SupportedExtensions);
         containerProvider.Resolve<ILanguageManager>()
-            .RegisterService(typeof(LanguageServiceVhdl), true, ".vhd", ".vhdl");
+            .RegisterService(typeof(LanguageServiceVhdl), true, SupportedExtensions);
 
-        containerProvider.Resolve<FpgaService>().RegisterNodeProvider<VhdlNodeProvider>(".vhd", ".vhdl");
-        containerProvider.Resolve<FpgaService>().RegisterLanguageExtensions([".vhd", ".vhdl"], LanguageType.Vhdl);
+        fpgaService.RegisterNodeProvider<VhdlNodeProvider>();
+        fpgaService.RegisterTemplate<VhdlBlinkTemplate>();
+        fpgaService.RegisterTemplate<VhdlBlinkSimulationTemplate>();
 
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkTemplate>();
-        containerProvider.Resolve<FpgaService>().RegisterTemplate<VhdlBlinkSimulationTemplate>();
-
-        containerProvider.Resolve<INodeProviderRegistry>().Register(LanguageType.Vhdl, new VhdlNodeProvider());
-        
         // containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
         // {
         //     if (x is [UniversalProjectRoot root])
