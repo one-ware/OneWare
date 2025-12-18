@@ -116,7 +116,7 @@ public class DesktopStudioApp : StudioApp
         var arguments = Environment.GetCommandLineArgs();
 
         //TODO Rework this to support opening folders, or custom context
-        if (arguments.LastOrDefault() is {} lastArg && !lastArg.StartsWith("--") && !lastArg.StartsWith("oneware://"))
+        if (arguments.Skip(1).LastOrDefault() is {} lastArg && !lastArg.StartsWith("--") && !lastArg.StartsWith("oneware://"))
         {
             var fileName = lastArg;
             //Check file exists
