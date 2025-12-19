@@ -9,6 +9,11 @@
              x:Class="OneWare.Settings.Views.SettingTypes.ComboBoxSearchSettingView"
              x:DataType="settingTypes:ComboBoxSearchSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
+        <StackPanel.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+            </ContextMenu>
+        </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding Setting.Title}"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />

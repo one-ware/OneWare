@@ -9,6 +9,11 @@
              x:DataType="settingTypes:CheckBoxSettingViewModel">
     <Border Padding="0 3">
         <StackPanel Orientation="Horizontal" Spacing="3">
+            <StackPanel.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                </ContextMenu>
+            </StackPanel.ContextMenu>
             <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
                       IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
             <StackPanel Spacing="3" Orientation="Horizontal">
