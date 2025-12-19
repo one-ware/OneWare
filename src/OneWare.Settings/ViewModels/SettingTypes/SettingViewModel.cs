@@ -12,6 +12,5 @@ public abstract class SettingViewModel : ObservableObject
     public ICommand RestoreDefaultCommand => new RelayCommand(() =>
     {
         Setting.Value = Setting.DefaultValue;
-        OnPropertyChanged(nameof(Setting));
     });
 }
