@@ -51,6 +51,9 @@ cat > "$plist_file" <<EOF
 
     <key>CFBundleVersion</key>
     <string>$version</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>Camera access is required for optional video capture features such as the OneAI Extension.</string>
 </dict>
 </plist>
 EOF
