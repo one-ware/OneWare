@@ -124,27 +124,39 @@ public class PluginService : IPluginService
                     // Try 3: add lib infront of it
                     if (!File.Exists(libPath))
                     {
-                        libFileName = PlatformHelper.GetLibraryFileName($"lib{libraryName}");
-                        libPath = Path.Combine(pluginPath, libFileName);
+                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
                     }
 
-                    // Try 4 : look in runtimes folder with lib infront
+                    // Try 4 : look in (plugin) runtimes folder with lib infront
                     if (!File.Exists(libPath))
                     {
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",  $"lib{libFileName}");
+                    }
+                    
+                    // Try 5: MacOS weirdness, look in (own) base folder
+                    // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
+                    }
+                    
+                    // Try 6: Same as 5 but added lib Prefix
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
                     }
                     
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
                     {
                         return customHandle;
                     }
-
+                    
                     if (NativeLibrary.TryLoad(libraryName, out var handle))
                     {
                         return handle;
                     }
 
-                    Console.WriteLine($"Loading native library {libFileName} failed");
+                    Console.WriteLine($"Loading native library {libraryName} failed");
                     return IntPtr.Zero;
                 });
 
