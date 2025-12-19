@@ -114,17 +114,24 @@ public class PluginService : IPluginService
                     // Try 1
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
-
+                    
+                    // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
                     {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
                     }
                     
-                    // Try 2: add lib infront of it
+                    // Try 3: add lib infront of it
                     if (!File.Exists(libPath))
                     {
                         libFileName = PlatformHelper.GetLibraryFileName($"lib{libraryName}");
                         libPath = Path.Combine(pluginPath, libFileName);
+                    }
+
+                    // Try 4 : look in runtimes folder with lib infront
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
                     }
                     
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
