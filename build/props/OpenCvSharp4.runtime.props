@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    
+    <!-- Windows x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'win-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Windows'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+    </ItemGroup>
+
+    <!-- Windows arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'win-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Windows'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+    </ItemGroup>
+
+    <!-- Linux x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'linux-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Linux'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="m-ringler.OpenCvSharp4.ubuntu24.runtime.linux-x64" Version="4.10.0.20250917" />
+    </ItemGroup>
+
+    <!-- Linux arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'linux-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Linux'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <!-- TODO: Build an arm compatible library -->
+        <PackageReference Include="m-ringler.OpenCvSharp4.ubuntu24.runtime.linux-x64" Version="4.10.0.20250917" />
+    </ItemGroup>
+
+    <!-- macOS x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'osx-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('MacOS'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.osx.10.15-x64" Version="4.6.0.20230105" />
+    </ItemGroup>
+
+    <!-- macOS arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'osx-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('MacOS'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.osx_arm64" Version="4.8.1-rc" />
+    </ItemGroup>
+</Project>

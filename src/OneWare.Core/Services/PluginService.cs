@@ -70,8 +70,9 @@ public class PluginService : IPluginService
                 ContainerLocator.Container.Resolve<ILogger>()
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
-
-            SetupNativeImports(realPath);
+            
+            //We don't use that anymore, since it can break compatibility with code signed apps
+            //SetupNativeImports(realPath);
         }
         catch (Exception e)
         {

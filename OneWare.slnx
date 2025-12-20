@@ -44,6 +44,8 @@
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
     <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
     <File Path="build/props/XUnit.props" />
+    <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
+    <File Path="build\props\OpenCvSharp4.runtime.props" />
   </Folder>
   <Folder Name="/Coremodules/">
     <Project Path="src/OneWare.ApplicationCommands/OneWare.ApplicationCommands.csproj" />
