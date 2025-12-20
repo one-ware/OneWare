@@ -30,6 +30,7 @@
         <ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.Native\OneWare.Native.csproj" />
         <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
     </ItemGroup>
 
@@ -45,12 +46,6 @@
     <!--Exclude Terminal on Linux to stop crashes on SetWindowSize-->
     <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Views\AIReleaseWindow.axaml.cs">
-        <DependentUpon>AIReleaseWindow.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
     </ItemGroup>
     
 </Project>
