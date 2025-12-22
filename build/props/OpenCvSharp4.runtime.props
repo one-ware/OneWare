@@ -71,6 +71,6 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
     )">
-        <PackageReference Include="OpenCvSharp4.runtime.osx_arm64" Version="4.8.1-rc" />
+        <PackageReference Include="OneWare.Native.osx-arm64" Version="0.0.1" />
     </ItemGroup>
 </Project>
