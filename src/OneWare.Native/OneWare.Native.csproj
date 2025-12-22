@@ -1,0 +1,86 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props"/>
+    <Import Project="..\..\build\props\OneWare.Module.props"/>
+
+    <PropertyGroup>
+        <Version>0.9</Version>
+        <RootNamespace>OneWare.NativeRuntimes</RootNamespace>
+    </PropertyGroup>
+    
+    <!-- Windows x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'win-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Windows'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+
+    <!-- Windows arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'win-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Windows'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+
+    <!-- Linux x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'linux-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Linux'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="m-ringler.OpenCvSharp4.ubuntu24.runtime.linux-x64" Version="4.10.0.20250917" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+
+    <!-- Linux arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'linux-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('Linux'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+
+    <!-- macOS x64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'osx-x64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('MacOS'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.osx.10.15-universal" Version="4.7.0.20230224" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+
+    <!-- macOS arm64 -->
+    <ItemGroup Condition="
+    '$(RuntimeIdentifier)' == 'osx-arm64'
+    OR
+    (
+      $([MSBuild]::IsOSPlatform('MacOS'))
+      AND
+      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
+    )">
+        <PackageReference Include="OpenCvSharp4.runtime.osx.10.15-universal" Version="4.7.0.20230224" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" Private="true" />
+    </ItemGroup>
+</Project>

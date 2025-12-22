@@ -44,6 +44,10 @@
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
     <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
     <File Path="build/props/XUnit.props" />
+    <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
+    <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
+    <File Path="build\props\OpenCvSharp4.props" />
+    <File Path="build\props\OpenCvSharp4.runtime.props" />
     <File Path="build\props\LiveChartsCore.SkiaSharpView.Avalonia.props" />
   </Folder>
   <Folder Name="/Coremodules/">
@@ -58,6 +62,7 @@
     <Project Path="src/OneWare.Settings/OneWare.Settings.csproj" />
     <Project Path="src/OneWare.SourceControl/OneWare.SourceControl.csproj" />
     <Project Path="src/OneWare.Updater/OneWare.Updater.csproj" />
+    <Project Path="src\OneWare.Native\OneWare.Native.csproj" />
   </Folder>
   <Folder Name="/Coremodules/Terminal/">
     <Project Path="src/OneWare.Terminal/OneWare.Terminal.csproj" />
