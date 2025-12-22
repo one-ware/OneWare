@@ -30,7 +30,6 @@
         <ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
-        <ProjectReference Include="..\..\src\OneWare.Native\OneWare.Native.csproj" />
         <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
     </ItemGroup>
 
