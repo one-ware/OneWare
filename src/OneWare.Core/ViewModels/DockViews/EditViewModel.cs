@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -26,7 +27,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     private readonly BackupService _backupService;
 
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IErrorService _errorService;
     private readonly ILanguageManager _languageManager;
     private readonly IProjectExplorerService _projectExplorerService;
@@ -40,12 +41,12 @@ public class EditViewModel : ExtendedDocument, IEditor
     private ITypeAssistance? _typeAssistance;
 
     public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
-        IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
+        IMainDockService mainDockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
-        BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
+        BackupService backupService) : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
         _settingsService = settingsService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _languageManager = languageManager;

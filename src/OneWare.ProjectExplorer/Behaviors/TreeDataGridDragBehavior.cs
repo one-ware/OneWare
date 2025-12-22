@@ -82,9 +82,14 @@ public class TreeDataGridDragBehavior : Behavior<Control>
 
     private async Task DoDragDropAsync(PointerEventArgs triggerEvent, object? value)
     {
-        var data = new DataObject();
-        data.Set(ContextDropBehavior.DataFormat, value!);
+        var transfer = new DataTransfer();
+        var data = new DataTransferItem();
 
+        DataTransferItem.Create(DataFormat.)
+        data.Set(value);
+            
+        transfer.Add(data);
+        
         var effect = DragDropEffects.None;
 
         if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Alt))
@@ -98,7 +103,7 @@ public class TreeDataGridDragBehavior : Behavior<Control>
 
         try
         {
-            await DragDrop.DoDragDrop(triggerEvent, data, effect);
+            await DragDrop.DoDragDropAsync(triggerEvent, transfer, effect);
         }
         catch (Exception e)
         {

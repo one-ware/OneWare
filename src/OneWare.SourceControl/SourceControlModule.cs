@@ -46,7 +46,7 @@ public class SourceControlModule : IModule
             "Poll changes interval", "Interval in seconds", 5, 1, 60, 1);
         
 
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = containerProvider.Resolve<IMainDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SourceControl")

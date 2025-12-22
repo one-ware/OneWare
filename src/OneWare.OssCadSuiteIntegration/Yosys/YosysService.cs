@@ -16,7 +16,7 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService)
+    IMainDockService mainDockService)
 {
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
@@ -28,7 +28,7 @@ public class YosysService(
         var buildDir = Path.Combine(project.FullPath, "build");
         Directory.CreateDirectory(buildDir);
 
-        dockService.Show<IOutputService>();
+        mainDockService.Show<IOutputService>();
 
         var start = DateTime.Now;
             

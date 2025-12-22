@@ -20,7 +20,7 @@ public class LibraryExplorerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = containerProvider.Resolve<IMainDockService>();
         var windowService = containerProvider.Resolve<IWindowService>();
 
         dockService.RegisterLayoutExtension<LibraryExplorerViewModel>(DockShowLocation.Left);

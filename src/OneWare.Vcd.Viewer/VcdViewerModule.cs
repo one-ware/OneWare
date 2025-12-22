@@ -14,7 +14,7 @@ public class VcdViewerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<IDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
+        containerProvider.Resolve<IMainDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
 
         containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".vcdconf", ".json");
 

@@ -73,7 +73,7 @@ public class ContextDragBubbleBehavior : Behavior<Control>
             RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         AssociatedObject?.AddHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased,
             RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
-        AssociatedObject?.AddHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMoved,
+        AssociatedObject?.AddHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMovedAsync,
             RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         AssociatedObject?.AddHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost,
             RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
@@ -84,15 +84,19 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     {
         AssociatedObject?.RemoveHandler(InputElement.PointerPressedEvent, AssociatedObject_PointerPressed);
         AssociatedObject?.RemoveHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased);
-        AssociatedObject?.RemoveHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMoved);
+        AssociatedObject?.RemoveHandler(InputElement.PointerMovedEvent,  () => AssociatedObject_PointerMovedAsync);
         AssociatedObject?.RemoveHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost);
     }
 
-    private async Task DoDragDrop(PointerEventArgs triggerEvent, object? value)
+    private async Task DoDragDropAsync(PointerEventArgs triggerEvent, object? value)
     {
-        var data = new DataObject();
-        data.Set(ContextDropBehavior.DataFormat, value!);
+        var transfer = new DataTransfer();
+        var data = new DataTransferItem();
+        
+        data.Set(DataFormat., value);
 
+        transfer.Add(data);
+        
         var effect = DragDropEffects.None;
 
         if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Alt))
@@ -104,7 +108,7 @@ public class ContextDragBubbleBehavior : Behavior<Control>
         else
             effect |= DragDropEffects.Move;
 
-        await DragDrop.DoDragDrop(triggerEvent, data, effect);
+        await DragDrop.DoDragDropAsync(triggerEvent, transfer, effect);
     }
 
     private void Released()
@@ -139,7 +143,7 @@ public class ContextDragBubbleBehavior : Behavior<Control>
         }
     }
 
-    private async void AssociatedObject_PointerMoved(object? sender, PointerEventArgs e)
+    private async Task AssociatedObject_PointerMovedAsync(object? sender, PointerEventArgs e)
     {
         var properties = e.GetCurrentPoint(AssociatedObject).Properties;
         if (_captured
@@ -162,7 +166,7 @@ public class ContextDragBubbleBehavior : Behavior<Control>
 
                 Handler?.BeforeDragDrop(sender, _triggerEvent, context);
 
-                await DoDragDrop(_triggerEvent, context);
+                await DoDragDropAsync(_triggerEvent, context);
 
                 Handler?.AfterDragDrop(sender, _triggerEvent, context);
 

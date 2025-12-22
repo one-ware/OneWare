@@ -40,7 +40,6 @@ using OneWare.Verilog;
 using OneWare.Vhdl;
 using Prism.Ioc;
 using Prism.Modularity;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Studio.Desktop;
 
@@ -121,7 +120,7 @@ public class DesktopStudioApp : StudioApp
             if (File.Exists(fileName))
             {
                 _tempMode = true;
-                var dockService = Container.Resolve<IDockService>();
+                var dockService = Container.Resolve<IMainDockService>();
 
                 var views = dockService.SearchView<Document>();
 
@@ -140,7 +139,7 @@ public class DesktopStudioApp : StudioApp
                 else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
                 {
                     var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Container.Resolve<IDockService>().OpenFileAsync(file);
+                    _ = Container.Resolve<IMainDockService>().OpenFileAsync(file);
                 }
                 else
                 {
@@ -155,7 +154,7 @@ public class DesktopStudioApp : StudioApp
                 var key = Container.Resolve<IApplicationStateService>()
                     .AddState("Loading last projects...", AppState.Loading);
                 await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                Container.Resolve<IDockService>().InitializeContent();
+                Container.Resolve<IMainDockService>().InitializeContent();
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
                 Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             }

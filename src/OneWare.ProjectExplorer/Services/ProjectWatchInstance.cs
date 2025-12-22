@@ -9,7 +9,7 @@ namespace OneWare.ProjectExplorer.Services;
 public class ProjectWatchInstance : IDisposable
 {
     private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly FileSystemWatcher _fileSystemWatcher;
     private readonly Lock _lock = new();
     private readonly IProjectExplorerService _projectExplorerService;
@@ -18,11 +18,11 @@ public class ProjectWatchInstance : IDisposable
     private DispatcherTimer? _timer;
 
     public ProjectWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
-        IDockService dockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
+        IMainDockService mainDockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
 
         _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
@@ -141,8 +141,8 @@ public class ProjectWatchInstance : IDisposable
                         {
                             if (oldEntry is IProjectFile file)
                             {
-                                _dockService.OpenFiles.TryGetValue(file, out var tab);
-                                _dockService.OpenFiles.Remove(file);
+                                _mainDockService.OpenFiles.TryGetValue(file, out var tab);
+                                _mainDockService.OpenFiles.Remove(file);
                                 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
@@ -153,7 +153,7 @@ public class ProjectWatchInstance : IDisposable
                                     tab.InitializeContent();
                                     
                                     if(tab.CurrentFile != null) 
-                                        _dockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
+                                        _mainDockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
                                 }
                             }
                             else
@@ -167,7 +167,7 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
-                        var openTab = _dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
+                        var openTab = _mainDockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
                         if (openTab.Key is not null)
                             openTab.Value.InitializeContent();
                         return;

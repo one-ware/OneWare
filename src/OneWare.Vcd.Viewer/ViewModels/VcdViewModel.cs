@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using Avalonia.Threading;
 using DynamicData;
@@ -34,9 +35,9 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
 
-    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
+    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
         ISettingsService settingsService, IWindowService windowService)
-        : base(fullPath, projectExplorerService, dockService, windowService)
+        : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
 

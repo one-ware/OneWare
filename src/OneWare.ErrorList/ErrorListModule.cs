@@ -15,15 +15,15 @@ public class ErrorListModule : IModule
     public const string KeyErrorListFilterMode = "ErrorList_FilterMode";
     public const string KeyErrorListShowExternalErrors = "ErrorList_ShowExternalErrors";
     public const string KeyErrorListVisibleSource = "ErrorList_VisibleSource";
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
-    public ErrorListModule(ISettingsService settingsService, IWindowService windowService, IDockService dockService)
+    public ErrorListModule(ISettingsService settingsService, IWindowService windowService, IMainDockService mainDockService)
     {
         _settingsService = settingsService;
         _windowService = windowService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
     }
 
     public void RegisterTypes(IContainerRegistry containerRegistry)
@@ -34,7 +34,7 @@ public class ErrorListModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        _dockService.RegisterLayoutExtension<IErrorService>(DockShowLocation.Bottom);
+        _mainDockService.RegisterLayoutExtension<IErrorService>(DockShowLocation.Bottom);
 
         _settingsService.Register(KeyErrorListFilterMode, 0);
         _settingsService.RegisterTitled("Experimental", "Errors", KeyErrorListShowExternalErrors,
@@ -44,7 +44,7 @@ public class ErrorListModule : IModule
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Problems")
         {
             Header = "Problems",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IErrorService>())),
+            Command = new RelayCommand(() => _mainDockService.Show(containerProvider.Resolve<IErrorService>())),
             IconObservable = Application.Current!.GetResourceObservable(ErrorListViewModel.IconKey)
         });
     }

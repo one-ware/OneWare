@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using Avalonia;
@@ -300,7 +301,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
         file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
-        var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;

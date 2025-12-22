@@ -26,7 +26,7 @@ public class ProjectExplorerModule : IModule
     {
         if (containerProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
 
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = containerProvider.Resolve<IMainDockService>();
         var windowService = containerProvider.Resolve<IWindowService>();
 
         dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);

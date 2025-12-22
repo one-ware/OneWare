@@ -21,7 +21,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 {
     public const string IconKey = "MaterialDesign.ErrorOutline";
 
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
 
     private readonly ObservableCollection<ErrorListItem> _items = new();
     private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
@@ -47,10 +47,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     private bool _warningEnabled = true;
 
-    public ErrorListViewModel(IDockService dockService, ISettingsService settingsService,
+    public ErrorListViewModel(IMainDockService mainDockService, ISettingsService settingsService,
         IProjectExplorerService projectExplorerExplorerViewModel) : base(IconKey)
     {
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _settingsService = settingsService;
         _projectExplorerExplorerViewModel = projectExplorerExplorerViewModel;
 
@@ -76,7 +76,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
                 this.WhenValueChanged(x => x.ShowExternalErrors))
             .Subscribe(x => ShowExternalErrors = x);
 
-        _dockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
+        _mainDockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
     }
 
     public ObservableCollection<string> ErrorListVisibleSources { get; } = new() { "All Sources" };
@@ -252,7 +252,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
                     return true;
                 break;
             case ErrorListFilterMode.CurrentFile:
-                if (_dockService.CurrentDocument?.CurrentFile == error.File) return true;
+                if (_mainDockService.CurrentDocument?.CurrentFile == error.File) return true;
                 break;
         }
 
@@ -261,7 +261,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     private bool FilterExternal(ErrorListItem error)
     {
-        return ShowExternalErrors || error.File is IProjectFile || _dockService.OpenFiles.ContainsKey(error.File);
+        return ShowExternalErrors || error.File is IProjectFile || _mainDockService.OpenFiles.ContainsKey(error.File);
     }
 
     private bool FilterEnabledType(ErrorListItem error)
@@ -351,7 +351,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     public async Task GoToErrorAsync()
     {
         if (SelectedItem is not { } error) return;
-        var doc = await _dockService.OpenFileAsync(error.File);
+        var doc = await _mainDockService.OpenFileAsync(error.File);
 
         if (doc is not IEditor evb) return;
         var offset = error.GetOffset(evb.CurrentDocument);

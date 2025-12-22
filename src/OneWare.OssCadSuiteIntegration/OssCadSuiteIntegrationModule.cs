@@ -24,7 +24,6 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
-using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
 // ReSharper disable StringLiteralTypo
@@ -512,7 +511,7 @@ public class OssCadSuiteIntegrationModule : IModule
         containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
 
-        containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
+        containerProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
             containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
             return true;

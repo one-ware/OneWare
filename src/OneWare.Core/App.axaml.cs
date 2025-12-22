@@ -71,7 +71,7 @@ public class App : PrismApplication
         containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
         containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
         containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
-        containerRegistry.RegisterSingleton<IDockService, DockService>();
+        containerRegistry.RegisterSingleton<IMainDockService, MainDockService>();
         containerRegistry.RegisterSingleton<IWindowService, WindowService>();
         containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
         containerRegistry.RegisterSingleton<BackupService>();
@@ -247,8 +247,8 @@ public class App : PrismApplication
             Header = "Format",
             IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
+                () => (Container.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.Format(),
+                () => Container.Resolve<IMainDockService>().CurrentDocument is EditViewModel),
             InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
@@ -256,8 +256,8 @@ public class App : PrismApplication
             Header = "Comment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null} ),
+                () => (Container.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
+                () => Container.Resolve<IMainDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null} ),
             InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
@@ -265,16 +265,16 @@ public class App : PrismApplication
             Header = "Uncomment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null}),
+                () => (Container.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
+                () => Container.Resolve<IMainDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null}),
             InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
         });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
         {
             Command = new AsyncRelayCommand(
-                () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
-                () => Container.Resolve<IDockService>().CurrentDocument is not null),
+                () => Container.Resolve<IMainDockService>().CurrentDocument!.SaveAsync(),
+                () => Container.Resolve<IMainDockService>().CurrentDocument is not null),
             Header = "Save Current",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
             IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
@@ -285,7 +285,7 @@ public class App : PrismApplication
             Command = new RelayCommand(
                 () =>
                 {
-                    foreach (var file in Container.Resolve<IDockService>().OpenFiles) _ = file.Value.SaveAsync();
+                    foreach (var file in Container.Resolve<IMainDockService>().OpenFiles) _ = file.Value.SaveAsync();
                 }),
             Header = "Save All",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
@@ -406,7 +406,7 @@ public class App : PrismApplication
 
         Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Container.Resolve<BackupService>().LoadAutoSaveFile();
-        Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
+        Container.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
         Container.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Container.Resolve<BackupService>().Init();
 
@@ -452,7 +452,7 @@ public class App : PrismApplication
         {
             var unsavedFiles = new List<IExtendedDocument>();
 
-            foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
+            foreach (var tab in Container.Resolve<IMainDockService>().OpenFiles)
                 if (tab.Value is { IsDirty: true } evm)
                     unsavedFiles.Add(evm);
 
@@ -490,7 +490,7 @@ public class App : PrismApplication
         Container.Resolve<ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
 
         //Save active layout
-        if (!_tempMode) Container.Resolve<IDockService>().SaveLayout();
+        if (!_tempMode) Container.Resolve<IMainDockService>().SaveLayout();
 
         //Save settings
         Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);

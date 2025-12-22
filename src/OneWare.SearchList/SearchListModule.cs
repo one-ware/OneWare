@@ -13,13 +13,13 @@ namespace OneWare.SearchList;
 
 public class SearchListModule : IModule
 {
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IWindowService _windowService;
 
-    public SearchListModule(IWindowService windowService, IDockService dockService)
+    public SearchListModule(IWindowService windowService, IMainDockService mainDockService)
     {
         _windowService = windowService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
     }
 
     public void RegisterTypes(IContainerRegistry containerRegistry)
@@ -36,7 +36,7 @@ public class SearchListModule : IModule
             {
                 var vm = containerProvider.Resolve<SearchListViewModel>();
                 vm.SearchString = string.Empty;
-                _dockService.Show(vm);
+                _mainDockService.Show(vm);
             }),
             IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)

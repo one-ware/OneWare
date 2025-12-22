@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 namespace OneWare.Output.Views;
 

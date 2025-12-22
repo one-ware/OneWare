@@ -21,7 +21,7 @@ public class SerialMonitorModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var windowService = containerProvider.Resolve<IWindowService>();
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = containerProvider.Resolve<IMainDockService>();
         var settingsService = containerProvider.Resolve<ISettingsService>();
 
         settingsService.Register("SerialMonitor_SelectedBaudRate", 9600);

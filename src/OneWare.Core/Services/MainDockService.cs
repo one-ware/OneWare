@@ -19,11 +19,10 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Core.Services;
 
-public class DockService : Factory, IDockService
+public class MainDockService : Factory, IMainDockService
 {
     private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
     private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
@@ -42,7 +41,7 @@ public class DockService : Factory, IDockService
 
     private RootDock? _layout;
 
-    public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
+    public MainDockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;

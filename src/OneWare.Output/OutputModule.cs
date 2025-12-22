@@ -12,15 +12,15 @@ namespace OneWare.Output;
 
 public class OutputModule : IModule
 {
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
-    public OutputModule(ISettingsService settingsService, IDockService dockService, IWindowService windowService)
+    public OutputModule(ISettingsService settingsService, IMainDockService mainDockService, IWindowService windowService)
     {
         _settingsService = settingsService;
         _windowService = windowService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
     }
 
     public void RegisterTypes(IContainerRegistry containerRegistry)
@@ -31,14 +31,14 @@ public class OutputModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        _dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
+        _mainDockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
 
         _settingsService.Register("Output_Autoscroll", true);
 
         _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
         {
             Header = "Output",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
+            Command = new RelayCommand(() => _mainDockService.Show(containerProvider.Resolve<IOutputService>())),
             IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
         });
     }

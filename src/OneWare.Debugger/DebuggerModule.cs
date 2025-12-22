@@ -18,7 +18,7 @@ public class DebuggerModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = containerProvider.Resolve<IMainDockService>();
         //dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
 
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",

@@ -76,7 +76,7 @@
             </StackPanel>
         </DockPanel>
 
-        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding DockService.Layout}" />
+        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding MainDockService.Layout}" />
     </Grid>
 
     <sdkControls:AdvancedWindow.TitleBarContent>

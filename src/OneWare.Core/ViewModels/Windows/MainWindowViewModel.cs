@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -39,13 +40,13 @@ public class MainWindowViewModel : ObservableObject
     private string _title;
 
     public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
+        IWindowService windowService, IMainDockService mainDockService,
         ISettingsService settingsService, IApplicationCommandService applicationCommandService)
     {
         _applicationCommandService = applicationCommandService;
         ApplicationStateService = applicationStateService;
         _windowService = windowService;
-        DockService = dockService;
+        MainDockService = mainDockService;
         Paths = paths;
         _settingsService = settingsService;
 
@@ -58,7 +59,7 @@ public class MainWindowViewModel : ObservableObject
 
         _title = paths.AppName;
 
-        DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
+        MainDockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
         {
             if (x != null)
             {
@@ -92,7 +93,7 @@ public class MainWindowViewModel : ObservableObject
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
     }
 
-    public IDockService DockService { get; }
+    public IMainDockService MainDockService { get; }
     public IApplicationStateService ApplicationStateService { get; }
     public IPaths Paths { get; }
 

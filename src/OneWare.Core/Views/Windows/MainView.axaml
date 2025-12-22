@@ -40,11 +40,11 @@
                             HorizontalAlignment="Left">
 
                     <Button ToolTip.Tip="Undo"
-                            Command="{Binding DockService.CurrentDocument.Undo, FallbackValue={x:Null}}">
+                            Command="{Binding MainDockService.CurrentDocument.Undo, FallbackValue={x:Null}}">
                         <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
                     </Button>
                     <Button ToolTip.Tip="Redo"
-                            Command="{Binding DockService.CurrentDocument.Redo, FallbackValue={x:Null}}">
+                            Command="{Binding MainDockService.CurrentDocument.Redo, FallbackValue={x:Null}}">
                         <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
                     </Button>
 
@@ -72,7 +72,7 @@
                 </StackPanel>
             </DockPanel>
 
-            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding DockService.Layout}" />
+            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding MainDockService.Layout}" />
 
             <Border Grid.Row="3" Padding="2"
                     Background="{DynamicResource ThemeAccentBrush}">
@@ -100,7 +100,7 @@
                                 <MenuItem.Header>
                                     <StackPanel Cursor="Hand">
                                         <TextBlock x:CompileBindings="False"
-                                                   Text="{Binding DockService.CurrentDocument.Extension}"
+                                                   Text="{Binding MainDockService.CurrentDocument.Extension}"
                                                    Foreground="White" />
                                     </StackPanel>
                                 </MenuItem.Header>

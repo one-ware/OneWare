@@ -46,6 +46,7 @@
     <File Path="build/props/XUnit.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
     <File Path="build\props\OpenCvSharp4.runtime.props" />
+    <File Path="build\props\ReactiveUI.Avalonia.props" />
   </Folder>
   <Folder Name="/Coremodules/">
     <Project Path="src/OneWare.ApplicationCommands/OneWare.ApplicationCommands.csproj" />
