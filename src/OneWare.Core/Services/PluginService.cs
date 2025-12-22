@@ -71,8 +71,8 @@ public class PluginService : IPluginService
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
             
-            //We don't use that anymore, since it can break compatibility with code signed apps
-            //SetupNativeImports(realPath);
+            //We should not use that anymore, since it can break compatibility with code signed apps
+            SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
@@ -95,6 +95,7 @@ public class PluginService : IPluginService
         }
     }
 
+    [Obsolete]
     private void SetupNativeImports(string pluginPath)
     {
         var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));

@@ -19,6 +19,8 @@
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>
     <Import Project="..\..\build\props\Svg.Controls.Skia.Avalonia.props"/>
     <Import Project="..\..\build\props\Xaml.Behaviors.Avalonia.props"/>
+    <Import Project="..\..\build\props\OpenCvSharp4.props"/>
+    <Import Project="..\..\build\props\Microsoft.ML.OnnxRuntime.Managed.props"/>
 
     <PropertyGroup>
         <Description>Essentials Needed for One Ware Plugin Development</Description>
