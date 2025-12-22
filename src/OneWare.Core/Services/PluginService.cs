@@ -70,9 +70,13 @@ public class PluginService : IPluginService
                 ContainerLocator.Container.Resolve<ILogger>()
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
-            
+
             //We should not use that anymore, since it can break compatibility with code signed apps
-            SetupNativeImports(realPath);
+            //We keep it for now except on MacOS
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                SetupNativeImports(realPath);
+            }
         }
         catch (Exception e)
         {
@@ -104,8 +108,8 @@ public class PluginService : IPluginService
         {
             _initAssemblies.Add(assembly);
 
-            if(assembly.FullName == null) continue;
-            
+            if (assembly.FullName == null) continue;
+
             if (_resolverSetAssemblies.Contains(assembly.FullName))
                 continue;
 
@@ -116,13 +120,14 @@ public class PluginService : IPluginService
                     // Try 1
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
-                    
+
                     // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
                     {
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                            libFileName);
                     }
-                    
+
                     // Try 3: add lib infront of it
                     if (!File.Exists(libPath))
                     {
@@ -132,27 +137,28 @@ public class PluginService : IPluginService
                     // Try 4 : look in (plugin) runtimes folder with lib infront
                     if (!File.Exists(libPath))
                     {
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",  $"lib{libFileName}");
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                            $"lib{libFileName}");
                     }
-                    
+
                     // Try 5: MacOS weirdness, look in (own) base folder
                     // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
                     if (!File.Exists(libPath))
                     {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
                     }
-                    
+
                     // Try 6: Same as 5 but added lib Prefix
                     if (!File.Exists(libPath))
                     {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
                     }
-                    
+
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
                     {
                         return customHandle;
                     }
-                    
+
                     if (NativeLibrary.TryLoad(libraryName, out var handle))
                     {
                         return handle;
@@ -168,7 +174,7 @@ public class PluginService : IPluginService
             {
                 // This assembly already has a resolver — log and continue
                 ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.", 
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.",
                     ConsoleColor.DarkYellow, true);
             }
         }
