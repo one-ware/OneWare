@@ -38,6 +38,12 @@ foreach ($f in $files) {
         continue
     }
 
+    # Skip if not under your namespace or not your executable
+    if ($name -notmatch "^$companyPrefix" -and $f.Extension -eq '.dll') {
+        Write-Host ("[SKIP] {0} - not a {1} binary" -f $f.FullName, $companyPrefix)
+        continue
+    }
+
     # Check signature
     try {
         $sig = Get-AuthenticodeSignature -FilePath $f.FullName
