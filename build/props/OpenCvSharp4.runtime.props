@@ -71,6 +71,6 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
     )">
-        <PackageReference Include="OneWare.Native.osx-arm64" Version="0.0.1" />
+        <PackageReference Include="OneWare.Native.osx-arm64" Version="0.0.2" />
     </ItemGroup>
 </Project>
