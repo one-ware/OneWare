@@ -44,3 +44,6 @@ parts:
       - libice6
       - libsm6
       - v4l-utils
+      - libglib2.0-0
+      - libgobject-2.0-0
+      - libgio-2.0-0
