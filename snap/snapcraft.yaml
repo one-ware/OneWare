@@ -12,6 +12,8 @@ apps:
     command: ./OneWareStudio
     common-id: com.one_ware.OneWare
     desktop: ./com.one_ware.OneWare.desktop
+    environment:
+      PATH: "$SNAP/usr/bin:$SNAP/bin:$PATH"
 
 parts:
   oneware:
@@ -42,20 +44,3 @@ parts:
       - libice6
       - libsm6
       - v4l-utils
-      - libcairo2
-      - libglib2.0-0
-      - libgobject-2.0-0
-      # Image formats
-      - libjpeg8
-      - libpng16-16
-      - libwebp7
-      # Tesseract OCR
-      - tesseract-ocr
-      - libtesseract5
-      # FireWire / camera support
-      - libdc1394-25
-      # FFmpeg (Ubuntu 24 / Noble)
-      - libavcodec60
-      - libavformat60
-      - libavutil58
-      - libswscale7
