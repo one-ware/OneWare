@@ -10,7 +10,7 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.13"/>
     </ItemGroup>
 
     <!-- Windows arm64 -->
@@ -22,7 +22,7 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.13"/>
     </ItemGroup>
 
     <!-- Linux x64 -->
@@ -34,7 +34,7 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.13"/>
     </ItemGroup>
 
     <!-- Linux arm64 -->
@@ -46,7 +46,7 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.13"/>
     </ItemGroup>
 
     <!-- macOS x64 -->
@@ -58,7 +58,7 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13"/>
     </ItemGroup>
 
     <!-- macOS arm64 -->
@@ -70,6 +70,6 @@
       AND
       $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
     )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.12"/>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13"/>
     </ItemGroup>
 </Project>
