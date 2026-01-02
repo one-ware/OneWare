@@ -1,5 +1,6 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.ToolEngine.Strategies;
 using Prism.Ioc;
 using Splat;
 using ILogger = OneWare.Essentials.Services.ILogger;
@@ -11,7 +12,8 @@ public class ToolService : IToolService
     private readonly List<EnvironmentDescription> _tools = new();
     private readonly ISettingsService _settingsService;
     private readonly ILogger _logger;
-
+    private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _toolStrategies = new();
+    
     public ToolService(ISettingsService settingsService, ILogger logger)
     {
         _settingsService = settingsService 
@@ -21,12 +23,11 @@ public class ToolService : IToolService
 
     private void RegisterToolInSettings(EnvironmentDescription description)
     {
-        // var setting = new ListBoxSetting("Tool Strategy", "Native", "Docker");
         var dispatcherService = ContainerLocator.Container.Resolve<IToolExecutionDispatcherService>();
         // TODO: Hier mal rüber schauen 
-        dispatcherService.Register(description.Key);
+        RegisterStrategy(description.Key, new NativeStrategy());
 
-        var strategies = dispatcherService.GetStrategyKeys(description.Key);
+        var strategies = GetStrategyKeys(description.Key);
         
         if (strategies.Length == 0) {
             _logger.Warning($"No strategies found for Tool: {description.Key}");
@@ -34,7 +35,7 @@ public class ToolService : IToolService
         }
         
         var setting = new ComboBoxSetting(description.Name, strategies[0], strategies.ToArray());
-        _settingsService.RegisterSetting("Tools", "Execution Strategy", description.Key, setting);
+        _settingsService.RegisterSetting("Binary Management", "Execution Strategy", description.Key, setting);
     }
     
     public void Register(EnvironmentDescription description)
@@ -42,6 +43,7 @@ public class ToolService : IToolService
         RegisterToolInSettings(description);
         _tools.Add(description);
     }
+     
 
     public void Unregister(EnvironmentDescription description)
     {
@@ -78,5 +80,62 @@ public class ToolService : IToolService
     public void UpdateSettings()
     {
         
+    }
+    
+    public void RegisterStrategy(string toolKey, IToolExecutionStrategy strategy)
+    {
+        if (!_toolStrategies.TryGetValue(toolKey, out var strategyMap))
+        {
+            strategyMap = new Dictionary<string, IToolExecutionStrategy>();
+            _toolStrategies[toolKey] = strategyMap;
+        }
+        
+        // TODO: IDK if this makes sense if the strategy has the key in itself: Think about it
+        strategyMap[strategy.GetStrategyKey()] = strategy;
+    }
+    
+    public void RegisterStrategyForGroups(IToolExecutionStrategy strategy, List<string> tags)
+    {
+        // Based on Group Tag in EnvironmentDescription set Strategy
+        throw new NotImplementedException();
+    }
+
+    public void UnregisterStrategy(string strategyKey)
+    {
+        foreach (var toolEntry in _toolStrategies)
+        {
+            var strategyMap = toolEntry.Value;
+            strategyMap.Remove(strategyKey);
+        }
+    }
+    
+    public string[] GetStrategyKeys(string toolKey)
+    {
+        if (_toolStrategies.TryGetValue(toolKey, out var strategies))
+        {
+            return strategies.Values
+                .Select(s => s.GetStrategyKey())  // nur den Key nehmen
+                .ToArray();
+        }
+
+        return [];
+    }
+    
+    public IReadOnlyList<IToolExecutionStrategy> GetStrategies(string toolKey)
+    {
+        return _toolStrategies[toolKey].Values.ToList();
+    }
+
+    public IToolExecutionStrategy GetStrategy(string toolKey)
+    {
+        var strategyKey = _settingsService.GetSettingValue<string>(toolKey);
+        if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
+            strategies.TryGetValue(strategyKey, out var strategy))
+        {
+            return strategy;
+        }
+        
+        throw new InvalidOperationException(
+            $"No execution strategy found for tool '{toolKey}' and strategy '{strategyKey}'");
     }
 }

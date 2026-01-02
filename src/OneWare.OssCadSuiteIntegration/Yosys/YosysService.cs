@@ -98,9 +98,8 @@ public class YosysService(
                     outputService.WriteLine(x);
                     return true;
                 });
-
-            var config = toolService.GetGlobalToolConfiguration();
-            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+            
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
             /*
             var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>
@@ -161,8 +160,7 @@ public class YosysService(
                 return true;
             });
         
-        var config = toolService.GetGlobalToolConfiguration();
-        var status = await toolExecutionDispatcherService.ExecuteAsync(command, config);
+        var status = await toolExecutionDispatcherService.ExecuteAsync(command);
         /*
         var status = await childProcessService.ExecuteShellAsync(
             nextPnrTool,

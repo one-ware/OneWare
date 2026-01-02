@@ -18,7 +18,8 @@ public class ToolEngineModule : IModule
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var settingsService = containerProvider.Resolve<ISettingsService>();
-        settingsService.RegisterSettingSubCategory("Tools", "Execution Strategy");
+        settingsService.RegisterSettingCategory("Binary Management", iconKey: "VSImageLib.BinaryManagement_16x");
+        settingsService.RegisterSettingSubCategory("Binary Management", "Execution Strategy");
 
         var toolService = containerProvider.Resolve<IToolService>();
         var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();

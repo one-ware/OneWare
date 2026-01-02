@@ -47,6 +47,8 @@ public class EnvironmentDescription
     public string Description { get; init; }
     public string Key { get; init; }
     
+    public List<string> Groups { get; init; }
+    
     public List<string> ToolNames { get; init; }
     
     public EnvironmentDescription(string name, string description, string key,  List<string>? toolNames = null)
