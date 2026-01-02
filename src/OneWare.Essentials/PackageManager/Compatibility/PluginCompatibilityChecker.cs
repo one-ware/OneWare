@@ -48,8 +48,7 @@ public class PluginCompatibilityChecker
                 var versionString = parts[1].Trim();
 
                 var dependencyVersionFull = Version.Parse(NormalizeVersion(versionString));
-                var dependencyVersion = TrimTo2Parts(dependencyVersionFull);
-
+                
                 switch (dependencyName)
                 {
                     //TODO
@@ -65,20 +64,16 @@ public class PluginCompatibilityChecker
                     compatibilityIssues += $"Dependency {dependencyName} not found\n";
                     continue;
                 }
+                
+                var required = dependencyVersionFull;
+                var provided = coreDep.Version;
 
-                var coreVersion = TrimTo2Parts(coreDep.Version);
-
-                var cmp = coreVersion.CompareTo(dependencyVersion);
-
-                if (cmp < 0)
+                if (provided.Major != required.Major ||
+                    provided.Minor != required.Minor ||
+                    provided.Build < required.Build)
                 {
                     compatibilityIssues +=
-                        $"Required {dependencyName} : {dependencyVersion} > {coreVersion}\n";
-                }
-                else if (cmp > 0)
-                {
-                    compatibilityIssues +=
-                        $"Required {dependencyName} : {dependencyVersion} < {coreVersion}\n";
+                        $"Dependency {dependencyName} requires {required}, but provided is {provided}\n";
                 }
             }
 
@@ -141,10 +136,5 @@ public class PluginCompatibilityChecker
         }
 
         return result;
-    }
-    
-    private static Version TrimTo2Parts(Version v)
-    {
-        return new Version(v.Major, v.Minor);
     }
 }

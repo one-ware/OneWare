@@ -71,7 +71,12 @@ public class PluginService : IPluginService
                     .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
             }
 
-            SetupNativeImports(realPath);
+            //We should not use that anymore, since it can break compatibility with code signed apps
+            //We keep it for now except on MacOS
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                SetupNativeImports(realPath);
+            }
         }
         catch (Exception e)
         {
@@ -94,6 +99,7 @@ public class PluginService : IPluginService
         }
     }
 
+    [Obsolete]
     private void SetupNativeImports(string pluginPath)
     {
         var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));
@@ -102,8 +108,8 @@ public class PluginService : IPluginService
         {
             _initAssemblies.Add(assembly);
 
-            if(assembly.FullName == null) continue;
-            
+            if (assembly.FullName == null) continue;
+
             if (_resolverSetAssemblies.Contains(assembly.FullName))
                 continue;
 
@@ -115,18 +121,39 @@ public class PluginService : IPluginService
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
 
+                    // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
                     {
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native", libFileName);
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                            libFileName);
                     }
-                    
-                    // Try 2: add lib infront of it
+
+                    // Try 3: add lib infront of it
                     if (!File.Exists(libPath))
                     {
-                        libFileName = PlatformHelper.GetLibraryFileName($"lib{libraryName}");
-                        libPath = Path.Combine(pluginPath, libFileName);
+                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
                     }
-                    
+
+                    // Try 4 : look in (plugin) runtimes folder with lib infront
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                            $"lib{libFileName}");
+                    }
+
+                    // Try 5: MacOS weirdness, look in (own) base folder
+                    // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
+                    }
+
+                    // Try 6: Same as 5 but added lib Prefix
+                    if (!File.Exists(libPath))
+                    {
+                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
+                    }
+
                     if (NativeLibrary.TryLoad(libPath, out var customHandle))
                     {
                         return customHandle;
@@ -137,7 +164,7 @@ public class PluginService : IPluginService
                         return handle;
                     }
 
-                    Console.WriteLine($"Loading native library {libFileName} failed");
+                    Console.WriteLine($"Loading native library {libraryName} failed");
                     return IntPtr.Zero;
                 });
 
@@ -147,7 +174,7 @@ public class PluginService : IPluginService
             {
                 // This assembly already has a resolver — log and continue
                 ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.", 
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.",
                     ConsoleColor.DarkYellow, true);
             }
         }

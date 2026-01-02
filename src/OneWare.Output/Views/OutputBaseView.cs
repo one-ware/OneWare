@@ -1,100 +1,169 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Collections.Specialized;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using AvaloniaEdit;
-using AvaloniaEdit.Rendering;
 using DynamicData.Binding;
-using Microsoft.Extensions.Logging;
 using OneWare.Output.ViewModels;
-using Prism.Ioc;
+using ReactiveUI;
 
 namespace OneWare.Output.Views;
 
 public abstract class OutputBaseView : UserControl
 {
     private TextEditor? _output;
+    private OutputBaseViewModel? _viewModel;
 
-    public OutputBaseView()
+    private CompositeDisposable _subscriptions = new();
+    private bool _stopScroll;
+    private bool _isAttached;
+
+    protected OutputBaseView()
     {
-        this.WhenValueChanged(x => x.DataContext).Subscribe(xb =>
-        {
-            _output = this.Find<TextEditor>("Output");
-            if (_output == null) return;
-
-            _output.TextArea.TextView.LinkTextForegroundBrush =
-                new BrushConverter().ConvertFrom("#f5cd56") as IBrush ?? throw new NullReferenceException();
-
-            var viewModel = DataContext as OutputBaseViewModel;
-            if (viewModel != null)
-            {
-            }
-            else
-            {
-                //ContainerLocator.Container.Resolve<ILogger>()?.Error("Output no datacontext!"); TODO
-                return;
-            }
-
-            viewModel.OutputDocument.UndoStack.SizeLimit = 0;
-            _output.Document = viewModel.OutputDocument;
-
-            var stopScroll = false;
-
-            viewModel.WhenValueChanged(xa => xa.AutoScroll).Subscribe(_ =>
-            {
-                if (!IsEffectivelyVisible) return;
-                _output.CaretOffset = _output.Text.Length;
-                _output.TextArea.Caret.BringCaretToView(5);
-            });
-
-            viewModel.OutputDocument.WhenValueChanged(xa => xa.LineCount).Subscribe(x =>
-            {
-                _ = Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    UpdateLineColors(viewModel);
-
-                    if (viewModel is { AutoScroll: true } && !stopScroll)
-                    {
-                        _output.CaretOffset = _output.Text.Length;
-                        if (IsEffectivelyVisible)
-                            _output.TextArea.Caret.BringCaretToView(5);
-                    }
-                }, DispatcherPriority.Background);
-            });
-
-            viewModel.LineContexts.CollectionChanged += (sender, args) =>
-            {
-                //TODO Optimize
-                UpdateLineColors(viewModel);
-            };
-
-            AddHandler(PointerMovedEvent, (_, i) =>
-            {
-                if (i.GetCurrentPoint(null).Properties.IsLeftButtonPressed && _output.IsPointerOver)
-                    stopScroll = true;
-                else
-                    stopScroll = false;
-            }, RoutingStrategies.Tunnel, true);
-
-            _output.CaretOffset = _output.Text.Length;
-            _output.TextArea.Caret.BringCaretToView(1);
-        });
+        this.WhenValueChanged(x => x.DataContext)
+            .Subscribe(_ => TryInitialize());
     }
 
-    protected void UpdateLineColors(OutputBaseViewModel evm)
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        if (_output == null) throw new NullReferenceException(nameof(_output));
-        for (var i = 0; i < _output.TextArea.TextView.LineTransformers.Count; i++)
+        base.OnAttachedToVisualTree(e);
+        _isAttached = true;
+        TryInitialize();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        _isAttached = false;
+        Cleanup();
+    }
+
+    private void TryInitialize()
+    {
+        if (!_isAttached)
+            return;
+
+        Cleanup();
+
+        _output = this.FindControl<TextEditor>("Output");
+        _viewModel = DataContext as OutputBaseViewModel;
+
+        if (_output == null || _viewModel == null)
+            return;
+
+        InitializeEditor();
+        BindViewModel();
+    }
+
+    private void InitializeEditor()
+    {
+        _output!.TextArea.TextView.LinkTextForegroundBrush =
+            new BrushConverter().ConvertFrom("#f5cd56") as IBrush
+            ?? throw new InvalidOperationException("Invalid brush color");
+
+        _output.Document = _viewModel!.OutputDocument;
+        _output.Document.UndoStack.SizeLimit = 0;
+
+        _output.TextArea.TextView.LineTransformers.Clear();
+
+        AddHandler(
+            PointerMovedEvent,
+            OnPointerMoved,
+            RoutingStrategies.Tunnel,
+            true);
+    }
+
+    private void BindViewModel()
+    {
+        _viewModel!.WhenValueChanged(x => x.AutoScroll)
+            .Throttle(TimeSpan.FromMilliseconds(20))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Subscribe(_ => ScrollToEnd())
+            .DisposeWith(_subscriptions);
+
+        _viewModel!.OutputDocument.WhenValueChanged(x => x.LineCount)
+            .Throttle(TimeSpan.FromMilliseconds(20))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Subscribe(_ => UpdateLineColors())
+            .DisposeWith(_subscriptions);
+
+        _viewModel.LineContexts.CollectionChanged += OnLineContextsChanged;
+
+        UpdateLineColors();
+        ScrollToEnd();
+    }
+
+    private void OnLineContextsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(UpdateLineColors, DispatcherPriority.Background);
+    }
+
+    private void UpdateLineColors()
+    {
+        if (_output == null || _viewModel == null)
+            return;
+
+        var transformers = _output.TextArea.TextView.LineTransformers;
+
+        // Remove old colorizers safely
+        for (int i = transformers.Count - 1; i >= 0; i--)
         {
-            if (_output.TextArea.TextView.LineTransformers[i] is LineColorizer)
+            if (transformers[i] is LineColorizer)
+                transformers.RemoveAt(i);
+        }
+
+        // Apply current line colors
+        for (int i = 0; i < _viewModel.LineContexts.Count; i++)
+        {
+            var ctx = _viewModel.LineContexts[i];
+            if (ctx.LineColor != null)
             {
-                _output.TextArea.TextView.LineTransformers.RemoveAt(i);
+                transformers.Add(new LineColorizer(i + 1, ctx.LineColor));
             }
         }
 
-        for (var i = 0; i < evm.LineContexts.Count; i++)
-            if (evm.LineContexts[i].LineColor != null)
-                _output.TextArea.TextView.LineTransformers.Add(new LineColorizer(i + 1,
-                    evm.LineContexts[i].LineColor));
+        _output.TextArea.TextView.Redraw();
+    }
+
+    private void ScrollToEnd()
+    {
+        if (_output == null || _viewModel == null)
+            return;
+
+        if (!_viewModel.AutoScroll || _stopScroll || !IsEffectivelyVisible)
+            return;
+
+        _output.CaretOffset = _output.Text.Length;
+        _output.TextArea.Caret.BringCaretToView(5);
+    }
+
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        _stopScroll =
+            e.GetCurrentPoint(null).Properties.IsLeftButtonPressed &&
+            _output?.IsPointerOver == true;
+    }
+
+    private void Cleanup()
+    {
+        _subscriptions.Dispose();
+        _subscriptions = new CompositeDisposable();
+
+        if (_viewModel != null)
+            _viewModel.LineContexts.CollectionChanged -= OnLineContextsChanged;
+
+        if (_output != null)
+            _output.TextArea.TextView.LineTransformers.Clear();
+
+        _viewModel = null;
+        _output = null;
+        _stopScroll = false;
     }
 }

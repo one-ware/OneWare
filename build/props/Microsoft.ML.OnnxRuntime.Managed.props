@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.6.2"/>
+        <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.23.2"/>
     </ItemGroup>
 </Project>

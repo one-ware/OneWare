@@ -12,6 +12,8 @@ apps:
     command: ./OneWareStudio
     common-id: com.one_ware.OneWare
     desktop: ./com.one_ware.OneWare.desktop
+    environment:
+      PATH: "$SNAP/usr/bin:$SNAP/bin:$PATH"
 
 parts:
   oneware:
@@ -41,3 +43,7 @@ parts:
       - libx11-6
       - libice6
       - libsm6
+      - v4l-utils
+      - libglib2.0-0
+      - libgobject-2.0-0
+      - libgio-2.0-0
