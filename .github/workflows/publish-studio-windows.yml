@@ -27,23 +27,35 @@ jobs:
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
       - name: Make Out Dir
         run: mkdir ./out
-      - name: Publish
-        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./publish
+      # Build win-x64
+      - name: Publish win-x64
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./publish/win-x64
+      # Build win-arm64
+      - name: Publish win-arm64
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-arm64 -o ./publish/win-arm64
       - name: Create Button HTML
         shell: powershell
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload.htm -Encoding UTF8
-      - name: Create VersionInfo
+      # Version info for win-x64
+      - name: Create VersionInfo win-x64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" > ./out/win-x64.txt
-      - name: Rename Installer
-        run: mv ./publish/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
+      # Version info for win-arm64
+      - name: Create VersionInfo win-arm64
+        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi" > ./out/win-arm64.txt
+      # Rename installers
+      - name: Rename Installer win-x64
+        run: mv ./publish/win-x64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
+      - name: Rename Installer win-arm64
+        run: mv ./publish/win-arm64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: |
             ./out/*.msi
-            ./out/WinDownload.htm
+            ./out/*.htm
             ./out/win-x64.txt
+            ./out/win-arm64.txt
 
   deploy:
     name: Deploy
@@ -78,5 +90,7 @@ jobs:
             mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
             set cmd:fail-exit true
             put OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
+            put OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi
             put WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
             put win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
+            put win-arm64.txt -o ./cdn.one-ware.com/onewarestudio/win-arm64.txt
