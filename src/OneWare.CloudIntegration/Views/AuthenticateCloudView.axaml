@@ -47,7 +47,14 @@
                         Command="{Binding LoginAsync}"
                         CommandParameter="{Binding #AuthenticateGitViewView}"
                         Content="Log In" />
-
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center" Margin="0 8 0 0 " DockPanel.Dock="Left" HorizontalAlignment="Left" Classes="WindowButtons">
+                <Button Background="{DynamicResource HighlightBrush}"
+                        Command="{Binding LoginWithBrowserAsync}"
+                        CommandParameter="{Binding #AuthenticateGitViewView}"
+                        Padding="10 0">
+                    Login with Browser
+                </Button>
             </StackPanel>
             
             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
@@ -56,6 +63,5 @@
                            IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
             </StackPanel>
         </DockPanel>
-
     </DockPanel>
 </controls:FlexibleWindow>

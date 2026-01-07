@@ -1,15 +1,8 @@
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using GitCredentialManager;
 using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
-using RestSharp;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
@@ -90,8 +83,9 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
         window.Close();
     }
     
-    public void Cancel(FlexibleWindow window)
+    public async Task LoginWithBrowserAsync(FlexibleWindow? window)
     {
-        window.Close();
+        _ = _loginService.LoginWithBrowserAsync();
+        window?.Close();
     }
 }
