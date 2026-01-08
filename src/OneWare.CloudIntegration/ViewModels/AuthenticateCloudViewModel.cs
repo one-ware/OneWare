@@ -1,15 +1,11 @@
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using GitCredentialManager;
+using Avalonia;
+using Avalonia.Media;
 using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
-using RestSharp;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
@@ -20,48 +16,57 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
     private readonly OneWareCloudLoginService _loginService;
 
     private string? _errorText;
-    
+
     private string _email = string.Empty;
-    
+
     private string _password = string.Empty;
 
     private bool _isLoading = false;
-    
-    public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger, OneWareCloudLoginService loginService)
+
+    private CancellationTokenSource _browserLoginCts = new();
+
+    public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger,
+        OneWareCloudLoginService loginService)
     {
         _settingService = settingsService;
         _logger = logger;
         _loginService = loginService;
-        
+
         Title = $"Login to OneWare Cloud";
-        
+
         Description = $"Login to OneWare Cloud";
     }
-    
+
     public string Description { get; }
-    
+
     public bool IsLoading
     {
         get => _isLoading;
         set => SetProperty(ref _isLoading, value);
     }
-    
+
     public string Email
     {
         get => _email;
         set => SetProperty(ref _email, value);
     }
-    
+
     public string Password
     {
         get => _password;
         set => SetProperty(ref _password, value);
     }
-    
+
     public string? ErrorText
     {
         get => _errorText;
         set => SetProperty(ref _errorText, value);
+    }
+
+    public bool IsWaitingForBrowserResponse
+    {
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public async Task LoginAsync(FlexibleWindow window)
@@ -86,12 +91,31 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
             };
             return;
         }
-        
+
         window.Close();
     }
-    
-    public void Cancel(FlexibleWindow window)
+
+    public async Task LoginWithBrowserAsync(FlexibleWindow? window)
     {
-        window.Close();
+        IsWaitingForBrowserResponse = true;
+        ErrorText = null;
+        
+        var newListenerStarted = await _loginService.LoginWithBrowserAsync(_browserLoginCts.Token);
+        if (newListenerStarted)
+        {
+            IsWaitingForBrowserResponse = false;
+            window?.Close();
+            
+            ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
+            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", ConsoleColor.Green, true, Brushes.Lime);
+        }
+    }
+
+    public override bool OnWindowClosing(FlexibleWindow window)
+    {
+        _browserLoginCts?.Cancel();
+        _browserLoginCts?.Dispose();
+        return base.OnWindowClosing(window);
     }
 }

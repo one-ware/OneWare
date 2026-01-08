@@ -396,9 +396,10 @@ public static class PlatformHelper
 
     public static int GetAvailablePort()
     {
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(DefaultLoopbackEndpoint);
-
-        return (socket.LocalEndPoint as IPEndPoint)?.Port ?? throw new Exception("Error getting free port!");
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
     }
 }

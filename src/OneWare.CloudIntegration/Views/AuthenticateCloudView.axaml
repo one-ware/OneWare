@@ -10,52 +10,88 @@
                          x:DataType="viewModels:AuthenticateCloudViewModel"
                          CustomIcon="{DynamicResource CodeIcons.Account}"
                          WindowStartupLocation="CenterOwner"
-                         Name="AuthenticateGitViewView" Title="{Binding Title}">
+                         Name="AuthenticateCloudViewView" Title="{Binding Title}">
 
     <Interaction.Behaviors>
         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Routes="Bubble"
                                                Command="{Binding LoginAsync}"
-                                               CommandParameter="{Binding #AuthenticateGitViewView}" />
+                                               CommandParameter="{Binding #AuthenticateCloudViewView}" />
     </Interaction.Behaviors>
 
     <DockPanel Margin="4" LastChildFill="False">
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="5" Margin="0 10">
-            <TextBlock Text="{Binding Description}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
 
-            <controls:HyperLink Url="https://cloud.one-ware.com/Account/Register" Label="Register" Margin="0 5 0 5"
-                                HorizontalAlignment="Left" />
-            
-            <StackPanel Spacing="3" Orientation="Vertical">
-                <TextBlock Text="Email:" />
-                <TextBox Text="{Binding Email, Mode=TwoWay}" />
+            <!-- Description -->
+            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+
+            <!-- Register Link -->
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Don't have an account?" VerticalAlignment="Center" />
+                <controls:HyperLink Url="https://cloud.one-ware.com/Account/Register"
+                                    Label="Register here"
+                                    VerticalAlignment="Center" />
             </StackPanel>
 
-            <StackPanel Spacing="3" Orientation="Vertical">
-                <TextBlock Text="Password:" />
-                <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="*" />
-            </StackPanel>
+            <!-- Login with Browser Button -->
+            <Button Background="{DynamicResource HighlightBrush}"
+                    Command="{Binding LoginWithBrowserAsync}"
+                    CommandParameter="{Binding #AuthenticateCloudViewView}"
+                    HorizontalAlignment="Stretch"
+                    Height="35"
+                    Classes="RoundButton"
+                    Content="Login with Browser">
+            </Button>
             
+            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}" HorizontalAlignment="Center">
+                <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
+                <controls:Spinner Height="16" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Expandable Username/Password Section -->
+            <Expander Header="Login with Username and Password"
+                      HorizontalAlignment="Stretch"
+                      Margin="0 5 0 0">
+                <StackPanel Spacing="8" Orientation="Vertical" Margin="0 10 0 5">
+
+                    <StackPanel Spacing="3" Orientation="Vertical">
+                        <TextBlock Text="Email:" />
+                        <TextBox Text="{Binding Email, Mode=TwoWay}"
+                                 Watermark="Enter your email" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="3" Orientation="Vertical">
+                        <TextBlock Text="Password:" />
+                        <TextBox Text="{Binding Password, Mode=TwoWay}"
+                                 PasswordChar="*"
+                                 Watermark="Enter your password" />
+                    </StackPanel>
+
+                    <Button Background="{DynamicResource HighlightBrush}"
+                            Command="{Binding LoginAsync}"
+                            CommandParameter="{Binding #AuthenticateCloudViewView}"
+                            HorizontalAlignment="Stretch"
+                            Height="30"
+                            Classes="RoundButton"
+                            Content="Login">
+                    </Button>
+                </StackPanel>
+            </Expander>
+
         </StackPanel>
 
-        <DockPanel DockPanel.Dock="Bottom">
-            <StackPanel VerticalAlignment="Center" Margin="0 8 0 0" DockPanel.Dock="Right" HorizontalAlignment="Right" Classes="WindowButtons">
-                
-                <controls:Spinner Height="16"
-                                  IsVisible="{Binding IsLoading}" />
+        <!-- Bottom Section: Error Message and Loading Spinner -->
+        <DockPanel DockPanel.Dock="Bottom" Margin="0 10 0 0">
+            <controls:Spinner Height="16"
+                              DockPanel.Dock="Right"
+                              Margin="5 0 0 0"
+                              VerticalAlignment="Center"
+                              IsVisible="{Binding IsLoading}" />
 
-                <Button Background="{DynamicResource HighlightBrush}"
-                        Command="{Binding LoginAsync}"
-                        CommandParameter="{Binding #AuthenticateGitViewView}"
-                        Content="Log In" />
-
-            </StackPanel>
-            
-            <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                <TextBlock DockPanel.Dock="Left" 
-                           Text="{Binding ErrorText}" Margin="0 0 5 0" Foreground="OrangeRed"
-                           IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-            </StackPanel>
+            <TextBlock Text="{Binding ErrorText}"
+                       Foreground="OrangeRed"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </DockPanel>
-
     </DockPanel>
 </controls:FlexibleWindow>
