@@ -37,16 +37,15 @@
                     Command="{Binding LoginWithBrowserAsync}"
                     CommandParameter="{Binding #AuthenticateCloudViewView}"
                     HorizontalAlignment="Stretch"
-                    Height="35" HorizontalContentAlignment="Stretch"
-                    Margin="0 5">
-                <Panel>
-                    <TextBlock Text="Login with Browser" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <controls:Spinner Height="16" HorizontalAlignment="Right"
-                                      Margin="2"
-                                      VerticalAlignment="Center"
-                                      IsVisible="{Binding IsWaitingForBrowserResponse}" />
-                </Panel>
+                    Height="35"
+                    Classes="RoundButton"
+                    Content="Login with Browser">
             </Button>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}" HorizontalAlignment="Center">
+                <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
+                <controls:Spinner Height="16" VerticalAlignment="Center" />
+            </StackPanel>
 
             <!-- Expandable Username/Password Section -->
             <Expander Header="Login with Username and Password"
@@ -72,6 +71,7 @@
                             CommandParameter="{Binding #AuthenticateCloudViewView}"
                             HorizontalAlignment="Stretch"
                             Height="30"
+                            Classes="RoundButton"
                             Content="Login">
                     </Button>
                 </StackPanel>
