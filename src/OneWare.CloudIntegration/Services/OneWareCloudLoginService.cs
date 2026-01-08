@@ -325,7 +325,8 @@ public sealed class OneWareCloudLoginService
     public bool OneWareCloudIsUsed { get; }
     
 
-    public async Task LoginWithBrowserAsync()
+    //Returns if new listener was started
+    public async Task<bool> LoginWithBrowserAsync(CancellationToken cancellationToken = default)
     {
         bool startNewListener = false;
         if (_port == null)
@@ -348,16 +349,34 @@ public sealed class OneWareCloudLoginService
 
         if (startNewListener)
         {
-            HttpListenerContext context = await listener.GetContextAsync();
-            HttpListenerResponse response = context.Response;
-            
-            await HandleLoginResponseAsync(context);
-            response.Redirect(host);
-            response.KeepAlive = false;
-            response.Close();
-            listener.Stop();
-            _port = null;
+            try
+            {
+                // Register cancellation callback to stop the listener
+                using var registration = cancellationToken.Register(() => listener.Stop());
+                
+                HttpListenerContext context = await listener.GetContextAsync();
+                
+                // Check if cancelled after getting context
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                HttpListenerResponse response = context.Response;
+                
+                await HandleLoginResponseAsync(context);
+                response.Redirect(host);
+                response.KeepAlive = false;
+                response.Close();
+            }
+            catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Listener was stopped due to cancellation, ignore
+            }
+            finally
+            {
+                listener.Stop();
+                _port = null;
+            }
         }
+        return startNewListener;
     }
 
     private async Task HandleLoginResponseAsync(HttpListenerContext context)
