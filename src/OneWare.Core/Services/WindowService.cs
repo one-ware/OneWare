@@ -194,6 +194,11 @@ public class WindowService : IWindowService
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
     }
 
+    public void ActivateMainWindow()
+    {
+        ContainerLocator.Container.Resolve<MainWindow>().Activate();
+    }
+
     private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
     {
         foreach (var item in items)

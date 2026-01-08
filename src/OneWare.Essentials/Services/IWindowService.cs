@@ -39,4 +39,6 @@ public interface IWindowService
 
     public void ShowNotificationWithButton(string title, string message, string buttonText,
         Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information, TimeSpan? expiration = null);
+    
+    public void ActivateMainWindow();
 }
