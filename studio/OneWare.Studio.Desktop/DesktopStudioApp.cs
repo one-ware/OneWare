@@ -33,6 +33,7 @@ using OneWare.SourceControl;
 using OneWare.Studio.Desktop.ViewModels;
 using OneWare.Studio.Desktop.Views;
 using OneWare.TerminalManager;
+using OneWare.ToolEngine;
 using OneWare.Updater;
 using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
@@ -60,6 +61,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<CppModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
+        moduleCatalog.AddModule<ToolEngineModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
         moduleCatalog.AddModule<PythonModule>();
         
