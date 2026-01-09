@@ -1,22 +1,21 @@
+using System.Collections.ObjectModel;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
 
 public interface IToolService
 {
-    void Register(EnvironmentDescription description);
+    void Register(ToolContext description, IToolExecutionStrategy strategy);
     
-    void Unregister(EnvironmentDescription description);
+    void Unregister(ToolContext description);
     
     void Unregister(string toolKey);
     
-    IReadOnlyList<EnvironmentDescription> GetAllTools(); 
+    ObservableCollection<ToolContext> GetAllTools(); 
     
     ToolConfiguration GetGlobalToolConfiguration();
     
     public void RegisterStrategy(string toolKey, IToolExecutionStrategy strategy);
-    
-    public void RegisterStrategyForGroups(IToolExecutionStrategy strategy, List<string> tags);
     
     public void UnregisterStrategy(string strategyKey);
     

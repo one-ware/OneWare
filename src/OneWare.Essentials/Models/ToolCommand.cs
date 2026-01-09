@@ -4,8 +4,8 @@ namespace OneWare.Essentials.Models;
 
 public class ToolCommand
 {
-    public string ToolName { get; init; }           // z.B. "yosys"
-    public string Executable { get; init; }            // z.B. "yosys"
+    public string ToolName { get; init; }          
+    public string Executable { get; init; }         
     public IReadOnlyCollection<string> Arguments { get; init; } = Array.Empty<string>();
     public string WorkingDirectory { get; init; } = ".";
     public string StatusMessage { get; init; } = "Running tool...";
@@ -41,17 +41,15 @@ public class ToolCommand
 }
 
 
-public class EnvironmentDescription
+public class ToolContext
 {
     public string Name { get; init; }
     public string Description { get; init; }
     public string Key { get; init; }
     
-    public List<string> Groups { get; init; }
-    
     public List<string> ToolNames { get; init; }
     
-    public EnvironmentDescription(string name, string description, string key,  List<string>? toolNames = null)
+    public ToolContext(string name, string description, string key,  List<string>? toolNames = null)
     {
         Name = name;
         Description = description;

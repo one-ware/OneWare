@@ -19,6 +19,7 @@ using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
+using OneWare.ToolEngine.Strategies;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -305,22 +306,19 @@ public class OssCadSuiteIntegrationModule : IModule
             }
         };
         
-        // var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
-        // TODO: Move NativeStrategy to an essentials 
-        // executionDispatcherService.Register("osscad", new NativeStrategy());
         var toolService = containerProvider.Resolve<IToolService>();
-        toolService.Register(new EnvironmentDescription("yosys", "Synth Tool", "yosys"));
+        toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
         
-        toolService.Register(new EnvironmentDescription("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"));
-        toolService.Register(new EnvironmentDescription("nextpnr-generic", "Synth Tool", "nextpnr-generic"));
-        toolService.Register(new EnvironmentDescription("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"));
-        toolService.Register(new EnvironmentDescription("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"));
-        toolService.Register(new EnvironmentDescription("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"));
-        toolService.Register(new EnvironmentDescription("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"));
+        toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"),new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"), new NativeStrategy());
         
-        toolService.Register(new EnvironmentDescription("openFPGALoader", "Synth Tool", "openFPGALoader"));
-        toolService.Register(new EnvironmentDescription("icepack", "Synth Tool", "icepack"));
-        toolService.Register(new EnvironmentDescription("iceprog", "Synth Tool", "iceprog"));
+        toolService.Register(new ToolContext("openFPGALoader", "Synth Tool", "openFPGALoader"), new NativeStrategy());
+        toolService.Register(new ToolContext("icepack", "Synth Tool", "icepack"), new NativeStrategy());
+        toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
 
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);

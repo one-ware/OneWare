@@ -10,4 +10,8 @@
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Strategies\" />
+    </ItemGroup>
 </Project>

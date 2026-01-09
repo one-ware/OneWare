@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ToolEngine.Strategies;
@@ -9,7 +10,7 @@ namespace OneWare.ToolEngine.Services;
 
 public class ToolService : IToolService
 {
-    private readonly List<EnvironmentDescription> _tools = new();
+    private readonly ObservableCollection<ToolContext> _tools = new();
     private readonly ISettingsService _settingsService;
     private readonly ILogger _logger;
     private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _toolStrategies = new();
@@ -21,12 +22,8 @@ public class ToolService : IToolService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    private void RegisterToolInSettings(EnvironmentDescription description)
+    private void RegisterToolInSettings(ToolContext description)
     {
-        var dispatcherService = ContainerLocator.Container.Resolve<IToolExecutionDispatcherService>();
-        // TODO: Hier mal rüber schauen 
-        RegisterStrategy(description.Key, new NativeStrategy());
-
         var strategies = GetStrategyKeys(description.Key);
         
         if (strategies.Length == 0) {
@@ -38,14 +35,16 @@ public class ToolService : IToolService
         _settingsService.RegisterSetting("Binary Management", "Execution Strategy", description.Key, setting);
     }
     
-    public void Register(EnvironmentDescription description)
+    public void Register(ToolContext description, IToolExecutionStrategy strategy)
     {
+        RegisterStrategy(description.Key, strategy);
         RegisterToolInSettings(description);
+        
         _tools.Add(description);
     }
      
 
-    public void Unregister(EnvironmentDescription description)
+    public void Unregister(ToolContext description)
     {
         _tools.Remove(description);
     }
@@ -62,9 +61,9 @@ public class ToolService : IToolService
         Unregister(tool);
     }
 
-    public IReadOnlyList<EnvironmentDescription> GetAllTools()
+    public ObservableCollection<ToolContext> GetAllTools()
     {
-        return _tools.AsReadOnly();
+        return _tools;
     }
 
     public ToolConfiguration GetGlobalToolConfiguration()
@@ -90,14 +89,7 @@ public class ToolService : IToolService
             _toolStrategies[toolKey] = strategyMap;
         }
         
-        // TODO: IDK if this makes sense if the strategy has the key in itself: Think about it
         strategyMap[strategy.GetStrategyKey()] = strategy;
-    }
-    
-    public void RegisterStrategyForGroups(IToolExecutionStrategy strategy, List<string> tags)
-    {
-        // Based on Group Tag in EnvironmentDescription set Strategy
-        throw new NotImplementedException();
     }
 
     public void UnregisterStrategy(string strategyKey)
@@ -114,7 +106,7 @@ public class ToolService : IToolService
         if (_toolStrategies.TryGetValue(toolKey, out var strategies))
         {
             return strategies.Values
-                .Select(s => s.GetStrategyKey())  // nur den Key nehmen
+                .Select(s => s.GetStrategyKey())  
                 .ToArray();
         }
 
