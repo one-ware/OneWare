@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+             xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Settings.Views.SettingTypes.AdvancedComboBoxSettingView"
+             x:DataType="settingTypes:AdvancedComboBoxSettingViewModel">
+    <StackPanel Orientation="Vertical" Spacing="2">
+        <StackPanel.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
+            </ContextMenu>
+        </StackPanel.ContextMenu>
+        <StackPanel Spacing="3" Orientation="Horizontal">
+            <TextBlock Text="{Binding AdvancedSetting.Title}"
+                       ToolTip.Tip="{Binding AdvancedSetting.HoverDescription}" />
+            <Button Padding="0" VerticalAlignment="Center"
+                    IsVisible="{Binding AdvancedSetting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                       VerticalAlignment="Center" />
+                <Button.Flyout>
+                    <Flyout>
+                        <mdxaml:MarkdownScrollViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
+                                                     MaxWidth="900" MaxHeight="500" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
+        <ComboBox ItemsSource="{Binding AdvancedSetting.Options}"
+                  IsEnabled="{Binding AdvancedSetting.IsEnabledObservable^, FallbackValue={x:True}}"
+                  SelectedItem="{Binding AdvancedSetting.SelectedItem, Mode=TwoWay}">
+            <ComboBox.Styles>
+                <Style Selector="ComboBoxItem" x:DataType="models:AdvancedComboBoxOption">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </ComboBox.Styles>
+            <ComboBox.ItemTemplate>
+                <DataTemplate DataType="models:AdvancedComboBoxOption">
+                    <DockPanel>
+                        <Button Padding="0" VerticalAlignment="Center" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                IsVisible="{Binding MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="13" Width="13"
+                                   VerticalAlignment="Center" />
+                            <Button.Flyout>
+                                <Flyout>
+                                    <mdxaml:MarkdownScrollViewer Markdown="{Binding MarkdownDocumentation}"
+                                                                 MaxWidth="900" MaxHeight="500" />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <TextBlock Text="{Binding Title}" DockPanel.Dock="Left"
+                                   ToolTip.Tip="{Binding HoverDescription}" />
+                    </DockPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+    </StackPanel>
+</UserControl>

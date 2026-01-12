@@ -35,7 +35,18 @@ public class Setting : ObservableObject
     public object DefaultValue { get; }
 }
 
-public abstract class TitledSetting : Setting
+public abstract class CollectionSetting : Setting
+{
+    protected CollectionSetting(object defaultValue) : base(defaultValue)
+    {
+    }
+    
+    public IObservable<bool>? IsEnabledObservable { get; init; }
+    
+    public IObservable<bool>? IsVisibleObservable { get; init; }
+}
+
+public abstract class TitledSetting : CollectionSetting
 {
     public TitledSetting(string title, object defaultValue) : base(defaultValue)
     {
@@ -48,10 +59,6 @@ public abstract class TitledSetting : Setting
     
     public string? MarkdownDocumentation { get; init; }
     
-    public IObservable<bool>? IsEnabledObservable { get; init; }
-    
-    public IObservable<bool>? IsVisibleObservable { get; init; }
-
     public abstract TitledSetting Clone();
 }
 
@@ -95,9 +102,15 @@ public class ComboBoxSetting : TitledSetting
 {
     private object[] _options;
     
+    [Obsolete("Use alternative constructor with object[] constructor instead")]
     public ComboBoxSetting(string title, object defaultValue, IEnumerable<object> options) : base(title, defaultValue)
     {
         _options = options.ToArray();
+    }
+    
+    public ComboBoxSetting(string title, object defaultValue, object[] options) : base(title, defaultValue)
+    {
+        _options = options;
     }
 
     public object[] Options
@@ -110,6 +123,57 @@ public class ComboBoxSetting : TitledSetting
     {
         return new ComboBoxSetting(this.Title, this.DefaultValue, Options);
     }
+}
+
+public class AdvancedComboBoxSetting : TitledSetting
+{
+    public AdvancedComboBoxSetting(string title, object defaultValue, AdvancedComboBoxOption[] options) : base(title, defaultValue)
+    {
+        Options = options;
+
+        this.WhenValueChanged(x => x.Value).Subscribe(x =>
+        {
+            OnPropertyChanged(nameof(SelectedItem));
+        });
+    }
+
+    public AdvancedComboBoxOption[] Options
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public AdvancedComboBoxOption SelectedItem
+    {
+        get => Options.FirstOrDefault(x => x.Value.Equals(Value))!;
+        set
+        {
+            if (value?.Value != Value && value != null)
+            {
+                Value = value.Value;
+            }
+        }
+    }
+
+    public override TitledSetting Clone()
+    {
+        return new AdvancedComboBoxSetting(this.Title, DefaultValue, Options);
+    }
+}
+
+public class AdvancedComboBoxOption
+{
+    public required string Title { get; set; }
+    
+    public required object Value { get; set; }
+    
+    public string? HoverDescription { get; init; }
+    
+    public string? MarkdownDocumentation { get; init; }
+    
+    public IObservable<bool>? IsEnabledObservable { get; init; }
+    
+    public IObservable<bool>? IsVisibleObservable { get; init; }
 }
 
 public class ListBoxSetting : TitledSetting
@@ -274,9 +338,10 @@ public class CategorySetting(string key, string name)
     public string Name { get; } = name;
 }
 
-public abstract class CustomSetting : Setting
+public abstract class CustomSetting : CollectionSetting
 {
     public object? Control { get; init; }
+    
     public CustomSetting(object defaultValue) : base(defaultValue)
     {
         

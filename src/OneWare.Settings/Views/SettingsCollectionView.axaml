@@ -27,8 +27,8 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemContainerTheme>
-                <ControlTheme TargetType="ContentPresenter" x:DataType="settingTypes1:TitledSettingViewModel">
-                    <Setter Property="IsVisible" Value="{Binding Setting.IsVisibleObservable^}" />
+                <ControlTheme TargetType="ContentPresenter" x:DataType="settingTypes1:SettingViewModel">
+                    <Setter Property="IsVisible" Value="{Binding Setting.IsVisibleObservable^, FallbackValue={x:Null}}" />
                 </ControlTheme>
             </ItemsControl.ItemContainerTheme>
         </ItemsControl>
