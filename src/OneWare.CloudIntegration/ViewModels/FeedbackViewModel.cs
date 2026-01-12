@@ -10,11 +10,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
     private readonly OneWareCloudLoginService _loginService;
     
     private string _header = string.Empty;
-    private string _message = string.Empty;
-    private string _category = string.Empty;
-    private string _errorText = string.Empty;
-    private bool _isLoading = false;
-    
+
     public FeedbackViewModel(OneWareCloudLoginService loginService)
     {
         _loginService = loginService;
@@ -33,28 +29,36 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         "Documentation",
         "Other"
     ];
-    
+
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = false;
 
     public string Message
     {
-        get => _message;
-        set => SetProperty(ref _message, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
+    
+    public string Mail
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
+
     public string Category
     {
-        get => _category;
-        set => SetProperty(ref _category, value);
+        get;
+        set => SetProperty(ref field, value);
     }
+
     public string ErrorText
     {
-        get => _errorText;
-        set => SetProperty(ref _errorText, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public async Task SendFeedbackAsync(Window window)
     {
@@ -66,7 +70,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         }
 
         IsLoading = true;
-        Result = await _loginService.SendFeedbackAsync(Category, Message);
+        Result = await _loginService.SendFeedbackAsync(Category, Message, Mail);
         IsLoading = false;
         window.Close();
     }

@@ -51,7 +51,7 @@ public class OneWareCloudIntegrationModule : IModule
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Feedback")
         {
             Header = "Send Feedback",
-            IconObservable = Application.Current!.GetResourceObservable("VSImageLib.FeedbackBubble_16x"),
+            IconObservable = Application.Current!.GetResourceObservable("Unicons.CommentMessage"),
             Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
         });
 

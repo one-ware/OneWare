@@ -23,7 +23,7 @@
         <Button Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
             <Button.Content>
-                <Image Source="{DynamicResource VSImageLib.FeedbackBubble_16x}" />
+                <Image Source="{DynamicResource Unicons.CommentMessage}" />
             </Button.Content>
         </Button>
 
