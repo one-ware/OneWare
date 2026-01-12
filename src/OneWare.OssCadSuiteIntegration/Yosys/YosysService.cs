@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Models;
 using OneWare.ToolEngine.Services;
 using OneWare.OssCadSuiteIntegration.Tools;

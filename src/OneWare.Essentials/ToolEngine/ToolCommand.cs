@@ -1,12 +1,12 @@
 using OneWare.Essentials.Enums;
 
-namespace OneWare.Essentials.Models;
+namespace OneWare.Essentials.ToolEngine;
 
 public class ToolCommand
 {
-    public string ToolName { get; init; }          
-    public string Executable { get; init; }         
-    public IReadOnlyCollection<string> Arguments { get; init; } = Array.Empty<string>();
+    public required string ToolName { get; init; }          
+    public string? Executable { get; init; }         
+    public IReadOnlyCollection<string> Arguments { get; init; } = [];
     public string WorkingDirectory { get; init; } = ".";
     public string StatusMessage { get; init; } = "Running tool...";
     public AppState State { get; init; } = AppState.Loading;

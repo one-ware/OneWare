@@ -2,7 +2,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
-namespace OneWare.ToolEngine.Strategies;
+namespace OneWare.Essentials.ToolEngine.Strategies;
 
 public class NativeStrategy : IToolExecutionStrategy
 {
