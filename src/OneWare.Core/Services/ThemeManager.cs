@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
@@ -23,9 +24,11 @@ public class ThemeManager : ObservableObject
             new("Light", null)
         };
 
-        _settingsService.RegisterTitledCombo("General", "Appearance", "General_SelectedTheme", "Theme",
-            "Sets the color scheme for the Application",
-            Themes[0].Key, Themes.Select(x => x.Key).ToArray());
+        _settingsService.RegisterSetting("General", "Appearance", "General_SelectedTheme", new ComboBoxSetting(
+            "Theme", Themes[0].Key, Themes.Select(x => x.Key).ToArray())
+        {
+            HoverDescription = "Sets the color scheme for the Application"
+        });
 
         //_settingsService.RegisterTitled<Color>("General", "Appearance", "General_SelectedAccentColor", "Accent Color", "Sets the color accent for personalisation", Color.Parse("#FF009688"));
 

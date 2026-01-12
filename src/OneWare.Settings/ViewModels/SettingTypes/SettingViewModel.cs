@@ -7,8 +7,8 @@ namespace OneWare.Settings.ViewModels.SettingTypes;
 
 public abstract class SettingViewModel : ObservableObject
 {
-    public abstract Setting Setting { get; }
-    
+    public abstract CollectionSetting Setting { get; }
+
     public ICommand RestoreDefaultCommand => new RelayCommand(() =>
     {
         Setting.Value = Setting.DefaultValue;
