@@ -179,9 +179,32 @@ public class SettingsService : ISettingsService
 
     public T GetSettingValue<T>(string key)
     {
-        _settings.TryGetValue(key, out var value);
-        if (value?.Value is T) return (T)Convert.ChangeType(value.Value, typeof(T));
-        throw new ArgumentException($"Setting {key} is not registered!");
+        if (!_settings.TryGetValue(key, out var setting))
+        {
+            throw new ArgumentException($"Setting with key '{key}' is not registered.", nameof(key));
+        }
+        
+        if (setting?.Value is null)
+        {
+            throw new NullReferenceException($"Setting '{key}' exists but has no value.");
+        }
+        
+        try
+        {
+            return (T)Convert.ChangeType(setting.Value, typeof(T));
+        }
+        catch (InvalidCastException ex)
+        {
+            throw new InvalidCastException(
+                $"Setting '{key}' cannot be converted from type '{setting.Value.GetType().Name}' to '{typeof(T).Name}'.",
+                ex);
+        }
+        catch (FormatException ex)
+        {
+            throw new FormatException(
+                $"Setting '{key}' with value '{setting.Value}' cannot be parsed as '{typeof(T).Name}'.",
+                ex);
+        }
     }
 
     public T[] GetComboOptions<T>(string key)

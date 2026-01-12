@@ -62,6 +62,7 @@
     <Project Path="src/OneWare.Settings/OneWare.Settings.csproj" />
     <Project Path="src/OneWare.SourceControl/OneWare.SourceControl.csproj" />
     <Project Path="src/OneWare.Updater/OneWare.Updater.csproj" />
+    <Project Path="src/OneWare.ToolEngine/OneWare.ToolEngine.csproj" />
   </Folder>
   <Folder Name="/Coremodules/Terminal/">
     <Project Path="src/OneWare.Terminal/OneWare.Terminal.csproj" />

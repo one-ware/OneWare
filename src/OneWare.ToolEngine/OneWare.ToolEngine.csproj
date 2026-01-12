@@ -3,12 +3,15 @@
     <Import Project="..\..\build\props\OneWare.Module.props"/>
 
     <PropertyGroup>
-        <Version>$(UniversalFpgaProjectSystemVersion)</Version>
+        <Version>1.0.0</Version>
     </PropertyGroup>
     
     <ItemGroup>
+        <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
-        <ProjectReference Include="..\OneWare.ToolEngine\OneWare.ToolEngine.csproj" />
-        <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Strategies\" />
     </ItemGroup>
 </Project>

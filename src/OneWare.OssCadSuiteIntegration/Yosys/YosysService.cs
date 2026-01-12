@@ -4,7 +4,9 @@ using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Models;
+using OneWare.ToolEngine.Services;
 using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -16,7 +18,9 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService)
+    IDockService dockService, 
+    ToolService toolService,
+    ToolExecutionDispatcherService toolExecutionDispatcherService)
 {
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
@@ -83,7 +87,7 @@ public class YosysService(
             
             yosysArguments.AddRange(mandatoryFiles ?? []);
 
-            var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
+            var command = ToolCommand.FromShellParams("yosys", yosysArguments, project.FullPath,
                 "Running yosys...", AppState.Loading, true, x =>
                 {
                     if (x.StartsWith("Error:"))
@@ -95,6 +99,8 @@ public class YosysService(
                     outputService.WriteLine(x);
                     return true;
                 });
+            
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
             
             return success;
         }
@@ -134,21 +140,16 @@ public class YosysService(
                                       .GetValueOrDefault("yosysToolchainNextPnrFlags")?
                                       .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
                                   ?? Array.Empty<string>());
-
-        var status = await childProcessService.ExecuteShellAsync(
-            nextPnrTool,
-            nextPnrArguments,
-            project.FullPath,
-            $"Running {nextPnrTool}...",
-            AppState.Loading,
-            true,
-            null,
-            s =>
+        
+        var command = ToolCommand.FromShellParams(nextPnrTool, nextPnrArguments,
+            project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
             {
-                Dispatcher.UIThread.Post(() => outputService.WriteLine(s));
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                 return true;
             });
-
+        
+        var status = await toolExecutionDispatcherService.ExecuteAsync(command);
+        
         return status.success;
     }
 

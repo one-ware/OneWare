@@ -12,6 +12,8 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
+using OneWare.Essentials.ToolEngine.Strategies;
 using OneWare.Essentials.ViewModels;
 using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Simulators;
@@ -270,7 +272,7 @@ public class OssCadSuiteIntegrationModule : IModule
                         ]
                     }
                 ]
-            }
+            },
         ]
     };
 
@@ -304,8 +306,25 @@ public class OssCadSuiteIntegrationModule : IModule
                 }
             }
         };
+        
+        var toolService = containerProvider.Resolve<IToolService>();
+        toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
+        
+        toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"),new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"), new NativeStrategy());
+        
+        toolService.Register(new ToolContext("openFPGALoader", "Synth Tool", "openFPGALoader"), new NativeStrategy());
+        toolService.Register(new ToolContext("icepack", "Synth Tool", "icepack"), new NativeStrategy());
+        toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
 
+        
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
+        containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
+            ".pcf");
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new UiExtension(x =>
@@ -508,9 +527,6 @@ public class OssCadSuiteIntegrationModule : IModule
                 }
             }
         });
-
-        containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
-            ".pcf");
 
         containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
         {

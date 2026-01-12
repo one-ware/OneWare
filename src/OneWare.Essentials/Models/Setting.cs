@@ -55,6 +55,9 @@ public abstract class TitledSetting : Setting
     public abstract TitledSetting Clone();
 }
 
+
+
+
 public class CheckBoxSetting : TitledSetting
 {
     public CheckBoxSetting(string title, bool defaultValue) : base(title, defaultValue)

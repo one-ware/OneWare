@@ -28,6 +28,7 @@
         <ProjectReference Include="..\..\src\OneWare.Updater\OneWare.Updater.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.SerialMonitor\OneWare.SerialMonitor.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.OssCadSuiteIntegration\OneWare.OssCadSuiteIntegration.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.ToolEngine\OneWare.ToolEngine.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Verilog\OneWare.Verilog.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
         <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
