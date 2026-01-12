@@ -257,7 +257,7 @@ public sealed class OneWareCloudLoginService
             {
                 Category = category,
                 Message = message,
-                Mail = mail
+                Email = mail
             });
 
             var restClient =
