@@ -322,6 +322,8 @@ public class OssCadSuiteIntegrationModule : IModule
 
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
+        containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
+            ".pcf");
 
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new UiExtension(x =>

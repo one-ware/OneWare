@@ -100,20 +100,7 @@ public class YosysService(
                 });
             
             var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
-            /*
-            var (success, _) = await childProcessService.ExecuteShellAsync("yosys", yosysArguments, project.FullPath,
-                "Running yosys...", AppState.Loading, true, x =>
-                {
-                    if (x.StartsWith("Error:"))
-                    {
-                        logger.Error(x);
-                        return false;
-                    }
-
-                    outputService.WriteLine(x);
-                    return true;
-                });
-            */
+            
             return success;
         }
         catch (Exception e)
@@ -161,21 +148,7 @@ public class YosysService(
             });
         
         var status = await toolExecutionDispatcherService.ExecuteAsync(command);
-        /*
-        var status = await childProcessService.ExecuteShellAsync(
-            nextPnrTool,
-            nextPnrArguments,
-            project.FullPath,
-            $"Running {nextPnrTool}...",
-            AppState.Loading,
-            true,
-            null,
-            s =>
-            {
-                Dispatcher.UIThread.Post(() => outputService.WriteLine(s));
-                return true;
-            });
-        */
+        
         return status.success;
     }
 

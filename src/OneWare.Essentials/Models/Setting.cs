@@ -55,13 +55,7 @@ public abstract class TitledSetting : Setting
     public abstract TitledSetting Clone();
 }
 
-public class TableSetting : Setting
-{
-    public TableSetting(object defaultValue) : base(defaultValue)
-    {
-        
-    }
-}
+
 
 
 public class CheckBoxSetting : TitledSetting
