@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using OneWare.CloudIntegration.Services;
+using OneWare.CloudIntegration.Settings;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.CloudIntegration.ViewModels;
@@ -11,15 +12,17 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
     
     private string _header = string.Empty;
 
-    public FeedbackViewModel(OneWareCloudLoginService loginService)
+    public FeedbackViewModel(OneWareCloudLoginService loginService, OneWareCloudAccountSetting setting)
     {
         _loginService = loginService;
+        UserIsAuthenticated = setting.IsLoggedIn;
         
         Title = $"Send Feedback";
         Category = "General Feedback";
     }
     
     public bool? Result { get; private set; }
+    public bool UserIsAuthenticated { get; private set; }
     public ObservableCollection<string> Categories { get; } = [
         "General Feedback",
         "Bug Report",

@@ -61,8 +61,9 @@ public class OneWareCloudIntegrationModule : IModule
     {
         var windowService = ContainerLocator.Container.Resolve<IWindowService>();
         var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
+        var accountSetting = ContainerLocator.Container.Resolve<OneWareCloudAccountSetting>();
                     
-        var dataContext = new FeedbackViewModel(loginService);
+        var dataContext = new FeedbackViewModel(loginService, accountSetting);
         await windowService.ShowDialogAsync(new SendFeedbackView()
         {
             DataContext = dataContext

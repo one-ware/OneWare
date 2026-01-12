@@ -55,7 +55,7 @@
                           SelectedItem="{Binding Category}" />
             </StackPanel>
             
-            <StackPanel Spacing="3" Orientation="Vertical">
+            <StackPanel Spacing="3" Orientation="Vertical" IsVisible="{Binding !UserIsAuthenticated}">
                 <TextBlock Text="E-Mail:" />
                 <TextBox Text="{Binding Mail}" Watermark="optional" />
             </StackPanel>
