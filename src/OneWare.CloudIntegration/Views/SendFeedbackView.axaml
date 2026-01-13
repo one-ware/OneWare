@@ -8,7 +8,7 @@
                          mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="360" Padding="4"
                          x:Class="OneWare.CloudIntegration.Views.SendFeedbackView"
                          x:DataType="viewModels:FeedbackViewModel"
-                         CustomIcon="{DynamicResource VSImageLib.FeedbackBubble_16x}"
+                         CustomIcon="{DynamicResource Unicons.CommentMessage}"
                          WindowStartupLocation="CenterOwner" MinHeight="340"
                          Title="{Binding Title}">
 
@@ -55,6 +55,10 @@
                           SelectedItem="{Binding Category}" />
             </StackPanel>
             
+            <StackPanel Spacing="3" Orientation="Vertical" IsVisible="{Binding !UserIsAuthenticated}">
+                <TextBlock Text="E-Mail:" />
+                <TextBox Text="{Binding Mail}" Watermark="optional" />
+            </StackPanel>
         </StackPanel>
         
         <DockPanel LastChildFill="True" Margin="0,3">

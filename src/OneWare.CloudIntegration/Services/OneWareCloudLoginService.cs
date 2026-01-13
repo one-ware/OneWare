@@ -231,7 +231,7 @@ public sealed class OneWareCloudLoginService
         }
     }
 
-    public async Task<bool> SendFeedbackAsync(string category, string message)
+    public async Task<bool> SendFeedbackAsync(string category, string message, string? mail = null)
     {
         try
         {
@@ -256,7 +256,8 @@ public sealed class OneWareCloudLoginService
             request.AddJsonBody(new
             {
                 Category = category,
-                Message = message
+                Message = message,
+                Email = mail
             });
 
             var restClient =

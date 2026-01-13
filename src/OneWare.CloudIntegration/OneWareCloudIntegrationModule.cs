@@ -51,7 +51,7 @@ public class OneWareCloudIntegrationModule : IModule
         containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Feedback")
         {
             Header = "Send Feedback",
-            IconObservable = Application.Current!.GetResourceObservable("VSImageLib.FeedbackBubble_16x"),
+            IconObservable = Application.Current!.GetResourceObservable("Unicons.CommentMessage"),
             Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
         });
 
@@ -61,8 +61,9 @@ public class OneWareCloudIntegrationModule : IModule
     {
         var windowService = ContainerLocator.Container.Resolve<IWindowService>();
         var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
+        var accountSetting = ContainerLocator.Container.Resolve<OneWareCloudAccountSetting>();
                     
-        var dataContext = new FeedbackViewModel(loginService);
+        var dataContext = new FeedbackViewModel(loginService, accountSetting);
         await windowService.ShowDialogAsync(new SendFeedbackView()
         {
             DataContext = dataContext
