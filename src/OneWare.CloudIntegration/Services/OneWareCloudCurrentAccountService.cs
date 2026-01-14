@@ -65,12 +65,14 @@ public class OneWareCloudCurrentAccountService : ObservableObject
     
     public string? UserId => _accountSetting.Value.ToString();
 
-    public async Task ResolveAsync()
+    private async Task ResolveAsync()
     {
         try
         {
             _accountSetting.Image = null;
-            _accountSetting.Email = string.Empty;
+            _accountSetting.Email = null;
+            CurrentUser = null;
+            CurrentBalance = null;
 
             if (string.IsNullOrEmpty(UserId)) return;
 

@@ -13,7 +13,7 @@
             </Panel>
 
         </Border>
-        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Setting.Email, FallbackValue=Not logged in}" VerticalAlignment="Top"/>
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Setting.Email}" VerticalAlignment="Top"/>
         <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
             <Button IsVisible="{Binding !Setting.IsLoggedIn}" Command="{Binding LoginAsync}" 
                     CommandParameter="{Binding $self}" Content="Login" Classes="BorderButton" Padding="5 0" CornerRadius="3"/>

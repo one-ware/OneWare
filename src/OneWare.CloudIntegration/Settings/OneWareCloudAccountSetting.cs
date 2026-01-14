@@ -44,7 +44,7 @@ public class OneWareCloudAccountSetting : CustomSetting
     
     public string? Email
     {
-        get;
+        get => field ?? (IsLoggedIn ? "..." : "Not logged in");
         set => SetProperty(ref field, value);
     }
 

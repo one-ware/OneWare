@@ -56,8 +56,8 @@
             </StackPanel>
             
             <StackPanel Spacing="3" Orientation="Vertical" IsVisible="{Binding !UserIsAuthenticated}">
-                <TextBlock Text="E-Mail:" />
-                <TextBox Text="{Binding Mail}" Watermark="optional" />
+                <TextBlock Text="Email (optional):" />
+                <TextBox Text="{Binding Mail}" Watermark="Enter your email so we can help you directly." />
             </StackPanel>
         </StackPanel>
         
