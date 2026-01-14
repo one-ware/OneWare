@@ -32,14 +32,17 @@ public class OneWareCloudAccountSetting : CustomSetting
             if (SetProperty(ref _value, value))
             {
                 IsLoggedIn = !string.IsNullOrWhiteSpace(value.ToString());
-                _ = ResolveAsync();
             }
         }
     }
 
-    public string? UserId => Value?.ToString();
-
     public IImage? Image
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
+    public string? Email
     {
         get;
         set => SetProperty(ref field, value);
@@ -49,58 +52,5 @@ public class OneWareCloudAccountSetting : CustomSetting
     {
         get;
         set => SetProperty(ref field, value);
-    }
-
-    public CurrentUserDto? CurrentUser
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public async Task ResolveAsync()
-    {
-        var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
-
-        try
-        {
-            Image = null;
-
-            if (string.IsNullOrEmpty(UserId)) return;
-
-            var (jwt, status) = await loginService.GetJwtTokenAsync(UserId);
-
-            if (jwt == null)
-            {
-                if (status == HttpStatusCode.Unauthorized)
-                {
-                    loginService.Logout(UserId);
-                    Value = string.Empty;
-                    return;
-                }
-            }
-
-            var request = new RestRequest("/api/users/current");
-            request.AddHeader("Authorization", $"Bearer {jwt}");
-
-            var response = await loginService.GetRestClient().ExecuteGetAsync(request);
-            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions()
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            })!;
-
-            await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
-            
-            var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-            
-            if (CurrentUser.AvatarUrl != null)
-            {
-                Image = await httpService.DownloadImageAsync(CurrentUser.AvatarUrl);
-                //TODO Move this to somewhere else
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
     }
 }

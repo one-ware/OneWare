@@ -5,7 +5,7 @@
     <Import Project="..\..\build\props\RestSharp.props"/>
     
     <PropertyGroup>
-        <Version>0.31.18.0</Version>
+        <Version>0.31.18.1</Version>
     </PropertyGroup>
     
     <ItemGroup>

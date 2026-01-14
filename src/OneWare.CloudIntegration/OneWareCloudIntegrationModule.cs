@@ -26,6 +26,7 @@ public class OneWareCloudIntegrationModule : IModule
         containerRegistry.RegisterSingleton<OneWareCloudAccountSetting>();
         containerRegistry.RegisterSingleton<OneWareCloudLoginService>();
         containerRegistry.RegisterSingleton<OneWareCloudNotificationService>();
+        containerRegistry.RegisterSingleton<OneWareCloudCurrentAccountService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
