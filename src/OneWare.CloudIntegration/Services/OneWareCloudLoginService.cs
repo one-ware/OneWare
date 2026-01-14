@@ -159,7 +159,7 @@ public sealed class OneWareCloudLoginService
             return (true, response.StatusCode);
         }
 
-        throw new Exception("Could not refresh token");
+        return (false, response.StatusCode);
     }
 
     public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
