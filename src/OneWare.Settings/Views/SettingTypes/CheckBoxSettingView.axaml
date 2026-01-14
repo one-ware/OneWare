@@ -8,7 +8,7 @@
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
              x:DataType="settingTypes:CheckBoxSettingViewModel">
     <Border Padding="0 3">
-        <StackPanel Orientation="Horizontal" Spacing="3">
+        <StackPanel Orientation="Horizontal" Spacing="4">
             <StackPanel.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>

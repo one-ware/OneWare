@@ -17,6 +17,15 @@
         </DrawingGroup>
     </DrawingImage>
 
+    <DrawingImage x:Key="Entypo+.TimeSlot">
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M8,-4.967E-009 C3.582,-4.967E-009 -4.967E-009,3.582 -4.967E-009,8 C-4.967E-009,12.42 3.582,16 8,16 C12.42,16 16,12.42 16,7.999 C16,3.582 12.42,-4.967E-009 8,-4.967E-009 z M8,14.33 C4.502,14.33 1.667,11.5 1.667,7.999 C1.667,4.502 4.502,1.666 8,1.666 L8,1.666 L8,8 L13.66,5.17 C14.09,6.022 14.33,6.981 14.33,8 C14.33,11.5 11.5,14.33 8,14.33 z" />
+    </DrawingImage>
+    
+    <DrawingImage x:Key="Bootstrap.Clipboard">
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}" Geometry="M3,1.5 L2,1.5 A2,-2 0 0 0 0,3.5 L0,14 A2,-2 0 0 0 2,16 L12,16 A2,-2 0 0 0 14,14 L14,3.5 A2,-2 0 0 0 12,1.5 L11,1.5 L11,2.5 L12,2.5 A1,-1 0 0 1 13,3.5 L13,14 A1,-1 0 0 1 12,15 L2,15 A1,-1 0 0 1 1,14 L1,3.5 A1,-1 0 0 1 2,2.5 L3,2.5 L3,1.5 z M8.5,1 A0.5,-0.5 0 0 1 9,1.5 L9,2.5 A0.5,-0.5 0 0 1 8.5,3 L5.5,3 A0.5,-0.5 0 0 1 5,2.5 L5,1.5 A0.5,-0.5 0 0 1 5.5,1 L8.5,1 z M5.5,0 A1.5,-1.5 0 0 0 4,1.5 L4,2.5 A1.5,-1.5 0 0 0 5.5,4 L8.5,4 A1.5,-1.5 0 0 0 10,2.5 L10,1.5 A1.5,-1.5 0 0 0 8.5,0 L5.5,0 z"   />
+    </DrawingImage>
+
     <DrawingImage x:Key="VsImageLib2019.SettingsFile16X">
         <DrawingGroup>
             <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
@@ -36,19 +45,19 @@
                              Geometry="F1M13,5L6,5 6,4 13,4z M11,7L6,7 6,6 11,6z M9,3L5,3 5,8 8.404,8 8.818,8 9.112,8.292 11,10.179 11,8.999 11,8 11.998,8 14,8 14,3z M9,11.137L9,12 5.501,12 4,13.085 4,12 2,12 2,8 3,8 3,9.999 7.464,9.999z" />
         </DrawingGroup>
     </DrawingImage>
-    
+
     <DrawingImage x:Key="VSImageLib.BinaryManagement_16x">
         <DrawingGroup>
             <GeometryDrawing Brush="#00FFFFFF"
-                             Geometry="F1M16,16L0,16 0,0 16,0z"/>
+                             Geometry="F1M16,16L0,16 0,0 16,0z" />
             <GeometryDrawing Brush="{StaticResource ThemeControlHighBrush}"
                              Geometry="F1M2,2L9,2 9,4 2,4z
                                    M2,6L9,6 9,8 2,8z
-                                   M2,10L9,10 9,12 2,12z"/>
+                                   M2,10L9,10 9,12 2,12z" />
             <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
                              Geometry="F1M11,2L14,2 14,5 11,5z
                                    M11,6L14,6 14,7 11,7z
-                                   M11,9L14,9 14,12 11,12z"/>
+                                   M11,9L14,9 14,12 11,12z" />
         </DrawingGroup>
     </DrawingImage>
 
@@ -471,7 +480,7 @@
         <StreamGeometry>F1M1,2L1,7.262C1.309,7.092,1.657,7,1.999,7L2,7 2,5 14,5 14,13 8,13 8,14 15,14 15,2z</StreamGeometry>
         <StreamGeometry>F1M6,12L6,12 6,14 2,14 2,9 5,9 5,10 6,10z M5.312,8L1.963,8C1.963,8,1,8,1,9L1,14C1,15,1.964,15,1.964,15L5.964,15C6.964,15,7,14,7,14L7,10.137z</StreamGeometry>
     </GeometryGroup>
-    
+
     <DrawingImage x:Key="VsImageLib.MakefileProject16X">
         <DrawingGroup>
             <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"

@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -44,7 +45,7 @@ public sealed class OneWareCloudLoginService
             .Subscribe(x =>
             {
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule
-                    .OneWareAccountEmailKey));
+                    .OneWareAccountUserIdKey));
             });
 
         OneWareCloudIsUsed =
@@ -60,35 +61,35 @@ public sealed class OneWareCloudLoginService
 
     public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
-        var email = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountEmailKey);
+        var userId = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
 
-        return GetJwtTokenAsync(email);
+        return GetJwtTokenAsync(userId);
     }
 
     /// <summary>
     /// Gives a JWT Token that has at least 5 minutes left before expiration
     /// TODO Change this to return the full token implementation
     /// </summary>
-    public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string email)
+    public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string userId)
     {
         await _semaphoreSlim.WaitAsync();
 
         try
         {
-            if (string.IsNullOrWhiteSpace(email)) return (null, HttpStatusCode.Unauthorized);
+            if (string.IsNullOrWhiteSpace(userId)) return (null, HttpStatusCode.Unauthorized);
 
-            _jwtTokenCache.TryGetValue(email, out var existingToken);
+            _jwtTokenCache.TryGetValue(userId, out var existingToken);
 
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(5))
             {
                 return (existingToken.RawData, HttpStatusCode.NoContent);
             }
 
-            var (result, status) = await RefreshFromEmailAsync(email);
+            var (result, status) = await RefreshFromUserIdAsync(userId);
 
             if (!result) return (null, status);
 
-            if (!_jwtTokenCache.TryGetValue(email, out var regeneratedToken)) return (null, status);
+            if (!_jwtTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
 
             return (regeneratedToken.RawData, status);
         }
@@ -98,14 +99,14 @@ public sealed class OneWareCloudLoginService
         }
     }
 
-    public async Task<(bool success, HttpStatusCode status)> RefreshFromEmailAsync(string email)
+    public async Task<(bool success, HttpStatusCode status)> RefreshFromUserIdAsync(string userId)
     {
         try
         {
             string? refreshToken = null;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
+                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
                 if (File.Exists(tokenPath))
                 {
                     var encrypted = await File.ReadAllBytesAsync(tokenPath);
@@ -117,7 +118,7 @@ public sealed class OneWareCloudLoginService
             {
                 var store = CredentialManager.Create("oneware");
 
-                var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
+                var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
                 refreshToken = cred?.Password;
             }
 
@@ -204,26 +205,26 @@ public sealed class OneWareCloudLoginService
         return (false, HttpStatusCode.NoContent);
     }
 
-    public void Logout(string email)
+    public void Logout(string userId)
     {
-        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, "");
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, "");
         _ = ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().DisconnectAsync();
 
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
+                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
                 if (File.Exists(tokenPath))
                     File.Delete(tokenPath);
             }
             else
             {
                 var store = CredentialManager.Create("oneware");
-                store.Remove(OneWareCloudIntegrationModule.CredentialStore, email);
+                store.Remove(OneWareCloudIntegrationModule.CredentialStore, userId);
             }
 
-            _jwtTokenCache.Remove(email);
+            _jwtTokenCache.Remove(userId);
         }
         catch (Exception e)
         {
@@ -276,20 +277,20 @@ public sealed class OneWareCloudLoginService
     private void SaveCredentials(string jwt, string refreshToken)
     {
         var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
-        var email = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name")?.Value ?? null;
-        if (email == null)
+        var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value ?? null;
+        if (userId == null)
         {
-            throw new Exception("Email not found");
+            throw new Exception("User ID not found in token");
         }
 
-        _jwtTokenCache[email] = jwtToken;
+        _jwtTokenCache[userId] = jwtToken;
 
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 Directory.CreateDirectory(_tokenPath);
-                var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
+                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
 
                 var plaintext = Encoding.UTF8.GetBytes(refreshToken);
                 var encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
@@ -298,7 +299,7 @@ public sealed class OneWareCloudLoginService
             else
             {
                 var store = CredentialManager.Create("oneware");
-                store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, email, refreshToken);
+                store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, userId, refreshToken);
             }
         }
         catch (Exception e)
@@ -306,7 +307,7 @@ public sealed class OneWareCloudLoginService
             _logger.Error(e.Message, e);
         }
 
-        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountEmailKey, email);
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, userId);
         _settingService.Save(_paths.SettingsPath);
     }
 

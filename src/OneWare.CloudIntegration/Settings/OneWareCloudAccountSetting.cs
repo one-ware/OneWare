@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media;
 using GitCredentialManager;
+using OneWare.CloudIntegration.Dto;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Models;
@@ -16,16 +17,13 @@ public class OneWareCloudAccountSetting : CustomSetting
 {
     private object _value;
 
-    private IImage? _image;
-    
-    private bool _isLoggedIn;
-
     public OneWareCloudAccountSetting() : base(string.Empty)
     {
         Control = new OneWareCloudAccountSettingViewModel(this);
         _value = string.Empty;
     }
 
+    // Will be the User ID
     public override object Value
     {
         get => _value;
@@ -34,70 +32,75 @@ public class OneWareCloudAccountSetting : CustomSetting
             if (SetProperty(ref _value, value))
             {
                 IsLoggedIn = !string.IsNullOrWhiteSpace(value.ToString());
-                OnPropertyChanged(nameof(Email));
                 _ = ResolveAsync();
             }
         }
     }
 
+    public string? UserId => Value?.ToString();
+
     public IImage? Image
     {
-        get => _image;
-        set => SetProperty(ref _image, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoggedIn
     {
-        get => _isLoggedIn;
-        set
-        {
-            SetProperty(ref _isLoggedIn, value);
-            if (!value) AddressIsVerified = true;
-        }
+        get;
+        set => SetProperty(ref field, value);
     }
 
-    public string? Email => IsLoggedIn ? Value.ToString() : "Not logged in";
-    
-    public bool AddressIsVerified { get; set; } = true;
+    public CurrentUserDto? CurrentUser
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
 
-    private async Task ResolveAsync()
+    public async Task ResolveAsync()
     {
         var loginService = ContainerLocator.Container.Resolve<OneWareCloudLoginService>();
 
-        Image = null;
-
-        if (string.IsNullOrEmpty(Value.ToString()) || Email == null) return;
-
-        var (jwt, status) = await loginService.GetJwtTokenAsync(Email);
-
-        if (jwt == null)
+        try
         {
-            if (status == HttpStatusCode.Unauthorized)
+            Image = null;
+
+            if (string.IsNullOrEmpty(UserId)) return;
+
+            var (jwt, status) = await loginService.GetJwtTokenAsync(UserId);
+
+            if (jwt == null)
             {
-                loginService.Logout(Email);
-                Value = string.Empty;
-                return;
+                if (status == HttpStatusCode.Unauthorized)
+                {
+                    loginService.Logout(UserId);
+                    Value = string.Empty;
+                    return;
+                }
+            }
+
+            var request = new RestRequest("/api/users/current");
+            request.AddHeader("Authorization", $"Bearer {jwt}");
+
+            var response = await loginService.GetRestClient().ExecuteGetAsync(request);
+            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            })!;
+
+            await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
+            
+            var httpService = ContainerLocator.Container.Resolve<IHttpService>();
+            
+            if (CurrentUser.AvatarUrl != null)
+            {
+                Image = await httpService.DownloadImageAsync(CurrentUser.AvatarUrl);
+                //TODO Move this to somewhere else
             }
         }
-
-        var request = new RestRequest("/api/users/me");
-        request.AddHeader("Authorization", $"Bearer {jwt}");
-
-        var response = await loginService.GetRestClient().ExecuteGetAsync(request);
-        var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-
-        var avatarUrl = data["avatarUrl"]?.GetValue<string>();
-
-        var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-
-        if (avatarUrl != null)
+        catch (Exception e)
         {
-            Image = await httpService.DownloadImageAsync(avatarUrl);
-
-            //TODO Move this to somewhere else
-            await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
+            Console.WriteLine(e);
         }
-        
-        AddressIsVerified = data["isAddressVerified"]?.GetValue<bool>() ?? true;
     }
 }

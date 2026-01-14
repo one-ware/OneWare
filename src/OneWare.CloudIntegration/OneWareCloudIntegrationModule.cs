@@ -18,7 +18,7 @@ namespace OneWare.CloudIntegration;
 public class OneWareCloudIntegrationModule : IModule
 {
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
-    public const string OneWareAccountEmailKey = "General_OneWareCloud_AccountEmail";
+    public const string OneWareAccountUserIdKey = "General_OneWareCloud_AccountUserId";
     public const string CredentialStore = "https://cloud.one-ware.com";
     
     public void RegisterTypes(IContainerRegistry containerRegistry)
@@ -34,7 +34,7 @@ public class OneWareCloudIntegrationModule : IModule
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
 
         containerProvider.Resolve<ISettingsService>().RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey, new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
-        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountEmailKey, containerProvider.Resolve<OneWareCloudAccountSetting>());
+        containerProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountUserIdKey, containerProvider.Resolve<OneWareCloudAccountSetting>());
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x =>
             new CloudIntegrationMainWindowBottomRightExtension()
             {

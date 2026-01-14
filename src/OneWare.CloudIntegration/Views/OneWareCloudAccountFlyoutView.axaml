@@ -9,16 +9,6 @@
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
 
-    <UserControl.DataTemplates>
-        <DataTemplate DataType="viewModels:IOneWareCloudAccountFlyoutSetting">
-            <Grid ColumnDefinitions="14,*,*" VerticalAlignment="Center">
-                <Image Source="{Binding Icon}"></Image>
-                <TextBlock Text="{Binding Value}" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0"></TextBlock>
-                <TextBlock Text="{Binding Title}" Opacity=".5" Grid.Column="2" HorizontalAlignment="Right"></TextBlock>
-            </Grid>
-        </DataTemplate>
-    </UserControl.DataTemplates>
-
     <StackPanel Orientation="Horizontal" Spacing="6">
         <Button Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
@@ -51,39 +41,59 @@
                         <ContentControl Content="{Binding SettingViewModel}" />
 
                         <Separator Margin="0" Padding="0"/>
-
-                        <ItemsControl ItemsSource="{Binding Information}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <Panel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ContentControl Height="28" Content="{Binding .}" IsVisible="{Binding IsVisible}"></ContentControl>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
                         
-                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}">
-                            <Separator Margin="0" Padding="0" />
+                        <!-- Logged In View -->
+                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding AccountSetting.IsLoggedIn}">
                             
-                            <TextBlock Foreground="Orange" Text="Your account is missing information. Enter your address and get free credits." TextWrapping="Wrap" MaxWidth="200" />
-                            <controls:HyperLink Label="Get free credits"
-                                                Url="{Binding ChangeAddressLink}"
-                                                HorizontalAlignment="Left" FontWeight="Bold"
-                                                IsVisible="{Binding !SettingViewModel.Setting.AddressIsVerified}" 
-                                                ToolTip.Tip="Your account is missing information. Enter your address and get free credits.">
+                            <StackPanel Name="BalanceInfoPanel" Orientation="Vertical" IsVisible="{Binding CurrentBalance, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="5" >
+                                <StackPanel.Styles>
+                                    <Style Selector="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </StackPanel.Styles>
+                                
+                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
+                                    <Image Source="{DynamicResource Credit}" Height="14"  />
+                                    <TextBlock Text="Credits" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
+                                    <TextBlock Text="{Binding CurrentBalance.Balance, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                </Grid>
+                                
+                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
+                                    <Image Source="{DynamicResource Entypo+.TimeSlot}" Height="14" />
+                                    <TextBlock Text="Monthly Included" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
+                                    <TextBlock Text="{Binding MonthlyIncludedCreditsValue, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                </Grid>
+                                
+                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
+                                    <Image Source="{DynamicResource Bootstrap.Clipboard}" Height="14"  />
+                                    <TextBlock Text="Plan" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0"/>
+                                    <TextBlock Text="{Binding AccountSetting.CurrentUser.UserPlan.Name, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                </Grid>
+                                
+                            </StackPanel>
+                            
+                            <Panel IsVisible="{Binding !#BalanceInfoPanel.IsVisible}">
+                                <controls:Spinner HorizontalAlignment="Center" VerticalAlignment="Center" Width="12" Height="12" />
+                            </Panel>
+                            
+                            <Separator Margin="0" Padding="0"/>
+                            
+                            <controls:HyperLink Label="Manage Account"
+                                                Url="{Binding Url}"
+                                                Margin="6,0, 6, 0"
+                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center">
                             </controls:HyperLink>
                         </StackPanel>
-                     
-                        <Separator Margin="0" Padding="0" IsVisible="{Binding SettingViewModel.Setting.IsLoggedIn}" />
+                        
+                        <!-- Logged Out View -->
+                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding !AccountSetting.IsLoggedIn}">
+                            <controls:HyperLink Label="Register here"
+                                                Url="{Binding Url}"
+                                                Margin="6,0, 6, 0"
+                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center">
+                            </controls:HyperLink>
+                        </StackPanel>
 
-                        <controls:HyperLink Label="{Binding UrlLabel}"
-                                            Url="{Binding Url}"
-                                            Margin="6,0, 6, 0"
-                                            HorizontalContentAlignment="Center" HorizontalAlignment="Center">
-                        </controls:HyperLink>
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>
