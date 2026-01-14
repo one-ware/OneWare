@@ -4,12 +4,16 @@
     <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
     
+    <PropertyGroup>
+        <Version>0.31.18.0</Version>
+    </PropertyGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.2" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     </ItemGroup>
 </Project>
