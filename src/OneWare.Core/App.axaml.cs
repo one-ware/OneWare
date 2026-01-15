@@ -442,7 +442,7 @@ public class App : PrismApplication
                 if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
                 {
                     //This will be used for deep linking into the app on MacOS
-                    Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri.Authority, protocolArgs.Uri.LocalPath);
+                    Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
                 }
             };
         }
@@ -450,7 +450,7 @@ public class App : PrismApplication
         if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
             var uri = new Uri(url);
-            Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri.Authority, uri.LocalPath);
+            Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri);
         }
         
         Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));

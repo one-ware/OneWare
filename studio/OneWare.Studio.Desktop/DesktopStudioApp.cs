@@ -92,8 +92,46 @@ public class DesktopStudioApp : StudioApp
         //     _splashWindow.Show();
         //     _splashWindow.Activate();
         // }
+        
+        Container.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
 
         base.OnFrameworkInitializationCompleted();
+    }
+    
+    // TODO rework this to support folders and more
+    private async Task PathOpenTaskAsync(string? path)
+    {
+        var fileName = path;
+        //Check file exists
+        if (File.Exists(fileName))
+        {
+            _tempMode = true;
+            var dockService = Container.Resolve<IDockService>();
+
+            var views = dockService.SearchView<Document>();
+
+            foreach (var view in views.ToArray())
+                if (view is IDockable dockable)
+                    dockService.CloseDockable(dockable);
+
+            var extension = Path.GetExtension(fileName);
+
+            var manager = Container.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
+
+            if (manager != null)
+            {
+                await Container.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
+            }
+            else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
+            {
+                var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
+                _ = Container.Resolve<IDockService>().OpenFileAsync(file);
+            }
+            else
+            {
+                Container.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
+            }
+        }
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
@@ -115,51 +153,18 @@ public class DesktopStudioApp : StudioApp
         Container.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
         
-        //TODO Rework this to support opening folders, or custom context
-        if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            var fileName = pathOpen;
-            //Check file exists
-            if (File.Exists(fileName))
+            var key = Container.Resolve<IApplicationStateService>()
+                .AddState("Loading last projects...", AppState.Loading);
+            await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+            Container.Resolve<IDockService>().InitializeContent();
+            Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
+            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            
+            if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
             {
-                _tempMode = true;
-                var dockService = Container.Resolve<IDockService>();
-
-                var views = dockService.SearchView<Document>();
-
-                foreach (var view in views.ToArray())
-                    if (view is IDockable dockable)
-                        dockService.CloseDockable(dockable);
-
-                var extension = Path.GetExtension(fileName);
-
-                var manager = Container.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
-
-                if (manager != null)
-                {
-                    await Container.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
-                }
-                else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
-                {
-                    var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Container.Resolve<IDockService>().OpenFileAsync(file);
-                }
-                else
-                {
-                    Container.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
-                }
-            }
-        }
-        else
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                var key = Container.Resolve<IApplicationStateService>()
-                    .AddState("Loading last projects...", AppState.Loading);
-                await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                Container.Resolve<IDockService>().InitializeContent();
-                Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-                Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+                Container.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
             }
         }
 
