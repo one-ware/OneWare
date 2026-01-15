@@ -5,18 +5,22 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageManagerViewModel : ObservableObject, IPackageWindowService
+public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
     private readonly ILogger _logger;
+    private readonly IApplicationStateService _applicationStateService;
 
     private string _filter = string.Empty;
     private bool _isLoading;
@@ -25,11 +29,12 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService)
+    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService, IApplicationStateService applicationStateService)
     {
         _packageService = packageService;
         _windowService = windowService;
         _logger = logger;
+        _applicationStateService = applicationStateService;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
             Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
@@ -256,5 +261,39 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
     {
         foreach (var categoryModel in PackageCategories)
             categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+    }
+
+    public override bool OnWindowClosing(FlexibleWindow window)
+    {
+        var needRestart = _packageService.Packages.Any(x => x.Value.Status == PackageStatus.NeedRestart);
+        
+        if (needRestart && !_restartQuestioned)
+        {
+            _ = AskForRestartAsync(window.Host);
+            return false;
+        }
+        
+        return base.OnWindowClosing(window);
+    }
+    
+    private bool _restartQuestioned;
+
+    private async Task AskForRestartAsync(Window? window)
+    {
+        var result = await _windowService.ShowYesNoAsync(
+            "Restart Required",
+            "Some changes to installed packages or plugins require a restart to take effect. Do you want to restart now?",
+            MessageBoxIcon.Warning, window);
+
+        _restartQuestioned = true;
+        
+        if (result == MessageBoxStatus.Yes)
+        {
+            _applicationStateService.TryRestart();
+        }
+        else
+        {
+            window?.Close();
+        }
     }
 }

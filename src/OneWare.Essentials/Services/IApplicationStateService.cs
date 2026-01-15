@@ -26,4 +26,6 @@ public interface IApplicationStateService
     public void ExecuteShutdownActions();
 
     public void TryShutdown();
+    
+    public void TryRestart();
 }
