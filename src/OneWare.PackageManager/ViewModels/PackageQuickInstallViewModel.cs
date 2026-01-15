@@ -53,7 +53,7 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
     {
         Success = await _packageService.InstallAsync(Package.Package);
         window?.Close();
-    }, window => Package.Status == Essentials.Enums.PackageStatus.Available);
+    });
 
     private async Task ResolveAsync()
     {

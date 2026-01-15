@@ -277,7 +277,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 .FirstOrDefault(x => x.Package.UrlLaunchIds != null && x.Package.UrlLaunchIds.Split(';').Select(y => y.Trim()).Contains(autoLaunchId));
         
             var packageWindowService = ContainerLocator.Container.Resolve<IPackageWindowService>();
-            if (package is { Package: { Id: not null } } packageModel)
+            if (package is { Package: { Id: not null }, Status: PackageStatus.UpdateAvailable or PackageStatus.Available })
             {
                 var result = await packageWindowService.QuickInstallPackageAsync(package.Package.Id);
                 if (result)
