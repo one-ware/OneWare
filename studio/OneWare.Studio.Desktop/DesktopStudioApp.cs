@@ -83,15 +83,15 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-        {
-            _splashWindow = new SplashWindow
-            {
-                DataContext = Container.Resolve<SplashWindowViewModel>()
-            };
-            _splashWindow.Show();
-            _splashWindow.Activate();
-        }
+        // if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+        // {
+        //     _splashWindow = new SplashWindow
+        //     {
+        //         DataContext = Container.Resolve<SplashWindowViewModel>()
+        //     };
+        //     _splashWindow.Show();
+        //     _splashWindow.Activate();
+        // }
 
         base.OnFrameworkInitializationCompleted();
     }
