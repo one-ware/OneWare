@@ -435,14 +435,18 @@ public class App : PrismApplication
 
     protected virtual Task LoadContentAsync()
     {
+        //This is an macOS only feature. On Linux and macOS, we use a different method with file locks inside the Program.cs
         if (this.TryGetFeature<IActivatableLifetime>(out var events))
         {
-            events.Activated += (sender, args) =>
+            events.Activated += (_, args) =>
             { 
                 if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
                 {
-                    //This will be used for deep linking into the app on MacOS
                     Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
+                }
+                else if(args is ProtocolActivatedEventArgs { Kind: ActivationKind.File } launchArgs)
+                {
+                    Container.Resolve<IApplicationStateService>().ExecutePathLaunchActions(launchArgs.Uri.ToString());
                 }
             };
         }

@@ -58,6 +58,7 @@ internal abstract class Program
         return app;
     }
 
+    // On macOS this should not be necessary, but keeping for consistency
     private static bool TryBecomePrimaryInstance()
     {
         try
