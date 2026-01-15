@@ -1,8 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
@@ -124,5 +127,135 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     public void TryShutdown()
     {
         Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
+    }
+    
+    public void TryRestart()
+    {
+        RegisterShutdownAction(PerformRestart);
+        TryShutdown();
+    }
+    
+    private void PerformRestart()
+    {
+        try
+        {
+            var executablePath = Environment.ProcessPath;
+            var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            
+            if (string.IsNullOrEmpty(executablePath))
+            {
+                ContainerLocator.Container.Resolve<ILogger>()?.Error("Cannot restart: executable path not found");
+                return;
+            }
+
+            // Platform-specific handling
+            switch (PlatformHelper.Platform)
+            {
+                case PlatformId.WinX64:
+                case PlatformId.WinArm64:
+                {
+                    // Windows: Use shell execute to start detached
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = executablePath,
+                        Arguments = string.Join(" ", args.Select(arg => $"\"{arg}\"")),
+                        UseShellExecute = true,
+                        WorkingDirectory = Environment.CurrentDirectory
+                    };
+                    Process.Start(startInfo);
+                    break;
+                }
+
+                case PlatformId.LinuxX64:
+                case PlatformId.LinuxArm64:
+                {
+                    string command;
+                    string commandArgs;
+                    
+                    // Linux: Check if running in Flatpak or Snap
+                    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
+                    {
+                        // Running in Flatpak
+                        var flatpakId = Environment.GetEnvironmentVariable("FLATPAK_ID");
+                        command = "flatpak";
+                        commandArgs = $"run {flatpakId}";
+                        if (args.Length > 0)
+                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                    }
+                    else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
+                    {
+                        // Running in Snap
+                        var snapName = Environment.GetEnvironmentVariable("SNAP_NAME");
+                        command = "snap";
+                        commandArgs = $"run {snapName}";
+                        if (args.Length > 0)
+                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                    }
+                    else
+                    {
+                        // Regular Linux binary - use the executable path
+                        command = executablePath;
+                        commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                    }
+
+                    // Use sh -c with nohup and & to properly detach the process
+                    var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "/bin/sh",
+                        Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WorkingDirectory = Environment.CurrentDirectory
+                    };
+                    Process.Start(startInfo);
+                    break;
+                }
+
+                case PlatformId.OsxX64:
+                case PlatformId.OsxArm64:
+                {
+                    // macOS: Check if inside .app bundle
+                    if (executablePath.Contains(".app/Contents/MacOS/"))
+                    {
+                        // Get the .app path - use 'open -n' which naturally detaches
+                        var appPath = executablePath.Substring(0, executablePath.IndexOf(".app/Contents/MacOS/", StringComparison.Ordinal) + 4);
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "open",
+                            Arguments = $"-n \"{appPath}\"" + (args.Length > 0 ? " --args " + string.Join(" ", args.Select(arg => $"\"{arg}\"")) : ""),
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                    }
+                    else
+                    {
+                        // Regular macOS binary - use nohup like Linux
+                        var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                        var fullCommand = $"nohup {executablePath} {commandArgs} > /dev/null 2>&1 &";
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "/bin/sh",
+                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                    }
+                    break;
+                }
+
+                default:
+                    ContainerLocator.Container.Resolve<ILogger>()?.Error($"Restart not supported on platform: {PlatformHelper.Platform}");
+                    return;
+            }
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error($"Failed to restart application: {ex.Message}", ex);
+        }
     }
 }

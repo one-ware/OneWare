@@ -5,18 +5,22 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageManagerViewModel : ObservableObject, IPackageWindowService
+public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
     private readonly ILogger _logger;
+    private readonly IApplicationStateService _applicationStateService;
 
     private string _filter = string.Empty;
     private bool _isLoading;
@@ -25,11 +29,13 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService)
+    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService,
+        IApplicationStateService applicationStateService)
     {
         _packageService = packageService;
         _windowService = windowService;
         _logger = logger;
+        _applicationStateService = applicationStateService;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
             Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
@@ -46,7 +52,7 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
             new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
-        
+
         PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
@@ -57,16 +63,13 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
 
         SelectedCategory = PackageCategories.First();
 
-        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x =>
-        {
-            IsLoading = x;
-        });
+        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
             ConstructPackageViewModels();
         });
-        
+
         ConstructPackageViewModels();
     }
 
@@ -139,20 +142,20 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
 
         return view;
     }
-    
+
     public Control? ShowExtensionManager(string category, string? subcategory)
     {
         if (!FocusCategory(category, subcategory))
             return null;
-        
+
         return ShowExtensionManager();
     }
-    
+
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string category, string packageId)
     {
         if (await FocusPluginAsync(category, packageId) is not { } pvm)
             return false;
-        
+
         var view = ShowExtensionManager();
         await pvm.InstallCommand.ExecuteAsync(view);
 
@@ -164,7 +167,7 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
         PackageCategoryViewModel? categoryVm = PackageCategories
             .FirstOrDefault(x => x.Header == category);
 
-        if (categoryVm == null) 
+        if (categoryVm == null)
             return false;
 
         if (subcategory != null)
@@ -173,12 +176,12 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
             if (categoryVm == null)
                 return false;
         }
-        
+
         SelectedCategory = categoryVm;
         SelectedCategory.SelectedPackage = null;
         return true;
     }
-    
+
     private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
     {
         PackageCategoryViewModel? categoryVm = PackageCategories
@@ -188,16 +191,17 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
         {
             PackageViewModel? packageVm = categoryVm.VisiblePackages
                 .FirstOrDefault(x => x.PackageModel == packageModel);
-            
+
             if (packageVm == null)
                 return null;
-            
+
             SelectedCategory = categoryVm;
             SelectedCategory.SelectedPackage = packageVm;
 
             await packageVm.ResolveTabsAsync();
             return packageVm;
         }
+
         return null;
     }
 
@@ -230,17 +234,18 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
                 var wantedCategory = packageModel.Package.Category;
 
                 if (wantedCategory is "Misc") wantedCategory = "Tools";
-                
+
                 var subCategory = category.SubCategories.FirstOrDefault(x =>
                     x.Header.Equals(wantedCategory, StringComparison.OrdinalIgnoreCase));
-                
+
                 if (subCategory == null && wantedCategory != null)
                 {
                     subCategory = new PackageCategoryViewModel(wantedCategory);
-                    category.SubCategories.Add(subCategory);    
+                    category.SubCategories.Add(subCategory);
                 }
+
                 subCategory?.Add(model);
-                
+
                 if (subCategory == null)
                     category.Add(model);
             }
@@ -256,5 +261,40 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
     {
         foreach (var categoryModel in PackageCategories)
             categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+    }
+
+    public override bool OnWindowClosing(FlexibleWindow window)
+    {
+        var needRestart = _packageService.Packages.Any(x => x.Value.Status == PackageStatus.NeedRestart);
+
+        if (needRestart && AskForRestart)
+        {
+            _ = AskForRestartAsync(window.Host);
+            return false;
+        }
+
+        AskForRestart = true;
+        return base.OnWindowClosing(window);
+    }
+
+    public bool AskForRestart { get; set; } = true;
+
+    private async Task AskForRestartAsync(Window? window)
+    {
+        var result = await _windowService.ShowYesNoCancelAsync(
+            "Restart Required",
+            "Some changes to installed packages or plugins require a restart to take effect. Do you want to restart now?",
+            MessageBoxIcon.Warning, window);
+
+        if (result == MessageBoxStatus.Yes)
+        {
+            AskForRestart = false;
+            _applicationStateService.TryRestart();
+        }
+        else if (result == MessageBoxStatus.No)
+        {
+            AskForRestart = false;
+            window?.Close();
+        }
     }
 }
