@@ -383,3 +383,5 @@ healthchecksdb
 MigrationBackup/
 
 .avalonia-build-tasks
+
+studio/OneWare.Studio.Desktop.MacOSInstaller/build-macos-dev/
