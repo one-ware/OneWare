@@ -29,7 +29,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService, IApplicationStateService applicationStateService)
+    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService,
+        IApplicationStateService applicationStateService)
     {
         _packageService = packageService;
         _windowService = windowService;
@@ -51,7 +52,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
-        
+
         PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
@@ -62,16 +63,13 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         SelectedCategory = PackageCategories.First();
 
-        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x =>
-        {
-            IsLoading = x;
-        });
+        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
             ConstructPackageViewModels();
         });
-        
+
         ConstructPackageViewModels();
     }
 
@@ -144,20 +142,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         return view;
     }
-    
+
     public Control? ShowExtensionManager(string category, string? subcategory)
     {
         if (!FocusCategory(category, subcategory))
             return null;
-        
+
         return ShowExtensionManager();
     }
-    
+
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string category, string packageId)
     {
         if (await FocusPluginAsync(category, packageId) is not { } pvm)
             return false;
-        
+
         var view = ShowExtensionManager();
         await pvm.InstallCommand.ExecuteAsync(view);
 
@@ -169,7 +167,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         PackageCategoryViewModel? categoryVm = PackageCategories
             .FirstOrDefault(x => x.Header == category);
 
-        if (categoryVm == null) 
+        if (categoryVm == null)
             return false;
 
         if (subcategory != null)
@@ -178,12 +176,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             if (categoryVm == null)
                 return false;
         }
-        
+
         SelectedCategory = categoryVm;
         SelectedCategory.SelectedPackage = null;
         return true;
     }
-    
+
     private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
     {
         PackageCategoryViewModel? categoryVm = PackageCategories
@@ -193,16 +191,17 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         {
             PackageViewModel? packageVm = categoryVm.VisiblePackages
                 .FirstOrDefault(x => x.PackageModel == packageModel);
-            
+
             if (packageVm == null)
                 return null;
-            
+
             SelectedCategory = categoryVm;
             SelectedCategory.SelectedPackage = packageVm;
 
             await packageVm.ResolveTabsAsync();
             return packageVm;
         }
+
         return null;
     }
 
@@ -235,17 +234,18 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                 var wantedCategory = packageModel.Package.Category;
 
                 if (wantedCategory is "Misc") wantedCategory = "Tools";
-                
+
                 var subCategory = category.SubCategories.FirstOrDefault(x =>
                     x.Header.Equals(wantedCategory, StringComparison.OrdinalIgnoreCase));
-                
+
                 if (subCategory == null && wantedCategory != null)
                 {
                     subCategory = new PackageCategoryViewModel(wantedCategory);
-                    category.SubCategories.Add(subCategory);    
+                    category.SubCategories.Add(subCategory);
                 }
+
                 subCategory?.Add(model);
-                
+
                 if (subCategory == null)
                     category.Add(model);
             }
@@ -266,33 +266,34 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     public override bool OnWindowClosing(FlexibleWindow window)
     {
         var needRestart = _packageService.Packages.Any(x => x.Value.Status == PackageStatus.NeedRestart);
-        
-        if (needRestart && !_restartQuestioned)
+
+        if (needRestart && AskForRestart)
         {
             _ = AskForRestartAsync(window.Host);
             return false;
         }
-        
+
+        AskForRestart = true;
         return base.OnWindowClosing(window);
     }
-    
-    private bool _restartQuestioned;
+
+    public bool AskForRestart { get; set; } = true;
 
     private async Task AskForRestartAsync(Window? window)
     {
-        var result = await _windowService.ShowYesNoAsync(
+        var result = await _windowService.ShowYesNoCancelAsync(
             "Restart Required",
             "Some changes to installed packages or plugins require a restart to take effect. Do you want to restart now?",
             MessageBoxIcon.Warning, window);
 
-        _restartQuestioned = true;
-        
         if (result == MessageBoxStatus.Yes)
         {
+            AskForRestart = false;
             _applicationStateService.TryRestart();
         }
-        else
+        else if (result == MessageBoxStatus.No)
         {
+            AskForRestart = false;
             window?.Close();
         }
     }
