@@ -13,6 +13,9 @@ public class FlexibleWindowViewModelBase : Document
         set => SetProperty(ref _isDirty, value);
     }
 
+    public virtual void OnWindowOpened(FlexibleWindow window)
+    {
+    }
 
     /// <summary>
     /// This method is called when the window is closed.

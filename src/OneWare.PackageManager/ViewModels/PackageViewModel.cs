@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -18,30 +19,25 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
+    
+    private readonly IApplicationStateService _applicationStateService;
 
-    private IImage? _image;
-
-    private bool _isTabsResolved;
-
-    private AsyncRelayCommand<Control?>? _mainButtonCommand;
+    private readonly IWindowService _windowService;
 
     private PackageModel _packageModel;
 
-    private IBrush? _primaryButtonBrush;
-
     private IDisposable? _primaryButtonBrushSubscription;
 
-    private string _primaryButtonText = string.Empty;
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
 
-    private PackageVersionModel? _selectedVersionModel;
-
-    protected PackageViewModel(PackageModel packageModel, IHttpService httpService)
+    protected PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
     {
         _packageModel = packageModel;
         _httpService = httpService;
+        _applicationStateService = applicationStateService;
+        _windowService = windowService;
 
         RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
             x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
@@ -59,8 +55,8 @@ public class PackageViewModel : ObservableObject
 
     public bool IsTabsResolved
     {
-        get => _isTabsResolved;
-        set => SetProperty(ref _isTabsResolved, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public PackageModel PackageModel
@@ -75,8 +71,8 @@ public class PackageViewModel : ObservableObject
 
     public IImage? Image
     {
-        get => _image;
-        private set => SetProperty(ref _image, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public ObservableCollection<PackageVersionModel> PackageVersionModels { get; } = new();
@@ -85,10 +81,10 @@ public class PackageViewModel : ObservableObject
 
     public PackageVersionModel? SelectedVersionModel
     {
-        get => _selectedVersionModel;
+        get;
         set
         {
-            SetProperty(ref _selectedVersionModel, value);
+            SetProperty(ref field, value);
             UpdateStatus();
             _ = CheckSelectedVersionCompatibilityAsync();
         }
@@ -96,20 +92,20 @@ public class PackageViewModel : ObservableObject
 
     public string PrimaryButtonText
     {
-        get => _primaryButtonText;
-        private set => SetProperty(ref _primaryButtonText, value);
-    }
+        get;
+        private set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public IBrush? PrimaryButtonBrush
     {
-        get => _primaryButtonBrush;
-        private set => SetProperty(ref _primaryButtonBrush, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
-    public AsyncRelayCommand<Control?>? MainButtonCommand
+    public ICommand? MainButtonCommand
     {
-        get => _mainButtonCommand;
-        set => SetProperty(ref _mainButtonCommand, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public AsyncRelayCommand<Control?> RemoveCommand { get; }
@@ -181,8 +177,8 @@ public class PackageViewModel : ObservableObject
                 break;
             case PackageStatus.NeedRestart:
                 PrimaryButtonText = "Restart Required";
-                MainButtonCommand = new AsyncRelayCommand<Control?>(x => Task.CompletedTask, x => false);
-                primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlLowBrush");
+                MainButtonCommand = new AsyncRelayCommand<Control?>(AskForRestartAsync);
+                primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
                 break;
         }
 
@@ -263,12 +259,28 @@ public class PackageViewModel : ObservableObject
         IsTabsResolved = true;
     }
 
-    public async Task CheckSelectedVersionCompatibilityAsync()
+    private async Task CheckSelectedVersionCompatibilityAsync()
     {
         if (SelectedVersionModel == null) return;
 
         if (SelectedVersionModel.CompatibilityReport == null)
             SelectedVersionModel.CompatibilityReport =
                 await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
+    }
+    
+    private async Task AskForRestartAsync(Control? owner)
+    {
+        var ownerWindow = TopLevel.GetTopLevel(owner) as Window;
+        
+        var result = await _windowService.ShowYesNoAsync(
+            "Restart now?",
+            "The changes to this package require a restart to be effective. Do you want to restart now?",
+            MessageBoxIcon.Warning, ownerWindow);
+        
+        if (result == MessageBoxStatus.Yes)
+        {
+            ContainerLocator.Container.Resolve<PackageManagerViewModel>().AskForRestart = false;
+            _applicationStateService.TryRestart();
+        }
     }
 }

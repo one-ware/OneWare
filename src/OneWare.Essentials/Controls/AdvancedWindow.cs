@@ -88,6 +88,16 @@ public class AdvancedWindow : Window
             }
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase vm } flexibleWindow)
+        {
+           vm.OnWindowOpened(flexibleWindow);
+        }
+        
+        base.OnAttachedToVisualTree(e);
+    }
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase vm } flexibleWindow)
