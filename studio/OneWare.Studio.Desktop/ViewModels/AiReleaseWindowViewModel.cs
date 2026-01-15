@@ -44,7 +44,7 @@ public class AiReleaseWindowViewModel : ObservableObject
     public async Task InstallPluginAsync(Control control)
     {
         Close(control);
-        await _packageWindowManager.ShowExtensionManagerAndTryInstallAsync("Plugins", ExtensionId);
+        await _packageWindowManager.QuickInstallPackageAsync(ExtensionId);
     }
 
     public void Close(Control control)

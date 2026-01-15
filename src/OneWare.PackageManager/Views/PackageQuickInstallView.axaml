@@ -1,0 +1,146 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+                         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefHeight="650" PrefWidth="550" Padding="4"
+                         Name="PackageQuickInstallViewView"
+                         Title="{Binding Title}"
+                         CustomIcon="{DynamicResource VsImageLib.Extension16X}"
+                         WindowStartupLocation="CenterOwner"
+                         x:Class="OneWare.PackageManager.Views.PackageQuickInstallView"
+                         x:DataType="viewModels:PackageQuickInstallViewModel">
+    
+    <DockPanel Margin="8" LastChildFill="True">
+        
+        <!-- Header Section with Icon and Title -->
+        <Border DockPanel.Dock="Top" 
+                CornerRadius="4">
+            <Grid ColumnDefinitions="80, 15, *">
+                <!-- Plugin Icon -->
+                <Border Grid.Column="0" Width="80" Height="80" 
+                        CornerRadius="8" ClipToBounds="True"
+                        Background="{DynamicResource ThemeControlLowBrush}">
+                    <Panel>
+                        <Image Source="{Binding Icon}" Stretch="UniformToFill" 
+                               IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Text="📦" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}" />
+                    </Panel>
+                </Border>
+                
+                <!-- Plugin Info -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="5">
+                    <TextBlock Text="{Binding Package.Package.Name}" 
+                               FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Package.Package.Description}" 
+                               TextWrapping="Wrap" 
+                               Opacity="0.8"
+                               IsVisible="{Binding Package.Package.Description, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Bottom Buttons -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0"
+                    Classes="WindowButtons" 
+                    HorizontalAlignment="Right"
+                    IsEnabled="{Binding !IsLoading}">
+            <Button Command="{Binding Close}" 
+                    CommandParameter="{Binding #PackageQuickInstallViewView}"
+                    Classes="RoundButton"
+                    Height="35"
+                    Padding="20 0">
+                <TextBlock Text="Cancel" />
+            </Button>
+            <Button Background="{DynamicResource HighlightBrush}" 
+                    Command="{Binding InstallCommand}"
+                    CommandParameter="{Binding #PackageQuickInstallViewView}"
+                    Classes="RoundButton"
+                    Height="35"
+                    Padding="20 0">
+                <Panel>
+                    <TextBlock Text="Install Plugin" 
+                               IsVisible="{Binding !Package.Package.AcceptLicenseBeforeDownload}" />
+                    <TextBlock Text="Accept License and Install"
+                               IsVisible="{Binding Package.Package.AcceptLicenseBeforeDownload}" />
+                </Panel>
+            </Button>
+        </StackPanel>
+
+        <!-- Content Section -->
+        <Panel>
+            <!-- Loading Spinner -->
+            <Border CornerRadius="8" Padding="30"
+                    IsVisible="{Binding IsLoading}">
+                <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <controls:Spinner Width="40" Height="40" />
+                    <TextBlock Text="Loading plugin information..." 
+                               HorizontalAlignment="Center"
+                               Opacity="0.7" />
+                </StackPanel>
+            </Border>
+
+            <!-- Content when loaded -->
+            <Border IsVisible="{Binding !IsLoading}"
+                    CornerRadius="8" Padding="3">
+                <Grid RowDefinitions="Auto, *" RowSpacing="15">
+                    
+                    <!-- Installation Progress -->
+                    <Border
+                            CornerRadius="6"
+                            IsVisible="{Binding Package.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
+                                      ConverterParameter={x:Static enums:PackageStatus.Installing}}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Installing..." FontWeight="SemiBold" FontSize="14" />
+                            <ProgressBar IsIndeterminate="{Binding Package.IsIndeterminate}"
+                                       Value="{Binding Package.Progress}" 
+                                       ShowProgressText="True"
+                                       Maximum="1.0"
+                                       Height="28" />
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- License Text -->
+                    <DockPanel Grid.Row="1"
+                                IsVisible="{Binding HasLicense}">
+                        <TextBlock DockPanel.Dock="Top" Text="License Agreement" FontWeight="SemiBold" FontSize="14" />
+                        <Border DockPanel.Dock="Bottom" Background="{DynamicResource ThemeControlLowBrush}"
+                                BorderBrush="{DynamicResource ThemeBorderMidBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10"
+                                Margin="0 8 0 0">
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Auto">
+                                <mdxaml:MarkdownScrollViewer Markdown="{Binding LicenseText}" />
+                            </ScrollViewer>
+                        </Border>
+                    </DockPanel>
+                    
+                    <!-- No License Text -->
+                    <StackPanel Grid.Row="1" Spacing="8" HorizontalAlignment="Center"
+                                IsVisible="{Binding !HasLicense}">
+                        <TextBlock Text="Ready to install" 
+                                   FontSize="16" 
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.7" />
+                        <TextBlock Text="Click Install to add this plugin to your application" 
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.5"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center" />
+                    </StackPanel>
+
+                </Grid>
+            </Border>
+        </Panel>
+
+
+    </DockPanel>
+</controls:FlexibleWindow>

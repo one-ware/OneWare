@@ -4,6 +4,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,6 +13,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
+using OpenCvSharp;
 using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
@@ -33,9 +35,10 @@ public partial class PackageService : ObservableObject, IPackageService
     private readonly ISettingsService _settingsService;
 
     private readonly Lock _installLock = new();
+    private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
 
     private readonly ILogger _logger;
-    private CancellationTokenSource? _cancellationTokenSource;
+    private Task<bool>? _currentLoadTask;
 
     public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
     {
@@ -92,55 +95,80 @@ public partial class PackageService : ObservableObject, IPackageService
 
     public async Task<bool> LoadPackagesAsync()
     {
-        if (_cancellationTokenSource is not null) await _cancellationTokenSource.CancelAsync();
-        _cancellationTokenSource = new CancellationTokenSource();
+        // Check if there's already a load in progress
+        await _loadSemaphore.WaitAsync();
+        try
+        {
+            // If there's already a load task running, wait for it instead of starting a new one
+            if (_currentLoadTask != null && !_currentLoadTask.IsCompleted)
+            {
+                _loadSemaphore.Release();
+                return await _currentLoadTask;
+            }
 
+            // Start a new load task
+            _currentLoadTask = LoadPackagesInternalAsync();
+        }
+        finally
+        {
+            if (_loadSemaphore.CurrentCount == 0)
+                _loadSemaphore.Release();
+        }
+
+        return await _currentLoadTask;
+    }
+
+    private async Task<bool> LoadPackagesInternalAsync()
+    {
         await WaitForInstallsAsync();
 
         IsUpdating = true;
 
         var result = true;
 
-        var customRepositories =
-            _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
-
-        var allRepos = PackageRepositories.Concat(customRepositories);
-        var newPackages = new List<Package>();
-        
-        foreach (var repository in allRepos)
+        try
         {
-            var loadedPackages = await LoadPackageRepositoryAsync(repository, _cancellationTokenSource.Token);
+            var customRepositories =
+                _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
 
-            if (_cancellationTokenSource.IsCancellationRequested) break;
+            var allRepos = PackageRepositories.Concat(customRepositories);
+            var newPackages = new List<Package>();
             
-            if (loadedPackages != null)
-                foreach (var package in loadedPackages)
-                {
-                    newPackages.Add(package);
-                    
-                    if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+            foreach (var repository in allRepos)
+            {
+                var loadedPackages = await LoadPackageRepositoryAsync(repository);
+                
+                if (loadedPackages != null)
+                    foreach (var package in loadedPackages)
                     {
-                        pkg.Package = package;
+                        newPackages.Add(package);
+                        
+                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                        {
+                            pkg.Package = package;
+                        }
+                        else
+                        {
+                            AddPackage(package);
+                        }
                     }
-                    else
-                    {
-                        AddPackage(package);
-                    }
-                }
 
-            result = result && loadedPackages != null;
+                result = result && loadedPackages != null;
+            }
+
+            foreach (var removedPackage in Packages.Select(x => x.Value.Package)
+                         .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
+                         .ToArray())
+            {
+                Packages.Remove(removedPackage.Id!);
+            }
+
+            PackagesUpdated?.Invoke(this, EventArgs.Empty);
         }
-
-        foreach (var removedPackage in Packages.Select(x => x.Value.Package)
-                     .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
-                     .ToArray())
+        finally
         {
-            Packages.Remove(removedPackage.Id!);
+            IsUpdating = false;
         }
-
-        PackagesUpdated?.Invoke(this, EventArgs.Empty);
-
-        IsUpdating = false;
 
         return result;
     }
@@ -175,6 +203,24 @@ public partial class PackageService : ObservableObject, IPackageService
         }
 
         return Task.FromResult(false);
+    }
+
+    public async Task<string?> DownloadLicenseAsync(Package package)
+    {
+        var url = package.Tabs?.FirstOrDefault(x => x.Title == "License")?.ContentUrl;
+
+        if (url == null) return null;
+
+        return await _httpService.DownloadTextAsync(url);
+    }
+
+    public async Task<IImage?> DownloadPackageIconAsync(Package package)
+    {
+        var icon = package.IconUrl != null
+            ? await _httpService.DownloadImageAsync(package.IconUrl)
+            : null;
+
+        return icon;
     }
 
     private void AddPackage(Package package, string? installedVersion = null)
@@ -221,9 +267,9 @@ public partial class PackageService : ObservableObject, IPackageService
         if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
     }
 
-    private async Task<Package[]?> LoadPackageRepositoryAsync(string url, CancellationToken cancellationToken)
+    private async Task<Package[]?> LoadPackageRepositoryAsync(string url)
     {
-        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
+        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10));
         if (repositoryString == null) return null;
 
         var trimmed = MyRegex().Replace(repositoryString, "");
@@ -244,8 +290,7 @@ public partial class PackageService : ObservableObject, IPackageService
                             if (manifest.ManifestUrl == null) continue;
 
                             var downloadManifest =
-                                await _httpService.DownloadTextAsync(manifest.ManifestUrl,
-                                    cancellationToken: cancellationToken);
+                                await _httpService.DownloadTextAsync(manifest.ManifestUrl);
 
                             var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
 

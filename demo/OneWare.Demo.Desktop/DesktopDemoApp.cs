@@ -53,15 +53,15 @@ public class DesktopDemoApp : DemoApp
         
         var arguments = Environment.GetCommandLineArgs();
 
-        Window? splashWindow = null;
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-        {
-            splashWindow = new SplashWindow
-            {
-                DataContext = Container.Resolve<SplashWindowViewModel>()
-            };
-            splashWindow.Show();
-        }
+        // Window? splashWindow = null;
+        // if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+        // {
+        //     splashWindow = new SplashWindow
+        //     {
+        //         DataContext = Container.Resolve<SplashWindowViewModel>()
+        //     };
+        //     splashWindow.Show();
+        // }
 
         if (arguments.Length > 1 && !arguments[1].StartsWith("--"))
         {
@@ -91,9 +91,6 @@ public class DesktopDemoApp : DemoApp
                 Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             }
         }
-
-        await Task.Delay(1000);
-        splashWindow?.Close();
 
         try
         {
