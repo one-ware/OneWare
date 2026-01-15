@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using Avalonia.Controls;
+using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 
@@ -21,4 +23,8 @@ public interface IPackageService : INotifyPropertyChanged
     public Task<bool> LoadPackagesAsync();
 
     public Task<bool> InstallAsync(Package package);
+    
+    public Task<string?> DownloadLicenseAsync(Package package);
+    
+    public Task<IImage?> DownloadPackageIconAsync(Package package);
 }

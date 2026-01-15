@@ -148,15 +148,38 @@ public class PackageManagerViewModel : ObservableObject, IPackageWindowService
         return ShowExtensionManager();
     }
     
-    public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string category, string packageId)
+    public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId)
     {
-        if (await FocusPluginAsync(category, packageId) is not { } pvm)
+        var category = PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageModel.Package.Id == packageId));
+        
+        if (await FocusPluginAsync(category!.Header, packageId) is not { } pvm)
             return false;
         
         var view = ShowExtensionManager();
         await pvm.InstallCommand.ExecuteAsync(view);
 
         return true;
+    }
+
+    public async Task<bool> QuickInstallPackageAsync(string packageId)
+    {
+        var packageModel = _packageService.Packages.GetValueOrDefault(packageId);
+
+        if (packageModel == null)
+        {
+            return false;
+        }
+
+        var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService);
+        
+        var view = new PackageQuickInstallView()
+        {
+            DataContext = quickInstallViewModel
+        };
+        
+        await _windowService.ShowDialogAsync(view);
+
+        return quickInstallViewModel.Success;
     }
 
     private bool FocusCategory(string category, string? subcategory)

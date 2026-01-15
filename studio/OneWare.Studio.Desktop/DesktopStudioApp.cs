@@ -256,7 +256,8 @@ public class DesktopStudioApp : StudioApp
                 });
             }
             //step 4: Ask to install the OneWare.AI extension
-            else if (showOneWareAiNotification)
+            else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null && 
+                     Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
                 AiReleaseWindowViewModel aiReleaseWindowVm = Container.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed

@@ -1,0 +1,60 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+                         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefHeight="200" PrefWidth="400" Padding="4"
+                         Name="PackageQuickInstallViewView"
+                         Title="{Binding Title}"
+                         x:Class="OneWare.PackageManager.Views.PackageQuickInstallView"
+                         x:DataType="viewModels:PackageQuickInstallViewModel">
+    <DockPanel Margin="4">
+        <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom" IsEnabled="{Binding !IsLoading}">
+            <Button Command="{Binding Close}" CommandParameter="{Binding #PackageQuickInstallViewView}">
+                <TextBlock Text="Reset" />
+            </Button>
+            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding InstallCommand}"
+                    CommandParameter="{Binding #PackageQuickInstallViewView}">
+                <Panel>
+                    <TextBlock Text="Install" IsVisible="{Binding !Package.Package.AcceptLicenseBeforeDownload}" />
+                    <TextBlock Text="Accept License and Install"
+                               IsVisible="{Binding Package.Package.AcceptLicenseBeforeDownload}" />
+                </Panel>
+            </Button>
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="100, 10, *">
+            <Image Source="{Binding Icon}" />
+            <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="3">
+                <TextBlock>
+                    <Run Text="Install Package: " />
+                    <Run Text="{Binding Package.Package.Name}" FontWeight="Bold" />
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <Panel DockPanel.Dock="Top">
+            <controls:Spinner IsVisible="{Binding IsLoading}" Width="20" Height="20" />
+
+            <StackPanel Spacing="10" Orientation="Vertical" IsVisible="{Binding !IsLoading}">
+                <mdxaml:MarkdownScrollViewer Markdown="{Binding LicenseText}"
+                                             MaxWidth="900" MaxHeight="500" />
+                <ProgressBar IsIndeterminate="{Binding Package.IsIndeterminate}"
+                             Value="{Binding Package.Progress}" ShowProgressText="True"
+                             Maximum="1.0"
+                             Height="24"
+                             IsVisible="{Binding Package.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
+                         ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
+            </StackPanel>
+
+        </Panel>
+
+
+    </DockPanel>
+</controls:FlexibleWindow>

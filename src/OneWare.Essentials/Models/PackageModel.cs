@@ -14,13 +14,6 @@ public abstract class PackageModel : ObservableObject
     private PackageVersion? _installedVersion;
     private Package _package;
 
-    private bool _isIndeterminate;
-    private float _progress;
-
-    private PackageStatus _status;
-
-    private string? _installedVersionWarningText;
-    
     protected readonly IHttpService HttpService;
 
     protected PackageModel(Package package,
@@ -52,26 +45,26 @@ public abstract class PackageModel : ObservableObject
 
     public string? InstalledVersionWarningText
     {
-        get => _installedVersionWarningText;
-        set => SetProperty(ref _installedVersionWarningText, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public PackageStatus Status
     {
-        get => _status;
-        protected set => SetProperty(ref _status, value);
+        get;
+        protected set => SetProperty(ref field, value);
     }
 
     public bool IsIndeterminate
     {
-        get => _isIndeterminate;
-        private set => SetProperty(ref _isIndeterminate, value);
-        
+        get;
+        private set => SetProperty(ref field, value);
     }
+
     public float Progress
     {
-        get => _progress;
-        private set => SetProperty(ref _progress, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     protected string ExtractionFolder { get; }

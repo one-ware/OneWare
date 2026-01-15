@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 
@@ -114,6 +115,11 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         if(_urlLaunchActions.TryGetValue(key, out var action))
             action.Invoke(value);
+        else
+        {
+            //Try to auto download extension if possible
+            _ = AttemptAutoDownloadExtensionAsync(key, value);
+        }
     }
 
     public void ExecuteShutdownActions()
@@ -124,5 +130,44 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     public void TryShutdown()
     {
         Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
+    }
+
+    private async Task AttemptAutoDownloadExtensionAsync(string autoLaunchId, string? value)
+    {
+        var state = AddState($"Running Autolaunch Action: {autoLaunchId}", AppState.Loading);
+        
+        try
+        {
+            var packageService = ContainerLocator.Container.Resolve<IPackageService>();
+            await packageService.LoadPackagesAsync();
+            var package = packageService.Packages.Values
+                .Where(x => x.Status != PackageStatus.Installed)
+                .FirstOrDefault(x => x.Package.UrlLaunchIds != null && x.Package.UrlLaunchIds.Split(';').Select(y => y.Trim()).Contains(autoLaunchId));
+        
+            var packageWindowService = ContainerLocator.Container.Resolve<IPackageWindowService>();
+            if (package is { Package: { Id: not null } } packageModel)
+            {
+                var result = await packageWindowService.QuickInstallPackageAsync(package.Package.Id);
+                if (result)
+                {
+                    if(_urlLaunchActions.TryGetValue(autoLaunchId, out var action))
+                        action.Invoke(value);
+                }
+                else
+                {
+                    ContainerLocator.Container.Resolve<ILogger>().Warning($"Failed downloading package for ID: {autoLaunchId}");
+                }
+            }
+            else
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Warning($"No package found for auto launch id: {autoLaunchId}");
+            }
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+        
+        RemoveState(state);
     }
 }
