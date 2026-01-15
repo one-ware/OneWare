@@ -224,7 +224,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                         {
                             FileName = "open",
                             Arguments = $"-n \"{appPath}\"" + (args.Length > 0 ? " --args " + string.Join(" ", args.Select(arg => $"\"{arg}\"")) : ""),
-                            UseShellExecute = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
                             WorkingDirectory = Environment.CurrentDirectory
                         };
                         Process.Start(startInfo);
