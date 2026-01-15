@@ -8,6 +8,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Platform;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
@@ -434,6 +435,18 @@ public class App : PrismApplication
 
     protected virtual Task LoadContentAsync()
     {
+        if (this.TryGetFeature<IActivatableLifetime>(out var events))
+        {
+            events.Activated += (sender, args) =>
+            { 
+                if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
+                {
+                    //This will be used for deep linking into the app on MacOS
+                    Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri.Authority, protocolArgs.Uri.LocalPath);
+                }
+            };
+        }
+        
         if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
             var uri = new Uri(url);

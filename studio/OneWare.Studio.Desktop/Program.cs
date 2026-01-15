@@ -11,6 +11,7 @@ using OneWare.Essentials.Services;
 using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace OneWare.Studio.Desktop;
 
@@ -29,6 +30,10 @@ internal abstract class Program
             {
                 WinUICompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? Environment.OSVersion.Version.Build >= 22000 ? 8 : 0 : 0
+            })
+            .With(new MacOSPlatformOptions()
+            {
+                
             })
             //.WithInterFont()
             .With(new FontManagerOptions
