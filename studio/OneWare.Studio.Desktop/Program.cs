@@ -1,22 +1,32 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
+using Avalonia.Threading;
 using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
-using Avalonia.Controls.ApplicationLifetimes;
+using OneWare.Core.Views.Windows;
 
 namespace OneWare.Studio.Desktop;
 
 internal abstract class Program
 {
+    private const string PipeName = "oneware-studio-ipc";
+    private static FileStream? _lockFileStream;
+    private static CancellationTokenSource? _ipcCancellation;
+    private static string LockFilePath => Path.Combine(Path.GetTempPath(), "OneWare", "oneware-studio.lock");
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
@@ -42,10 +52,172 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
+        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog") && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             app.UseManagedSystemDialogs();
 
         return app;
+    }
+
+    // On macOS this should not be necessary, but keeping for consistency
+    private static bool TryBecomePrimaryInstance()
+    {
+        try
+        {
+            _lockFileStream = new FileStream(
+                LockFilePath,
+                FileMode.OpenOrCreate,
+                FileAccess.ReadWrite,
+                FileShare.None,
+                bufferSize: 32,
+                FileOptions.DeleteOnClose);
+            
+            var pidBytes = Encoding.UTF8.GetBytes(Environment.ProcessId.ToString());
+            _lockFileStream.Write(pidBytes, 0, pidBytes.Length);
+            _lockFileStream.Flush();
+
+            Console.WriteLine($"Successfully acquired lock. PID: {Environment.ProcessId}");
+            return true;
+        }
+        catch (IOException)
+        {
+            // File is locked by another process - check if that process is still running
+            try
+            {
+                if (File.Exists(LockFilePath))
+                {
+                    var pidString = File.ReadAllText(LockFilePath).Trim();
+                    if (int.TryParse(pidString, out int existingPid))
+                    {
+                        try
+                        {
+                            Process.GetProcessById(existingPid);
+                            Console.WriteLine($"Another instance is running (PID: {existingPid})");
+                            return false; // Process is still running
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Process doesn't exist - stale lock file
+                            Console.WriteLine("Stale lock file detected, cleaning up...");
+                            File.Delete(LockFilePath);
+                            return TryBecomePrimaryInstance(); // Retry
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking existing process: {ex.Message}");
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to create lock file: {ex.Message}");
+            return true;
+        }
+    }
+
+    private static async Task<bool> TrySendToExistingInstanceAsync(string message)
+    {
+        try
+        {
+            await using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+            await client.ConnectAsync(2000);
+
+            await using var writer = new StreamWriter(client, Encoding.UTF8);
+            await writer.WriteAsync(message);
+            await writer.FlushAsync();
+            
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static async Task RunIpcServerAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await using var server = new NamedPipeServerStream(
+                    PipeName,
+                    PipeDirection.In,
+                    1,
+                    PipeTransmissionMode.Byte,
+                    PipeOptions.Asynchronous);
+
+                await server.WaitForConnectionAsync(cancellationToken);
+
+                using var reader = new StreamReader(server, Encoding.UTF8);
+                var message = await reader.ReadToEndAsync(cancellationToken);
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        HandleOpenTarget(message);
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine($"IPC Server error: {ex.Message}");
+                    await Task.Delay(1000, cancellationToken); // Wait before retry
+                }
+            }
+        }
+    }
+
+    private static void HandleOpenTarget(string target)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(target))
+                return;
+
+            var logger = ContainerLocator.Container?.Resolve<ILogger>();
+            logger?.Log($"Received IPC message: {target}", ConsoleColor.Cyan);
+
+            
+            ContainerLocator.Container.Resolve<MainWindow>()?.Activate();
+
+            if (target == "activateWindow")
+            {
+                // Just activate the window
+            }
+            else if (target.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
+            {
+                Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
+                logger?.Log($"Opening URL: {target}", ConsoleColor.Green);
+                ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(new Uri(target));
+            }
+            else if (File.Exists(target) || Directory.Exists(target))
+            {
+                var fullPath = Path.GetFullPath(target);
+                logger?.Log($"Opening path: {fullPath}", ConsoleColor.Green);
+                
+                ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecutePathLaunchActions(fullPath);
+            }
+            else
+            {
+                logger?.Warning($"Target not found or invalid: {target}");
+            }
+        }
+        catch (Exception ex)
+        {
+            var logger = ContainerLocator.Container?.Resolve<ILogger>();
+            logger?.Error($"Error handling IPC message: {ex.Message}", ex);
+        }
     }
 
     [STAThread]
@@ -126,7 +298,61 @@ internal abstract class Program
             {
                 return 0;
             }
-            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+            // Check for single instance
+            if (!TryBecomePrimaryInstance())
+            {
+                // Not the primary instance - try to forward the message
+                Console.WriteLine("Another instance is already running. Forwarding request...");
+                
+                // Determine what to send to the existing instance
+                string? messageToSend = null;
+                
+                if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
+                {
+                    messageToSend = url;
+                }
+                else if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } path)
+                {
+                    messageToSend = path;
+                }
+
+                try
+                {
+                    var sendTask = TrySendToExistingInstanceAsync(messageToSend ?? "activateWindow");
+                    sendTask.Wait(5000); // 5 second timeout
+                        
+                    if (sendTask.Result)
+                    {
+                        Console.WriteLine("Request forwarded successfully.");
+                        return 0;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to forward request to existing instance.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error forwarding request: {ex.Message}");
+                }
+                
+                return 0;
+            }
+
+            // We are the primary instance - start IPC server
+            _ipcCancellation = new CancellationTokenSource();
+            _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
+
+            var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+            // Cleanup
+            _ipcCancellation?.Cancel();
+            _ipcCancellation?.Dispose();
+            _lockFileStream?.Close();
+            _lockFileStream?.Dispose();
+
+            return result;
         }
         catch (Exception ex)
         {

@@ -18,6 +18,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
 
+    private readonly List<Action<string?>> _pathLaunchActions = new();
     private readonly List<Action<string?>> _autoLaunchActions = new();
     private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly List<Action> _shutdownActions = new();
@@ -97,7 +98,12 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         _autoLaunchActions.Add(action);
     }
-    
+
+    public void RegisterPathLaunchAction(Action<string?> action)
+    {
+        _pathLaunchActions.Add(action);
+    }
+
     public void RegisterUrlLaunchAction(string key, Action<string?> action)
     {
         _urlLaunchActions.Add(key, action);
@@ -112,15 +118,20 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         foreach (var action in _autoLaunchActions) action.Invoke(value);
     }
-    
-    public void ExecuteUrlLaunchActions(string key, string? value)
+
+    public void ExecutePathLaunchActions(string? value)
     {
-        if(_urlLaunchActions.TryGetValue(key, out var action))
-            action.Invoke(value);
+        foreach (var action in _pathLaunchActions) action.Invoke(value);
+    }
+
+    public void ExecuteUrlLaunchActions(Uri uri)
+    {
+        if(_urlLaunchActions.TryGetValue(uri.Authority, out var action))
+            action.Invoke(uri.LocalPath);
         else
         {
             //Try to auto download extension if possible
-            _ = AttemptAutoDownloadExtensionAsync(key, value);
+            _ = AttemptAutoDownloadExtensionAsync(uri.Authority, uri.LocalPath);
         }
     }
 

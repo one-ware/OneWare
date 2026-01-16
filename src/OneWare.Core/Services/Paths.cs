@@ -47,7 +47,7 @@ public class Paths : IPaths
 
         //Lock file
         _fileStreamLock = new FileStream(Path.Combine(SessionDirectory, ".session_lock"), FileMode.OpenOrCreate,
-            FileAccess.ReadWrite, FileShare.None);
+            FileAccess.ReadWrite, FileShare.None, 32, FileOptions.DeleteOnClose);
     }
 
     public string AppName { get; }
