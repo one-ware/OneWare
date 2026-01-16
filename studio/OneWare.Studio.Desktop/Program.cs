@@ -26,7 +26,7 @@ internal abstract class Program
     private const string PipeName = "oneware-studio-ipc";
     private static FileStream? _lockFileStream;
     private static CancellationTokenSource? _ipcCancellation;
-    private static string LockFilePath => Path.Combine(Path.GetTempPath(), "oneware-studio.lock");
+    private static string LockFilePath => Path.Combine(Path.GetTempPath(), "OneWare", "oneware-studio.lock");
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
