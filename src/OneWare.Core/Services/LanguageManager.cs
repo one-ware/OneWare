@@ -29,7 +29,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
     private IRawTheme _currentEditorTheme;
 
-    public LanguageManager(ISettingsService settingsService)
+    public LanguageManager(ISettingsService settingsService, IApplicationStateService applicationStateService)
     {
         _currentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
 
@@ -50,6 +50,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
+        
+        applicationStateService.RegisterShutdownTask(CleanResourcesAsync);
     }
 
     public IRegistryOptions RegistryOptions => _textMateRegistryOptions;
@@ -198,10 +200,12 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 }
     }
 
-    public async Task CleanResourcesAsync()
+    private async Task<bool> CleanResourcesAsync()
     {
         await Task.WhenAll(_singleInstanceServers.Select(x => x.Value.DeactivateAsync()));
         await Task.WhenAll(_workspaceServers
             .SelectMany(x => x.Value.Select(b => b.Value.DeactivateAsync())));
+
+        return true;
     }
 }

@@ -63,6 +63,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         Id = "ProjectExplorer";
         Title = "Project Explorer";
+        
+        ApplicationStateService.RegisterShutdownTask(ShutdownAsync);
     }
 
     public IApplicationStateService ApplicationStateService { get; }
@@ -875,6 +877,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     #region LastProjectsFile
 
+    private async Task<bool> ShutdownAsync()
+    {
+        await SaveRecentProjectsFileAsync();
+        await SaveLastProjectsFileAsync();
+        return true;
+    }
+    
     public async Task SaveRecentProjectsFileAsync()
     {
         if (PlatformHelper.Platform is PlatformId.Wasm)

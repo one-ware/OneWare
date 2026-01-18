@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.ApplicationCommands.Services;
@@ -48,7 +49,6 @@ namespace OneWare.Core;
 
 public class App : PrismApplication
 {
-    protected bool _tempMode = false;
     protected AggregateModuleCatalog ModuleCatalog { get; } = new();
 
     protected virtual string GetDefaultLayoutName => "Default";
@@ -355,7 +355,16 @@ public class App : PrismApplication
 
         var mainWindow = Container.Resolve<MainWindow>();
 
-        mainWindow.Closing += (o, i) => _ = TryShutDownAsync(o, i);
+        mainWindow.Closing += (o, i) =>
+        {
+            var applicationStateService = Container.Resolve<IApplicationStateService>();
+
+            if (!applicationStateService.ShutdownComplete)
+            {
+                i.Cancel = true;
+                _ = applicationStateService.TryShutdownAsync();
+            }
+        };
 
         return mainWindow;
     }
@@ -384,6 +393,11 @@ public class App : PrismApplication
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Dispatcher.UIThread.UnhandledException += (s, e) =>
+        {
+            Console.WriteLine($"Unhandled: {e.Exception}");
+        };
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             DisableAvaloniaDataAnnotationValidation();
@@ -460,62 +474,6 @@ public class App : PrismApplication
         Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
         
         return Task.CompletedTask;
-    }
-
-    private async Task TryShutDownAsync(object? sender, CancelEventArgs e)
-    {
-        e.Cancel = true;
-        try
-        {
-            var unsavedFiles = new List<IExtendedDocument>();
-
-            foreach (var tab in Container.Resolve<IDockService>().OpenFiles)
-                if (tab.Value is { IsDirty: true } evm)
-                    unsavedFiles.Add(evm);
-
-            var mainWin = MainWindow as Window;
-            if (mainWin == null) throw new NullReferenceException(nameof(mainWin));
-            var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, mainWin);
-
-            if (shutdownReady) await ShutdownAsync();
-        }
-        catch (Exception ex)
-        {
-            Container.Resolve<ILogger>().Error(ex.Message, ex);
-        }
-    }
-
-    private async Task ShutdownAsync()
-    {
-        if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime cds)
-            foreach (var win in cds.Windows)
-                win.Hide();
-
-        //DockService.ProjectFiles.SaveLastProjectData();
-        Container.Resolve<BackupService>().CleanUp();
-
-        await Container.Resolve<LanguageManager>().CleanResourcesAsync();
-
-        if (!_tempMode)
-        {
-            await Container.Resolve<IProjectExplorerService>().SaveRecentProjectsFileAsync();
-            await Container.Resolve<IProjectExplorerService>().SaveLastProjectsFileAsync();
-        }
-
-        //if (LaunchUpdaterOnExit) Global.PackageManagerViewModel.VhdPlusUpdaterModel.LaunchUpdater(); TODO
-
-        Container.Resolve<ILogger>()?.Log("Closed!", ConsoleColor.DarkGray);
-
-        //Save active layout
-        if (!_tempMode) Container.Resolve<IDockService>().SaveLayout();
-
-        //Save settings
-        Container.Resolve<ISettingsService>().Save(Container.Resolve<IPaths>().SettingsPath);
-
-        //Execute ShutdownActions, like starting the updater
-        Container.Resolve<IApplicationStateService>().ExecuteShutdownActions();
-
-        Environment.Exit(0);
     }
     
     private void DisableAvaloniaDataAnnotationValidation()

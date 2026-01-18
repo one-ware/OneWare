@@ -312,7 +312,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         if (result == MessageBoxStatus.Yes)
         {
             AskForRestart = false;
-            _applicationStateService.TryRestart();
+            _ = _applicationStateService.TryRestartAsync();
         }
         else if (result == MessageBoxStatus.No)
         {

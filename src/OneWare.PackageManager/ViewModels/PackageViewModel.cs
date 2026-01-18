@@ -280,7 +280,7 @@ public class PackageViewModel : ObservableObject
         if (result == MessageBoxStatus.Yes)
         {
             ContainerLocator.Container.Resolve<PackageManagerViewModel>().AskForRestart = false;
-            _applicationStateService.TryRestart();
+            _ = _applicationStateService.TryRestartAsync();
         }
     }
 }

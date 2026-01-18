@@ -83,29 +83,20 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-        // {
-        //     _splashWindow = new SplashWindow
-        //     {
-        //         DataContext = Container.Resolve<SplashWindowViewModel>()
-        //     };
-        //     _splashWindow.Show();
-        //     _splashWindow.Activate();
-        // }
-        
         Container.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
-
+        Container.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
+        
         base.OnFrameworkInitializationCompleted();
+        
+        Program.ReleaseLock();
     }
     
-    // TODO rework this to support folders and more
     private async Task PathOpenTaskAsync(string? path)
     {
         var fileName = path;
         //Check file exists
         if (File.Exists(fileName))
         {
-            _tempMode = true;
             var dockService = Container.Resolve<IDockService>();
 
             var views = dockService.SearchView<Document>();
