@@ -329,8 +329,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     
     public async Task<bool> TryShutdownAsync()
     {
-        Console.WriteLine("Shutting down...");
-        
         try
         {
             foreach (var shutdownTask in _shutdownTasks)
@@ -344,8 +342,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
             }
             
             ShutdownComplete = true;
-            
-            await Task.Delay(1000);
             
             Shutdown();
             
