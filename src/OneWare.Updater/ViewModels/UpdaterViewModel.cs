@@ -175,7 +175,7 @@ public class UpdaterViewModel : ObservableObject
 
             if (resultContinue == MessageBoxStatus.Yes)
             {
-                var updateTasks = updatablePackages.Select(x => x.UpdateAsync(x.Package.Versions!.Last()));
+                var updateTasks = updatablePackages.Select(x => x.UpdateAsync(x.Package.Versions!.Last(), true));
 
                 var updateResult = await Task.WhenAll(updateTasks);
 

@@ -87,11 +87,11 @@ public abstract class PackageModel : ObservableObject
 
     public event EventHandler? Removed;
 
-    public async Task<bool> UpdateAsync(PackageVersion version)
+    public async Task<bool> UpdateAsync(PackageVersion version, bool ignoreCompatibility = false)
     {
         var compat = await CheckCompatibilityAsync(version);
 
-        if (!compat.IsCompatible)
+        if (!compat.IsCompatible && !ignoreCompatibility)
         {
             _logger.Error(compat.Report!);
             return false;
