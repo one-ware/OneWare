@@ -178,10 +178,10 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         for (var i = 0; i < Children.Count; i++)
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
-                                                  string.CompareOrdinal(entry.Header, Children[i].Header) <=
+                                                  string.Compare(entry.Header, Children[i].Header, StringComparison.OrdinalIgnoreCase) <=
                                                   0) || //Insert if both are folders
                                                  (entry is not ProjectFolder && Children[i] is not ProjectFolder &&
-                                                  string.CompareOrdinal(entry.Header, Children[i].Header) <=
+                                                  string.Compare(entry.Header, Children[i].Header, StringComparison.OrdinalIgnoreCase) <=
                                                   0))) //Insert if both are files
             {
                 Children.Insert(i, entry);
