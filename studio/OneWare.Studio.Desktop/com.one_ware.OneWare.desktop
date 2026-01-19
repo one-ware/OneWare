@@ -9,4 +9,4 @@ Type=Application
 Terminal=false
 StartupWMClass=OneWare
 Categories=Development;IDE;Electronics;
-MimeType=text/x-vhdl;text/x-verilog;text/plain;application/x-vcd;x-scheme-handler/oneware;
+MimeType=text/x-vhdl;text/x-verilog;text/plain;application/x-vcd;application/x-fpgaproj;application/x-oneai;x-scheme-handler/oneware;
