@@ -23,7 +23,7 @@ public class SettingsService : ISettingsService
     private readonly Dictionary<string, Setting> _settings = new();
 
     private readonly Dictionary<string, object> _unregisteredSettings = new();
-
+    
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
     {
         SettingCategories.TryAdd(category, new SettingCategory());

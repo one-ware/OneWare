@@ -5,6 +5,8 @@ namespace OneWare.Essentials.Services;
 
 public interface IApplicationStateService
 {
+    public bool ShutdownComplete { get; }
+    
     public ApplicationProcess ActiveProcess { get; }
 
     public ApplicationProcess AddState(string status, AppState state, Action? terminate = null);
@@ -20,6 +22,8 @@ public interface IApplicationStateService
     public void RegisterUrlLaunchAction(string key, Action<string?> action);
     
     public void RegisterShutdownAction(Action action);
+
+    public void RegisterShutdownTask(Func<Task<bool>> task);
     
     public void ExecuteAutoLaunchActions(string? value);
     
@@ -27,9 +31,7 @@ public interface IApplicationStateService
     
     public void ExecuteUrlLaunchActions(Uri uri);
 
-    public void ExecuteShutdownActions();
-
-    public void TryShutdown();
+    public Task<bool> TryShutdownAsync();
     
-    public void TryRestart();
+    public Task<bool> TryRestartAsync();
 }

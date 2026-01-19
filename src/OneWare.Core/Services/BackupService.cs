@@ -29,7 +29,7 @@ public class BackupService
     private DispatcherTimer? _timer;
 
     public BackupService(IPaths paths, IDockService dockService, ISettingsService settingsService,
-        ILogger logger, IWindowService windowService)
+        ILogger logger, IWindowService windowService, IApplicationStateService applicationStateService)
     {
         _dockService = dockService;
         _logger = logger;
@@ -38,6 +38,8 @@ public class BackupService
 
         _backupFolder = Path.Combine(paths.AppDataDirectory, "Backups");
         _backupRegistryFile = Path.Combine(_backupFolder, "BackupRegistry.json");
+        
+        applicationStateService.RegisterShutdownAction(CleanUp);
     }
 
     public void Init()

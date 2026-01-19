@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Core.Views.Windows;
@@ -8,13 +10,14 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
 public class ApplicationStateService : ObservableObject, IApplicationStateService
 {
-    private readonly object _activeLock = new();
+    private readonly Lock _activeLock = new();
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
 
@@ -22,13 +25,16 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private readonly List<Action<string?>> _autoLaunchActions = new();
     private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly List<Action> _shutdownActions = new();
+    private readonly List<Func<Task<bool>>> _shutdownTasks = new();
     private readonly IWindowService _windowService;
-
+    private readonly ILogger _logger;
+    
     private ApplicationProcess _activeProcess = new() { State = AppState.Idle, StatusMessage = "Ready" };
 
-    public ApplicationStateService(IWindowService windowService)
+    public ApplicationStateService(IWindowService windowService, ILogger logger)
     {
         _windowService = windowService;
+        _logger = logger;
 
         _activeStates.CollectionChanged += (_, i) =>
         {
@@ -45,6 +51,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
             }
         };
     }
+
+    public bool ShutdownComplete { get; private set; }
 
     public ApplicationProcess ActiveProcess
     {
@@ -113,6 +121,11 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         _shutdownActions.Add(action);
     }
+    
+    public void RegisterShutdownTask(Func<Task<bool>> task)
+    {
+        _shutdownTasks.Add(task);
+    }
 
     public void ExecuteAutoLaunchActions(string? value)
     {
@@ -139,16 +152,16 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         foreach (var action in _shutdownActions) action.Invoke();
     }
-
-    public void TryShutdown()
-    {
-        Dispatcher.UIThread.Post(() => ContainerLocator.Container.Resolve<MainWindow>().Close());
-    }
     
-    public void TryRestart()
+    public async Task<bool> TryRestartAsync()
     {
-        RegisterShutdownAction(PerformRestart);
-        TryShutdown();
+        var result = await TryShutdownAsync();
+        if (result)
+        {
+            PerformRestart();
+            return true;
+        }
+        return false;
     }
     
     private void PerformRestart()
@@ -312,5 +325,48 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         }
         
         RemoveState(state);
+    }
+    
+    public async Task<bool> TryShutdownAsync()
+    {
+        try
+        {
+            foreach (var shutdownTask in _shutdownTasks)
+            {
+                var result = await shutdownTask.Invoke();
+                if (!result)
+                {
+                    _logger.Log("Shutdown aborted by shutdown task.", ConsoleColor.Yellow);
+                    return false;
+                }
+            }
+            
+            ShutdownComplete = true;
+            
+            Shutdown();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+        }
+
+        return false;
+    }
+    
+    private void Shutdown()
+    {
+        _logger.Log("Closed!", ConsoleColor.DarkGray);
+        
+        //Save settings
+        ContainerLocator.Container.Resolve<ISettingsService>().Save(ContainerLocator.Container.Resolve<IPaths>().SettingsPath);
+
+        ExecuteShutdownActions();
+        
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
+        {
+            desktopApp.Shutdown();
+        }
     }
 }

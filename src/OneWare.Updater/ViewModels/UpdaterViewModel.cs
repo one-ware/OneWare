@@ -40,7 +40,7 @@ public class UpdaterViewModel : ObservableObject
         _packageService = packageService;
         _windowService = windowService;
 
-        applicationStateService.RegisterShutdownAction(PerformRestartAction);
+        applicationStateService.RegisterShutdownAction(OpenUpdaterAction);
     }
 
 
@@ -204,10 +204,10 @@ public class UpdaterViewModel : ObservableObject
 
     public void TryRestart()
     {
-        _applicationStateService.TryShutdown();
+        _ = _applicationStateService.TryShutdownAsync();
     }
 
-    private void PerformRestartAction()
+    private void OpenUpdaterAction()
     {
         if (Status is not UpdaterStatus.RestartRequired) return;
 

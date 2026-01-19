@@ -27,6 +27,13 @@ internal abstract class Program
     private static FileStream? _lockFileStream;
     private static CancellationTokenSource? _ipcCancellation;
     private static string LockFilePath => Path.Combine(Path.GetTempPath(), "OneWare", "oneware-studio.lock");
+
+    public static void ReleaseLock()
+    {
+        _lockFileStream?.Close();
+        _lockFileStream?.Dispose();
+    }
+    
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
@@ -63,6 +70,8 @@ internal abstract class Program
     {
         try
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(LockFilePath) ?? Path.GetTempPath());
+            
             _lockFileStream = new FileStream(
                 LockFilePath,
                 FileMode.OpenOrCreate,
@@ -342,6 +351,7 @@ internal abstract class Program
 
             // We are the primary instance - start IPC server
             _ipcCancellation = new CancellationTokenSource();
+            
             _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
 
             var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

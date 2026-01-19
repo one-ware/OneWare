@@ -15,6 +15,7 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -42,7 +43,7 @@ public class DockService : Factory, IDockService
 
     private RootDock? _layout;
 
-    public DockService(IPaths paths, IWindowService windowService, WelcomeScreenViewModel welcomeScreenViewModel,
+    public DockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService, WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;
@@ -58,6 +59,29 @@ public class DockService : Factory, IDockService
                 Command = new RelayCommand(ResetLayout)
             }
         );
+        
+        applicationStateService.RegisterShutdownTask(async () =>
+        {
+            var unsavedFiles = new List<IExtendedDocument>();
+            
+            foreach (var tab in OpenFiles)
+                if (tab.Value is { IsDirty: true } evm)
+                    unsavedFiles.Add(evm);
+            
+            var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, ContainerLocator.Container.Resolve<MainWindow>());
+
+            if (shutdownReady)
+            {
+                SaveLayout();
+
+                foreach (var tab in OpenFiles.Values.OfType<ExtendedDocument>())
+                {
+                    tab.IsDirty = false;
+                }
+            }
+            
+            return shutdownReady;
+        });
     }
 
     public Dictionary<IFile, IExtendedDocument> OpenFiles { get; } = new();
