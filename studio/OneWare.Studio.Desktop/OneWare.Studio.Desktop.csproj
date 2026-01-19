@@ -38,15 +38,15 @@
         <AvaloniaResource Include="Assets\Startup.png"/>
     </ItemGroup>
 
-    <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
-        <PackageReference Include="Tmds.DBus.Protocol" Version="0.23.0" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"/>
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.23.0" />
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.mime.xml" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
-    <!--Exclude Terminal on Linux to stop crashes on SetWindowSize-->
-    <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+    <!--Exclude Terminal on Linux to stop crashes on SetWindowSize. TODO: Check if this is still needed-->
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll" />
     </ItemGroup>
     
