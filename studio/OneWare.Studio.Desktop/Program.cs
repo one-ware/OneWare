@@ -30,8 +30,17 @@ internal abstract class Program
 
     public static void ReleaseLock()
     {
-        _lockFileStream?.Close();
-        _lockFileStream?.Dispose();
+        try
+        {
+            _ipcCancellation?.Cancel();
+            _ipcCancellation?.Dispose();
+            _lockFileStream?.Close();
+            _lockFileStream?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error releasing lock: {ex.Message}");
+        }
     }
     
     // This method is needed for IDE previewer infrastructure
@@ -355,13 +364,7 @@ internal abstract class Program
             _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
 
             var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-
-            // Cleanup
-            _ipcCancellation?.Cancel();
-            _ipcCancellation?.Dispose();
-            _lockFileStream?.Close();
-            _lockFileStream?.Dispose();
-
+            
             return result;
         }
         catch (Exception ex)

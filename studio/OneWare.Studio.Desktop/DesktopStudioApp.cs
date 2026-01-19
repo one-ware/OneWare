@@ -87,8 +87,6 @@ public class DesktopStudioApp : StudioApp
         Container.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
         
         base.OnFrameworkInitializationCompleted();
-        
-        Program.ReleaseLock();
     }
     
     private async Task PathOpenTaskAsync(string? path)
