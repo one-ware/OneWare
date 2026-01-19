@@ -1,26 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <ItemGroup>
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.13" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.13" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.13" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.13" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-x64" Version="4.12.0.13" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
         <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13" />
     </ItemGroup>
 
