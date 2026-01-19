@@ -12,6 +12,9 @@ jobs:
     name: Build
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [linux-x64, linux-arm64]
     outputs:
       version: ${{ steps.get-oneware-version.outputs.info }}
     steps:
@@ -30,7 +33,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Publish
-        run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r linux-x64 -o ./out
+        run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r ${{ matrix.arch }} -o ./out
       - name: Compress
         uses: a7ul/tar-action@v1.1.0
         id: compress
@@ -38,16 +41,16 @@ jobs:
           command: c
           files: ./
           cwd: ./out
-          outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
+          outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz
       - name: Create VersionInfo
-        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz" > ./out/linux-x64.txt
+        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz" > ./out/${{ matrix.arch }}.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-artifacts
+          name: linux-artifacts-${{ matrix.arch }}
           path: |
-            ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-linux-x64.tgz
-            ./out/linux-x64.txt
+            ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz
+            ./out/${{ matrix.arch }}.txt
 
   deploy:
     name: Deploy
@@ -56,10 +59,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download Artifacts
+      - name: Download Artifacts (x64)
         uses: actions/download-artifact@v4
         with:
-          name: linux-artifacts
+          name: linux-artifacts-linux-x64
+      - name: Download Artifacts (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifacts-linux-arm64
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
@@ -79,6 +86,8 @@ jobs:
           password: ${{ secrets.ONEWARE_SFTP_PW }}
           script: |
             set cmd:fail-exit false
+            put OneWareStudio-${{ needs.build.outputs.version }}-linux-arm64.tgz -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-linux-arm64.tgz
+            put linux-arm64.txt -o ./cdn.one-ware.com/onewarestudio/linux-arm64.txt
             mkdir ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}
             set cmd:fail-exit true
             put OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-linux-x64.tgz

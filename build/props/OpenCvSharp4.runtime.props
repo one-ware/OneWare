@@ -1,75 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <!-- Windows x64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'win-x64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('Windows'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.13"/>
+    <ItemGroup>
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.13" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.13" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.13" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.13" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-x64" Version="4.12.0.13" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13" />
     </ItemGroup>
 
-    <!-- Windows arm64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'win-arm64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('Windows'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.13"/>
-    </ItemGroup>
-
-    <!-- Linux x64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'linux-x64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('Linux'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.13"/>
-    </ItemGroup>
-
-    <!-- Linux arm64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'linux-arm64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('Linux'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.13"/>
-    </ItemGroup>
-
-    <!-- macOS x64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'osx-x64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('MacOS'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'X64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13"/>
-    </ItemGroup>
-
-    <!-- macOS arm64 -->
-    <ItemGroup Condition="
-    '$(RuntimeIdentifier)' == 'osx-arm64'
-    OR
-    (
-      $([MSBuild]::IsOSPlatform('MacOS'))
-      AND
-      $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) == 'Arm64'
-    )">
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.13"/>
-    </ItemGroup>
 </Project>

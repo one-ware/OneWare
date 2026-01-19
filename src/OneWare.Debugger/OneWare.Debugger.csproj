@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <Content Include="Assets\SIGINT.exe"
-                 Condition="$([MSBuild]::IsOSPlatform('Windows')) And $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">
+                 Condition="'$(RuntimeIdentifier)' == 'win-x64'">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
