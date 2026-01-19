@@ -29,6 +29,23 @@
                         Type="string" />
                 </RegistryKey>
 
+                <!-- Associate .oneai files -->
+                <RegistryKey Root="HKCR" Key=".oneai">
+                    <RegistryValue Value="OneWare.AIFile" Type="string" />
+                    <RegistryValue Name="PerceivedType" Value="document" Type="string" />
+                </RegistryKey>
+
+                <!-- Assign an icon to .oneai files -->
+                <RegistryKey Root="HKCR" Key="OneWare.AIFile\DefaultIcon">
+                    <RegistryValue Value="[#OneWareStudioExe],0" Type="string" />
+                </RegistryKey>
+
+                <!-- Define how to open .oneai files -->
+                <RegistryKey Root="HKCR" Key="OneWare.AIFile\shell\open\command">
+                    <RegistryValue Value="&quot;[#OneWareStudioExe]&quot; &quot;%1&quot;"
+                        Type="string" />
+                </RegistryKey>
+
                 <!-- Register OneWare Studio in the "Open With" list -->
                 <RegistryKey Root="HKCR" Key="Applications\OneWareStudio.exe">
                     <RegistryValue Name="FriendlyAppName" Value="OneWare Studio" Type="string" />

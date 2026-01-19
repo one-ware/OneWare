@@ -25,6 +25,38 @@ cat > "$plist_file" <<EOF
     <key>CFBundleIdentifier</key>
     <string>oneware.onewarestudio</string>
 
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>OneWare FPGA Project</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>fpgaproj</string>
+            </array>
+            <key>CFBundleTypeIconFile</key>
+            <string>OneWare.icns</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>OneWare AI File</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>oneai</string>
+            </array>
+            <key>CFBundleTypeIconFile</key>
+            <string>OneWare.icns</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+        </dict>
+    </array>
+
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
