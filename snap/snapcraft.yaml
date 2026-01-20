@@ -6,10 +6,10 @@ confinement: classic
 adopt-info: oneware
 
 platforms:
-  linux-x64:
+  amd64:
     build-on: [amd64]
     build-for: [amd64]
-  linux-arm64:
+  arm64:
     build-on: [arm64]
     build-for: [arm64]
 
@@ -42,7 +42,7 @@ parts:
       export DOTNET_CLI_TELEMETRY_OPTOUT=1
       
       # Determine the correct .NET runtime identifier based on architecture
-      if [ "$SNAPCRAFT_BUILD_FOR" = "arm64" ]; then
+      if [ "SNAPCRAFT_TARGET_ARCH" = "arm64" ]; then
         DOTNET_RID="linux-arm64"
       else
         DOTNET_RID="linux-x64"
