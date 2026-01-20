@@ -8,33 +8,21 @@ on:
       - completed
 
 jobs:
-  # Build Snap and upload to Snap Store
   deploy-snapcraft:
-    name: Deploy for Snap Store
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: mavrosxristoforos/get-xml-info@2.0
-        name: Get Version
-        id: get-oneware-version
-        with:
-          xml-file: './build/props/Base.props'
-          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - name: Build Snap
-        uses: snapcore/action-build@v1
-        id: build
-      - name: Upload Snap
-        uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_ONEWARE }}
-        with:
-          snap: ${{ steps.build.outputs.snap }}
-          release: stable
+
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+
+      - name: Login to Snapcraft
+        run: |
+          echo "${{ secrets.SNAPCRAFT_ONEWARE }}" | snapcraft login --with -
+
+      - name: Build & publish multi-arch snap
+        run: |
+          snapcraft remote-build --build-for=amd64,arm64
