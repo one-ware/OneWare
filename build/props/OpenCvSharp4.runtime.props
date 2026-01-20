@@ -2,12 +2,12 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <ItemGroup>
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.14" />
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.14" />
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.14" />
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.14" />
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-x64" Version="4.12.0.14" />
-        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.14" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-x64" Version="4.12.0.16" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.win-arm64" Version="4.12.0.16" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-x64" Version="4.12.0.16" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.ubuntu.24.04-arm64" Version="4.12.0.16" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-x64" Version="4.12.0.16" />
+        <PackageReference Include="OneWare.OpenCvSharp4.runtime.osx-arm64" Version="4.12.0.16" />
     </ItemGroup>
 
 </Project>
