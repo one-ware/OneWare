@@ -19,10 +19,8 @@ jobs:
         run: |
           sudo snap install snapcraft --classic
 
-      - name: Login to Snapcraft
-        run: |
-          echo "${{ secrets.SNAPCRAFT_ONEWARE }}" | snapcraft login --with -
-
       - name: Build & publish multi-arch snap
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
           snapcraft remote-build --build-for=amd64,arm64
