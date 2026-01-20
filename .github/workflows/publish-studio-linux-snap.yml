@@ -23,4 +23,4 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_ONEWARE }}
         run: |
-          snapcraft remote-build --build-for=amd64,arm64 --launchpad-accept-public-upload --no-wait
+          snapcraft remote-build --build-for=amd64,arm64 --launchpad-accept-public-upload
