@@ -10,14 +10,18 @@ on:
 jobs:
   deploy-snapcraft:
     name: Deploy Snap (${{ matrix.arch }})
-    runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     strategy:
+      fail-fast: false
       matrix:
-        arch:
-          - amd64
-          - arm64
+        include:
+          - arch: amd64
+            runs_on: ubuntu-latest
+          - arch: arm64
+            runs_on: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runs_on }}
 
     steps:
       - name: Checkout
@@ -25,33 +29,21 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: mavrosxristoforos/get-xml-info@2.0
-        name: Get Version
+      - name: Get Version
+        uses: mavrosxristoforos/get-xml-info@2.0
         id: get-oneware-version
         with:
           xml-file: './build/props/Base.props'
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      # Required for non-amd64 builds
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Build Snap (${{ matrix.arch }})
-        id: snapcraft
-        uses: soumyaDghosh/snapcraft-multiarch-action@master
-        with:
-          architecture: ${{ matrix.arch }}
-          snapcraft-channel: stable
+        uses: snapcore/action-build@v1
+        id: build
 
       - name: Upload Snap (${{ matrix.arch }})
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_ONEWARE }}
         with:
-          snap: ${{ steps.snapcraft.outputs.snap }}
+          snap: ${{ steps.build.outputs.snap }}
           release: stable
