@@ -29,6 +29,8 @@ parts:
     source: .
     parse-info: [studio/OneWare.Studio.Desktop/com.one_ware.OneWare.metainfo.xml]
     build-packages:
+      - curl
+      - tar
       - libicu74
     override-build: |
       export TZ=Europe/Berlin

@@ -9,18 +9,49 @@ on:
 
 jobs:
   deploy-snapcraft:
+    name: Deploy Snap (${{ matrix.arch }})
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Snapcraft
-        run: |
-          sudo snap install snapcraft --classic
+      - uses: mavrosxristoforos/get-xml-info@2.0
+        name: Get Version
+        id: get-oneware-version
+        with:
+          xml-file: './build/props/Base.props'
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
 
-      - name: Build & publish multi-arch snap
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Required for non-amd64 builds
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build Snap (${{ matrix.arch }})
+        id: snapcraft
+        uses: soumyaDghosh/snapcraft-multiarch-action@master
+        with:
+          architecture: ${{ matrix.arch }}
+          snapcraft-channel: stable
+
+      - name: Upload Snap (${{ matrix.arch }})
+        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_ONEWARE }}
-        run: |
-          snapcraft remote-build --launchpad-accept-public-upload --status
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: stable
