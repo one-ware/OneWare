@@ -106,8 +106,8 @@ public abstract class TitledSetting : CollectionSetting
 
         try
         {
-            ValidationMessage = !Validator.Validate(value, out string? validationMsg) ? validationMsg : null;
-            ValidationIsError = false;
+            ValidationIsError = !Validator.Validate(value, out string? validationMsg);
+            ValidationMessage = validationMsg;
         }
         catch (ValidationException ex)
         {
