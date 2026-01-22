@@ -8,29 +8,46 @@
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
              x:DataType="settingTypes:CheckBoxSettingViewModel">
     <Border Padding="0 3">
-        <StackPanel Orientation="Horizontal" Spacing="4">
-            <StackPanel.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
-                </ContextMenu>
-            </StackPanel.ContextMenu>
-            <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
-                      IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
-            <StackPanel Spacing="3" Orientation="Horizontal">
-                <TextBlock Text="{Binding Setting.Title}" Margin="0 1 0 0"
-                           ToolTip.Tip="{Binding Setting.HoverDescription}" />
-                <Button Padding="0" VerticalAlignment="Center"
-                        IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
-                           VerticalAlignment="Center" />
-                    <Button.Flyout>
-                        <Flyout>
-                            <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
-                                                         MaxWidth="900" MaxHeight="500" />
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+        <StackPanel Orientation="Vertical" Spacing="2">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <StackPanel.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                    </ContextMenu>
+                </StackPanel.ContextMenu>
+                <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center" 
+                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
+                          Command="{Binding Setting.InvalidateValidation}" 
+                          CommandParameter="{Binding $self.IsChecked}"/>
+                <StackPanel Spacing="3" Orientation="Horizontal">
+                    <TextBlock Text="{Binding Setting.Title}" Margin="0 1 0 0"
+                               ToolTip.Tip="{Binding Setting.HoverDescription}" />
+                    <Button Padding="0" VerticalAlignment="Center"
+                            IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                               VerticalAlignment="Center" />
+                        <Button.Flyout>
+                            <Flyout>
+                                <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                             MaxWidth="900" MaxHeight="500" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
             </StackPanel>
+            <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11"
+                       IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       Classes.Warning="{Binding !Setting.ValidationIsError}"
+                       Classes.Error="{Binding Setting.ValidationIsError}">
+                <TextBlock.Styles>
+                    <Style Selector="TextBlock.Warning">
+                        <Setter Property="Foreground" Value="Orange" />
+                    </Style>
+                    <Style Selector="TextBlock.Error">
+                        <Setter Property="Foreground" Value="Red" />
+                    </Style>
+                </TextBlock.Styles> 
+            </TextBlock>
         </StackPanel>
     </Border>
 </UserControl>

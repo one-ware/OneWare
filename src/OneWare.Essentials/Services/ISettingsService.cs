@@ -3,8 +3,22 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
 
+public class SavingEventArgs(object hostWindow) : EventArgs
+{
+    public object HostWindow { get; } = hostWindow;
+    public bool Cancelled { get; private set; }
+    
+    public void Cancel()
+    {
+        Cancelled = true;
+    }
+}
+
 public interface ISettingsService
 {
+    public event EventHandler<SavingEventArgs>? OnSaving;
+    public event EventHandler? OnSaved;
+    
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null);
 
     public void RegisterSettingSubCategory(string category, string subCategory, int priority = 0,
@@ -71,4 +85,5 @@ public interface ISettingsService
     public void Reset(string key);
 
     public void ResetAll();
+    public void Saving(object host, out bool cancel);
 }

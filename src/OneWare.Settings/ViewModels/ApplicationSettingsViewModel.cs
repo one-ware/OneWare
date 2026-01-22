@@ -79,6 +79,10 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
     public void Save(FlexibleWindow window)
     {
+        _settingsService.Saving(window, out bool cancel);
+        if (cancel)
+            return;
+        
         Close(window);
         _settingsService.Save(_paths.SettingsPath);
     }

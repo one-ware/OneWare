@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -28,11 +29,16 @@ public class Setting : ObservableObject
             var originalType = DefaultValue.GetType();
             if(value.GetType() != originalType)
                 value = Convert.ChangeType(value, originalType);
-            SetProperty(ref _value, value);
+            SetValue(value);
         }
     }
 
     public object DefaultValue { get; }
+
+    protected virtual void SetValue(object value)
+    {
+        SetProperty(ref _value, value);
+    }
 }
 
 public abstract class CollectionSetting : Setting
@@ -48,6 +54,8 @@ public abstract class CollectionSetting : Setting
 
 public abstract class TitledSetting : CollectionSetting
 {
+    protected const string ValidationFallbackMessage = "Invalid: Please check the value";
+    
     public TitledSetting(string title, object defaultValue) : base(defaultValue)
     {
         Title = title;
@@ -59,11 +67,66 @@ public abstract class TitledSetting : CollectionSetting
     
     public string? MarkdownDocumentation { get; init; }
     
+    public ISettingValidation? Validator { get; init; }
+
+    public string? ValidationMessage
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public bool ValidationIsError
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
+    public void InvalidateValidation(object value)
+    {
+        InvalidateValidation(value, out _);
+    }
+    
     public abstract TitledSetting Clone();
+    
+    protected override void SetValue(object value)
+    {
+        InvalidateValidation(value, out bool set);
+        
+        if (set)
+            base.SetValue(value);
+    }
+    
+    private void InvalidateValidation(object value, out bool set)
+    {
+        if (Validator is null)
+        {
+            set = true;
+            return;
+        }
+
+        try
+        {
+            ValidationMessage = !Validator.Validate(value, out string? validationMsg) ? validationMsg : null;
+            ValidationIsError = false;
+        }
+        catch (ValidationException ex)
+        {
+            ValidationMessage = string.IsNullOrEmpty(ex.Message) ? ValidationFallbackMessage : ex.Message;
+            ValidationIsError = true;
+        }
+        catch
+        {
+            ValidationMessage = ValidationFallbackMessage;
+            ValidationIsError = true;
+        }
+        set = !ValidationIsError;
+    }
 }
 
-
-
+public interface ISettingValidation
+{
+    bool Validate(object? value, out string? warningMessage);
+}
 
 public class CheckBoxSetting : TitledSetting
 {
