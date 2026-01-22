@@ -16,7 +16,6 @@ public class SavingEventArgs(object hostWindow) : EventArgs
 
 public interface ISettingsService
 {
-    public event EventHandler<SavingEventArgs>? OnSaving;
     public event EventHandler? OnSaved;
     
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null);
@@ -85,5 +84,4 @@ public interface ISettingsService
     public void Reset(string key);
 
     public void ResetAll();
-    public void Saving(object host, out bool cancel);
 }

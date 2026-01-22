@@ -20,7 +20,6 @@ public class SettingsService : ISettingsService
     private Dictionary<string, object>? _loadedSettings;
 
     public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
-    public event EventHandler<SavingEventArgs>? OnSaving;
     public event EventHandler? OnSaved;
     
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
@@ -311,13 +310,6 @@ public class SettingsService : ISettingsService
     public void WhenLoaded(Action action)
     {
         _afterLoadingActions.Add(action);
-    }
-
-    public void Saving(object host, out bool cancel)
-    {
-        SavingEventArgs args = new(host);
-        OnSaving?.Invoke(this, args);
-        cancel = args.Cancelled;
     }
 
     private void AddSetting(string category, string subCategory, string key, Setting setting)
