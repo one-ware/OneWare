@@ -188,6 +188,15 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
+public class AdvancedComboBoxSearchSetting(string title, object defaultValue, AdvancedComboBoxOption[] options)
+    : AdvancedComboBoxSetting(title, defaultValue, options)
+{
+    public override TitledSetting Clone()
+    {
+        return new AdvancedComboBoxSearchSetting(Title, DefaultValue, Options);
+    }
+}
+
 public class AdvancedComboBoxSetting : TitledSetting
 {
     public AdvancedComboBoxSetting(string title, object defaultValue, AdvancedComboBoxOption[] options) : base(title, defaultValue)
@@ -237,6 +246,11 @@ public class AdvancedComboBoxOption
     public IObservable<bool>? IsEnabledObservable { get; init; }
     
     public IObservable<bool>? IsVisibleObservable { get; init; }
+
+    public override string? ToString()
+    {
+        return Value.ToString();
+    }
 }
 
 public class ListBoxSetting : TitledSetting
