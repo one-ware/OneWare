@@ -227,7 +227,7 @@ public class AdvancedComboBoxOption
 
     public override string? ToString()
     {
-        return Value.ToString();
+        return Title;
     }
 }
 
