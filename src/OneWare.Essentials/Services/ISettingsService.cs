@@ -10,7 +10,7 @@ public class SaveEventArgs(bool autoSave) : EventArgs
 
 public interface ISettingsService
 {
-    public event EventHandler<SaveEventArgs>? OnSaved;
+    public event EventHandler<SaveEventArgs>? Saved;
     
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null);
 
