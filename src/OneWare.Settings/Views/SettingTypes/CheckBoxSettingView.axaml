@@ -16,9 +16,7 @@
                     </ContextMenu>
                 </StackPanel.ContextMenu>
                 <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center" 
-                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                          Command="{Binding Setting.InvalidateValidation}" 
-                          CommandParameter="{Binding $self.IsChecked}"/>
+                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"/>
                 <StackPanel Spacing="3" Orientation="Horizontal">
                     <TextBlock Text="{Binding Setting.Title}" Margin="0 1 0 0"
                                ToolTip.Tip="{Binding Setting.HoverDescription}" />
@@ -35,19 +33,8 @@
                     </Button>
                 </StackPanel>
             </StackPanel>
-            <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11"
-                       IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                       Classes.Warning="{Binding !Setting.ValidationIsError}"
-                       Classes.Error="{Binding Setting.ValidationIsError}">
-                <TextBlock.Styles>
-                    <Style Selector="TextBlock.Warning">
-                        <Setter Property="Foreground" Value="Orange" />
-                    </Style>
-                    <Style Selector="TextBlock.Error">
-                        <Setter Property="Foreground" Value="Red" />
-                    </Style>
-                </TextBlock.Styles> 
-            </TextBlock>
+            <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
+                       IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         </StackPanel>
     </Border>
 </UserControl>

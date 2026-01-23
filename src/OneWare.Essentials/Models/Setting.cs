@@ -74,52 +74,30 @@ public abstract class TitledSetting : CollectionSetting
         get;
         set => SetProperty(ref field, value);
     }
-
-    public bool ValidationIsError
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-    
-    public void InvalidateValidation(object value)
-    {
-        InvalidateValidation(value, out _);
-    }
     
     public abstract TitledSetting Clone();
     
     protected override void SetValue(object value)
     {
-        InvalidateValidation(value, out bool set);
-        
-        if (set)
-            base.SetValue(value);
-    }
-    
-    private void InvalidateValidation(object value, out bool set)
-    {
         if (Validator is null)
         {
-            set = true;
+            base.SetValue(value);
             return;
         }
 
         try
         {
-            ValidationIsError = !Validator.Validate(value, out string? validationMsg);
-            ValidationMessage = validationMsg;
+            ValidationMessage = !Validator.Validate(value, out string? validationMsg) ? validationMsg ?? ValidationFallbackMessage : null;
         }
         catch (ValidationException ex)
         {
             ValidationMessage = string.IsNullOrEmpty(ex.Message) ? ValidationFallbackMessage : ex.Message;
-            ValidationIsError = true;
         }
         catch
         {
             ValidationMessage = ValidationFallbackMessage;
-            ValidationIsError = true;
         }
-        set = !ValidationIsError;
+        base.SetValue(value);
     }
 }
 

@@ -3,20 +3,14 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
 
-public class SavingEventArgs(object hostWindow) : EventArgs
+public class SaveEventArgs(bool autoSave) : EventArgs
 {
-    public object HostWindow { get; } = hostWindow;
-    public bool Cancelled { get; private set; }
-    
-    public void Cancel()
-    {
-        Cancelled = true;
-    }
+    public bool AutoSave { get; } = autoSave;
 }
 
 public interface ISettingsService
 {
-    public event EventHandler? OnSaved;
+    public event EventHandler<SaveEventArgs>? OnSaved;
     
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null);
 
@@ -77,7 +71,7 @@ public interface ISettingsService
 
     public void Load(string path);
 
-    public void Save(string path);
+    public void Save(string path, bool autoSave = true);
 
     public void WhenLoaded(Action action);
 

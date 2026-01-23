@@ -80,7 +80,7 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
     public void Save(FlexibleWindow window)
     {
         Close(window);
-        _settingsService.Save(_paths.SettingsPath);
+        _settingsService.Save(_paths.SettingsPath, false);
     }
 
     public async Task ResetDialogAsync(FlexibleWindow window)
