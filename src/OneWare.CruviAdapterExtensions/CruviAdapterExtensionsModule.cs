@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

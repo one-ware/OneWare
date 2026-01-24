@@ -45,8 +45,6 @@ namespace OneWare.Studio.Desktop;
 
 public class DesktopStudioApp : StudioApp
 {
-    private Window? _splashWindow;
-
     protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
@@ -84,10 +82,10 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
+        base.OnFrameworkInitializationCompleted();
+        
         Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
         Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
-        
-        base.OnFrameworkInitializationCompleted();
     }
     
     private async Task PathOpenTaskAsync(string? path)
@@ -131,11 +129,13 @@ public class DesktopStudioApp : StudioApp
         services.AddSingleton<AiReleaseWindowViewModel>();
     }
 
-    protected override void InitializeShell(AvaloniaObject shell)
+    protected override AvaloniaObject CreateShell()
     {
-        base.InitializeShell(shell);
+        var shell = base.CreateShell();
         
         Services.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
+
+        return shell;
     }
 
     protected override async Task LoadContentAsync()
@@ -203,9 +203,6 @@ public class DesktopStudioApp : StudioApp
         {
             Services.Resolve<ILogger>().Error(e.Message, e);
         }
-        
-        //close the loading splash screen
-        _splashWindow?.Close();
 
         try
         {
@@ -242,7 +239,7 @@ public class DesktopStudioApp : StudioApp
                 Dispatcher.UIThread.Post(() =>
                 {
                     Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
-                        $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Container
+                        $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Services
                             .Resolve<IWindowService>().Show(new UpdaterView
                             {
                                 DataContext = Services.Resolve<UpdaterViewModel>()

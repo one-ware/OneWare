@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
-using ImTools;
 using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;
 using OneWare.Demo.Desktop.ViewModels;
@@ -15,15 +14,14 @@ using OneWare.Essentials.Services;
 using OneWare.PackageManager;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
-using Prism.Ioc;
-using Prism.Modularity;
 using System.CommandLine;
+using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Demo.Desktop;
 
 public class DesktopDemoApp : DemoApp
 {
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
 
@@ -34,16 +32,16 @@ public class DesktopDemoApp : DemoApp
         try
         {
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
+            foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Services.Resolve<ILogger>().Error(e.Message, e);
         }
         
         if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
         {
-            Container.Resolve<IPluginService>().AddPlugin(pluginPath);
+            Services.Resolve<IPluginService>().AddPlugin(pluginPath);
         }
     }
 
@@ -71,12 +69,12 @@ public class DesktopDemoApp : DemoApp
             {
                 if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                 {
-                    var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Container.Resolve<IDockService>().OpenFileAsync(file);
+                    var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
+                    _ = Services.Resolve<IDockService>().OpenFileAsync(file);
                 }
                 else
                 {
-                    Container.Resolve<ILogger>()?.Log("Could not load file " + fileName);
+                    Services.Resolve<ILogger>()?.Log("Could not load file " + fileName);
                 }
             }
         }
@@ -84,26 +82,26 @@ public class DesktopDemoApp : DemoApp
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                var key = Container.Resolve<IApplicationStateService>()
+                var key = Services.Resolve<IApplicationStateService>()
                     .AddState("Loading last projects...", AppState.Loading);
-                await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                Container.Resolve<IDockService>().InitializeContent();
-                Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
+                await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+                Services.Resolve<IDockService>().InitializeContent();
+                Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             }
         }
 
         try
         {
-            var settingsService = Container.Resolve<ISettingsService>();
-            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            var settingsService = Services.Resolve<ISettingsService>();
+            Services.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
 
             if (settingsService.GetSettingValue<string>("LastVersion") != Global.VersionCode)
             {
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
 
-                Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                    () => { Container.Resolve<IWindowService>().Show(new ChangelogView()); },
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
+                    $"{Services.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
+                    () => { Services.Resolve<IWindowService>().Show(new ChangelogView()); },
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
             }
 
@@ -114,7 +112,7 @@ public class DesktopDemoApp : DemoApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Services.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 }

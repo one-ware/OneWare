@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
-using Prism.Ioc;
 
 namespace OneWare.Demo;
 
@@ -26,13 +26,13 @@ public class DemoApp : App
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
+        services.AddSingleton(SettingsService);
+        services.AddSingleton(Paths);
+        services.AddSingleton(Logger);
 
-        base.RegisterTypes(containerRegistry);
+        base.RegisterServices(services);
     }
 
     public override void Initialize()

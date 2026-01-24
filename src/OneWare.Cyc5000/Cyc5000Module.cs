@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Cyc5000.ViewModels;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Cyc5000;

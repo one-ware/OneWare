@@ -342,27 +342,31 @@ public class App : Application
             PlatformHelper.OpenHyperLink(link);
         });
 
-        if (ApplicationLifetime is ISingleViewApplicationLifetime)
+        StyledElement shell; 
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            var mainView = Services.Resolve<MainView>();
-            mainView.DataContext = Services.Resolve<MainWindowViewModel>();
-            return mainView;
-        }
-
-        var mainWindow = Services.Resolve<MainWindow>();
-
-        mainWindow.Closing += (o, i) =>
-        {
-            var applicationStateService = Services.Resolve<IApplicationStateService>();
-
-            if (!applicationStateService.ShutdownComplete)
+            var mainWindow = Services.Resolve<MainWindow>();
+            mainWindow.Closing += (o, i) =>
             {
-                i.Cancel = true;
-                _ = applicationStateService.TryShutdownAsync();
-            }
-        };
+                var applicationStateService = Services.Resolve<IApplicationStateService>();
 
-        return mainWindow;
+                if (!applicationStateService.ShutdownComplete)
+                {
+                    i.Cancel = true;
+                    _ = applicationStateService.TryShutdownAsync();
+                }
+            };
+
+            shell = mainWindow;
+        }
+        else
+        {
+            shell = Services.Resolve<MainView>();
+        }
+        
+        shell.DataContext = Services.Resolve<MainWindowViewModel>();
+
+        return shell;
     }
 
     protected virtual void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
@@ -403,6 +407,7 @@ public class App : Application
         var compositeProvider = new CompositeServiceProvider(rootProvider, _moduleServiceRegistry);
 
         ContainerLocator.SetContainer(compositeProvider);
+        
         _moduleManager.SetLogger(compositeProvider.Resolve<ILogger>());
 
         LoadStartupPlugins();
