@@ -7,8 +7,6 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;
-using OneWare.Demo.Desktop.ViewModels;
-using OneWare.Demo.Desktop.Views;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager;

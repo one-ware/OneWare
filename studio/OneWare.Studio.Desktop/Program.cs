@@ -18,6 +18,7 @@ using System.CommandLine;
 using System.Linq;
 using OneWare.Core.Views.Windows;
 using Microsoft.Extensions.Logging;
+using OneWare.Studio.Desktop.Views;
 
 namespace OneWare.Studio.Desktop;
 
