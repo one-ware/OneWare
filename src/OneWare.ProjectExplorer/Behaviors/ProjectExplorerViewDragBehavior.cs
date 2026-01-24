@@ -4,27 +4,21 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Platform.Storage;
 using Avalonia.Xaml.Interactions.DragAndDrop;
 using Avalonia.Xaml.Interactivity;
+using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectExplorer.Behaviors;
 
-/// <summary>
-/// </summary>
-public class TreeDataGridDragBehavior : Behavior<Control>
+public class ProjectExplorerViewDragBehavior : Behavior<Control>
 {
-    /// <summary>
-    /// </summary>
     public static readonly StyledProperty<IDragHandler?> HandlerProperty =
         AvaloniaProperty.Register<ContextDragBehavior, IDragHandler?>(nameof(Handler));
-
-    /// <summary>
-    /// </summary>
+    
     public static readonly StyledProperty<double> HorizontalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(HorizontalDragThreshold), 3);
-
-    /// <summary>
-    /// </summary>
+    
     public static readonly StyledProperty<double> VerticalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(VerticalDragThreshold), 3);
 
@@ -32,26 +26,19 @@ public class TreeDataGridDragBehavior : Behavior<Control>
     private Point _dragStartPoint;
     private bool _lock;
     private PointerEventArgs? _triggerEvent;
-
-
-    /// <summary>
-    /// </summary>
+    
     public IDragHandler? Handler
     {
         get => GetValue(HandlerProperty);
         set => SetValue(HandlerProperty, value);
     }
-
-    /// <summary>
-    /// </summary>
+    
     public double HorizontalDragThreshold
     {
         get => GetValue(HorizontalDragThresholdProperty);
         set => SetValue(HorizontalDragThresholdProperty, value);
     }
-
-    /// <summary>
-    /// </summary>
+    
     public double VerticalDragThreshold
     {
         get => GetValue(VerticalDragThresholdProperty);
@@ -80,11 +67,8 @@ public class TreeDataGridDragBehavior : Behavior<Control>
         AssociatedObject?.RemoveHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost);
     }
 
-    private async Task DoDragDropAsync(PointerEventArgs triggerEvent, object? value)
+    private async Task DoDragDropAsync(PointerEventArgs triggerEvent, DataTransfer data)
     {
-        var data = new DataObject();
-        data.Set(ContextDropBehavior.DataFormat, value!);
-
         var effect = DragDropEffects.None;
 
         if (triggerEvent.KeyModifiers.HasFlag(KeyModifiers.Alt))
@@ -98,7 +82,7 @@ public class TreeDataGridDragBehavior : Behavior<Control>
 
         try
         {
-            await DragDrop.DoDragDrop(triggerEvent, data, effect);
+            await DragDrop.DoDragDropAsync(triggerEvent, data, effect);
         }
         catch (Exception e)
         {
@@ -166,17 +150,47 @@ public class TreeDataGridDragBehavior : Behavior<Control>
                 else
                     return;
 
-                var context = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection?.SelectedItems;
+                var selectedItems = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection?.SelectedItems.OfType<IProjectEntry>();
 
-                Handler?.BeforeDragDrop(sender, _triggerEvent, context);
+                if (selectedItems == null) return;
+                
+                var transfer = new DataTransfer();
+                
+                foreach (var selectedItem in selectedItems)
+                {
+                    var storageItem = await CreateStorageItemAsync(selectedItem);
 
-                await DoDragDropAsync(_triggerEvent, context);
+                    if (storageItem is not null)
+                    {
+                        transfer.Add(DataTransferItem.CreateFile(storageItem));
+                    }
+                }
+                
+                Handler?.BeforeDragDrop(sender, _triggerEvent, selectedItems);
 
-                Handler?.AfterDragDrop(sender, _triggerEvent, context);
+                await DoDragDropAsync(_triggerEvent, transfer);
+
+                Handler?.AfterDragDrop(sender, _triggerEvent, selectedItems);
 
                 _triggerEvent = null;
             }
         }
+    }
+
+    private async Task<IStorageItem?> CreateStorageItemAsync(IProjectEntry entry)
+    {
+        var storageProvider = TopLevel.GetTopLevel(AssociatedObject)?.StorageProvider;
+        if (storageProvider == null) return null;
+        
+        if (entry is IProjectFile file)
+        {
+            return await storageProvider.TryGetFileFromPathAsync(file.FullPath);
+        }
+        else if (entry is IProjectFolder folder)
+        {
+            return await storageProvider.TryGetFolderFromPathAsync(folder.FullPath);
+        }
+        return null;
     }
 
     private void AssociatedObject_CaptureLost(object? sender, PointerCaptureLostEventArgs e)

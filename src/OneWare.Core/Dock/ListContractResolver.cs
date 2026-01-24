@@ -32,6 +32,7 @@ public class ListContractResolver : DefaultContractResolver
                     var resolveParameters = parameters
                         .Where(x => x != null)
                         .Select(x => (x?.GetType(), x))
+                        .OfType<(Type, object)>()
                         .ToArray();
 
                     var resolve = ContainerLocator.Container!.Resolve(type, resolveParameters);

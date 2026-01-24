@@ -21,51 +21,31 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
 
         if (targetParent == null) return false;
 
-        //Import files or folders from outside
-        if (sourceContext is not IReadOnlyList<T> sourceNodes)
-        {
-            if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
-            {
-                if (bExecute)
-                    _ = vm.DropAsync(targetParent, false, true, files
-                        .Select(x => x.TryGetLocalPath())
-                        .Where(x => x != null)
-                        .Cast<string>()
-                        .ToArray());
-                return true;
-            }
+        var files = e.DataTransfer.TryGetFiles();
 
-            return false;
-        }
-
-        if (!sourceNodes.All(x => x is IProjectEntry)) return false;
-
-        var sourceEntities = sourceNodes.Cast<IProjectEntry>().ToArray();
-        
-        foreach (var sourceNode in sourceEntities)
-        {
-            if (targetParent == sourceNode.Parent) return false;
-
-            if (sourceNode.FullPath == targetParent.FullPath)
-                return false;
-
-            if (sourceNode is IProjectFolder sourceFolder && targetParent.FullPath.StartsWith(sourceFolder.FullPath))
-                return false;
-        }
+        if (files == null) return false;
         
         switch (e.DragEffects)
         {
             case DragDropEffects.Copy:
             {
                 if (bExecute)
-                    _ = vm.DropAsync(targetParent, true, true, sourceEntities.Select(x => x.FullPath).ToArray());
+                    _ = vm.DropAsync(targetParent, true, true, files
+                        .Select(x => x.TryGetLocalPath())
+                        .Where(x => x != null)
+                        .Cast<string>()
+                        .ToArray());
 
                 return true;
             }
             case DragDropEffects.Move:
             {
                 if (bExecute)
-                    _ = vm.DropAsync(targetParent, true, false, sourceEntities.Select(x => x.FullPath).ToArray());
+                    _ = vm.DropAsync(targetParent, true, false, files
+                        .Select(x => x.TryGetLocalPath())
+                        .Where(x => x != null)
+                        .Cast<string>()
+                        .ToArray());
 
                 return true;
             }

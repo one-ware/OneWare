@@ -72,7 +72,7 @@
                             <behaviors:CommandOnDoubleTapBehavior
                                 Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding}" />
-                            <behaviors1:TreeDataGridDragBehavior />
+                            <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
