@@ -3,6 +3,7 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.ProjectSystem.Models;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.FolderProjectSystem;
 

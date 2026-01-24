@@ -4,6 +4,7 @@ using Avalonia.Svg.Skia;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.ImageViewer.ViewModels;
 

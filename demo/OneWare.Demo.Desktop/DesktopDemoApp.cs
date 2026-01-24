@@ -15,6 +15,7 @@ using OneWare.PackageManager;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
 using System.CommandLine;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Demo.Desktop;

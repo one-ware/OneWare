@@ -2,6 +2,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.PackageManager.Models;
 

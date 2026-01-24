@@ -8,6 +8,7 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 

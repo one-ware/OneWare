@@ -14,6 +14,7 @@ using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 using OpenCvSharp;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.PackageManager.Services;
 

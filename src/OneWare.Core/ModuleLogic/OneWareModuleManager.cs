@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.ModuleLogic;
 
@@ -83,7 +84,7 @@ public sealed class OneWareModuleManager
 
         foreach (var module in moduleList)
         {
-            foreach (var dependency in module.Dependencies ?? Array.Empty<string>())
+            foreach (var dependency in module.Dependencies ?? [])
             {
                 if (!moduleById.ContainsKey(dependency))
                 {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
 using Avalonia.Media;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.Services;
 

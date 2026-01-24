@@ -13,9 +13,8 @@
     <Import Project="..\..\build\props\AvaloniaEdit.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.TextMate.props"/>
     <Import Project="..\..\build\props\Dock.Avalonia.props"/>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
-    </ItemGroup>
+    <Import Project="..\..\build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props"/>
+    <Import Project="..\..\build\props\Microsoft.Extensions.Logging.Abstractions.props"/>
     <Import Project="..\..\build\props\Jint.props"/>
     <Import Project="..\..\build\props\CommunityToolkit.Mvvm.props"/>
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>

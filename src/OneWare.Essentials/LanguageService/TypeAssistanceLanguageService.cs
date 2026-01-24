@@ -26,6 +26,7 @@ using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
 using Location = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.LanguageService;
 

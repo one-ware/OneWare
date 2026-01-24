@@ -30,6 +30,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Range = System.Range;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Views.DockViews;
 

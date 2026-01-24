@@ -2,6 +2,7 @@
 using Avalonia.Input;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.ApplicationCommands.Serialization;
 

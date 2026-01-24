@@ -9,6 +9,7 @@ using OneWare.Terminal.Provider.Unix;
 using OneWare.Terminal.Provider.Win32;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Terminal.ViewModels;
 

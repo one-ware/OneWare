@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
@@ -15,8 +16,6 @@ public class DemoApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Demo", "avares://OneWare.Demo/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new Logger(Paths);
-
     static DemoApp()
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
@@ -30,7 +29,6 @@ public class DemoApp : App
     {
         services.AddSingleton(SettingsService);
         services.AddSingleton(Paths);
-        services.AddSingleton(Logger);
 
         base.RegisterServices(services);
     }

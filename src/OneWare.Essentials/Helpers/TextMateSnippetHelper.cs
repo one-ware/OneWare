@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.Helpers;
 

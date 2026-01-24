@@ -17,6 +17,7 @@ using OneWare.Essentials.Services;
 using System.CommandLine;
 using System.Linq;
 using OneWare.Core.Views.Windows;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Studio.Desktop;
 
@@ -204,7 +205,6 @@ internal abstract class Program
 
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}", ConsoleColor.Cyan);
-
             
             ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
 

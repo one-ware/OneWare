@@ -5,6 +5,7 @@ using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.ViewModels;
 

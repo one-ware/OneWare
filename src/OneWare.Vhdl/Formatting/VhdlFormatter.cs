@@ -3,6 +3,7 @@ using AvaloniaEdit.Document;
 using Jint;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vhdl.Formatting;
 

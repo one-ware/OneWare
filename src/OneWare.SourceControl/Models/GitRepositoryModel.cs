@@ -9,6 +9,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.SourceControl.Models;
 

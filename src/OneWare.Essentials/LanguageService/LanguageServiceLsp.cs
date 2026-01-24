@@ -19,6 +19,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.LanguageService;
 

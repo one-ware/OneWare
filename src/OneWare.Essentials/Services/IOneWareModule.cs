@@ -12,4 +12,3 @@ public interface IOneWareModule
 
     void Initialize(IServiceProvider serviceProvider);
 }
-

@@ -44,6 +44,10 @@
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
     <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
     <File Path="build/props/XUnit.props" />
+    <File Path="build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props" />
+    <File Path="build\props\Microsoft.Extensions.DependencyInjection.props" />
+    <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props" />
+    <File Path="build\props\Microsoft.Extensions.Logging.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
     <File Path="build\props\OpenCvSharp4.props" />

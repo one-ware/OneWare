@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 

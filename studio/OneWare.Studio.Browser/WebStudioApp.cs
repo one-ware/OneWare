@@ -7,6 +7,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.Vcd.Viewer.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Studio.Browser;
 

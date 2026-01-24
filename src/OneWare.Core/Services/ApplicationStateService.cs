@@ -11,6 +11,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 

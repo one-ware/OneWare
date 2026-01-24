@@ -4,6 +4,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.Models;
 

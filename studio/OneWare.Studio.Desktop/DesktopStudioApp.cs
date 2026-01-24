@@ -39,6 +39,7 @@ using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
 using OneWare.Verilog;
 using OneWare.Vhdl;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Studio.Desktop;
 

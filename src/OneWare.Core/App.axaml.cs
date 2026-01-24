@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.Models;
@@ -40,7 +41,10 @@ using OneWare.SearchList;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using OneWare.Toml;
+using Serilog;
+using Serilog.Events;
 using TextMateSharp.Grammars;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace OneWare.Core;
 
@@ -64,6 +68,10 @@ public class App : Application
 
     protected virtual void RegisterServices(IServiceCollection services)
     {
+        services.AddLogging(ConfigureLogging);
+        services.AddSingleton<ILogger>(provider =>
+            provider.GetRequiredService<ILoggerFactory>().CreateLogger("OneWare"));
+
         //Services
         services.AddSingleton<IPluginService, PluginService>();
         services.AddSingleton<IHttpService, HttpService>();
@@ -382,6 +390,31 @@ public class App : Application
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<DebuggerModule>();
         moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
+    }
+
+    protected virtual string GetLogFilePath()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "oneware.log");
+    }
+
+    protected virtual void ConfigureLogging(ILoggingBuilder builder)
+    {
+        var logPath = GetLogFilePath();
+        var logDirectory = Path.GetDirectoryName(logPath);
+        if (!string.IsNullOrWhiteSpace(logDirectory))
+            Directory.CreateDirectory(logDirectory);
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, shared: true)
+            .WriteTo.Console()
+            .CreateLogger();
+
+        builder.ClearProviders();
+        builder.AddSerilog(Log.Logger, dispose: true);
     }
 
     protected virtual void LoadStartupPlugins()

@@ -26,6 +26,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Orientation = Avalonia.Layout.Orientation;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable StringLiteralTypo
 

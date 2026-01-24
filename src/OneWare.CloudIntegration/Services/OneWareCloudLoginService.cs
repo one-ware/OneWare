@@ -14,6 +14,7 @@ using GitCredentialManager;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using RestSharp;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.Services;
 

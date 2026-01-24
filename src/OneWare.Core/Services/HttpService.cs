@@ -6,6 +6,7 @@ using OneWare.Core.Extensions;
 using OneWare.Essentials.Services;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 

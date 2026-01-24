@@ -23,8 +23,6 @@ public class StudioApp : App
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
 
-    private static readonly ILogger Logger = new Logger(Paths);
-
     static StudioApp()
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
@@ -44,9 +42,12 @@ public class StudioApp : App
         services.AddSingleton(SettingsService);
         services.AddSingleton(ProjectSettingsService);
         services.AddSingleton(Paths);
-        services.AddSingleton(Logger);
-
         base.RegisterServices(services);
+    }
+
+    protected override string GetLogFilePath()
+    {
+        return Path.Combine(Paths.DocumentsDirectory, "IDELog.txt");
     }
 
     public override void Initialize()

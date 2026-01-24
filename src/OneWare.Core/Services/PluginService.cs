@@ -7,6 +7,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 

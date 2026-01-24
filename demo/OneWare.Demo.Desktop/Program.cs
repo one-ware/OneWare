@@ -9,6 +9,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using System.CommandLine;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Demo.Desktop;
 

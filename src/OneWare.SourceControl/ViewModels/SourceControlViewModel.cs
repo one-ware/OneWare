@@ -19,6 +19,7 @@ using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Models;
 using OneWare.SourceControl.Views;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.SourceControl.ViewModels;
 

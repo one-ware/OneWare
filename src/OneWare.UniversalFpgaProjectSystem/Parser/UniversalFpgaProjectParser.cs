@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Avalonia.Threading;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Parser;
 

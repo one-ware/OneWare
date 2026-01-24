@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Context;
 
