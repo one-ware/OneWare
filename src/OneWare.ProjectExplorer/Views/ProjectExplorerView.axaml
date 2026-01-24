@@ -58,7 +58,7 @@
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
                 <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
-                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialog}"
+                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialogAsync}"
                                                        TriggerKey="Delete" />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>

@@ -866,7 +866,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         target.IsExpanded = true;
     }
 
-    public Task DeleteSelectedDialog()
+    public Task DeleteSelectedDialogAsync()
     {
         if (SelectedItems.Count == 0 || SelectedItems.Any(x => x is not IProjectEntry)) return Task.CompletedTask;
 
@@ -976,7 +976,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         public string ProjectType { get; }
         public string Path { get; }
         public bool IsExpanded { get; }
-
         public bool IsActive { get; }
     }
 
