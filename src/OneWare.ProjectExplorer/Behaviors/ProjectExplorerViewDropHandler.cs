@@ -25,13 +25,40 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         IProjectFolder targetFolder,
         IEnumerable<string> sourcePaths)
     {
-        var targetPath = Path.GetFullPath(targetFolder.FullPath);
+        static string Normalize(string path)
+        {
+            var full = Path.GetFullPath(path);
+
+            // normalize directory paths
+            if (!full.EndsWith(Path.DirectorySeparatorChar))
+                full += Path.DirectorySeparatorChar;
+
+            return full;
+        }
+
+        var targetPath = Normalize(targetFolder.FullPath);
 
         return sourcePaths.Any(src =>
         {
-            var sourceDir = Path.GetDirectoryName(Path.GetFullPath(src));
-            return sourceDir != null &&
-                   Path.Equals(sourceDir, targetPath);
+            var fullSrc = Path.GetFullPath(src);
+            
+            if (File.Exists(fullSrc))
+            {
+                var sourceDir = Path.GetDirectoryName(fullSrc);
+                return sourceDir != null &&
+                       Normalize(sourceDir) == targetPath;
+            }
+            
+            if (Directory.Exists(fullSrc))
+            {
+                var parentDir = Path.GetDirectoryName(
+                    fullSrc.TrimEnd(Path.DirectorySeparatorChar));
+
+                return parentDir != null &&
+                       Normalize(parentDir) == targetPath;
+            }
+
+            return false;
         });
     }
     

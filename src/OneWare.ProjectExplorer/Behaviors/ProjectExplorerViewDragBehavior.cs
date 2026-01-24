@@ -13,9 +13,6 @@ namespace OneWare.ProjectExplorer.Behaviors;
 
 public class ProjectExplorerViewDragBehavior : Behavior<Control>
 {
-    public static readonly StyledProperty<IDragHandler?> HandlerProperty =
-        AvaloniaProperty.Register<ContextDragBehavior, IDragHandler?>(nameof(Handler));
-    
     public static readonly StyledProperty<double> HorizontalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(HorizontalDragThreshold), 3);
     
@@ -26,12 +23,6 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
     private Point _dragStartPoint;
     private bool _lock;
     private PointerEventArgs? _triggerEvent;
-    
-    public IDragHandler? Handler
-    {
-        get => GetValue(HandlerProperty);
-        set => SetValue(HandlerProperty, value);
-    }
     
     public double HorizontalDragThreshold
     {
@@ -166,11 +157,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
                     }
                 }
                 
-                Handler?.BeforeDragDrop(sender, _triggerEvent, selectedItems);
-
                 await DoDragDropAsync(_triggerEvent, transfer);
-
-                Handler?.AfterDragDrop(sender, _triggerEvent, selectedItems);
 
                 _triggerEvent = null;
             }
