@@ -71,7 +71,7 @@ public class App : Application
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
         services.AddSingleton<ILanguageManager, LanguageManager>();
         services.AddSingleton<IApplicationStateService, ApplicationStateService>();
-        services.AddSingleton<IDockService, DockService>();
+        services.AddSingleton<IMainDockService, MainDockService>();
         services.AddSingleton<IWindowService, WindowService>();
         services.AddSingleton<IModuleTracker, ModuleTracker>();
         services.AddSingleton<BackupService>();
@@ -153,13 +153,13 @@ public class App : Application
             new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
-            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>())
+            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>().ToArray())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Dark Mode"
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light",
-            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus, Enum.GetValues<ThemeName>().Cast<object>())
+            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus, Enum.GetValues<ThemeName>().Cast<object>().ToArray())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Light Mode"
             });
@@ -250,8 +250,8 @@ public class App : Application
             Header = "Format",
             IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
             Command = new RelayCommand(
-                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
-                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel),
+                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.Format(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel),
             InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
@@ -259,8 +259,8 @@ public class App : Application
             Header = "Comment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
             Command = new RelayCommand(
-                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
-                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
+                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
             InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
@@ -268,16 +268,16 @@ public class App : Application
             Header = "Uncomment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
             Command = new RelayCommand(
-                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
-                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
+                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
             InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
         });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
         {
             Command = new AsyncRelayCommand(
-                () => Services.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
-                () => Services.Resolve<IDockService>().CurrentDocument is not null),
+                () => Services.Resolve<IMainDockService>().CurrentDocument!.SaveAsync(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is not null),
             Header = "Save Current",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
             IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
@@ -288,7 +288,7 @@ public class App : Application
             Command = new RelayCommand(
                 () =>
                 {
-                    foreach (var file in Services.Resolve<IDockService>().OpenFiles) _ = file.Value.SaveAsync();
+                    foreach (var file in Services.Resolve<IMainDockService>().OpenFiles) _ = file.Value.SaveAsync();
                 }),
             Header = "Save All",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
@@ -454,7 +454,7 @@ public class App : Application
 
         Services.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
         Services.Resolve<BackupService>().LoadAutoSaveFile();
-        Services.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
+        Services.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
         Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Services.Resolve<BackupService>().Init();
 

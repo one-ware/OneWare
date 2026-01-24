@@ -44,7 +44,7 @@ public class SourceControlModule : OneWareModuleBase
         settingsService.RegisterTitledSlider("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
             "Poll changes interval", "Interval in seconds", 5, 1, 60, 1);
 
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SourceControl")
@@ -56,7 +56,7 @@ public class SourceControlModule : OneWareModuleBase
 
         if (serviceProvider.Resolve<SourceControlViewModel>() is not { } vm) return;
 
-        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(_ =>
+        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new OneWareUiExtension(_ =>
             new SourceControlMainWindowBottomRightExtension
             {
                 DataContext = vm

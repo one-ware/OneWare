@@ -11,25 +11,25 @@ using OneWare.Core.Views.Controls;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
-using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
-    private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
+    private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _uiExtensions = new();
 
-    public void RegisterUiExtension(string key, UiExtension extension)
+    public void RegisterUiExtension(string key, OneWareUiExtension extension)
     {
         _uiExtensions.TryAdd(key, []);
         _uiExtensions[key].Add(extension);
     }
 
-    public ObservableCollection<UiExtension> GetUiExtensions(string key)
+    public ObservableCollection<OneWareUiExtension> GetUiExtensions(string key)
     {
         _uiExtensions.TryAdd(key, []);
         return _uiExtensions[key];

@@ -19,14 +19,13 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Core.Services;
 
-public class DockService : Factory, IDockService
+public class MainDockService : Factory, IMainDockService
 {
     private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
-    private readonly Dictionary<string, ObservableCollection<UiExtension>> _documentViewExtensions = new();
+    private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
     private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
@@ -42,7 +41,7 @@ public class DockService : Factory, IDockService
 
     private RootDock? _layout;
 
-    public DockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService, WelcomeScreenViewModel welcomeScreenViewModel,
+    public MainDockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService, WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;

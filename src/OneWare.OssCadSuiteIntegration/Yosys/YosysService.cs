@@ -18,7 +18,7 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService, 
+    IMainDockService mainDockService, 
     IToolService toolService,
     IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
@@ -32,7 +32,7 @@ public class YosysService(
         var buildDir = Path.Combine(project.FullPath, "build");
         Directory.CreateDirectory(buildDir);
 
-        dockService.Show<IOutputService>();
+        mainDockService.Show<IOutputService>();
 
         var start = DateTime.Now;
             

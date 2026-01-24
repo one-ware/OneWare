@@ -11,9 +11,9 @@ public class ImageViewModel : ExtendedDocument
 {
     private IImage? _image;
 
-    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
+    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
         IWindowService windowService) :
-        base(fullPath, projectExplorerService, dockService, windowService)
+        base(fullPath, projectExplorerService, mainDockService, windowService)
     {
     }
 

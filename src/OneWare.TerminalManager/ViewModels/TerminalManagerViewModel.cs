@@ -13,18 +13,18 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.Console";
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IPaths _paths;
 
     private readonly IProjectExplorerService _projectExplorerService;
 
     private TerminalTabModel? _selectedTerminalTab;
 
-    public TerminalManagerViewModel(ISettingsService settingsService, IDockService dockService,
+    public TerminalManagerViewModel(ISettingsService settingsService, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService, IPaths paths) : base(IconKey)
     {
         _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _paths = paths;
 
         Title = "Terminal";
@@ -64,7 +64,7 @@ public class TerminalManagerViewModel : ExtendedTool
 
         if (!Terminals.Any())
         {
-            _dockService.CloseDockable(this);
+            _mainDockService.CloseDockable(this);
             return;
         }
 
@@ -97,7 +97,7 @@ public class TerminalManagerViewModel : ExtendedTool
 
             var wrapper = new StandaloneTerminalViewModel(title, terminal);
 
-            _dockService.Show(wrapper);
+            _mainDockService.Show(wrapper);
 
             Observable.FromEventPattern(terminal, nameof(terminal.TerminalReady)).Take(1)
                 .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(

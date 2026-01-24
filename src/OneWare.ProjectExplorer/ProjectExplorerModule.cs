@@ -25,12 +25,12 @@ public class ProjectExplorerModule : OneWareModuleBase
     {
         if (serviceProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
 
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
 
         dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);
 
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new UiExtension(_ =>
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new OneWareUiExtension(_ =>
             new ProjectExplorerMainWindowToolBarExtension
             {
                 DataContext = vm

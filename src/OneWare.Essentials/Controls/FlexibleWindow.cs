@@ -205,7 +205,7 @@ public class FlexibleWindow : UserControl
             if (DataContext is not Document doc)
                 throw new Exception("ViewModel for FlexibleWindow must be Document");
 
-            ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
+            ContainerLocator.Container.Resolve<IMainDockService>().Show(doc, DockShowLocation.Document);
         }
 
         AttachedToHost();

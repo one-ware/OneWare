@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Services;
 using OneWare.Vcd.Viewer.ViewModels;
 
@@ -13,7 +13,7 @@ public class VcdViewerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
+        serviceProvider.Resolve<IMainDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
 
         serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".vcdconf", ".json");
 

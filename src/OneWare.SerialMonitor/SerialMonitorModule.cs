@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +20,7 @@ public class SerialMonitorModule : OneWareModuleBase
     public override void Initialize(IServiceProvider serviceProvider)
     {
         var windowService = serviceProvider.Resolve<IWindowService>();
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
 
         settingsService.Register("SerialMonitor_SelectedBaudRate", 9600);

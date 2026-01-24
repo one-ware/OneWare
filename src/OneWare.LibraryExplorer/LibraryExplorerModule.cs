@@ -19,7 +19,7 @@ public class LibraryExplorerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
 
         dockService.RegisterLayoutExtension<LibraryExplorerViewModel>(DockShowLocation.Left);

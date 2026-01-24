@@ -246,7 +246,7 @@ public abstract class LanguageServiceBase : ILanguageService
     public virtual void ApplyContainer(string path, IEnumerable<TextEdit> con)
     {
         var openDoc =
-            ContainerLocator.Container.Resolve<IDockService>().OpenFiles
+            ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
                 .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Value as IEditor;
 
         try
@@ -298,7 +298,7 @@ public abstract class LanguageServiceBase : ILanguageService
         {
             var path = pdp.Uri.GetFileSystemPath();
             
-            var file = ContainerLocator.Container.Resolve<IDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+            var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
             

@@ -39,7 +39,6 @@ using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
 using OneWare.Verilog;
 using OneWare.Vhdl;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Studio.Desktop;
 
@@ -94,7 +93,7 @@ public class DesktopStudioApp : StudioApp
         //Check file exists
         if (File.Exists(fileName))
         {
-            var dockService = Services.Resolve<IDockService>();
+            var dockService = Services.Resolve<IMainDockService>();
 
             var views = dockService.SearchView<Document>();
 
@@ -113,7 +112,7 @@ public class DesktopStudioApp : StudioApp
             else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
             {
                 var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                _ = Services.Resolve<IDockService>().OpenFileAsync(file);
+                _ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
             }
             else
             {
@@ -148,7 +147,7 @@ public class DesktopStudioApp : StudioApp
             var key = Services.Resolve<IApplicationStateService>()
                 .AddState("Loading last projects...", AppState.Loading);
             await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-            Services.Resolve<IDockService>().InitializeContent();
+            Services.Resolve<IMainDockService>().InitializeContent();
             Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             Services.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             

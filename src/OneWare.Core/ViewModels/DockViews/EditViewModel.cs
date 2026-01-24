@@ -25,7 +25,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     private readonly BackupService _backupService;
 
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IErrorService _errorService;
     private readonly ILanguageManager _languageManager;
     private readonly IProjectExplorerService _projectExplorerService;
@@ -39,12 +39,12 @@ public class EditViewModel : ExtendedDocument, IEditor
     private ITypeAssistance? _typeAssistance;
 
     public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
-        IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
+        IMainDockService mainDockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
-        BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
+        BackupService backupService) : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
         _settingsService = settingsService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _languageManager = languageManager;
@@ -124,8 +124,8 @@ public class EditViewModel : ExtendedDocument, IEditor
         set => SetProperty(ref _diagnostics, value);
     }
 
-    public ObservableCollection<UiExtension> TopExtensions { get; }
-    public ObservableCollection<UiExtension> BottomExtensions { get; }
+    public ObservableCollection<OneWareUiExtension> TopExtensions { get; }
+    public ObservableCollection<OneWareUiExtension> BottomExtensions { get; }
 
     public ExtendedTextEditor Editor { get; } = new();
 

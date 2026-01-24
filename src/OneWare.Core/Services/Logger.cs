@@ -82,7 +82,7 @@ public class Logger : ILogger
             Dispatcher.UIThread.Post(() =>
             {
                 ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Red);
-                ContainerLocator.Current.Resolve<IDockService>()
+                ContainerLocator.Current.Resolve<IMainDockService>()
                     .Show(ContainerLocator.Current.Resolve<IOutputService>());
             });
 
@@ -103,7 +103,7 @@ public class Logger : ILogger
         if (showOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
         {
             ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Orange);
-            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
         }
 
         if (showDialog)

@@ -25,7 +25,6 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
 // ReSharper disable StringLiteralTypo
@@ -326,7 +325,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             ".pcf");
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
-            new UiExtension(x =>
+            new OneWareUiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectPinPlannerViewModel cm) return null;
                 return new YosysCompileWindowExtensionView
@@ -338,7 +337,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             }));
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
-            new UiExtension(x =>
+            new OneWareUiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
 
@@ -433,7 +432,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             }));
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension(
-            "UniversalFpgaToolBar_DownloaderConfigurationExtension", new UiExtension(x =>
+            "UniversalFpgaToolBar_DownloaderConfigurationExtension", new OneWareUiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectRoot cm) return null;
                 return new OpenFpgaLoaderWindowExtensionView
@@ -527,7 +526,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             }
         });
 
-        serviceProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
+        serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
             serviceProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
             return true;

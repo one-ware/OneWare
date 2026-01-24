@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +18,7 @@ public class DebuggerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemViewModel("Debugger")

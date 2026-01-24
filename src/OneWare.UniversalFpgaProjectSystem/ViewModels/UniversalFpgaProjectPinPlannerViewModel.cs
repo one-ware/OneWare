@@ -103,7 +103,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
 
-    public ObservableCollection<UiExtension> TopRightExtension { get; }
+    public ObservableCollection<OneWareUiExtension> TopRightExtension { get; }
 
     public UniversalFpgaProjectRoot Project { get; }
 

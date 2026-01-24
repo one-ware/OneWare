@@ -82,7 +82,7 @@ public partial class OutputView : OutputBaseView
 
         if (result is IFile file)
         {
-            var doc = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            var doc = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
             if (doc is not IEditor evb) return;
 
             var offset = evb.CurrentDocument.GetOffset(_searchResult.Line, _searchResult.Column);

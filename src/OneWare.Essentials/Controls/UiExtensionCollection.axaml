@@ -12,7 +12,7 @@
             <ControlTemplate>
                 <ItemsControl ItemsPanel="{TemplateBinding ItemsPanel}" ItemsSource="{TemplateBinding Extensions}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:UiExtension">
+                        <DataTemplate x:DataType="models:OneWareUiExtension">
                             <controls:UiExtensionControl
                                 Context="{Binding $parent[controls:UiExtensionCollection].Context, Mode=OneWay}"
                                 UiExtension="{Binding}" />

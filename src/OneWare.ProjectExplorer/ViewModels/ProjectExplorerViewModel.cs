@@ -20,7 +20,7 @@ namespace OneWare.ProjectExplorer.ViewModels;
 public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerService
 {
     public const string IconKey = "EvaIcons.FolderOutline";
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IFileWatchService _fileWatchService;
     private readonly ILanguageManager _languageManager;
 
@@ -42,7 +42,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private IProjectRoot? _activeProject;
 
     public ProjectExplorerViewModel(IApplicationStateService applicationStateService, IPaths paths,
-        IDockService dockService,
+        IMainDockService mainDockService,
         IWindowService windowService, ISettingsService settingsService,
         IProjectManagerService projectManagerService, IFileWatchService fileWatchService,
         ILanguageManager languageManager)
@@ -50,7 +50,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         ApplicationStateService = applicationStateService;
         _paths = paths;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
         _settingsService = settingsService;
         _projectManagerService = projectManagerService;
@@ -110,7 +110,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
     {
         var folderPath = await StorageProviderHelper.SelectFolderAsync(
-            _dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Folder Path",
+            _mainDockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Folder Path",
             _paths.ProjectsDirectory);
 
         if (folderPath == null) return null;
@@ -152,7 +152,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         params FilePickerFileType[]? filters)
     {
         var filePath = await StorageProviderHelper.SelectFileAsync(
-            _dockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Project File",
+            _mainDockService.GetWindowOwner(this) ?? throw new NullReferenceException("Window"), "Select Project File",
             _paths.ProjectsDirectory, filters);
 
         if (filePath == null) return null;
@@ -185,7 +185,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public void DoubleTab(IProjectEntry entry)
     {
         if (entry is IProjectFile file)
-            _ = _dockService.OpenFileAsync(file);
+            _ = _mainDockService.OpenFileAsync(file);
         else
             entry.IsExpanded = !entry.IsExpanded;
     }
@@ -202,7 +202,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     menuItems.Add(new MenuItemViewModel("Open")
                     {
                         Header = "Open",
-                        Command = new AsyncRelayCommand(() => _dockService.OpenFileAsync(file))
+                        Command = new AsyncRelayCommand(() => _mainDockService.OpenFileAsync(file))
                     });
                     break;
                 case IProjectFolder folder:
@@ -349,9 +349,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task OpenFileDialogAsync()
     {
-        var file = await StorageProviderHelper.SelectFileAsync(_dockService.GetWindowOwner(this)!, "Select File", null);
+        var file = await StorageProviderHelper.SelectFileAsync(_mainDockService.GetWindowOwner(this)!, "Select File", null);
 
-        if (file != null) await _dockService.OpenFileAsync(GetTemporaryFile(file));
+        if (file != null) await _mainDockService.OpenFileAsync(GetTemporaryFile(file));
     }
 
     private async Task<bool> AskForIncludeDialogAsync(IProjectRoot root, string relativePath)
@@ -360,7 +360,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         {
             var dialogResult = await _windowService.ShowYesNoCancelAsync("Warning",
                 $"{Path.GetFileName(relativePath)} is not included in {root.Header}! Do you want to include it?",
-                MessageBoxIcon.Warning, _dockService.GetWindowOwner(this));
+                MessageBoxIcon.Warning, _mainDockService.GetWindowOwner(this));
 
             switch (dialogResult)
             {
@@ -382,7 +382,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var newFile = await _windowService.ShowInputAsync("Create File", "Enter a name for the new file!",
             MessageBoxIcon.Info,
-            "NewFile.txt", _dockService.GetWindowOwner(this));
+            "NewFile.txt", _mainDockService.GetWindowOwner(this));
 
         if (!string.IsNullOrWhiteSpace(newFile))
         {
@@ -394,7 +394,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             var f = parent.AddFile(newFile, true);
             parent.IsExpanded = true;
-            await _dockService.OpenFileAsync(f);
+            await _mainDockService.OpenFileAsync(f);
         }
     }
 
@@ -402,7 +402,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         var newFolder = await _windowService.ShowInputAsync("Create Folder", "Enter a name for the new folder!",
             MessageBoxIcon.Info,
-            "NewFolder", _dockService.GetWindowOwner(this));
+            "NewFolder", _mainDockService.GetWindowOwner(this));
 
         if (!string.IsNullOrWhiteSpace(newFolder))
         {
@@ -433,10 +433,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (entry is IProjectRoot proj)
         {
-            var openFiles = _dockService.OpenFiles.Where(x => x.Key is IProjectFile pf && pf.Root == proj).ToList();
+            var openFiles = _mainDockService.OpenFiles.Where(x => x.Key is IProjectFile pf && pf.Root == proj).ToList();
 
             foreach (var tab in openFiles)
-                if (!await _dockService.CloseFileAsync(tab.Key))
+                if (!await _mainDockService.CloseFileAsync(tab.Key))
                     return;
 
             ProjectRemoved?.Invoke(this, proj);
@@ -467,7 +467,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         else if (entry is IProjectFile file)
         {
-            if (!await _dockService.CloseFileAsync(file)) return;
+            if (!await _mainDockService.CloseFileAsync(file)) return;
             FileRemoved?.Invoke(this, file);
         }
 
@@ -499,7 +499,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
 
         var result = await _windowService.ShowYesNoAsync("Warning", message, MessageBoxIcon.Warning,
-            _dockService.GetWindowOwner(this));
+            _mainDockService.GetWindowOwner(this));
 
         if (result == MessageBoxStatus.Yes)
             await DeleteAsync(entries);
@@ -547,7 +547,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
 
-        var folders = await StorageProviderHelper.SelectFoldersAsync(_dockService.GetWindowOwner(this)!,
+        var folders = await StorageProviderHelper.SelectFoldersAsync(_mainDockService.GetWindowOwner(this)!,
             "Import Folders to " + destination.Header,
             destination.FullPath);
 
@@ -566,7 +566,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             return;
         }
 
-        var files = await StorageProviderHelper.SelectFilesAsync(_dockService.GetWindowOwner(this)!,
+        var files = await StorageProviderHelper.SelectFilesAsync(_mainDockService.GetWindowOwner(this)!,
             "Import Files to " + destination.Header,
             destination.FullPath);
 
@@ -686,7 +686,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             //TODO make reload working without fully replacing the project
             //For now we just re-initialize the files that are open from the project and still included
 
-            var filesOpenInProject = _dockService.OpenFiles
+            var filesOpenInProject = _mainDockService.OpenFiles
                 .Where(x => x.Key is IProjectFile pf && pf.Root == root)
                 .Select(x => new { File = (x.Key as IProjectFile)!, ViewModel = x.Value })
                 .ToList();
@@ -697,8 +697,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 if (proj.SearchRelativePath(openFile.File.RelativePath) is IProjectFile newFile)
                 {
-                    _dockService.OpenFiles.Remove(openFile.File);
-                    _dockService.OpenFiles.Add(newFile, openFile.ViewModel);
+                    _mainDockService.OpenFiles.Remove(openFile.File);
+                    _mainDockService.OpenFiles.Add(newFile, openFile.ViewModel);
                     refreshedFiles.Add(newFile);
                 }
             }
@@ -711,7 +711,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             //Re-initialize the files that didn't get removed after swapping project
             foreach (var refreshed in refreshedFiles)
             {
-                if (_dockService.OpenFiles.TryGetValue(refreshed, out var vm))
+                if (_mainDockService.OpenFiles.TryGetValue(refreshed, out var vm))
                 {
                     vm.InitializeContent();
                 }
@@ -734,7 +734,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (entry is IProjectFile file)
         {
-            _dockService.OpenFiles.TryGetValue(file, out var evm);
+            _mainDockService.OpenFiles.TryGetValue(file, out var evm);
             if (evm is not null)
             {
                 evm.FullPath = file.FullPath;
@@ -756,7 +756,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
     {
-        var saveTasks = _dockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
+        var saveTasks = _mainDockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
             .Select(x => x.Value.SaveAsync());
 
         var results = await Task.WhenAll(saveTasks);

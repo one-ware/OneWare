@@ -20,7 +20,7 @@ public class SearchListModule : OneWareModuleBase
     public override void Initialize(IServiceProvider serviceProvider)
     {
         var windowService = serviceProvider.Resolve<IWindowService>();
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
         {

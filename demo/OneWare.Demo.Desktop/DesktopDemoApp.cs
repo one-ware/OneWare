@@ -70,7 +70,7 @@ public class DesktopDemoApp : DemoApp
                 if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                 {
                     var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Services.Resolve<IDockService>().OpenFileAsync(file);
+                    _ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
                 }
                 else
                 {
@@ -85,7 +85,7 @@ public class DesktopDemoApp : DemoApp
                 var key = Services.Resolve<IApplicationStateService>()
                     .AddState("Loading last projects...", AppState.Loading);
                 await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                Services.Resolve<IDockService>().InitializeContent();
+                Services.Resolve<IMainDockService>().InitializeContent();
                 Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             }
         }

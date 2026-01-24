@@ -66,11 +66,11 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         set => SetProperty(ref _project, value);
     }
 
-    public ObservableCollection<UiExtension> PinPlannerMenuExtension { get; }
+    public ObservableCollection<OneWareUiExtension> PinPlannerMenuExtension { get; }
 
-    public ObservableCollection<UiExtension> CompileMenuExtension { get; }
+    public ObservableCollection<OneWareUiExtension> CompileMenuExtension { get; }
 
-    public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
+    public ObservableCollection<OneWareUiExtension> DownloaderConfigurationExtension { get; }
 
     public void ToggleLongTermProgramming()
     {

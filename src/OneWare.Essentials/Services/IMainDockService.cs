@@ -8,7 +8,7 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.Services;
 
-public interface IDockService : INotifyPropertyChanged
+public interface IMainDockService : INotifyPropertyChanged
 {
     public RootDock? Layout { get; }
 

@@ -39,7 +39,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountUserIdKey,
             serviceProvider.Resolve<OneWareCloudAccountSetting>());
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension",
-            new UiExtension(_ =>
+            new OneWareUiExtension(_ =>
                 new CloudIntegrationMainWindowBottomRightExtension
                 {
                     DataContext = serviceProvider.Resolve<CloudIntegrationMainWindowBottomRightExtensionViewModel>()
@@ -47,7 +47,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
 
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_RightToolBarExtension",
-            new UiExtension(_ =>
+            new OneWareUiExtension(_ =>
                 new OneWareCloudAccountFlyoutView
                 {
                     DataContext = serviceProvider.Resolve<OneWareCloudAccountFlyoutViewModel>()

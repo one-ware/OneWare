@@ -107,9 +107,9 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
         ]);
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
-            new UiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
+            new OneWareUiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
 
-        windowService.RegisterUiExtension("EditView_Top", new UiExtension(x =>
+        windowService.RegisterUiExtension("EditView_Top", new OneWareUiExtension(x =>
         {
             if (x is IFile)
                 return new UniversalFpgaProjectTestBenchToolBarView

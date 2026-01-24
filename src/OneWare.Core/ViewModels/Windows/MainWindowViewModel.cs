@@ -18,11 +18,11 @@ using OneWare.Essentials.Commands;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
-using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.ViewModels.Windows;
 
@@ -38,13 +38,13 @@ public class MainWindowViewModel : ObservableObject
     private string _title;
 
     public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
+        IWindowService windowService, IMainDockService mainDockService,
         ISettingsService settingsService, IApplicationCommandService applicationCommandService)
     {
         _applicationCommandService = applicationCommandService;
         ApplicationStateService = applicationStateService;
         _windowService = windowService;
-        DockService = dockService;
+        MainDockService = mainDockService;
         Paths = paths;
         _settingsService = settingsService;
 
@@ -57,7 +57,7 @@ public class MainWindowViewModel : ObservableObject
 
         _title = paths.AppName;
 
-        DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
+        MainDockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
         {
             if (x != null)
             {
@@ -91,7 +91,7 @@ public class MainWindowViewModel : ObservableObject
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
     }
 
-    public IDockService DockService { get; }
+    public IMainDockService MainDockService { get; }
     public IApplicationStateService ApplicationStateService { get; }
     public IPaths Paths { get; }
 
@@ -129,11 +129,11 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
-    public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
+    public ObservableCollection<OneWareUiExtension> RoundToolBarExtension { get; }
+    public ObservableCollection<OneWareUiExtension> LeftToolBarExtension { get; }
     
-    public ObservableCollection<UiExtension> RightToolBarExtension { get; }
-    public ObservableCollection<UiExtension> BottomRightExtension { get; }
+    public ObservableCollection<OneWareUiExtension> RightToolBarExtension { get; }
+    public ObservableCollection<OneWareUiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
     
     #region MainWindowButtons

@@ -23,7 +23,7 @@ public class ErrorListModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        var dockService = serviceProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
 
