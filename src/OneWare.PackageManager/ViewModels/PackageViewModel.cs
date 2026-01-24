@@ -32,7 +32,7 @@ public class PackageViewModel : ObservableObject
 
     private bool _resolveTabsStarted;
 
-    protected PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
+    public PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
     {
         _packageModel = packageModel;
         _httpService = httpService;

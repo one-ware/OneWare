@@ -20,6 +20,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
     private readonly ILogger _logger;
+    private readonly IHttpService _httpService;
     private readonly IApplicationStateService _applicationStateService;
 
     private string _filter = string.Empty;
@@ -29,10 +30,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService,
+    public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger, IWindowService windowService,
         IApplicationStateService applicationStateService)
     {
         _packageService = packageService;
+        _httpService = httpService;
         _windowService = windowService;
         _logger = logger;
         _applicationStateService = applicationStateService;
@@ -241,7 +243,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         foreach (var (_, packageModel) in _packageService.Packages)
             try
             {
-                var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(PackageModel), packageModel));
+                var viewModel = new PackageViewModel(packageModel, _httpService, _applicationStateService, _windowService);
 
                 var category = packageModel.Package.Type switch
                 {
@@ -267,10 +269,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                     category.SubCategories.Add(subCategory);
                 }
 
-                subCategory?.Add(model);
+                subCategory?.Add(viewModel);
 
                 if (subCategory == null)
-                    category.Add(model);
+                    category.Add(viewModel);
             }
             catch (Exception e)
             {
