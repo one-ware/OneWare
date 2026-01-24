@@ -24,8 +24,7 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.DependencyInjection;
 using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
@@ -33,7 +32,7 @@ using Orientation = Avalonia.Layout.Orientation;
 
 namespace OneWare.OssCadSuiteIntegration;
 
-public class OssCadSuiteIntegrationModule : IModule
+public class OssCadSuiteIntegrationModule : OneWareModuleBase
 {
     public const string OssPathSetting = "OssCadSuite_Path";
 
@@ -276,20 +275,20 @@ public class OssCadSuiteIntegrationModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<YosysService>();
-        containerRegistry.RegisterSingleton<GtkWaveService>();
+        services.AddSingleton<YosysService>();
+        services.AddSingleton<GtkWaveService>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var settingsService = containerProvider.Resolve<ISettingsService>();
-        var yosysService = containerProvider.Resolve<YosysService>();
-        var environmentService = containerProvider.Resolve<IEnvironmentService>();
-        var windowService = containerProvider.Resolve<IWindowService>();
-        var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
-        var fpgaService = containerProvider.Resolve<FpgaService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var yosysService = serviceProvider.Resolve<YosysService>();
+        var environmentService = serviceProvider.Resolve<IEnvironmentService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
+        var projectExplorerService = serviceProvider.Resolve<IProjectExplorerService>();
+        var fpgaService = serviceProvider.Resolve<FpgaService>();
 
         fpgaService.RegisterNodeProvider<YosysNodeProvider>();
 
@@ -307,7 +306,7 @@ public class OssCadSuiteIntegrationModule : IModule
             }
         };
         
-        var toolService = containerProvider.Resolve<IToolService>();
+        var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
         
         toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
@@ -322,23 +321,23 @@ public class OssCadSuiteIntegrationModule : IModule
         toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
 
         
-        containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
-        containerProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
 
-        containerProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
+        serviceProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new UiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectPinPlannerViewModel cm) return null;
                 return new YosysCompileWindowExtensionView
                 {
                     DataContext =
-                        containerProvider.Resolve<YosysCompileWindowExtensionViewModel>((
+                        serviceProvider.Resolve<YosysCompileWindowExtensionViewModel>((
                             typeof(UniversalFpgaProjectPinPlannerViewModel), cm))
                 };
             }));
 
-        containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
+        serviceProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new UiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
@@ -400,7 +399,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
                                     if (selectedFpgaPackage == null)
                                     {
-                                        containerProvider.Resolve<ILogger>()
+                                        serviceProvider.Resolve<ILogger>()
                                             .Warning("No FPGA Selected. Open Pin Planner first!");
                                         return;
                                     }
@@ -433,21 +432,21 @@ public class OssCadSuiteIntegrationModule : IModule
                 };
             }));
 
-        containerProvider.Resolve<IWindowService>().RegisterUiExtension(
+        serviceProvider.Resolve<IWindowService>().RegisterUiExtension(
             "UniversalFpgaToolBar_DownloaderConfigurationExtension", new UiExtension(x =>
             {
                 if (x is not UniversalFpgaProjectRoot cm) return null;
                 return new OpenFpgaLoaderWindowExtensionView
                 {
                     DataContext =
-                        containerProvider.Resolve<OpenFpgaLoaderWindowExtensionViewModel>((
+                        serviceProvider.Resolve<OpenFpgaLoaderWindowExtensionViewModel>((
                             typeof(UniversalFpgaProjectRoot), cm))
                 };
             }));
 
-        containerProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
-        containerProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
-        containerProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
+        serviceProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
+        serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
+        serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
 
         settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
@@ -458,7 +457,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
             if (!IsOssPathValid(x))
             {
-                containerProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null, false);
+                serviceProvider.Resolve<ILogger>().Warning("OSS CAD Suite path invalid", null, false);
                 return;
             }
 
@@ -483,12 +482,12 @@ public class OssCadSuiteIntegrationModule : IModule
                 Path.Combine(x, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders.cache"));
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                _ = containerProvider.Resolve<IChildProcessService>().ExecuteShellAsync(
+                _ = serviceProvider.Resolve<IChildProcessService>().ExecuteShellAsync(
                     $"gdk-pixbuf-query-loaders{PlatformHelper.ExecutableExtension}",
                     ["--update-cache"], x, "Updating gdk-pixbuf cache");
         });
 
-        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
+        serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
         {
             if (x is [IProjectFile { Extension: ".v" } verilog])
                 l.Add(new MenuItemViewModel("YosysNetList")
@@ -502,7 +501,7 @@ public class OssCadSuiteIntegrationModule : IModule
                 {
                     Header = "Open with GTKWave",
                     Command = new RelayCommand(() =>
-                        containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
+                        serviceProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
                 });
             if (x is [IProjectFile { Extension: ".pcf" } pcf])
             {
@@ -528,9 +527,9 @@ public class OssCadSuiteIntegrationModule : IModule
             }
         });
 
-        containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
+        serviceProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
         {
-            containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
+            serviceProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
             return true;
         }, ".ghw", ".fst");
     }

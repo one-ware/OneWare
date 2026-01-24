@@ -7,7 +7,6 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
@@ -68,7 +67,7 @@ public class Logger : ILogger
         Console.WriteLine(message);
         if (RuntimeInformation.ProcessArchitecture is not Architecture.Wasm) Console.ForegroundColor = default;
 #endif
-        if (writeOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
+        if (writeOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
             ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message.ToString() ?? "", outputBrush);
         WriteLogFile(message?.ToString() ?? "");
     }
@@ -79,7 +78,7 @@ public class Logger : ILogger
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Red);
 
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
+        if (showOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
             Dispatcher.UIThread.Post(() =>
             {
                 ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Red);
@@ -101,7 +100,7 @@ public class Logger : ILogger
         var output = message + (exception != null ? $"\n{exception}" : "");
         Log(output, project, ConsoleColor.Yellow);
 
-        if (showOutput && ContainerLocator.Container.IsRegistered<IOutputService>())
+        if (showOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
         {
             ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, Brushes.Orange);
             ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());

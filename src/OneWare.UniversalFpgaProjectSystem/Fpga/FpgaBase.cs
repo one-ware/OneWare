@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 

@@ -5,7 +5,6 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 

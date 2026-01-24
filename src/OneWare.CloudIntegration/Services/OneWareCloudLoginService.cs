@@ -13,7 +13,6 @@ using Avalonia.Threading;
 using GitCredentialManager;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;

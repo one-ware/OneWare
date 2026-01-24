@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using DynamicData;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;

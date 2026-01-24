@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
 using Avalonia.Media;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.CloudIntegration.Services;
 

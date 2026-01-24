@@ -1,4 +1,3 @@
-﻿using System.ComponentModel;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -12,6 +11,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.Models;
@@ -40,46 +40,45 @@ using OneWare.SearchList;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 using OneWare.Toml;
-using Prism.DryIoc;
-using Prism.Ioc;
-using Prism.Modularity;
 using TextMateSharp.Grammars;
 
 namespace OneWare.Core;
 
-public class App : PrismApplication
+public class App : Application
 {
-    protected AggregateModuleCatalog ModuleCatalog { get; } = new();
+    protected OneWareModuleCatalog ModuleCatalog { get; } = new();
 
     protected virtual string GetDefaultLayoutName => "Default";
+
+    protected IServiceProvider Services => ContainerLocator.Current;
+
+    private OneWareModuleManager? _moduleManager;
+    private ModuleServiceRegistry? _moduleServiceRegistry;
 
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        base.Initialize();
-        
+
         Animation.RegisterCustomAnimator<string, CustomStringAnimator>();
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected virtual void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance<IModuleCatalog>(ModuleCatalog);
-
         //Services
-        containerRegistry.RegisterSingleton<IPluginService, PluginService>();
-        containerRegistry.RegisterSingleton<IHttpService, HttpService>();
-        containerRegistry.RegisterSingleton<IApplicationCommandService, ApplicationCommandService>();
-        containerRegistry.RegisterSingleton<IProjectManagerService, ProjectManagerService>();
-        containerRegistry.RegisterSingleton<ILanguageManager, LanguageManager>();
-        containerRegistry.RegisterSingleton<IApplicationStateService, ApplicationStateService>();
-        containerRegistry.RegisterSingleton<IDockService, DockService>();
-        containerRegistry.RegisterSingleton<IWindowService, WindowService>();
-        containerRegistry.RegisterSingleton<IModuleTracker, ModuleTracker>();
-        containerRegistry.RegisterSingleton<BackupService>();
-        containerRegistry.RegisterSingleton<IChildProcessService, ChildProcessService>();
-        containerRegistry.RegisterSingleton<IFileIconService, FileIconService>();
-        containerRegistry.RegisterSingleton<IEnvironmentService, EnvironmentService>();
-        containerRegistry.RegisterSingleton<IWelcomeScreenService>(provider =>
+        services.AddSingleton<IPluginService, PluginService>();
+        services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<IApplicationCommandService, ApplicationCommandService>();
+        services.AddSingleton<IProjectManagerService, ProjectManagerService>();
+        services.AddSingleton<ILanguageManager, LanguageManager>();
+        services.AddSingleton<IApplicationStateService, ApplicationStateService>();
+        services.AddSingleton<IDockService, DockService>();
+        services.AddSingleton<IWindowService, WindowService>();
+        services.AddSingleton<IModuleTracker, ModuleTracker>();
+        services.AddSingleton<BackupService>();
+        services.AddSingleton<IChildProcessService, ChildProcessService>();
+        services.AddSingleton<IFileIconService, FileIconService>();
+        services.AddSingleton<IEnvironmentService, EnvironmentService>();
+        services.AddSingleton<IWelcomeScreenService>(provider =>
         {
             var service = new WelcomeScreenService();
             service.RegisterReceiver(provider.Resolve<WelcomeScreenViewModel>());
@@ -88,25 +87,25 @@ public class App : PrismApplication
         });
 
         //ViewModels - Singletons
-        containerRegistry.RegisterSingleton<WelcomeScreenViewModel>();
-        containerRegistry.RegisterSingleton<MainWindowViewModel>();
-        containerRegistry.RegisterSingleton<MainDocumentDockViewModel>();
+        services.AddSingleton<WelcomeScreenViewModel>();
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<MainDocumentDockViewModel>();
 
         //ViewModels Transients
-        containerRegistry.Register<EditViewModel>();
-        containerRegistry.Register<ChangelogViewModel>();
-        containerRegistry.Register<AboutViewModel>();
+        services.AddTransient<EditViewModel>();
+        services.AddTransient<ChangelogViewModel>();
+        services.AddTransient<AboutViewModel>();
 
         //Windows
-        containerRegistry.RegisterSingleton<MainWindow>();
-        containerRegistry.RegisterSingleton<MainView>();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainView>();
     }
 
-    protected override AvaloniaObject CreateShell()
+    protected virtual AvaloniaObject CreateShell()
     {
         //Register IDE Settings
-        var settingsService = Container.Resolve<ISettingsService>();
-        var paths = Container.Resolve<IPaths>();
+        var settingsService = Services.Resolve<ISettingsService>();
+        var paths = Services.Resolve<IPaths>();
 
         Name = paths.AppName;
 
@@ -117,20 +116,20 @@ public class App : PrismApplication
                 new NativeMenuItem
                 {
                     Header = $"About {Name}",
-                    Command = new RelayCommand(() => Container.Resolve<IWindowService>().Show(
+                    Command = new RelayCommand(() => Services.Resolve<IWindowService>().Show(
                         new AboutView
                         {
-                            DataContext = Container.Resolve<AboutViewModel>()
+                            DataContext = Services.Resolve<AboutViewModel>()
                         }))
                 },
                 new NativeMenuItemSeparator(),
                 new NativeMenuItem
                 {
                     Header = "Settings",
-                    Command = new AsyncRelayCommand(() => Container.Resolve<IWindowService>().ShowDialogAsync(
+                    Command = new AsyncRelayCommand(() => Services.Resolve<IWindowService>().ShowDialogAsync(
                         new ApplicationSettingsView
                         {
-                            DataContext = Container.Resolve<ApplicationSettingsViewModel>()
+                            DataContext = Services.Resolve<ApplicationSettingsViewModel>()
                         }))
                 }
             }
@@ -145,29 +144,31 @@ public class App : PrismApplication
         settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
-        
-        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily", 
-            new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL", ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
-        
-        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize", 
-            new ComboBoxSetting("Font Size", 15,Enumerable.Range(10, 30).Cast<object>()));
 
-        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark", 
-            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus,Enum.GetValues<ThemeName>().Cast<object>())
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
+            new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL",
+                ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
+
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize",
+            new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
+
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
+            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Dark Mode"
             });
-        
-        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light", 
-            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus,Enum.GetValues<ThemeName>().Cast<object>())
+
+        settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light",
+            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus, Enum.GetValues<ThemeName>().Cast<object>())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Light Mode"
             });
-        
+
         settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoFormatting",
             new CheckBoxSetting("Use Auto Formatting", true));
-        
-        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket", new CheckBoxSetting("Use Auto Bracket", true));
+
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket",
+            new CheckBoxSetting("Use Auto Bracket", true));
 
         settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding",
             "Use Folding in Editor", true);
@@ -185,7 +186,7 @@ public class App : PrismApplication
             "Notify external changes", "Notifies the user when external happen and ask for reload", false);
 
         //TypeAssistance
-        
+
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",
             "Enable Hover Information", "Enable Hover Information", true);
         settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
@@ -196,11 +197,12 @@ public class App : PrismApplication
         settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_DisableLargeFile_Min",
             new SliderSetting("Disable Assistance for Large Files", 100000, 50000, 1000000, 1000)
             {
-                MarkdownDocumentation = "If a document is larger than the specified amount of chars, assistance will be disabled for performance reasons" 
+                MarkdownDocumentation =
+                    "If a document is larger than the specified amount of chars, assistance will be disabled for performance reasons"
             });
-        
-        var windowService = Container.Resolve<IWindowService>();
-        var commandService = Container.Resolve<IApplicationCommandService>();
+
+        var windowService = Services.Resolve<IWindowService>();
+        var commandService = Services.Resolve<IApplicationCommandService>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
         {
@@ -218,7 +220,7 @@ public class App : PrismApplication
             IconObservable = Current!.GetResourceObservable("VsImageLib2019.StatusUpdateGrey16X"),
             Command = new RelayCommand(() => windowService.Show(new ChangelogView
             {
-                DataContext = Container.Resolve<ChangelogViewModel>()
+                DataContext = Services.Resolve<ChangelogViewModel>()
             }))
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("About")
@@ -226,7 +228,7 @@ public class App : PrismApplication
             Header = $"About {paths.AppName}",
             Command = new RelayCommand(() => windowService.Show(new AboutView
             {
-                DataContext = Container.Resolve<AboutViewModel>()
+                DataContext = Services.Resolve<AboutViewModel>()
             }))
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Extras")
@@ -240,7 +242,7 @@ public class App : PrismApplication
             IconObservable = Current!.GetResourceObservable("Material.SettingsOutline"),
             Command = new AsyncRelayCommand(() => windowService.ShowDialogAsync(new ApplicationSettingsView
             {
-                DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+                DataContext = Services.Resolve<ApplicationSettingsViewModel>()
             }))
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
@@ -248,8 +250,8 @@ public class App : PrismApplication
             Header = "Format",
             IconObservable = Current!.GetResourceObservable("BoxIcons.RegularCode"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel),
+                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.Format(),
+                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel),
             InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
@@ -257,8 +259,8 @@ public class App : PrismApplication
             Header = "Comment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null} ),
+                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
+                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
             InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
@@ -266,16 +268,16 @@ public class App : PrismApplication
             Header = "Uncomment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
             Command = new RelayCommand(
-                () => (Container.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
-                () => Container.Resolve<IDockService>().CurrentDocument is EditViewModel {TypeAssistance: not null}),
+                () => (Services.Resolve<IDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
+                () => Services.Resolve<IDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
             InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
         });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
         {
             Command = new AsyncRelayCommand(
-                () => Container.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
-                () => Container.Resolve<IDockService>().CurrentDocument is not null),
+                () => Services.Resolve<IDockService>().CurrentDocument!.SaveAsync(),
+                () => Services.Resolve<IDockService>().CurrentDocument is not null),
             Header = "Save Current",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
             IconObservable = Current!.GetResourceObservable("VsImageLib.Save16XMd")
@@ -286,14 +288,14 @@ public class App : PrismApplication
             Command = new RelayCommand(
                 () =>
                 {
-                    foreach (var file in Container.Resolve<IDockService>().OpenFiles) _ = file.Value.SaveAsync();
+                    foreach (var file in Services.Resolve<IDockService>().OpenFiles) _ = file.Value.SaveAsync();
                 }),
             Header = "Save All",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
             IconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
         });
 
-        var applicationCommandService = Container.Resolve<IApplicationCommandService>();
+        var applicationCommandService = Services.Resolve<IApplicationCommandService>();
 
         applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active light theme",
             () =>
@@ -302,7 +304,7 @@ public class App : PrismApplication
                 settingsService.Save(paths.SettingsPath);
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Light"));
-        
+
         applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active dark theme",
             () =>
             {
@@ -310,11 +312,11 @@ public class App : PrismApplication
                 settingsService.Save(paths.SettingsPath);
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
-        
-        var welcomeScreenService = Container.Resolve<IWelcomeScreenService>();
-        
-        welcomeScreenService.RegisterItemToWalkthrough("fundamentals", 
-            new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals", 
+
+        var welcomeScreenService = Services.Resolve<IWelcomeScreenService>();
+
+        welcomeScreenService.RegisterItemToWalkthrough("fundamentals",
+            new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals",
                 null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
@@ -322,23 +324,17 @@ public class App : PrismApplication
             {
                 IconObservable = Application.Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
             });
-        
-        welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai", 
-            new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI", 
+
+        welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
+            new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI",
                 null, new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
                 }))
             {
-                IconObservable =  Application.Current!.GetResourceObservable("AI_Img"),
+                IconObservable = Application.Current!.GetResourceObservable("AI_Img"),
             });
-        
-        // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Success Notification",
-        //     () => Container.Resolve<IWindowService>().ShowNotification("Test", "TestMessage", NotificationType.Success)));
-        //
-        // applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Show Test Notification",
-        //     () => Container.Resolve<IWindowService>().ShowNotificationWithButton("Test", "TestMessage", "Open", () => Console.WriteLine(""), null,  NotificationType.Warning)));
-        
+
         //AvaloniaEdit Hyperlink support
         VisualLineLinkText.OpenUriEvent.AddClassHandler<Window>((window, args) =>
         {
@@ -348,16 +344,16 @@ public class App : PrismApplication
 
         if (ApplicationLifetime is ISingleViewApplicationLifetime)
         {
-            var mainView = Container.Resolve<MainView>();
-            mainView.DataContext = ContainerLocator.Container.Resolve<MainWindowViewModel>();
+            var mainView = Services.Resolve<MainView>();
+            mainView.DataContext = Services.Resolve<MainWindowViewModel>();
             return mainView;
         }
 
-        var mainWindow = Container.Resolve<MainWindow>();
+        var mainWindow = Services.Resolve<MainWindow>();
 
         mainWindow.Closing += (o, i) =>
         {
-            var applicationStateService = Container.Resolve<IApplicationStateService>();
+            var applicationStateService = Services.Resolve<IApplicationStateService>();
 
             if (!applicationStateService.ShutdownComplete)
             {
@@ -369,12 +365,7 @@ public class App : PrismApplication
         return mainWindow;
     }
 
-    protected override IModuleCatalog CreateModuleCatalog()
-    {
-        return ModuleCatalog;
-    }
-
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected virtual void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         moduleCatalog.AddModule<SearchListModule>();
         moduleCatalog.AddModule<ErrorListModule>();
@@ -387,22 +378,59 @@ public class App : PrismApplication
         moduleCatalog.AddModule<TomlModule>();
         moduleCatalog.AddModule<DebuggerModule>();
         moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
+    }
 
-        base.ConfigureModuleCatalog(moduleCatalog);
+    protected virtual void LoadStartupPlugins()
+    {
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
+        var services = new ServiceCollection();
+        services.AddSingleton(ModuleCatalog);
+        RegisterServices(services);
+
+        ConfigureModuleCatalog(ModuleCatalog);
+
+        _moduleManager = new OneWareModuleManager(ModuleCatalog);
+        services.AddSingleton(_moduleManager);
+        _moduleManager.RegisterModuleServices(services);
+
+        _moduleServiceRegistry = new ModuleServiceRegistry();
+        services.AddSingleton(_moduleServiceRegistry);
+
+        var rootProvider = services.BuildServiceProvider();
+        var compositeProvider = new CompositeServiceProvider(rootProvider, _moduleServiceRegistry);
+
+        ContainerLocator.SetContainer(compositeProvider);
+        _moduleManager.SetLogger(compositeProvider.Resolve<ILogger>());
+
+        LoadStartupPlugins();
+
+        var shell = CreateShell();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime &&
+            shell is Window shellWindow)
+        {
+            desktopLifetime.MainWindow = shellWindow;
+        }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime &&
+                 shell is Control shellView)
+        {
+            singleViewLifetime.MainView = shellView;
+        }
+
+        _moduleManager.InitializeModules(compositeProvider);
+
         Dispatcher.UIThread.UnhandledException += (s, e) =>
         {
             Console.WriteLine($"Unhandled: {e.Exception}");
         };
-        
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             DisableAvaloniaDataAnnotationValidation();
-            
-            var mainWindow = Container.Resolve<MainWindow>();
+
+            var mainWindow = Services.Resolve<MainWindow>();
             mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
             {
                 Position = NotificationPosition.TopRight,
@@ -411,21 +439,21 @@ public class App : PrismApplication
                 MaxItems = 3
             };
         }
-        
-        Container.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
 
-        Container.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
+        Services.Resolve<IApplicationCommandService>().LoadKeyConfiguration();
+
+        Services.Resolve<ISettingsService>().GetSettingObservable<string>("General_SelectedTheme").Subscribe(x =>
         {
             TypeAssistanceIconStore.Instance.Load();
         });
 
-        Container.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
-        Container.Resolve<BackupService>().LoadAutoSaveFile();
-        Container.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
-        Container.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
-        Container.Resolve<BackupService>().Init();
+        Services.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+        Services.Resolve<BackupService>().LoadAutoSaveFile();
+        Services.Resolve<IDockService>().LoadLayout(GetDefaultLayoutName);
+        Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
+        Services.Resolve<BackupService>().Init();
 
-        Container.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
+        Services.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
         {
             if (FontManager.Current.SystemFonts.Contains(x))
             {
@@ -437,7 +465,7 @@ public class App : PrismApplication
             if (findFont && resourceFont is FontFamily fFamily) Resources["EditorFont"] = this.FindResource(x);
         });
 
-        Container.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
+        Services.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
         {
             Resources["EditorFontSize"] = (double)x;
         });
@@ -453,29 +481,30 @@ public class App : PrismApplication
         if (this.TryGetFeature<IActivatableLifetime>(out var events))
         {
             events.Activated += (_, args) =>
-            { 
+            {
                 if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
                 {
-                    Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
+                    Services.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
                 }
-                else if(args is ProtocolActivatedEventArgs { Kind: ActivationKind.File } launchArgs)
+                else if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.File } launchArgs)
                 {
-                    Container.Resolve<IApplicationStateService>().ExecutePathLaunchActions(launchArgs.Uri.ToString());
+                    Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(launchArgs.Uri.ToString());
                 }
             };
         }
-        
+
         if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
             var uri = new Uri(url);
-            Container.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri);
+            Services.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(uri);
         }
-        
-        Container.Resolve<IApplicationStateService>().ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
-        
+
+        Services.Resolve<IApplicationStateService>()
+            .ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
+
         return Task.CompletedTask;
     }
-    
+
     private void DisableAvaloniaDataAnnotationValidation()
     {
         // Get an array of plugins to remove

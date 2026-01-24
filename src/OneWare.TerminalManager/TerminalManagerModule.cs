@@ -1,34 +1,33 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.TerminalManager.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.TerminalManager;
 
-public class TerminalManagerModule : IModule
+public class TerminalManagerModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<TerminalManagerViewModel>();
+        services.AddSingleton<TerminalManagerViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerProvider.Resolve<IDockService>()
+        serviceProvider.Resolve<IDockService>()
             .RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+        serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemViewModel("Terminal")
             {
                 Header = "Terminal",
                 Command = new RelayCommand(() =>
-                    containerProvider.Resolve<IDockService>()
-                        .Show(containerProvider.Resolve<TerminalManagerViewModel>())),
+                    serviceProvider.Resolve<IDockService>().Show(serviceProvider.Resolve<TerminalManagerViewModel>())),
                 IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
             });
     }
 }
+

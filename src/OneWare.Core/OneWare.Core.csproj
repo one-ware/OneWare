@@ -16,6 +16,7 @@
     <ItemGroup>
         <!-- Bug with 11.3.0 ?, Check why this is needed and maybe remove in future -->
         <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25306.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup>

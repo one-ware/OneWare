@@ -22,7 +22,6 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
-using Prism.Ioc;
 using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.ViewModels.Windows;

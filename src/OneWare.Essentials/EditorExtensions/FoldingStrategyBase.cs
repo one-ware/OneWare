@@ -1,7 +1,6 @@
 ﻿using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.EditorExtensions;
 

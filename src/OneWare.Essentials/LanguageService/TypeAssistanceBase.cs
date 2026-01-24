@@ -6,7 +6,6 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.LanguageService;
 

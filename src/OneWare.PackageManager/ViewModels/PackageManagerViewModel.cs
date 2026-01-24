@@ -11,7 +11,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 

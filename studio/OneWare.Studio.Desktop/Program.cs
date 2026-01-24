@@ -14,7 +14,6 @@ using Avalonia.Threading;
 using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
 using OneWare.Core.Views.Windows;
@@ -207,7 +206,7 @@ internal abstract class Program
             logger?.Log($"Received IPC message: {target}", ConsoleColor.Cyan);
 
             
-            ContainerLocator.Container.Resolve<MainWindow>()?.Activate();
+            ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
 
             if (target == "activateWindow")
             {
@@ -372,7 +371,7 @@ internal abstract class Program
             var crashReport =
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
 
-            if (ContainerLocator.Container.IsRegistered<ILogger>())
+            if (ContainerLocator.Container?.IsRegistered<ILogger>() == true)
                 ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
             else Console.WriteLine(crashReport);
 

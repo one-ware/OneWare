@@ -3,7 +3,6 @@ using AvaloniaEdit.Document;
 using Jint;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Vhdl.Formatting;
 

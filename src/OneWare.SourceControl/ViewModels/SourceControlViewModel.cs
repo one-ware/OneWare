@@ -19,7 +19,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Models;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels;
 

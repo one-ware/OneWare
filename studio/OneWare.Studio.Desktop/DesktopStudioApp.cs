@@ -14,9 +14,9 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
-using ImTools;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Core.Data;
+using OneWare.Core.ModuleLogic;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
@@ -39,8 +39,6 @@ using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
 using OneWare.Verilog;
 using OneWare.Vhdl;
-using Prism.Ioc;
-using Prism.Modularity;
 using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.Studio.Desktop;
@@ -49,7 +47,7 @@ public class DesktopStudioApp : StudioApp
 {
     private Window? _splashWindow;
 
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
 
@@ -64,27 +62,30 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<ToolEngineModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
         moduleCatalog.AddModule<PythonModule>();
-        
+    }
+
+    protected override void LoadStartupPlugins()
+    {
         try
         {
             if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
             {
-                Container.Resolve<IPluginService>().AddPlugin(pluginPath);
+                Services.Resolve<IPluginService>().AddPlugin(pluginPath);
             }
 
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Container.Resolve<IPluginService>().AddPlugin(module);
+            foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Services.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        Container.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
-        Container.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
+        Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
+        Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
         
         base.OnFrameworkInitializationCompleted();
     }
@@ -95,7 +96,7 @@ public class DesktopStudioApp : StudioApp
         //Check file exists
         if (File.Exists(fileName))
         {
-            var dockService = Container.Resolve<IDockService>();
+            var dockService = Services.Resolve<IDockService>();
 
             var views = dockService.SearchView<Document>();
 
@@ -105,64 +106,64 @@ public class DesktopStudioApp : StudioApp
 
             var extension = Path.GetExtension(fileName);
 
-            var manager = Container.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
+            var manager = Services.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
 
             if (manager != null)
             {
-                await Container.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
+                await Services.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
             }
             else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
             {
-                var file = Container.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                _ = Container.Resolve<IDockService>().OpenFileAsync(file);
+                var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
+                _ = Services.Resolve<IDockService>().OpenFileAsync(file);
             }
             else
             {
-                Container.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
+                Services.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
             }
         }
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        base.RegisterTypes(containerRegistry);
+        base.RegisterServices(services);
 
-        containerRegistry.RegisterSingleton<AiReleaseWindowViewModel>();
+        services.AddSingleton<AiReleaseWindowViewModel>();
     }
 
     protected override void InitializeShell(AvaloniaObject shell)
     {
         base.InitializeShell(shell);
         
-        Container.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
+        Services.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
     }
 
     protected override async Task LoadContentAsync()
     {
-        Container.Resolve<IPackageService>().RegisterPackageRepository(
+        Services.Resolve<IPackageService>().RegisterPackageRepository(
             $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            var key = Container.Resolve<IApplicationStateService>()
+            var key = Services.Resolve<IApplicationStateService>()
                 .AddState("Loading last projects...", AppState.Loading);
-            await Container.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-            Container.Resolve<IDockService>().InitializeContent();
-            Container.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-            Container.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+            Services.Resolve<IDockService>().InitializeContent();
+            Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
+            Services.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
             
             if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
             {
-                Container.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
+                Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
             }
         }
 
         // trigger AutoLaunch Actions
         await base.LoadContentAsync();
 
-        var settingsService = Container.Resolve<ISettingsService>();
-        var packageService = Container.Resolve<IPackageService>();
-        var ideUpdater = Container.Resolve<UpdaterViewModel>();
+        var settingsService = Services.Resolve<ISettingsService>();
+        var packageService = Services.Resolve<IPackageService>();
+        var ideUpdater = Services.Resolve<UpdaterViewModel>();
         
         bool versionGotUpdated = false;
         List<PackageModel>? updatePackages = null;
@@ -200,7 +201,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Services.Resolve<ILogger>().Error(e.Message, e);
         }
         
         //close the loading splash screen
@@ -211,13 +212,13 @@ public class DesktopStudioApp : StudioApp
             //step 1: IDE got updated
             if (versionGotUpdated)
             {
-                Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Container.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
+                    $"{Services.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
                     () =>
                     {
-                        Container.Resolve<IWindowService>().Show(new ChangelogView
+                        Services.Resolve<IWindowService>().Show(new ChangelogView
                         {
-                            DataContext = Container.Resolve<ChangelogViewModel>()
+                            DataContext = Services.Resolve<ChangelogViewModel>()
                         });
                     },
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
@@ -226,11 +227,11 @@ public class DesktopStudioApp : StudioApp
             //step 2: Ask to update the outdated plugins
             if (updatePackages?.Count > 0)
             {
-                Container.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
                     $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
-                    "Download", () => Container.Resolve<IWindowService>().Show(new PackageManagerView
+                    "Download", () => Services.Resolve<IWindowService>().Show(new PackageManagerView
                     {
-                        DataContext = Container.Resolve<PackageManagerViewModel>()
+                        DataContext = Services.Resolve<PackageManagerViewModel>()
                     }),
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
             }
@@ -240,11 +241,11 @@ public class DesktopStudioApp : StudioApp
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    Container.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
+                    Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
                         $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Container
                             .Resolve<IWindowService>().Show(new UpdaterView
                             {
-                                DataContext = Container.Resolve<UpdaterViewModel>()
+                                DataContext = Services.Resolve<UpdaterViewModel>()
                             }),
                         Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
                 });
@@ -253,15 +254,15 @@ public class DesktopStudioApp : StudioApp
             else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null && 
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
-                AiReleaseWindowViewModel aiReleaseWindowVm = Container.Resolve<AiReleaseWindowViewModel>();
+                AiReleaseWindowViewModel aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed
-                if (aiReleaseWindowVm.ExtensionIsAlreadyInstalled(Container.Resolve<IPluginService>()))
+                if (aiReleaseWindowVm.ExtensionIsAlreadyInstalled(Services.Resolve<IPluginService>()))
                     return;
                 
                 //if not, notify the user that the OneWare.AI extension is available
                 Dispatcher.UIThread.Post(() =>
                 {
-                    Container.Resolve<IWindowService>().Show(new AiReleaseWindow()
+                    Services.Resolve<IWindowService>().Show(new AiReleaseWindow()
                     {
                         DataContext = aiReleaseWindowVm
                     });
@@ -270,7 +271,7 @@ public class DesktopStudioApp : StudioApp
         }
         catch (Exception e)
         {
-            Container.Resolve<ILogger>().Error(e.Message, e);
+            Services.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 }

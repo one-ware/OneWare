@@ -1,19 +1,19 @@
-﻿using OneWare.Essentials.Services;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Services;
 using OneWare.ImageViewer.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.ImageViewer;
 
-public class ImageViewerModule : IModule
+public class ImageViewerModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.Register<ImageViewModel>();
+        services.AddTransient<ImageViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerProvider.Resolve<IDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
+        serviceProvider.Resolve<IDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
     }
 }
+

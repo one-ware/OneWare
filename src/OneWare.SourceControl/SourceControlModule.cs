@@ -1,7 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -9,32 +10,30 @@ using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.Settings;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.SourceControl;
 
-public class SourceControlModule : IModule
+public class SourceControlModule : OneWareModuleBase
 {
     public const string GitHubAccountNameKey = "SourceControl_GitHub_AccountName";
-    
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.Register<CompareFileViewModel>();
-        containerRegistry.RegisterSingleton<SourceControlViewModel>();
-        containerRegistry.RegisterSingleton<GitHubAccountSettingViewModel>();
+        services.AddTransient<CompareFileViewModel>();
+        services.AddSingleton<SourceControlViewModel>();
+        services.AddSingleton<GitHubAccountSettingViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var settingsService = containerProvider.Resolve<ISettingsService>();
-        var windowService = containerProvider.Resolve<IWindowService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
 
         settingsService.RegisterCustom("Team Explorer", "GitHub", GitHubAccountNameKey, new GitHubAccountSetting());
-        
+
         settingsService.RegisterSettingCategory("Team Explorer", 10, "VsImageLib.Team16X");
         settingsService.RegisterTitled("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",
             "Auto fetch", "Fetch for changed automatically", true);
@@ -44,24 +43,24 @@ public class SourceControlModule : IModule
             "Poll for changes", "Fetch for changed files automatically", true);
         settingsService.RegisterTitledSlider("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
             "Poll changes interval", "Interval in seconds", 5, 1, 60, 1);
-        
 
-        var dockService = containerProvider.Resolve<IDockService>();
+        var dockService = serviceProvider.Resolve<IDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SourceControl")
         {
             Header = "Source Control",
-            Command = new RelayCommand(() => dockService.Show(containerProvider.Resolve<SourceControlViewModel>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<SourceControlViewModel>())),
             IconObservable = Application.Current!.GetResourceObservable(SourceControlViewModel.IconKey)
         });
 
-        if (containerProvider.Resolve<SourceControlViewModel>() is not { } vm) return;
+        if (serviceProvider.Resolve<SourceControlViewModel>() is not { } vm) return;
 
-        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(x =>
+        windowService.RegisterUiExtension("MainWindow_BottomRightExtension", new UiExtension(_ =>
             new SourceControlMainWindowBottomRightExtension
             {
                 DataContext = vm
             }));
     }
 }
+

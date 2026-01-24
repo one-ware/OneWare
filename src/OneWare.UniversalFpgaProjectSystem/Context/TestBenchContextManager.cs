@@ -2,7 +2,6 @@
 using System.Text.Json.Nodes;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Context;
 

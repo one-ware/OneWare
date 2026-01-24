@@ -2,7 +2,6 @@
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Helpers;
 

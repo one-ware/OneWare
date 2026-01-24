@@ -8,7 +8,6 @@ using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 

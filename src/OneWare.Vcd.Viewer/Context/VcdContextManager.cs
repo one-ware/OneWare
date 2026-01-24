@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Vcd.Viewer.Context;
 

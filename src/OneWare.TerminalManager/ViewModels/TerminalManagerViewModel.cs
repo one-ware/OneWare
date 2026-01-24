@@ -7,7 +7,6 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
-using Prism.Ioc;
 
 namespace OneWare.TerminalManager.ViewModels;
 

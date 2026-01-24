@@ -1,29 +1,29 @@
-﻿using OneWare.Essentials.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Python;
 
-public class PythonModule : IModule
+public class PythonModule : OneWareModuleBase
 {
     public const string LspName = "pylsp";
     public const string LspPathSetting = "PythonModule_PylspPath";
-    
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+
+    public override void RegisterServices(IServiceCollection services)
     {
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Python", LspPathSetting,
+        serviceProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "Python", LspPathSetting,
             "Pylsp Path", "Path for Pylsp executable", "", null,
-            containerProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath, PlatformHelper.ExeFile);
+            serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath, PlatformHelper.ExeFile);
 
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
+        serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
 
-        containerProvider.Resolve<ILanguageManager>()
+        serviceProvider.Resolve<ILanguageManager>()
             .RegisterService(typeof(LanguageServicePython), false, ".py");
     }
 }
+

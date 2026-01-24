@@ -2,6 +2,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.LanguageService;
 

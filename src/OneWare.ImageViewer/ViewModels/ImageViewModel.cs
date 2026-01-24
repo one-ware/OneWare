@@ -4,7 +4,6 @@ using Avalonia.Svg.Skia;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.ImageViewer.ViewModels;
 

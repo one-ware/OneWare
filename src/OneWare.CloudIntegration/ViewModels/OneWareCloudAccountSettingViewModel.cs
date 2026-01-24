@@ -6,7 +6,6 @@ using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
 
 namespace OneWare.CloudIntegration.ViewModels;
 

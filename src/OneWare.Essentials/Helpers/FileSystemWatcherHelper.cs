@@ -1,5 +1,4 @@
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Helpers;
 

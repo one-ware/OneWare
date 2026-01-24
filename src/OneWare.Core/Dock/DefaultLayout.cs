@@ -3,7 +3,7 @@ using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
-using Prism.Ioc;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Dock;
 

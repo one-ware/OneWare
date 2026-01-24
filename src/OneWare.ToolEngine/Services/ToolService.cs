@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
-using Prism.Ioc;
 using Splat;
 using ILogger = OneWare.Essentials.Services.ILogger;
 

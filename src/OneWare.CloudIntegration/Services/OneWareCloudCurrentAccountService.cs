@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using OneWare.CloudIntegration.Dto;
 using OneWare.CloudIntegration.Settings;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;

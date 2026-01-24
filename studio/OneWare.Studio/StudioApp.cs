@@ -10,8 +10,8 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Studio;
 
@@ -39,14 +39,14 @@ public class StudioApp : App
         SettingsService.Load(Paths.SettingsPath);
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(ProjectSettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
+        services.AddSingleton(SettingsService);
+        services.AddSingleton(ProjectSettingsService);
+        services.AddSingleton(Paths);
+        services.AddSingleton(Logger);
 
-        base.RegisterTypes(containerRegistry);
+        base.RegisterServices(services);
     }
 
     public override void Initialize()
@@ -60,7 +60,7 @@ public class StudioApp : App
         });
     }
 
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();

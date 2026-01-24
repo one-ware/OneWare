@@ -8,7 +8,6 @@ using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.ViewModels;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Settings;

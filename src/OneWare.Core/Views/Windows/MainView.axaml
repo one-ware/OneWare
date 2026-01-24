@@ -11,7 +11,7 @@
                    xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                    x:Class="OneWare.Core.Views.Windows.MainView"
-                   mvvm:ViewModelLocator.AutoWireViewModel="False" Name="MainViewView"
+                   Name="MainViewView"
                    x:DataType="windows:MainWindowViewModel">
     <Panel>
 
