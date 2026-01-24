@@ -91,7 +91,7 @@ public class ContextDragBubbleBehavior : Behavior<Control>
     private async Task DoDragDrop(PointerEventArgs triggerEvent, object? value)
     {
         var data = new DataObject();
-        data.Set(ContextDropBehavior.DataFormat, value!);
+        data.Set("OneWare.DragAndDrop.Context", value!);
 
         var effect = DragDropEffects.None;
 
