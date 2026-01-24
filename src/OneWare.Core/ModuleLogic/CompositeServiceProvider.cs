@@ -1,7 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ModuleLogic;
 
+/// <summary>
+/// This Service Provider provides both integrated aswell as Plugin services
+/// </summary>
 public sealed class CompositeServiceProvider : IServiceProvider, IServiceProviderIsService
 {
     private readonly IServiceProvider _rootProvider;
@@ -29,13 +33,14 @@ public sealed class CompositeServiceProvider : IServiceProvider, IServiceProvide
 
     public bool IsService(Type serviceType)
     {
-        if (_moduleRegistry.IsRegistered(serviceType))
-            return true;
+        if (serviceType.IsGenericType &&
+            serviceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            var elementType = serviceType.GetGenericArguments()[0];
+            return _moduleRegistry.IsRegistered(elementType);
+        }
 
-        if (_rootProvider is IServiceProviderIsService isService)
-            return isService.IsService(serviceType);
-
-        return _rootProvider.GetService(serviceType) != null;
+        return _moduleRegistry.IsRegistered(serviceType);
     }
 
     private object BuildEnumerable(Type serviceType)

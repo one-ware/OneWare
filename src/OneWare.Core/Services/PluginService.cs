@@ -123,7 +123,7 @@ public class PluginService : IPluginService
         foreach (var module in added)
         {
             ContainerLocator.Container?.Resolve<ILogger>()
-                .Log($"Module {module.Id} loaded");
+                .Log($"Module '{module.Id}' loaded");
         }
 
         return added;

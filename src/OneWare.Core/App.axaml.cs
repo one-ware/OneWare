@@ -490,6 +490,7 @@ public class App : Application
         _moduleManager.RegisterModuleServices(services);
 
         _moduleServiceRegistry = new ModuleServiceRegistry();
+        _moduleServiceRegistry.AddServiceTypes(services);
         services.AddSingleton(_moduleServiceRegistry);
 
         var rootProvider = services.BuildServiceProvider();

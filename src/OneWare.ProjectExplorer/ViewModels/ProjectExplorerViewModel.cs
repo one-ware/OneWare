@@ -579,13 +579,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         foreach (var path in paths)
         {
             if (!copy && path == destination.FullPath) continue;
-
+            
             try
             {
                 var attr = File.GetAttributes(path);
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
-                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameDirectory();
+                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path.TrimEnd('/', '\\'))).CheckNameDirectory();
                     // if (askForInclude)
                     //     if (!await AskForIncludeDialogAsync(destination.Root,
                     //             Path.GetRelativePath(destination.Root.FullPath, destPath)))

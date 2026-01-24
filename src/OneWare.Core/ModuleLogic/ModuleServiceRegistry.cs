@@ -6,15 +6,34 @@ public sealed class ModuleServiceRegistry
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
     private readonly Dictionary<ServiceDescriptor, object?> _singletonCache = new();
+    private readonly HashSet<Type> _registeredTypes = new();
 
     public void AddDescriptors(IEnumerable<ServiceDescriptor> descriptors)
     {
-        _descriptors.AddRange(descriptors);
+        foreach (var descriptor in descriptors)
+        {
+            _descriptors.Add(descriptor);
+            _registeredTypes.Add(descriptor.ServiceType);
+        }
+    }
+
+    public void AddServiceTypes(IEnumerable<ServiceDescriptor> descriptors)
+    {
+        foreach (var descriptor in descriptors)
+        {
+            _registeredTypes.Add(descriptor.ServiceType);
+        }
     }
 
     public bool IsRegistered(Type serviceType)
     {
-        return _descriptors.Any(x => x.ServiceType == serviceType);
+        if (_registeredTypes.Contains(serviceType))
+            return true;
+
+        if (serviceType.IsGenericType)
+            return _registeredTypes.Contains(serviceType.GetGenericTypeDefinition());
+
+        return false;
     }
 
     public object? GetService(Type serviceType, IServiceProvider provider)
@@ -56,4 +75,3 @@ public sealed class ModuleServiceRegistry
         return created;
     }
 }
-
