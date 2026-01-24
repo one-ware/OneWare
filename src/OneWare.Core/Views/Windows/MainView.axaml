@@ -4,8 +4,6 @@
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                    xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
                    xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-                   xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
-                   xmlns:mvvm="http://prismlibrary.com/"
                    xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
                    xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                    xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"

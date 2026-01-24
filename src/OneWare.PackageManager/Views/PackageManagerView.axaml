@@ -4,7 +4,6 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:helpers="clr-namespace:OneWare.Essentials.Helpers;assembly=OneWare.Essentials"
                          xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
-                         xmlns:mvvm="http://prismlibrary.com/"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          PrefWidth="1050" PrefHeight="600"
                          mc:Ignorable="d"

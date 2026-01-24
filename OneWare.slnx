@@ -38,7 +38,6 @@
     <File Path="build/props/OmniSharp.Extensions.Language.props" />
     <File Path="build/props/OneWare.Module.props" />
     <File Path="build/props/PanAndZoom.props" />
-    <File Path="build/props/Prism.Avalonia.props" />
     <File Path="build/props/RestSharp.props" />
     <File Path="build/props/SharpCompress.props" />
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
