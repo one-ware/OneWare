@@ -6,7 +6,7 @@
     <Import Project="..\..\build\props\DynamicData.props"/>
     <Import Project="..\..\build\props\Avalonia.props"/>
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
-    <Import Project="..\..\build\props\Avalonia.ReactiveUI.props"/>
+    <Import Project="..\..\build\props\ReactiveUI.Avalonia.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.ColorPicker.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.DataGrid.props"/>
     <Import Project="..\..\build\props\PanAndZoom.props"/>
