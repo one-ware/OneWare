@@ -47,7 +47,7 @@ public class StudioApp : App
 
     protected override string GetLogFilePath()
     {
-        return Path.Combine(Paths.DocumentsDirectory, "IDELog.txt");
+        return Path.Combine(Paths.DocumentsDirectory, "Logs", $"{Paths.AppName.Replace(" ", "_").ToLower()}_.txt");
     }
 
     public override void Initialize()
