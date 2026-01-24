@@ -150,7 +150,7 @@ public class DesktopStudioApp : StudioApp
             await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
             Services.Resolve<IMainDockService>().InitializeContent();
             Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-            Services.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            Services.Resolve<ILogger>()?.Log("Loading last projects finished");
             
             if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
             {

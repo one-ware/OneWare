@@ -94,7 +94,7 @@ public class DesktopDemoApp : DemoApp
         try
         {
             var settingsService = Services.Resolve<ISettingsService>();
-            Services.Resolve<ILogger>()?.Log("Loading last projects finished!", ConsoleColor.Cyan);
+            Services.Resolve<ILogger>()?.Log("Loading last projects finished");
 
             if (settingsService.GetSettingValue<string>("LastVersion") != Global.VersionCode)
             {

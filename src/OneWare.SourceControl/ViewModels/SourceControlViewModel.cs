@@ -361,7 +361,7 @@ public class SourceControlViewModel : ExtendedTool
 
             _ = RefreshAsync();
 
-            _logger.Log("Switched to branch '" + branch.FriendlyName + "'", ConsoleColor.Green, true, Brushes.Green);
+            _logger.Log("Switched to branch '" + branch.FriendlyName + "'", true, Brushes.Green);
         }
         catch (Exception e)
         {
@@ -627,7 +627,7 @@ public class SourceControlViewModel : ExtendedTool
             var committer = author;
             var commit = repository.Commit(CommitMessage, author, committer);
 
-            _logger.Log($"Commit {commit.Message}", ConsoleColor.Green, true, Brushes.Green);
+            _logger.Log($"Commit {commit.Message}", true, Brushes.Green);
             CommitMessage = "";
         }
         catch (Exception e)
@@ -729,7 +729,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (result != null)
         {
-            _logger.Log($"Pull Status: {result.Status}", default, true);
+            _logger.Log($"Pull Status: {result.Status}", true);
             PublishMergeResult(result);
         }
 

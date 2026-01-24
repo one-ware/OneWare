@@ -108,7 +108,7 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
             
             ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
             ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
-            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", ConsoleColor.Green, true, Brushes.Lime);
+            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
         }
     }
 

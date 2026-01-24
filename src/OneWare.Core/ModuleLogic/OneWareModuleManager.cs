@@ -49,7 +49,7 @@ public sealed class OneWareModuleManager
             {
                 module.Initialize(provider);
                 _initialized.Add(module.Id);
-                _logger?.Log($"Module '{module.Id}' initialized.", ConsoleColor.Cyan, true);
+                _logger?.Log($"Module '{module.Id}' initialized.");
             }
             catch (Exception ex)
             {

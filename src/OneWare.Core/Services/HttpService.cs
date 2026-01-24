@@ -76,7 +76,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -107,7 +107,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -127,7 +127,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -141,13 +141,7 @@ public class HttpService : IHttpService
         IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         var tempPath = Path.Combine(_paths.TempDirectory, Path.GetFileName(url));
-
-        //if (Directory.Exists(location))
-        //{
-        //    _logger.Error("Destination dir already exists");
-        //    return false;
-        //}
-
+        
         try
         {
             Directory.CreateDirectory(location);
@@ -172,21 +166,15 @@ public class HttpService : IHttpService
             File.Delete(tempPath);
             return true;
         }
+        catch (HttpRequestException e)
+        {
+            _logger.Warning(e.Message, e);
+        }
         catch (Exception e)
         {
-            if (e is not HttpRequestException)
-                _logger.Error(e.Message, e);
-            else _logger.Log(e.Message, ConsoleColor.Yellow);
-            try
-            {
-                Directory.Delete(location);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-
-            return false;
+            _logger.Error(e.Message, e);
         }
+
+        return false;
     }
 }

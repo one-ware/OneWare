@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
+using OneWare.Core.Data;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -43,6 +45,7 @@ using OneWare.Settings.Views;
 using OneWare.Toml;
 using Serilog;
 using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 using TextMateSharp.Grammars;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -81,7 +84,6 @@ public class App : Application
         services.AddSingleton<IApplicationStateService, ApplicationStateService>();
         services.AddSingleton<IMainDockService, MainDockService>();
         services.AddSingleton<IWindowService, WindowService>();
-        services.AddSingleton<IModuleTracker, ModuleTracker>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<IChildProcessService, ChildProcessService>();
         services.AddSingleton<IFileIconService, FileIconService>();
@@ -161,13 +163,15 @@ public class App : Application
             new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
-            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus, Enum.GetValues<ThemeName>().Cast<object>().ToArray())
+            new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus,
+                Enum.GetValues<ThemeName>().Cast<object>().ToArray())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Dark Mode"
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Light",
-            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus, Enum.GetValues<ThemeName>().Cast<object>().ToArray())
+            new ComboBoxSetting("Editor Theme Light", ThemeName.LightPlus,
+                Enum.GetValues<ThemeName>().Cast<object>().ToArray())
             {
                 HoverDescription = "Sets the theme for Syntax Highlighting in Light Mode"
             });
@@ -267,8 +271,12 @@ public class App : Application
             Header = "Comment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.CommentCode16X"),
             Command = new RelayCommand(
-                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Comment(),
-                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
+                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance
+                    ?.Comment(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel
+                {
+                    TypeAssistance: not null
+                }),
             InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
@@ -276,8 +284,12 @@ public class App : Application
             Header = "Uncomment Selection",
             IconObservable = Current!.GetResourceObservable("VsImageLib.UncommentCode16X"),
             Command = new RelayCommand(
-                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance?.Uncomment(),
-                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel { TypeAssistance: not null }),
+                () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance
+                    ?.Uncomment(),
+                () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel
+                {
+                    TypeAssistance: not null
+                }),
             InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
         });
 
@@ -293,11 +305,10 @@ public class App : Application
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
         {
-            Command = new RelayCommand(
-                () =>
-                {
-                    foreach (var file in Services.Resolve<IMainDockService>().OpenFiles) _ = file.Value.SaveAsync();
-                }),
+            Command = new RelayCommand(() =>
+            {
+                foreach (var file in Services.Resolve<IMainDockService>().OpenFiles) _ = file.Value.SaveAsync();
+            }),
             Header = "Save All",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
             IconObservable = Current!.GetResourceObservable("VsImageLib.SaveAll16X")
@@ -325,7 +336,8 @@ public class App : Application
 
         welcomeScreenService.RegisterItemToWalkthrough("fundamentals",
             new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals",
-                null, new RelayCommand(() =>
+                null,
+                new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
                 }))
@@ -335,7 +347,8 @@ public class App : Application
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
             new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI",
-                null, new RelayCommand(() =>
+                null,
+                new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
                 }))
@@ -350,7 +363,7 @@ public class App : Application
             PlatformHelper.OpenHyperLink(link);
         });
 
-        StyledElement shell; 
+        StyledElement shell;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var mainWindow = Services.Resolve<MainWindow>();
@@ -371,7 +384,7 @@ public class App : Application
         {
             shell = Services.Resolve<MainView>();
         }
-        
+
         shell.DataContext = Services.Resolve<MainWindowViewModel>();
 
         return shell;
@@ -394,7 +407,7 @@ public class App : Application
 
     protected virtual string GetLogFilePath()
     {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "oneware.log");
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
     }
 
     protected virtual void ConfigureLogging(ILoggingBuilder builder)
@@ -404,13 +417,55 @@ public class App : Application
         if (!string.IsNullOrWhiteSpace(logDirectory))
             Directory.CreateDirectory(logDirectory);
 
+        var onewareTheme = new SystemConsoleTheme(new Dictionary<ConsoleThemeStyle, SystemConsoleThemeStyle>
+        {
+            // Main message text
+            [ConsoleThemeStyle.Text] = new() { Foreground = ConsoleColor.Cyan },
+
+            // Template / boilerplate
+            [ConsoleThemeStyle.SecondaryText] = new() { Foreground = ConsoleColor.DarkGray },
+            [ConsoleThemeStyle.TertiaryText]  = new() { Foreground = ConsoleColor.DarkGray },
+
+            // Literals / scalars
+            [ConsoleThemeStyle.String]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Number]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Boolean] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Null]    = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Scalar]  = new() { Foreground = ConsoleColor.White },
+
+            // Property names
+            [ConsoleThemeStyle.Name] = new() { Foreground = ConsoleColor.Gray },
+
+            // Invalid output
+            [ConsoleThemeStyle.Invalid] = new() { Foreground = ConsoleColor.Red },
+
+            // Log levels (your requirements)
+            [ConsoleThemeStyle.LevelVerbose]     = new() { Foreground = ConsoleColor.Gray }, // brown
+            [ConsoleThemeStyle.LevelDebug]       = new() { Foreground = ConsoleColor.DarkYellow },
+            [ConsoleThemeStyle.LevelInformation] = new() { Foreground = ConsoleColor.DarkCyan },
+            [ConsoleThemeStyle.LevelWarning]     = new() { Foreground = ConsoleColor.Yellow },
+            [ConsoleThemeStyle.LevelError]       = new() { Foreground = ConsoleColor.Red },
+            [ConsoleThemeStyle.LevelFatal]       = new() { Foreground = ConsoleColor.Magenta },
+        });
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, shared: true)
-            .WriteTo.Console()
+            .WriteTo.File(
+                path: Path.Combine(logPath, "log-.txt"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7,
+                shared: true
+            )
+            .WriteTo.File(
+                path: Path.Combine(logPath, "current.txt"),
+                shared: true
+            )
+            .WriteTo.Console(
+                theme: onewareTheme
+            )
             .CreateLogger();
 
         builder.ClearProviders();
@@ -424,6 +479,7 @@ public class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
+
         services.AddSingleton(ModuleCatalog);
         RegisterServices(services);
 
@@ -440,8 +496,12 @@ public class App : Application
         var compositeProvider = new CompositeServiceProvider(rootProvider, _moduleServiceRegistry);
 
         ContainerLocator.SetContainer(compositeProvider);
-        
-        _moduleManager.SetLogger(compositeProvider.Resolve<ILogger>());
+
+        var logger = compositeProvider.GetRequiredService<ILogger>();
+        _moduleManager.SetLogger(logger);
+
+        logger.LogInformation(
+            $"App Started: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
 
         LoadStartupPlugins();
 
@@ -459,10 +519,7 @@ public class App : Application
 
         _moduleManager.InitializeModules(compositeProvider);
 
-        Dispatcher.UIThread.UnhandledException += (s, e) =>
-        {
-            Console.WriteLine($"Unhandled: {e.Exception}");
-        };
+        Dispatcher.UIThread.UnhandledException += (s, e) => { Console.WriteLine($"Unhandled: {e.Exception}"); };
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
@@ -485,7 +542,7 @@ public class App : Application
             TypeAssistanceIconStore.Instance.Load();
         });
 
-        Services.Resolve<ILogger>().Log("Framework initialization complete!", ConsoleColor.Green);
+        Services.Resolve<ILogger>().Log("Framework initialization complete!");
         Services.Resolve<BackupService>().LoadAutoSaveFile();
         Services.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
         Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();

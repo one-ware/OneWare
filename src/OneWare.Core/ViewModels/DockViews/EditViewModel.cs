@@ -57,7 +57,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+        logger.Log("Initializing " + fullPath);
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -334,7 +334,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
 
         ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
+            ?.Log($"Saved {CurrentFile.Name}!");
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;

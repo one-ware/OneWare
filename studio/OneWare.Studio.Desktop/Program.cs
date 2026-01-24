@@ -204,7 +204,7 @@ internal abstract class Program
                 return;
 
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
-            logger?.Log($"Received IPC message: {target}", ConsoleColor.Cyan);
+            logger?.Log($"Received IPC message: {target}");
             
             ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
 
@@ -215,13 +215,13 @@ internal abstract class Program
             else if (target.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
             {
                 Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
-                logger?.Log($"Opening URL: {target}", ConsoleColor.Green);
+                logger?.Log($"Opening URL: {target}");
                 ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(new Uri(target));
             }
             else if (File.Exists(target) || Directory.Exists(target))
             {
                 var fullPath = Path.GetFullPath(target);
-                logger?.Log($"Opening path: {fullPath}", ConsoleColor.Green);
+                logger?.Log($"Opening path: {fullPath}");
                 
                 ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecutePathLaunchActions(fullPath);
             }

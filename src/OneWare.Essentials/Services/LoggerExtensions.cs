@@ -8,17 +8,10 @@ namespace OneWare.Essentials.Services;
 
 public static class LoggerExtensions
 {
-    public static void Log(this ILogger logger, object message, ConsoleColor color = default,
-        bool showOutput = false, IBrush? outputBrush = null)
-    {
-        Log(logger, message, null, color, showOutput, outputBrush);
-    }
-
-    public static void Log(this ILogger logger, object message, IProjectRoot? owner, ConsoleColor color = default,
-        bool showOutput = false, IBrush? outputBrush = null)
+    public static void Log(this ILogger logger, object message, bool showOutput = false, IBrush? outputBrush = null)
     {
         var text = message?.ToString() ?? string.Empty;
-        logger.LogInformation("{Message}", text);
+        logger.LogInformation(text);
 
         if (showOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
             ContainerLocator.Current.Resolve<IOutputService>().WriteLine(text, outputBrush);
@@ -27,13 +20,7 @@ public static class LoggerExtensions
     public static void Warning(this ILogger logger, string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Warning(logger, message, null, exception, showOutput, showDialog, dialogOwner);
-    }
-
-    public static void Warning(this ILogger logger, string message, IProjectRoot? owner, Exception? exception = null,
-        bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
-    {
-        logger.LogWarning(exception, "{Message}", message);
+        logger.LogWarning(exception, message);
         WriteToOutput(message, exception, showOutput, Brushes.Orange);
         ShowDialog(message, exception, showDialog, "Warning", MessageBoxIcon.Warning, dialogOwner);
     }
@@ -41,13 +28,7 @@ public static class LoggerExtensions
     public static void Error(this ILogger logger, string message, Exception? exception = null, bool showOutput = true,
         bool showDialog = false, Window? dialogOwner = null)
     {
-        Error(logger, message, null, exception, showOutput, showDialog, dialogOwner);
-    }
-
-    public static void Error(this ILogger logger, string message, IProjectRoot? owner, Exception? exception = null,
-        bool showOutput = true, bool showDialog = false, Window? dialogOwner = null)
-    {
-        logger.LogError(exception, "{Message}", message);
+        logger.LogError(exception, message);
         WriteToOutput(message, exception, showOutput, Brushes.Red);
         ShowDialog(message, exception, showDialog, "Error", MessageBoxIcon.Error, dialogOwner);
     }
@@ -57,7 +38,7 @@ public static class LoggerExtensions
         if (!showOutput || ContainerLocator.Container?.IsRegistered<IOutputService>() != true)
             return;
 
-        var output = exception == null ? message : $"{message}\n{exception}";
+        var output = exception == null ? message : $"{message}\n{exception.Message}";
         ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, brush);
         ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
     }
@@ -68,7 +49,7 @@ public static class LoggerExtensions
         if (!showDialog || ContainerLocator.Container?.IsRegistered<IWindowService>() != true)
             return;
 
-        var output = exception == null ? message : $"{message}\n{exception}";
+        var output = exception == null ? message : $"{message}\n{exception.Message}";
         _ = ContainerLocator.Current.Resolve<IWindowService>().ShowMessageAsync(title, output, icon, owner);
     }
 }

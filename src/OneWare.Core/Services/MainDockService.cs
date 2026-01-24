@@ -339,7 +339,7 @@ public class MainDockService : Factory, IMainDockService
             catch (Exception e)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
-                    ?.Log("Could not load layout from file! Loading default layout..." + e, ConsoleColor.Red);
+                    ?.Warning("Could not load layout from file! Loading default layout...", e);
             }
 
         if (layout == null)

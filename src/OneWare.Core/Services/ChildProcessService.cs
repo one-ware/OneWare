@@ -66,8 +66,7 @@ public class ChildProcessService(
             if (x.Contains(' ')) return $"\"{x}\"";
             return x;
         }));
-        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}",
-            ConsoleColor.DarkCyan, true, Brushes.CornflowerBlue);
+        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", true, Brushes.CornflowerBlue);
 
         var output = string.Empty;
 
@@ -149,8 +148,7 @@ public class ChildProcessService(
             catch (TaskCanceledException)
             {
                 logger.Log(
-                    $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!",
-                    ConsoleColor.DarkYellow, true, Brushes.DarkOrange);
+                    $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!", true, Brushes.DarkOrange);
                 childProcess.Kill();
             }
 

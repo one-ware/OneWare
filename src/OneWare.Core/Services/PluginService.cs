@@ -123,7 +123,7 @@ public class PluginService : IPluginService
         foreach (var module in added)
         {
             ContainerLocator.Container?.Resolve<ILogger>()
-                .Log($"Module {module.Id} loaded", ConsoleColor.Cyan, true);
+                .Log($"Module {module.Id} loaded");
         }
 
         return added;
@@ -203,9 +203,8 @@ public class PluginService : IPluginService
             catch (InvalidOperationException)
             {
                 // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.",
-                    ConsoleColor.DarkYellow, true);
+                ContainerLocator.Container.Resolve<ILogger>().Warning(
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
             }
         }
     }

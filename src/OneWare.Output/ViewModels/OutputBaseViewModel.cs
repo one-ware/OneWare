@@ -55,9 +55,9 @@ public abstract class OutputBaseViewModel : ExtendedTool
         set => SetProperty(ref _autoScroll, value);
     }
 
-    public void WriteLine(string text, IBrush? textColor = null)
+    public void WriteLine(string text, IBrush? textColor = null, IProjectRoot? owner = null)
     {
-        Write(text + "\n", textColor);
+        Write(text + "\n", textColor, owner);
     }
 
     public void Write(string text, IBrush? textColor = null, IProjectRoot? owner = null)
