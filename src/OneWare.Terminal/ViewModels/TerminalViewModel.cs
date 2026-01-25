@@ -16,7 +16,9 @@ namespace OneWare.Terminal.ViewModels;
 public class TerminalViewModel : ObservableObject
 {
     private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? new Win32PseudoTerminalProvider()
+        ? (RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+            ? new Win32ConPtyPseudoTerminalProvider()
+            : new Win32PseudoTerminalProvider())
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();
@@ -103,6 +105,12 @@ public class TerminalViewModel : ObservableObject
             if (!string.IsNullOrEmpty(shellExecutable))
             {
                 var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
+                if (terminal == null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                    SProvider is Win32PseudoTerminalProvider)
+                {
+                    terminal = new Win32ConPtyPseudoTerminalProvider().Create(80, 32, WorkingDir, shellExecutable,
+                        null, StartArguments);
+                }
 
                 if (terminal == null)
                 {
