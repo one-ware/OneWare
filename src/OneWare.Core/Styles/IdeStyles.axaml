@@ -12,7 +12,7 @@
                       TargetType="FlyoutPresenter">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
-            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="1" />
@@ -51,7 +51,6 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/Editor.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/AdvancedWindow.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Menu.axaml" />
-    <StyleInclude Source="avares://OneWare.Core/Styles/ToolTip.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/ScrollViewer.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
@@ -64,11 +63,12 @@
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
-
+    
     <Style Selector="ToolTip">
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="3" />
         <Setter Property="MaxWidth" Value="600" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{TemplateBinding Background}"
