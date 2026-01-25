@@ -3,28 +3,56 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
-             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatBotView" 
+             x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
-    <Grid RowDefinitions="*, 30">
-        <ScrollViewer Background="{DynamicResource ThemeControlLowBrush}">
-            <Border Margin="0 10 0 0">
-                <ItemsControl ItemsSource="{Binding Messages}"/>
+    <Grid RowDefinitions="Auto, *, Auto">
+        <Border Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="0 0 0 1" Padding="12 8">
+            <DockPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Copilot Chat" FontWeight="Bold" />
+                    <TextBlock Text="{Binding StatusText}" FontSize="11"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10"
+                            VerticalAlignment="Center">
+                    <ProgressBar Width="70" Height="4" IsIndeterminate="True"
+                                 IsVisible="{Binding IsBusy}" />
+                    <TextBlock Text="Model" FontSize="11"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                    <ComboBox Width="170" ItemsSource="{Binding Models}"
+                              SelectedItem="{Binding SelectedModel}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Border Padding="8 12 8 0">
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
             </Border>
         </ScrollViewer>
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
-            <DockPanel Margin="5 0" VerticalAlignment="Center">
-                <Button DockPanel.Dock="Right" Command="{Binding SendText}"
-                        Margin="5 0 0 0" CommandParameter="{Binding #CommandBox.Text}">
-                    <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
-                </Button>
-                <TextBox Classes="ToolBar" DockPanel.Dock="Left" Name="CommandBox" Watermark="Message OneAI..."
-                         HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding CurrentMessage, Mode=TwoWay}">
-                    <Interaction.Behaviors>
-                        <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
-                                                            CommandParameter="{Binding #CommandBox.Text}" />
-                    </Interaction.Behaviors>
+
+        <Border Grid.Row="2" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
+            <DockPanel Margin="10 8" LastChildFill="True">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                    <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
+                        <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
+                    </Button>
+                    <Button Command="{Binding SendCommand}">
+                        <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
+                    </Button>
+                </StackPanel>
+                <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Ask Copilot..."
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44"
+                         VerticalContentAlignment="Top"
+                         Text="{Binding CurrentMessage, Mode=TwoWay}">
                 </TextBox>
             </DockPanel>
         </Border>
