@@ -28,9 +28,10 @@ public partial class ChatBotViewModel : ExtendedTool
     [ObservableProperty] private string _selectedModel = "gpt-5";
 
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
+    
     public ObservableCollection<string> Models { get; } = new()
     {
-        "gpt-4.1",
+        "gpt-5",
         "claude-sonnet-4.5"
     };
 

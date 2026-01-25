@@ -5,62 +5,83 @@
              xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatMessageView" x:DataType="viewModels:ChatMessageViewModel">
+             mc:Ignorable="d"
+             x:Class="OneWare.ChatBot.Views.ChatMessageView"
+             x:DataType="viewModels:ChatMessageViewModel">
+
     <UserControl.Styles>
+
+        <!-- Base message bubble -->
         <Style Selector="Border.message">
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-            <Setter Property="Padding" Value="12" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14 12" />
             <Setter Property="MaxWidth" Value="640" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Left" />
         </Style>
+
+        <!-- User message -->
         <Style Selector="Border.message.user">
-            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+            <Setter Property="Background"
+                    Value="{DynamicResource ThemeControlMidBrush}" />
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
+
+        <!-- Assistant message -->
         <Style Selector="Border.message.assistant">
-            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="Background"
+                    Value="{DynamicResource ThemeControlLowBrush}" />
         </Style>
-        <Style Selector="TextBlock.meta">
-            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
+
+        <!-- Streaming indicator -->
         <Style Selector="TextBlock.streaming">
-            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
-            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Foreground"
+                    Value="{DynamicResource ThemeForegroundLowBrush}" />
             <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Margin" Value="2 4 0 0" />
         </Style>
+
     </UserControl.Styles>
+
     <Border Classes="message"
             Classes.user="{Binding IsUser}"
             Classes.assistant="{Binding IsAssistant}">
+
         <StackPanel Spacing="6">
-            <DockPanel LastChildFill="False">
-                <TextBlock Text="{Binding Author}" FontWeight="Bold" />
-                <TextBlock Classes="meta" DockPanel.Dock="Right"
-                           Text="{Binding Timestamp, StringFormat={}{0:t}}" />
-            </DockPanel>
+
+            <!-- Message content -->
             <controls:MarkdownViewer Markdown="{Binding Message}">
                 <controls:MarkdownViewer.Styles>
+
+                    <!-- Inline code / editor -->
                     <Style Selector="avaloniaEdit|TextEditor">
-                        <Style.Setters>
-                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
-                        </Style.Setters>
+                        <Setter Property="FontFamily"
+                                Value="{DynamicResource EditorFont}" />
+                        <Setter Property="HorizontalScrollBarVisibility"
+                                Value="Disabled" />
+                        <Setter Property="VerticalScrollBarVisibility"
+                                Value="Disabled" />
+                        <Setter Property="Background" Value="Transparent" />
                     </Style>
 
+                    <!-- Code blocks -->
                     <Style Selector="Border.CodeBlock">
-                        <Setter Property="Margin" Value="0" />
-                        <Setter Property="Padding" Value="6" />
-                        <Setter Property="CornerRadius" Value="4" />
-                        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
+                        <Setter Property="Margin" Value="4 6" />
+                        <Setter Property="Padding" Value="8" />
+                        <Setter Property="CornerRadius" Value="6" />
+                        <Setter Property="Background"
+                                Value="{DynamicResource ThemeBackgroundBrush}" />
                     </Style>
+
                 </controls:MarkdownViewer.Styles>
             </controls:MarkdownViewer>
-            <TextBlock Classes="streaming" Text="Thinking..." IsVisible="{Binding IsStreaming}" />
+
+            <!-- Streaming hint -->
+            <TextBlock Classes="streaming"
+                       Text="Thinking…"
+                       IsVisible="{Binding IsStreaming}" />
+
         </StackPanel>
     </Border>
 </UserControl>
