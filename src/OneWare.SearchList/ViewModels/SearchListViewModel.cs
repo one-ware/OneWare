@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
+using Avalonia.ReactiveUI;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using DynamicData;
@@ -9,6 +11,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.Models;
+using ReactiveUI;
 
 namespace OneWare.SearchList.ViewModels;
 
@@ -35,23 +38,25 @@ public class SearchListViewModel : ExtendedTool
 
     private bool _wholeWord;
 
-    public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) :
+        base(IconKey)
     {
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
         Title = "Search";
         Id = "Search";
+
+        this.WhenAnyValue(x => x.SearchString)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Subscribe(Search);
     }
 
     public string SearchString
     {
         get => _searchString;
-        set
-        {
-            SetProperty(ref _searchString, value);
-            Search(_searchString);
-        }
+        set => SetProperty(ref _searchString, value);
     }
 
     public ObservableCollection<SearchResultModel> Items { get; } = new();
@@ -246,8 +251,8 @@ public class SearchListViewModel : ExtendedTool
 
         if (await _mainDockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
 
-        if (_mainDockService.GetWindowOwner(this) is IHostWindow) ;
-        _mainDockService.CloseDockable(this);
+        if (_mainDockService.GetWindowOwner(this) is IHostWindow)
+            _mainDockService.CloseDockable(this);
 
         //JUMP TO LINE
         if (resultModel.Line > 0)

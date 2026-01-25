@@ -113,7 +113,7 @@
                           DockPanel.Dock="Top" DataContext="{Binding SelectedFpgaModel}">
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Pins:" />
-                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}">
+                        <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1">
                             <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"
@@ -165,50 +165,22 @@
                         </Border>
 
                         <Border Grid.Column="1" Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}">
-                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="30">
-                                <Button Command="{Binding ConnectCommand}" Classes="RoundButton" Height="40"
-                                        ToolTip.Tip="Connect" Width="40" CornerRadius="3">
-                                    <Button.RenderTransform>
-                                        <RotateTransform Angle="45" />
-                                    </Button.RenderTransform>
-                                    <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25"
+                            
+                            <Panel Height="40" Width="40">
+                                <Panel.RenderTransform>
+                                    <RotateTransform Angle="45" />
+                                </Panel.RenderTransform>
+                                <Button Command="{Binding ConnectCommand}" BorderThickness="1" CornerRadius="3"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        ToolTip.Tip="Connect" Width="40" Height="40">
+                                    <Image Source="{DynamicResource VSImageLib2019.Plugged_16x}" Height="25" Width="25"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Button>
-
-                                <!--
-                                <ContentControl Content="{Binding LastSelection}" HorizontalAlignment="Center">
-                                    <ContentControl.DataTemplates>
-                                        <DataTemplate DataType="models:FpgaPinModel">
-                                            <Grid ColumnDefinitions="*, 8, *">
-                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Pin.Name}"/>
-                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Connection.Node.Name, FallbackValue={x:Null}}"></TextBlock>
-                                            </Grid>
-                                        </DataTemplate>
-                                        <DataTemplate DataType="models:FpgaNodeModel">
-                                            <Grid ColumnDefinitions="*, 8, *">
-                                                <TextBlock HorizontalAlignment="Right" Text="{Binding Connection.Pin.Name, FallbackValue={x:Null}}"></TextBlock>
-                                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="-" IsVisible="{Binding Connection, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                                <TextBlock Grid.Column="2" HorizontalAlignment="Left" Text="{Binding Node.Name}"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ContentControl.DataTemplates>
-                                </ContentControl>
-                                
-                                <Button Command="{Binding DisconnectCommand}" Classes="RoundButton" Height="40"
-                                        ToolTip.Tip="Disconnect" Width="40" CornerRadius="3">
-                                    <Button.RenderTransform>
-                                        <RotateTransform Angle="45"></RotateTransform>
-                                    </Button.RenderTransform>
-                                    <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="25"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Button>
-                                -->
-                            </StackPanel>
+                            </Panel>
                         </Border>
 
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="Nodes:" />
-                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}">
+                        <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="1">
                             <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
                                 <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
                                                     Background="{DynamicResource ThemeBackgroundBrush}"

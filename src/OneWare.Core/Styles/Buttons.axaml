@@ -21,7 +21,6 @@
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="Height" Value="24" />
-        <Setter Property="MinWidth" Value="60" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
@@ -29,6 +28,7 @@
     <Style Selector="StackPanel.WindowButtons > Button">
         <Setter Property="Padding" Value="5 3" />
         <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="60" />
     </Style>
     
     <Style Selector="ToggleButton">
@@ -41,7 +41,6 @@
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="Height" Value="24" />
-        <Setter Property="MinWidth" Value="60" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
@@ -60,7 +59,7 @@
     </Style>
     
     <Style Selector="ToggleButton:checked /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>
 </Styles>

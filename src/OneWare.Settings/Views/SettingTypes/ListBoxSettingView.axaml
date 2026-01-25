@@ -6,8 +6,7 @@
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.ListBoxSettingView"
-             x:DataType="settingTypes:ListBoxSettingViewModel"
-             >
+             x:DataType="settingTypes:ListBoxSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <StackPanel.ContextMenu>
             <ContextMenu>
@@ -29,9 +28,9 @@
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border>
+        <Border Background="{DynamicResource ThemeControlMidBrush}"  BorderThickness="1">
             <Grid RowDefinitions="20, *">
-                <StackPanel Orientation="Horizontal" Spacing="3">
+                <StackPanel Classes="ToolBar">
                     <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}" IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" >
                         <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
                     </Button>
@@ -45,7 +44,6 @@
                 <ListBox Grid.Row="1" ItemsSource="{Binding Setting.Items}" Height="100" 
                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" 
                          SelectedIndex="{Binding SelectedIndex}"
-                         Background="{DynamicResource ThemeBackgroundBrush}"
                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                          BorderThickness="0 1 0 0">
                 </ListBox>
