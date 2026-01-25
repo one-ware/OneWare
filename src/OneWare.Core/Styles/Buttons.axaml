@@ -6,10 +6,6 @@
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
-    <Style Selector="Button:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}" />
-    </Style>
-
     <Style Selector="Button.BorderButton">
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
@@ -24,14 +20,38 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
-        <Setter Property="Height" Value="25" />
+        <Setter Property="Height" Value="24" />
         <Setter Property="MinWidth" Value="60" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
     </Style>
     
-    <Style Selector="Button.PrimaryButton">
+    <Style Selector="ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+    
+    <Style Selector="ToggleButton.RoundButton">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="MinWidth" Value="60" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+    </Style>
+    
+    <Style Selector="ToggleButton.RoundButton /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+    </Style>
+    
+    <Style Selector="Button.PrimaryButton, ToggleButton.PrimaryButton">
         <Setter Property="Background" Value="{DynamicResource HighlightBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+    </Style>
+    
+    <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>
 </Styles>

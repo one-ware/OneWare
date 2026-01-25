@@ -16,16 +16,16 @@
             <DockPanel Name="InformationPanel">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
 
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
+                    <ToggleButton Classes="RoundButton" Width="24" Height="24" Background="Transparent"
                                   IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
                         <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.CaseSensitive16X}" />
                     </ToggleButton>
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
+                    <ToggleButton Classes="RoundButton" Width="24" Height="24" Background="Transparent"
                                   IsChecked="{Binding WholeWord}"
                                   ToolTip.Tip="Match whole words">
                         <Image Height="16" Width="16" Source="{DynamicResource VsCodeLight.Whole-Word}" />
                     </ToggleButton>
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
+                    <ToggleButton Classes="RoundButton" Width="24" Height="24" Background="Transparent"
                                   IsChecked="{Binding UseRegex}"
                                   ToolTip.Tip="Use Regex">
                         <Image Height="16" Width="16" Source="{DynamicResource VsCodeLight.Regex}" />

@@ -29,7 +29,7 @@
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border Classes="RoundToolBar" BorderBrush="Gray">
+        <Border Classes="RoundToolBar" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Background="{DynamicResource ThemeControlLowBrush}">
             <DockPanel>
 
                 <Button IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Right" Command="{Binding SelectPathAsync}" CommandParameter="{Binding $self}">
@@ -37,7 +37,7 @@
                            Source="{DynamicResource VsImageLib.FolderOpen16X}" />
                 </Button>
 
-                <Border DockPanel.Dock="Right" Classes="SplitterBorder" Background="Gray" />
+                <Border DockPanel.Dock="Right" Classes="SplitterBorder" Background="{DynamicResource ThemeBorderLowBrush}" />
 
                 <Grid DockPanel.Dock="Right" Margin="0 0 2 0" IsVisible="{Binding PathSetting.CanVerify}">
                     <Image Height="10" ToolTip.Tip="Path is invalid!" IsVisible="{Binding !PathSetting.IsValid}"
@@ -46,7 +46,8 @@
                            Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
                 </Grid>
 
-                <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" />
+                <TextBox BorderThickness="0" Background="Transparent" 
+                         IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" />
             </DockPanel>
         </Border>
     </StackPanel>

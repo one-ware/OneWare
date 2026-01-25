@@ -37,7 +37,7 @@
                     CommandParameter="{Binding #AuthenticateCloudViewView}"
                     HorizontalAlignment="Stretch"
                     Height="35"
-                    Classes="RoundButton PrimaryButton"
+                    Classes="PrimaryButton"
                     Content="Login with Browser">
             </Button>
             
@@ -69,7 +69,7 @@
                             CommandParameter="{Binding #AuthenticateCloudViewView}"
                             HorizontalAlignment="Stretch"
                             Height="30"
-                            Classes="RoundButton PrimaryButton"
+                            Classes="PrimaryButton"
                             Content="Login">
                     </Button>
                 </StackPanel>

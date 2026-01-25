@@ -128,7 +128,7 @@
                                             <Button Content="{Binding PrimaryButtonText}"
                                                     Name="MainButton"
                                                     Background="{Binding PrimaryButtonBrush}"
-                                                    Classes="RoundButton" Command="{Binding MainButtonCommand}">
+                                                    Command="{Binding MainButtonCommand}">
                                                 <Interaction.Behaviors>
                                                     <ButtonClickEventTriggerBehavior>
                                                         <ChangePropertyAction TargetObject="PluginList"

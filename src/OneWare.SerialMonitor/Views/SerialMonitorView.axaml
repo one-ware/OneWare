@@ -35,16 +35,12 @@
                     <CheckBox IsChecked="{Binding AutoScroll}" />
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Line Ending" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableLineEndings}"
-                                  SelectedItem="{Binding SelectedLineEnding}" />
-                    </Border>
+                    <ComboBox ItemsSource="{Binding AvailableLineEndings}"
+                              SelectedItem="{Binding SelectedLineEnding}" />
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Encoding" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableEncodings}"
-                                  SelectedItem="{Binding SelectedLineEncoding}" />
-                    </Border>
+                    <ComboBox ItemsSource="{Binding AvailableEncodings}"
+                              SelectedItem="{Binding SelectedLineEncoding}" />
                     <Border Classes="SplitterBorder" />
                 </StackPanel>
 
@@ -55,18 +51,14 @@
                     </Button>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
-                                  SelectedItem="{Binding SelectedBaudRate}" />
-                    </Border>
+                    <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
+                              SelectedItem="{Binding SelectedBaudRate}" />
                     <Border Classes="SplitterBorder" />
 
                     <TextBlock Text="Serial Port:" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                                  ItemsSource="{Binding SerialPorts}"
-                                  SelectedItem="{Binding SelectedSerialPort}" />
-                    </Border>
+                    <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
+                              ItemsSource="{Binding SerialPorts}"
+                              SelectedItem="{Binding SelectedSerialPort}" />
                     <Button IsEnabled="{Binding AllowConnecting}"
                             Command="{Binding RefreshSerialPorts}"
                             ToolTip.Tip="Refresh serial ports">

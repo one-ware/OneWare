@@ -53,14 +53,13 @@
                     IsEnabled="{Binding !IsLoading}">
             <Button Command="{Binding Close}" 
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    Classes="RoundButton"
                     Height="35"
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
             </Button>
             <Button Command="{Binding InstallCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    Classes="RoundButton PrimaryButton"
+                    Classes="PrimaryButton"
                     Height="35"
                     Padding="20 0">
                 <Panel>
