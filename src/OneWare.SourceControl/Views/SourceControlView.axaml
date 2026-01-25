@@ -177,11 +177,11 @@
                            TextWrapping="Wrap" />
                 <Button
                     IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
-                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Padding="5"
+                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Height="30"
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource BoxIcons.RegularGitRepoForked}" />
                             <TextBlock Text="Initialize Repository" VerticalAlignment="Center" />
                         </StackPanel>
@@ -192,11 +192,11 @@
                            TextWrapping="Wrap" />
 
                 <Button Margin="0, 10, 0, 10" Width="180" Classes="RoundButton"
-                        Padding="5"
+                        Height="30"
                         Command="{Binding CloneDialogAsync}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource FontAwesome.DownloadSolid}" />
                             <TextBlock Text="Clone existing Repository" VerticalAlignment="Center" />
                         </StackPanel>

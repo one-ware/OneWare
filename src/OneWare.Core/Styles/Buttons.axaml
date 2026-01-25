@@ -20,7 +20,7 @@
         <Setter Property="Spacing" Value="5" />
     </Style>
     
-    <Style Selector="Button.RoundButton, StackPanel.WindowButtons > Button">
+    <Style Selector="Button.RoundButton, Button.WindowButton, StackPanel.WindowButtons > Button">
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="2" />
@@ -29,7 +29,7 @@
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
     
-    <Style Selector="StackPanel.WindowButtons > Button">
+    <Style Selector="Button.WindowButton, StackPanel.WindowButtons > Button">
         <Setter Property="Padding" Value="5 3" />
         <Setter Property="Height" Value="26" />
         <Setter Property="MinWidth" Value="60" />

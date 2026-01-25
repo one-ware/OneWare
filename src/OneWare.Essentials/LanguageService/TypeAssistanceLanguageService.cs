@@ -705,7 +705,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 : comp.Documentation.String
             : null;
 
-        return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, comp.Detail, description, icon,
+        return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
             0,
             comp, offset, CurrentFile, AfterComplete);
     }

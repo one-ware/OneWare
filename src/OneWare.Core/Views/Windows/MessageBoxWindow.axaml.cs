@@ -6,9 +6,10 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Windows;
-using OneWare.Essentials.Controls;
 using OneWare.Essentials.Converters;
+using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Core.Views.Windows;
 
@@ -19,67 +20,38 @@ public partial class MessageBoxWindow : FlexibleWindow
         InitializeComponent();
     }
 
-    public MessageBoxWindow(string title, string message, MessageBoxMode mode = MessageBoxMode.AllButtons,
-        MessageBoxIcon defaultIcon = MessageBoxIcon.Warning) : this()
+    public MessageBoxWindow(MessageBoxRequest request) : this()
     {
-        Title = title;
-        DataContext = new MessageBoxViewModel(title, message, mode);
+        Title = request.Title;
+        DataContext = new MessageBoxViewModel(request);
 
-        if (Application.Current is null) throw new NullReferenceException(nameof(Application.Current));
-        switch (defaultIcon) //Warning is default icon defined in xaml
+        ApplyIcon(request.Icon);
+
+        KeyDown += (_, e) =>
         {
-            case MessageBoxIcon.Info:
-                var infoIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                    "avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png", typeof(Bitmap), null, null);
-                if (infoIcon != null) Icon = new WindowIcon(infoIcon);
-                CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,
-                    "VsImageLib.StatusInformation16X");
-                break;
+            if (DataContext is not MessageBoxViewModel vm)
+                return;
 
-            case MessageBoxIcon.Error:
-                var errorIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                    "avares://OneWare.Core/Assets/Images/Icons/Error_Icon.png", typeof(Bitmap), null, null);
-                if (errorIcon != null) Icon = new WindowIcon(errorIcon);
-                CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,
-                    "VsImageLib.StatusCriticalError16X");
-                break;
-            default:
-                var warningIcon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
-                    "avares://OneWare.Core/Assets/Images/Icons/Warning_Icon.png", typeof(Bitmap), null, null);
-                if (warningIcon != null) Icon = new WindowIcon(warningIcon);
-                CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,
-                    "VsImageLib.StatusWarning16X");
-                break;
-        }
-
-        if (mode is MessageBoxMode.Input or MessageBoxMode.PasswordInput)
-        {
-            KeyDown += (o, i) =>
+            if (e.Key == Key.Enter)
             {
-                if (i.Key == Key.Enter && DataContext is MessageBoxViewModel mb)
-                {
-                    mb.BoxStatus = MessageBoxStatus.Yes;
-                    i.Handled = true;
-                    Close();
-                }
-            };
-        }
-        else
-        {
-            KeyDown += (o, i) =>
+                if (vm.TryExecuteDefault())
+                    e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
             {
-                if (i.Key == Key.Enter && DataContext is MessageBoxViewModel mb)
-                {
-                    mb.BoxStatus = MessageBoxStatus.Yes;
-                    i.Handled = true;
-                    Close();
-                }
-            };
-        }
-        
+                if (vm.TryExecuteCancel())
+                    e.Handled = true;
+            }
+        };
+
         AttachedToVisualTree += (_, _) =>
         {
-            if (mode == MessageBoxMode.Input)
+            if (DataContext is not MessageBoxViewModel vm)
+                return;
+
+            vm.AttachWindow(this);
+
+            if (vm.ShowInput)
             {
                 Dispatcher.UIThread.Post(() =>
                 {
@@ -89,12 +61,25 @@ public partial class MessageBoxWindow : FlexibleWindow
             }
             else
             {
-                Dispatcher.UIThread.Post(() => this.Focus());
+                Dispatcher.UIThread.Post(() => Focus());
             }
+        };
+
+        Closed += (_, _) =>
+        {
+            if (DataContext is MessageBoxViewModel vm)
+                vm.EnsureCanceled();
         };
     }
 
-    public MessageBoxStatus BoxStatus => (DataContext as MessageBoxViewModel)!.BoxStatus;
+    public MessageBoxWindow(string title, string message, MessageBoxMode mode = MessageBoxMode.AllButtons,
+        MessageBoxIcon defaultIcon = MessageBoxIcon.Warning) : this(BuildRequest(title, message, mode, defaultIcon))
+    {
+    }
+
+    public MessageBoxResult Result => (DataContext as MessageBoxViewModel)!.Result;
+
+    public MessageBoxStatus BoxStatus => Result.Status;
 
     public string? Input
     {
@@ -108,5 +93,152 @@ public partial class MessageBoxWindow : FlexibleWindow
     {
         get => (DataContext as MessageBoxViewModel)!.SelectedItem;
         set => (DataContext as MessageBoxViewModel)!.SelectedItem = value;
+    }
+
+    private void ApplyIcon(MessageBoxIcon icon)
+    {
+        if (Application.Current is null) throw new NullReferenceException(nameof(Application.Current));
+
+        switch (icon)
+        {
+            case MessageBoxIcon.Info:
+                SetIcon(
+                    "avares://OneWare.Core/Assets/Images/Icons/Hint_Icon.png",
+                    "VsImageLib.StatusInformation16X");
+                break;
+            case MessageBoxIcon.Error:
+                SetIcon(
+                    "avares://OneWare.Core/Assets/Images/Icons/Error_Icon.png",
+                    "VsImageLib.StatusCriticalError16X");
+                break;
+            default:
+                SetIcon(
+                    "avares://OneWare.Core/Assets/Images/Icons/Warning_Icon.png",
+                    "VsImageLib.StatusWarning16X");
+                break;
+        }
+    }
+
+    private void SetIcon(string windowIconPath, string resourceKey)
+    {
+        var icon = (Bitmap?)SharedConverters.PathToBitmapConverter.Convert(
+            windowIconPath, typeof(Bitmap), null, null);
+        if (icon != null)
+            Icon = new WindowIcon(icon);
+
+        if (Application.Current is not null)
+            CustomIcon = (IImage?)Application.Current.FindResource(Application.Current.RequestedThemeVariant,
+                resourceKey);
+    }
+
+    private static MessageBoxRequest BuildRequest(string title, string message, MessageBoxMode mode,
+        MessageBoxIcon icon)
+    {
+        var request = new MessageBoxRequest
+        {
+            Title = title,
+            Message = message,
+            Icon = icon
+        };
+
+        switch (mode)
+        {
+            case MessageBoxMode.NoCancel:
+                request.Buttons = new[]
+                {
+                    CreateYesButton(),
+                    CreateNoButton()
+                };
+                break;
+            case MessageBoxMode.OnlyOk:
+                request.Buttons = new[]
+                {
+                    CreateOkButton()
+                };
+                break;
+            case MessageBoxMode.Input:
+                request.Buttons = new[]
+                {
+                    CreateOkButton(),
+                    CreateCancelButton()
+                };
+                request.Input = new MessageBoxInputOptions();
+                break;
+            case MessageBoxMode.PasswordInput:
+                request.Buttons = new[]
+                {
+                    CreateOkButton(),
+                    CreateCancelButton()
+                };
+                request.Input = new MessageBoxInputOptions { Kind = MessageBoxInputKind.Password };
+                break;
+            case MessageBoxMode.SelectFolder:
+                request.Buttons = new[]
+                {
+                    CreateOkButton(),
+                    CreateCancelButton()
+                };
+                request.Input = new MessageBoxInputOptions { ShowFolderButton = true };
+                break;
+            case MessageBoxMode.SelectItem:
+                request.Buttons = new[]
+                {
+                    CreateOkButton(),
+                    CreateCancelButton()
+                };
+                break;
+            default:
+                request.Buttons = new[]
+                {
+                    CreateYesButton(),
+                    CreateNoButton(),
+                    CreateCancelButton()
+                };
+                break;
+        }
+
+        return request;
+    }
+
+    private static MessageBoxButton CreateYesButton()
+    {
+        return new MessageBoxButton
+        {
+            Text = "Yes",
+            Role = MessageBoxButtonRole.Yes,
+            Style = MessageBoxButtonStyle.Primary,
+            IsDefault = true
+        };
+    }
+
+    private static MessageBoxButton CreateNoButton()
+    {
+        return new MessageBoxButton
+        {
+            Text = "No",
+            Role = MessageBoxButtonRole.No,
+            Style = MessageBoxButtonStyle.Secondary
+        };
+    }
+
+    private static MessageBoxButton CreateCancelButton()
+    {
+        return new MessageBoxButton
+        {
+            Text = "Cancel",
+            Role = MessageBoxButtonRole.Cancel,
+            Style = MessageBoxButtonStyle.Secondary,
+        };
+    }
+
+    private static MessageBoxButton CreateOkButton()
+    {
+        return new MessageBoxButton
+        {
+            Text = "Ok",
+            Role = MessageBoxButtonRole.Yes,
+            Style = MessageBoxButtonStyle.Primary,
+            IsDefault = true,
+        };
     }
 }
