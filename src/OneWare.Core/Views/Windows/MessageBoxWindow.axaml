@@ -19,7 +19,7 @@
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
             
-            <mdxaml:MarkdownScrollViewer Margin="2" Markdown="{Binding Message}" MaxHeight="300" />
+            <controls:MarkdownViewer Margin="2" Markdown="{Binding Message}" MaxHeight="300" />
             
             <Border Classes="RoundToolBar" IsVisible="{Binding ShowInput}" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
                 <DockPanel>

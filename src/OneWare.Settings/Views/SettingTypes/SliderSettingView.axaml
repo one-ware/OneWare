@@ -5,6 +5,7 @@
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.SliderSettingView"
              x:DataType="settingTypes:SliderSettingViewModel" >
@@ -23,7 +24,7 @@
                        VerticalAlignment="Center" />
                 <Button.Flyout>
                     <Flyout>
-                        <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                        <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
                                                      MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>

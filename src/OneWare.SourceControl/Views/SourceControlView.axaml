@@ -177,7 +177,7 @@
                            TextWrapping="Wrap" />
                 <Button
                     IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
-                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Padding="5 3"
+                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Padding="5"
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -192,7 +192,7 @@
                            TextWrapping="Wrap" />
 
                 <Button Margin="0, 10, 0, 10" Width="180" Classes="RoundButton"
-                        Padding="5 3"
+                        Padding="5"
                         Command="{Binding CloneDialogAsync}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">

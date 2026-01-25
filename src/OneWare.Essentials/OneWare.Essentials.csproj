@@ -36,4 +36,13 @@
         <None Include="readme.md" Pack="true" PackagePath=""/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="ColorTextBlock.Avalonia">
+        <HintPath>..\..\..\..\.homes\ubuntu-dev\.nuget\packages\oneware.colortextblock.avalonia\11.3.3\lib\net9.0\ColorTextBlock.Avalonia.dll</HintPath>
+      </Reference>
+      <Reference Include="Markdown.Avalonia">
+        <HintPath>..\..\..\..\.homes\ubuntu-dev\.nuget\packages\oneware.markdown.avalonia.tight\11.3.3\lib\net9.0\Markdown.Avalonia.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project> 

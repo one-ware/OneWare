@@ -24,7 +24,7 @@
                        VerticalAlignment="Center" />
                 <Button.Flyout>
                     <Flyout>
-                        <mdxaml:MarkdownScrollViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
+                        <controls:MarkdownViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
                                                      MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
@@ -48,7 +48,7 @@
                                    VerticalAlignment="Center" />
                             <Button.Flyout>
                                 <Flyout>
-                                    <mdxaml:MarkdownScrollViewer Markdown="{Binding MarkdownDocumentation}"
+                                    <controls:MarkdownViewer Markdown="{Binding MarkdownDocumentation}"
                                                                  MaxWidth="900" MaxHeight="500" />
                                 </Flyout>
                             </Button.Flyout>

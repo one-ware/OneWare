@@ -42,7 +42,7 @@
             </Setter>
         </ControlTheme>
     </Styles.Resources>
-
+    
     <StyleInclude Source="avares://OneWare.Core/Styles/HostWindow.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Dock.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/TreeView.axaml" />
@@ -63,9 +63,9 @@
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
-    
+
     <Style Selector="ToolTip">
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="3" />
         <Setter Property="MaxWidth" Value="600" />
         <Setter Property="Template">
@@ -80,16 +80,16 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="CheckBox">
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
-    
+
     <Style Selector="ToolTip TextBlock">
-        <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+        <Setter Property="TextWrapping" Value="WrapWithOverflow" />
     </Style>
-    
+
     <Style Selector="StackPanel.ToolBar">
         <Setter Property="Spacing" Value="5" />
         <Setter Property="Height" Value="24" />
@@ -108,7 +108,7 @@
         <Setter Property="ClipToBounds" Value="True" />
         <Setter Property="Height" Value="24" />
     </Style>
-    
+
     <Style Selector="StackPanel.ToolBar TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>

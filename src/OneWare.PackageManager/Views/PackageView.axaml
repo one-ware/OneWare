@@ -1,5 +1,4 @@
-﻿
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -30,37 +29,34 @@
                 </ItemsControl.DataTemplates>
             </ItemsControl>
 
-            <StackPanel Orientation="Horizontal" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="6">
 
-                <Border Classes="RoundToolBar" Background="{DynamicResource ThemeBackgroundBrush}">
-                    <StackPanel Orientation="Horizontal">
-                        <ComboBox ItemsSource="{Binding PackageVersionModels}"
-                                  SelectedItem="{Binding SelectedVersionModel}"
-                                  BorderThickness="0">
-                            <ComboBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical" />
-                                </ItemsPanelTemplate>
-                            </ComboBox.ItemsPanel>
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:PackageVersionModel">
-                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                        <TextBlock Text="{Binding Version.Version}" VerticalAlignment="Center" />
-                                        <Border VerticalAlignment="Center" IsVisible="{Binding Version.IsPrerelease}" Background="DarkOrange" CornerRadius="18">
-                                            <TextBlock FontSize="10" Foreground="Black" Text="Prerelease" Margin="8,0" />
-                                        </Border>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                </Border>
+                <ComboBox ItemsSource="{Binding PackageVersionModels}"
+                          SelectedItem="{Binding SelectedVersionModel}">
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:PackageVersionModel">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="{Binding Version.Version}" VerticalAlignment="Center" />
+                                <Border VerticalAlignment="Center" IsVisible="{Binding Version.IsPrerelease}"
+                                        Background="DarkOrange" CornerRadius="18">
+                                    <TextBlock FontSize="10" Foreground="Black" Text="Prerelease" Margin="8,0" />
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
                 <StackPanel Orientation="Horizontal">
                     <Button Content="{Binding PrimaryButtonText}"
                             Command="{Binding MainButtonCommand}"
                             CommandParameter="{Binding $self}"
-                            Background="{Binding PrimaryButtonBrush}" />
+                            Background="{Binding PrimaryButtonBrush}"
+                            Classes="RoundButton" Padding="8 3" />
                     <Button>
                         <Button.Flyout>
                             <MenuFlyout>
@@ -80,8 +76,7 @@
                                Text="Installed version incompatible!" />
                 </StackPanel>
             </StackPanel>
-
-
+            
             <ItemsControl ItemsSource="{Binding SelectedVersionModel.Version.Targets, FallbackValue={x:Null}}"
                           IsVisible="{Binding !SelectedVersionModel.TargetAll, FallbackValue={x:False}}">
                 <ItemsControl.ItemsPanel>
@@ -149,22 +144,27 @@
                          IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>
-
-        <TabControl IsVisible="{Binding IsTabsResolved}"
-                    Margin="0 10 0 0" DockPanel.Dock="Top" ItemsSource="{Binding Tabs}">
-            <TabControl.ItemTemplate>
-                <DataTemplate DataType="models:TabModel">
-                    <TextBlock Text="{Binding Title}" />
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate DataType="models:TabModel">
-                    <avalonia:MarkdownScrollViewer Markdown="{Binding Content}" />
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
-
-        <controls:Spinner Height="40" Width="40" IsVisible="{Binding !IsTabsResolved}" />
+        
+        <Panel Margin="0 10 0 0" DockPanel.Dock="Top">
+            <TabControl IsVisible="{Binding IsTabsResolved}"
+                        ItemsSource="{Binding Tabs}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate DataType="models:TabModel">
+                        <TextBlock Text="{Binding Title}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate DataType="models:TabModel">
+                        <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}">
+                            <controls:MarkdownViewer Markdown="{Binding Content}" />
+                        </Border>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+            
+            <controls:Spinner VerticalAlignment="Center" HorizontalAlignment="Center" Height="40" Width="40" IsVisible="{Binding !IsTabsResolved}" />
+        </Panel>
+        
     </DockPanel>
 
 </UserControl>
