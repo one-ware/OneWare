@@ -48,6 +48,7 @@ using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using TextMateSharp.Grammars;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using LoggerExtensions = OneWare.Essentials.Services.LoggerExtensions;
 
 namespace OneWare.Core;
 
@@ -548,6 +549,8 @@ public class App : Application
         Services.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
         Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Services.Resolve<BackupService>().Init();
+
+        LoggerExtensions.LayoutLoaded = true;
 
         Services.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
         {
