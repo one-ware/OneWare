@@ -25,7 +25,7 @@
                 <DockPanel>
                     <DockPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" IsVisible="{Binding ShowFolderButton}">
-                            <Border Classes="SplitterBorder" Background="{DynamicResource ThemeBorderMidBrush}" />
+                            <Separator />
 
                             <Button Command="{Binding SelectPathAsync}" CommandParameter="{Binding #MessageWindow}">
                                 <Image Height="16" Width="16" VerticalAlignment="Center"

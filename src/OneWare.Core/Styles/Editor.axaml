@@ -32,9 +32,8 @@
     <Style Selector="cc|CompletionList">
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="{DynamicResource ThemeBackgroundBrush}" CornerRadius="3" BorderThickness="1"
+                <Border Background="{DynamicResource ThemeBackgroundBrush}" Classes="RoundBorder"
                         Padding="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                         IsVisible="{Binding $parent[cc:CompletionWindow].IsVisible}">
                     <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"

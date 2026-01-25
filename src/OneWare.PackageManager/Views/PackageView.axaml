@@ -97,10 +97,8 @@
             </ItemsControl>
 
             <Border Background="{DynamicResource ThemeControlLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="3"
-                    Padding="5"
-                    BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    Classes="RoundBorder"
+                    Padding="5">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Spacing="5" Orientation="Vertical"
                                 IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNull}, FallbackValue={x:False}}">

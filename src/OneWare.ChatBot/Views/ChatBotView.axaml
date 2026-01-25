@@ -13,7 +13,7 @@
                 <ItemsControl ItemsSource="{Binding Messages}"/>
             </Border>
         </ScrollViewer>
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
             <DockPanel Margin="5 0" VerticalAlignment="Center">
                 <Button DockPanel.Dock="Right" Command="{Binding SendText}"
                         Margin="5 0 0 0" CommandParameter="{Binding #CommandBox.Text}">

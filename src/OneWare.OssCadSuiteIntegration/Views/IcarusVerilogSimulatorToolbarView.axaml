@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.OssCadSuiteIntegration.Views.IcarusVerilogSimulatorToolbarView"
              x:DataType="viewModels:IcarusVerilogSimulatorToolbarViewModel">
-    <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+    <StackPanel DockPanel.Dock="Left">
         <TextBlock Text="IVerilog Arguments:" />
         <TextBox Classes="ToolBar" Width="200" Text="{Binding IcarusVerilogArguments}" />
     </StackPanel>

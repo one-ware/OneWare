@@ -19,16 +19,16 @@
             <Setter Property="Padding" Value="5" />
             <Setter Property="Height" Value="30" />
         </Style>
-        
+
         <Style Selector="Border.ChildBorder">
             <Setter Property="Padding" Value="5,0,1,0" />
             <Setter Property="Margin" Value="0,2,0,2" />
         </Style>
-        
+
         <Style Selector="TextBlock.ChildText">
             <Setter Property="Margin" Value="0,0,0,1" />
         </Style>
-        
+
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -41,55 +41,58 @@
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
-                <ComboBox SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
-                    <ComboBoxItem>All open projects</ComboBoxItem>
-                    <ComboBoxItem>Current project</ComboBoxItem>
-                    <ComboBoxItem>Current file</ComboBoxItem>
-                </ComboBox>
+                <StackPanel Classes="ToolBar">
+                    
+                    <ComboBox SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
+                        <ComboBoxItem>All open projects</ComboBoxItem>
+                        <ComboBoxItem>Current project</ComboBoxItem>
+                        <ComboBoxItem>Current file</ComboBoxItem>
+                    </ComboBox>
 
-                <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
+                    <Separator />
 
-                <ComboBox ItemsSource="{Binding ErrorListVisibleSources}"
-                          SelectedItem="{Binding ErrorListVisibleSource}"
-                          Width="140">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    <ComboBox ItemsSource="{Binding ErrorListVisibleSources}"
+                              SelectedItem="{Binding ErrorListVisibleSource}"
+                              Width="140">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
-                <ToggleButton Classes="RoundButton" IsChecked="{Binding ErrorEnabled}"
-                              DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
-                        <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
-                                   Text="{Binding ErrorCountVisible}" />
-                    </StackPanel>
-                </ToggleButton>
-                <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
-                <ToggleButton Classes="RoundButton" IsChecked="{Binding WarningEnabled}"
-                              DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
-                        <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
-                                   Text="{Binding WarningCountVisible}" />
-                    </StackPanel>
-                </ToggleButton>
-                <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
-                <ToggleButton Classes="RoundButton" IsChecked="{Binding HintEnabled}"
-                              DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
-                        <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
-                                   Text="{Binding HintCountVisible}" />
-                    </StackPanel>
-                </ToggleButton>
+                    <Separator />
 
-                <Border CornerRadius="3" DockPanel.Dock="Right" Width="280" BorderThickness="1"
-                        HorizontalAlignment="Right" Height="24" Background="{DynamicResource ThemeControlLowBrush}"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <ToggleButton Classes="RoundButton" IsChecked="{Binding ErrorEnabled}"
+                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
+                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
+                                       Text="{Binding ErrorCountVisible}" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <Separator />
+                    <ToggleButton Classes="RoundButton" IsChecked="{Binding WarningEnabled}"
+                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
+                            <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
+                                       Text="{Binding WarningCountVisible}" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <Separator />
+                    <ToggleButton Classes="RoundButton" IsChecked="{Binding HintEnabled}"
+                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
+                            <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
+                                       Text="{Binding HintCountVisible}" />
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+
+                <Border Classes="RoundBorder" DockPanel.Dock="Right" Width="280"
+                        HorizontalAlignment="Right" Height="24" Background="{DynamicResource ThemeControlLowBrush}">
                     <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
                                         Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
                 </Border>

@@ -26,34 +26,33 @@
                                  FontSize="{DynamicResource EditorFontSize}"
                                  Padding="5" />
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2">
 
             <DockPanel>
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+                <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
                     <TextBlock Text="AutoScroll" />
                     <CheckBox IsChecked="{Binding AutoScroll}" />
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <TextBlock Text="Line Ending" />
                     <ComboBox ItemsSource="{Binding AvailableLineEndings}"
                               SelectedItem="{Binding SelectedLineEnding}" />
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <TextBlock Text="Encoding" />
                     <ComboBox ItemsSource="{Binding AvailableEncodings}"
                               SelectedItem="{Binding SelectedLineEncoding}" />
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                 </StackPanel>
 
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Right">
+                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
                     <Button Command="{Binding SendText}"
                             CommandParameter="{Binding #CommandBox.Text}">
                         <Image Source="{DynamicResource BoxIcons.SolidSend}" />
                     </Button>
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
                     <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
                               SelectedItem="{Binding SelectedBaudRate}" />
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <TextBlock Text="Serial Port:" />
                     <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
@@ -71,7 +70,7 @@
                     <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
                         <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" Width="15" />
                     </Button>
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <Menu DockPanel.Dock="Right">
                         <Menu.Items>
                             <MenuItem Width="24" Height="24">
@@ -83,7 +82,7 @@
                     </Menu>
                 </StackPanel>
 
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox"
+                <TextBox DockPanel.Dock="Right" Name="CommandBox"
                          Watermark="Enter Message..."
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>

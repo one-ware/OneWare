@@ -7,6 +7,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="3" />
     </Style>
 
     <Style Selector="TextBox[AcceptsReturn=True]">
@@ -17,13 +18,5 @@
     <Style Selector="TextBox.MultilineTextBox">
         <Setter Property="Height" Value="NaN" />
         <Setter Property="VerticalContentAlignment" Value="Top" />
-    </Style>
-
-    <Style Selector="TextBox.ToolBar">
-        <Setter Property="Height" Value="24" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar TextBox">
-        <Setter Property="BorderThickness" Value="0" />
     </Style>
 </Styles>

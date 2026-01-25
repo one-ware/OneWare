@@ -15,7 +15,6 @@
     -->
         <DockPanel>
             <Border Height="30" DockPanel.Dock="Top" BorderThickness="0,0,0,1"
-                    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                     Background="{DynamicResource ThemeBackgroundBrush}">
                 <DockPanel VerticalAlignment="Center">
                     <Border Height="20" Margin="0,0,3,0" DockPanel.Dock="Right"
@@ -29,7 +28,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="AutoScroll" VerticalAlignment="Center" />
                             <CheckBox Margin="5, 0, 1, 0" IsChecked="{Binding AutoScroll}" />
-                            <Border Classes="SplitterBorder" Margin="5,0,0,0" Height="20" />
+                            <Separator />
                             <Button Command="{Binding Clear}" Margin="0" ToolTip.Tip="Clear output">
                                 <Image Height="18" Source="{DynamicResource VsImageLib.ClearWindowContent16X}" />
                             </Button>

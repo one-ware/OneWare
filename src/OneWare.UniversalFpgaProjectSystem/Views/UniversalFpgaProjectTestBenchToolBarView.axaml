@@ -9,8 +9,7 @@
              x:DataType="viewModels:UniversalFpgaProjectTestBenchToolBarViewModel"
              IsVisible="{Binding IsVisible}">
 
-    <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,0,0,1" Padding="2"
-            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+    <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,0,0,1" Padding="2">
         <DockPanel>
             <Border Classes="RoundToolBar" DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
@@ -23,7 +22,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <Button Command="{Binding SimulateCurrentAsync, FallbackValue={x:Null}}"
                             IsEnabled="{Binding SelectedSimulator, Converter={x:Static ObjectConverters.IsNotNull}}">

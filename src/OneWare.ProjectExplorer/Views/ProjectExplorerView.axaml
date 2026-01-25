@@ -43,7 +43,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Border Grid.ColumnSpan="2" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="0 1 0 1">
+        <Border Grid.ColumnSpan="2" BorderThickness="0 1 0 1">
             <controls:SearchBox Background="{DynamicResource ThemeBackgroundBrush}"
                                 SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />

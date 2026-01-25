@@ -34,7 +34,7 @@
             <!--Icon Tray-->
             <DockPanel Grid.Row="1" Margin="3 0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
 
-                <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal"
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"
                             HorizontalAlignment="Left">
 
                     <Button ToolTip.Tip="Undo"
@@ -46,8 +46,7 @@
                         <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
                     </Button>
 
-                    <Border Classes="RoundToolBar" Margin="5 0 0 0"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <Border Classes="RoundToolBar" Margin="5 0 0 0">
 
                         <StackPanel Orientation="Horizontal">
                             <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
@@ -63,7 +62,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
+                <StackPanel DockPanel.Dock="Right" Name="RightButtons">
                     <Button ToolTip.Tip="Settings" Command="{Binding OpenSettingsDialogAsync}">
                         <Image Source="{DynamicResource Material.SettingsOutline}" />
                     </Button>

@@ -23,7 +23,7 @@
         </Grid.ColumnDefinitions>
 
         <Grid RowDefinitions="30, *, 5, *">
-            <Border BorderThickness="0 0 0 1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <Border BorderThickness="0 0 0 1">
                 <StackPanel Height="26" Orientation="Horizontal" Margin="5 0" Spacing="5">
                     <Button VerticalAlignment="Center" Command="{Binding Refresh}">
                         <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />

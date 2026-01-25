@@ -36,7 +36,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Text="Text to convert:" Grid.ColumnSpan="2" Margin="0, 0, 0, 2" />
-            <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <Border Grid.Row="1">
                 <avaloniaEdit:TextEditor Name="SourceBox"
                                          HorizontalScrollBarVisibility="Auto"
                                          VerticalScrollBarVisibility="Visible"
@@ -90,7 +90,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Text="Result:" Grid.ColumnSpan="2" Margin="0, 0, 0, 2" />
-            <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <Border Grid.Row="1">
                 <avaloniaEdit:TextEditor Name="ResultBox"
                                          HorizontalScrollBarVisibility="Auto"
                                          VerticalScrollBarVisibility="Visible"

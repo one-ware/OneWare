@@ -7,7 +7,7 @@
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ChatBot.Views.ChatMessageView" x:DataType="viewModels:ChatMessageViewModel">
-    <Border CornerRadius="3" BorderThickness="1" Margin="5 0 5 10" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Background="{DynamicResource ThemeBackgroundBrush}" Padding="5">
+    <Border Classes="RoundBorder" Margin="5 0 5 10" Background="{DynamicResource ThemeBackgroundBrush}" Padding="5">
         <Grid ColumnDefinitions="20, 5, *" RowDefinitions="20, 5, Auto">
             <Ellipse Fill="LightGray" Grid.Row="0" Grid.Column="0" Height="20" Width="20"/>
             <Image Grid.Row="0" Grid.Column="0" Source="{Binding Icon}" Height="15" Width="15" VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -27,8 +27,6 @@
                         <Setter Property="Margin" Value="0" />
                         <Setter Property="Padding" Value="5" />
                         <Setter Property="CornerRadius" Value="3" />
-                        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"/>
-                        <Setter Property="BorderThickness" Value="1"/>
                         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
                     </Style>
                 </md:MarkdownScrollViewer.Styles>

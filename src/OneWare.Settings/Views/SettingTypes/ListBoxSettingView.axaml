@@ -29,8 +29,7 @@
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                BorderThickness="1">
+        <Border>
             <Grid RowDefinitions="20, *">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                     <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}" IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" >

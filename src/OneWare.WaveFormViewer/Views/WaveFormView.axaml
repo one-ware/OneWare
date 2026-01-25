@@ -86,10 +86,9 @@
 
         <Border Grid.Row="0" Grid.Column="0" Height="30" Grid.ColumnSpan="3"
                 Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                 BorderThickness="0, 0, 0, 1">
             <DockPanel LastChildFill="False">
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+                <StackPanel DockPanel.Dock="Left">
 
                     <Button Command="{Binding XOffsetMinus}"
                             IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}"
@@ -104,7 +103,7 @@
                                                InOut="{Binding Offset, Mode=TwoWay}"
                                                InOutTimeScale="{Binding TimeScale}" />
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <Button Command="{Binding ResetView}" ToolTip.Tip="Reset View">
                         <Image Source="{DynamicResource FluentIconsFilled.FullScreenZoomFilled}" />
@@ -137,20 +136,20 @@
                     </Button>
                 </StackPanel>
 
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Right">
+                <StackPanel DockPanel.Dock="Right">
 
                     <TextBlock Margin="3,0,0,0" VerticalAlignment="Center" Text="Zoom: " />
                     <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"
                                Text="{Binding ZoomMultiply}" />
                     <TextBlock Margin="3,0,3,0" VerticalAlignment="Center" Text="x" />
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <TextBlock Margin="3,0,0,0" VerticalAlignment="Center" Text="Cursor: " />
                     <TextBlock Margin="3,0,3,0" VerticalAlignment="Center" Text="{Binding CursorText}" />
 
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <TextBlock Text="Marker: " />
                     <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}"/>

@@ -31,22 +31,21 @@
                         <Image Height="16" Width="16" Source="{DynamicResource VsCodeLight.Regex}" />
                     </ToggleButton>
 
-                    <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
+                    <Separator />
 
-                    <Border Classes="RoundToolBar">
-                        <ComboBox
-                            SelectedIndex="{Binding SearchListFilterMode}"
-                            Width="140" BorderThickness="0">
-                            <ComboBoxItem>All open projects</ComboBoxItem>
-                            <ComboBoxItem>Current project</ComboBoxItem>
-                            <ComboBoxItem>Current file</ComboBoxItem>
-                        </ComboBox>
-                    </Border>
+                    <ComboBox
+                        SelectedIndex="{Binding SearchListFilterMode}"
+                        Width="140">
+                        <ComboBoxItem>All open projects</ComboBoxItem>
+                        <ComboBoxItem>Current project</ComboBoxItem>
+                        <ComboBoxItem>Current file</ComboBoxItem>
+                    </ComboBox>
 
                 </StackPanel>
-                <Border DockPanel.Dock="Right" Classes="SplitterBorder" Margin="6 0" />
+                
+                <Separator DockPanel.Dock="Right"/>
 
-                <Border DockPanel.Dock="Left" Classes="RoundToolBar">
+                <Border DockPanel.Dock="Left" Classes="RoundBorder">
                     <controls:SearchBox SearchText="{Binding SearchString}" x:Name="Search" BorderThickness="0"
                                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                         HorizontalAlignment="Stretch">

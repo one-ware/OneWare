@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountSettingView" x:DataType="viewModels:OneWareCloudAccountSettingViewModel">
     <Grid ColumnDefinitions="40, 5, *" RowDefinitions="20, 20" Margin="0 5">
-        <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="50">
+        <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="50">
             <Panel>
                 <Image Source="{Binding Setting.Image}"/>
                 <Image IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="6"/>

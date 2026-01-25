@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24"
              x:Class="OneWare.Essentials.Controls.TimeSelectorBox" Name="TimeSelectorBoxView">
-    <Border CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+    <Border Classes="RoundBorder">
         <DockPanel>
             <ComboBox DockPanel.Dock="Right" Padding="3, 2"
                       SelectedIndex="{Binding #TimeSelectorBoxView.WaitUnit}"
