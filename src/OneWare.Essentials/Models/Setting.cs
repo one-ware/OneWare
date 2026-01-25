@@ -37,7 +37,7 @@ public class Setting : ObservableObject
 
     protected virtual void SetValue(object value)
     {
-        SetProperty(ref _value, value);
+        SetProperty(ref _value, value, nameof(Value));
     }
 }
 
