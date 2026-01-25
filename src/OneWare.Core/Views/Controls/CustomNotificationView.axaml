@@ -20,12 +20,11 @@
 
                 <StackPanel IsVisible="{Binding ButtonText, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,8, 0, 0" DockPanel.Dock="Bottom" Spacing="0" Orientation="Horizontal">
                     <Border>
-                        <Button NotificationCard.CloseOnClick="True" Classes="RoundButton PrimaryButton" CornerRadius="3"
-                                Cursor="Hand"
-                                Padding="2"
+                        <Button NotificationCard.CloseOnClick="True" Classes="RoundButton PrimaryButton"
+                                Cursor="Hand" Height="30"
                                 Command="{Binding ExecuteButton}">
                             <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Text="{Binding ButtonText}"
-                                       FontSize="13" Margin="4" />
+                                       FontSize="13" Margin="4" VerticalAlignment="Center" />
                         </Button>
                     </Border>
                 </StackPanel>

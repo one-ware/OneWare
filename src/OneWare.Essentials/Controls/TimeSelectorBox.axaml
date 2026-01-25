@@ -4,21 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24"
              x:Class="OneWare.Essentials.Controls.TimeSelectorBox" Name="TimeSelectorBoxView">
-    <Border Classes="RoundBorder">
-        <DockPanel>
-            <ComboBox DockPanel.Dock="Right" Padding="3, 2"
-                      SelectedIndex="{Binding #TimeSelectorBoxView.WaitUnit}"
-                      BorderThickness="0" Name="ComboBoxFrequencyUnit">
+    <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}">
+        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
+            <TextBox Grid.Column="0" Watermark="{Binding #TimeSelectorBoxView.Label}" BorderThickness="0"
+                     Background="Transparent"
+                     Text="{Binding #TimeSelectorBoxView.Display}" />
+            <Separator Grid.Column="1" />
+            <ComboBox Grid.Column="2" SelectedIndex="{Binding #TimeSelectorBoxView.WaitUnit}"
+                      Background="Transparent" BorderThickness="0" Name="ComboBoxFrequencyUnit">
                 <ComboBoxItem>ps</ComboBoxItem>
                 <ComboBoxItem>ns</ComboBoxItem>
                 <ComboBoxItem>µs</ComboBoxItem>
                 <ComboBoxItem>ms</ComboBoxItem>
                 <ComboBoxItem>s</ComboBoxItem>
             </ComboBox>
-            <Border DockPanel.Dock="Right" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" />
-            <TextBox Padding="4 2"
-                     Watermark="{Binding #TimeSelectorBoxView.Label}" BorderThickness="0"
-                     Text="{Binding #TimeSelectorBoxView.Display}" />
-        </DockPanel>
+        </Grid>
     </Border>
 </UserControl>

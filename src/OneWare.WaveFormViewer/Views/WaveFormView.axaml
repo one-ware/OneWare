@@ -88,13 +88,14 @@
                 Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0, 0, 0, 1">
             <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Left">
+                <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
 
                     <Button Command="{Binding XOffsetMinus}"
                             IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}"
                             ToolTip.Tip="Moves offset to left">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronLeft}" />
                     </Button>
+                    
                     <Button Command="{Binding XOffsetPlus}" ToolTip.Tip="Moves offset to right">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronRight}" />
                     </Button>
@@ -136,7 +137,7 @@
                     </Button>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Right">
+                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
 
                     <TextBlock Margin="3,0,0,0" VerticalAlignment="Center" Text="Zoom: " />
                     <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"

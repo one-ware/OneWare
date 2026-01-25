@@ -45,7 +45,7 @@
                     <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
                 </Button>
 
-                <Border Classes="RoundBorder" Margin="5 0 0 0" Height="24">
+                <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}" Margin="5 0 0 0" Height="24">
 
                     <StackPanel Classes="ToolBar">
                         <sdkControls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
