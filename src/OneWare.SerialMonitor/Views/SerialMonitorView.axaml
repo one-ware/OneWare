@@ -36,13 +36,13 @@
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Line Ending" />
                     <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableLineEndings}" BorderThickness="0"
+                        <ComboBox ItemsSource="{Binding AvailableLineEndings}"
                                   SelectedItem="{Binding SelectedLineEnding}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
                     <TextBlock Text="Encoding" />
                     <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableEncodings}" BorderThickness="0"
+                        <ComboBox ItemsSource="{Binding AvailableEncodings}"
                                   SelectedItem="{Binding SelectedLineEncoding}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
@@ -56,7 +56,7 @@
                     <Border Classes="SplitterBorder" />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
                     <Border Classes="RoundToolBar">
-                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}" BorderThickness="0"
+                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
                                   SelectedItem="{Binding SelectedBaudRate}" />
                     </Border>
                     <Border Classes="SplitterBorder" />
@@ -64,7 +64,7 @@
                     <TextBlock Text="Serial Port:" />
                     <Border Classes="RoundToolBar">
                         <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                                  ItemsSource="{Binding SerialPorts}" BorderThickness="0"
+                                  ItemsSource="{Binding SerialPorts}"
                                   SelectedItem="{Binding SelectedSerialPort}" />
                     </Border>
                     <Button IsEnabled="{Binding AllowConnecting}"
@@ -91,7 +91,7 @@
                     </Menu>
                 </StackPanel>
 
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Height="24"
+                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox"
                          Watermark="Enter Message..."
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>

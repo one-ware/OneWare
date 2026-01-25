@@ -13,7 +13,6 @@
                     <Image Source="{DynamicResource Material.WindowClose}" Height="8" Width="8" />
                 </Button>
                 <TextBox Watermark="{Binding #SearchBoxView.Label}" CaretBrush="{DynamicResource ThemeForegroundBrush}"
-                         Background="Transparent"
                          DockPanel.Dock="Left" TextWrapping="NoWrap" AcceptsReturn="False" Name="SearchTextBox"
                          BorderThickness="0" AcceptsTab="False" VerticalContentAlignment="Center"
                          Padding="6, 0, 0, 0" VerticalAlignment="Center"

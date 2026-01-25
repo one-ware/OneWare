@@ -1,0 +1,20 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
+    <Style Selector="ComboBox, controls|SearchComboBox">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="3 1" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+
+    <Style Selector="ComboBox:disabled controls|SearchComboBox">
+        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+    </Style>
+
+    <Style Selector="ComboBox /template/ Popup > Border, controls|SearchComboBox /template/ Popup > Border">
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+</Styles>

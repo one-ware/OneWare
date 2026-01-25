@@ -33,7 +33,7 @@
                             </Button>
                         </StackPanel>
 
-                        <TextBox Name="InputBox" DockPanel.Dock="Left" Text="{Binding Input, Mode=TwoWay}" BorderThickness="0" />
+                        <TextBox Name="InputBox" DockPanel.Dock="Left" Text="{Binding Input, Mode=TwoWay}" />
                     </DockPanel>
                 </DockPanel>
             </Border>

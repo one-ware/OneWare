@@ -223,7 +223,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <TextBox Background="{DynamicResource ThemeControlLowBrush}" Name="inputBox" IsReadOnly="False" />
+                    <TextBox Name="inputBox" IsReadOnly="False" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

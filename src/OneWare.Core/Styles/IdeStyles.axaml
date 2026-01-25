@@ -56,30 +56,15 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Buttons.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/TextBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/ComboBoxes.axaml" />
 
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
 
-    <Style Selector="ComboBox:disabled controls|SearchComboBox">
-        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
-    </Style>
-
-    <Style Selector="ComboBox, controls|SearchComboBox">
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Padding" Value="3 1" />
-    </Style>
-
-    <Style Selector="ComboBox /template/ Popup > Border, controls|SearchComboBox /template/ Popup > Border">
+    <Style Selector="CheckBox, TextBox">
         <Setter Property="CornerRadius" Value="3" />
-    </Style>
-
-    <Style Selector="CheckBox, ComboBox, TextBox, controls|SearchComboBox">
-        <Setter Property="CornerRadius" Value="3" />
-    </Style>
-
-    <Style Selector="ComboBoxItem">
-        <Setter Property="Height" Value="24" />
     </Style>
 
     <Style Selector="StackPanel.HToolBar TextBlock">
@@ -96,13 +81,6 @@
         <Setter Property="Width" Value="24" />
     </Style>
 
-    <Style Selector="TextBox">
-        <Setter Property="Padding" Value="3 2" />
-        <Setter Property="Background" Value="Transparent" />
-    </Style>
-    <Style Selector="TextBox.ToolBar">
-        <Setter Property="Height" Value="24" />
-    </Style>
 
     <!--IconTray-->
     <Style Selector="Border.SplitterBorder">
@@ -136,10 +114,6 @@
         <Setter Property="Height" Value="24" />
         <Setter Property="Width" Value="1" />
         <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar > StackPanel > ComboBox">
-        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="Border.RoundToolBar Button">

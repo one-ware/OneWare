@@ -1,0 +1,29 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style Selector="TextBox">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="3 2" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBox[AcceptsReturn=True]">
+        <Setter Property="Height" Value="NaN" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+
+    <Style Selector="TextBox.MultilineTextBox">
+        <Setter Property="Height" Value="NaN" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+
+    <Style Selector="TextBox.ToolBar">
+        <Setter Property="Height" Value="24" />
+    </Style>
+
+    <Style Selector="Border.RoundToolBar TextBox">
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+</Styles>

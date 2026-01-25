@@ -156,7 +156,7 @@
         <DockPanel Grid.Row="1">
             <TextBox IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                      Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                     Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}"
+                     Name="CommitMessageBox"
                      BorderThickness="0,1,0,1" Watermark="Message for commit...">
                 <TextBox.Styles>
                     <Style Selector="TextBox:focus /template/ Border#border">

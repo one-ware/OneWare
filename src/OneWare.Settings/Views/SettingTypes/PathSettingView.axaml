@@ -46,7 +46,7 @@
                            Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
                 </Grid>
 
-                <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" BorderThickness="0" />
+                <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" />
             </DockPanel>
         </Border>
     </StackPanel>

@@ -52,7 +52,7 @@
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
                 <Border Classes="RoundToolBar">
-                    <ComboBox BorderThickness="0" SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
+                    <ComboBox SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
                         <ComboBoxItem>All open projects</ComboBoxItem>
                         <ComboBoxItem>Current project</ComboBoxItem>
                         <ComboBoxItem>Current file</ComboBoxItem>
@@ -62,8 +62,7 @@
                 <Border DockPanel.Dock="Left" Height="20" Classes="SplitterBorder" />
 
                 <Border Classes="RoundToolBar">
-                    <ComboBox BorderThickness="0"
-                              ItemsSource="{Binding ErrorListVisibleSources}"
+                    <ComboBox ItemsSource="{Binding ErrorListVisibleSources}"
                               SelectedItem="{Binding ErrorListVisibleSource}"
                               Width="140">
                         <ComboBox.ItemTemplate>
