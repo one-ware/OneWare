@@ -5,6 +5,10 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
+    
+    <Style Selector="Button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    </Style>
 
     <Style Selector="Button.RoundButton">
         <Setter Property="BorderThickness" Value="1" />
@@ -60,6 +64,9 @@
     
     <Style Selector="ToggleButton:checked /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+    </Style>
+    
+    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
     </Style>
 </Styles>

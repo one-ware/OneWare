@@ -28,7 +28,7 @@
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}" Height="24">
+        <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}" Height="24">
             <DockPanel>
 
                 <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="2">

@@ -21,7 +21,7 @@ public static class LoggerExtensions
         bool showDialog = false, Window? dialogOwner = null)
     {
         logger.LogWarning(exception, message);
-        WriteToOutput(message, exception, showOutput, Brushes.Orange);
+        WriteToOutput(message, showOutput, Brushes.Orange);
         ShowDialog(message, exception, showDialog, "Warning", MessageBoxIcon.Warning, dialogOwner);
     }
 
@@ -29,17 +29,16 @@ public static class LoggerExtensions
         bool showDialog = false, Window? dialogOwner = null)
     {
         logger.LogError(exception, message);
-        WriteToOutput(message, exception, showOutput, Brushes.Red);
+        WriteToOutput(message, showOutput, Brushes.Red);
         ShowDialog(message, exception, showDialog, "Error", MessageBoxIcon.Error, dialogOwner);
     }
 
-    private static void WriteToOutput(string message, Exception? exception, bool showOutput, IBrush brush)
+    private static void WriteToOutput(string message, bool showOutput, IBrush brush)
     {
         if (!showOutput || ContainerLocator.Container?.IsRegistered<IOutputService>() != true)
             return;
-
-        var output = exception == null ? message : $"{message}\n{exception.Message}";
-        ContainerLocator.Current.Resolve<IOutputService>().WriteLine(output, brush);
+        
+        ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message, brush);
         ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
     }
 
