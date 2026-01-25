@@ -250,7 +250,7 @@ public class MainDockService : Factory, IMainDockService
         ContextLocator = new Dictionary<string, Func<object?>>();
         HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
         {
-            [nameof(IDockWindow)] = () => ContainerLocator.Container.Resolve<AdvancedHostWindow>()
+            [nameof(IDockWindow)] = () => ContainerLocator.Container!.Resolve<AdvancedHostWindow>()
         };
         DockableLocator = new Dictionary<string, Func<IDockable?>>();
 

@@ -92,7 +92,7 @@
                 </StackPanel>
 
                 <Border Classes="RoundBorder" DockPanel.Dock="Right" Width="280"
-                        HorizontalAlignment="Right" Height="24" Background="{DynamicResource ThemeControlLowBrush}">
+                        HorizontalAlignment="Right" Height="24" Background="{DynamicResource ThemeControlMidBrush}">
                     <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
                                         Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
                 </Border>

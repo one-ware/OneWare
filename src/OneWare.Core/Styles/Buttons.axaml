@@ -17,7 +17,7 @@
     
     <Style Selector="StackPanel.WindowButtons">
         <Setter Property="Orientation" Value="Horizontal" />
-        <Setter Property="Spacing" Value="10" />
+        <Setter Property="Spacing" Value="5" />
     </Style>
     
     <Style Selector="Button.RoundButton, StackPanel.WindowButtons > Button">
@@ -64,6 +64,7 @@
     
     <Style Selector="ToggleButton:checked /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
     
     <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
