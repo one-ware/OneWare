@@ -17,7 +17,8 @@ public sealed class CopilotChatService : IChatService
     {
         _client = new CopilotClient(new CopilotClientOptions
         {
-            AutoStart = false
+            AutoStart = false,
+            CliPath = "/home/hmenn/.homes/ubuntu-dev/.local/bin/copilot"
         });
     }
 

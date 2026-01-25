@@ -18,10 +18,6 @@
                             VerticalAlignment="Center">
                     <ProgressBar Width="70" Height="4" IsIndeterminate="True"
                                  IsVisible="{Binding IsBusy}" />
-                    <TextBlock Text="Model" FontSize="11"
-                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    <ComboBox Width="170" ItemsSource="{Binding Models}"
-                              SelectedItem="{Binding SelectedModel}" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -41,19 +37,34 @@
 
         <Border Grid.Row="2" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
             <DockPanel Margin="10 8" LastChildFill="True">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
-                    <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
-                        <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
-                    </Button>
-                    <Button Command="{Binding SendCommand}">
-                        <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
-                    </Button>
-                </StackPanel>
-                <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Ask Copilot..."
-                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44"
-                         VerticalContentAlignment="Top"
-                         Text="{Binding CurrentMessage, Mode=TwoWay}">
-                </TextBox>
+                <Border Background="{DynamicResource ThemeControlLowBrush}">
+                    <Panel>
+                        <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Ask Copilot..."
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"
+                                 Padding="10"
+                                 VerticalContentAlignment="Top"
+                                 Text="{Binding CurrentMessage, Mode=TwoWay}">
+                        </TextBox>
+                        <StackPanel Orientation="Horizontal" Spacing="10" Height="24"
+                                    VerticalAlignment="Bottom" Margin="10 5">
+                            <TextBlock Text="Model" FontSize="11" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                            <ComboBox Width="170" ItemsSource="{Binding Models}"
+                                      SelectedItem="{Binding SelectedModel}" />
+                        </StackPanel>
+                        
+                        <StackPanel Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6" Margin="6 3">
+                            <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
+                                <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
+                            </Button>
+                            <Button Command="{Binding SendCommand}">
+                                <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
+                            </Button>
+                        </StackPanel>
+                    </Panel>
+
+                </Border>
+
             </DockPanel>
         </Border>
     </Grid>

@@ -30,7 +30,7 @@ public partial class ChatBotViewModel : ExtendedTool
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
     public ObservableCollection<string> Models { get; } = new()
     {
-        "gpt-5",
+        "gpt-4.1",
         "claude-sonnet-4.5"
     };
 

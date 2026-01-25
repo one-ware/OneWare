@@ -11,7 +11,8 @@
         <Style Selector="Border.message">
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="Padding" Value="12" />
             <Setter Property="MaxWidth" Value="640" />
             <Setter Property="HorizontalAlignment" Value="Left" />
         </Style>
@@ -35,38 +36,31 @@
     <Border Classes="message"
             Classes.user="{Binding IsUser}"
             Classes.assistant="{Binding IsAssistant}">
-        <Grid ColumnDefinitions="24, 10, *" RowDefinitions="Auto, Auto">
-            <Border Width="24" Height="24" CornerRadius="12"
-                    Background="{DynamicResource ThemeControlLowBrush}">
-                <Image Source="{Binding Icon}" Height="16" Width="16"
-                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
-            </Border>
-            <StackPanel Grid.Column="2" Spacing="4">
-                <DockPanel LastChildFill="False">
-                    <TextBlock Text="{Binding Author}" FontWeight="Bold" />
-                    <TextBlock Classes="meta" DockPanel.Dock="Right"
-                               Text="{Binding Timestamp, StringFormat={}{0:t}}" />
-                </DockPanel>
-                <controls:MarkdownViewer Markdown="{Binding Message}">
-                    <controls:MarkdownViewer.Styles>
-                        <Style Selector="avaloniaEdit|TextEditor">
-                            <Style.Setters>
-                                <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                                <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
-                            </Style.Setters>
-                        </Style>
+        <StackPanel Spacing="6">
+            <DockPanel LastChildFill="False">
+                <TextBlock Text="{Binding Author}" FontWeight="Bold" />
+                <TextBlock Classes="meta" DockPanel.Dock="Right"
+                           Text="{Binding Timestamp, StringFormat={}{0:t}}" />
+            </DockPanel>
+            <controls:MarkdownViewer Markdown="{Binding Message}">
+                <controls:MarkdownViewer.Styles>
+                    <Style Selector="avaloniaEdit|TextEditor">
+                        <Style.Setters>
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+                        </Style.Setters>
+                    </Style>
 
-                        <Style Selector="Border.CodeBlock">
-                            <Setter Property="Margin" Value="0" />
-                            <Setter Property="Padding" Value="6" />
-                            <Setter Property="CornerRadius" Value="4" />
-                            <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
-                        </Style>
-                    </controls:MarkdownViewer.Styles>
-                </controls:MarkdownViewer>
-                <TextBlock Classes="streaming" Text="Thinking..." IsVisible="{Binding IsStreaming}" />
-            </StackPanel>
-        </Grid>
+                    <Style Selector="Border.CodeBlock">
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Padding" Value="6" />
+                        <Setter Property="CornerRadius" Value="4" />
+                        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
+                    </Style>
+                </controls:MarkdownViewer.Styles>
+            </controls:MarkdownViewer>
+            <TextBlock Classes="streaming" Text="Thinking..." IsVisible="{Binding IsStreaming}" />
+        </StackPanel>
     </Border>
 </UserControl>
