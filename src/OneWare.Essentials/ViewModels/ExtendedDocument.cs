@@ -34,8 +34,6 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         _windowService = windowService;
     }
 
-    public IAsyncRelayCommand? TryClose { get; protected set; }
-
     public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Name}?";
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
