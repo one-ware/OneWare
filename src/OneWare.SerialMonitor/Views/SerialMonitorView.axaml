@@ -83,7 +83,7 @@
                 </StackPanel>
 
                 <TextBox DockPanel.Dock="Right" Name="CommandBox"
-                         Watermark="Enter Message..."
+                         Watermark="Enter Message..." Margin="5 0"
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SendText}"

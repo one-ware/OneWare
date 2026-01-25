@@ -19,7 +19,7 @@
     </Design.PreviewWith>
 
     <Style Selector="ToolTabStripItem:selected">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
 
     <Style Selector="ToolControl">

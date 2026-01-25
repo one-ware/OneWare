@@ -83,7 +83,7 @@
     
     <Style Selector="CheckBox">
         <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
     
     <Style Selector="ToolTip TextBlock">

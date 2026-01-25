@@ -166,7 +166,7 @@
 
                         <Border Grid.Column="1" Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}">
                             <StackPanel Orientation="Vertical" VerticalAlignment="Center" Spacing="30">
-                                <Button Command="{Binding ConnectCommand}" Classes="BorderButton" Height="40"
+                                <Button Command="{Binding ConnectCommand}" Classes="RoundButton" Height="40"
                                         ToolTip.Tip="Connect" Width="40" CornerRadius="3">
                                     <Button.RenderTransform>
                                         <RotateTransform Angle="45" />
@@ -195,7 +195,7 @@
                                     </ContentControl.DataTemplates>
                                 </ContentControl>
                                 
-                                <Button Command="{Binding DisconnectCommand}" Classes="BorderButton" Height="40"
+                                <Button Command="{Binding DisconnectCommand}" Classes="RoundButton" Height="40"
                                         ToolTip.Tip="Disconnect" Width="40" CornerRadius="3">
                                     <Button.RenderTransform>
                                         <RotateTransform Angle="45"></RotateTransform>

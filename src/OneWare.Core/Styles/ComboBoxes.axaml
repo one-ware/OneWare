@@ -4,7 +4,7 @@
     <Style Selector="ComboBox, controls|SearchComboBox">
         <Setter Property="Height" Value="24" />
         <Setter Property="Padding" Value="3 1" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
         <Setter Property="CornerRadius" Value="3" />
