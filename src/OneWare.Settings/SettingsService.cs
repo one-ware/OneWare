@@ -14,15 +14,13 @@ public class SettingsService : ISettingsService
         WriteIndented = true,
         AllowTrailingCommas = true
     };
-
     private readonly List<Action> _afterLoadingActions = [];
-
-    private Dictionary<string, object>? _loadedSettings;
-    public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
-
     private readonly Dictionary<string, Setting> _settings = new();
-
     private readonly Dictionary<string, object> _unregisteredSettings = new();
+    private Dictionary<string, object>? _loadedSettings;
+
+    public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
+    public event EventHandler<SaveEventArgs>? Saved;
     
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
     {
@@ -272,7 +270,7 @@ public class SettingsService : ISettingsService
         }
     }
 
-    public void Save(string path)
+    public void Save(string path, bool autoSave = true)
     {
         try
         {
@@ -289,6 +287,7 @@ public class SettingsService : ISettingsService
 
             using var stream = File.Create(path);
             JsonSerializer.Serialize(stream, saveD, saveD.GetType(), JsonSerializerOptions);
+            Saved?.Invoke(this, new SaveEventArgs(autoSave));
         }
         catch (Exception e)
         {
