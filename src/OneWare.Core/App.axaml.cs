@@ -108,7 +108,7 @@ public class App : Application
 
         //Windows
         services.AddSingleton<MainWindow>();
-        services.AddSingleton<MainView>();
+        services.AddSingleton<MainSingleView>();
     }
 
     protected virtual AvaloniaObject CreateShell()
@@ -382,7 +382,7 @@ public class App : Application
         }
         else
         {
-            shell = Services.Resolve<MainView>();
+            shell = Services.Resolve<MainSingleView>();
         }
 
         shell.DataContext = Services.Resolve<MainWindowViewModel>();

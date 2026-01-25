@@ -109,7 +109,7 @@ public class WindowService : IWindowService
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
             await window.ShowDialogAsync(owner);
         }
-        else await ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
+        else await ContainerLocator.Container.Resolve<MainSingleView>().ShowVirtualDialogAsync(window);
         
         window.Focus();
     }

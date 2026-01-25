@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Core.Views.Windows.MainDock" x:DataType="windows:MainWindowViewModel">
+    <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
+
+        <!--Icon Tray-->
+        <DockPanel Margin="3 0" Grid.Row="0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
+
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Left" Classes="ToolBar">
+
+                <Button ToolTip.Tip="Undo" x:CompileBindings="False"
+                        Command="{Binding DockService.CurrentDocument.Undo}">
+                    <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
+                </Button>
+                <Button ToolTip.Tip="Redo" x:CompileBindings="False"
+                        Command="{Binding DockService.CurrentDocument.Redo}">
+                    <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
+                </Button>
+
+                <Border Classes="RoundBorder" Margin="5 0 0 0" Height="24">
+
+                    <StackPanel Classes="ToolBar">
+                        <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
+                        <StackPanel Orientation="Horizontal"
+                                    IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
+                                       Height="24" />
+                            <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
+                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                </Border>
+
+                <controls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}" />
+
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
+                <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
+                <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
+                    <Button.Content>
+                        <Image Source="{DynamicResource Material.SettingsOutline}" />
+                    </Button.Content>
+                </Button>
+            </StackPanel>
+        </DockPanel>
+
+        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding MainDockService.Layout}" />
+    </Grid>
+</UserControl>
