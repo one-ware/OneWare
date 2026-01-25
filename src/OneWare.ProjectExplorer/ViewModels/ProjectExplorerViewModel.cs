@@ -585,17 +585,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 var attr = File.GetAttributes(path);
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
-                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path.TrimEnd('/', '\\'))).CheckNameDirectory();
-                    // if (askForInclude)
-                    //     if (!await AskForIncludeDialogAsync(destination.Root,
-                    //             Path.GetRelativePath(destination.Root.FullPath, destPath)))
-                    //         return;
+                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path.TrimEnd('/', '\\')));
                     if (copy) PlatformHelper.CopyDirectory(path, destPath);
                     else Directory.Move(path, destPath);
                 }
                 else
                 {
-                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path)).CheckNameFile();
+                    var destPath = Path.Combine(destination.FullPath, Path.GetFileName(path));
                     if (askForInclude)
                         await AskForIncludeDialogAsync(destination.Root,
                             Path.GetRelativePath(destination.Root.FullPath, destPath));

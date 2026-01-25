@@ -46,14 +46,14 @@
                                           ItemsSource="{Binding SettingCollections}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="18" Source="{Binding Icon}" />
+                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
                                 <TextBlock FontSize="13" Text="{Binding Header}" />
                             </StackPanel>
                         </TreeDataTemplate>
                         <DataTemplate DataType="viewModels:SettingsCollectionViewModel">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="18" Source="{Binding Icon}" />
+                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
                                 <TextBlock FontSize="13" Text="{Binding Header}" />
                             </StackPanel>
                         </DataTemplate>

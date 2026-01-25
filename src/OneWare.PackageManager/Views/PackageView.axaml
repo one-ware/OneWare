@@ -156,7 +156,7 @@
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}">
-                            <controls:MarkdownViewer Markdown="{Binding Content}" />
+                            <controls:MarkdownViewer Markdown="{Binding Content}" Margin="10 5 0 0" />
                         </Border>
                     </DataTemplate>
                 </TabControl.ContentTemplate>

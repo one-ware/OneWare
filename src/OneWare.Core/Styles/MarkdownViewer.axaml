@@ -12,7 +12,6 @@
     </Design.PreviewWith>
 
     <Style Selector="controls|MarkdownViewer">
-        <Setter Property="Margin" Value="10 5 0 0" />
         <Setter Property="Template">
             <ControlTemplate>
                 <mdxaml:MarkdownScrollViewer Markdown="{TemplateBinding Markdown}">

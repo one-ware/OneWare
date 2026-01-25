@@ -116,7 +116,7 @@
                                 Margin="0 8 0 0">
                             <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                         VerticalScrollBarVisibility="Auto">
-                                <controls:MarkdownViewer Markdown="{Binding LicenseText}" />
+                                <controls:MarkdownViewer Markdown="{Binding LicenseText}" Margin="10 5 0 0" />
                             </ScrollViewer>
                         </Border>
                     </DockPanel>

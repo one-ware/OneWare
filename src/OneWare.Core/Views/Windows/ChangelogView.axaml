@@ -17,7 +17,7 @@
     <DockPanel>
         <Grid DockPanel.Dock="Top">
             <Border DockPanel.Dock="Top" Margin="4" Background="{DynamicResource ThemeControlLowBrush}">
-                <controls:MarkdownViewer Markdown="{Binding ChangeLog}" />
+                <controls:MarkdownViewer Markdown="{Binding ChangeLog}" Margin="10 5 0 0" />
             </Border>
             <controls:Spinner IsVisible="{Binding IsLoading}" Height="30" />
         </Grid>
