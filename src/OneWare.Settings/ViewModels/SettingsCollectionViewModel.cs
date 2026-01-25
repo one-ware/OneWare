@@ -52,6 +52,9 @@ public class SettingsCollectionViewModel : ObservableObject
                 case ComboBoxSearchSetting csS:
                     SettingViewModels.Add(new ComboBoxSearchSettingViewModel(csS));
                     break;
+                case AdvancedComboBoxSearchSetting aCss:
+                    SettingViewModels.Add(new AdvancedComboBoxSearchSettingViewModel(aCss));
+                    break;
                 case AdvancedComboBoxSetting aCs:
                     SettingViewModels.Add(new AdvancedComboBoxSettingViewModel(aCs));
                     break;

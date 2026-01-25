@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -28,11 +29,16 @@ public class Setting : ObservableObject
             var originalType = DefaultValue.GetType();
             if(value.GetType() != originalType)
                 value = Convert.ChangeType(value, originalType);
-            SetProperty(ref _value, value);
+            SetValue(value);
         }
     }
 
     public object DefaultValue { get; }
+
+    protected virtual void SetValue(object value)
+    {
+        SetProperty(ref _value, value);
+    }
 }
 
 public abstract class CollectionSetting : Setting
@@ -48,6 +54,8 @@ public abstract class CollectionSetting : Setting
 
 public abstract class TitledSetting : CollectionSetting
 {
+    protected const string ValidationFallbackMessage = "Invalid: Please check the value";
+    
     public TitledSetting(string title, object defaultValue) : base(defaultValue)
     {
         Title = title;
@@ -59,11 +67,44 @@ public abstract class TitledSetting : CollectionSetting
     
     public string? MarkdownDocumentation { get; init; }
     
+    public ISettingValidation? Validator { get; init; }
+
+    public string? ValidationMessage
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
     public abstract TitledSetting Clone();
+    
+    protected override void SetValue(object value)
+    {
+        if (Validator is null)
+        {
+            base.SetValue(value);
+            return;
+        }
+
+        try
+        {
+            ValidationMessage = !Validator.Validate(value, out string? validationMsg) ? validationMsg ?? ValidationFallbackMessage : null;
+        }
+        catch (ValidationException ex)
+        {
+            ValidationMessage = string.IsNullOrEmpty(ex.Message) ? ValidationFallbackMessage : ex.Message;
+        }
+        catch
+        {
+            ValidationMessage = ValidationFallbackMessage;
+        }
+        base.SetValue(value);
+    }
 }
 
-
-
+public interface ISettingValidation
+{
+    bool Validate(object? value, out string? warningMessage);
+}
 
 public class CheckBoxSetting : TitledSetting
 {
@@ -125,6 +166,15 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
+public class AdvancedComboBoxSearchSetting(string title, object defaultValue, AdvancedComboBoxOption[] options)
+    : AdvancedComboBoxSetting(title, defaultValue, options)
+{
+    public override TitledSetting Clone()
+    {
+        return new AdvancedComboBoxSearchSetting(Title, DefaultValue, Options);
+    }
+}
+
 public class AdvancedComboBoxSetting : TitledSetting
 {
     public AdvancedComboBoxSetting(string title, object defaultValue, AdvancedComboBoxOption[] options) : base(title, defaultValue)
@@ -174,6 +224,11 @@ public class AdvancedComboBoxOption
     public IObservable<bool>? IsEnabledObservable { get; init; }
     
     public IObservable<bool>? IsVisibleObservable { get; init; }
+
+    public override string? ToString()
+    {
+        return Title;
+    }
 }
 
 public class ListBoxSetting : TitledSetting
