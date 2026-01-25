@@ -52,11 +52,11 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
             <Button Command="{Binding SaveAsync}"
-                    Background="{DynamicResource HighlightBrush}">
+                    Classes="PrimaryButton">
                 <TextBlock Text="Apply" Margin="5 0"/>
             </Button>
             <Button Command="{Binding SaveAndCloseAsync}"
-                    Background="{DynamicResource HighlightBrush}"
+                    Classes="PrimaryButton"
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
                 <TextBlock Text="Save and Close" Margin="5 0"/>
             </Button>

@@ -33,12 +33,11 @@
             </StackPanel>
 
             <!-- Login with Browser Button -->
-            <Button Background="{DynamicResource HighlightBrush}"
-                    Command="{Binding LoginWithBrowserAsync}"
+            <Button Command="{Binding LoginWithBrowserAsync}"
                     CommandParameter="{Binding #AuthenticateCloudViewView}"
                     HorizontalAlignment="Stretch"
                     Height="35"
-                    Classes="RoundButton"
+                    Classes="RoundButton PrimaryButton"
                     Content="Login with Browser">
             </Button>
             
@@ -66,12 +65,11 @@
                                  Watermark="Enter your password" />
                     </StackPanel>
 
-                    <Button Background="{DynamicResource HighlightBrush}"
-                            Command="{Binding LoginAsync}"
+                    <Button Command="{Binding LoginAsync}"
                             CommandParameter="{Binding #AuthenticateCloudViewView}"
                             HorizontalAlignment="Stretch"
                             Height="30"
-                            Classes="RoundButton"
+                            Classes="RoundButton PrimaryButton"
                             Content="Login">
                     </Button>
                 </StackPanel>

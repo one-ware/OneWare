@@ -28,9 +28,9 @@
             <Button Command="{Binding Cancel}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
                     Content="Cancel" />
-            <Button Background="{DynamicResource HighlightBrush}"
-                    Command="{Binding LoginAsync}"
+            <Button Command="{Binding LoginAsync}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
+                    Classes="PrimaryButton"
                     Content="Log In" />
         </StackPanel>
     </DockPanel>

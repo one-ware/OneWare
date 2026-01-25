@@ -22,7 +22,7 @@
             <Button Command="{Binding Reset}" ToolTip.Tip="Reset to Device Default">
                 <TextBlock Text="Reset" />
             </Button>
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Save}"
+            <Button Classes="PrimaryButton" Command="{Binding Save}"
                     CommandParameter="{Binding #YosysCompileSettingsViewView}">
                 <TextBlock Text="Save" />
             </Button>

@@ -274,7 +274,7 @@
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
                 <TextBlock Text="Save and Close" Margin="5 0" />
             </Button>
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAndCompile}"
+            <Button Classes="PrimaryButton" Command="{Binding SaveAndCompile}"
                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
                     IsEnabled="{Binding Project.Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Name="CompileButton">

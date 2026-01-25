@@ -58,10 +58,9 @@
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
             </Button>
-            <Button Background="{DynamicResource HighlightBrush}" 
-                    Command="{Binding InstallCommand}"
+            <Button Command="{Binding InstallCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    Classes="RoundButton"
+                    Classes="RoundButton PrimaryButton"
                     Height="35"
                     Padding="20 0">
                 <Panel>

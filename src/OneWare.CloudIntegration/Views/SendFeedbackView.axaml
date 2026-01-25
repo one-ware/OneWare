@@ -29,9 +29,9 @@
                 <Button Command="{Binding Cancel}"
                         CommandParameter="{Binding $parent[Window]}"
                         Content="Cancel" />
-                <Button Background="{DynamicResource HighlightBrush}"
-                        Command="{Binding SendFeedbackAsync}"
+                <Button Command="{Binding SendFeedbackAsync}"
                         CommandParameter="{Binding $parent[Window]}"
+                        Classes="PrimaryButton"
                         Content="Send" />
 
             </StackPanel>
