@@ -16,8 +16,8 @@ public class Win32ConPtyPseudoTerminal : IPseudoTerminal
     {
         Process = process;
         _pseudoConsole = pseudoConsole;
-        _stdin = new FileStream(inputWrite, FileAccess.Write, 4096, true);
-        _stdout = new FileStream(outputRead, FileAccess.Read, 4096, true);
+        _stdin = new FileStream(inputWrite, FileAccess.Write, 4096, false);
+        _stdout = new FileStream(outputRead, FileAccess.Read, 4096, false);
     }
 
     public Process Process { get; }

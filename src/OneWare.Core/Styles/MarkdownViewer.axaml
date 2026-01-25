@@ -1,12 +1,14 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:OneWare.Essentials.Controls"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
         xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
-        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-        xmlns:extensions="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia">
+        xmlns:extensions="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit">
     <Design.PreviewWith>
-        <controls:MarkdownViewer />
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
     </Design.PreviewWith>
 
     <Style Selector="controls|MarkdownViewer">

@@ -11,16 +11,4 @@
         <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="AvalonStudio.winpty.NET" Version="0.4.6">
-            <ExcludeAssets Condition="
-  !$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win')) 
-  And 
-  !$([MSBuild]::IsOSPlatform('Windows'))
-">
-                contentFiles;runtime;build
-            </ExcludeAssets>
-        </PackageReference>
-    </ItemGroup>
-
 </Project>

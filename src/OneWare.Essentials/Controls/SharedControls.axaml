@@ -3,8 +3,7 @@
     <Styles.Resources>
         <ResourceDictionary />
     </Styles.Resources>
-
-    <StyleInclude Source="avares://OneWare.Essentials/Controls/MarkdownViewer.axaml" />
+    
     <StyleInclude Source="avares://OneWare.Essentials/Controls/SearchComboBox.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Controls/UiExtensionCollection.axaml" />
 </Styles>
