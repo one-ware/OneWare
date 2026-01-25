@@ -353,8 +353,6 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         if (SelectedItem is not { } error) return;
         var doc = await _mainDockService.OpenFileAsync(error.File);
 
-        if (doc is not IEditor evb) return;
-        var offset = error.GetOffset(evb.CurrentDocument);
-        evb.Select(offset.startOffset, offset.endOffset - offset.startOffset);
+        doc?.GoToDiagnostic(error);
     }
 }

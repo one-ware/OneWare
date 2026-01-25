@@ -139,6 +139,10 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         
         UpdateCurrentFile(oldCurrentFile);
     }
+    
+    public virtual void GoToDiagnostic(ErrorListItem item)
+    {
+    }
 
     protected virtual void Reset()
     {

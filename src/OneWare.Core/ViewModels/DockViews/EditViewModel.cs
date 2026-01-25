@@ -251,6 +251,12 @@ public class EditViewModel : ExtendedDocument, IEditor
     
     #region Jump
 
+    public override void GoToDiagnostic(ErrorListItem item)
+    {
+        var offset = item.GetOffset(CurrentDocument);
+        Select(offset.startOffset, offset.endOffset - offset.startOffset);
+    }
+
     public async Task<bool> WaitForEditorReadyAsync()
     {
         const int timeOut = 1000;
