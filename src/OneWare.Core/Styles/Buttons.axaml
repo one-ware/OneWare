@@ -50,6 +50,10 @@
         <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
     </Style>
     
+    <Style Selector="Button.SecondaryButton">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+    
     <Style Selector="ToggleButton:checked /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
