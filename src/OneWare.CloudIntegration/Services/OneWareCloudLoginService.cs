@@ -60,7 +60,7 @@ public sealed class OneWareCloudLoginService
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
 
-    public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
+    public Task<(JwtSecurityToken? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
         var userId = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
 
@@ -68,10 +68,10 @@ public sealed class OneWareCloudLoginService
     }
 
     /// <summary>
-    ///     Gives a JWT Token that has at least 5 minutes left before expiration
-    ///     TODO Change this to return the full token implementation
+    ///     Returns a JWT Token that has at least 2 minutes left before expiration
+    ///     If the token is null, the HttpStatusCode can be used to get the reason
     /// </summary>
-    public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string userId)
+    public async Task<(JwtSecurityToken? token, HttpStatusCode status)> GetJwtTokenAsync(string userId)
     {
         await _semaphoreSlim.WaitAsync();
 
@@ -82,7 +82,7 @@ public sealed class OneWareCloudLoginService
             _jwtTokenCache.TryGetValue(userId, out var existingToken);
 
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
-                return (existingToken.RawData, HttpStatusCode.NoContent);
+                return (existingToken, HttpStatusCode.NoContent);
 
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
@@ -90,7 +90,7 @@ public sealed class OneWareCloudLoginService
 
             if (!_jwtTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
 
-            return (regeneratedToken.RawData, status);
+            return (regeneratedToken, status);
         }
         finally
         {
@@ -234,7 +234,7 @@ public sealed class OneWareCloudLoginService
         try
         {
             RestRequest? request;
-            string? jwt = null;
+            JwtSecurityToken? jwt = null;
             if (OneWareCloudIsUsed) (jwt, _) = await GetLoggedInJwtTokenAsync();
 
             if (jwt == null)
@@ -244,7 +244,7 @@ public sealed class OneWareCloudLoginService
             else
             {
                 request = new RestRequest("/api/feedback");
-                request.AddHeader("Authorization", $"Bearer {jwt}");
+                request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
             }
 
             request.AddHeader("Accept", "application/json");

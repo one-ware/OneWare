@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Avalonia.Media;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ public class OneWareCloudNotificationService
     private async Task<string?> GetTokenAsync()
     {
         var (token, status) = await _loginService.GetLoggedInJwtTokenAsync();
-        return token;
+        return token?.RawData;
     }
 
     public async Task<bool> ConnectAsync()
