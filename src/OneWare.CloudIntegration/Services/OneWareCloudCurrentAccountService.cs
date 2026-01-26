@@ -93,7 +93,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             }
 
             var request = new RestRequest("/api/users/current");
-            request.AddHeader("Authorization", $"Bearer {jwt!.RawData}");
+            request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
 
             var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
             CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions
@@ -122,7 +122,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
     {
         var (jwt, status) = await _loginService.GetLoggedInJwtTokenAsync();
         var request = new RestRequest("/api/credits/balance");
-        request.AddHeader("Authorization", $"Bearer {jwt}");
+        request.AddHeader("Authorization", $"Bearer {jwt?.RawData}");
 
         var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
         CurrentBalance = JsonSerializer.Deserialize<UserBalanceDto>(response.Content!, new JsonSerializerOptions
