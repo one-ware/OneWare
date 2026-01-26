@@ -6,7 +6,6 @@
              xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
-             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.Vcd.Viewer.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
@@ -31,11 +30,11 @@
                         </Button>
                         <TextBlock VerticalAlignment="Center" Text="Threads" />
                     </StackPanel>
-                    
+
                     <ComboBox Margin="5 0" DockPanel.Dock="Right" ItemsSource="{Binding LoadingThreadOptions}"
                               SelectedItem="{Binding LoadingThreads}" />
                 </DockPanel>
-                
+
             </Border>
 
             <TreeView Grid.Row="1" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"

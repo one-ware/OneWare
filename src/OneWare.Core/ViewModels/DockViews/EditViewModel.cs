@@ -7,6 +7,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -15,7 +16,6 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -25,16 +25,16 @@ public class EditViewModel : ExtendedDocument, IEditor
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     private readonly BackupService _backupService;
-
-    private readonly IMainDockService _mainDockService;
     private readonly IErrorService _errorService;
     private readonly ILanguageManager _languageManager;
+
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
     private CompositeDisposable _composite = new();
-    
+
     private IEnumerable<ErrorListItem>? _diagnostics;
 
     private ITypeAssistance? _typeAssistance;
@@ -146,7 +146,8 @@ public class EditViewModel : ExtendedDocument, IEditor
         {
             var result = await LoadAsync();
 
-            var disableAfterSetting = (int)_settingsService.GetSettingValue<double>("TypeAssistance_DisableLargeFile_Min");
+            var disableAfterSetting =
+                (int)_settingsService.GetSettingValue<double>("TypeAssistance_DisableLargeFile_Min");
             DisableEditViewEvents = CurrentDocument.TextLength > disableAfterSetting;
             if (DisableEditViewEvents)
             {
@@ -248,7 +249,7 @@ public class EditViewModel : ExtendedDocument, IEditor
     {
         TypeAssistance?.Uncomment();
     }
-    
+
     #region Jump
 
     public override void GoToDiagnostic(ErrorListItem item)

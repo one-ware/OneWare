@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using OneWare.Cyc5000.ViewModels;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
@@ -16,4 +15,3 @@ public class Cyc5000Module : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterFpgaPackage(new Cyc5000FpgaPackage());
     }
 }
-

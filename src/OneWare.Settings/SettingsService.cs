@@ -14,6 +14,7 @@ public class SettingsService : ISettingsService
         WriteIndented = true,
         AllowTrailingCommas = true
     };
+
     private readonly List<Action> _afterLoadingActions = [];
     private readonly Dictionary<string, Setting> _settings = new();
     private readonly Dictionary<string, object> _unregisteredSettings = new();
@@ -21,7 +22,7 @@ public class SettingsService : ISettingsService
 
     public Dictionary<string, SettingCategory> SettingCategories { get; } = new();
     public event EventHandler<SaveEventArgs>? Saved;
-    
+
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null)
     {
         SettingCategories.TryAdd(category, new SettingCategory());
@@ -82,16 +83,6 @@ public class SettingsService : ISettingsService
                 });
                 break;
         }
-    }
-
-    public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
-        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
-    {
-        AddSetting(category, subCategory, key,
-            new FolderPathSetting(title, defaultValue, watermark, startDir, validate)
-            {
-                HoverDescription = description
-            });
     }
 
     public void RegisterTitledFolderPath(string category, string subCategory, string key, string title,
@@ -178,15 +169,10 @@ public class SettingsService : ISettingsService
     public T GetSettingValue<T>(string key)
     {
         if (!_settings.TryGetValue(key, out var setting))
-        {
             throw new ArgumentException($"Setting with key '{key}' is not registered.", nameof(key));
-        }
-        
-        if (setting?.Value is null)
-        {
-            throw new NullReferenceException($"Setting '{key}' exists but has no value.");
-        }
-        
+
+        if (setting?.Value is null) throw new NullReferenceException($"Setting '{key}' exists but has no value.");
+
         try
         {
             return (T)Convert.ChangeType(setting.Value, typeof(T));
@@ -276,10 +262,7 @@ public class SettingsService : ISettingsService
         {
             var saveD = _settings.ToDictionary(s => s.Key, s => s.Value.Value);
 
-            foreach (var unregistered in _unregisteredSettings)
-            {
-                saveD.TryAdd(unregistered.Key, unregistered.Value);
-            }
+            foreach (var unregistered in _unregisteredSettings) saveD.TryAdd(unregistered.Key, unregistered.Value);
 
             if (_loadedSettings != null)
                 foreach (var (key, value) in _loadedSettings)
@@ -310,6 +293,16 @@ public class SettingsService : ISettingsService
     public void WhenLoaded(Action action)
     {
         _afterLoadingActions.Add(action);
+    }
+
+    public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate)
+    {
+        AddSetting(category, subCategory, key,
+            new FolderPathSetting(title, defaultValue, watermark, startDir, validate)
+            {
+                HoverDescription = description
+            });
     }
 
     private void AddSetting(string category, string subCategory, string key, Setting setting)

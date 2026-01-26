@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -9,7 +10,6 @@ using OneWare.Essentials.ViewModels;
 using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.LanguageService;
 
@@ -298,11 +298,12 @@ public abstract class LanguageServiceBase : ILanguageService
         Dispatcher.UIThread.Post(() =>
         {
             var path = pdp.Uri.GetFileSystemPath();
-            
-            var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+
+            var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
+                .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
-            
+
             ContainerLocator.Container.Resolve<IErrorService>()
                 .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
             //file.Diagnostics = pdp.Diagnostics;

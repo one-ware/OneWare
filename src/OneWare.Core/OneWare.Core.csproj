@@ -10,29 +10,29 @@
     <Import Project="..\..\build\props\OpenCvSharp4.runtime.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.DependencyInjection.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.Logging.props"/>
-    
+
     <ItemGroup>
         <AvaloniaResource Include="Assets\**\*.*"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.CommandLine" Version="2.0.2" />
-        <PackageReference Include="Serilog" Version="4.3.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="System.CommandLine" Version="2.0.2"/>
+        <PackageReference Include="Serilog" Version="4.3.0"/>
+        <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1"/>
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj"/>
-        <ProjectReference Include="..\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj" />
+        <ProjectReference Include="..\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj"/>
         <ProjectReference Include="..\OneWare.Debugger\OneWare.Debugger.csproj"/>
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj"/>
         <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj"/>
         <ProjectReference Include="..\OneWare.Json\OneWare.Json.csproj"/>
-        <ProjectReference Include="..\OneWare.LibraryExplorer\OneWare.LibraryExplorer.csproj" />
+        <ProjectReference Include="..\OneWare.LibraryExplorer\OneWare.LibraryExplorer.csproj"/>
         <ProjectReference Include="..\OneWare.Output\OneWare.Output.csproj"/>
         <ProjectReference Include="..\OneWare.ProjectExplorer\OneWare.ProjectExplorer.csproj"/>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>

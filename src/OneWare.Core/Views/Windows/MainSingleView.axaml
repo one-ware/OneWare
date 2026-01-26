@@ -1,16 +1,16 @@
 ﻿<windows1:MainSingleView xmlns="https://github.com/avaloniaui"
-                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                   xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
-                   xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-                   xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
-                   xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                   xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
-                   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                   x:Class="OneWare.Core.Views.Windows.MainSingleView"
-                   Name="MainViewView"
-                   x:DataType="windows:MainWindowViewModel">
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:windows1="clr-namespace:OneWare.Core.Views.Windows"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         x:Class="OneWare.Core.Views.Windows.MainSingleView"
+                         Name="MainViewView"
+                         x:DataType="windows:MainWindowViewModel">
     <Panel>
         <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, *, Auto"
               ColumnDefinitions="*">
@@ -30,7 +30,7 @@
                     </Menu.Styles>
                 </Menu>
             </StackPanel>
-            
+
             <!-- Main Content -->
             <windows1:MainDock Grid.Row="1" />
 

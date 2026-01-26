@@ -6,7 +6,7 @@ public static class ServiceProviderExtensions
 {
     public static T Resolve<T>(this IServiceProvider? provider)
     {
-        return (T)Resolve(provider, typeof(T));
+        return (T)provider.Resolve(typeof(T));
     }
 
     public static object Resolve(this IServiceProvider? provider, Type type)
@@ -19,15 +19,16 @@ public static class ServiceProviderExtensions
 
     public static T Resolve<T>(this IServiceProvider? provider, params (Type type, object value)[] parameters)
     {
-        return (T)Resolve(provider, typeof(T), parameters);
+        return (T)provider.Resolve(typeof(T), parameters);
     }
 
-    public static object Resolve(this IServiceProvider? provider, Type type, params (Type type, object value)[] parameters)
+    public static object Resolve(this IServiceProvider? provider, Type type,
+        params (Type type, object value)[] parameters)
     {
         if (provider is null)
             throw new ArgumentNullException(nameof(provider));
         if (parameters.Length == 0)
-            return Resolve(provider, type);
+            return provider.Resolve(type);
 
         var args = parameters.Select(x => x.value).ToArray();
         return ActivatorUtilities.CreateInstance(provider, type, args);
@@ -35,7 +36,7 @@ public static class ServiceProviderExtensions
 
     public static bool IsRegistered<T>(this IServiceProvider? provider)
     {
-        return IsRegistered(provider, typeof(T));
+        return provider.IsRegistered(typeof(T));
     }
 
     public static bool IsRegistered(this IServiceProvider? provider, Type type)

@@ -16,11 +16,11 @@
             <ControlTemplate>
                 <mdxaml:MarkdownScrollViewer Markdown="{TemplateBinding Markdown}">
                     <mdxaml:MarkdownScrollViewer.Styles>
-                        
+
                         <Style Selector="ScrollViewer">
                             <Setter Property="Padding" Value="5" />
                         </Style>
-                        
+
                         <Style Selector="Grid.List">
                             <Setter Property="Margin" Value="20 0 0 0" />
                         </Style>

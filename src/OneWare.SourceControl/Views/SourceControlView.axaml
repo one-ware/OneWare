@@ -209,9 +209,11 @@
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
+            <Grid DockPanel.Dock="Top"
+                  IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="MergeChangeListBox">
                         <ListBox.Styles>
@@ -255,7 +257,8 @@
                 <TextBlock Text="{Binding ActiveRepository.StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
 
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
+            <Grid DockPanel.Dock="Top"
+                  IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
                     <ListBox ItemsSource="{Binding ActiveRepository.StagedChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
@@ -307,7 +310,8 @@
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                 <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
-                    <ListBox ItemsSource="{Binding ActiveRepository.Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    <ListBox ItemsSource="{Binding ActiveRepository.Changes}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="ChangeListBox">
                         <ListBox.Styles>

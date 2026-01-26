@@ -38,15 +38,14 @@ public class PackageManagerModule : OneWareModuleBase
 
         serviceProvider.Resolve<ISettingsService>()
             .RegisterSetting("Package Manager", "Sources", "PackageManager_Sources",
-                new ListBoxSetting("Custom Package Sources", [])
+                new ListBoxSetting("Custom Package Sources")
                 {
                     MarkdownDocumentation = """
                                             Add custom package sources to the package manager. These sources will be used to search for and install packages.
                                             You can add either:
                                             - A Package Repository
                                             - A Direct link to a package manifest
-                                            """,
+                                            """
                 });
     }
 }
-

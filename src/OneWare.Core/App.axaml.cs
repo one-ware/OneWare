@@ -17,7 +17,6 @@ using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.Data;
-using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -54,14 +53,13 @@ namespace OneWare.Core;
 
 public class App : Application
 {
+    private OneWareModuleManager? _moduleManager;
+    private ModuleServiceRegistry? _moduleServiceRegistry;
     protected OneWareModuleCatalog ModuleCatalog { get; } = new();
 
     protected virtual string GetDefaultLayoutName => "Default";
 
     protected IServiceProvider Services => ContainerLocator.Current;
-
-    private OneWareModuleManager? _moduleManager;
-    private ModuleServiceRegistry? _moduleServiceRegistry;
 
     public override void Initialize()
     {
@@ -366,7 +364,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
                 }))
             {
-                IconObservable = Application.Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
+                IconObservable = Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
             });
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
@@ -377,7 +375,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
                 }))
             {
-                IconObservable = Application.Current!.GetResourceObservable("AI_Img"),
+                IconObservable = Current!.GetResourceObservable("AI_Img")
             });
 
         //AvaloniaEdit Hyperlink support
@@ -448,14 +446,14 @@ public class App : Application
 
             // Template / boilerplate
             [ConsoleThemeStyle.SecondaryText] = new() { Foreground = ConsoleColor.DarkGray },
-            [ConsoleThemeStyle.TertiaryText]  = new() { Foreground = ConsoleColor.DarkGray },
+            [ConsoleThemeStyle.TertiaryText] = new() { Foreground = ConsoleColor.DarkGray },
 
             // Literals / scalars
-            [ConsoleThemeStyle.String]  = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Number]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.String] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Number] = new() { Foreground = ConsoleColor.White },
             [ConsoleThemeStyle.Boolean] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Null]    = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Scalar]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Null] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Scalar] = new() { Foreground = ConsoleColor.White },
 
             // Property names
             [ConsoleThemeStyle.Name] = new() { Foreground = ConsoleColor.Gray },
@@ -464,12 +462,12 @@ public class App : Application
             [ConsoleThemeStyle.Invalid] = new() { Foreground = ConsoleColor.Red },
 
             // Log levels (your requirements)
-            [ConsoleThemeStyle.LevelVerbose]     = new() { Foreground = ConsoleColor.Gray }, // brown
-            [ConsoleThemeStyle.LevelDebug]       = new() { Foreground = ConsoleColor.DarkYellow },
+            [ConsoleThemeStyle.LevelVerbose] = new() { Foreground = ConsoleColor.Gray }, // brown
+            [ConsoleThemeStyle.LevelDebug] = new() { Foreground = ConsoleColor.DarkYellow },
             [ConsoleThemeStyle.LevelInformation] = new() { Foreground = ConsoleColor.DarkCyan },
-            [ConsoleThemeStyle.LevelWarning]     = new() { Foreground = ConsoleColor.Yellow },
-            [ConsoleThemeStyle.LevelError]       = new() { Foreground = ConsoleColor.Red },
-            [ConsoleThemeStyle.LevelFatal]       = new() { Foreground = ConsoleColor.Magenta },
+            [ConsoleThemeStyle.LevelWarning] = new() { Foreground = ConsoleColor.Yellow },
+            [ConsoleThemeStyle.LevelError] = new() { Foreground = ConsoleColor.Red },
+            [ConsoleThemeStyle.LevelFatal] = new() { Foreground = ConsoleColor.Magenta }
         });
 
         Log.Logger = new LoggerConfiguration()
@@ -478,13 +476,13 @@ public class App : Application
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.File(
-                path: Path.Combine(logPath, "log-.txt"),
+                Path.Combine(logPath, "log-.txt"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 shared: true
             )
             .WriteTo.File(
-                path: Path.Combine(logPath, "current.txt"),
+                Path.Combine(logPath, "current.txt"),
                 shared: true
             )
             .WriteTo.Console(
@@ -493,7 +491,7 @@ public class App : Application
             .CreateLogger();
 
         builder.ClearProviders();
-        builder.AddSerilog(Log.Logger, dispose: true);
+        builder.AddSerilog(Log.Logger, true);
     }
 
     protected virtual void LoadStartupPlugins()
@@ -533,14 +531,10 @@ public class App : Application
         var shell = CreateShell();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime &&
             shell is Window shellWindow)
-        {
             desktopLifetime.MainWindow = shellWindow;
-        }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime &&
                  shell is Control shellView)
-        {
             singleViewLifetime.MainView = shellView;
-        }
 
         _moduleManager.InitializeModules(compositeProvider);
 
@@ -601,19 +595,13 @@ public class App : Application
     {
         //This is an macOS only feature. On Linux and macOS, we use a different method with file locks inside the Program.cs
         if (this.TryGetFeature<IActivatableLifetime>(out var events))
-        {
             events.Activated += (_, args) =>
             {
                 if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
-                {
                     Services.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
-                }
                 else if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.File } launchArgs)
-                {
                     Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(launchArgs.Uri.ToString());
-                }
             };
-        }
 
         if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
@@ -634,9 +622,6 @@ public class App : Application
             BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
         // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
+        foreach (var plugin in dataValidationPluginsToRemove) BindingPlugins.DataValidators.Remove(plugin);
     }
 }

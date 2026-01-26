@@ -12,16 +12,16 @@ public static class FoldingRegexVhdl
                                                				(
                                                				# Check for keyword ... is
                                                				 (\b(?i:architecture|case|entity|function|package|procedure)\b(.+?)(?i:\bis)\b)
-                                               
+
                                                				# Check for if statements
                                                				|(\b(?i:if)\b(.+?)(?i:generate|then)\b)
-                                               
+
                                                				# Check for and while statements
                                                				|(\b(?i:for|while)(.+?)(?i:loop|generate)\b)
-                                               
+
                                                				# Check for keywords that do not require an is after it
                                                				|(\b(?i:component|process|record)\b[^;]*?$)
-                                               
+
                                                				# From the beginning of the line, check for instantiation maps
                                                				|(^\s*\b(?i:port|generic)\b(?i:\s+map\b)?\s*\()
                                                			)
@@ -43,7 +43,7 @@ public static class FoldingRegexVhdl
                                              						)
                                              					)
                                              				)
-                                             
+
                                              				# ... a close paren followed by an optional semicolon as the only thing on the line
                                              			    |(\s*?\)\s*?;?\s*?$\n?
                                              			)

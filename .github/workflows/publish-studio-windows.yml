@@ -39,7 +39,7 @@ jobs:
       - name: Create Button HTML arm64
         shell: pwsh
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate-arm64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload-arm64.htm -Encoding UTF8
-     # Version info for win-x64
+      # Version info for win-x64
       - name: Create VersionInfo win-x64
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" > ./out/win-x64.txt
       # Version info for win-arm64

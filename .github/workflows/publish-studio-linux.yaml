@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [linux-x64, linux-arm64]
+        arch: [ linux-x64, linux-arm64 ]
     outputs:
       version: ${{ steps.get-oneware-version.outputs.info }}
     steps:

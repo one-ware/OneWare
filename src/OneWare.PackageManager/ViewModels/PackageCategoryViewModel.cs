@@ -15,6 +15,7 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
         get => _isExpanded;
         set => SetProperty(ref _isExpanded, value);
     }
+
     public PackageViewModel? SelectedPackage
     {
         get => _selectedPackage;

@@ -1,8 +1,8 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OneWare.Cpp;
 

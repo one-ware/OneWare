@@ -11,13 +11,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" Private="false" ExcludeAssets="runtime;Native" />
+        <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" Private="false" ExcludeAssets="runtime;Native"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="compatibility.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="compatibility.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

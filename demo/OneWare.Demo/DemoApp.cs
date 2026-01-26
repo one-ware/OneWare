@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;

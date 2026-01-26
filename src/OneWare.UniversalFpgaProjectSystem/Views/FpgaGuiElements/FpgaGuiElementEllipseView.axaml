@@ -7,9 +7,9 @@
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementEllipseView"
              x:DataType="fpgaGuiElements:FpgaGuiElementEllipseViewModel" ClipToBounds="False" IsHitTestVisible="False">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
-    <Ellipse Height="{Binding Height}" 
-             Width="{Binding Width}" 
-             Fill="{Binding Color}"/>
+    <Ellipse Height="{Binding Height}"
+             Width="{Binding Width}"
+             Fill="{Binding Color}" />
 </UserControl>

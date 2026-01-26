@@ -4,9 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Height="{Binding Height}" Width="{Binding Width}"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Height="{Binding Height}"
+             Width="{Binding Width}"
              ClipToBounds="False"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.HardwareGuiView" x:DataType="viewModels:HardwareGuiViewModel">
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.HardwareGuiView"
+             x:DataType="viewModels:HardwareGuiViewModel">
     <ItemsControl ItemsSource="{Binding Elements}" ClipToBounds="False">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>

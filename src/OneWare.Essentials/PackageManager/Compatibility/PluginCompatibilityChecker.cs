@@ -16,7 +16,7 @@ public class PluginCompatibilityChecker
 
             if (!File.Exists(depFilePath))
             {
-                compatibilityIssues += $"compatibility.txt not found in plugin folder\n";
+                compatibilityIssues += "compatibility.txt not found in plugin folder\n";
                 return new CompatibilityReport(false, compatibilityIssues);
             }
 
@@ -47,7 +47,7 @@ public class PluginCompatibilityChecker
                 var versionString = parts[1].Trim();
 
                 var dependencyVersionFull = Version.Parse(NormalizeVersion(versionString));
-                
+
                 switch (dependencyName)
                 {
                     //TODO
@@ -63,17 +63,15 @@ public class PluginCompatibilityChecker
                     compatibilityIssues += $"Dependency {dependencyName} not found\n";
                     continue;
                 }
-                
+
                 var required = dependencyVersionFull;
                 var provided = coreDep.Version;
 
                 if (provided.Major != required.Major ||
                     provided.Minor != required.Minor ||
                     provided.Build < required.Build)
-                {
                     compatibilityIssues +=
                         $"Dependency {dependencyName} requires {required}, but provided is {provided}\n";
-                }
             }
 
             return new CompatibilityReport(compatibilityIssues.Length == 0, compatibilityIssues);
@@ -84,9 +82,9 @@ public class PluginCompatibilityChecker
         }
     }
 
-    static string NormalizeVersion(string version)
+    private static string NormalizeVersion(string version)
     {
-        string[] parts = version.Split('.');
+        var parts = version.Split('.');
         while (parts.Length < 4)
         {
             Array.Resize(ref parts, parts.Length + 1);
@@ -100,11 +98,11 @@ public class PluginCompatibilityChecker
     {
         var result = new Dictionary<string, AssemblyName>();
         var toVisit = new Queue<AssemblyName>(rootAssembly.GetReferencedAssemblies());
-        
+
         while (toVisit.Count > 0)
         {
             var current = toVisit.Dequeue();
-            
+
             if (result.ContainsKey(current.Name!))
                 continue;
 
@@ -121,10 +119,8 @@ public class PluginCompatibilityChecker
                 {
                     var referenced = loadedAsm.GetReferencedAssemblies();
                     foreach (var refAsm in referenced)
-                    {
                         if (!result.ContainsKey(refAsm.Name!))
                             toVisit.Enqueue(refAsm);
-                    }
                 }
                 // Else: it's referenced but not loaded and we stop here
             }

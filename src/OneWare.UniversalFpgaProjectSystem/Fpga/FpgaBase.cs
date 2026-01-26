@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Avalonia.Platform;
-using OneWare.Essentials.Services;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 
@@ -22,7 +22,7 @@ public abstract class FpgaBase : IFpga
     public IList<HardwarePin> Pins { get; } = new List<HardwarePin>();
 
     public IList<HardwareInterface> Interfaces { get; } = new List<HardwareInterface>();
-    
+
     public IReadOnlyDictionary<string, string> Properties { get; }
 
     protected void LoadFromJsonAsset(string path)
@@ -31,7 +31,7 @@ public abstract class FpgaBase : IFpga
         using var reader = new StreamReader(stream);
         LoadFromJson(reader.ReadToEnd());
     }
-    
+
     protected void LoadFromJsonFile(string path)
     {
         using var stream = File.OpenRead(path);
@@ -44,7 +44,7 @@ public abstract class FpgaBase : IFpga
         try
         {
             var properties = JsonNode.Parse(json);
-            
+
             if (properties == null) return;
 
             foreach (var pin in properties["pins"]?.AsArray() ?? [])
@@ -76,8 +76,8 @@ public abstract class FpgaBase : IFpga
 
                         var name = pin["name"]?.ToString();
                         var pinName = pin["pin"]?.ToString();
-                        
-                        if (name == null) throw new Exception($"interface name not defined");
+
+                        if (name == null) throw new Exception("interface name not defined");
                         if (pinName == null) throw new Exception($"pinname not found in interface {name}");
 
                         newInterface.Pins.Add(new HardwareInterfacePin(name, pinName));
@@ -97,7 +97,7 @@ public abstract class FpgaBase : IFpga
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message,e);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 }

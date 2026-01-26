@@ -2,10 +2,10 @@
 using System.Reflection;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Updater.ViewModels;
 
@@ -139,7 +139,7 @@ public class UpdaterViewModel : ObservableObject
         var topLevelWindow = TopLevel.GetTopLevel(owner) as Window;
 
         Status = UpdaterStatus.UpdatingPackages;
-        
+
         var loadPackages = await _packageService.LoadPackagesAsync();
 
         if (!loadPackages)

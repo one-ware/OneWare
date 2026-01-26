@@ -1,14 +1,12 @@
 ﻿using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.Settings;
 using OneWare.Settings.ViewModels;
-using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 

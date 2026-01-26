@@ -1,5 +1,4 @@
-﻿using OneWare.Essentials.Enums;
-using OneWare.Essentials.Services;
+﻿using OneWare.Essentials.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Tools;
 

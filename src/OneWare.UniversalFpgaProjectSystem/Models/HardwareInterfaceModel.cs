@@ -2,12 +2,12 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
@@ -16,7 +16,7 @@ public class HardwareInterfaceModel : ObservableObject
     private ExtensionModel? _connectedExtension;
 
     private ExtensionViewModelBase? _connectedExtensionViewModel;
-    
+
     public HardwareInterfaceModel(HardwareInterface fpgaInterface, IHardwareModel owner)
     {
         Interface = fpgaInterface;
@@ -25,7 +25,7 @@ public class HardwareInterfaceModel : ObservableObject
         TranslatePins();
         UpdateMenu();
     }
-    
+
     public IHardwareModel Owner { get; }
 
     public FpgaModel? FpgaModel
@@ -38,10 +38,11 @@ public class HardwareInterfaceModel : ObservableObject
                 if (parent is FpgaModel fpgaModel) return fpgaModel;
                 parent = (parent as ExtensionModel)?.ParentInterfaceModel?.Owner;
             }
+
             return null;
         }
     }
-    
+
     public Dictionary<string, HardwarePinModel> TranslatedPins { get; } = new();
 
     public HardwareInterface Interface { get; }
@@ -68,22 +69,16 @@ public class HardwareInterfaceModel : ObservableObject
     {
         try
         {
-            foreach (var pin in Interface.Pins)
-            {
-                TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
-            }
+            foreach (var pin in Interface.Pins) TranslatedPins[pin.Name] = Owner.PinModels[pin.BindPin!];
 
-            if (ConnectedExtension != null)
-            {
-                ConnectedExtension.ParentInterfaceModel = this;
-            }
+            if (ConnectedExtension != null) ConnectedExtension.ParentInterfaceModel = this;
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
-    
+
     private void UpdateMenu()
     {
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
@@ -136,7 +131,7 @@ public class HardwareInterfaceModel : ObservableObject
     public void DropExtension(HardwareInterfaceModel lastOwner)
     {
         var connections = lastOwner.TranslatedPins!.Where(x => x.Value.ConnectedNode != null).ToList();
-        
+
         ConnectedExtension = lastOwner.ConnectedExtension;
         ConnectedExtension!.ParentInterfaceModel = this;
         ConnectedExtensionViewModel = lastOwner.ConnectedExtensionViewModel;
@@ -144,7 +139,6 @@ public class HardwareInterfaceModel : ObservableObject
 
         // Autoconnect pins
         if (FpgaModel is { } model)
-        {
             foreach (var connection in connections)
             {
                 var pin = TranslatedPins[connection.Key];
@@ -152,8 +146,7 @@ public class HardwareInterfaceModel : ObservableObject
                 model.Disconnect(connection.Value);
                 model.Connect(pin, node!);
             }
-        }
-        
+
         lastOwner.SetExtension(null);
 
         Dispatcher.UIThread.Post(UpdateMenu);

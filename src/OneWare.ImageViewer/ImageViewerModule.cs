@@ -13,7 +13,7 @@ public class ImageViewerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IMainDockService>().RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
+        serviceProvider.Resolve<IMainDockService>()
+            .RegisterDocumentView<ImageViewModel>(".svg", ".jpg", ".png", ".jpeg");
     }
 }
-

@@ -24,7 +24,7 @@
     <Import Project="..\..\build\props\Microsoft.ML.OnnxRuntime.Managed.props"/>
 
     <Import Project="..\..\build\props\LiveChartsCore.SkiaSharpView.Avalonia.props"/>
-    
+
     <PropertyGroup>
         <Description>Essentials Needed for One Ware Plugin Development</Description>
         <Version>$(EssentialsVersion)</Version>

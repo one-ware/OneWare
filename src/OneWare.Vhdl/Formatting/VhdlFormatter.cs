@@ -1,9 +1,9 @@
 using Avalonia.Platform;
 using AvaloniaEdit.Document;
 using Jint;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vhdl.Formatting;
 

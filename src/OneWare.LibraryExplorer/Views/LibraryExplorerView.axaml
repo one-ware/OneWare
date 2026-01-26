@@ -5,7 +5,6 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
-             xmlns:behaviors1="clr-namespace:OneWare.ProjectExplorer.Behaviors"
              xmlns:viewModels="clr-namespace:OneWare.LibraryExplorer.ViewModels"
              xmlns:views1="clr-namespace:OneWare.ProjectExplorer.Views;assembly=OneWare.ProjectExplorer"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
@@ -26,7 +25,7 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
-        <StyleInclude Source="avares://OneWare.ProjectExplorer/Views/ProjectExplorerTheme.axaml"></StyleInclude>
+        <StyleInclude Source="avares://OneWare.ProjectExplorer/Views/ProjectExplorerTheme.axaml" />
     </UserControl.Styles>
 
     <Grid>

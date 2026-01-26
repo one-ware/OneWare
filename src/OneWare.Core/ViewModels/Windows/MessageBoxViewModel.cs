@@ -1,10 +1,8 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
@@ -25,11 +23,10 @@ public enum MessageBoxMode
 public class MessageBoxViewModel : FlexibleWindowViewModelBase
 {
     private readonly MessageBoxRequest _request;
-    private FlexibleWindow? _window;
-    private MessageBoxResult _result = MessageBoxResult.Canceled();
     private string? _input;
     private object? _selectedItem;
     private ObservableCollection<object> _selectionItems = new();
+    private FlexibleWindow? _window;
 
     public MessageBoxViewModel(MessageBoxRequest request)
     {
@@ -84,7 +81,7 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
 
     public IRelayCommand<MessageBoxButtonViewModel> ButtonCommand { get; }
 
-    public MessageBoxResult Result => _result;
+    public MessageBoxResult Result { get; private set; } = MessageBoxResult.Canceled();
 
     public string Message { get; }
 
@@ -125,8 +122,8 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
 
     public void EnsureCanceled()
     {
-        if (_result.Button == null)
-            _result = MessageBoxResult.Canceled();
+        if (Result.Button == null)
+            Result = MessageBoxResult.Canceled();
     }
 
     public async Task SelectPathAsync(FlexibleWindow window)
@@ -143,7 +140,7 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
         if (button == null)
             return;
 
-        _result = new MessageBoxResult
+        Result = new MessageBoxResult
         {
             Button = button.Model,
             Input = Input,
@@ -177,7 +174,7 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
             Text = "Ok",
             Role = MessageBoxButtonRole.Yes,
             Style = MessageBoxButtonStyle.Primary,
-            IsDefault = true,
+            IsDefault = true
         };
     }
 }

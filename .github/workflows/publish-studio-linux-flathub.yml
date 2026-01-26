@@ -39,7 +39,7 @@ jobs:
         id: get-oneware-version
         with:
           xml-file: 'source-repo/build/props/Base.props'
-          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"        
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
       - name: Update Nuget Sources
         run: |
           curl -o flatpak-dotnet-generator.py https://raw.githubusercontent.com/flathub/com.one_ware.OneWare/refs/heads/master/flatpak-dotnet-generator.py
@@ -47,7 +47,7 @@ jobs:
           ./flatpak-dotnet-generator.py oneware-nuget-sources.json ./source-repo/studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -d 10 -f 24.08 -r linux-x64 linux-arm64
           rm -f flatpak-dotnet-generator.py      
       - name: Delete the source repository
-        run: rm -rf source-repo 
+        run: rm -rf source-repo
       - name: Update Version
         run: |
           sed -i 's/tag: .*/tag: ${{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml

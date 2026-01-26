@@ -2,11 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using OneWare.PackageManager.ViewModels;
-using OneWare.PackageManager.Views;
 
 namespace OneWare.Studio.Desktop.ViewModels;
 
@@ -14,14 +10,14 @@ public class AiReleaseWindowViewModel : ObservableObject
 {
     public const string ShowReleaseNotificationKey = "OneAI_ShowReleaseNotification";
     private const string ExtensionId = "OneWare.AI";
-    
-    private readonly ISettingsService _settingsService;
-    private readonly IWindowService _windowService;
     private readonly IPackageWindowService _packageWindowManager;
     private readonly IPaths _paths;
+
+    private readonly ISettingsService _settingsService;
+    private readonly IWindowService _windowService;
     private bool _hideNextTime;
-    
-    public AiReleaseWindowViewModel(IPaths paths, ISettingsService settingsService, 
+
+    public AiReleaseWindowViewModel(IPaths paths, ISettingsService settingsService,
         IWindowService windowService, IPackageWindowService packageWindowManager)
     {
         _paths = paths;
@@ -32,7 +28,7 @@ public class AiReleaseWindowViewModel : ObservableObject
 
     public bool HideNextTime
     {
-        get =>  _hideNextTime;
+        get => _hideNextTime;
         set => SetProperty(ref _hideNextTime, value);
     }
 
@@ -55,10 +51,7 @@ public class AiReleaseWindowViewModel : ObservableObject
             _settingsService.Save(_paths.SettingsPath);
         }
 
-        TopLevel? topLevel = TopLevel.GetTopLevel(control);
-        if (topLevel is Window wd)
-        {
-            wd.Close();
-        }
+        var topLevel = TopLevel.GetTopLevel(control);
+        if (topLevel is Window wd) wd.Close();
     }
 }

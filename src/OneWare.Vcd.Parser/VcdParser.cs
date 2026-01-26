@@ -490,9 +490,11 @@ public static partial class VcdParser
                                         var padding = Enumerable.Repeat(StdLogic.Zero, padCount).ToList();
                                         currentVector.InsertRange(0, padding);
                                     }
+
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentVector.ToArray());
                                     break;
-                                case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic) && currentVector.Count == 1:
+                                case ParsingType.Array when signalRegister[id].ValueType == typeof(StdLogic) &&
+                                                            currentVector.Count == 1:
                                     signalRegister[id].AddChange(changeTimes.Count - 1, currentVector[0]);
                                     break;
                                 case ParsingType.Real:

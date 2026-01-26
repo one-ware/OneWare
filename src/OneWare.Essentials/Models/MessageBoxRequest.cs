@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using OneWare.Essentials.Enums;
 
 namespace OneWare.Essentials.Models;
@@ -16,7 +14,7 @@ public enum MessageBoxButtonStyle
 {
     Primary,
     Secondary,
-    Danger,
+    Danger
 }
 
 public enum MessageBoxInputKind

@@ -1,13 +1,13 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using OneWare.Core.Models;
-using OneWare.Essentials.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
@@ -72,10 +72,7 @@ public class PluginService : IPluginService
 
             //We should not use that anymore, since it can break compatibility with code signed apps
             //We keep it for now except on MacOS
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                SetupNativeImports(realPath);
-            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
@@ -102,7 +99,6 @@ public class PluginService : IPluginService
     {
         var assemblies = new List<Assembly>();
         foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories))
-        {
             try
             {
                 assemblies.Add(Assembly.LoadFrom(file));
@@ -112,19 +108,13 @@ public class PluginService : IPluginService
                 ContainerLocator.Container?.Resolve<ILogger>()
                     .Warning($"Skipping plugin assembly '{Path.GetFileName(file)}': {ex.Message}", ex);
             }
-        }
 
         var added = new List<IOneWareModule>();
-        foreach (var assembly in assemblies)
-        {
-            added.AddRange(_moduleCatalog.AddModulesFromAssembly(assembly));
-        }
+        foreach (var assembly in assemblies) added.AddRange(_moduleCatalog.AddModulesFromAssembly(assembly));
 
         foreach (var module in added)
-        {
             ContainerLocator.Container?.Resolve<ILogger>()
                 .Log($"Module '{module.Id}' loaded");
-        }
 
         return added;
     }
@@ -152,46 +142,29 @@ public class PluginService : IPluginService
 
                     // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             libFileName);
-                    }
 
                     // Try 3: add lib infront of it
-                    if (!File.Exists(libPath))
-                    {
-                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
-                    }
+                    if (!File.Exists(libPath)) libPath = Path.Combine(pluginPath, $"lib{libFileName}");
 
                     // Try 4 : look in (plugin) runtimes folder with lib infront
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             $"lib{libFileName}");
-                    }
 
                     // Try 5: MacOS weirdness, look in (own) base folder
                     // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
-                    }
 
                     // Try 6: Same as 5 but added lib Prefix
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
-                    }
 
-                    if (NativeLibrary.TryLoad(libPath, out var customHandle))
-                    {
-                        return customHandle;
-                    }
+                    if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
 
-                    if (NativeLibrary.TryLoad(libraryName, out var handle))
-                    {
-                        return handle;
-                    }
+                    if (NativeLibrary.TryLoad(libraryName, out var handle)) return handle;
 
                     Console.WriteLine($"Loading native library {libraryName} failed");
                     return IntPtr.Zero;

@@ -1,5 +1,4 @@
-﻿using System;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.UniversalFpgaProjectSystem.Context;
 using OneWare.UniversalFpgaProjectSystem.Services;
 

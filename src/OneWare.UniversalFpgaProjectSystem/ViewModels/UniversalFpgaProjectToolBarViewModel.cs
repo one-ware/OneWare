@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -29,9 +29,9 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
         DownloaderConfigurationExtension =
             windowService.GetUiExtensions("UniversalFpgaToolBar_DownloaderConfigurationExtension");
-        
+
         CompileMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_CompileMenuExtension");
-        
+
         PinPlannerMenuExtension = windowService.GetUiExtensions("UniversalFpgaToolBar_PinPlannerMenuExtension");
 
         settingsService.Bind("UniversalFpgaProjectSystem_LongTermProgramming",
@@ -96,21 +96,21 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
 
         return (project, new FpgaModel(fpgaPackage.LoadFpga()));
     }
-    
+
     public async Task CompileAsync()
     {
-        if(EnsureProjectAndFpga() is not {project: not null, fpga: not null} data) return;
-        
+        if (EnsureProjectAndFpga() is not { project: not null, fpga: not null } data) return;
+
         await ProjectExplorerService.SaveOpenFilesForProjectAsync(data.project);
         await data.project.RunToolchainAsync(data.fpga);
     }
-    
+
     public async Task OpenPinPlannerAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
         {
             await ProjectExplorerService.SaveOpenFilesForProjectAsync(project);
-            
+
             await _windowService.ShowDialogAsync(new UniversalFpgaProjectPinPlannerView
             {
                 DataContext =
@@ -123,14 +123,14 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task OpenProjectSettingsAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot project)
-            await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
+            await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView
             {
                 DataContext =
                     ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((
                         typeof(UniversalFpgaProjectRoot), project))
             });
     }
-    
+
     public async Task DownloadAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)

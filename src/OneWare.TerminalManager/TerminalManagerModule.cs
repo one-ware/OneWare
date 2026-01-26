@@ -25,9 +25,9 @@ public class TerminalManagerModule : OneWareModuleBase
             {
                 Header = "Terminal",
                 Command = new RelayCommand(() =>
-                    serviceProvider.Resolve<IMainDockService>().Show(serviceProvider.Resolve<TerminalManagerViewModel>())),
+                    serviceProvider.Resolve<IMainDockService>()
+                        .Show(serviceProvider.Resolve<TerminalManagerViewModel>())),
                 IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
             });
     }
 }
-

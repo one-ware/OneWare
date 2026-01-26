@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Parser;
 
@@ -68,7 +68,7 @@ public static class FpgaSettingsParser
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
             var filteredSettings = settings
-                .Where(x => string.IsNullOrEmpty(x.Value) == false)
+                .Where(x => !string.IsNullOrEmpty(x.Value))
                 .ToDictionary(x => x.Key, x => x.Value);
 
             using var stream = File.OpenWrite(path);

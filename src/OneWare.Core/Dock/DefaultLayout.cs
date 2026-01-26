@@ -106,7 +106,7 @@ public static class DefaultLayout
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout,
             EnableGlobalDocking = false,
-            EnableAdaptiveGlobalDockTargets = false,
+            EnableAdaptiveGlobalDockTargets = false
         };
 
         return root;

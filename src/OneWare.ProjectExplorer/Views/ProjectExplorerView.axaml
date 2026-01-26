@@ -32,7 +32,7 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
-        <StyleInclude Source="ProjectExplorerTheme.axaml"></StyleInclude>
+        <StyleInclude Source="ProjectExplorerTheme.axaml" />
     </UserControl.Styles>
 
     <Grid>
@@ -50,10 +50,11 @@
         </Border>
 
         <projectExplorer:TreeDataGridCustom Grid.Row="1" CanUserSortColumns="False"
-                      ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                      CanUserResizeColumns="False"
-                      AutoDragDropRows="False"
-                      Source="{Binding Source}">
+                                            ShowColumnHeaders="False"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            CanUserResizeColumns="False"
+                                            AutoDragDropRows="False"
+                                            Source="{Binding Source}">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
@@ -115,8 +116,7 @@
                                                       Margin="4 0 0 0"
                                                       Text="{Binding Header, Mode=OneWay}"
                                                       RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                                                      Opacity="{Binding TextOpacity}">
-                            </controls:RenamingTextBox>
+                                                      Opacity="{Binding TextOpacity}" />
                         </DockPanel>
                     </DockPanel>
                 </DataTemplate>

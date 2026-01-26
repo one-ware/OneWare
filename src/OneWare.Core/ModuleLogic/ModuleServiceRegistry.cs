@@ -5,8 +5,8 @@ namespace OneWare.Core.ModuleLogic;
 public sealed class ModuleServiceRegistry
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
-    private readonly Dictionary<ServiceDescriptor, object?> _singletonCache = new();
     private readonly HashSet<Type> _registeredTypes = new();
+    private readonly Dictionary<ServiceDescriptor, object?> _singletonCache = new();
 
     public void AddDescriptors(IEnumerable<ServiceDescriptor> descriptors)
     {
@@ -19,10 +19,7 @@ public sealed class ModuleServiceRegistry
 
     public void AddServiceTypes(IEnumerable<ServiceDescriptor> descriptors)
     {
-        foreach (var descriptor in descriptors)
-        {
-            _registeredTypes.Add(descriptor.ServiceType);
-        }
+        foreach (var descriptor in descriptors) _registeredTypes.Add(descriptor.ServiceType);
     }
 
     public bool IsRegistered(Type serviceType)
@@ -48,9 +45,7 @@ public sealed class ModuleServiceRegistry
     public IEnumerable<object?> GetServices(Type serviceType, IServiceProvider provider)
     {
         foreach (var descriptor in _descriptors.Where(x => x.ServiceType == serviceType))
-        {
             yield return CreateService(descriptor, provider);
-        }
     }
 
     private object? CreateService(ServiceDescriptor descriptor, IServiceProvider provider)
@@ -62,10 +57,11 @@ public sealed class ModuleServiceRegistry
             _singletonCache.TryGetValue(descriptor, out var cached))
             return cached;
 
-        object? created = descriptor switch
+        var created = descriptor switch
         {
             { ImplementationFactory: not null } => descriptor.ImplementationFactory(provider),
-            { ImplementationType: not null } => ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType),
+            { ImplementationType: not null } => ActivatorUtilities.CreateInstance(provider,
+                descriptor.ImplementationType),
             _ => null
         };
 

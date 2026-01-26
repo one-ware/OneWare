@@ -21,9 +21,9 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 {
     public const string IconKey = "MaterialDesign.ErrorOutline";
 
-    private readonly IMainDockService _mainDockService;
-
     private readonly ObservableCollection<ErrorListItem> _items = new();
+
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
     private readonly ISettingsService _settingsService;
 
@@ -63,12 +63,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         };
 
         Observable.FromEventPattern<IFile>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(
-            x => { Clear(x.EventArgs); });
+            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(x => { Clear(x.EventArgs); });
 
         Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(
-            x => { Clear(x.EventArgs); });
+            nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(x => { Clear(x.EventArgs); });
 
         _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
             .Subscribe(x => ErrorListFilterMode = x);
@@ -198,14 +196,11 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     {
         var errors = _items.Where(x => x.Source == source).ToList();
         var files = errors.Select(x => x.File).Distinct();
-        
+
         ListEx.RemoveMany(_items, errors);
 
-        foreach (var file in files)
-        {
-            ErrorRefresh?.Invoke(this, file);
-        }
-        
+        foreach (var file in files) ErrorRefresh?.Invoke(this, file);
+
         RefreshCountToggle();
     }
 
@@ -285,9 +280,9 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     private bool FilterSearchString(ErrorListItem error)
     {
         if (string.IsNullOrWhiteSpace(SearchString)) return true;
-        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase) 
+        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
                || error.File.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
-               || (error.Root?.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false) 
+               || (error.Root?.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false)
                || (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 

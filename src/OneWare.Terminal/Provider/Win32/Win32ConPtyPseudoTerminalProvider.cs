@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -23,9 +22,9 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         SafeFileHandle? inputWrite = null;
         SafeFileHandle? outputRead = null;
         SafeFileHandle? outputWrite = null;
-        IntPtr pseudoConsole = IntPtr.Zero;
-        IntPtr attributeList = IntPtr.Zero;
-        IntPtr environmentBlock = IntPtr.Zero;
+        var pseudoConsole = IntPtr.Zero;
+        var attributeList = IntPtr.Zero;
+        var environmentBlock = IntPtr.Zero;
         var terminalCreated = false;
 
         try
@@ -57,10 +56,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 lpAttributeList = attributeList
             };
 
-            if (!string.IsNullOrWhiteSpace(environment))
-            {
-                environmentBlock = Marshal.StringToHGlobalUni(environment);
-            }
+            if (!string.IsNullOrWhiteSpace(environment)) environmentBlock = Marshal.StringToHGlobalUni(environment);
 
             var creationFlags = ConPtyNative.EXTENDED_STARTUPINFO_PRESENT |
                                 (environmentBlock != IntPtr.Zero ? ConPtyNative.CREATE_UNICODE_ENVIRONMENT : 0);
@@ -149,7 +145,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             throw new Win32Exception(Marshal.GetLastWin32Error());
 
         if (!ConPtyNative.UpdateProcThreadAttribute(attributeList, 0,
-                (IntPtr)ConPtyNative.PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, pseudoConsole, (IntPtr)IntPtr.Size,
+                ConPtyNative.PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, pseudoConsole, IntPtr.Size,
                 IntPtr.Zero, IntPtr.Zero))
             throw new Win32Exception(Marshal.GetLastWin32Error());
     }

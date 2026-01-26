@@ -12,9 +12,10 @@ public class CommandOnKeyPressedBehavior : CommandBasedBehavior
 
     public static readonly StyledProperty<bool> HandledEventsTooProperty =
         AvaloniaProperty.Register<CommandOnKeyPressedBehavior, bool>(nameof(HandledEventsToo));
-    
+
     public static readonly StyledProperty<RoutingStrategies> RoutesProperty =
-        AvaloniaProperty.Register<CommandOnKeyPressedBehavior, RoutingStrategies>(nameof(Routes), RoutingStrategies.Bubble);
+        AvaloniaProperty.Register<CommandOnKeyPressedBehavior, RoutingStrategies>(nameof(Routes),
+            RoutingStrategies.Bubble);
 
     public Key? TriggerKey
     {

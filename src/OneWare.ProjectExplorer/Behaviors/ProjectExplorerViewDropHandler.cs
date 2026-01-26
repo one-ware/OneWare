@@ -20,7 +20,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                    .ToArray()
                ?? Array.Empty<string>();
     }
- 
+
     private static bool IsSameFolderMove(
         IProjectFolder targetFolder,
         IEnumerable<string> sourcePaths)
@@ -41,14 +41,14 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         return sourcePaths.Any(src =>
         {
             var fullSrc = Path.GetFullPath(src);
-            
+
             if (File.Exists(fullSrc))
             {
                 var sourceDir = Path.GetDirectoryName(fullSrc);
                 return sourceDir != null &&
                        Normalize(sourceDir) == targetPath;
             }
-            
+
             if (Directory.Exists(fullSrc))
             {
                 var parentDir = Path.GetDirectoryName(
@@ -61,7 +61,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             return false;
         });
     }
-    
+
     private bool Validate<T>(
         TreeDataGrid treeView,
         DragEventArgs e,
@@ -86,7 +86,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
         var sourcePaths = GetLocalPaths(e);
         if (sourcePaths.Length == 0)
             return false;
-        
+
         if (e.DragEffects == DragDropEffects.Move &&
             IsSameFolderMove(targetFolder, sourcePaths))
             return false;
@@ -103,12 +103,12 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             case DragDropEffects.Move:
                 _ = vm.DropAsync(targetFolder, true, false, sourcePaths);
                 return true;
-            
+
             // Happens when a file is dragged from outside
             case DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link:
                 _ = vm.DropAsync(targetFolder, false, true, sourcePaths);
                 return true;
-            
+
             default:
                 return false;
         }

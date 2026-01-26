@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Media;
 using OneWare.Essentials.Models;
@@ -21,6 +20,7 @@ public class LoadingDummyNode : IProjectExplorerNode
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
     public ObservableCollection<IImage> IconOverlays { get; } = new();
     public ObservableCollection<IImage> RightIcons { get; } = new();
+
     public bool IsExpanded
     {
         get => _isExpanded;
@@ -31,6 +31,7 @@ public class LoadingDummyNode : IProjectExplorerNode
             OnPropertyChanged(nameof(IsExpanded));
         }
     }
+
     public IBrush Background
     {
         get => _background;
@@ -41,6 +42,7 @@ public class LoadingDummyNode : IProjectExplorerNode
             OnPropertyChanged(nameof(Background));
         }
     }
+
     public FontWeight FontWeight
     {
         get => _fontWeight;
@@ -51,6 +53,7 @@ public class LoadingDummyNode : IProjectExplorerNode
             OnPropertyChanged(nameof(FontWeight));
         }
     }
+
     public float TextOpacity
     {
         get => _textOpacity;

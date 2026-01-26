@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Avalonia.Platform;
+﻿using Avalonia.Platform;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars.Reader;
@@ -10,8 +9,8 @@ namespace OneWare.Core.Extensions.TextMate;
 
 public class CustomTextMateRegistryOptions : IAdvancedRegistryOptions
 {
-    private readonly RegistryOptions _defaultRegistryOptions = new(ThemeName.DarkPlus);
     private readonly List<TextMateLanguage> _availableLanguages = new();
+    private readonly RegistryOptions _defaultRegistryOptions = new(ThemeName.DarkPlus);
     private readonly Dictionary<string, string> _extensionLinks = new();
 
     public IRawGrammar GetGrammar(string scopeName)

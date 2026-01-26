@@ -1,5 +1,4 @@
-﻿using DynamicData.Binding;
-using OneWare.Essentials.Enums;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -7,7 +6,6 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vhdl.Parsing;
 using OneWare.Vhdl.Templates;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OneWare.Vhdl;
 
@@ -144,7 +142,7 @@ public class VhdlModule : OneWareModuleBase
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.83.0",
                 Targets =
@@ -177,7 +175,7 @@ public class VhdlModule : OneWareModuleBase
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "osx-arm64",
                         Url =
@@ -193,7 +191,7 @@ public class VhdlModule : OneWareModuleBase
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.85.0",
                 Targets =
@@ -226,7 +224,7 @@ public class VhdlModule : OneWareModuleBase
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "osx-arm64",
                         Url =
@@ -242,7 +240,7 @@ public class VhdlModule : OneWareModuleBase
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.86.0",
                 Targets =
@@ -275,7 +273,7 @@ public class VhdlModule : OneWareModuleBase
                             }
                         ]
                     },
-                    new PackageTarget()
+                    new PackageTarget
                     {
                         Target = "osx-arm64",
                         Url =
@@ -301,18 +299,18 @@ public class VhdlModule : OneWareModuleBase
     public override void Initialize(IServiceProvider serviceProvider)
     {
         var fpgaService = serviceProvider.Resolve<FpgaService>();
-        
+
         fpgaService.RegisterLanguage("VHDL", SupportedExtensions);
-        
+
         var settingsService = serviceProvider.Resolve<ISettingsService>();
-        
+
         serviceProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
 
         settingsService.RegisterSetting("Languages", "VHDL", LspPathSetting,
             new FilePathSetting("RustHDL Path", "", "",
                 serviceProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile)
             {
-                HoverDescription = "Path to the RustHDL Language Server executable.",
+                HoverDescription = "Path to the RustHDL Language Server executable."
             }
         );
 
@@ -320,15 +318,12 @@ public class VhdlModule : OneWareModuleBase
             .RegisterSetting("Languages", "VHDL", EnableSnippetsSetting, new CheckBoxSetting("Enable Snippets", true)
             {
                 MarkdownDocumentation =
-                    "Enable snippets that provide rich completion. These are not smart or context based.",
+                    "Enable snippets that provide rich completion. These are not smart or context based."
             });
 
         var nodeProviderComboSetting =
-            new ComboBoxSetting("Node Provider", VhdlNodeProvider.NodeProviderKey, [VhdlNodeProvider.NodeProviderKey])
-            {
+            new ComboBoxSetting("Node Provider", VhdlNodeProvider.NodeProviderKey, [VhdlNodeProvider.NodeProviderKey]);
 
-            };
-        
         serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         serviceProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
             "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", SupportedExtensions);

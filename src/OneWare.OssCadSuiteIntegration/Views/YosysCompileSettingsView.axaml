@@ -14,7 +14,7 @@
                          x:DataType="viewModels:YosysCompileSettingsViewModel">
     <Interaction.Behaviors>
         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding Save}"
-                                          CommandParameter="{Binding #YosysCompileSettingsViewView}" />
+                                               CommandParameter="{Binding #YosysCompileSettingsViewView}" />
     </Interaction.Behaviors>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"

@@ -1,8 +1,8 @@
-﻿using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vhdl.Templates;
 

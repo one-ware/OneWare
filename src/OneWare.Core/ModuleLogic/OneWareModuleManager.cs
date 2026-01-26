@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using OneWare.Essentials.Services;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ModuleLogic;
 
@@ -10,12 +10,12 @@ public sealed class OneWareModuleManager
     private readonly HashSet<string> _initialized = new(StringComparer.OrdinalIgnoreCase);
     private ILogger? _logger;
 
-    public bool InitializationCompleted { get; private set; }
-
     public OneWareModuleManager(OneWareModuleCatalog catalog)
     {
         _catalog = catalog;
     }
+
+    public bool InitializationCompleted { get; private set; }
 
     public void SetLogger(ILogger logger)
     {
@@ -25,7 +25,6 @@ public sealed class OneWareModuleManager
     public void RegisterModuleServices(IServiceCollection services, IEnumerable<IOneWareModule>? modules = null)
     {
         foreach (var module in GetInitializationOrder(modules))
-        {
             try
             {
                 module.RegisterServices(services);
@@ -34,7 +33,6 @@ public sealed class OneWareModuleManager
             {
                 _logger?.Error($"Registering services for module '{module.Id}' failed: {ex.Message}", ex);
             }
-        }
     }
 
     public void InitializeModules(IServiceProvider provider, IEnumerable<IOneWareModule>? modules = null)
@@ -77,31 +75,26 @@ public sealed class OneWareModuleManager
         var edges = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         var indegree = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var module in moduleList)
-        {
-            indegree.TryAdd(module.Id, 0);
-        }
+        foreach (var module in moduleList) indegree.TryAdd(module.Id, 0);
 
         foreach (var module in moduleList)
+        foreach (var dependency in module.Dependencies ?? [])
         {
-            foreach (var dependency in module.Dependencies ?? [])
+            if (!moduleById.ContainsKey(dependency))
             {
-                if (!moduleById.ContainsKey(dependency))
-                {
-                    if (!catalogById.ContainsKey(dependency))
-                        _logger?.Warning($"Module '{module.Id}' depends on missing module '{dependency}'.");
-                    continue;
-                }
-
-                if (!edges.TryGetValue(dependency, out var list))
-                {
-                    list = new List<string>();
-                    edges[dependency] = list;
-                }
-
-                list.Add(module.Id);
-                indegree[module.Id] = indegree.GetValueOrDefault(module.Id) + 1;
+                if (!catalogById.ContainsKey(dependency))
+                    _logger?.Warning($"Module '{module.Id}' depends on missing module '{dependency}'.");
+                continue;
             }
+
+            if (!edges.TryGetValue(dependency, out var list))
+            {
+                list = new List<string>();
+                edges[dependency] = list;
+            }
+
+            list.Add(module.Id);
+            indegree[module.Id] = indegree.GetValueOrDefault(module.Id) + 1;
         }
 
         var queue = new Queue<string>(moduleList.Where(m => indegree[m.Id] == 0).Select(m => m.Id));

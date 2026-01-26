@@ -45,12 +45,10 @@ public class ApplicationCommandService : IApplicationCommandService
         var commands = ApplicationCommands.Where(x => x.ActiveGesture?.Equals(gesture) ?? false);
 
         foreach (var command in commands)
-        {
             if (command.Execute(logical))
             {
                 args.Handled = true;
                 return;
             }
-        }
     }
 }

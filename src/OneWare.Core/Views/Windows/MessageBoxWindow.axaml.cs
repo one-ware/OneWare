@@ -6,8 +6,8 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using OneWare.Core.ViewModels.Windows;
-using OneWare.Essentials.Converters;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Converters;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 
@@ -52,17 +52,13 @@ public partial class MessageBoxWindow : FlexibleWindow
             vm.AttachWindow(this);
 
             if (vm.ShowInput)
-            {
                 Dispatcher.UIThread.Post(() =>
                 {
                     InputBox.SelectAll();
                     InputBox.Focus();
                 });
-            }
             else
-            {
                 Dispatcher.UIThread.Post(() => Focus());
-            }
         };
 
         Closed += (_, _) =>
@@ -227,7 +223,7 @@ public partial class MessageBoxWindow : FlexibleWindow
         {
             Text = "Cancel",
             Role = MessageBoxButtonRole.Cancel,
-            Style = MessageBoxButtonStyle.Secondary,
+            Style = MessageBoxButtonStyle.Secondary
         };
     }
 
@@ -238,7 +234,7 @@ public partial class MessageBoxWindow : FlexibleWindow
             Text = "Ok",
             Role = MessageBoxButtonRole.Yes,
             Style = MessageBoxButtonStyle.Primary,
-            IsDefault = true,
+            IsDefault = true
         };
     }
 }

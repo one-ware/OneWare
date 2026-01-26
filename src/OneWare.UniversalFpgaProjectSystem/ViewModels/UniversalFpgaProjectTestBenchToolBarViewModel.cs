@@ -21,7 +21,8 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 
     private TestBenchContext? _testBenchContext;
 
-    public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IMainDockService mainDockService, FpgaService fpgaService)
+    public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IMainDockService mainDockService,
+        FpgaService fpgaService)
     {
         File = file;
         _mainDockService = mainDockService;

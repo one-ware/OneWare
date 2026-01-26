@@ -15,16 +15,18 @@ public class OneWareCloudCurrentAccountService : ObservableObject
 {
     private readonly OneWareCloudAccountSetting _accountSetting;
     private readonly OneWareCloudLoginService _loginService;
-    
-    public OneWareCloudCurrentAccountService(OneWareCloudAccountSetting accountSetting, OneWareCloudLoginService loginService, OneWareCloudNotificationService notificationService)
+
+    public OneWareCloudCurrentAccountService(OneWareCloudAccountSetting accountSetting,
+        OneWareCloudLoginService loginService, OneWareCloudNotificationService notificationService)
     {
         _accountSetting = accountSetting;
         _loginService = loginService;
 
         accountSetting.WhenValueChanged(x => x.Value)
             .Subscribe(x => _ = ResolveAsync());
-        
-        Observable.FromEventPattern<HubConnectionState>(notificationService, nameof(notificationService.ConnectionStateChanged))
+
+        Observable.FromEventPattern<HubConnectionState>(notificationService,
+                nameof(notificationService.ConnectionStateChanged))
             .Subscribe(x =>
             {
                 if (notificationService.ConnectionState == HubConnectionState.Connected)
@@ -37,10 +39,10 @@ public class OneWareCloudCurrentAccountService : ObservableObject
                     IsConnected = false;
                 }
             });
-        
+
         SubscribeToHub(notificationService);
     }
-    
+
     public bool IsConnected
     {
         get;
@@ -54,14 +56,14 @@ public class OneWareCloudCurrentAccountService : ObservableObject
     }
 
     public string MonthlyIncludedCreditsValue =>
-        $"{((CurrentUser?.UserPlan.IncludedMonthlyCredits) - CurrentBalance?.IncludedMonthlyCreditsUsed ?? 0)}";
-    
+        $"{CurrentUser?.UserPlan.IncludedMonthlyCredits - CurrentBalance?.IncludedMonthlyCreditsUsed ?? 0}";
+
     public CurrentUserDto? CurrentUser
     {
         get;
         set => SetProperty(ref field, value);
     }
-    
+
     public string? UserId => _accountSetting.Value.ToString();
 
     private async Task ResolveAsync()
@@ -78,20 +80,18 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             var (jwt, status) = await _loginService.GetJwtTokenAsync(UserId);
 
             if (jwt == null)
-            {
                 if (status == HttpStatusCode.Unauthorized)
                 {
                     _loginService.Logout(UserId);
                     _accountSetting.Value = string.Empty;
                     return;
                 }
-            }
 
             var request = new RestRequest("/api/users/current");
             request.AddHeader("Authorization", $"Bearer {jwt}");
 
             var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
-            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions()
+            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
@@ -101,13 +101,11 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             await UpdateBalanceAsync();
 
             await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
-            
+
             var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-            
+
             if (CurrentUser?.AvatarUrl != null)
-            {
                 _accountSetting.Image = await httpService.DownloadImageAsync(CurrentUser.AvatarUrl);
-            }
         }
         catch (Exception e)
         {
@@ -122,17 +120,15 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         request.AddHeader("Authorization", $"Bearer {jwt}");
 
         var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
-        CurrentBalance = JsonSerializer.Deserialize<UserBalanceDto>(response.Content!, new JsonSerializerOptions()
+        CurrentBalance = JsonSerializer.Deserialize<UserBalanceDto>(response.Content!, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         })!;
     }
-    
+
     private void SubscribeToHub(OneWareCloudNotificationService service)
     {
-        service.SubscribeToHubMethod<UserBalanceDto>("Balance_Updated", creditBalance =>
-        {
-            CurrentBalance = creditBalance;
-        });
+        service.SubscribeToHubMethod<UserBalanceDto>("Balance_Updated",
+            creditBalance => { CurrentBalance = creditBalance; });
     }
 }

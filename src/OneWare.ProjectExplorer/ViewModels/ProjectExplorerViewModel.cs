@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -14,25 +14,24 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.ProjectExplorer.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
 public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerService
 {
     public const string IconKey = "EvaIcons.FolderOutline";
-    private readonly IMainDockService _mainDockService;
     private readonly IFileWatchService _fileWatchService;
     private readonly ILanguageManager _languageManager;
 
     private readonly string _lastProjectsFile;
-    private readonly string _recentProjectsFile;
+    private readonly IMainDockService _mainDockService;
 
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManagerService;
 
     private readonly LinkedList<string> _recentProjects = new();
     private readonly int _recentProjectsCapacity = 4;
+    private readonly string _recentProjectsFile;
 
     private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
         new();
@@ -63,7 +62,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         Id = "ProjectExplorer";
         Title = "Project Explorer";
-        
+
         ApplicationStateService.RegisterShutdownTask(ShutdownAsync);
     }
 
@@ -131,10 +130,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         try
         {
             using var stream = File.OpenRead(_recentProjectsFile);
-            string[] recentFiles = JsonSerializer.Deserialize<string[]>(stream) ?? [];
-            for (int i = 0; i < Math.Min(_recentProjectsCapacity, recentFiles.Length); i++)
+            var recentFiles = JsonSerializer.Deserialize<string[]>(stream) ?? [];
+            for (var i = 0; i < Math.Min(_recentProjectsCapacity, recentFiles.Length); i++)
             {
-                string path = recentFiles[i];
+                var path = recentFiles[i];
                 if (!File.Exists(path) && !Directory.Exists(path))
                     continue;
 
@@ -350,7 +349,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task OpenFileDialogAsync()
     {
-        var file = await StorageProviderHelper.SelectFileAsync(_mainDockService.GetWindowOwner(this)!, "Select File", null);
+        var file = await StorageProviderHelper.SelectFileAsync(_mainDockService.GetWindowOwner(this)!, "Select File",
+            null);
 
         if (file != null) await _mainDockService.OpenFileAsync(GetTemporaryFile(file));
     }
@@ -484,7 +484,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var message = string.Empty;
 
         if (entries.Length == 1)
-        {
             message = entries[0] switch
             {
                 IProjectRoot =>
@@ -493,11 +492,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 IProjectFile => $"Are you sure you want to delete {entries[0].Header} permanently?",
                 _ => message
             };
-        }
         else
-        {
             message = $"Are you sure you want to delete {entries.Length} objects permanently?";
-        }
 
         var result = await _windowService.ShowYesNoAsync("Warning", message, MessageBoxIcon.Warning,
             _mainDockService.GetWindowOwner(this));
@@ -579,7 +575,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         foreach (var path in paths)
         {
             if (!copy && path == destination.FullPath) continue;
-            
+
             try
             {
                 var attr = File.GetAttributes(path);
@@ -691,14 +687,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             var refreshedFiles = new List<IProjectFile>();
 
             foreach (var openFile in filesOpenInProject)
-            {
                 if (proj.SearchRelativePath(openFile.File.RelativePath) is IProjectFile newFile)
                 {
                     _mainDockService.OpenFiles.Remove(openFile.File);
                     _mainDockService.OpenFiles.Add(newFile, openFile.ViewModel);
                     refreshedFiles.Add(newFile);
                 }
-            }
 
             var expanded = root.IsExpanded;
             var active = root.IsActive;
@@ -707,12 +701,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             //Re-initialize the files that didn't get removed after swapping project
             foreach (var refreshed in refreshedFiles)
-            {
                 if (_mainDockService.OpenFiles.TryGetValue(refreshed, out var vm))
-                {
                     vm.InitializeContent();
-                }
-            }
 
             if (active) ActiveProject = proj;
 
@@ -878,7 +868,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (SelectedItems.Count == 0 || SelectedItems.Any(x => x is not IProjectEntry)) return Task.CompletedTask;
 
-        return this.DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
+        return DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray());
     }
 
     #endregion
@@ -891,7 +881,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         await SaveLastProjectsFileAsync();
         return true;
     }
-    
+
     public async Task SaveRecentProjectsFileAsync()
     {
         if (PlatformHelper.Platform is PlatformId.Wasm)

@@ -3,10 +3,8 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
-using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Context;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -42,7 +40,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public async Task<bool> SimulateAsync(IFile file)
     {
-        if (file is IProjectFile {Root: UniversalFpgaProjectRoot root } projectFile)
+        if (file is IProjectFile { Root: UniversalFpgaProjectRoot root } projectFile)
         {
             var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
                 Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
@@ -75,7 +73,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             {
                 var vcdFileRelativePath = match.Groups[1].Value;
                 var vcdFileFullPath = Path.Combine(projectFile.Root!.FullPath, vcdFileRelativePath);
-                
+
                 var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 

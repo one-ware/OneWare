@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -117,10 +116,7 @@ public partial class MainWindow : AdvancedWindow
                     Gesture = mi.InputGesture
                 };
 
-                if (mi.Icon is IObservable<Bitmap> btm)
-                {
-                    nmi.Bind(NativeMenuItem.IconProperty, btm);
-                }
+                if (mi.Icon is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
 
                 nmi.Bind(NativeMenuItem.CommandProperty, mi.WhenValueChanged(x => x.Command));
                 nmi.Bind(NativeMenuItem.IsEnabledProperty, mi.WhenValueChanged(x => x.IsEnabled));

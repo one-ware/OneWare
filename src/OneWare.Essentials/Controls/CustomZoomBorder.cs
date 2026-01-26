@@ -1,10 +1,8 @@
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 namespace OneWare.Essentials.Controls;
@@ -13,11 +11,11 @@ public class CustomZoomBorder : ZoomBorder
 {
     private const int KeyPanSpeed = 5;
 
-    protected override Type StyleKeyOverride => typeof(ZoomBorder);
+    private readonly List<Key> _keysDown = [];
 
     private CompositeDisposable _disposables = new();
 
-    private readonly List<Key> _keysDown = [];
+    protected override Type StyleKeyOverride => typeof(ZoomBorder);
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -37,16 +35,14 @@ public class CustomZoomBorder : ZoomBorder
                 return true;
             }, TimeSpan.FromMilliseconds(10))
             .DisposeWith(_disposables);
-        
+
         KeyDownEvent.AddClassHandler<TopLevel>((sender, args) =>
         {
-            if(IsPointerOver) _keysDown.Add(args.Key);
+            if (IsPointerOver) _keysDown.Add(args.Key);
         }, handledEventsToo: true).DisposeWith(_disposables);
-        
-        KeyUpEvent.AddClassHandler<TopLevel>((sender, args) =>
-        {
-            _keysDown.RemoveAll(x => x == args.Key);
-        }, handledEventsToo: true).DisposeWith(_disposables);
+
+        KeyUpEvent.AddClassHandler<TopLevel>((sender, args) => { _keysDown.RemoveAll(x => x == args.Key); },
+            handledEventsToo: true).DisposeWith(_disposables);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

@@ -5,10 +5,10 @@
 /// </summary>
 public class StreamReaderHelper : IDisposable
 {
+    private readonly CancellationTokenSource _cancellationSource = new();
     private readonly AutoResetEvent _getInput, _gotInput;
     private readonly StreamReader _outputReader;
     private string? _input;
-    private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
     public StreamReaderHelper(StreamReader output)
     {
@@ -22,6 +22,14 @@ public class StreamReaderHelper : IDisposable
         _outputReader = output;
     }
 
+    public void Dispose()
+    {
+        _getInput.Dispose();
+        _gotInput.Dispose();
+        _outputReader.Dispose();
+        _cancellationSource?.Dispose();
+    }
+
     private void Reader()
     {
         while (!_cancellationSource.IsCancellationRequested)
@@ -31,28 +39,20 @@ public class StreamReaderHelper : IDisposable
             _gotInput.Set();
         }
     }
-    
+
     public string? ReadLine(int timeout = Timeout.Infinite, CancellationToken cancellationToken = default)
     {
-   
-        var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationSource.Token).Token;
+        var combinedToken = CancellationTokenSource
+            .CreateLinkedTokenSource(cancellationToken, _cancellationSource.Token).Token;
 
         _getInput.Set();
 
-        var waitHandles = new WaitHandle[] { _gotInput, combinedToken.WaitHandle };
+        var waitHandles = new[] { _gotInput, combinedToken.WaitHandle };
 
         var index = WaitHandle.WaitAny(waitHandles, timeout);
 
         _cancellationSource.Cancel();
-        
-        return index == 0 ? _input : null; // Timeout
-    }
 
-    public void Dispose()
-    {
-        _getInput.Dispose();
-        _gotInput.Dispose();
-        _outputReader.Dispose();
-        _cancellationSource?.Dispose();
+        return index == 0 ? _input : null; // Timeout
     }
 }

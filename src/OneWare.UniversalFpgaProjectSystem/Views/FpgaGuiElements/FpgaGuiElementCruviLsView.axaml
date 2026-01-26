@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.UniversalFpgaProjectSystem.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementCruviLsView"
@@ -19,30 +18,31 @@
     <Panel>
         <Menu Classes="BindMenu">
             <MenuItem Padding="0"
-                      Classes="RootMenuItem" 
+                      Classes="RootMenuItem"
                       ItemsSource="{Binding InterfaceModel.InterfaceMenu, FallbackValue={x:Null}}">
                 <MenuItem.Header>
                     <Panel DragDrop.AllowDrop="True">
                         <Interaction.Behaviors>
-                            <ContextDropBehavior Context="{Binding InterfaceModel}" Handler="{StaticResource ExtensionDropHandler}"/>
+                            <ContextDropBehavior Context="{Binding InterfaceModel}"
+                                                 Handler="{StaticResource ExtensionDropHandler}" />
                         </Interaction.Behaviors>
-                        
-                        <Border Classes="ConnectorBorder" Height="20" Width="50"/>
+
+                        <Border Classes="ConnectorBorder" Height="20" Width="50" />
                         <TextBlock Text="CRUVI LS" Foreground="White" FontSize="9" VerticalAlignment="Center"
-                                   TextAlignment="Center" Width="50" HorizontalAlignment="Center"/>
+                                   TextAlignment="Center" Width="50" HorizontalAlignment="Center" />
                     </Panel>
                 </MenuItem.Header>
                 <MenuItem.Styles>
                     <Style Selector="MenuItem.RootMenuItem /template/ Border#root">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
                     </Style>
                     <Style Selector="MenuItem.RootMenuItem:pointerover /template/ Border#root">
-                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Background" Value="Transparent" />
                     </Style>
                     <Style Selector="MenuItem.RootMenuItem Border.ConnectorBorder">
                         <Setter Property="Background" Value="#202020" />
-                        <Setter Property="CornerRadius" Value="0"/>
+                        <Setter Property="CornerRadius" Value="0" />
                     </Style>
                     <Style Selector="MenuItem.RootMenuItem:pointerover Border.ConnectorBorder">
                         <Setter Property="Background" Value="#505050" />
@@ -53,7 +53,8 @@
         <Border
             IsVisible="{Binding InterfaceModel.ConnectedExtensionViewModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
             VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ContentControl ClipToBounds="False" Content="{Binding InterfaceModel.ConnectedExtensionViewModel, FallbackValue={x:Null}}" />
+            <ContentControl ClipToBounds="False"
+                            Content="{Binding InterfaceModel.ConnectedExtensionViewModel, FallbackValue={x:Null}}" />
         </Border>
     </Panel>
 </UserControl>

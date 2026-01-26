@@ -94,7 +94,7 @@ public class ResultData : IEnumerable
         var rd = ob as ResultData;
         if (rd != null && rd._isArrayProperty)
             return rd._array ?? Array.Empty<object?>();
-        return new object?[] { ob };
+        return new[] { ob };
     }
 
     protected void ReadResults(string str, int pos)

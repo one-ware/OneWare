@@ -9,8 +9,8 @@ using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
-using Dock.Settings;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
@@ -20,7 +20,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
@@ -43,13 +42,14 @@ public class MainDockService : Factory, IMainDockService
 
     private RootDock? _layout;
 
-    public MainDockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService, WelcomeScreenViewModel welcomeScreenViewModel,
+    public MainDockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
+        WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
-        
+
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
@@ -59,27 +59,26 @@ public class MainDockService : Factory, IMainDockService
                 Command = new RelayCommand(ResetLayout)
             }
         );
-        
+
         applicationStateService.RegisterShutdownTask(async () =>
         {
             var unsavedFiles = new List<IExtendedDocument>();
-            
+
             foreach (var tab in OpenFiles)
                 if (tab.Value is { IsDirty: true } evm)
                     unsavedFiles.Add(evm);
-            
-            var shutdownReady = await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles, ContainerLocator.Container.Resolve<MainWindow>());
+
+            var shutdownReady =
+                await WindowHelper.HandleUnsavedFilesAsync(unsavedFiles,
+                    ContainerLocator.Container.Resolve<MainWindow>());
 
             if (shutdownReady)
             {
                 SaveLayout();
 
-                foreach (var tab in OpenFiles.Values.OfType<ExtendedDocument>())
-                {
-                    tab.IsDirty = false;
-                }
+                foreach (var tab in OpenFiles.Values.OfType<ExtendedDocument>()) tab.IsDirty = false;
             }
-            
+
             return shutdownReady;
         });
     }
@@ -120,7 +119,7 @@ public class MainDockService : Factory, IMainDockService
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
     }
 
-    public void RegisterFileOpenOverwrite(Func<IFile,bool> action, params string[] extensions)
+    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions)
     {
         foreach (var extension in extensions) _fileOpenOverwrites.TryAdd(extension, action);
     }
@@ -134,12 +133,11 @@ public class MainDockService : Factory, IMainDockService
     public async Task<IExtendedDocument?> OpenFileAsync(IFile pf)
     {
         if (_fileOpenOverwrites.TryGetValue(pf.Extension, out var overwrite))
-        {
             // If overwrite executes successfully, return null
             // This means that the file is open in an external program
-            if(overwrite.Invoke(pf)) return null;
-        }
-        
+            if (overwrite.Invoke(pf))
+                return null;
+
         if (OpenFiles.ContainsKey(pf))
         {
             Show(OpenFiles[pf]);
@@ -267,11 +265,8 @@ public class MainDockService : Factory, IMainDockService
 
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
     {
-        if (IsDockablePinned(dockable))
-        {
-            UnpinDockable(dockable);
-        }
-        
+        if (IsDockablePinned(dockable)) UnpinDockable(dockable);
+
         //Check if dockable already exists
         if (SearchView(dockable) is { } result)
         {
@@ -377,9 +372,9 @@ public class MainDockService : Factory, IMainDockService
     public void InitializeContent()
     {
         var extendedDocs = SearchView<IWaitForContent>();
-        foreach (var extendedDocument in extendedDocs) 
+        foreach (var extendedDocument in extendedDocs)
             extendedDocument.InitializeContent();
-        
+
         //the current document won't be set during initialization because the 
         //focus event does not necessarily get triggered
         CurrentDocument = _mainDocumentDockViewModel.ActiveDockable as IExtendedDocument;

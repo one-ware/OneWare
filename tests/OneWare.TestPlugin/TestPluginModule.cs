@@ -18,12 +18,10 @@ public class TestPluginModule : OneWareModuleBase
         serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((selected, menuItems) =>
         {
             if (selected is [IProjectFile])
-            {
                 menuItems.Add(new MenuItemViewModel("Hello World")
                 {
-                    Header = $"Hello World"
+                    Header = "Hello World"
                 });
-            }
         });
     }
 }

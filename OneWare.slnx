@@ -1,130 +1,130 @@
 <Solution>
-  <Folder Name="/build/" />
-  <Folder Name="/build/actions/">
-    <File Path=".github/workflows/publish-nuget.yml" />
-    <File Path=".github/workflows/publish-studio-all.yml" />
-    <File Path=".github/workflows/publish-studio-linux-flathub.yml" />
-    <File Path=".github/workflows/publish-studio-linux-snap.yml" />
-    <File Path=".github/workflows/publish-studio-linux.yaml" />
-    <File Path=".github/workflows/publish-studio-macos.yml" />
-    <File Path=".github/workflows/publish-studio-web.yml" />
-    <File Path=".github/workflows/publish-studio-windows.yml" />
-    <File Path=".github/workflows/publish-studio-winget.yml" />
-    <File Path=".github/workflows/snapcraft.yml" />
-    <File Path=".github/workflows/test.yml" />
-  </Folder>
-  <Folder Name="/build/props/">
-    <File Path="build/props/Asmichi.ChildProcess.props" />
-    <File Path="build/props/Avalonia.Browser.props" />
-    <File Path="build/props/Avalonia.Controls.ColorPicker.props" />
-    <File Path="build/props/Avalonia.Controls.DataGrid.props" />
-    <File Path="build/props/Avalonia.Desktop.props" />
-    <File Path="build/props/Avalonia.Diagnostics.props" />
-    <File Path="build/props/Avalonia.Fonts.Inter.props" />
-    <File Path="build/props/Avalonia.props" />
-    <File Path="build/props/ReactiveUI.Avalonia.props" />
-    <File Path="build/props/Avalonia.Themes.Simple.props" />
-    <File Path="build/props/AvaloniaEdit.props" />
-    <File Path="build/props/AvaloniaEdit.TextMate.props" />
-    <File Path="build/props/Base.props" />
-    <File Path="build/props/CommunityToolkit.Mvvm.props" />
-    <File Path="build/props/Devlooped.CredentialManager.props" />
-    <File Path="build/props/Dock.Avalonia.props" />
-    <File Path="build/props/DynamicData.props" />
-    <File Path="build/props/Jint.props" />
-    <File Path="build/props/Markdown.Avalonia.props" />
-    <File Path="build/props/MsBuildUncompressTask.props" />
-    <File Path="build/props/NodeEditorAvalonia.props" />
-    <File Path="build/props/OmniSharp.Extensions.Language.props" />
-    <File Path="build/props/OneWare.Module.props" />
-    <File Path="build/props/PanAndZoom.props" />
-    <File Path="build/props/RestSharp.props" />
-    <File Path="build/props/SharpCompress.props" />
-    <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
-    <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
-    <File Path="build/props/XUnit.props" />
-    <File Path="build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props" />
-    <File Path="build\props\Microsoft.Extensions.DependencyInjection.props" />
-    <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props" />
-    <File Path="build\props\Microsoft.Extensions.Logging.props" />
-    <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
-    <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
-    <File Path="build\props\OpenCvSharp4.props" />
-    <File Path="build\props\OpenCvSharp4.runtime.props" />
-    <File Path="build\props\LiveChartsCore.SkiaSharpView.Avalonia.props" />
-  </Folder>
-  <Folder Name="/Coremodules/">
-    <Project Path="src/OneWare.ApplicationCommands/OneWare.ApplicationCommands.csproj" />
-    <Project Path="src/OneWare.Debugger/OneWare.Debugger.csproj" />
-    <Project Path="src/OneWare.ErrorList/OneWare.ErrorList.csproj" />
-    <Project Path="src/OneWare.LibraryExplorer/OneWare.LibraryExplorer.csproj" />
-    <Project Path="src/OneWare.Output/OneWare.Output.csproj" />
-    <Project Path="src/OneWare.ProjectExplorer/OneWare.ProjectExplorer.csproj" />
-    <Project Path="src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj" />
-    <Project Path="src/OneWare.SearchList/OneWare.SearchList.csproj" />
-    <Project Path="src/OneWare.Settings/OneWare.Settings.csproj" />
-    <Project Path="src/OneWare.SourceControl/OneWare.SourceControl.csproj" />
-    <Project Path="src/OneWare.Updater/OneWare.Updater.csproj" />
-    <Project Path="src/OneWare.ToolEngine/OneWare.ToolEngine.csproj" />
-  </Folder>
-  <Folder Name="/Coremodules/Terminal/">
-    <Project Path="src/OneWare.Terminal/OneWare.Terminal.csproj" />
-    <Project Path="src/OneWare.TerminalManager/OneWare.TerminalManager.csproj" />
-    <Project Path="src/VtNetCore.Avalonia/VtNetCore.Avalonia/VtNetCore.Avalonia.csproj" />
-    <Project Path="src/VtNetCore.Avalonia/VtNetCore/VtNetCore/VtNetCore.csproj" />
-  </Folder>
-  <Folder Name="/Demo/">
-    <Project Path="demo/OneWare.Demo.Desktop/OneWare.Demo.Desktop.csproj" />
-    <Project Path="demo/OneWare.Demo/OneWare.Demo.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/">
-    <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
-    <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
-    <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/FpgaSupport/">
-    <Project Path="src/OneWare.SerialMonitor/OneWare.SerialMonitor.csproj" />
-    <Project Path="src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/FpgaSupport/Hardware/">
-    <Project Path="src/OneWare.Cyc5000/OneWare.Cyc5000.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/FpgaSupport/Hardware/Extensions/">
-    <Project Path="src/OneWare.CruviAdapterExtensions/OneWare.CruviAdapterExtensions.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/FpgaSupport/Integrations/">
-    <Project Path="src/OneWare.OssCadSuiteIntegration/OneWare.OssCadSuiteIntegration.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/LanguageSupport/">
-    <Project Path="src/OneWare.Cpp/OneWare.Cpp.csproj" />
-    <Project Path="src/OneWare.Json/OneWare.Json.csproj" />
-    <Project Path="src/OneWare.Python/OneWare.Python.csproj" />
-    <Project Path="src/OneWare.Toml/OneWare.Toml.csproj" />
-    <Project Path="src/OneWare.Verilog/OneWare.Verilog.csproj" />
-    <Project Path="src/OneWare.Vhdl/OneWare.Vhdl.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/ProjectSystem/">
-    <Project Path="src/OneWare.FolderProjectSystem/OneWare.FolderProjectSystem.csproj" />
-  </Folder>
-  <Folder Name="/Extensions/Wave/">
-    <Project Path="src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj" />
-    <Project Path="src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj" />
-    <Project Path="src/OneWare.WaveFormViewer/OneWare.WaveFormViewer.csproj" />
-  </Folder>
-  <Folder Name="/Studio/">
-    <Project Path="studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj" />
-    <Project Path="studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj" />
-    <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
-    <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
-    <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
-    <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
-    <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj" />
-    <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />
-    <Project Path="tests/OneWare.WaveFormViewer.Tests/OneWare.WaveFormViewer.Tests.csproj" />
-  </Folder>
-  <Project Path="src/OneWare.Core/OneWare.Core.csproj" />
-  <Project Path="src/OneWare.Essentials/OneWare.Essentials.csproj" />
+    <Folder Name="/build/"/>
+    <Folder Name="/build/actions/">
+        <File Path=".github/workflows/publish-nuget.yml"/>
+        <File Path=".github/workflows/publish-studio-all.yml"/>
+        <File Path=".github/workflows/publish-studio-linux-flathub.yml"/>
+        <File Path=".github/workflows/publish-studio-linux-snap.yml"/>
+        <File Path=".github/workflows/publish-studio-linux.yaml"/>
+        <File Path=".github/workflows/publish-studio-macos.yml"/>
+        <File Path=".github/workflows/publish-studio-web.yml"/>
+        <File Path=".github/workflows/publish-studio-windows.yml"/>
+        <File Path=".github/workflows/publish-studio-winget.yml"/>
+        <File Path=".github/workflows/snapcraft.yml"/>
+        <File Path=".github/workflows/test.yml"/>
+    </Folder>
+    <Folder Name="/build/props/">
+        <File Path="build/props/Asmichi.ChildProcess.props"/>
+        <File Path="build/props/Avalonia.Browser.props"/>
+        <File Path="build/props/Avalonia.Controls.ColorPicker.props"/>
+        <File Path="build/props/Avalonia.Controls.DataGrid.props"/>
+        <File Path="build/props/Avalonia.Desktop.props"/>
+        <File Path="build/props/Avalonia.Diagnostics.props"/>
+        <File Path="build/props/Avalonia.Fonts.Inter.props"/>
+        <File Path="build/props/Avalonia.props"/>
+        <File Path="build/props/ReactiveUI.Avalonia.props"/>
+        <File Path="build/props/Avalonia.Themes.Simple.props"/>
+        <File Path="build/props/AvaloniaEdit.props"/>
+        <File Path="build/props/AvaloniaEdit.TextMate.props"/>
+        <File Path="build/props/Base.props"/>
+        <File Path="build/props/CommunityToolkit.Mvvm.props"/>
+        <File Path="build/props/Devlooped.CredentialManager.props"/>
+        <File Path="build/props/Dock.Avalonia.props"/>
+        <File Path="build/props/DynamicData.props"/>
+        <File Path="build/props/Jint.props"/>
+        <File Path="build/props/Markdown.Avalonia.props"/>
+        <File Path="build/props/MsBuildUncompressTask.props"/>
+        <File Path="build/props/NodeEditorAvalonia.props"/>
+        <File Path="build/props/OmniSharp.Extensions.Language.props"/>
+        <File Path="build/props/OneWare.Module.props"/>
+        <File Path="build/props/PanAndZoom.props"/>
+        <File Path="build/props/RestSharp.props"/>
+        <File Path="build/props/SharpCompress.props"/>
+        <File Path="build/props/Svg.Controls.Skia.Avalonia.props"/>
+        <File Path="build/props/Xaml.Behaviors.Avalonia.props"/>
+        <File Path="build/props/XUnit.props"/>
+        <File Path="build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props"/>
+        <File Path="build\props\Microsoft.Extensions.DependencyInjection.props"/>
+        <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props"/>
+        <File Path="build\props\Microsoft.Extensions.Logging.props"/>
+        <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props"/>
+        <File Path="build\props\Microsoft.ML.OnnxRuntime.props"/>
+        <File Path="build\props\OpenCvSharp4.props"/>
+        <File Path="build\props\OpenCvSharp4.runtime.props"/>
+        <File Path="build\props\LiveChartsCore.SkiaSharpView.Avalonia.props"/>
+    </Folder>
+    <Folder Name="/Coremodules/">
+        <Project Path="src/OneWare.ApplicationCommands/OneWare.ApplicationCommands.csproj"/>
+        <Project Path="src/OneWare.Debugger/OneWare.Debugger.csproj"/>
+        <Project Path="src/OneWare.ErrorList/OneWare.ErrorList.csproj"/>
+        <Project Path="src/OneWare.LibraryExplorer/OneWare.LibraryExplorer.csproj"/>
+        <Project Path="src/OneWare.Output/OneWare.Output.csproj"/>
+        <Project Path="src/OneWare.ProjectExplorer/OneWare.ProjectExplorer.csproj"/>
+        <Project Path="src/OneWare.ProjectSystem/OneWare.ProjectSystem.csproj"/>
+        <Project Path="src/OneWare.SearchList/OneWare.SearchList.csproj"/>
+        <Project Path="src/OneWare.Settings/OneWare.Settings.csproj"/>
+        <Project Path="src/OneWare.SourceControl/OneWare.SourceControl.csproj"/>
+        <Project Path="src/OneWare.Updater/OneWare.Updater.csproj"/>
+        <Project Path="src/OneWare.ToolEngine/OneWare.ToolEngine.csproj"/>
+    </Folder>
+    <Folder Name="/Coremodules/Terminal/">
+        <Project Path="src/OneWare.Terminal/OneWare.Terminal.csproj"/>
+        <Project Path="src/OneWare.TerminalManager/OneWare.TerminalManager.csproj"/>
+        <Project Path="src/VtNetCore.Avalonia/VtNetCore.Avalonia/VtNetCore.Avalonia.csproj"/>
+        <Project Path="src/VtNetCore.Avalonia/VtNetCore/VtNetCore/VtNetCore.csproj"/>
+    </Folder>
+    <Folder Name="/Demo/">
+        <Project Path="demo/OneWare.Demo.Desktop/OneWare.Demo.Desktop.csproj"/>
+        <Project Path="demo/OneWare.Demo/OneWare.Demo.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/">
+        <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj"/>
+        <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj"/>
+        <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/FpgaSupport/">
+        <Project Path="src/OneWare.SerialMonitor/OneWare.SerialMonitor.csproj"/>
+        <Project Path="src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/FpgaSupport/Hardware/">
+        <Project Path="src/OneWare.Cyc5000/OneWare.Cyc5000.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/FpgaSupport/Hardware/Extensions/">
+        <Project Path="src/OneWare.CruviAdapterExtensions/OneWare.CruviAdapterExtensions.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/FpgaSupport/Integrations/">
+        <Project Path="src/OneWare.OssCadSuiteIntegration/OneWare.OssCadSuiteIntegration.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/LanguageSupport/">
+        <Project Path="src/OneWare.Cpp/OneWare.Cpp.csproj"/>
+        <Project Path="src/OneWare.Json/OneWare.Json.csproj"/>
+        <Project Path="src/OneWare.Python/OneWare.Python.csproj"/>
+        <Project Path="src/OneWare.Toml/OneWare.Toml.csproj"/>
+        <Project Path="src/OneWare.Verilog/OneWare.Verilog.csproj"/>
+        <Project Path="src/OneWare.Vhdl/OneWare.Vhdl.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/ProjectSystem/">
+        <Project Path="src/OneWare.FolderProjectSystem/OneWare.FolderProjectSystem.csproj"/>
+    </Folder>
+    <Folder Name="/Extensions/Wave/">
+        <Project Path="src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj"/>
+        <Project Path="src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj"/>
+        <Project Path="src/OneWare.WaveFormViewer/OneWare.WaveFormViewer.csproj"/>
+    </Folder>
+    <Folder Name="/Studio/">
+        <Project Path="studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj"/>
+        <Project Path="studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj"/>
+        <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj"/>
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj"/>
+        <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj"/>
+        <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj"/>
+        <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj"/>
+        <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj"/>
+        <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj"/>
+        <Project Path="tests/OneWare.WaveFormViewer.Tests/OneWare.WaveFormViewer.Tests.csproj"/>
+    </Folder>
+    <Project Path="src/OneWare.Core/OneWare.Core.csproj"/>
+    <Project Path="src/OneWare.Essentials/OneWare.Essentials.csproj"/>
 </Solution>

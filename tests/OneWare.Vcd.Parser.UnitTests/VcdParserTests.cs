@@ -39,17 +39,17 @@ public class VcdParserTests
     {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/core.vcd");
     }
-    
+
     private static string GetTestPath5()
     {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/trace.vcd");
     }
-    
+
     private static string GetTestPath6()
     {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/integer_width.vcd");
     }
-    
+
     [Fact]
     public void SignalLineTest()
     {
@@ -144,7 +144,7 @@ public class VcdParserTests
         Assert.Equal(216, result.Definition.SignalRegister.Count);
         Assert.Equal(130, result.Definition.ChangeTimes.Count);
     }
-    
+
     [Fact]
     public void ParseTest4()
     {
@@ -159,7 +159,7 @@ public class VcdParserTests
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
         _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
-    
+
     [Fact]
     public void ParseTest6()
     {
@@ -187,7 +187,7 @@ public class VcdParserTests
         _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
         _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
-    
+
     [Fact]
     public async Task FindLastTimeTest()
     {

@@ -1,29 +1,28 @@
 using System.Net;
-using Avalonia;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
 public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 {
-    private readonly ISettingsService _settingService;
     private readonly ILogger _logger;
     private readonly OneWareCloudLoginService _loginService;
+    private readonly ISettingsService _settingService;
 
-    private string? _errorText;
+    private readonly CancellationTokenSource _browserLoginCts = new();
 
     private string _email = string.Empty;
 
+    private string? _errorText;
+
+    private bool _isLoading;
+
     private string _password = string.Empty;
-
-    private bool _isLoading = false;
-
-    private CancellationTokenSource _browserLoginCts = new();
 
     public AuthenticateCloudViewModel(ISettingsService settingsService, ILogger logger,
         OneWareCloudLoginService loginService)
@@ -32,9 +31,9 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
         _logger = logger;
         _loginService = loginService;
 
-        Title = $"Login to OneWare Cloud";
+        Title = "Login to OneWare Cloud";
 
-        Description = $"Login to OneWare Cloud";
+        Description = "Login to OneWare Cloud";
     }
 
     public string Description { get; }
@@ -99,16 +98,18 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
     {
         IsWaitingForBrowserResponse = true;
         ErrorText = null;
-        
+
         var newListenerStarted = await _loginService.LoginWithBrowserAsync(_browserLoginCts.Token);
         if (newListenerStarted)
         {
             IsWaitingForBrowserResponse = false;
             window?.Close();
-            
+
             ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
-            ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
-            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
+            ContainerLocator.Current.Resolve<IMainDockService>()
+                .Show(ContainerLocator.Current.Resolve<IOutputService>());
+            ContainerLocator.Current.Resolve<ILogger>()
+                .Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
         }
     }
 

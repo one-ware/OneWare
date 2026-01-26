@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
-             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.CheckBoxSettingView"
@@ -13,11 +12,11 @@
             <StackPanel Orientation="Horizontal" Spacing="4">
                 <StackPanel.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                        <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
                     </ContextMenu>
                 </StackPanel.ContextMenu>
-                <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center" 
-                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"/>
+                <CheckBox IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
+                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
                 <StackPanel Spacing="3" Orientation="Horizontal">
                     <TextBlock Text="{Binding Setting.Title}" Margin="0 1 0 0"
                                ToolTip.Tip="{Binding Setting.HoverDescription}" />
@@ -35,7 +34,7 @@
                 </StackPanel>
             </StackPanel>
             <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
-                       IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                       IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </StackPanel>
     </Border>
 </UserControl>

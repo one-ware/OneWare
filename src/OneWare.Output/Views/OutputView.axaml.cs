@@ -17,19 +17,18 @@ public partial class OutputView : OutputBaseView
     private readonly TextModificationService _modificationService;
 
     private PointerEventArgs? _lastMovedArgs;
-    
+
     private SearchResult? _searchResult;
-    
+
     public OutputView()
     {
         InitializeComponent();
-        
+
         _modificationService = new TextModificationService(Output.TextArea.TextView);
         Output.TextArea.TextView.LineTransformers.Add(_modificationService);
         Output.Options.AllowScrollBelowDocument = false;
-        
-        Output.AddHandler(PointerPressedEvent, PointerPressedAfterCaretUpdate, RoutingStrategies.Bubble, true);
 
+        Output.AddHandler(PointerPressedEvent, PointerPressedAfterCaretUpdate, RoutingStrategies.Bubble, true);
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -39,44 +38,34 @@ public partial class OutputView : OutputBaseView
         _lastMovedArgs = e;
 
         if (e.KeyModifiers == PlatformHelper.ControlKey)
-        {
             SearchPath();
-        }
         else
-        {
-           ResetControlModification();
-        }
+            ResetControlModification();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if(e.KeyModifiers == PlatformHelper.ControlKey)
-        {
-            SearchPath();
-        }
+        if (e.KeyModifiers == PlatformHelper.ControlKey) SearchPath();
         base.OnKeyDown(e);
     }
-    
+
     protected override void OnKeyUp(KeyEventArgs e)
     {
-        if(e.KeyModifiers == PlatformHelper.ControlKey)
-        {
-            ResetControlModification();
-        }
+        if (e.KeyModifiers == PlatformHelper.ControlKey) ResetControlModification();
         base.OnKeyUp(e);
     }
 
     private void PointerPressedAfterCaretUpdate(object? sender, PointerPressedEventArgs e)
     {
-        if(!e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return;
+        if (!e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return;
 
         _ = OpenFileAsync();
     }
-    
+
     private async Task OpenFileAsync()
     {
-        if(_searchResult == null) return;
-        
+        if (_searchResult == null) return;
+
         var result = ContainerLocator.Container.Resolve<IProjectExplorerService>()
             .ActiveProject?.SearchRelativePath(_searchResult.Path);
 
@@ -86,7 +75,7 @@ public partial class OutputView : OutputBaseView
             if (doc is not IEditor evb) return;
 
             var offset = evb.CurrentDocument.GetOffset(_searchResult.Line, _searchResult.Column);
-            
+
             evb.Select(offset, 0);
         }
     }
@@ -96,40 +85,41 @@ public partial class OutputView : OutputBaseView
         ResetControlModification();
         base.OnLostFocus(e);
     }
-    
+
     private void SearchPath()
     {
-        if(_lastMovedArgs == null) return;
-        
+        if (_lastMovedArgs == null) return;
+
         var pointerPosition = Output.GetOffsetFromPointerPosition(_lastMovedArgs);
-            
-        if(pointerPosition < 0) return;
-            
+
+        if (pointerPosition < 0) return;
+
         var line = Output.Document.GetLineByOffset(pointerPosition);
         var lineText = Output.Document.GetText(line);
-            
+
         var regex = ExtractFilePathRegex();
 
         var matches = regex.Matches(lineText);
 
-        var match = matches.FirstOrDefault(x => x.Index + line.Offset <= pointerPosition && x.Index + line.Offset + x.Length >= pointerPosition);
+        var match = matches.FirstOrDefault(x =>
+            x.Index + line.Offset <= pointerPosition && x.Index + line.Offset + x.Length >= pointerPosition);
 
         if (match is not { Success: true }) return;
-            
+
         var path = match.Groups[1].Value;
         var fileLine = int.Parse(match.Groups[2].Value);
         var fileColumn = int.Parse(match.Groups[3].Value);
-        
+
         _searchResult = new SearchResult(path, fileLine, fileColumn);
 
-        var lineContext = (DataContext as OutputBaseViewModel)?.LineContexts[line.LineNumber-1];
+        var lineContext = (DataContext as OutputBaseViewModel)?.LineContexts[line.LineNumber - 1];
 
         var result = lineContext?.Owner?.SearchRelativePath(_searchResult.Path);
-        
-        if(result == null) return;
-        
+
+        if (result == null) return;
+
         Output.TextArea.TextView.Cursor = Cursor.Parse("Hand");
-            
+
         _modificationService.SetModification("Control_Underline", new TextModificationSegment(
                 line.Offset + match.Index,
                 line.Offset + match.Index + match.Length)
@@ -145,18 +135,18 @@ public partial class OutputView : OutputBaseView
 
     [GeneratedRegex(@"^(.*?):(\d+):(\d+)")]
     private static partial Regex ExtractFilePathRegex();
-    
+
     private class SearchResult
     {
-        public string Path { get; }
-        public int Line { get; }
-        public int Column { get; }
-        
         public SearchResult(string path, int line, int column)
         {
             Path = path;
             Line = line;
             Column = column;
         }
+
+        public string Path { get; }
+        public int Line { get; }
+        public int Column { get; }
     }
 }

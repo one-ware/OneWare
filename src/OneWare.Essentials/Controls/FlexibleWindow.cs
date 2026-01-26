@@ -175,14 +175,14 @@ public class FlexibleWindow : UserControl
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             Host = CreateHost();
-            
+
             //Check available Size
-            if (owner.Screens.ScreenFromWindow(owner) is {} screen)
+            if (owner.Screens.ScreenFromWindow(owner) is { } screen)
             {
                 Host.Height = Math.Min(PrefHeight, screen.WorkingArea.Height / screen.Scaling);
                 Host.Width = Math.Min(PrefWidth, screen.WorkingArea.Width / screen.Scaling);
             }
-            
+
             Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             if (owner != null)
             {
@@ -215,14 +215,14 @@ public class FlexibleWindow : UserControl
     {
         if (owner == null) throw new NullReferenceException("Owner is needed on Classic Desktop Environment");
         Host = CreateHost();
-        
+
         //Check available Size
-        if (owner.Screens.ScreenFromWindow(owner) is {} screen)
+        if (owner.Screens.ScreenFromWindow(owner) is { } screen)
         {
             Host.Height = Math.Min(PrefHeight, screen.WorkingArea.Height / screen.Scaling);
             Host.Width = Math.Min(PrefWidth, screen.WorkingArea.Width / screen.Scaling);
         }
-        
+
         Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
         return Host.ShowDialog(owner);
     }

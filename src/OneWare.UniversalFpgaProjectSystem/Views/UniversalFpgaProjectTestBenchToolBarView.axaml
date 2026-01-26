@@ -11,7 +11,8 @@
 
     <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,0,0,1" Padding="2">
         <DockPanel>
-            <Border Classes="RoundBorder" DockPanel.Dock="Left" Height="24" Background="{DynamicResource ThemeControlMidBrush}">
+            <Border Classes="RoundBorder" DockPanel.Dock="Left" Height="24"
+                    Background="{DynamicResource ThemeControlMidBrush}">
                 <StackPanel Orientation="Horizontal" Classes="ToolBar">
 
                     <ComboBox Width="100" BorderThickness="0" Background="Transparent"

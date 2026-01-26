@@ -17,4 +17,3 @@ public class TomlModule : OneWareModuleBase
             .RegisterTextMateLanguage("toml", "avares://OneWare.Toml/Assets/TOML.tmLanguage.json", ".toml");
     }
 }
-

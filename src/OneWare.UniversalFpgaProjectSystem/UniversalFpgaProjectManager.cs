@@ -16,8 +16,8 @@ namespace OneWare.UniversalFpgaProjectSystem;
 
 public class UniversalFpgaProjectManager : IProjectManager
 {
-    private readonly IMainDockService _mainDockService;
     private readonly FpgaService _fpgaService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
 
@@ -116,7 +116,8 @@ public class UniversalFpgaProjectManager : IProjectManager
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
                             _mainDockService.OpenFileAsync(root.SearchFullPath(root.ProjectFilePath) as IProjectFile ??
-                                                       _projectExplorerService.GetTemporaryFile(root.ProjectFilePath)))
+                                                           _projectExplorerService.GetTemporaryFile(
+                                                               root.ProjectFilePath)))
                     });
                     break;
                 case FpgaProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
@@ -199,10 +200,11 @@ public class UniversalFpgaProjectManager : IProjectManager
     private async Task OpenProjectSettingsDialogAsync(UniversalFpgaProjectRoot root)
     {
         // UniversalFpgaProjectRoot root
-        await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView()
+        await _windowService.ShowDialogAsync(new UniversalFpgaProjectSettingsEditorView
         {
-            DataContext = ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((typeof(UniversalFpgaProjectRoot), root))
+            DataContext =
+                ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((
+                    typeof(UniversalFpgaProjectRoot), root))
         });
-        
     }
 }

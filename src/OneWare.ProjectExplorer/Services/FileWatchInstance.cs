@@ -1,17 +1,17 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class FileWatchInstance : IDisposable
 {
     private readonly List<FileSystemEventArgs> _changes = new();
-    private readonly IMainDockService _mainDockService;
     private readonly IFile _file;
     private readonly FileSystemWatcher? _fileSystemWatcher;
     private readonly object _lock = new();
+    private readonly IMainDockService _mainDockService;
     private readonly IWindowService _windowService;
     private DispatcherTimer? _timer;
 
@@ -92,11 +92,9 @@ public class FileWatchInstance : IDisposable
             // Can happen naturally if the file is opened in an external tool
             // Also when a temporary file is registered but not opened yet, we can ignore the changes
             if (tab == null)
-            {
                 //Dispose();
                 //throw new NullReferenceException(nameof(tab));
                 return;
-            }
 
             switch (lastArg.ChangeType)
             {

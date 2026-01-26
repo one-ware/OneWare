@@ -6,7 +6,7 @@
                          xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="400" Padding="4"
-                         x:Class="OneWare.SourceControl.Views.AuthenticateCloudView"
+                         x:Class="OneWare.CloudIntegration.Views.AuthenticateCloudView"
                          x:DataType="viewModels:AuthenticateCloudViewModel"
                          CustomIcon="{DynamicResource CodeIcons.Account}"
                          WindowStartupLocation="CenterOwner"
@@ -38,10 +38,10 @@
                     HorizontalAlignment="Stretch"
                     Height="35"
                     Classes="PrimaryButton"
-                    Content="Login with Browser">
-            </Button>
-            
-            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}" HorizontalAlignment="Center">
+                    Content="Login with Browser" />
+
+            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}"
+                        HorizontalAlignment="Center">
                 <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
                 <controls:Spinner Height="16" VerticalAlignment="Center" />
             </StackPanel>
@@ -70,8 +70,7 @@
                             HorizontalAlignment="Stretch"
                             Height="30"
                             Classes="PrimaryButton"
-                            Content="Login">
-                    </Button>
+                            Content="Login" />
                 </StackPanel>
             </Expander>
 

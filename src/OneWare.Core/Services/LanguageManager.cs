@@ -49,7 +49,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
-        
+
         applicationStateService.RegisterShutdownTask(CleanResourcesAsync);
     }
 

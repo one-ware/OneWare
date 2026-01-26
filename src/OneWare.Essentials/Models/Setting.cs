@@ -13,13 +13,13 @@ public class Setting : ObservableObject
 {
     private object _value;
 
-    public int Priority { get; set; } = 0;
-
     public Setting(object defaultValue)
     {
         DefaultValue = defaultValue;
         _value = defaultValue;
     }
+
+    public int Priority { get; set; } = 0;
 
     public virtual object Value
     {
@@ -27,7 +27,7 @@ public class Setting : ObservableObject
         set
         {
             var originalType = DefaultValue.GetType();
-            if(value.GetType() != originalType)
+            if (value.GetType() != originalType)
                 value = Convert.ChangeType(value, originalType);
             SetValue(value);
         }
@@ -46,27 +46,27 @@ public abstract class CollectionSetting : Setting
     protected CollectionSetting(object defaultValue) : base(defaultValue)
     {
     }
-    
+
     public IObservable<bool>? IsEnabledObservable { get; init; }
-    
+
     public IObservable<bool>? IsVisibleObservable { get; init; }
 }
 
 public abstract class TitledSetting : CollectionSetting
 {
     protected const string ValidationFallbackMessage = "Invalid: Please check the value";
-    
+
     public TitledSetting(string title, object defaultValue) : base(defaultValue)
     {
         Title = title;
     }
-    
+
     public string Title { get; }
-    
+
     public string? HoverDescription { get; init; }
-    
+
     public string? MarkdownDocumentation { get; init; }
-    
+
     public ISettingValidation? Validator { get; init; }
 
     public string? ValidationMessage
@@ -74,9 +74,9 @@ public abstract class TitledSetting : CollectionSetting
         get;
         set => SetProperty(ref field, value);
     }
-    
+
     public abstract TitledSetting Clone();
-    
+
     protected override void SetValue(object value)
     {
         if (Validator is null)
@@ -87,7 +87,9 @@ public abstract class TitledSetting : CollectionSetting
 
         try
         {
-            ValidationMessage = !Validator.Validate(value, out string? validationMsg) ? validationMsg ?? ValidationFallbackMessage : null;
+            ValidationMessage = !Validator.Validate(value, out var validationMsg)
+                ? validationMsg ?? ValidationFallbackMessage
+                : null;
         }
         catch (ValidationException ex)
         {
@@ -97,6 +99,7 @@ public abstract class TitledSetting : CollectionSetting
         {
             ValidationMessage = ValidationFallbackMessage;
         }
+
         base.SetValue(value);
     }
 }
@@ -114,14 +117,14 @@ public class CheckBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new CheckBoxSetting(this.Title, (bool)this.DefaultValue);
+        return new CheckBoxSetting(Title, (bool)DefaultValue);
     }
 }
 
 public class TextBoxSetting : TitledSetting
 {
     private string? _watermark;
-    
+
     public TextBoxSetting(string title, object defaultValue, string? watermark) : base(title, defaultValue)
     {
         _watermark = watermark;
@@ -132,23 +135,23 @@ public class TextBoxSetting : TitledSetting
         get => _watermark;
         set => SetProperty(ref _watermark, value);
     }
-    
+
     public override TitledSetting Clone()
     {
-        return new TextBoxSetting(this.Title, this.DefaultValue, Watermark);
+        return new TextBoxSetting(Title, DefaultValue, Watermark);
     }
 }
 
 public class ComboBoxSetting : TitledSetting
 {
     private object[] _options;
-    
+
     [Obsolete("Use alternative constructor with object[] constructor instead")]
     public ComboBoxSetting(string title, object defaultValue, IEnumerable<object> options) : base(title, defaultValue)
     {
         _options = options.ToArray();
     }
-    
+
     public ComboBoxSetting(string title, object defaultValue, object[] options) : base(title, defaultValue)
     {
         _options = options;
@@ -159,10 +162,10 @@ public class ComboBoxSetting : TitledSetting
         get => _options;
         set => SetProperty(ref _options, value);
     }
-    
+
     public override TitledSetting Clone()
     {
-        return new ComboBoxSetting(this.Title, this.DefaultValue, Options);
+        return new ComboBoxSetting(Title, DefaultValue, Options);
     }
 }
 
@@ -177,14 +180,12 @@ public class AdvancedComboBoxSearchSetting(string title, object defaultValue, Ad
 
 public class AdvancedComboBoxSetting : TitledSetting
 {
-    public AdvancedComboBoxSetting(string title, object defaultValue, AdvancedComboBoxOption[] options) : base(title, defaultValue)
+    public AdvancedComboBoxSetting(string title, object defaultValue, AdvancedComboBoxOption[] options) : base(title,
+        defaultValue)
     {
         Options = options;
 
-        this.WhenValueChanged(x => x.Value).Subscribe(x =>
-        {
-            OnPropertyChanged(nameof(SelectedItem));
-        });
+        this.WhenValueChanged(x => x.Value).Subscribe(x => { OnPropertyChanged(nameof(SelectedItem)); });
     }
 
     public AdvancedComboBoxOption[] Options
@@ -198,31 +199,28 @@ public class AdvancedComboBoxSetting : TitledSetting
         get => Options.FirstOrDefault(x => x.Value.Equals(Value))!;
         set
         {
-            if (value?.Value != Value && value != null)
-            {
-                Value = value.Value;
-            }
+            if (value?.Value != Value && value != null) Value = value.Value;
         }
     }
 
     public override TitledSetting Clone()
     {
-        return new AdvancedComboBoxSetting(this.Title, DefaultValue, Options);
+        return new AdvancedComboBoxSetting(Title, DefaultValue, Options);
     }
 }
 
 public class AdvancedComboBoxOption
 {
     public required string Title { get; set; }
-    
+
     public required object Value { get; set; }
-    
+
     public string? HoverDescription { get; init; }
-    
+
     public string? MarkdownDocumentation { get; init; }
-    
+
     public IObservable<bool>? IsEnabledObservable { get; init; }
-    
+
     public IObservable<bool>? IsVisibleObservable { get; init; }
 
     public override string? ToString()
@@ -233,7 +231,8 @@ public class AdvancedComboBoxOption
 
 public class ListBoxSetting : TitledSetting
 {
-    public ListBoxSetting(string title, params string[] defaultValue) : base(title, new ObservableCollection<string>(defaultValue))
+    public ListBoxSetting(string title, params string[] defaultValue) : base(title,
+        new ObservableCollection<string>(defaultValue))
     {
     }
 
@@ -245,7 +244,7 @@ public class ListBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ListBoxSetting(this.Title, ((ObservableCollection<string>)this.DefaultValue).ToArray());
+        return new ListBoxSetting(Title, ((ObservableCollection<string>)DefaultValue).ToArray());
     }
 }
 
@@ -254,12 +253,11 @@ public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerabl
 
 public class SliderSetting : TitledSetting
 {
-    private double _min;
-    
     private double _max;
-    
+    private double _min;
+
     private double _step;
-    
+
     public SliderSetting(string title, double defaultValue, double min, double max, double step) : base(
         title, defaultValue)
     {
@@ -285,10 +283,10 @@ public class SliderSetting : TitledSetting
         get => _step;
         set => SetProperty(ref _step, value);
     }
-    
+
     public override TitledSetting Clone()
     {
-        return new SliderSetting(this.Title, (double)this.DefaultValue, Min, Max, Step);
+        return new SliderSetting(Title, (double)DefaultValue, Min, Max, Step);
     }
 }
 
@@ -305,16 +303,13 @@ public abstract class PathSetting : TextBoxSetting
         if (checkPath != null)
         {
             CanVerify = true;
-            this.WhenValueChanged(x => x.Value).Subscribe(x =>
-            {
-                IsValid = checkPath.Invoke((x as string)!);
-            });
+            this.WhenValueChanged(x => x.Value).Subscribe(x => { IsValid = checkPath.Invoke((x as string)!); });
         }
     }
 
     public string? StartDirectory { get; }
     public bool CanVerify { get; }
-    
+
     public Func<string, bool>? CheckPath { get; }
 
     public bool IsValid
@@ -363,12 +358,11 @@ public class ColorSetting : TitledSetting
 {
     public ColorSetting(string title, Color defaultValue) : base(title, defaultValue)
     {
-        
     }
 
     public override TitledSetting Clone()
     {
-        return new ColorSetting(this.Title, (Color)this.DefaultValue);
+        return new ColorSetting(Title, (Color)DefaultValue);
     }
 }
 
@@ -386,7 +380,6 @@ public class ProjectSetting(
     public Func<IProjectRootWithFile, bool> ActivationFunction { get; } = activationFunction;
 }
 
-
 public class CategorySetting(string key, string name)
 {
     public string Key { get; } = key;
@@ -395,10 +388,9 @@ public class CategorySetting(string key, string name)
 
 public abstract class CustomSetting : CollectionSetting
 {
-    public object? Control { get; init; }
-    
     public CustomSetting(object defaultValue) : base(defaultValue)
     {
-        
     }
+
+    public object? Control { get; init; }
 }

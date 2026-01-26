@@ -1,13 +1,13 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
@@ -23,7 +23,8 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
         _windowService = windowService;
         _projectRoot = projectRoot;
 
-        _fpga = fpgaService.FpgaPackages.FirstOrDefault(x => x.Name == projectRoot.GetProjectProperty("Fpga"))?.LoadFpga();
+        _fpga = fpgaService.FpgaPackages.FirstOrDefault(x => x.Name == projectRoot.GetProjectProperty("Fpga"))
+            ?.LoadFpga();
 
         IsVisible = projectRoot.Loader is OpenFpgaLoader;
         IsEnabled = _fpga != null;

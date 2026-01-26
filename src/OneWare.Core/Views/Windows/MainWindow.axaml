@@ -83,7 +83,7 @@
                             </MenuItem.Header>
                         </MenuItem>
                     </Menu>
-                    
+
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
                         <TextBlock Foreground="White"

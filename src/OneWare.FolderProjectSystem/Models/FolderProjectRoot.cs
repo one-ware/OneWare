@@ -1,8 +1,8 @@
 ﻿using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.FolderProjectSystem.Models;
 
@@ -53,7 +53,7 @@ public class FolderProjectRoot : ProjectRoot
                         folder.Children.Add(new LoadingDummyNode());
                 }
             });
-            
+
             _registeredFolders.Add(folder, subscription);
         }
         catch (Exception e)
@@ -96,7 +96,7 @@ public class FolderProjectRoot : ProjectRoot
                 else
                     AddFile(relativePath);
             }
-            else if(folder.Children.Count == 0)
+            else if (folder.Children.Count == 0)
             {
                 folder.Children.Add(new LoadingDummyNode());
             }

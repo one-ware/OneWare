@@ -1,16 +1,14 @@
 using System.Text.Json;
 using Avalonia;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Svg.Skia;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
-using OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Helpers;
 
@@ -24,7 +22,7 @@ public static class HardwareGuiCreator
         { "5V", Brushes.Red },
         { "VIN", Brushes.DarkRed },
         { "TX", Brushes.Blue },
-        { "RX", Brushes.DarkRed },
+        { "RX", Brushes.DarkRed }
     };
 
     public static async Task<HardwareGuiViewModel> CreateGuiAsync(string guiPath, IHardwareModel hardwareModel)
@@ -63,10 +61,10 @@ public static class HardwareGuiCreator
                         ? rotationProperty.GetDouble()
                         : 0;
                     var color = element.TryGetProperty("color", out var colorProperty)
-                        ? (ColorShortcuts.ContainsKey(colorProperty.GetString() ?? "")
+                        ? ColorShortcuts.ContainsKey(colorProperty.GetString() ?? "")
                             ? ColorShortcuts[colorProperty.GetString()!]
                             : new BrushConverter().ConvertFromString(colorProperty.GetString() ?? string.Empty) as
-                                IBrush)
+                                IBrush
                         : null;
 
                     var foreground = element.TryGetProperty("textColor", out var textColorProperty)
@@ -93,7 +91,7 @@ public static class HardwareGuiCreator
                             var relativePath = element.GetProperty("src").GetString();
                             var path = Path.Combine(Path.GetDirectoryName(guiPath)!, relativePath!);
                             var child = await CreateGuiAsync(path, hardwareModel);
-                            
+
                             vm.AddElement(new FpgaGuiElementChildViewModel(x, y)
                             {
                                 Child = child,
@@ -137,7 +135,7 @@ public static class HardwareGuiCreator
                         {
                             vm.AddElement(new FpgaGuiElementEllipseViewModel(x, y, width, height, color!)
                             {
-                                Rotation = rotation,
+                                Rotation = rotation
                             });
                             break;
                         }
@@ -148,9 +146,7 @@ public static class HardwareGuiCreator
                                 : null;
 
                             if (!Enum.TryParse<FontWeight>(fontWeightStr ?? "Normal", true, out var fontWeight))
-                            {
                                 fontWeight = FontWeight.Normal;
-                            }
 
                             var text = element.TryGetProperty("text", out var textProperty)
                                 ? textProperty.GetString()
@@ -218,7 +214,7 @@ public static class HardwareGuiCreator
                             var pinHeight = element.TryGetProperty("pinHeight", out var pinHeightProperty)
                                 ? pinHeightProperty.GetInt32()
                                 : 10;
-                            
+
                             var labelPosition = element.TryGetProperty("labelPosition", out var labelPositionProperty)
                                 ? labelPositionProperty.GetString()
                                 : null;
@@ -226,13 +222,9 @@ public static class HardwareGuiCreator
                             Enum.TryParse<PinLabelPosition>(labelPosition, true, out var labelPositionEnum);
 
                             if (labelPosition == null && element.TryGetProperty("flipLabel", out var flipLabelProperty))
-                            {
                                 if (flipLabelProperty.GetBoolean())
-                                {
                                     labelPositionEnum = PinLabelPosition.After;
-                                }
-                            }
-                            
+
                             var isHorizontal = element.TryGetProperty("horizontal", out var horizontalProperty) &&
                                                horizontalProperty.GetBoolean();
 
@@ -249,10 +241,10 @@ public static class HardwareGuiCreator
                                     : null;
 
                                 var colorPin = pin.TryGetProperty("color", out var colorPinProperty)
-                                    ? (ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
+                                    ? ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
                                         ? ColorShortcuts[colorPinProperty.GetString()!]
                                         : new BrushConverter().ConvertFromString(colorPinProperty.GetString() ??
-                                            string.Empty) as IBrush)
+                                            string.Empty) as IBrush
                                     : null;
 
                                 list.Add(new FpgaGuiElementPinViewModel(0, 0, isHorizontal ? pinHeight : pinWidth,
@@ -302,10 +294,10 @@ public static class HardwareGuiCreator
                                     : null;
 
                                 var colorPin = pin.TryGetProperty("color", out var colorPinProperty)
-                                    ? (ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
+                                    ? ColorShortcuts.ContainsKey(colorPinProperty.GetString() ?? "")
                                         ? ColorShortcuts[colorPinProperty.GetString()!]
                                         : new BrushConverter().ConvertFromString(colorPinProperty.GetString() ??
-                                            string.Empty) as IBrush)
+                                            string.Empty) as IBrush
                                     : null;
 
                                 list.Add(new FpgaGuiElementPinViewModel(0, 0, pinWidth, pinHeight)
@@ -316,7 +308,7 @@ public static class HardwareGuiCreator
                                     LabelPosition = PinLabelPosition.Inside,
                                     Parent = hardwareModel,
                                     Foreground = foreground,
-                                    FontSize = fontSize,
+                                    FontSize = fontSize
                                 });
                             }
 
@@ -344,12 +336,8 @@ public static class HardwareGuiCreator
                             Enum.TryParse<PinLabelPosition>(labelPosition, true, out var labelPositionEnum);
 
                             if (labelPosition == null && element.TryGetProperty("flipLabel", out var flipLabelProperty))
-                            {
                                 if (flipLabelProperty.GetBoolean())
-                                {
                                     labelPositionEnum = PinLabelPosition.After;
-                                }
-                            }
 
                             vm.AddElement(new FpgaGuiElementPinViewModel(x, y, width, height)
                             {
@@ -371,9 +359,7 @@ public static class HardwareGuiCreator
                                 : null;
 
                             if (!Enum.TryParse<FontWeight>(fontWeightStr ?? "Normal", true, out var fontWeight))
-                            {
                                 fontWeight = FontWeight.Normal;
-                            }
 
                             var text = element.GetProperty("text").GetString();
 
@@ -406,7 +392,7 @@ public static class HardwareGuiCreator
                                 BindRx = bindRx,
                                 BindTx = bindTx,
                                 Parent = hardwareModel,
-                                FlipLabel = flipLabel,
+                                FlipLabel = flipLabel
                             });
                             break;
                         }
