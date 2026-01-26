@@ -120,7 +120,15 @@ public class YosysService(
 
     public Task<bool> OpenNextpnrGuiAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
     {
-        return RunNextpnrAsync(project, fpgaModel, true);
+        try
+        {
+            return RunNextpnrAsync(project, fpgaModel, true);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e.Message, e);
+            return Task.FromResult(false);
+        }
     }
 
     private async Task<bool> RunNextpnrAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, bool withGui)
