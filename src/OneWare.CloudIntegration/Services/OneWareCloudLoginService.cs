@@ -81,7 +81,7 @@ public sealed class OneWareCloudLoginService
 
             _jwtTokenCache.TryGetValue(userId, out var existingToken);
 
-            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(5))
+            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
                 return (existingToken.RawData, HttpStatusCode.NoContent);
 
             var (result, status) = await RefreshFromUserIdAsync(userId);
