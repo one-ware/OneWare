@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using OneWare.Essentials.Models;
 using OneWare.Settings.ViewModels.SettingTypes;
 

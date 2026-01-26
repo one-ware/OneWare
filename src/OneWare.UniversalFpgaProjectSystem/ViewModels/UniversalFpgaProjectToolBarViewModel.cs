@@ -6,7 +6,7 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
@@ -67,11 +67,11 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         set => SetProperty(ref _project, value);
     }
 
-    public ObservableCollection<UiExtension> PinPlannerMenuExtension { get; }
+    public ObservableCollection<OneWareUiExtension> PinPlannerMenuExtension { get; }
 
-    public ObservableCollection<UiExtension> CompileMenuExtension { get; }
+    public ObservableCollection<OneWareUiExtension> CompileMenuExtension { get; }
 
-    public ObservableCollection<UiExtension> DownloaderConfigurationExtension { get; }
+    public ObservableCollection<OneWareUiExtension> DownloaderConfigurationExtension { get; }
 
     public void ToggleLongTermProgramming()
     {

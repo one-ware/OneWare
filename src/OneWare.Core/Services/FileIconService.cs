@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 

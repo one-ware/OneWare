@@ -3,7 +3,7 @@ using Dock.Model.Mvvm.Controls;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
-using Prism.Ioc;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Dock;
 
@@ -20,20 +20,20 @@ public static class DefaultLayout
             : factory.CreateList(bottomToolsResolved.ToArray());
     }
 
-    public static RootDock GetDefaultLayout(DockService dockService)
+    public static RootDock GetDefaultLayout(MainDockService mainDockService)
     {
         var documentDock = ContainerLocator.Container.Resolve<MainDocumentDockViewModel>();
         documentDock.ActiveDockable = null;
         documentDock.FocusedDockable = null;
         documentDock.VisibleDockables?.Clear();
-        dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
-        dockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
+        mainDockService.LayoutRegistrations.TryGetValue(DockShowLocation.Left, out var leftTools);
+        mainDockService.LayoutRegistrations.TryGetValue(DockShowLocation.Bottom, out var bottomTools);
 
         var leftTool = new ToolDock
         {
             Id = "LeftPaneTop",
             Title = "LeftPaneTop",
-            VisibleDockables = ConvertRegistration(leftTools, dockService),
+            VisibleDockables = ConvertRegistration(leftTools, mainDockService),
             Alignment = Alignment.Left
         };
 
@@ -43,7 +43,7 @@ public static class DefaultLayout
             Title = "LeftPane",
             Proportion = 0.25,
             Orientation = Orientation.Vertical,
-            VisibleDockables = dockService.CreateList<IDockable>
+            VisibleDockables = mainDockService.CreateList<IDockable>
             (
                 leftTool
             )
@@ -53,7 +53,7 @@ public static class DefaultLayout
         {
             Id = "BottomPaneOne",
             Title = "BottomPaneOne",
-            VisibleDockables = ConvertRegistration(bottomTools, dockService),
+            VisibleDockables = ConvertRegistration(bottomTools, mainDockService),
             Alignment = Alignment.Bottom
         };
 
@@ -63,7 +63,7 @@ public static class DefaultLayout
             Title = "BottomRow",
             Proportion = 0.3,
             Orientation = Orientation.Horizontal,
-            VisibleDockables = dockService.CreateList<IDockable>
+            VisibleDockables = mainDockService.CreateList<IDockable>
             (
                 bottomTool
             )
@@ -75,7 +75,7 @@ public static class DefaultLayout
             Title = "TopRow",
             Orientation = Orientation.Vertical,
             ActiveDockable = null,
-            VisibleDockables = dockService.CreateList<IDockable>
+            VisibleDockables = mainDockService.CreateList<IDockable>
             (
                 documentDock,
                 new ProportionalDockSplitter(),
@@ -89,7 +89,7 @@ public static class DefaultLayout
             Title = "MainLayout",
             Orientation = Orientation.Horizontal,
             ActiveDockable = null,
-            VisibleDockables = dockService.CreateList<IDockable>
+            VisibleDockables = mainDockService.CreateList<IDockable>
             (
                 left,
                 new ProportionalDockSplitter(),
@@ -102,7 +102,7 @@ public static class DefaultLayout
             Id = "Root",
             Title = "Root",
             IsCollapsable = false,
-            VisibleDockables = dockService.CreateList<IDockable>(mainLayout),
+            VisibleDockables = mainDockService.CreateList<IDockable>(mainLayout),
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout
         };

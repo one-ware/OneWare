@@ -8,6 +8,7 @@ using OneWare.Settings.ViewModels;
 using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 

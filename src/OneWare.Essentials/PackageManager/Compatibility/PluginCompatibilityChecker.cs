@@ -1,5 +1,4 @@
 using System.Reflection;
-using DryIoc;
 
 namespace OneWare.Essentials.PackageManager.Compatibility;
 

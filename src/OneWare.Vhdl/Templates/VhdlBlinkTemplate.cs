@@ -2,10 +2,11 @@
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vhdl.Templates;
 
-public class VhdlBlinkTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
+public class VhdlBlinkTemplate(ILogger logger, IMainDockService mainDockService) : IFpgaProjectTemplate
 {
     public string Name => "VHDL Blink";
 
@@ -20,7 +21,7 @@ public class VhdlBlinkTemplate(ILogger logger, IDockService dockService) : IFpga
             var file = root.AddFile(name + ".vhd");
             root.TopEntity = file;
 
-            _ = dockService.OpenFileAsync(file);
+            _ = mainDockService.OpenFileAsync(file);
         }
         catch (Exception e)
         {

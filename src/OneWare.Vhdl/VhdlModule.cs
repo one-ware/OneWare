@@ -7,12 +7,11 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vhdl.Parsing;
 using OneWare.Vhdl.Templates;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OneWare.Vhdl;
 
-public class VhdlModule : IModule
+public class VhdlModule : OneWareModuleBase
 {
     public const string LspName = "RustHDL";
     public const string LspPathSetting = "VhdlModule_RustHdlPath";
@@ -295,23 +294,23 @@ public class VhdlModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var fpgaService = containerProvider.Resolve<FpgaService>();
+        var fpgaService = serviceProvider.Resolve<FpgaService>();
         
         fpgaService.RegisterLanguage("VHDL", SupportedExtensions);
         
-        var settingsService = containerProvider.Resolve<ISettingsService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
         
-        containerProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
 
         settingsService.RegisterSetting("Languages", "VHDL", LspPathSetting,
             new FilePathSetting("RustHDL Path", "", "",
-                containerProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile)
+                serviceProvider.Resolve<IPaths>().PackagesDirectory, File.Exists, PlatformHelper.ExeFile)
             {
                 HoverDescription = "Path to the RustHDL Language Server executable.",
             }
@@ -330,17 +329,17 @@ public class VhdlModule : IModule
 
             };
         
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
+        serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
+        serviceProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("vhdl",
             "avares://OneWare.Vhdl/Assets/vhdl.tmLanguage.json", SupportedExtensions);
-        containerProvider.Resolve<ILanguageManager>()
+        serviceProvider.Resolve<ILanguageManager>()
             .RegisterService(typeof(LanguageServiceVhdl), true, SupportedExtensions);
 
         fpgaService.RegisterNodeProvider<VhdlNodeProvider>();
         fpgaService.RegisterTemplate<VhdlBlinkTemplate>();
         fpgaService.RegisterTemplate<VhdlBlinkSimulationTemplate>();
 
-        // containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
+        // serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
         // {
         //     if (x is [UniversalProjectRoot root])
         //     {

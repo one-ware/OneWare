@@ -1,5 +1,5 @@
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.Helpers;
 

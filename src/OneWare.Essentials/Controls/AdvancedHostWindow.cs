@@ -14,15 +14,15 @@ namespace OneWare.Essentials.Controls;
 public class AdvancedHostWindow : HostWindow
 {
     private bool _cancelClose = true;
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private WindowState _lastWindowState = WindowState.Normal;
 
-    public AdvancedHostWindow(IDockService dockService)
+    public AdvancedHostWindow(IMainDockService mainDockService)
     {
 #if DEBUG
         this.AttachDevTools();
 #endif
-        _dockService = dockService;
+        _mainDockService = mainDockService;
 
         this.KeyDown += (s, args) =>
         {
@@ -56,7 +56,7 @@ public class AdvancedHostWindow : HostWindow
             if (dock.VisibleDockables is { Count: > 0 } &&
                 dock.VisibleDockables[0] is DocumentDock tool)
             {
-                var docs = _dockService.OpenFiles
+                var docs = _mainDockService.OpenFiles
                     .Where(x => tool.VisibleDockables != null && tool.VisibleDockables.Contains(x.Value)).ToArray();
 
                 var unsaved = docs.Where(x => x.Value is { IsDirty: true })
@@ -71,7 +71,7 @@ public class AdvancedHostWindow : HostWindow
                 }
                 else
                 {
-                    foreach (var i in docs) _ = _dockService.CloseFileAsync(i.Key);
+                    foreach (var i in docs) _ = _mainDockService.CloseFileAsync(i.Key);
                 }
             }
     }
@@ -84,7 +84,7 @@ public class AdvancedHostWindow : HostWindow
             _cancelClose = false;
             foreach (var file in unsavedFiles)
                 if (file.CurrentFile != null)
-                    _dockService.OpenFiles.Remove(file.CurrentFile);
+                    _mainDockService.OpenFiles.Remove(file.CurrentFile);
 
             Dispatcher.UIThread.Post(Close);
         }

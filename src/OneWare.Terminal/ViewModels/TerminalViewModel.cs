@@ -7,9 +7,9 @@ using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
 using OneWare.Terminal.Provider.Win32;
-using Prism.Ioc;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Terminal.ViewModels;
 

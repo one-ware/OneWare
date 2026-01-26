@@ -5,7 +5,7 @@ using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
@@ -107,8 +107,8 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
             window?.Close();
             
             ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
-            ContainerLocator.Current.Resolve<IDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
-            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", ConsoleColor.Green, true, Brushes.Lime);
+            ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+            ContainerLocator.Current.Resolve<ILogger>().Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
         }
     }
 

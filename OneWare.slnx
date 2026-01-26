@@ -22,7 +22,7 @@
     <File Path="build/props/Avalonia.Diagnostics.props" />
     <File Path="build/props/Avalonia.Fonts.Inter.props" />
     <File Path="build/props/Avalonia.props" />
-    <File Path="build/props/Avalonia.ReactiveUI.props" />
+    <File Path="build/props/ReactiveUI.Avalonia.props" />
     <File Path="build/props/Avalonia.Themes.Simple.props" />
     <File Path="build/props/AvaloniaEdit.props" />
     <File Path="build/props/AvaloniaEdit.TextMate.props" />
@@ -38,12 +38,15 @@
     <File Path="build/props/OmniSharp.Extensions.Language.props" />
     <File Path="build/props/OneWare.Module.props" />
     <File Path="build/props/PanAndZoom.props" />
-    <File Path="build/props/Prism.Avalonia.props" />
     <File Path="build/props/RestSharp.props" />
     <File Path="build/props/SharpCompress.props" />
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
     <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
     <File Path="build/props/XUnit.props" />
+    <File Path="build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props" />
+    <File Path="build\props\Microsoft.Extensions.DependencyInjection.props" />
+    <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props" />
+    <File Path="build\props\Microsoft.Extensions.Logging.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
     <File Path="build\props\OpenCvSharp4.props" />
@@ -116,6 +119,7 @@
   <Folder Name="/Tests/">
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
+    <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
     <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
     <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj" />
     <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />

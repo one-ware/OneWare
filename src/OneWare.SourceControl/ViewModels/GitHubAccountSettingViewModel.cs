@@ -9,7 +9,6 @@ using OneWare.Settings;
 using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Settings;
 using OneWare.SourceControl.Views;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.ViewModels;
 

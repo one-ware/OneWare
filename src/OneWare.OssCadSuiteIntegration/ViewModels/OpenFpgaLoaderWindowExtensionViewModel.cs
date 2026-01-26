@@ -7,7 +7,7 @@ using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 

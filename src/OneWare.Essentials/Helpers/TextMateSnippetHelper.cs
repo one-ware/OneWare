@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.Helpers;
 

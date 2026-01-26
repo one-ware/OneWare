@@ -7,9 +7,9 @@ using Avalonia.Dialogs;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Demo.Desktop;
 

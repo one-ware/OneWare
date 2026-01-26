@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Parser;
 

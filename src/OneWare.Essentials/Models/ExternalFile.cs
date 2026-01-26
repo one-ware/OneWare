@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Models;
 

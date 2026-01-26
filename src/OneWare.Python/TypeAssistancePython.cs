@@ -4,7 +4,6 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Python;
 

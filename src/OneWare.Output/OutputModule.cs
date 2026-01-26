@@ -1,45 +1,38 @@
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Output.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Output;
 
-public class OutputModule : IModule
+public class OutputModule : OneWareModuleBase
 {
-    private readonly IDockService _dockService;
-    private readonly ISettingsService _settingsService;
-    private readonly IWindowService _windowService;
-
-    public OutputModule(ISettingsService settingsService, IDockService dockService, IWindowService windowService)
+    public override void RegisterServices(IServiceCollection services)
     {
-        _settingsService = settingsService;
-        _windowService = windowService;
-        _dockService = dockService;
+        services.AddSingleton<OutputViewModel>();
+        services.AddSingleton<IOutputService>(provider => provider.Resolve<OutputViewModel>());
     }
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerRegistry.RegisterManySingleton<OutputViewModel>(typeof(IOutputService),
-            typeof(OutputViewModel));
-    }
+        var dockService = serviceProvider.Resolve<IMainDockService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        _dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
+        dockService.RegisterLayoutExtension<IOutputService>(DockShowLocation.Bottom);
 
-        _settingsService.Register("Output_Autoscroll", true);
+        settingsService.Register("Output_Autoscroll", true);
 
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
         {
             Header = "Output",
-            Command = new RelayCommand(() => _dockService.Show(containerProvider.Resolve<IOutputService>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IOutputService>())),
             IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
         });
     }
 }
+

@@ -9,8 +9,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.LibraryExplorer.ViewModels;
 
@@ -21,16 +19,16 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     private string _libraryFolderPath;
     
     private readonly IFileWatchService _fileWatchService;
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IMainDockService mainDockService, IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
         
         _fileWatchService = fileWatchService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
         _libraryFolderPath = Path.Combine(paths.PackagesDirectory, "Libraries");
@@ -113,7 +111,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     private async Task PreviewFileAsync(IProjectFile file)
     {
-        var extendedDocument = await _dockService.OpenFileAsync(file);
+        var extendedDocument = await _mainDockService.OpenFileAsync(file);
         if (extendedDocument != null)
         {
             extendedDocument.IsReadOnly = true;

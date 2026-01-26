@@ -7,7 +7,7 @@ using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 

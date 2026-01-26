@@ -6,7 +6,7 @@ using Avalonia.Styling;
 using OneWare.Essentials.Models;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using Prism.Ioc;
+using OneWare.Essentials.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Tools;
 

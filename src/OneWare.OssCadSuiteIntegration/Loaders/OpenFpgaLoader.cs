@@ -3,6 +3,7 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.OssCadSuiteIntegration.Loaders;
 

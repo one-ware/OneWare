@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vcd.Viewer.Context;
 

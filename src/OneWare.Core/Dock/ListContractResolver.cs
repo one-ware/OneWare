@@ -1,9 +1,7 @@
 ﻿using System.Reflection;
-using DryIoc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Prism.DryIoc;
-using Prism.Ioc;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Dock;
 
@@ -28,15 +26,15 @@ public class ListContractResolver : DefaultContractResolver
         var contract = base.ResolveContract(type);
 
         if (contract is JsonObjectContract co)
-            if (ContainerLocator.Container.GetContainer().IsRegistered(type))
+            if (ContainerLocator.Container?.IsRegistered(type) == true)
                 co.OverrideCreator = parameters =>
                 {
                     var resolveParameters = parameters
                         .Where(x => x != null)
-                        .Select(x => (x?.GetType(), x))
+                        .Select(x => (x!.GetType(), x))
                         .ToArray();
 
-                    var resolve = ContainerLocator.Container.Resolve(type, resolveParameters);
+                    var resolve = ContainerLocator.Container!.Resolve(type, resolveParameters);
                     return resolve;
                 };
         return contract;

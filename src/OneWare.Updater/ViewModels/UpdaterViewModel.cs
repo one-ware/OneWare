@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Updater.ViewModels;
 

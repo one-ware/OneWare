@@ -6,7 +6,7 @@ public interface IFpgaSimulator
 {
     public string Name { get; }
 
-    public UiExtension? TestBenchToolbarTopUiExtension { get; }
+    public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
     public Task<bool> SimulateAsync(IFile file);
 }

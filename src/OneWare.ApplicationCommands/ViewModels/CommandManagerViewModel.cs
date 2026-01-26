@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.LogicalTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using OneWare.ApplicationCommands.Tabs;
 using OneWare.ApplicationCommands.Views;
 using OneWare.Essentials.Commands;

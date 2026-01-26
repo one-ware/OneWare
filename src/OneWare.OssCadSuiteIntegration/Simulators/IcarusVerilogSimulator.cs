@@ -16,16 +16,16 @@ namespace OneWare.OssCadSuiteIntegration.Simulators;
 public class IcarusVerilogSimulator : IFpgaSimulator
 {
     private readonly IChildProcessService _childProcessService;
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    public IcarusVerilogSimulator(IChildProcessService childProcessService, IDockService dockService,
+    public IcarusVerilogSimulator(IChildProcessService childProcessService, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService)
     {
         _childProcessService = childProcessService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
-        TestBenchToolbarTopUiExtension = new UiExtension(x =>
+        TestBenchToolbarTopUiExtension = new OneWareUiExtension(x =>
         {
             if (x is TestBenchContext tb)
                 return new IcarusVerilogSimulatorToolbarView
@@ -38,7 +38,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public string Name => "IVerilog";
 
-    public UiExtension? TestBenchToolbarTopUiExtension { get; }
+    public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
     public async Task<bool> SimulateAsync(IFile file)
     {
@@ -52,7 +52,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                 .Where(x => !root.CompileExcluded.Contains(x))
                 .Select(x => $"{x.RelativePath.ToUnixPath()}");
 
-            _dockService.Show<IOutputService>();
+            _mainDockService.Show<IOutputService>();
 
             List<string> icarusVerilogArguments = ["-o", vvpPath];
             icarusVerilogArguments.AddRange(verilogFiles);
@@ -79,7 +79,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                 var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 
-                var doc = await _dockService.OpenFileAsync(vcdFile);
+                var doc = await _mainDockService.OpenFileAsync(vcdFile);
             }
 
             return true;

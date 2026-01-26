@@ -11,7 +11,7 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.Models;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.SourceControl.ViewModels;
 

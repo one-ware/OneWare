@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using OneWare.Essentials.Models;
-using Prism.Ioc;
+using OneWare.Essentials.Services;
 
 namespace OneWare.ProjectExplorer.Services;
 

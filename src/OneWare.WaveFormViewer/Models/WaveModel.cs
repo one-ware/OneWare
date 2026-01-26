@@ -7,7 +7,6 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Enums;
-using Prism.Ioc;
 
 namespace OneWare.WaveFormViewer.Models;
 

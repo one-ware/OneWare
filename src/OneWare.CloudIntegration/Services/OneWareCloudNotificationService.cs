@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
 using Avalonia.Media;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.CloudIntegration.Services;
 
@@ -64,7 +64,7 @@ public class OneWareCloudNotificationService
             
             ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
             
-            _logger.Log("Connected to OneWare Cloud", ConsoleColor.Green, true, Brushes.Lime);
+            _logger.Log("Connected to OneWare Cloud", true, Brushes.Lime);
             
             return true;
         }

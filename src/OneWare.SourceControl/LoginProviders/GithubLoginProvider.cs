@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using GitCredentialManager;
 using OneWare.Essentials.Services;
 using RestSharp;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.SourceControl.LoginProviders;
 

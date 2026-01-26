@@ -14,7 +14,7 @@ using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 using OpenCvSharp;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.PackageManager.Services;
 
@@ -189,7 +189,7 @@ public partial class PackageService : ObservableObject, IPackageService
                 switch (model.Status)
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true,
+                        _logger.Log($"Downloading {model.Package.Name}...", true,
                             Brushes.DarkCyan);
                         return model.DownloadAsync(model.Package.Versions.Last());
                     case PackageStatus.Installing:

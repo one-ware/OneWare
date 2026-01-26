@@ -2,28 +2,32 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using OneWare.Core.Models;
 using OneWare.Essentials.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
-    private readonly IModuleCatalog _moduleCatalog;
-    private readonly IModuleManager _moduleManager;
+    private readonly OneWareModuleCatalog _moduleCatalog;
+    private readonly OneWareModuleManager _moduleManager;
+    private readonly ModuleServiceRegistry _moduleServiceRegistry;
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
 
     private List<Assembly> _initAssemblies;
 
-    public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
+    public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
+        ModuleServiceRegistry moduleServiceRegistry, IPaths paths)
     {
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
+        _moduleServiceRegistry = moduleServiceRegistry;
 
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
@@ -55,20 +59,15 @@ public class PluginService : IPluginService
             var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
             PlatformHelper.CopyDirectory(path, realPath);
 
-            var catalog = new DirectoryModuleCatalog
-            {
-                ModulePath = realPath
-            };
-            catalog.Initialize();
+            var addedModules = LoadModulesFromPath(realPath);
 
-            foreach (var module in catalog.Modules)
+            if (addedModules.Count > 0 && ContainerLocator.Container != null)
             {
-                _moduleCatalog.AddModule(module);
-                if (_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized)
-                    _moduleManager.LoadModule(module.ModuleName);
-
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
+                var pluginServices = new ServiceCollection();
+                _moduleManager.RegisterModuleServices(pluginServices, addedModules);
+                _moduleServiceRegistry.AddDescriptors(pluginServices);
+                if (_moduleManager.InitializationCompleted)
+                    _moduleManager.InitializeModules(ContainerLocator.Current, addedModules);
             }
 
             //We should not use that anymore, since it can break compatibility with code signed apps
@@ -97,6 +96,37 @@ public class PluginService : IPluginService
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
+    }
+
+    private IReadOnlyList<IOneWareModule> LoadModulesFromPath(string path)
+    {
+        var assemblies = new List<Assembly>();
+        foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories))
+        {
+            try
+            {
+                assemblies.Add(Assembly.LoadFrom(file));
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container?.Resolve<ILogger>()
+                    .Warning($"Skipping plugin assembly '{Path.GetFileName(file)}': {ex.Message}", ex);
+            }
+        }
+
+        var added = new List<IOneWareModule>();
+        foreach (var assembly in assemblies)
+        {
+            added.AddRange(_moduleCatalog.AddModulesFromAssembly(assembly));
+        }
+
+        foreach (var module in added)
+        {
+            ContainerLocator.Container?.Resolve<ILogger>()
+                .Log($"Module '{module.Id}' loaded");
+        }
+
+        return added;
     }
 
     [Obsolete]
@@ -173,9 +203,8 @@ public class PluginService : IPluginService
             catch (InvalidOperationException)
             {
                 // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.",
-                    ConsoleColor.DarkYellow, true);
+                ContainerLocator.Container.Resolve<ILogger>().Warning(
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
             }
         }
     }

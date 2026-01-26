@@ -8,7 +8,6 @@ using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 
@@ -206,7 +205,7 @@ public class FlexibleWindow : UserControl
             if (DataContext is not Document doc)
                 throw new Exception("ViewModel for FlexibleWindow must be Document");
 
-            ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
+            ContainerLocator.Container.Resolve<IMainDockService>().Show(doc, DockShowLocation.Document);
         }
 
         AttachedToHost();

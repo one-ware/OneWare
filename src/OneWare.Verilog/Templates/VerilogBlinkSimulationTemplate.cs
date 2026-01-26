@@ -2,10 +2,11 @@
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Verilog.Templates;
 
-public class VerilogBlinkSimulationTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
+public class VerilogBlinkSimulationTemplate(ILogger logger, IMainDockService mainDockService) : IFpgaProjectTemplate
 {
     public string Name => "Verilog Blink with Simulation";
 
@@ -22,8 +23,8 @@ public class VerilogBlinkSimulationTemplate(ILogger logger, IDockService dockSer
             var file2 = root.AddFile(name + "_tb.v");
             root.RegisterTestBench(file2);
 
-            _ = dockService.OpenFileAsync(file);
-            _ = dockService.OpenFileAsync(file2);
+            _ = mainDockService.OpenFileAsync(file);
+            _ = mainDockService.OpenFileAsync(file2);
         }
         catch (Exception e)
         {

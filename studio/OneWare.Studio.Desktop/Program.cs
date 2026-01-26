@@ -14,10 +14,11 @@ using Avalonia.Threading;
 using OneWare.Core.Data;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using System.CommandLine;
 using System.Linq;
 using OneWare.Core.Views.Windows;
+using Microsoft.Extensions.Logging;
+using OneWare.Studio.Desktop.Views;
 
 namespace OneWare.Studio.Desktop;
 
@@ -204,10 +205,9 @@ internal abstract class Program
                 return;
 
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
-            logger?.Log($"Received IPC message: {target}", ConsoleColor.Cyan);
-
+            logger?.Log($"Received IPC message: {target}");
             
-            ContainerLocator.Container.Resolve<MainWindow>()?.Activate();
+            ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
 
             if (target == "activateWindow")
             {
@@ -216,13 +216,13 @@ internal abstract class Program
             else if (target.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
             {
                 Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
-                logger?.Log($"Opening URL: {target}", ConsoleColor.Green);
+                logger?.Log($"Opening URL: {target}");
                 ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(new Uri(target));
             }
             else if (File.Exists(target) || Directory.Exists(target))
             {
                 var fullPath = Path.GetFullPath(target);
-                logger?.Log($"Opening path: {fullPath}", ConsoleColor.Green);
+                logger?.Log($"Opening path: {fullPath}");
                 
                 ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecutePathLaunchActions(fullPath);
             }
@@ -372,7 +372,7 @@ internal abstract class Program
             var crashReport =
                 $"Version: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}{Environment.NewLine}{ex}";
 
-            if (ContainerLocator.Container.IsRegistered<ILogger>())
+            if (ContainerLocator.Container?.IsRegistered<ILogger>() == true)
                 ContainerLocator.Container?.Resolve<ILogger>()?.Error(ex.Message, ex, false);
             else Console.WriteLine(crashReport);
 

@@ -69,7 +69,7 @@
                         <Setter Property="Interaction.Behaviors">
                             <BehaviorCollectionTemplate>
                                 <BehaviorCollection>
-                                    <behaviors:ContextDragBubbleBehavior />
+                                    <ContextDragBehavior />
                                 </BehaviorCollection>
                             </BehaviorCollectionTemplate>
                         </Setter>

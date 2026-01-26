@@ -11,7 +11,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
@@ -336,7 +336,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 var result = await shutdownTask.Invoke();
                 if (!result)
                 {
-                    _logger.Log("Shutdown aborted by shutdown task.", ConsoleColor.Yellow);
+                    _logger.Log("Shutdown aborted by shutdown task.");
                     return false;
                 }
             }
@@ -357,7 +357,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     
     private void Shutdown()
     {
-        _logger.Log("Closed!", ConsoleColor.DarkGray);
+        _logger.Log("Closed!");
         
         //Save settings
         ContainerLocator.Container.Resolve<ISettingsService>().Save(ContainerLocator.Container.Resolve<IPaths>().SettingsPath);

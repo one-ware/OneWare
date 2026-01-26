@@ -7,7 +7,6 @@ using OneWare.Core.Services;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.FolderProjectSystem;
-using Prism.Ioc;
 
 namespace OneWare.Core.ViewModels.DockViews;
 

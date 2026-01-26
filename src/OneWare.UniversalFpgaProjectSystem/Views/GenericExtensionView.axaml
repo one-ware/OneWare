@@ -53,7 +53,7 @@
                     </Style>
                 </Button.Styles>
                 <Interaction.Behaviors>
-                    <behaviors:ContextDragBubbleBehavior Context="{Binding ExtensionModel}" />
+                    <ContextDragBehavior Context="{Binding ExtensionModel}" />
                 </Interaction.Behaviors>
                 <ContentControl Name="Gui" Content="{Binding GuiViewModel}" ClipToBounds="False" />
             </Button>

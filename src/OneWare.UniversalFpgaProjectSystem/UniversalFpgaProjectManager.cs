@@ -11,22 +11,21 @@ using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem;
 
 public class UniversalFpgaProjectManager : IProjectManager
 {
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly FpgaService _fpgaService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
 
-    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IDockService dockService,
+    public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
         IWindowService windowService, FpgaService fpgaService)
     {
         _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
         _fpgaService = fpgaService;
 
@@ -116,7 +115,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
-                            _dockService.OpenFileAsync(root.SearchFullPath(root.ProjectFilePath) as IProjectFile ??
+                            _mainDockService.OpenFileAsync(root.SearchFullPath(root.ProjectFilePath) as IProjectFile ??
                                                        _projectExplorerService.GetTemporaryFile(root.ProjectFilePath)))
                     });
                     break;

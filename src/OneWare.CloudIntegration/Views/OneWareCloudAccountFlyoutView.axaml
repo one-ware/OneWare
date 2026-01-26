@@ -53,15 +53,15 @@
                                 </StackPanel.Styles>
                                 
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Credit}" Height="14"  />
-                                    <TextBlock Text="Credits" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
+                                    <Image Source="{DynamicResource Bootstrap.Wallet2}" Height="14"  />
+                                    <TextBlock Text="Prepaid" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
                                     <TextBlock Text="{Binding CurrentAccountService.CurrentBalance.Balance, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
                                 </Grid>
                                 
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Entypo+.TimeSlot}" Height="14" />
-                                    <TextBlock Text="Monthly Included" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
-                                    <TextBlock Text="{Binding CurrentAccountService.MonthlyIncludedCreditsValue, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                    <Image Source="{DynamicResource Bootstrap.Clock}" Height="14" />
+                                    <TextBlock Text="Free Monthly" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
+                                    <TextBlock Foreground="Green" Text="{Binding CurrentAccountService.MonthlyIncludedCreditsValue, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
                                 </Grid>
                                 
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">

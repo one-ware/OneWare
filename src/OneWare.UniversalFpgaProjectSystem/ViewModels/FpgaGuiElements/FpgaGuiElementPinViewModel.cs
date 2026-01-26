@@ -1,7 +1,7 @@
 using Avalonia.Media;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 

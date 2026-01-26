@@ -4,11 +4,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Media;
 using Avalonia.Styling;
+using DynamicData;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
@@ -29,11 +30,8 @@ public abstract class ProjectViewModelBase : ExtendedTool
             },
         };
 
-        if (Source.RowSelection != null)
-        {
-            Source.RowSelection.SingleSelect = false;
-            SelectedItems = Source.RowSelection.SelectedItems!;
-        }
+        Source.RowSelection!.SingleSelect = false;
+        SelectedItems = Source.RowSelection.SelectedItems!;
     }
     
     public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
@@ -50,7 +48,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
-    public IReadOnlyList<IProjectExplorerNode>? SelectedItems { get; }
+    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
     

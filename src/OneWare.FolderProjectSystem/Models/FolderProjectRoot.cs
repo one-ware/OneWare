@@ -2,7 +2,7 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.FolderProjectSystem.Models;
 

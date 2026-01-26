@@ -96,7 +96,7 @@
                             Background="{DynamicResource CheckerBoardBrush16}" BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3">
                         <controls:CustomZoomBorder UseLayoutRounding="False" Name="ZoomBorder" ClipToBounds="True"
-                                                   PanButton="Right">
+                                                   PanButton="Middle">
                             <Viewbox ClipToBounds="False">
                                 <ContentControl Name="ZoomContentControl" HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"

@@ -58,7 +58,7 @@
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
                 <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
-                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialog}"
+                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialogAsync}"
                                                        TriggerKey="Delete" />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>
@@ -72,7 +72,7 @@
                             <behaviors:CommandOnDoubleTapBehavior
                                 Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding}" />
-                            <behaviors1:TreeDataGridDragBehavior />
+                            <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">

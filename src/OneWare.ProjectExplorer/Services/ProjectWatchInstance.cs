@@ -2,28 +2,27 @@
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class ProjectWatchInstance : IDisposable
 {
     private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly FileSystemWatcher _fileSystemWatcher;
+    private readonly FileSystemWatcher _parentWatcher;
     private readonly Lock _lock = new();
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IProjectRoot _root;
-    private readonly IWindowService _windowService;
     private DispatcherTimer? _timer;
 
     public ProjectWatchInstance(IProjectRoot root, IProjectExplorerService projectExplorerService,
-        IDockService dockService, ISettingsService settingsService, IWindowService windowService, ILogger logger)
+        IMainDockService mainDockService, ISettingsService settingsService, ILogger logger)
     {
         _root = root;
         _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
-        _windowService = windowService;
+        _mainDockService = mainDockService;
 
         _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
         {
@@ -36,9 +35,39 @@ public class ProjectWatchInstance : IDisposable
         _fileSystemWatcher.Renamed += File_Changed;
         _fileSystemWatcher.Created += File_Changed;
 
-        _fileSystemWatcher.Error += (sender, args) =>
+        _fileSystemWatcher.Error += (sender, args) => { Console.WriteLine("Error"); };
+
+        var parent = Directory.GetParent(root.FullPath)!;
+
+        _parentWatcher = new FileSystemWatcher(parent.FullName)
         {
-            Console.WriteLine("Error");
+            NotifyFilter = NotifyFilters.DirectoryName,
+        };
+
+        _parentWatcher.Renamed += (s, e) =>
+        {
+            if (string.Equals(e.OldFullPath, root.FullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                // root was renamed, we detect is as it was deleted
+                Dispatcher.UIThread.Post(() =>
+                {
+                    root.LoadingFailed = true;
+                    root.IsExpanded = false;
+                });
+            }
+        };
+
+        _parentWatcher.Deleted += (s, e) =>
+        {
+            if (string.Equals(e.FullPath, root.FullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                // root was deleted
+                Dispatcher.UIThread.Post(() =>
+                {
+                    root.LoadingFailed = true;
+                    root.IsExpanded = false;
+                });
+            }
         };
 
         try
@@ -46,6 +75,7 @@ public class ProjectWatchInstance : IDisposable
             settingsService.GetSettingObservable<bool>("Editor_DetectExternalChanges").Subscribe(x =>
             {
                 _fileSystemWatcher.EnableRaisingEvents = x;
+                _parentWatcher.EnableRaisingEvents = x;
 
                 _timer?.Stop();
                 if (!x) return;
@@ -69,6 +99,7 @@ public class ProjectWatchInstance : IDisposable
     {
         _timer?.Stop();
         _fileSystemWatcher.Dispose();
+        _parentWatcher.Dispose();
     }
 
     private void File_Changed(object source, FileSystemEventArgs e)
@@ -141,9 +172,9 @@ public class ProjectWatchInstance : IDisposable
                         {
                             if (oldEntry is IProjectFile file)
                             {
-                                _dockService.OpenFiles.TryGetValue(file, out var tab);
-                                _dockService.OpenFiles.Remove(file);
-                                
+                                _mainDockService.OpenFiles.TryGetValue(file, out var tab);
+                                _mainDockService.OpenFiles.Remove(file);
+
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
 
@@ -151,9 +182,9 @@ public class ProjectWatchInstance : IDisposable
                                 {
                                     tab.FullPath = path;
                                     tab.InitializeContent();
-                                    
-                                    if(tab.CurrentFile != null) 
-                                        _dockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
+
+                                    if (tab.CurrentFile != null)
+                                        _mainDockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
                                 }
                             }
                             else
@@ -167,7 +198,7 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
-                        var openTab = _dockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
+                        var openTab = _mainDockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
                         if (openTab.Key is not null)
                             openTab.Value.InitializeContent();
                         return;
@@ -181,6 +212,7 @@ public class ProjectWatchInstance : IDisposable
                         {
                             _root.LoadingFailed = true;
                         }
+
                         return;
                 }
         }

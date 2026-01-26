@@ -7,7 +7,6 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;

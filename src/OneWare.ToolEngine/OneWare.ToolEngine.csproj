@@ -11,7 +11,4 @@
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
     
-    <ItemGroup>
-      <Folder Include="Strategies\" />
-    </ItemGroup>
 </Project>

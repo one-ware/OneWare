@@ -1,26 +1,25 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Updater;
 
-public class UpdaterModule : IModule
+public class UpdaterModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<UpdaterViewModel>();
+        services.AddSingleton<UpdaterViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var windowService = containerProvider.Resolve<IWindowService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
         if (PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64
             or PlatformId.OsxArm64)
@@ -29,14 +28,15 @@ public class UpdaterModule : IModule
                 Header = "Studio Update",
                 Command = new RelayCommand(() =>
                 {
-                    var vm = containerProvider.Resolve<UpdaterViewModel>();
+                    var vm = serviceProvider.Resolve<UpdaterViewModel>();
                     windowService.Show(new UpdaterView
                     {
                         DataContext = vm
                     });
-                    if(vm.Status == UpdaterStatus.UpdateUnavailable) _ = vm.CheckForUpdateAsync();
+                    if (vm.Status == UpdaterStatus.UpdateUnavailable) _ = vm.CheckForUpdateAsync();
                 }),
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
             });
     }
 }
+

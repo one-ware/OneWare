@@ -10,8 +10,8 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Studio;
 
@@ -22,8 +22,6 @@ public class StudioApp : App
     public static readonly ISettingsService SettingsService = new SettingsService();
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
-
-    private static readonly ILogger Logger = new Logger(Paths);
 
     static StudioApp()
     {
@@ -39,14 +37,17 @@ public class StudioApp : App
         SettingsService.Load(Paths.SettingsPath);
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(ProjectSettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
+        services.AddSingleton(SettingsService);
+        services.AddSingleton(ProjectSettingsService);
+        services.AddSingleton(Paths);
+        base.RegisterServices(services);
+    }
 
-        base.RegisterTypes(containerRegistry);
+    protected override string GetLogFilePath()
+    {
+        return Path.Combine(Paths.DocumentsDirectory, "Logs", $"{Paths.AppName.Replace(" ", "_").ToLower()}_.txt");
     }
 
     public override void Initialize()
@@ -60,7 +61,7 @@ public class StudioApp : App
         });
     }
 
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();

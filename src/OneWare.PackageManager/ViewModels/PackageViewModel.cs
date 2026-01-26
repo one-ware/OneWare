@@ -6,13 +6,13 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
@@ -32,7 +32,7 @@ public class PackageViewModel : ObservableObject
 
     private bool _resolveTabsStarted;
 
-    protected PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
+    public PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
     {
         _packageModel = packageModel;
         _httpService = httpService;

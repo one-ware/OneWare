@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using OneWare.Essentials.Enums;
 
 namespace OneWare.PackageManager.ViewModels;

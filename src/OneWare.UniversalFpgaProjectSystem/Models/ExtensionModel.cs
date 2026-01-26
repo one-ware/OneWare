@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 

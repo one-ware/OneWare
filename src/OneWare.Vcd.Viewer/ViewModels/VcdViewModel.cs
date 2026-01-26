@@ -12,7 +12,7 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
-using Prism.Ioc;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 
@@ -34,9 +34,9 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
 
-    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
+    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
         ISettingsService settingsService, IWindowService windowService)
-        : base(fullPath, projectExplorerService, dockService, windowService)
+        : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
 

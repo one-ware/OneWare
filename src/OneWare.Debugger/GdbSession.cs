@@ -31,6 +31,7 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Debugger;
 
@@ -40,7 +41,7 @@ public abstract class GdbSession(
     bool asyncMode,
     ILogger logger,
     IProjectExplorerService projectExplorerService,
-    IDockService dockService)
+    IMainDockService mainDockService)
 {
     private readonly string _elfFile = Path.GetFileName(elfFile);
     private readonly object _eventLock = new();
@@ -289,7 +290,7 @@ public abstract class GdbSession(
             var file = projectExplorerService.SearchFullPath(fullPath) as IFile ??
                        projectExplorerService.GetTemporaryFile(fullPath);
 
-            var evm = await dockService.OpenFileAsync(file) as IEditor;
+            var evm = await mainDockService.OpenFileAsync(file) as IEditor;
 
             evm?.JumpToLine(lineNr);
 

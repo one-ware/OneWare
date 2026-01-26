@@ -1,11 +1,12 @@
 using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
-using Prism.Ioc;
 
 namespace OneWare.Demo;
 
@@ -14,8 +15,6 @@ public class DemoApp : App
     public static readonly ISettingsService SettingsService = new SettingsService();
 
     public static readonly IPaths Paths = new Paths("OneWare Demo", "avares://OneWare.Demo/Assets/icon.ico");
-
-    private static readonly ILogger Logger = new Logger(Paths);
 
     static DemoApp()
     {
@@ -26,13 +25,12 @@ public class DemoApp : App
             "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
+        services.AddSingleton(SettingsService);
+        services.AddSingleton(Paths);
 
-        base.RegisterTypes(containerRegistry);
+        base.RegisterServices(services);
     }
 
     public override void Initialize()

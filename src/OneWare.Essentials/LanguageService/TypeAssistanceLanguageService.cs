@@ -21,12 +21,12 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
 using Location = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.LanguageService;
 
@@ -300,7 +300,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
         file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
-        var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;

@@ -6,14 +6,15 @@
     <Import Project="..\..\build\props\DynamicData.props"/>
     <Import Project="..\..\build\props\Avalonia.props"/>
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
-    <Import Project="..\..\build\props\Avalonia.ReactiveUI.props"/>
+    <Import Project="..\..\build\props\ReactiveUI.Avalonia.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.ColorPicker.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.DataGrid.props"/>
     <Import Project="..\..\build\props\PanAndZoom.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.props"/>
     <Import Project="..\..\build\props\AvaloniaEdit.TextMate.props"/>
     <Import Project="..\..\build\props\Dock.Avalonia.props"/>
-    <Import Project="..\..\build\props\Prism.Avalonia.props"/>
+    <Import Project="..\..\build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props"/>
+    <Import Project="..\..\build\props\Microsoft.Extensions.Logging.Abstractions.props"/>
     <Import Project="..\..\build\props\Jint.props"/>
     <Import Project="..\..\build\props\CommunityToolkit.Mvvm.props"/>
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>

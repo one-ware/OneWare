@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Helpers;
 

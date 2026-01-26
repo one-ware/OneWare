@@ -14,6 +14,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using DynamicData.Binding;
 using Markdown.Avalonia;
 using OneWare.Core.Extensions;
@@ -28,8 +29,8 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using Range = System.Range;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Views.DockViews;
 
