@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.CloudIntegration.Services;
 using OneWare.CloudIntegration.Settings;
 using OneWare.Essentials.Services;
-using OneWare.SourceControl.Views;
 using AuthenticateCloudView = OneWare.CloudIntegration.Views.AuthenticateCloudView;
 
 namespace OneWare.CloudIntegration.ViewModels;
