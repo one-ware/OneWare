@@ -9,6 +9,7 @@ using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
+using Dock.Settings;
 using DynamicData.Binding;
 using OneWare.Core.Dock;
 using OneWare.Core.ViewModels.DockViews;
@@ -48,7 +49,7 @@ public class MainDockService : Factory, IMainDockService
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
-
+        
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",

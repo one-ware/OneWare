@@ -105,7 +105,8 @@ public static class DefaultLayout
             VisibleDockables = mainDockService.CreateList<IDockable>(mainLayout),
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout,
-            EnableGlobalDocking = false
+            EnableGlobalDocking = false,
+            EnableAdaptiveGlobalDockTargets = false,
         };
 
         return root;

@@ -64,6 +64,10 @@
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
     
+    <Style Selector="ContextMenu > Separator, MenuItem > Separator">
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+    
     <Style Selector="ToolTip">
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="3" />
