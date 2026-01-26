@@ -14,7 +14,7 @@ public class YosysSettingHelper
 {
     private static readonly IImage? _icon = Application.Current!.FindResource(ThemeVariant.Dark, "ForkAwesome.Check") as IImage;
     
-    public static Task UpdateProjectPcFile(IProjectFile file)
+    public static Task UpdateProjectPcFileAsync(IProjectFile file)
     {
         if (file.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot)
             return Task.CompletedTask;
@@ -51,7 +51,8 @@ public class YosysSettingHelper
         {
             if (projectFile.RelativePath.Equals(path))
             {
-                projectFile.IconOverlays.Add(_icon!);
+                if (_icon != null)
+                    projectFile.IconOverlays.Add(_icon);
                 return;
             }
         }
@@ -68,8 +69,9 @@ public class YosysSettingHelper
     public static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? constraintFile)
     {
         bool ccfInclude = true;
-        var test = project.Properties["Include"]?.AsArray()!;
-        foreach (var t in test)
+        var includeArray = project.Properties["Include"]?.AsArray();
+        if (includeArray == null) return;
+        foreach (var t in includeArray)
         {
             if (t.ToString() == "*.pcf")
                 ccfInclude = false;
@@ -78,7 +80,7 @@ public class YosysSettingHelper
         if (ccfInclude)
         {
 
-            project.Properties["Include"]?.AsArray().Add("*.pcf");
+            includeArray.Add("*.pcf");
         }
 
         JsonNode js = new JsonObject();

@@ -117,19 +117,6 @@ public partial class MainWindow : AdvancedWindow
                     Gesture = mi.InputGesture
                 };
 
-                if (false) //TODO
-                {
-                    nmi.ToggleType = NativeMenuItemToggleType.CheckBox;
-                    var obsvr = Observer.Create<bool?>(
-                        x => nmi.IsChecked = x ?? false,
-                        ex => { },
-                        () => { });
-
-                    nmi.IsChecked = true;
-
-                    //cb.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(obsvr);
-                }
-
                 if (mi.Icon is IObservable<Bitmap> btm)
                 {
                     nmi.Bind(NativeMenuItem.IconProperty, btm);

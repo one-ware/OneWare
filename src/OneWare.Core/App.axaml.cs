@@ -161,7 +161,7 @@ public class App : Application
                 ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize",
-            new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
+            new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>().ToArray()));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
             new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus,
@@ -183,29 +183,52 @@ public class App : Application
         settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket",
             new CheckBoxSetting("Use Auto Bracket", true));
 
-        settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding",
-            "Use Folding in Editor", true);
+        settingsService.RegisterSetting("Editor", "Folding", "Editor_UseFolding",
+            new CheckBoxSetting("Use Folding", true)
+            {
+                HoverDescription = "Use Folding in Editor"
+            });
 
-        settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable,
-            "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes",
-            ApplicationLifetime is IClassicDesktopStyleApplicationLifetime);
-        settingsService.RegisterTitledCombo("Editor", "Backups", BackupService.KeyBackupServiceInterval,
-            "Auto backup interval (s)",
-            "Interval the IDE uses to save files for backup", 30, 5, 10, 15, 30, 60, 120);
+        settingsService.RegisterSetting("Editor", "Backups", BackupService.KeyBackupServiceEnable,
+            new CheckBoxSetting("Use Automatic Backups",
+                ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                HoverDescription = "Use Automatic Backups in case the IDE crashes"
+            });
+        settingsService.RegisterSetting("Editor", "Backups", BackupService.KeyBackupServiceInterval,
+            new ComboBoxSetting("Auto backup interval (s)", 30, new object[] { 5, 10, 15, 30, 60, 120 })
+            {
+                HoverDescription = "Interval the IDE uses to save files for backup"
+            });
 
-        settingsService.RegisterTitled("Editor", "External Changes", "Editor_DetectExternalChanges",
-            "Detect external changes", "Detects changes that happen outside of the IDE", true);
-        settingsService.RegisterTitled("Editor", "External Changes", "Editor_NotifyExternalChanges",
-            "Notify external changes", "Notifies the user when external happen and ask for reload", false);
+        settingsService.RegisterSetting("Editor", "External Changes", "Editor_DetectExternalChanges",
+            new CheckBoxSetting("Detect external changes", true)
+            {
+                HoverDescription = "Detects changes that happen outside of the IDE"
+            });
+        settingsService.RegisterSetting("Editor", "External Changes", "Editor_NotifyExternalChanges",
+            new CheckBoxSetting("Notify external changes", false)
+            {
+                HoverDescription = "Notifies the user when external happen and ask for reload"
+            });
 
         //TypeAssistance
 
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",
-            "Enable Hover Information", "Enable Hover Information", true);
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
-            "Enable Code Suggestions", "Enable completion suggestions", true);
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
-            "Enable Auto Formatting", "Enable automatic formatting", true);
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableHover",
+            new CheckBoxSetting("Enable Hover Information", true)
+            {
+                HoverDescription = "Enable Hover Information"
+            });
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
+            new CheckBoxSetting("Enable Code Suggestions", true)
+            {
+                HoverDescription = "Enable completion suggestions"
+            });
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
+            new CheckBoxSetting("Enable Auto Formatting", true)
+            {
+                HoverDescription = "Enable automatic formatting"
+            });
 
         settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_DisableLargeFile_Min",
             new SliderSetting("Disable Assistance for Large Files", 100000, 50000, 1000000, 1000)

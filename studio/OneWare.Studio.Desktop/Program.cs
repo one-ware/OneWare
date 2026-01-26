@@ -239,7 +239,7 @@ internal abstract class Program
     }
 
     [STAThread]
-    public static int Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         try
         {
@@ -338,9 +338,9 @@ internal abstract class Program
                 try
                 {
                     var sendTask = TrySendToExistingInstanceAsync(messageToSend ?? "activateWindow");
-                    sendTask.Wait(5000); // 5 second timeout
-                        
-                    if (sendTask.Result)
+                    var sendSuccess = await sendTask.WaitAsync(TimeSpan.FromSeconds(5));
+
+                    if (sendSuccess)
                     {
                         Console.WriteLine("Request forwarded successfully.");
                         return 0;

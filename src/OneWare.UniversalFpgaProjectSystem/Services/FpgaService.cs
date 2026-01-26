@@ -125,7 +125,7 @@ public class FpgaService
         else
         {
             var nodeProviderComboSetting =
-                new ComboBoxSetting($"{language} Node Provider", options.FirstOrDefault() ?? "", options)
+                new ComboBoxSetting($"{language} Node Provider", options.FirstOrDefault() ?? "", options.ToArray())
                 {
                     MarkdownDocumentation =
                         $"Node Provider used to extract FPGA nodes from {language} files. "

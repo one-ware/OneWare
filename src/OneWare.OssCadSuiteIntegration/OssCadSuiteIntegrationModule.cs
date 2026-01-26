@@ -421,7 +421,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                await yosysService.OpenNextpnrGuiAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null),
                             Icon = new Image()
                             {
@@ -450,8 +450,11 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
 
-        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
-            "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
+        settingsService.RegisterSetting("Tools", "OSS Cad Suite", OssPathSetting,
+            new FolderPathSetting("OSS CAD Suite Path", "", null, null, IsOssPathValid)
+            {
+                HoverDescription = "Sets the path for the Yosys OSS CAD Suite"
+            });
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
         {
@@ -495,7 +498,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 l.Add(new MenuItemViewModel("YosysNetList")
                 {
                     Header = "Generate Json Netlist",
-                    Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
+                    Command = new AsyncRelayCommand(() => yosysService.CreateJsonNetListAsync(verilog))
                 });
             if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting)))
@@ -514,7 +517,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
                         });
                     }
                     else
@@ -522,7 +525,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
                         });
                     }
                 }

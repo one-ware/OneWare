@@ -783,18 +783,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (topLevel.Clipboard is not { } clipboard) return;
 
-        var dataObject = await GetDataObjectFromItemsAsync(topLevel, SelectedItems);
+        var dataTransfer = await GetDataTransferFromItemsAsync(topLevel, SelectedItems);
 
-        if (dataObject == null) return;
-        await clipboard.SetDataObjectAsync(dataObject);
+        if (dataTransfer == null) return;
+        await clipboard.SetDataAsync(dataTransfer);
     }
 
-    private const string CustomFileCopyFormat = "application/oneware-projectexplorer-copy";
+    private static readonly DataFormat<string> CustomFileCopyFormat =
+        DataFormat.CreateStringApplicationFormat("application/oneware-projectexplorer-copy");
 
-    private static async Task<DataObject?> GetDataObjectFromItemsAsync(TopLevel topLevel,
+    private static async Task<DataTransfer?> GetDataTransferFromItemsAsync(TopLevel topLevel,
         IEnumerable<IProjectExplorerNode> items)
     {
-        var dataObject = new DataObject();
+        var dataTransfer = new DataTransfer();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -816,17 +817,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             if (!storageItems.Any()) return null;
 
-            dataObject.Set(DataFormats.Files, storageItems);
+            foreach (var storageItem in storageItems)
+                dataTransfer.Add(DataTransferItem.CreateFile(storageItem));
         }
         else
         {
-            dataObject.Set(CustomFileCopyFormat, string.Join('|', items
+            var paths = string.Join('|', items
                 .Where(x => x is IProjectEntry)
                 .Cast<IProjectEntry>()
-                .Select(x => x.FullPath)));
+                .Select(x => x.FullPath));
+            dataTransfer.Add(DataTransferItem.Create(CustomFileCopyFormat, paths));
         }
 
-        return dataObject;
+        return dataTransfer;
     }
 
     public async Task PasteAsync(TopLevel topLevel)
@@ -836,27 +839,36 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var target = selectedItem as IProjectFolder ?? selectedItem?.Parent as IProjectFolder;
         if (target == null) return;
 
-        var formats = await clipboard.GetFormatsAsync();
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        var data = await clipboard.TryGetDataAsync();
+        if (data == null) return;
+        try
         {
-            var files = await clipboard.GetDataAsync(DataFormats.Files);
-            if (files is IEnumerable<IStorageItem> storageItems)
-                await ImportAsync(target, true, true, storageItems
-                    .Select(x => x.TryGetLocalPath())
-                    .Where(x => x != null)
-                    .Cast<string>().ToArray());
-        }
-        else
-        {
-            var copyContext = await clipboard.GetDataAsync(CustomFileCopyFormat);
-            if (copyContext is byte[] { Length: > 0 } byteArray)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var str = Encoding.Default.GetString(byteArray);
-                var files = str.Split('|');
-
-                await ImportAsync(target, true, true, files);
+                var storageItems = await data.TryGetFilesAsync();
+                if (storageItems != null)
+                    await ImportAsync(target, true, true, storageItems
+                        .Select(x => x.TryGetLocalPath())
+                        .Where(x => x != null)
+                        .Cast<string>()
+                        .ToArray());
             }
+            else
+            {
+                var copyContext = await data.TryGetValueAsync(CustomFileCopyFormat);
+                if (!string.IsNullOrEmpty(copyContext))
+                {
+                    var files = copyContext.Split('|');
+                    await ImportAsync(target, true, true, files);
+                }
+            }
+        }
+        finally
+        {
+            if (data is IAsyncDisposable asyncDisposable)
+                await asyncDisposable.DisposeAsync();
+            else if (data is IDisposable disposable)
+                disposable.Dispose();
         }
 
         target.IsExpanded = true;

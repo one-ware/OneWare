@@ -41,7 +41,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         };
 
         _templateSetting = new ComboBoxSearchSetting("Template", "Empty",
-            new[] { "Empty" }.Concat(fpgaService.Templates.Select(x => x.Name)))
+            new[] { "Empty" }.Concat(fpgaService.Templates.Select(x => x.Name)).ToArray())
         {
             HoverDescription = "Set the template used for this project"
         };
@@ -60,7 +60,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _toolchainSetting = new ComboBoxSetting("Toolchain",
             fpgaService.Toolchains.FirstOrDefault()?.Name ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Toolchains
-                .Select(x => x.Name)))
+                .Select(x => x.Name)).ToArray())
         {
             HoverDescription = "Set the toolchain to use for the project (can be changed later)"
         };
@@ -68,7 +68,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _loaderSetting = new ComboBoxSetting("Loader",
             fpgaService.Loaders.FirstOrDefault()?.Name ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Loaders
-                .Select(x => x.Name)))
+                .Select(x => x.Name)).ToArray())
         {
             HoverDescription = "Set the loader to use for the project (can be changed later)"
         };

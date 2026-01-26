@@ -125,9 +125,11 @@ public class SearchListViewModel : ExtendedTool
                 await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
                     _lastCancellationToken.Token);
                 break;
-            case 2 when _mainDockService.CurrentDocument is IEditor { CurrentFile: not null } editor:
-                Items.AddRange(await FindAllIndexesAsync(editor.CurrentFile,
-                    searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
+            case 2 when _mainDockService.CurrentDocument is IEditor editor:
+                var currentFile = editor.CurrentFile;
+                if (currentFile != null)
+                    Items.AddRange(await FindAllIndexesAsync(currentFile,
+                        searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
                 break;
         }
 

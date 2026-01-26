@@ -27,13 +27,17 @@ public class StudioApp : App
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
         SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
-            "Use Managed File Dialog (restart required)",
-            "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!",
-            false);
-        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
-            "Automatically download Binaries",
-            "Automatically download binaries for features when possible", true);
+        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_UseManagedFileDialog",
+            new CheckBoxSetting("Use Managed File Dialog (restart required)", false)
+            {
+                HoverDescription =
+                    "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!"
+            });
+        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
+            new CheckBoxSetting("Automatically download Binaries", true)
+            {
+                HoverDescription = "Automatically download binaries for features when possible"
+            });
         SettingsService.Load(Paths.SettingsPath);
     }
 

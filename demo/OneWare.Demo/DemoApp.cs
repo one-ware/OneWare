@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Core;
 using OneWare.Core.Data;
 using OneWare.Core.Services;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
 
@@ -20,9 +21,11 @@ public class DemoApp : App
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
         SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
-            "Use Managed File Dialog",
-            "", RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_UseManagedFileDialog",
+            new CheckBoxSetting("Use Managed File Dialog", RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                HoverDescription = ""
+            });
     }
 
     protected override void RegisterServices(IServiceCollection services)

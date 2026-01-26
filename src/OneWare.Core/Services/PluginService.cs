@@ -129,7 +129,6 @@ public class PluginService : IPluginService
         return added;
     }
 
-    [Obsolete]
     private void SetupNativeImports(string pluginPath)
     {
         var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));

@@ -35,14 +35,26 @@ public class SourceControlModule : OneWareModuleBase
         settingsService.RegisterCustom("Team Explorer", "GitHub", GitHubAccountNameKey, new GitHubAccountSetting());
 
         settingsService.RegisterSettingCategory("Team Explorer", 10, "VsImageLib.Team16X");
-        settingsService.RegisterTitled("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",
-            "Auto fetch", "Fetch for changed automatically", true);
-        settingsService.RegisterTitledSlider("Team Explorer", "Fetch", "SourceControl_AutoFetchDelay",
-            "Auto fetch interval", "Interval in seconds", 60, 5, 60, 5);
-        settingsService.RegisterTitled("Team Explorer", "Polling", "SourceControl_PollChangesEnable",
-            "Poll for changes", "Fetch for changed files automatically", true);
-        settingsService.RegisterTitledSlider("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
-            "Poll changes interval", "Interval in seconds", 5, 1, 60, 1);
+        settingsService.RegisterSetting("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",
+            new CheckBoxSetting("Auto fetch", true)
+            {
+                HoverDescription = "Fetch for changed automatically"
+            });
+        settingsService.RegisterSetting("Team Explorer", "Fetch", "SourceControl_AutoFetchDelay",
+            new SliderSetting("Auto fetch interval", 60, 5, 60, 5)
+            {
+                HoverDescription = "Interval in seconds"
+            });
+        settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesEnable",
+            new CheckBoxSetting("Poll for changes", true)
+            {
+                HoverDescription = "Fetch for changed files automatically"
+            });
+        settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
+            new SliderSetting("Poll changes interval", 5, 1, 60, 1)
+            {
+                HoverDescription = "Interval in seconds"
+            });
 
         var dockService = serviceProvider.Resolve<IMainDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
@@ -63,4 +75,3 @@ public class SourceControlModule : OneWareModuleBase
             }));
     }
 }
-

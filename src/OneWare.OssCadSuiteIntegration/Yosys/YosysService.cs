@@ -6,7 +6,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Models;
-using OneWare.ToolEngine.Services;
 using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -20,7 +19,6 @@ public class YosysService(
     ILogger logger,
     IOutputService outputService,
     IMainDockService mainDockService, 
-    IToolService toolService,
     IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
 
@@ -115,7 +113,7 @@ public class YosysService(
     public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
         => RunNextpnrAsync(project, fpgaModel, withGui: false);
 
-    public Task<bool> OpenNextpnrGui(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    public Task<bool> OpenNextpnrGuiAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
         => RunNextpnrAsync(project, fpgaModel, withGui: true);
     
     private async Task<bool> RunNextpnrAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, bool withGui)

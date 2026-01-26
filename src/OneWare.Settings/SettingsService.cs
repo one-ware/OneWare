@@ -131,7 +131,7 @@ public class SettingsService : ISettingsService
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ComboBoxSetting(title, defaultValue, options.Cast<object>())
+            new ComboBoxSetting(title, defaultValue, options.Cast<object>().ToArray())
             {
                 HoverDescription = description
             });
@@ -142,7 +142,7 @@ public class SettingsService : ISettingsService
     {
         if (defaultValue == null) throw new NullReferenceException(nameof(defaultValue));
         AddSetting(category, subCategory, key,
-            new ComboBoxSearchSetting(title, defaultValue, options.Cast<object>())
+            new ComboBoxSearchSetting(title, defaultValue, options.Cast<object>().ToArray())
             {
                 HoverDescription = description
             });

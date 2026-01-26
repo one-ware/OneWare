@@ -250,7 +250,7 @@ public class ListBoxSetting : TitledSetting
 }
 
 public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerable<object> options)
-    : ComboBoxSetting(title, defaultValue, options);
+    : ComboBoxSetting(title, defaultValue, options.ToArray());
 
 public class SliderSetting : TitledSetting
 {

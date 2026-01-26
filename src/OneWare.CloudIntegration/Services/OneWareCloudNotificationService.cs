@@ -70,7 +70,7 @@ public class OneWareCloudNotificationService
         }
         catch (Exception e)
         {
-            _logger.Warning("Failed to connect to OneWare Cloud", null, true);
+            _logger.Warning("Failed to connect to OneWare Cloud", e, true);
             
             return false;
         }
