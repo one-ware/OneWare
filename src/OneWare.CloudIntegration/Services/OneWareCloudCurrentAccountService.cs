@@ -80,6 +80,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             var (jwt, status) = await _loginService.GetJwtTokenAsync(UserId);
 
             if (jwt == null)
+            {
                 if (status == HttpStatusCode.Unauthorized)
                 {
                     _loginService.Logout(UserId);
@@ -87,8 +88,12 @@ public class OneWareCloudCurrentAccountService : ObservableObject
                     return;
                 }
 
+                // No connection?
+                return;
+            }
+
             var request = new RestRequest("/api/users/current");
-            request.AddHeader("Authorization", $"Bearer {jwt}");
+            request.AddHeader("Authorization", $"Bearer {jwt!.RawData}");
 
             var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
             CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions
