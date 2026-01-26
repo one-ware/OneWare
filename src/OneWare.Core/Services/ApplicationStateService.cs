@@ -221,46 +221,65 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 case PlatformId.LinuxX64:
                 case PlatformId.LinuxArm64:
                 {
-                    string command;
-                    string commandArgs;
-
                     // Linux: Check if running in Flatpak or Snap
                     if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
                     {
                         // Running in Flatpak
                         var flatpakId = Environment.GetEnvironmentVariable("FLATPAK_ID");
-                        command = "flatpak";
-                        commandArgs = $"run {flatpakId}";
+                        var commandArgs = $"--host flatpak run {flatpakId}";
                         if (args.Length > 0)
                             commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "flatpak-spawn",
+                            Arguments = commandArgs,
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                        break;
                     }
                     else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
                     {
                         // Running in Snap
                         var snapName = Environment.GetEnvironmentVariable("SNAP_NAME");
-                        command = "snap";
-                        commandArgs = $"run {snapName}";
+                        var command = "snap";
+                        var commandArgs = $"run {snapName}";
                         if (args.Length > 0)
                             commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-                    }
-                    else
-                    {
-                        // Regular Linux binary - use the executable path
-                        command = executablePath;
-                        commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+
+                        // Use sh -c with nohup and & to properly detach the process
+                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "/bin/sh",
+                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                        break;
                     }
 
-                    // Use sh -c with nohup and & to properly detach the process
-                    var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
-                    var startInfo = new ProcessStartInfo
+                    // Regular Linux binary - use the executable path
                     {
-                        FileName = "/bin/sh",
-                        Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = Environment.CurrentDirectory
-                    };
-                    Process.Start(startInfo);
+                        var command = executablePath;
+                        var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+
+                        // Use sh -c with nohup and & to properly detach the process
+                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "/bin/sh",
+                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                    }
                     break;
                 }
 
