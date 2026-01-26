@@ -53,9 +53,10 @@
                                        Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                        VerticalAlignment="Center" Margin="0 0 5 0" />
                             <TextBox DockPanel.Dock="Left" Name="SearchBox" AcceptsReturn="False"
+                                     Background="Transparent" BorderThickness="0"
                                      Text="{Binding SearchText}"
-                                     BorderThickness="0" CornerRadius="0" Padding="7 0"
-                                     Watermark="Find..." Height="25" VerticalContentAlignment="Center">
+                                     Padding="7 0"
+                                     Watermark="Find..." VerticalContentAlignment="Center">
                                 <Interaction.Behaviors>
                                     <FocusOnAttachedToVisualTreeBehavior />
                                     <behaviors:ListBoxNavigationBehavior AssociatedListBox="{Binding #ItemList}" />

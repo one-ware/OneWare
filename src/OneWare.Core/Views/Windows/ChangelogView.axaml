@@ -16,13 +16,8 @@
                          x:DataType="windows1:ChangelogViewModel">
     <DockPanel>
         <Grid DockPanel.Dock="Top">
-            <Border DockPanel.Dock="Top" Margin="4" Padding="4" Background="{DynamicResource ThemeControlLowBrush}"
-                    BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1">
-                <md:MarkdownScrollViewer Margin="4" Markdown="{Binding ChangeLog}">
-                    <md:MarkdownScrollViewer.Styles>
-                        <StyleInclude Source="avares://OneWare.Core/Styles/Markdown.axaml" />
-                    </md:MarkdownScrollViewer.Styles>
-                </md:MarkdownScrollViewer>
+            <Border DockPanel.Dock="Top" Margin="4" Background="{DynamicResource ThemeControlLowBrush}">
+                <controls:MarkdownViewer Markdown="{Binding ChangeLog}" Margin="10 5 0 0" />
             </Border>
             <controls:Spinner IsVisible="{Binding IsLoading}" Height="30" />
         </Grid>

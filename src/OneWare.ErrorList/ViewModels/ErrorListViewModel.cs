@@ -285,8 +285,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     private bool FilterSearchString(ErrorListItem error)
     {
         if (string.IsNullOrWhiteSpace(SearchString)) return true;
-        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
-               (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
+        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase) 
+               || error.File.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
+               || (error.Root?.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false) 
+               || (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private int CountToggle(ErrorType type)
@@ -353,8 +355,6 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         if (SelectedItem is not { } error) return;
         var doc = await _mainDockService.OpenFileAsync(error.File);
 
-        if (doc is not IEditor evb) return;
-        var offset = error.GetOffset(evb.CurrentDocument);
-        evb.Select(offset.startOffset, offset.endOffset - offset.startOffset);
+        doc?.GoToDiagnostic(error);
     }
 }

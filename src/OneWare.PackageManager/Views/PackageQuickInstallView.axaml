@@ -53,15 +53,13 @@
                     IsEnabled="{Binding !IsLoading}">
             <Button Command="{Binding Close}" 
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    Classes="RoundButton"
                     Height="35"
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
             </Button>
-            <Button Background="{DynamicResource HighlightBrush}" 
-                    Command="{Binding InstallCommand}"
+            <Button Command="{Binding InstallCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    Classes="RoundButton"
+                    Classes="PrimaryButton"
                     Height="35"
                     Padding="20 0">
                 <Panel>
@@ -118,7 +116,7 @@
                                 Margin="0 8 0 0">
                             <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                         VerticalScrollBarVisibility="Auto">
-                                <mdxaml:MarkdownScrollViewer Markdown="{Binding LicenseText}" />
+                                <controls:MarkdownViewer Markdown="{Binding LicenseText}" Margin="10 5 0 0" />
                             </ScrollViewer>
                         </Border>
                     </DockPanel>

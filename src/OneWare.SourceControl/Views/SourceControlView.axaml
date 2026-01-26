@@ -156,7 +156,7 @@
         <DockPanel Grid.Row="1">
             <TextBox IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                      Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                     Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}"
+                     Name="CommitMessageBox"
                      BorderThickness="0,1,0,1" Watermark="Message for commit...">
                 <TextBox.Styles>
                     <Style Selector="TextBox:focus /template/ Border#border">
@@ -177,11 +177,11 @@
                            TextWrapping="Wrap" />
                 <Button
                     IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
-                    Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
+                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Height="30"
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource BoxIcons.RegularGitRepoForked}" />
                             <TextBlock Text="Initialize Repository" VerticalAlignment="Center" />
                         </StackPanel>
@@ -191,11 +191,12 @@
                 <TextBlock Margin="0, 20, 0, 0" Text="Alternatively you can clone an existing repository"
                            TextWrapping="Wrap" />
 
-                <Button Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
+                <Button Margin="0, 10, 0, 10" Width="180" Classes="RoundButton"
+                        Height="30"
                         Command="{Binding CloneDialogAsync}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource FontAwesome.DownloadSolid}" />
                             <TextBlock Text="Clone existing Repository" VerticalAlignment="Center" />
                         </StackPanel>

@@ -33,10 +33,10 @@
         </Style>
     </controls:FlexibleWindow.Styles>
 
-    <Border BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+    <Border BorderThickness="0 1 0 0">
         <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
 
-            <Border BorderThickness="0, 0, 1, 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.RowSpan="2"
+            <Border BorderThickness="0, 0, 1, 0" Grid.RowSpan="2"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <TreeView Padding="3" BorderThickness="0" Background="Transparent"
                           ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"
@@ -46,14 +46,14 @@
                                           ItemsSource="{Binding SettingCollections}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="18" Source="{Binding Icon}" />
+                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
                                 <TextBlock FontSize="13" Text="{Binding Header}" />
                             </StackPanel>
                         </TreeDataTemplate>
                         <DataTemplate DataType="viewModels:SettingsCollectionViewModel">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
                                 <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="18" Source="{Binding Icon}" />
+                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
                                 <TextBlock FontSize="13" Text="{Binding Header}" />
                             </StackPanel>
                         </DataTemplate>
@@ -99,7 +99,7 @@
                         CommandParameter="{Binding #SettingsWindowView}" Name="ResetButton">
                     Reset
                 </Button>
-                <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Save}"
+                <Button Classes="PrimaryButton" Command="{Binding Save}"
                         CommandParameter="{Binding #SettingsWindowView}"
                         Name="OkButton">
                     <TextBlock Text="Save" />

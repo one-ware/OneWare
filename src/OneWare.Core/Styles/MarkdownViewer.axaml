@@ -1,0 +1,104 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+        xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+        xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+        xmlns:extensions="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|MarkdownViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <mdxaml:MarkdownScrollViewer Markdown="{TemplateBinding Markdown}">
+                    <mdxaml:MarkdownScrollViewer.Styles>
+                        
+                        <Style Selector="ScrollViewer">
+                            <Setter Property="Padding" Value="5" />
+                        </Style>
+                        
+                        <Style Selector="Grid.List">
+                            <Setter Property="Margin" Value="20 0 0 0" />
+                        </Style>
+
+                        <Style Selector="ctxt|CTextBlock.Heading1">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 2.0}" />
+                        </Style>
+
+                        <Style Selector="ctxt|CTextBlock.Heading2">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.6}" />
+                        </Style>
+
+                        <Style Selector="ctxt|CTextBlock.Heading3">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.3}" />
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip">
+                            <Style.Setters>
+                                <Setter Property="Margin" Value="-1" />
+                                <Setter Property="MaxWidth" Value="500" />
+                                <Setter Property="MaxHeight" Value="200" />
+                            </Style.Setters>
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip TextBlock">
+                            <Style.Setters>
+                                <Setter Property="MaxWidth" Value="490" />
+                            </Style.Setters>
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip ctxt|CTextBlock">
+                            <Style.Setters>
+                                <Setter Property="MaxWidth" Value="490" />
+                                <Setter Property="Margin" Value="0" />
+                            </Style.Setters>
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip ctxt|CTextBlock.Paragraph">
+                            <Style.Setters>
+                                <Setter Property="MaxWidth" Value="490" />
+                                <Setter Property="Margin" Value="0" />
+                            </Style.Setters>
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer avaloniaEdit|TextEditor">
+                            <Style.Setters>
+                                <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                                <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                                <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+                            </Style.Setters>
+                        </Style>
+
+                        <Style Selector="mdxaml|MarkdownScrollViewer Border.CodeBlock">
+                            <Style.Setters>
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="Padding" Value="3" />
+                                <Setter Property="CornerRadius" Value="2" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                            </Style.Setters>
+                        </Style>
+                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip Border.CodeBlock">
+                            <Style.Setters>
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="CornerRadius" Value="0" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style.Setters>
+                        </Style>
+                        <Style Selector="mdxaml|MarkdownScrollViewer ctxt|CCode">
+                            <Style.Setters>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                                <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+                            </Style.Setters>
+                        </Style>
+                    </mdxaml:MarkdownScrollViewer.Styles>
+                </mdxaml:MarkdownScrollViewer>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

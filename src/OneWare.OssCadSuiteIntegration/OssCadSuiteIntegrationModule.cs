@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Logging;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
@@ -305,22 +306,23 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 }
             }
         };
-        
+
         var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
-        
+
         toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"),new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"),
+            new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"), new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"), new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"), new NativeStrategy());
-        
+
         toolService.Register(new ToolContext("openFPGALoader", "Synth Tool", "openFPGALoader"), new NativeStrategy());
         toolService.Register(new ToolContext("icepack", "Synth Tool", "icepack"), new NativeStrategy());
         toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
 
-        
+
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
         serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
@@ -378,7 +380,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null)
                         },
-                        new Separator(),
+                        new Separator() { Width = double.NaN, Height = 1, Margin = new Thickness(0, 2, 0, 2)},
                         new MenuItem()
                         {
                             Header = "Yosys Settings",

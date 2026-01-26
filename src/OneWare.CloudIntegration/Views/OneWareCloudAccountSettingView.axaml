@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountSettingView" x:DataType="viewModels:OneWareCloudAccountSettingViewModel">
     <Grid ColumnDefinitions="40, 5, *" RowDefinitions="20, 20" Margin="0 5">
-        <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="50">
+        <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="50">
             <Panel>
                 <Image Source="{Binding Setting.Image}"/>
                 <Image IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}" Source="{DynamicResource CodeIcons.Account}" Margin="6"/>
@@ -16,8 +16,8 @@
         <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Setting.Email}" VerticalAlignment="Top"/>
         <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
             <Button IsVisible="{Binding !Setting.IsLoggedIn}" Command="{Binding LoginAsync}" 
-                    CommandParameter="{Binding $self}" Content="Login" Classes="BorderButton" Padding="5 0" CornerRadius="3"/>
-            <Button IsVisible="{Binding Setting.IsLoggedIn}" Command="{Binding Logout}" Content="Logout" Classes="BorderButton" Padding="5 0" CornerRadius="3"/>
+                    CommandParameter="{Binding $self}" Content="Login" Classes="RoundButton" Padding="5 0" Height="20" />
+            <Button IsVisible="{Binding Setting.IsLoggedIn}" Command="{Binding Logout}" Content="Logout" Classes="RoundButton" Padding="5 0" Height="20" />
         </StackPanel>
     </Grid>
 </UserControl>

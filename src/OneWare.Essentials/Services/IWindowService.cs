@@ -17,6 +17,7 @@ public interface IWindowService
     public ObservableCollection<MenuItemViewModel> GetMenuItems(string key);
     public void Show(FlexibleWindow window, Window? owner = null);
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner = null);
+    public Task<MessageBoxResult> ShowMessageBoxAsync(MessageBoxRequest request, Window? owner = null);
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
 
     public Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon,

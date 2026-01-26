@@ -13,11 +13,11 @@
             <TextBlock Text="{Binding Description}"/>
             <Grid ColumnDefinitions="50, *">
                 <TextBlock Text="Server:" VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1" IsEnabled="False" VerticalAlignment="Center" CornerRadius="3" Text="{Binding Server}" BorderThickness="1" BorderBrush="{DynamicResource ThemeControlMidBrush}" />
+                <TextBox Grid.Column="1" IsEnabled="False" VerticalAlignment="Center" Text="{Binding Server}" />
             </Grid>
             <Grid ColumnDefinitions="50, *, 70">
                 <TextBlock VerticalAlignment="Center" Text="Token:"/>
-                <TextBox Grid.Column="1" VerticalAlignment="Center" CornerRadius="3" Text="{Binding Password}" PasswordChar="*" BorderThickness="1" BorderBrush="{DynamicResource ThemeControlMidBrush}"/>
+                <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Password}" PasswordChar="*" />
                 <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding Generate}" CornerRadius="3" 
                         BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1" Content="Generate" Height="23" Padding="0" Margin="2 0 0 0" />
             </Grid>
@@ -28,9 +28,9 @@
             <Button Command="{Binding Cancel}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
                     Content="Cancel" />
-            <Button Background="{DynamicResource HighlightBrush}"
-                    Command="{Binding LoginAsync}"
+            <Button Command="{Binding LoginAsync}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
+                    Classes="PrimaryButton"
                     Content="Log In" />
         </StackPanel>
     </DockPanel>

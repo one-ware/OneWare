@@ -14,41 +14,37 @@
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="3">
+                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
 
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
-                                  IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
-                        <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.CaseSensitive16X}" />
+                    <Separator />
+                    
+                    <ToggleButton Classes="RoundButton" Width="24" IsChecked="{Binding CaseSensitive}" ToolTip.Tip="Case Sensitive">
+                        <Image VerticalAlignment="Center" HorizontalAlignment="Center"  Height="16" Width="16" Source="{DynamicResource VsImageLib.CaseSensitive16X}" />
                     </ToggleButton>
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
-                                  IsChecked="{Binding WholeWord}"
+                    
+                    <ToggleButton Classes="RoundButton" Width="24" IsChecked="{Binding WholeWord}"
                                   ToolTip.Tip="Match whole words">
-                        <Image Height="16" Width="16" Source="{DynamicResource VsCodeLight.Whole-Word}" />
+                        <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="16" Width="16" Source="{DynamicResource VsCodeLight.Whole-Word}" />
                     </ToggleButton>
-                    <ToggleButton CornerRadius="3" Width="24" Height="24" Background="Transparent"
-                                  IsChecked="{Binding UseRegex}"
+                    <ToggleButton Classes="RoundButton" Width="24" IsChecked="{Binding UseRegex}"
                                   ToolTip.Tip="Use Regex">
-                        <Image Height="16" Width="16" Source="{DynamicResource VsCodeLight.Regex}" />
+                        <Image VerticalAlignment="Center" HorizontalAlignment="Center"  Height="16" Width="16" Source="{DynamicResource VsCodeLight.Regex}" />
                     </ToggleButton>
 
-                    <Border DockPanel.Dock="Left" Classes="SplitterBorder" />
+                    <Separator />
 
-                    <Border Classes="RoundToolBar">
-                        <ComboBox
-                            SelectedIndex="{Binding SearchListFilterMode}"
-                            Width="140" BorderThickness="0">
-                            <ComboBoxItem>All open projects</ComboBoxItem>
-                            <ComboBoxItem>Current project</ComboBoxItem>
-                            <ComboBoxItem>Current file</ComboBoxItem>
-                        </ComboBox>
-                    </Border>
+                    <ComboBox
+                        SelectedIndex="{Binding SearchListFilterMode}"
+                        Width="140">
+                        <ComboBoxItem>All open projects</ComboBoxItem>
+                        <ComboBoxItem>Current project</ComboBoxItem>
+                        <ComboBoxItem>Current file</ComboBoxItem>
+                    </ComboBox>
 
                 </StackPanel>
-                <Border DockPanel.Dock="Right" Classes="SplitterBorder" Margin="6 0" />
 
-                <Border DockPanel.Dock="Left" Classes="RoundToolBar">
-                    <controls:SearchBox SearchText="{Binding SearchString}" x:Name="Search" BorderThickness="0"
-                                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                <Border DockPanel.Dock="Left" Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}" Height="24" Margin="0 0 5 0">
+                    <controls:SearchBox SearchText="{Binding SearchString}"
                                         HorizontalAlignment="Stretch">
                         <Interaction.Behaviors>
                             <FocusOnAttachedToVisualTreeBehavior />

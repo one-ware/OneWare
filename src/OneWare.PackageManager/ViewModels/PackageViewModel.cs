@@ -19,7 +19,7 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    
+
     private readonly IApplicationStateService _applicationStateService;
 
     private readonly IWindowService _windowService;
@@ -32,7 +32,8 @@ public class PackageViewModel : ObservableObject
 
     private bool _resolveTabsStarted;
 
-    public PackageViewModel(PackageModel packageModel, IHttpService httpService, IApplicationStateService applicationStateService, IWindowService windowService)
+    public PackageViewModel(PackageModel packageModel, IHttpService httpService,
+        IApplicationStateService applicationStateService, IWindowService windowService)
     {
         _packageModel = packageModel;
         _httpService = httpService;
@@ -40,7 +41,8 @@ public class PackageViewModel : ObservableObject
         _windowService = windowService;
 
         RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
-            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
+            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
+                or PackageStatus.UpdateAvailablePrerelease);
 
         InstallCommand = new AsyncRelayCommand<Control?>(
             x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
@@ -199,7 +201,7 @@ public class PackageViewModel : ObservableObject
 
         if (version.IsPrerelease)
         {
-            var warningResult = await ContainerLocator.Container.Resolve<IWindowService>()
+            var warningResult = await ContainerLocator.Container!.Resolve<IWindowService>()
                 .ShowYesNoAsync("Install Prerelease",
                     "The selected version is a prerelease version. Bugs are expected. Do you want to continue?",
                     MessageBoxIcon.Warning, topLevel as Window);
@@ -211,10 +213,32 @@ public class PackageViewModel : ObservableObject
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
 
-            var result = await ContainerLocator.Container.Resolve<IWindowService>()
-                .ShowYesNoAsync("Confirm License", licenseTab.Content, MessageBoxIcon.Info, topLevel as Window);
+            var result = await ContainerLocator.Container!.Resolve<IWindowService>()
+                .ShowMessageBoxAsync(new MessageBoxRequest()
+                {
+                    Title = "Confirm License",
+                    Icon = MessageBoxIcon.Info,
+                    Message = licenseTab.Content,
+                    Buttons =
+                    [
+                        new MessageBoxButton
+                        {
+                            Text = "Decline",
+                            Role = MessageBoxButtonRole.No,
+                            Style = MessageBoxButtonStyle.Secondary,
+                            IsDefault = true,
+                        },
+                        new MessageBoxButton
+                        {
+                            Text = "Accept",
+                            Role = MessageBoxButtonRole.Yes,
+                            Style = MessageBoxButtonStyle.Primary,
+                            IsDefault = true,
+                        }
+                    ]
+                }, topLevel as Window);
 
-            if (result != MessageBoxStatus.Yes) return;
+            if (!result.IsAccepted) return;
         }
 
         await _packageModel.DownloadAsync(version);
@@ -267,16 +291,16 @@ public class PackageViewModel : ObservableObject
             SelectedVersionModel.CompatibilityReport =
                 await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
     }
-    
+
     private async Task AskForRestartAsync(Control? owner)
     {
         var ownerWindow = TopLevel.GetTopLevel(owner) as Window;
-        
+
         var result = await _windowService.ShowYesNoAsync(
             "Restart now?",
             "The changes to this package require a restart to be effective. Do you want to restart now?",
             MessageBoxIcon.Warning, ownerWindow);
-        
+
         if (result == MessageBoxStatus.Yes)
         {
             ContainerLocator.Container.Resolve<PackageManagerViewModel>().AskForRestart = false;

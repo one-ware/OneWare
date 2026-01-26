@@ -1,4 +1,4 @@
-﻿<windows1:MainView xmlns="https://github.com/avaloniaui"
+﻿<windows1:MainSingleView xmlns="https://github.com/avaloniaui"
                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,14 +8,14 @@
                    xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                    xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
                    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                   x:Class="OneWare.Core.Views.Windows.MainView"
+                   x:Class="OneWare.Core.Views.Windows.MainSingleView"
                    Name="MainViewView"
                    x:DataType="windows:MainWindowViewModel">
     <Panel>
-
-        <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, Auto,*, Auto"
+        <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto, *, Auto"
               ColumnDefinitions="*">
 
+            <!-- Title Content -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="5" Margin="3 0">
                 <Image IsHitTestVisible="False"
                        Source="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
@@ -30,49 +30,12 @@
                     </Menu.Styles>
                 </Menu>
             </StackPanel>
+            
+            <!-- Main Content -->
+            <windows1:MainDock Grid.Row="1" />
 
-            <!--Icon Tray-->
-            <DockPanel Grid.Row="1" Margin="3 0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
-
-                <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal"
-                            HorizontalAlignment="Left">
-
-                    <Button ToolTip.Tip="Undo"
-                            Command="{Binding MainDockService.CurrentDocument.Undo, FallbackValue={x:Null}}">
-                        <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
-                    </Button>
-                    <Button ToolTip.Tip="Redo"
-                            Command="{Binding MainDockService.CurrentDocument.Redo, FallbackValue={x:Null}}">
-                        <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
-                    </Button>
-
-                    <Border Classes="RoundToolBar" Margin="5 0 0 0"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-
-                        <StackPanel Orientation="Horizontal">
-                            <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
-                            <StackPanel Orientation="Horizontal"
-                                        IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
-                                           Height="24" />
-                                <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
-                                    <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
-                                </Button>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel DockPanel.Dock="Right" Classes="HToolBar" Name="RightButtons">
-                    <Button ToolTip.Tip="Settings" Command="{Binding OpenSettingsDialogAsync}">
-                        <Image Source="{DynamicResource Material.SettingsOutline}" />
-                    </Button>
-                </StackPanel>
-            </DockPanel>
-
-            <DockControl Grid.Row="2" Name="DockControl" Layout="{Binding MainDockService.Layout}" />
-
-            <Border Grid.Row="3" Padding="2"
+            <!-- Bottom Content -->
+            <Border Grid.Row="2" Padding="2"
                     Background="{DynamicResource ThemeAccentBrush}">
                 <DockPanel Height="20" HorizontalAlignment="Stretch" LastChildFill="False">
                     <!--Left elements-->
@@ -185,6 +148,5 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Panel>
-
     </Panel>
-</windows1:MainView>
+</windows1:MainSingleView>

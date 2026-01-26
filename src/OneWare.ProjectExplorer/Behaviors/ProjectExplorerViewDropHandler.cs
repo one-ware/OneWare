@@ -103,7 +103,12 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             case DragDropEffects.Move:
                 _ = vm.DropAsync(targetFolder, true, false, sourcePaths);
                 return true;
-
+            
+            // Happens when a file is dragged from outside
+            case DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link:
+                _ = vm.DropAsync(targetFolder, false, true, sourcePaths);
+                return true;
+            
             default:
                 return false;
         }

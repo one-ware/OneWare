@@ -6,11 +6,11 @@ using OneWare.Essentials.Controls;
 
 namespace OneWare.Core.Views.Windows;
 
-public partial class MainView : UserControl
+public partial class MainSingleView : UserControl
 {
     public ObservableCollection<VirtualDialogModel> VirtualDialogModels { get; } = new();
 
-    public MainView()
+    public MainSingleView()
     {
         InitializeComponent();
     }

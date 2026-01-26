@@ -33,8 +33,7 @@
             <ControlTemplate>
                 <LayoutTransformControl Name="PART_LayoutTransformControl"
                                         UseRenderTransform="True">
-                    <Border Background="{TemplateBinding Background}" BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="3"
+                    <Border Background="{TemplateBinding Background}" Classes="RoundBorder"
                             BoxShadow="0 3 4 0 #4F000000" Margin="5 5 5 10">
                         <Panel>
                             <!--

@@ -7,7 +7,7 @@
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                         PrefHeight="400" PrefWidth="600" Padding="4"
+                         PrefWidth="500" SizeToContent="Height" Padding="4"
                          WindowStartupLocation="CenterOwner"
                          Title="New Universal FPGA Project" Name="UniversalFpgaProjectCreator"
                          Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
@@ -22,7 +22,7 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
                     VerticalAlignment="Bottom">
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding SaveAsync}"
+            <Button Classes="PrimaryButton" Command="{Binding SaveAsync}"
                     CommandParameter="{Binding #UniversalFpgaProjectCreator}">
                 <TextBlock Text="Save" />
             </Button>

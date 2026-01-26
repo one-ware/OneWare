@@ -16,7 +16,7 @@ namespace OneWare.Terminal.ViewModels;
 public class TerminalViewModel : ObservableObject
 {
     private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? new Win32PseudoTerminalProvider()
+        ? new Win32ConPtyPseudoTerminalProvider()
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();

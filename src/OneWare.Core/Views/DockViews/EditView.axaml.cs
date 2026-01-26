@@ -31,6 +31,7 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Range = System.Range;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Core.Views.DockViews;
 
@@ -588,7 +589,7 @@ public partial class EditView : UserControl
                 }
                 else if (!string.IsNullOrWhiteSpace(info))
                 {
-                    var markdown = new MarkdownScrollViewer
+                    var markdown = new MarkdownViewer
                     {
                         Markdown = info
                     };

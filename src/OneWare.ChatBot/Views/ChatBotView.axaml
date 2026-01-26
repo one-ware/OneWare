@@ -13,13 +13,13 @@
                 <ItemsControl ItemsSource="{Binding Messages}"/>
             </Border>
         </ScrollViewer>
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
             <DockPanel Margin="5 0" VerticalAlignment="Center">
                 <Button DockPanel.Dock="Right" Command="{Binding SendText}"
                         Margin="5 0 0 0" CommandParameter="{Binding #CommandBox.Text}">
                     <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
                 </Button>
-                <TextBox BorderThickness="0" Classes="ToolBar" DockPanel.Dock="Left" Name="CommandBox" Height="24" Watermark="Message OneAI..."
+                <TextBox Classes="ToolBar" DockPanel.Dock="Left" Name="CommandBox" Watermark="Message OneAI..."
                          HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding CurrentMessage, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
