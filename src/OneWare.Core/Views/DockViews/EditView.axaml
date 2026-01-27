@@ -96,6 +96,9 @@
                                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                     Background="{DynamicResource ThemeBackgroundBrush}">
                         <ContentControl.Styles>
+                            <Style Selector="Border.CodeBlock">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
                             <Style Selector="avaloniaEdit|TextEditor">
                                 <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                 <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />

@@ -589,8 +589,9 @@ public partial class EditView : UserControl
                 {
                     var markdown = new MarkdownViewer
                     {
-                        Markdown = info
+                        Markdown = info,
                     };
+                    markdown.Classes.Add("ToolTip");
                     HoverBoxContent.Content = markdown;
                 }
             }

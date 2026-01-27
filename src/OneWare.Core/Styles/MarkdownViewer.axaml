@@ -14,7 +14,7 @@
     <Style Selector="controls|MarkdownViewer">
         <Setter Property="Template">
             <ControlTemplate>
-                <mdxaml:MarkdownScrollViewer Markdown="{TemplateBinding Markdown}">
+                <mdxaml:MarkdownScrollViewer SelectionEnabled="True" Markdown="{TemplateBinding Markdown}">
                     <mdxaml:MarkdownScrollViewer.Styles>
 
                         <Style Selector="ScrollViewer">
@@ -64,13 +64,10 @@
                                 <Setter Property="Margin" Value="0" />
                             </Style.Setters>
                         </Style>
-
-                        <Style Selector="mdxaml|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                            <Style.Setters>
-                                <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                                <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
-                            </Style.Setters>
+                        
+                        <Style Selector=".CodeBlock avaloniaEdit|TextEditor">
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
                         </Style>
 
                         <Style Selector="mdxaml|MarkdownScrollViewer Border.CodeBlock">
@@ -82,14 +79,7 @@
                                 <Setter Property="BorderThickness" Value="1" />
                             </Style.Setters>
                         </Style>
-                        <Style Selector="mdxaml|MarkdownScrollViewer.ToolTip Border.CodeBlock">
-                            <Style.Setters>
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="Padding" Value="0" />
-                                <Setter Property="CornerRadius" Value="0" />
-                                <Setter Property="Background" Value="Transparent" />
-                            </Style.Setters>
-                        </Style>
+                        
                         <Style Selector="mdxaml|MarkdownScrollViewer ctxt|CCode">
                             <Style.Setters>
                                 <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />

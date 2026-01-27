@@ -107,7 +107,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         Models.Clear();
         Models.AddRange(models);
 
-        SelectedModel = Models.FirstOrDefault();
+        SelectedModel = Models.LastOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
     }
 
     [RelayCommand(CanExecute = nameof(CanSend))]

@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
+using Markdown.Avalonia.SyntaxHigh.Extensions;
 using OneWare.Core.Extensions.TextMate;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
@@ -46,7 +47,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                     SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
                 });
             });
-
+        
         //Hoverbox hack
         SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
 
