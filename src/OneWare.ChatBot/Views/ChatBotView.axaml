@@ -9,9 +9,9 @@
              x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
     <Grid RowDefinitions="Auto, *, Auto">
-        <Border Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="0 0 0 1" Padding="12 8">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="12 8">
             <DockPanel LastChildFill="False">
-                <StackPanel Spacing="2">
+                <StackPanel Spacing="5" Orientation="Horizontal">
                     <TextBlock Text="OneWare Chat" FontWeight="Bold" />
                     <TextBlock Text="{Binding StatusText}" FontSize="11"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
@@ -42,11 +42,11 @@
 
         <Border Grid.Row="2">
             <DockPanel Margin="10 8" LastChildFill="True">
-                <Border Background="{DynamicResource ThemeControlLowBrush}">
-                    <Panel>
+                <Border Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder">
+                    <Grid RowDefinitions="Auto, Auto">
                         <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
-                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"
-                                 Padding="6"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                                 Padding="6" BorderThickness="0" Background="Transparent"
                                  VerticalContentAlignment="Top"
                                  Text="{Binding CurrentMessage, Mode=TwoWay}">
                             <Interaction.Behaviors>
@@ -55,7 +55,7 @@
                             </Interaction.Behaviors>
                         </TextBox>
 
-                        <DockPanel Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
+                        <DockPanel Grid.Row="1" Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
                                     <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
@@ -134,7 +134,7 @@
                                 </StackPanel>
                             </StackPanel>
                         </DockPanel>
-                    </Panel>
+                    </Grid>
 
                 </Border>
 

@@ -14,8 +14,7 @@
         <!-- Base message bubble -->
         <Style Selector="Border.message">
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="14 12" />
-            <Setter Property="MaxWidth" Value="640" />
+            <Setter Property="Padding" Value="10 8" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Left" />
         </Style>
@@ -51,31 +50,7 @@
         <StackPanel Spacing="6">
 
             <!-- Message content -->
-            <controls:MarkdownViewer Markdown="{Binding Message}">
-                <controls:MarkdownViewer.Styles>
-
-                    <!-- Inline code / editor -->
-                    <Style Selector="avaloniaEdit|TextEditor">
-                        <Setter Property="FontFamily"
-                                Value="{DynamicResource EditorFont}" />
-                        <Setter Property="HorizontalScrollBarVisibility"
-                                Value="Disabled" />
-                        <Setter Property="VerticalScrollBarVisibility"
-                                Value="Disabled" />
-                        <Setter Property="Background" Value="Transparent" />
-                    </Style>
-
-                    <!-- Code blocks -->
-                    <Style Selector="Border.CodeBlock">
-                        <Setter Property="Margin" Value="4 6" />
-                        <Setter Property="Padding" Value="8" />
-                        <Setter Property="CornerRadius" Value="6" />
-                        <Setter Property="Background"
-                                Value="{DynamicResource ThemeBackgroundBrush}" />
-                    </Style>
-
-                </controls:MarkdownViewer.Styles>
-            </controls:MarkdownViewer>
+            <controls:MarkdownViewer Markdown="{Binding Message}" />
 
             <!-- Streaming hint -->
             <TextBlock Classes="streaming"

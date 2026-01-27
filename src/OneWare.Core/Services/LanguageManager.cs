@@ -44,12 +44,12 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
                 {
                     CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
-                    SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
+                    CodeBlockElement.CurrentEditorTheme = CurrentEditorTheme;
                 });
             });
         
         //Hoverbox hack
-        SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
+        CodeBlockElement.RegistryOptions = _textMateRegistryOptions;
 
         applicationStateService.RegisterShutdownTask(CleanResourcesAsync);
     }

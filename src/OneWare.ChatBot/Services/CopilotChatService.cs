@@ -28,7 +28,10 @@ public sealed class CopilotChatService : IChatService
 
         try
         {
-            _client = new CopilotClient(new CopilotClientOptions());
+            _client = new CopilotClient(new CopilotClientOptions()
+            {
+                Cwd = Directory.GetCurrentDirectory(),
+            });
 
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Starting Copilot..."));
             
@@ -58,7 +61,7 @@ public sealed class CopilotChatService : IChatService
         }
     }
 
-    public async Task InitializeSessionAsync(string model)
+    private async Task InitializeSessionAsync(string model)
     {
         if (_client == null) return;
 
@@ -70,6 +73,7 @@ public sealed class CopilotChatService : IChatService
         {
             Model = model,
             Streaming = true,
+            
         });
         
         StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
