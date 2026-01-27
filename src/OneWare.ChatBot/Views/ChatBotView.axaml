@@ -11,9 +11,9 @@
     <Grid RowDefinitions="Auto, *, Auto">
         <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="12 8">
             <DockPanel LastChildFill="False">
-                <StackPanel Spacing="5" Orientation="Horizontal">
+                <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock Text="OneWare Chat" FontWeight="Bold" />
-                    <TextBlock Text="{Binding StatusText}" FontSize="11"
+                    <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10"
@@ -72,7 +72,7 @@
                                 <Button Height="15" VerticalAlignment="Center">
                                     <Button.Flyout>
                                         <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                                Placement="BottomEdgeAlignedRight" PlacementConstraintAdjustment="None">
+                                                Placement="TopEdgeAlignedRight">
                                             <ListBox ItemsSource="{Binding Models}"
                                                      SelectedItem="{Binding SelectedModel}" BorderThickness="0"
                                                      MinWidth="200">
@@ -108,8 +108,7 @@
                                     <Button Height="15" VerticalAlignment="Center">
                                         <Button.Flyout>
                                             <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                                    Placement="BottomEdgeAlignedRight"
-                                                    PlacementConstraintAdjustment="None">
+                                                    Placement="Top">
                                                 <ListBox ItemsSource="{Binding ChatServices}"
                                                          SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
                                                          MinWidth="200">
