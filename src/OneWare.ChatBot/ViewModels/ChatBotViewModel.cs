@@ -10,6 +10,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using OneWare.ChatBot.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -28,13 +29,9 @@ public partial class ChatBotViewModel : ExtendedTool
     [ObservableProperty] private string _selectedModel = "gpt-5";
 
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
-    
-    public ObservableCollection<string> Models { get; } = new()
-    {
-        "gpt-5",
-        "claude-sonnet-4.5"
-    };
 
+    public ObservableCollection<string> Models { get; } = [];
+    
     private readonly IChatService _chatService;
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
@@ -101,7 +98,7 @@ public partial class ChatBotViewModel : ExtendedTool
 
         try
         {
-            await _chatService.SendAsync(prompt);
+            await _chatService.SendAsync(SelectedModel, prompt);
         }
         catch (Exception ex)
         {
@@ -147,7 +144,11 @@ public partial class ChatBotViewModel : ExtendedTool
 
     private async Task InitializeChatAsync()
     {
-        await _chatService.InitializeAsync(SelectedModel);
+        var models = await _chatService.InitializeAsync();
+        
+        var selectedModel = models[0];
+        Models.Clear();
+        Models.AddRange(models);
     }
 
     private ChatMessageViewModel CreateAssistantMessage()
@@ -257,20 +258,5 @@ public partial class ChatBotViewModel : ExtendedTool
             IsConnected = e.IsConnected;
             StatusText = e.StatusText;
         });
-    }
-
-    partial void OnSelectedModelChanged(string value)
-    {
-        if (!_initialized) return;
-        _ = SwitchModelAsync(value);
-    }
-
-    private async Task SwitchModelAsync(string model)
-    {
-        if (string.IsNullOrWhiteSpace(model)) return;
-
-        IsBusy = false;
-        _activeAssistantMessage = null;
-        await _chatService.InitializeAsync(model);
     }
 }

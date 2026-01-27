@@ -3,12 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.ChatBot.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
     <Grid RowDefinitions="Auto, *, Auto">
         <Border Background="{DynamicResource ThemeControlLowBrush}" BorderThickness="0 0 0 1" Padding="12 8">
-            <DockPanel>
+            <DockPanel LastChildFill="False">
                 <StackPanel Spacing="2">
                     <TextBlock Text="Copilot Chat" FontWeight="Bold" />
                     <TextBlock Text="{Binding StatusText}" FontSize="11"
@@ -16,8 +18,7 @@
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10"
                             VerticalAlignment="Center">
-                    <ProgressBar Width="70" Height="4" IsIndeterminate="True"
-                                 IsVisible="{Binding IsBusy}" />
+                    <controls:Spinner Height="16" Width="16" IsVisible="{Binding IsBusy}" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -35,7 +36,7 @@
             </Border>
         </ScrollViewer>
 
-        <Border Grid.Row="2" >
+        <Border Grid.Row="2">
             <DockPanel Margin="10 8" LastChildFill="True">
                 <Border Background="{DynamicResource ThemeControlLowBrush}">
                     <Panel>
@@ -44,20 +45,42 @@
                                  Padding="6"
                                  VerticalContentAlignment="Top"
                                  Text="{Binding CurrentMessage, Mode=TwoWay}">
+                            <Interaction.Behaviors>
+                                <behaviors:CommandOnEnterBehavior EventRoutingStrategy="Tunnel"
+                                                                  Command="{Binding SendCommand}" />
+                            </Interaction.Behaviors>
                         </TextBox>
-                        
+
                         <DockPanel Height="22" Margin="6 4" LastChildFill="False" VerticalAlignment="Bottom">
-                            <StackPanel DockPanel.Dock="Left">
-                                <TextBlock Text="{Binding SelectedModel}" FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2">
+                                <TextBlock Text="{Binding SelectedModel}" FontSize="11" VerticalAlignment="Bottom" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <Button Height="15" VerticalAlignment="Bottom">
+                                    <Button.Flyout>
+                                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                                            <ListBox ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}" BorderThickness="0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding}" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ListBox>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                    <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8" Height="8"/>
+                                </Button>
                             </StackPanel>
-                            
+
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
                                     <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
                                 </Button>
                                 <Button Command="{Binding SendCommand}">
-                                    <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
+                                    <Image Source="{DynamicResource FluentIcons.send_regular}" Height="16" />
                                 </Button>
                             </StackPanel>
                         </DockPanel>

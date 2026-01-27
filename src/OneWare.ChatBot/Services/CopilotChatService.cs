@@ -7,53 +7,41 @@ namespace OneWare.ChatBot.Services;
 
 public sealed class CopilotChatService : IChatService
 {
-    private readonly CopilotClient _client;
+    private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
-    private IDisposable? _subscription;
-    private bool _started;
+    private string? _currentModel;
 
-    public CopilotChatService()
-    {
-        _client = new CopilotClient(new CopilotClientOptions
-        {
-            AutoStart = false,
-            CliPath = "/home/hmenn/.homes/ubuntu-dev/.local/bin/copilot"
-        });
-    }
+    private IDisposable? _subscription;
 
     public event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     public event EventHandler<ChatServiceStatusEvent>? StatusChanged;
 
-    public async Task InitializeAsync(string model)
+    public async Task<string[]> InitializeAsync()
     {
+        Console.WriteLine("Initializing Copilot...");
+        
         await _sync.WaitAsync().ConfigureAwait(false);
+        await DisposeAsync();
+
         try
         {
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Connecting to {model}..."));
+            _client = new CopilotClient(new CopilotClientOptions());
 
-            if (!_started)
-            {
-                await _client.StartAsync().ConfigureAwait(false);
-                _started = true;
-            }
+            await _client.StartAsync();
 
-            await DisposeSessionAsync().ConfigureAwait(false);
+            var models = await _client.ListModelsAsync();
 
-            _session = await _client.CreateSessionAsync(new SessionConfig
-            {
-                Model = model,
-                Streaming = true
-            }).ConfigureAwait(false);
+            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
 
-            _subscription = _session.On(HandleSessionEvent);
-
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected ({model})"));
+            return models.Select(x => x.Id).ToArray();
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Copilot unavailable"));
             MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error, ex.Message));
+
+            return [];
         }
         finally
         {
@@ -61,9 +49,32 @@ public sealed class CopilotChatService : IChatService
         }
     }
 
-    public async Task SendAsync(string prompt)
+    public async Task InitializeSessionAsync(string model)
     {
-        if (_session == null) throw new InvalidOperationException("Copilot session is not ready.");
+        if (_client == null) return;
+
+        await DisposeSessionAsync();
+
+        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Connecting to {model}..."));
+
+        _session = await _client.CreateSessionAsync(new SessionConfig
+        {
+            Model = model,
+            Streaming = true,
+        });
+
+        _currentModel = model;
+        _subscription = _session.On(HandleSessionEvent);
+    }
+
+    public async Task SendAsync(string model, string prompt)
+    {
+        if (_session == null || _currentModel != model)
+        {
+            await InitializeSessionAsync(model);
+        }
+
+        if (_session == null) return;
         await _session.SendAsync(new MessageOptions { Prompt = prompt }).ConfigureAwait(false);
     }
 
@@ -75,10 +86,13 @@ public sealed class CopilotChatService : IChatService
 
     public async ValueTask DisposeAsync()
     {
-        await DisposeSessionAsync().ConfigureAwait(false);
-        if (_started)
-            await _client.StopAsync().ConfigureAwait(false);
-        await _client.DisposeAsync().ConfigureAwait(false);
+        await DisposeSessionAsync();
+        if (_client != null)
+        {
+            await _client.StopAsync();
+            await _client.DisposeAsync();
+        }
+
         _sync.Dispose();
     }
 
@@ -91,6 +105,7 @@ public sealed class CopilotChatService : IChatService
         {
             await _session.DisposeAsync().ConfigureAwait(false);
             _session = null;
+            _currentModel = null;
         }
     }
 
