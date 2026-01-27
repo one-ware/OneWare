@@ -47,22 +47,6 @@ node_modules
 lib/core/metadata.js
 lib/core/MetadataBlog.js
 
-#installer
-Installs/
-VHDPlus.WindowsInstaller/Installs/
-VHDPlus.WindowsInstaller/WinDownload.htm
-VHDPlus.WindowsInstaller/ComponentsGenerated.wxs
-VHDPlus.Debian/deb-out/
-VHDPlus.Debian/deb-build/
-VHDPlus.OSXInstaller/OSXDownload-arm64.htm
-VHDPlus.OSXInstaller/OSXDownload-x64.htm
-VHDPlus.OSXInstaller/publish/
-VHDPlus.OSXInstaller/source/
-
-#updater
-VHDPlus.UpdateManager/VHDPlus.Updater.exe
-VHDPlus.UpdateManager/VHDPlus.Updater
-
 # VSCode
 .vscode/
 

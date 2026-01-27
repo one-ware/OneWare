@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.Models;
 
@@ -12,10 +12,10 @@ public abstract class PackageModel : ObservableObject
 {
     private readonly IApplicationStateService _applicationStateService;
     private readonly ILogger _logger;
-    private PackageVersion? _installedVersion;
-    private Package _package;
 
     protected readonly IHttpService HttpService;
+    private PackageVersion? _installedVersion;
+    private Package _package;
 
     protected PackageModel(Package package,
         string packageType,
@@ -97,7 +97,7 @@ public abstract class PackageModel : ObservableObject
             _logger.Error(compat.Report!);
             return false;
         }
-        
+
         if (!await RemoveAsync()) return false;
         return await DownloadAsync(version);
     }
@@ -105,10 +105,11 @@ public abstract class PackageModel : ObservableObject
     protected virtual PackageTarget? SelectTarget(PackageVersion version)
     {
         var currentTarget = PlatformHelper.Platform.ToString().ToLower();
-        var target = version.Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget) ?? version.Targets?.FirstOrDefault(x => x.Target == "all");
+        var target = version.Targets?.FirstOrDefault(x => x.Target?.Replace("-", "") == currentTarget) ??
+                     version.Targets?.FirstOrDefault(x => x.Target == "all");
         return target;
     }
-    
+
     public Task<bool> DownloadAsync(PackageVersion version)
     {
         var task = PerformDownloadAsync(version);
@@ -125,17 +126,21 @@ public abstract class PackageModel : ObservableObject
             Status = PackageStatus.Installing;
 
             var target = SelectTarget(version);
-            
+
             if (target is not null)
             {
-                var zipUrl = target.Url ?? $"{Package.SourceUrl}/{version.Version}/{Package.Id}_{version.Version}_{target.Target}.zip";
-                
+                var zipUrl = target.Url ??
+                             $"{Package.SourceUrl}/{version.Version}/{Package.Id}_{version.Version}_{target.Target}.zip";
+
                 var state = _applicationStateService.AddState($"Downloading {Package.Id}...", AppState.Loading);
 
                 var progress = new Progress<float>(x =>
                 {
                     Progress = x;
-                    if(x < 1) state.StatusMessage = $"Downloading {Package.Id} {(int)(x * 100)}%";
+                    if (x < 1)
+                    {
+                        state.StatusMessage = $"Downloading {Package.Id} {(int)(x * 100)}%";
+                    }
                     else
                     {
                         state.StatusMessage = $"Extracting {Package.Id}...";
@@ -149,7 +154,7 @@ public abstract class PackageModel : ObservableObject
                 _applicationStateService.RemoveState(state);
 
                 IsIndeterminate = false;
-                
+
                 if (!result)
                 {
                     Status = PackageStatus.Available;
@@ -234,15 +239,15 @@ public abstract class PackageModel : ObservableObject
 
     private void UpdateStatus()
     {
-        if(Status == PackageStatus.NeedRestart) return;
-        
+        if (Status == PackageStatus.NeedRestart) return;
+
         var lastPrerelease = Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
         var lastStable = Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
-        
+
         var lV = Version.TryParse(lastStable?.Version, out var lastVersion);
         var lpV = Version.TryParse(lastPrerelease?.Version, out var lastPrereleaseVersion);
         var iV = Version.TryParse(InstalledVersion?.Version ?? "", out var installedVersion);
-        
+
         if (lV && iV && lastVersion > installedVersion)
             Status = PackageStatus.UpdateAvailable;
         else if (iV && lpV && lastPrereleaseVersion > installedVersion)
@@ -254,9 +259,9 @@ public abstract class PackageModel : ObservableObject
         else
             Status = PackageStatus.Unavailable;
     }
-    
+
     public virtual Task<CompatibilityReport> CheckCompatibilityAsync(PackageVersion version)
     {
-        return Task.FromResult(new CompatibilityReport(true, null));
+        return Task.FromResult(new CompatibilityReport(true));
     }
 }

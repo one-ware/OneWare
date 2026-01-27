@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.CloudIntegration.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:views="clr-namespace:OneWare.CloudIntegration.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
@@ -40,58 +39,67 @@
 
                         <ContentControl Content="{Binding SettingViewModel}" />
 
-                        <Separator Margin="0" Padding="0"/>
-                        
+                        <Separator Margin="0" Padding="0" />
+
                         <!-- Logged In View -->
-                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            
-                            <StackPanel Name="BalanceInfoPanel" Orientation="Vertical" IsVisible="{Binding CurrentAccountService.IsConnected}" Spacing="5" >
+                        <StackPanel Orientation="Vertical" Spacing="5"
+                                    IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                            <StackPanel Name="BalanceInfoPanel" Orientation="Vertical"
+                                        IsVisible="{Binding CurrentAccountService.IsConnected}" Spacing="5">
                                 <StackPanel.Styles>
                                     <Style Selector="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center" />
                                     </Style>
                                 </StackPanel.Styles>
-                                
+
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Bootstrap.Wallet2}" Height="14"  />
+                                    <Image Source="{DynamicResource Bootstrap.Wallet2}" Height="14" />
                                     <TextBlock Text="Prepaid" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
-                                    <TextBlock Text="{Binding CurrentAccountService.CurrentBalance.Balance, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                    <TextBlock
+                                        Text="{Binding CurrentAccountService.CurrentBalance.Balance, FallbackValue=Error}"
+                                        Grid.Column="2" HorizontalAlignment="Right" />
                                 </Grid>
-                                
+
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
                                     <Image Source="{DynamicResource Bootstrap.Clock}" Height="14" />
-                                    <TextBlock Text="Free Monthly" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
-                                    <TextBlock Foreground="Green" Text="{Binding CurrentAccountService.MonthlyIncludedCreditsValue, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                    <TextBlock Text="Free Monthly" Grid.Column="1" HorizontalAlignment="Left"
+                                               Margin="4,0" />
+                                    <TextBlock Foreground="Green"
+                                               Text="{Binding CurrentAccountService.MonthlyIncludedCreditsValue, FallbackValue=Error}"
+                                               Grid.Column="2" HorizontalAlignment="Right" />
                                 </Grid>
-                                
+
                                 <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Bootstrap.Clipboard}" Height="14"  />
-                                    <TextBlock Text="Plan" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0"/>
-                                    <TextBlock Text="{Binding CurrentAccountService.CurrentUser.UserPlan.Name, FallbackValue=Error}" Grid.Column="2" HorizontalAlignment="Right" />
+                                    <Image Source="{DynamicResource Bootstrap.Clipboard}" Height="14" />
+                                    <TextBlock Text="Plan" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
+                                    <TextBlock
+                                        Text="{Binding CurrentAccountService.CurrentUser.UserPlan.Name, FallbackValue=Error}"
+                                        Grid.Column="2" HorizontalAlignment="Right" />
                                 </Grid>
-                                
+
                             </StackPanel>
-                            
+
                             <Panel IsVisible="{Binding !#BalanceInfoPanel.IsVisible}">
-                                <controls:Spinner HorizontalAlignment="Center" VerticalAlignment="Center" Width="12" Height="12" />
+                                <controls:Spinner HorizontalAlignment="Center" VerticalAlignment="Center" Width="12"
+                                                  Height="12" />
                             </Panel>
-                            
-                            <Separator Margin="0" Padding="0"/>
-                            
+
+                            <Separator Margin="0" Padding="0" />
+
                             <controls:HyperLink Label="Manage Account"
                                                 Url="{Binding Url}"
                                                 Margin="6,0, 6, 0"
-                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center">
-                            </controls:HyperLink>
+                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center" />
                         </StackPanel>
-                        
+
                         <!-- Logged Out View -->
-                        <StackPanel Orientation="Vertical" Spacing="5" IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNull}}">
+                        <StackPanel Orientation="Vertical" Spacing="5"
+                                    IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNull}}">
                             <controls:HyperLink Label="Register here"
                                                 Url="{Binding Url}"
                                                 Margin="6,0, 6, 0"
-                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center">
-                            </controls:HyperLink>
+                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center" />
                         </StackPanel>
 
                     </StackPanel>

@@ -6,8 +6,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
-using OneWare.Essentials.Services;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Helpers;
 
@@ -88,7 +88,7 @@ public static class PlatformHelper
 
         throw new PlatformNotSupportedException("Unsupported operating system.");
     }
-    
+
     public static bool Exists(string path)
     {
         return File.Exists(path) || ExistsOnPath(path);
@@ -151,10 +151,8 @@ public static class PlatformHelper
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // Try opening the directory if the path is a file
-                if (System.IO.File.Exists(path))
-                {
+                if (File.Exists(path))
                     path = Path.GetDirectoryName(path) ?? throw new NullReferenceException(nameof(path));
-                }
                 Process.Start("xdg-open", $"\"{path}\"");
             }
             else
@@ -372,7 +370,7 @@ public static class PlatformHelper
     }
 
     #endregion
-    
+
     #region Common FileDialogFilters
 
     public static readonly FilePickerFileType ExeFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -398,7 +396,7 @@ public static class PlatformHelper
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
     }

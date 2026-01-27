@@ -2,12 +2,12 @@
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.TerminalManager.ViewModels;
 
@@ -101,8 +101,7 @@ public class TerminalManagerViewModel : ExtendedTool
             _mainDockService.Show(wrapper);
 
             Observable.FromEventPattern(terminal, nameof(terminal.TerminalReady)).Take(1)
-                .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(
-                    x => { terminal.Send($"{sudo}{scriptPath}"); });
+                .Delay(TimeSpan.FromMilliseconds(100)).Subscribe(x => { terminal.Send($"{sudo}{scriptPath}"); });
         }
         catch (Exception e)
         {

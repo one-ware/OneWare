@@ -1,7 +1,8 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OneWare.Cpp;
 
@@ -186,9 +187,12 @@ public class CppModule : OneWareModuleBase
     {
         serviceProvider.Resolve<IPackageService>().RegisterPackage(ClangdPackage);
 
-        serviceProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "C++", LspPathSetting,
-            "Clangd Path", "Path for clangd executable", "", null,
-            serviceProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile);
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "C++", LspPathSetting,
+            new FilePathSetting("Clangd Path", "", null,
+                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile)
+            {
+                HoverDescription = "Path for clangd executable"
+            });
 
         serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
 

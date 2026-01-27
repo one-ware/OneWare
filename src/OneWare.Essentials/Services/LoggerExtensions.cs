@@ -2,14 +2,13 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
 
 public static class LoggerExtensions
 {
     public static bool LayoutLoaded { get; set; } = false;
-    
+
     public static void Log(this ILogger logger, object message, bool showOutput = false, IBrush? outputBrush = null)
     {
         var text = message?.ToString() ?? string.Empty;
@@ -39,11 +38,12 @@ public static class LoggerExtensions
     {
         if (!showOutput || ContainerLocator.Container?.IsRegistered<IOutputService>() != true)
             return;
-        
+
         ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message, brush);
-        
-        if(LayoutLoaded) 
-            ContainerLocator.Current.Resolve<IMainDockService>().Show(ContainerLocator.Current.Resolve<IOutputService>());
+
+        if (LayoutLoaded)
+            ContainerLocator.Current.Resolve<IMainDockService>()
+                .Show(ContainerLocator.Current.Resolve<IOutputService>());
     }
 
     private static void ShowDialog(string message, Exception? exception, bool showDialog, string title,

@@ -16,12 +16,13 @@ using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
-using Markdown.Avalonia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Controls;
 using OneWare.ErrorList.ViewModels;
+using OneWare.Essentials.Controls;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -30,8 +31,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using Range = System.Range;
-using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Controls;
 
 namespace OneWare.Core.Views.DockViews;
 
@@ -143,11 +142,10 @@ public partial class EditView : UserControl
             i.Handled = true;
         }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
 
-        (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(
-                x =>
-                {
-                    if (!x) HoverBox.Close();
-                })
+        (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(x =>
+            {
+                if (!x) HoverBox.Close();
+            })
             .DisposeWith(_compositeDisposable);
     }
 

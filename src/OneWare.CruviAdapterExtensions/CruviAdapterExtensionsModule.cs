@@ -21,4 +21,3 @@ public class CruviAdapterExtensionsModule : OneWareModuleBase
                 "avares://OneWare.CruviAdapterExtensions/Assets/PMOD/PMOD to CRUVI_LS Adapter"));
     }
 }
-

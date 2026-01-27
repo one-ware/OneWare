@@ -1,12 +1,12 @@
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Indentation;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Services;
 using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Essentials.LanguageService;
 

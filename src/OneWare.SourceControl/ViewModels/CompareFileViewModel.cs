@@ -5,18 +5,19 @@ using Avalonia.Threading;
 using DiffPlex;
 using Dock.Model.Mvvm.Controls;
 using LibGit2Sharp;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.Models;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.SourceControl.ViewModels;
 
 public class CompareFileViewModel : Document, IWaitForContent
 {
+    private readonly IDisposable? _fileWatcher;
     private readonly SourceControlViewModel _sourceControlViewModel;
 
     private List<DiffSectionViewModel>? _chunks;
@@ -26,8 +27,6 @@ public class CompareFileViewModel : Document, IWaitForContent
     private ScrollInfoContext _scrollInfoLeft = new();
 
     private ScrollInfoContext _scrollInfoRight = new();
-    
-    private readonly IDisposable? _fileWatcher;
 
     static CompareFileViewModel()
     {
@@ -44,14 +43,7 @@ public class CompareFileViewModel : Document, IWaitForContent
         _fileWatcher = FileSystemWatcherHelper.WatchFile(FullPath, () => Dispatcher.UIThread.Post(InitializeContent));
     }
 
-    public override bool OnClose()
-    {
-        _fileWatcher?.Dispose();
-        return base.OnClose();
-    }
-
-    [DataMember]
-    public string FullPath { get; set; }
+    [DataMember] public string FullPath { get; set; }
 
     public bool IsLoading
     {
@@ -84,6 +76,12 @@ public class CompareFileViewModel : Document, IWaitForContent
     public void InitializeContent()
     {
         _ = LoadAsync();
+    }
+
+    public override bool OnClose()
+    {
+        _fileWatcher?.Dispose();
+        return base.OnClose();
     }
 
     private async Task LoadAsync()

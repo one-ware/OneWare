@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using OneWare.Essentials.Services;
-
 namespace OneWare.Essentials.Services;
 
 public static class ContainerLocator
@@ -15,4 +12,3 @@ public static class ContainerLocator
         Container = provider;
     }
 }
-

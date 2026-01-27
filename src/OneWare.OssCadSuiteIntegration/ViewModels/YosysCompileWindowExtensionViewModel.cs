@@ -2,23 +2,23 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
 public class YosysCompileWindowExtensionViewModel : ObservableObject
 {
+    private readonly FpgaService _fpgaService;
     private readonly UniversalFpgaProjectPinPlannerViewModel _pinPlannerViewModel;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-    private readonly FpgaService _fpgaService;
-    
+
     private bool _isVisible;
 
     public YosysCompileWindowExtensionViewModel(UniversalFpgaProjectPinPlannerViewModel pinPlannerViewModel,
@@ -59,15 +59,14 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
                 if (_projectExplorerService.ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                 {
                     var selectedFpga = _pinPlannerViewModel.SelectedFpgaModel?.Fpga;
-                    
-                    if(selectedFpga == null) return;
-                    
+
+                    if (selectedFpga == null) return;
+
                     await _windowService.ShowDialogAsync(
                         new YosysCompileSettingsView
                             { DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot, selectedFpga) },
                         ownerWindow);
                 }
-               
             }
             catch (Exception e)
             {

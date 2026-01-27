@@ -1,7 +1,7 @@
 ﻿using AvaloniaEdit.Document;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Json.Formatting;
 

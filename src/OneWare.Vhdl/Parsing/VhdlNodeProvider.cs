@@ -70,10 +70,12 @@ public partial class VhdlNodeProvider : INodeProvider
         if (start == -1)
             return null;
 
-        int depth = 0;
-        for (int i = start; i < code.Length; i++)
-        {
-            if (code[i] == '(') depth++;
+        var depth = 0;
+        for (var i = start; i < code.Length; i++)
+            if (code[i] == '(')
+            {
+                depth++;
+            }
             else if (code[i] == ')')
             {
                 depth--;
@@ -83,7 +85,6 @@ public partial class VhdlNodeProvider : INodeProvider
                     return code.Substring(start + 1, end - start - 1);
                 }
             }
-        }
 
         return code.Substring(start + 1);
     }
@@ -102,7 +103,7 @@ public partial class VhdlNodeProvider : INodeProvider
         {
             var name = match.Groups[1].Value.Trim();
             var value = match.Groups[2].Value.Trim();
-            if (int.TryParse(value, out int intValue))
+            if (int.TryParse(value, out var intValue))
                 genericValues[name] = intValue;
         }
 
@@ -141,18 +142,12 @@ public partial class VhdlNodeProvider : INodeProvider
                 var lower = EvaluateExpression(lowerBoundExpr, genericValues);
 
                 foreach (var name in names)
-                {
                     if (directionType.Equals("to", StringComparison.OrdinalIgnoreCase))
-                    {
-                        for (int i = upper; i <= lower; i++)
+                        for (var i = upper; i <= lower; i++)
                             nodes.Add(new FpgaNode($"{name}[{i}]", direction));
-                    }
                     else // downto
-                    {
-                        for (int i = upper; i >= lower; i--)
+                        for (var i = upper; i >= lower; i--)
                             nodes.Add(new FpgaNode($"{name}[{i}]", direction));
-                    }
-                }
             }
             // ---------------- SCALAR PORTS ----------------
             else if (logicMatch.Success)
@@ -173,13 +168,11 @@ public partial class VhdlNodeProvider : INodeProvider
     private static int EvaluateExpression(string expr, Dictionary<string, int> generics)
     {
         foreach (var g in generics.OrderByDescending(x => x.Key.Length))
-        {
             expr = Regex.Replace(
                 expr,
                 $@"\b{g.Key}\b",
                 g.Value.ToString(),
                 RegexOptions.IgnoreCase);
-        }
 
         expr = expr.Replace(" ", "");
 

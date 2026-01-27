@@ -1,9 +1,8 @@
-﻿using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
 using OneWare.ProjectSystem.Models;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.FolderProjectSystem;
 
@@ -39,7 +38,7 @@ public class FolderProjectManager : IProjectManager
 
         if (!Directory.Exists(folder.FullPath))
             return;
-        
+
         var options = new EnumerationOptions
         {
             AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
@@ -47,7 +46,7 @@ public class FolderProjectManager : IProjectManager
             RecurseSubdirectories = false
         };
         var directoryMatches = Directory.EnumerateDirectories(folder.FullPath, "*", options);
-        
+
         foreach (var match in directoryMatches)
         {
             var newFolder = new ProjectFolder(Path.GetFileName(match), folder);
@@ -55,9 +54,9 @@ public class FolderProjectManager : IProjectManager
             folder.Entities.Add(newFolder);
             (folder.Root as FolderProjectRoot)!.RegisterEntry(newFolder);
         }
-        
+
         var fileMatches = Directory.EnumerateFiles(folder.FullPath, "*.*", options);
-        
+
         foreach (var match in fileMatches)
         {
             var newFile = new ProjectFile(Path.GetFileName(match), folder);

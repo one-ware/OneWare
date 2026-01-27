@@ -12,7 +12,7 @@ public static class StringExtensions
     public static bool EqualPaths(this string input, string otherPath)
     {
         if (input == otherPath) return true;
-        
+
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
         return string.Equals(input.NormalizePath(), otherPath.NormalizePath(), comparison);
     }

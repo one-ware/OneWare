@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.ViewModels.Windows;
@@ -39,7 +37,6 @@ using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
 using OneWare.Verilog;
 using OneWare.Vhdl;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Studio.Desktop;
 
@@ -67,9 +64,7 @@ public class DesktopStudioApp : StudioApp
         try
         {
             if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
-            {
                 Services.Resolve<IPluginService>().AddPlugin(pluginPath);
-            }
 
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
             foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
@@ -83,11 +78,11 @@ public class DesktopStudioApp : StudioApp
     public override void OnFrameworkInitializationCompleted()
     {
         base.OnFrameworkInitializationCompleted();
-        
+
         Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
         Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
     }
-    
+
     private async Task PathOpenTaskAsync(string? path)
     {
         var fileName = path;
@@ -132,7 +127,7 @@ public class DesktopStudioApp : StudioApp
     protected override AvaloniaObject CreateShell()
     {
         var shell = base.CreateShell();
-        
+
         Services.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
 
         return shell;
@@ -141,8 +136,8 @@ public class DesktopStudioApp : StudioApp
     protected override async Task LoadContentAsync()
     {
         Services.Resolve<IPackageService>().RegisterPackageRepository(
-            $"https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
-        
+            "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var key = Services.Resolve<IApplicationStateService>()
@@ -151,11 +146,9 @@ public class DesktopStudioApp : StudioApp
             Services.Resolve<IMainDockService>().InitializeContent();
             Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
             Services.Resolve<ILogger>()?.Log("Loading last projects finished");
-            
+
             if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
-            {
                 Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
-            }
         }
 
         // trigger AutoLaunch Actions
@@ -164,12 +157,12 @@ public class DesktopStudioApp : StudioApp
         var settingsService = Services.Resolve<ISettingsService>();
         var packageService = Services.Resolve<IPackageService>();
         var ideUpdater = Services.Resolve<UpdaterViewModel>();
-        
-        bool versionGotUpdated = false;
+
+        var versionGotUpdated = false;
         List<PackageModel>? updatePackages = null;
-        bool canUpdate = false;
-        bool showOneWareAiNotification = false;
-        
+        var canUpdate = false;
+        var showOneWareAiNotification = false;
+
         try
         {
             //step 1: IDE got updated
@@ -181,7 +174,7 @@ public class DesktopStudioApp : StudioApp
                 settingsService.SetSettingValue("LastVersion", Global.VersionCode);
                 versionGotUpdated = true;
             }
-            
+
             //step 2: Load the installed plugins
             await packageService.LoadPackagesAsync();
 
@@ -190,10 +183,10 @@ public class DesktopStudioApp : StudioApp
                 .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
                 .Select(x => x.Value)
                 .ToList();
-            
+
             //step 4: Check if there is any IDE update
             canUpdate = await ideUpdater.CheckForUpdateAsync();
-            
+
             //step 5: Check if the OneWare.AI notification should be shown
             //the setting refer to the dialog option "Don't show this again"
             showOneWareAiNotification =
@@ -208,7 +201,6 @@ public class DesktopStudioApp : StudioApp
         {
             //step 1: IDE got updated
             if (versionGotUpdated)
-            {
                 Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
                     $"{Services.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
                     () =>
@@ -219,11 +211,9 @@ public class DesktopStudioApp : StudioApp
                         });
                     },
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-            }
 
             //step 2: Ask to update the outdated plugins
             if (updatePackages?.Count > 0)
-            {
                 Services.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
                     $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
                     "Download", () => Services.Resolve<IWindowService>().Show(new PackageManagerView
@@ -231,8 +221,7 @@ public class DesktopStudioApp : StudioApp
                         DataContext = Services.Resolve<PackageManagerViewModel>()
                     }),
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-            }
-            
+
             //step 3: Ask to update the IDE
             if (canUpdate)
             {
@@ -248,18 +237,18 @@ public class DesktopStudioApp : StudioApp
                 });
             }
             //step 4: Ask to install the OneWare.AI extension
-            else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null && 
+            else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
-                AiReleaseWindowViewModel aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();
+                var aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed
                 if (aiReleaseWindowVm.ExtensionIsAlreadyInstalled(Services.Resolve<IPluginService>()))
                     return;
-                
+
                 //if not, notify the user that the OneWare.AI extension is available
                 Dispatcher.UIThread.Post(() =>
                 {
-                    Services.Resolve<IWindowService>().Show(new AiReleaseWindow()
+                    Services.Resolve<IWindowService>().Show(new AiReleaseWindow
                     {
                         DataContext = aiReleaseWindowVm
                     });

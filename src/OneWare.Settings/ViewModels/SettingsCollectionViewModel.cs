@@ -19,19 +19,16 @@ public class SettingsCollectionViewModel : ObservableObject
 
         SettingModels.CollectionChanged += (sender, args) =>
         {
-            if (args.NewItems != null)
-            {
-                ConstructViewModels(args.NewItems.Cast<Setting>());
-            }
+            if (args.NewItems != null) ConstructViewModels(args.NewItems.Cast<Setting>());
         };
-        
+
         if (Application.Current == null) throw new NullReferenceException("Application.Current is null");
 
         if (iconKey == null) return;
 
         Application.Current.GetResourceObservable(iconKey).Subscribe(x => { Icon = x as IImage; });
     }
-    
+
     public bool ShowTitle { get; set; } = true;
     public IImage? Icon { get; set; }
 
@@ -46,7 +43,6 @@ public class SettingsCollectionViewModel : ObservableObject
     private void ConstructViewModels(IEnumerable<Setting> source)
     {
         foreach (var setting in source)
-        {
             switch (setting)
             {
                 case ComboBoxSearchSetting csS:
@@ -89,18 +85,16 @@ public class SettingsCollectionViewModel : ObservableObject
                     SettingViewModels.Add(new CustomSettingViewModel(cS));
                     break;
             }
-        }
-        
+
         var sorted = new ObservableCollection<SettingViewModel>(
-            SettingViewModels.OrderBy(s => s.Setting.Priority) 
+            SettingViewModels.OrderBy(s => s.Setting.Priority)
         );
         SettingViewModels.Clear();
         SettingViewModels.AddRange(sorted);
-
     }
-    
+
     /// <summary>
-    /// Clears all settings and their view models.
+    ///     Clears all settings and their view models.
     /// </summary>
     public void Clear()
     {

@@ -8,8 +8,8 @@ public class HorizontalLabelMarginConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if(value is double i)
-            return new Thickness(0-i, 0, 0, 0);
+        if (value is double i)
+            return new Thickness(0 - i, 0, 0, 0);
         return new Thickness(0);
     }
 

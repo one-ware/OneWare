@@ -104,7 +104,9 @@ public static class DefaultLayout
             IsCollapsable = false,
             VisibleDockables = mainDockService.CreateList<IDockable>(mainLayout),
             ActiveDockable = mainLayout,
-            DefaultDockable = mainLayout
+            DefaultDockable = mainLayout,
+            EnableGlobalDocking = false,
+            EnableAdaptiveGlobalDockTargets = false
         };
 
         return root;

@@ -28,10 +28,12 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
             <controls:MarkdownViewer Margin="2" Markdown="{Binding Message}" MaxHeight="300" />
 
-            <Border Classes="RoundToolBar" IsVisible="{Binding ShowInput}" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
+            <Border Classes="RoundToolBar" IsVisible="{Binding ShowInput}"
+                    BorderBrush="{DynamicResource ThemeBorderMidBrush}">
                 <DockPanel>
                     <DockPanel>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" IsVisible="{Binding ShowFolderButton}">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                                    IsVisible="{Binding ShowFolderButton}">
                             <Separator />
                             <Button Command="{Binding SelectPathAsync}" CommandParameter="{Binding #MessageWindow}">
                                 <Image Height="16" Width="16" VerticalAlignment="Center"

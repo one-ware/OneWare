@@ -7,7 +7,8 @@ public class CustomNotificationViewModel : Notification
 {
     public CustomNotificationViewModel(string title, string message, NotificationType type, TimeSpan expiration,
         string? buttonText = null, Action? buttonAction = null,
-        IImage? icon = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration, onClick,
+        IImage? icon = null, Action? onClick = null, Action? onClose = null) : base(title, message, type, expiration,
+        onClick,
         onClose)
     {
         ButtonText = buttonText;

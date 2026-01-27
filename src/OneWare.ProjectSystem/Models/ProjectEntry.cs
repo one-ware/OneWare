@@ -4,16 +4,13 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
+    private readonly IImage _loadingFailedOverlay;
     private IBrush _background = Brushes.Transparent;
 
     private FontWeight _fontWeight = FontWeight.Regular;
@@ -27,16 +24,15 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     private string _name;
 
     private float _textOpacity = 1f;
-    
-    private readonly IImage _loadingFailedOverlay;
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
         _name = name;
         TopFolder = topFolder;
-        
+
         _loadingFailedOverlay =
-            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.StatusCriticalErrorOverlayExp16X") as IImage
+            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.StatusCriticalErrorOverlayExp16X") as
+                IImage
             ?? throw new NullReferenceException(nameof(Application));
     }
 
@@ -113,10 +109,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set
         {
             if (this is IProjectFolder { Children.Count: 0 }) value = false;
-            if (value != _isExpanded)
-            { 
-                SetProperty(ref _isExpanded, value);
-            }
+            if (value != _isExpanded) SetProperty(ref _isExpanded, value);
         }
     }
 

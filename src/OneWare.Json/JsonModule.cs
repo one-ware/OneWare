@@ -15,4 +15,3 @@ public class JsonModule : OneWareModuleBase
             .RegisterStandaloneTypeAssistance(typeof(TypeAssistanceJson), ".json");
     }
 }
-

@@ -57,7 +57,7 @@ public class InlayHintGenerator : VisualLineElementGenerator
                 {
                     Text = x.Text,
                     Foreground = foreground,
-                    Margin = new Thickness(2, 0),
+                    Margin = new Thickness(2, 0)
                 }
             }
         }));

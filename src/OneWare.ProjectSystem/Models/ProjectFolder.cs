@@ -2,11 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectSystem.Models;
 
@@ -55,7 +55,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Collapse folder if empty
         if (Children.Count == 0) IsExpanded = false;
     }
-    
+
     public void SetIsExpandedFromView(bool newValue)
     {
         IsExpanded = newValue;
@@ -134,7 +134,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
-            
+
         var pf = ConstructNewProjectFolder(path, this);
 
         Insert(pf);
@@ -178,10 +178,12 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         for (var i = 0; i < Children.Count; i++)
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
-                                                  string.Compare(entry.Header, Children[i].Header, StringComparison.OrdinalIgnoreCase) <=
+                                                  string.Compare(entry.Header, Children[i].Header,
+                                                      StringComparison.OrdinalIgnoreCase) <=
                                                   0) || //Insert if both are folders
                                                  (entry is not ProjectFolder && Children[i] is not ProjectFolder &&
-                                                  string.Compare(entry.Header, Children[i].Header, StringComparison.OrdinalIgnoreCase) <=
+                                                  string.Compare(entry.Header, Children[i].Header,
+                                                      StringComparison.OrdinalIgnoreCase) <=
                                                   0))) //Insert if both are files
             {
                 Children.Insert(i, entry);

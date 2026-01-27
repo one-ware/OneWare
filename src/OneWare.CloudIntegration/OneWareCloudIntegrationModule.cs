@@ -69,7 +69,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
         var accountSetting = ContainerLocator.Container.Resolve<OneWareCloudAccountSetting>();
 
         var dataContext = new FeedbackViewModel(loginService, accountSetting);
-        await windowService.ShowDialogAsync(new SendFeedbackView()
+        await windowService.ShowDialogAsync(new SendFeedbackView
         {
             DataContext = dataContext
         });
@@ -77,10 +77,9 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
         if (!dataContext.Result.HasValue)
             return;
 
-        string msg = dataContext.Result == true
+        var msg = dataContext.Result == true
             ? "We received your feedback and process the request as soon as possible."
             : "Something went wrong. Please retry it later.";
         await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
     }
 }
-

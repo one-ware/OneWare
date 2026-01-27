@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 namespace OneWare.Terminal.Provider.Unix;
@@ -16,19 +15,19 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             ws_xpixel = 0,
             ws_ypixel = 0
         };
-        
+
         //Collect ENV Vars before fork to avoid EntryPointNotFoundException
         var envVars = new List<string>();
         var env = Environment.GetEnvironmentVariables();
         foreach (var variable in env.Keys)
             if (variable.ToString() is not ("TERM" or "VTE_VERSION"))
                 envVars.Add($"{variable}={env[variable]}");
-        
+
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);
-        
+
         var pid = Native.forkpty(out var masterFd, IntPtr.Zero, IntPtr.Zero, ref winsize);
-        
+
         //pid will be 0 on the forked process
         if (pid == 0)
         {
@@ -42,10 +41,10 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             Native.execve(argsArray[0], argsArray.ToArray(), envVars.ToArray());
             Environment.Exit(1);
         }
-        
+
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
-        
+
         return new UnixPseudoTerminal(process, masterFd, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
             FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read));
     }

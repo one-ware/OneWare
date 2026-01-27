@@ -3,11 +3,10 @@ using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Logging;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Core;
-using OneWare.Essentials.Enums;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -24,9 +23,7 @@ using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
 using Orientation = Avalonia.Layout.Orientation;
-using Microsoft.Extensions.Logging;
 
 // ReSharper disable StringLiteralTypo
 
@@ -56,7 +53,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         ],
         Tabs =
         [
-            new PackageTab()
+            new PackageTab
             {
                 Title = "Readme",
                 ContentUrl = "https://raw.githubusercontent.com/HendrikMennen/oss-cad-suite-build/main/README.md"
@@ -271,7 +268,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         ]
                     }
                 ]
-            },
+            }
         ]
     };
 
@@ -295,32 +292,27 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         projectExplorerService.Projects.CollectionChanged += (sender, e) =>
         {
             if (sender is ObservableCollection<IProjectRoot> collection)
-            {
                 if (e.Action == NotifyCollectionChangedAction.Add)
-                {
                     foreach (var project in collection)
-                    {
                         YosysSettingHelper.SetConstraintOverlay(project);
-                    }
-                }
-            }
         };
-        
+
         var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
-        
+
         toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"),new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"),
+            new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"), new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"), new NativeStrategy());
         toolService.Register(new ToolContext("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"), new NativeStrategy());
-        
+
         toolService.Register(new ToolContext("openFPGALoader", "Synth Tool", "openFPGALoader"), new NativeStrategy());
         toolService.Register(new ToolContext("icepack", "Synth Tool", "icepack"), new NativeStrategy());
         toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
 
-        
+
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
         serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
@@ -346,12 +338,12 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 var fpga = fpgaPackage?.LoadFpga();
 
-                return new StackPanel()
+                return new StackPanel
                 {
                     Orientation = Orientation.Vertical,
                     Children =
                     {
-                        new MenuItem()
+                        new MenuItem
                         {
                             Header = "Run Synthesis",
                             Command = new AsyncRelayCommand(async () =>
@@ -360,7 +352,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 await yosysService.SynthAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null)
                         },
-                        new MenuItem()
+                        new MenuItem
                         {
                             Header = "Run Fit",
                             Command = new AsyncRelayCommand(async () =>
@@ -369,7 +361,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 await yosysService.FitAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null)
                         },
-                        new MenuItem()
+                        new MenuItem
                         {
                             Header = "Run Assemble",
                             Command = new AsyncRelayCommand(async () =>
@@ -378,11 +370,11 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null)
                         },
-                        new Separator(),
-                        new MenuItem()
+                        new Separator { Width = double.NaN, Height = 1, Margin = new Thickness(0, 2, 0, 2) },
+                        new MenuItem
                         {
                             Header = "Yosys Settings",
-                            Icon = new Image()
+                            Icon = new Image
                             {
                                 Source = Application.Current!.FindResource(
                                     Application.Current!.RequestedThemeVariant,
@@ -413,20 +405,20 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 }
                             })
                         },
-                        new MenuItem()
+                        new MenuItem
                         {
                             Header = "Open nextpnr GUI",
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                await yosysService.OpenNextpnrGuiAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null),
-                            Icon = new Image()
+                            Icon = new Image
                             {
                                 Source = Application.Current!.FindResource(
                                     Application.Current!.RequestedThemeVariant,
                                     "BoxIcons.RegularOpenGui") as IImage
-                            },
+                            }
                         }
                     }
                 };
@@ -448,8 +440,11 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
 
-        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
-            "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
+        settingsService.RegisterSetting("Tools", "OSS Cad Suite", OssPathSetting,
+            new FolderPathSetting("OSS CAD Suite Path", "", null, null, IsOssPathValid)
+            {
+                HoverDescription = "Sets the path for the Yosys OSS CAD Suite"
+            });
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
         {
@@ -473,7 +468,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
             //    Path.Combine(x, "share", $"verilator"));
             environmentService.SetEnvironmentVariable("GHDL_PREFIX",
-                Path.Combine(x, "lib", $"ghdl"));
+                Path.Combine(x, "lib", "ghdl"));
             environmentService.SetEnvironmentVariable("GTK_EXE_PREFIX", x);
             environmentService.SetEnvironmentVariable("GTK_DATA_PREFIX", x);
             environmentService.SetEnvironmentVariable("GDK_PIXBUF_MODULEDIR",
@@ -493,7 +488,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 l.Add(new MenuItemViewModel("YosysNetList")
                 {
                     Header = "Generate Json Netlist",
-                    Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
+                    Command = new AsyncRelayCommand(() => yosysService.CreateJsonNetListAsync(verilog))
                 });
             if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting)))
@@ -504,27 +499,21 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         serviceProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
                 });
             if (x is [IProjectFile { Extension: ".pcf" } pcf])
-            {
                 if (pcf.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
                 {
                     if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath)
-                    {
                         l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf))
                         });
-                    }
                     else
-                    {
                         l.Add(new MenuItemViewModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFile(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf))
                         });
-                    }
                 }
-            }
         });
 
         serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>

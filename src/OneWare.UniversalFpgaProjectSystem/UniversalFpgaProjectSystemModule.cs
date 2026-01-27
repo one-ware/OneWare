@@ -1,9 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Converters;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -11,7 +10,6 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OneWare.UniversalFpgaProjectSystem;
 
@@ -90,21 +88,17 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                 Priority = 200
             });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
-        [
-            new MenuItemViewModel("Download")
-            {
-                Header = "Download",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
-            },
-            new MenuItemViewModel("Compile")
-            {
-                Header = "Compile",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
-            }
-        ]);
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemViewModel("Download")
+        {
+            Header = "Download",
+            Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
+            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
+        }, new MenuItemViewModel("Compile")
+        {
+            Header = "Compile",
+            Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
+            IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+        });
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
             new OneWareUiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));

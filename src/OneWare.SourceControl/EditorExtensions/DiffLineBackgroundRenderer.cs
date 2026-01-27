@@ -10,7 +10,7 @@ namespace OneWare.SourceControl.EditorExtensions;
 public class DiffLineBackgroundRenderer : IBackgroundRenderer
 {
     private static readonly Pen BorderlessPen;
-    private readonly Pen? _texturePen;
+    private readonly Pen _texturePen;
 
     static DiffLineBackgroundRenderer()
     {

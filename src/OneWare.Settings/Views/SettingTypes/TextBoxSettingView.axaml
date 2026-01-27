@@ -3,16 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
-             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.TextBoxSettingView"
-             x:DataType="settingTypes:TextBoxSettingViewModel"
-             >
+             x:DataType="settingTypes:TextBoxSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2">
         <StackPanel.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
@@ -25,13 +23,15 @@
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                         <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
-                                                     MaxWidth="900" MaxHeight="500" />
+                                                 MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
             </Button>
         </StackPanel>
         <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                 Watermark="{Binding Watermark}" 
+                 Watermark="{Binding Watermark}"
                  Text="{Binding Setting.Value, Mode=TwoWay}" />
+        <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
+                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>
 </UserControl>

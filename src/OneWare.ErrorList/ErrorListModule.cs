@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.ErrorList.ViewModels;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -30,8 +31,11 @@ public class ErrorListModule : OneWareModuleBase
         dockService.RegisterLayoutExtension<IErrorService>(DockShowLocation.Bottom);
 
         settingsService.Register(KeyErrorListFilterMode, 0);
-        settingsService.RegisterTitled("Experimental", "Errors", KeyErrorListShowExternalErrors,
-            "Show external errors", "Sets if errors from files outside of your project should be visible", false);
+        settingsService.RegisterSetting("Experimental", "Errors", KeyErrorListShowExternalErrors,
+            new CheckBoxSetting("Show external errors", false)
+            {
+                HoverDescription = "Sets if errors from files outside of your project should be visible"
+            });
         settingsService.Register(KeyErrorListVisibleSource, 0);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Problems")
@@ -42,4 +46,3 @@ public class ErrorListModule : OneWareModuleBase
         });
     }
 }
-

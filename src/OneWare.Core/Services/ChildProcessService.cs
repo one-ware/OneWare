@@ -3,10 +3,10 @@ using System.Diagnostics;
 using Asmichi.ProcessManagement;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
@@ -66,7 +66,8 @@ public class ChildProcessService(
             if (x.Contains(' ')) return $"\"{x}\"";
             return x;
         }));
-        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}", true, Brushes.CornflowerBlue);
+        logger.Log($"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} {argumentString}",
+            true, Brushes.CornflowerBlue);
 
         var output = string.Empty;
 
@@ -148,7 +149,8 @@ public class ChildProcessService(
             catch (TaskCanceledException)
             {
                 logger.Log(
-                    $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!", true, Brushes.DarkOrange);
+                    $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!",
+                    true, Brushes.DarkOrange);
                 childProcess.Kill();
             }
 
@@ -173,21 +175,22 @@ public class ChildProcessService(
         return (success, output);
     }
 
-    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory)
+    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments,
+        string workingDirectory)
     {
-        var process = new Process()
+        var process = new Process
         {
             StartInfo = new ProcessStartInfo(path, arguments)
             {
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
-                CreateNoWindow = true,
+                CreateNoWindow = true
             }
         };
 
         process.Start();
         process.EnableRaisingEvents = true;
-        
+
         return new WeakReference<Process>(process);
     }
 

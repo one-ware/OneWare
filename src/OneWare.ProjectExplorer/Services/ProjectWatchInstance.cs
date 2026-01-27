@@ -1,18 +1,18 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class ProjectWatchInstance : IDisposable
 {
     private readonly Dictionary<string, List<FileSystemEventArgs>> _changes = new();
-    private readonly IMainDockService _mainDockService;
     private readonly FileSystemWatcher _fileSystemWatcher;
-    private readonly FileSystemWatcher _parentWatcher;
     private readonly Lock _lock = new();
+    private readonly IMainDockService _mainDockService;
+    private readonly FileSystemWatcher _parentWatcher;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IProjectRoot _root;
     private DispatcherTimer? _timer;
@@ -41,33 +41,29 @@ public class ProjectWatchInstance : IDisposable
 
         _parentWatcher = new FileSystemWatcher(parent.FullName)
         {
-            NotifyFilter = NotifyFilters.DirectoryName,
+            NotifyFilter = NotifyFilters.DirectoryName
         };
 
         _parentWatcher.Renamed += (s, e) =>
         {
             if (string.Equals(e.OldFullPath, root.FullPath, StringComparison.OrdinalIgnoreCase))
-            {
                 // root was renamed, we detect is as it was deleted
                 Dispatcher.UIThread.Post(() =>
                 {
                     root.LoadingFailed = true;
                     root.IsExpanded = false;
                 });
-            }
         };
 
         _parentWatcher.Deleted += (s, e) =>
         {
             if (string.Equals(e.FullPath, root.FullPath, StringComparison.OrdinalIgnoreCase))
-            {
                 // root was deleted
                 Dispatcher.UIThread.Post(() =>
                 {
                     root.LoadingFailed = true;
                     root.IsExpanded = false;
                 });
-            }
         };
 
         try
@@ -208,10 +204,7 @@ public class ProjectWatchInstance : IDisposable
                                 await _projectExplorerService.ReloadAsync(_root);
                         return;
                     case WatcherChangeTypes.Deleted:
-                        if (_root.ProjectPath.EqualPaths(path))
-                        {
-                            _root.LoadingFailed = true;
-                        }
+                        if (_root.ProjectPath.EqualPaths(path)) _root.LoadingFailed = true;
 
                         return;
                 }

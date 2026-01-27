@@ -36,7 +36,7 @@
                                            VerticalAlignment="Center" TextAlignment="Center" />
                             </Panel>
                             <Panel Margin="-5 0 0 -20" HorizontalAlignment="Left"
-                                IsVisible="{Binding ConnectorStyle, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter=compact}">
+                                   IsVisible="{Binding ConnectorStyle, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter=compact}">
                                 <Border Classes="ConnectorBorder" Height="20" Width="5" />
                             </Panel>
                             <Panel Margin="60 0 0 -20" HorizontalAlignment="Left"
@@ -55,7 +55,7 @@
                         </Style>
                         <Style Selector="MenuItem.RootMenuItem Border.ConnectorBorder">
                             <Setter Property="Background" Value="#202020" />
-                            <Setter Property="CornerRadius" Value="0"/>
+                            <Setter Property="CornerRadius" Value="0" />
                         </Style>
                         <Style Selector="MenuItem.RootMenuItem:pointerover Border.ConnectorBorder">
                             <Setter Property="Background" Value="#505050" />

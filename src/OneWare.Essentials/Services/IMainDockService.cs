@@ -17,8 +17,8 @@ public interface IMainDockService : INotifyPropertyChanged
     public IExtendedDocument? CurrentDocument { get; }
 
     public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument;
-    
-    public void RegisterFileOpenOverwrite(Func<IFile,bool> action, params string[] extensions);
+
+    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions);
 
     public void RegisterLayoutExtension<T>(DockShowLocation location);
 

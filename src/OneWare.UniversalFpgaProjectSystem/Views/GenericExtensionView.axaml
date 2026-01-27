@@ -4,11 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:views="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views"
-             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericExtensionView"
              ClipToBounds="False"
@@ -16,14 +12,16 @@
     <Panel Name="ExtensionView">
 
         <Interaction.Behaviors>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="True" Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="True"
+                                 Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
                 <AddClassAction ClassName="HideExtension" />
             </DataTriggerBehavior>
-            <DataTriggerBehavior ComparisonCondition="Equal" Value="False" Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
+            <DataTriggerBehavior ComparisonCondition="Equal" Value="False"
+                                 Binding="{Binding $parent[views:UniversalFpgaProjectPinPlannerView].((viewModels:UniversalFpgaProjectPinPlannerViewModel)DataContext).HideExtensions, FallbackValue={x:False}}">
                 <RemoveClassAction ClassName="HideExtension" />
             </DataTriggerBehavior>
         </Interaction.Behaviors>
-        
+
         <Panel.Styles>
             <Style Selector="Panel#ExtensionView">
                 <Setter Property="Transitions">
@@ -34,7 +32,7 @@
             </Style>
             <Style Selector="Panel#ExtensionView.HideExtension">
                 <Setter Property="Opacity" Value="0.1" />
-                <Setter Property="IsHitTestVisible" Value="False"/>
+                <Setter Property="IsHitTestVisible" Value="False" />
             </Style>
         </Panel.Styles>
 

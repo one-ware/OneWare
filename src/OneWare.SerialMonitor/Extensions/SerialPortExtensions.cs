@@ -21,7 +21,7 @@ public static class SerialPortExtensions
         // with the line ending then stop reading
         while (true)
         {
-            await serialPort.BaseStream.ReadAsync(buffer, 0, 1);
+            await serialPort.BaseStream.ReadExactlyAsync(buffer.AsMemory(0, 1));
             ret += serialPort.Encoding.GetString(buffer);
 
             if (ret.EndsWith(serialPort.NewLine))

@@ -3,18 +3,16 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Notifications;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
+using OneWare.Core.ModuleLogic;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager;
 using OneWare.SourceControl;
 using OneWare.TerminalManager;
-using System.CommandLine;
-using Microsoft.Extensions.Logging;
-using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Demo.Desktop;
 
@@ -37,17 +35,15 @@ public class DesktopDemoApp : DemoApp
         {
             Services.Resolve<ILogger>().Error(e.Message, e);
         }
-        
+
         if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
-        {
             Services.Resolve<IPluginService>().AddPlugin(pluginPath);
-        }
     }
 
     protected override async Task LoadContentAsync()
     {
         await base.LoadContentAsync();
-        
+
         var arguments = Environment.GetCommandLineArgs();
 
         // Window? splashWindow = null;

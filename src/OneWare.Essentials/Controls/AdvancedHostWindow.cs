@@ -13,8 +13,8 @@ namespace OneWare.Essentials.Controls;
 
 public class AdvancedHostWindow : HostWindow
 {
-    private bool _cancelClose = true;
     private readonly IMainDockService _mainDockService;
+    private bool _cancelClose = true;
     private WindowState _lastWindowState = WindowState.Normal;
 
     public AdvancedHostWindow(IMainDockService mainDockService)
@@ -24,7 +24,7 @@ public class AdvancedHostWindow : HostWindow
 #endif
         _mainDockService = mainDockService;
 
-        this.KeyDown += (s, args) =>
+        KeyDown += (s, args) =>
         {
             if (args.Key == Key.F11)
             {

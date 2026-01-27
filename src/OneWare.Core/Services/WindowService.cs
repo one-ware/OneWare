@@ -4,10 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
-using DynamicData;
 using OneWare.Core.ViewModels.Controls;
-using OneWare.Core.ViewModels.Windows;
-using OneWare.Core.Views.Controls;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
@@ -109,8 +106,11 @@ public class WindowService : IWindowService
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
             await window.ShowDialogAsync(owner);
         }
-        else await ContainerLocator.Container.Resolve<MainSingleView>().ShowVirtualDialogAsync(window);
-        
+        else
+        {
+            await ContainerLocator.Container.Resolve<MainSingleView>().ShowVirtualDialogAsync(window);
+        }
+
         window.Focus();
     }
 
@@ -135,7 +135,7 @@ public class WindowService : IWindowService
                     Text = "Ok",
                     Role = MessageBoxButtonRole.Yes,
                     Style = MessageBoxButtonStyle.Primary,
-                    IsDefault = true,
+                    IsDefault = true
                 }
             }
         };
@@ -199,7 +199,7 @@ public class WindowService : IWindowService
                 {
                     Text = "Cancel",
                     Role = MessageBoxButtonRole.Cancel,
-                    Style = MessageBoxButtonStyle.Secondary,
+                    Style = MessageBoxButtonStyle.Secondary
                 }
             }
         };
@@ -239,7 +239,7 @@ public class WindowService : IWindowService
                 {
                     Text = "Cancel",
                     Role = MessageBoxButtonRole.Cancel,
-                    Style = MessageBoxButtonStyle.Secondary,
+                    Style = MessageBoxButtonStyle.Secondary
                 }
             }
         };
@@ -248,7 +248,8 @@ public class WindowService : IWindowService
         return result.IsCanceled ? null : result.Input;
     }
 
-    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
+    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon,
+        string? defaultValue,
         Window? owner = null)
     {
         var request = new MessageBoxRequest
@@ -274,7 +275,7 @@ public class WindowService : IWindowService
                 {
                     Text = "Cancel",
                     Role = MessageBoxButtonRole.Cancel,
-                    Style = MessageBoxButtonStyle.Secondary,
+                    Style = MessageBoxButtonStyle.Secondary
                 }
             }
         };
@@ -306,7 +307,7 @@ public class WindowService : IWindowService
                 {
                     Text = "Cancel",
                     Role = MessageBoxButtonRole.Cancel,
-                    Style = MessageBoxButtonStyle.Secondary,
+                    Style = MessageBoxButtonStyle.Secondary
                 }
             }
         };
@@ -328,7 +329,8 @@ public class WindowService : IWindowService
         Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information,
         TimeSpan? expiration = null)
     {
-        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10), buttonText, buttonAction, icon);
+        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10),
+            buttonText, buttonAction, icon);
 
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
     }

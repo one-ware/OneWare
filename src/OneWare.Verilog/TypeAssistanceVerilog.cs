@@ -11,13 +11,14 @@ namespace OneWare.Verilog;
 
 internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
 {
-    private readonly ISettingsService _settingsService;
     private static List<TextMateSnippet>? _snippets;
+    private readonly ISettingsService _settingsService;
 
-    public TypeAssistanceVerilog(IEditor editor, LanguageServiceVerilog ls, ISettingsService settingsService) : base(editor, ls)
+    public TypeAssistanceVerilog(IEditor editor, LanguageServiceVerilog ls, ISettingsService settingsService) :
+        base(editor, ls)
     {
         _settingsService = settingsService;
-        
+
         CodeBox.TextArea.IndentationStrategy =
             IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFile);
         FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
@@ -34,11 +35,9 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         if (IsInComment(CodeBox.CaretOffset)) return Task.FromResult(items);
 
         if (_settingsService.GetSettingValue<bool>(VerilogModule.EnableSnippetsSetting) && _snippets != null)
-        {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
                 CodeBox.CaretOffset, CurrentFile)));
-        }
 
         return Task.FromResult(items);
     }

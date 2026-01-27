@@ -8,12 +8,12 @@ namespace OneWare.Core.Views.Windows;
 
 public partial class MainSingleView : UserControl
 {
-    public ObservableCollection<VirtualDialogModel> VirtualDialogModels { get; } = new();
-
     public MainSingleView()
     {
         InitializeComponent();
     }
+
+    public ObservableCollection<VirtualDialogModel> VirtualDialogModels { get; } = new();
 
     public async Task ShowVirtualDialogAsync(FlexibleWindow window)
     {

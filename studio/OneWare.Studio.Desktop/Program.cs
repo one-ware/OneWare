@@ -1,8 +1,10 @@
 ﻿using System;
+using System.CommandLine;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -11,14 +13,11 @@ using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
+using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using System.CommandLine;
-using System.Linq;
-using OneWare.Core.Views.Windows;
-using Microsoft.Extensions.Logging;
-using OneWare.Studio.Desktop.Views;
 
 namespace OneWare.Studio.Desktop;
 
@@ -43,7 +42,7 @@ internal abstract class Program
             Console.WriteLine($"Error releasing lock: {ex.Message}");
         }
     }
-    
+
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
@@ -51,17 +50,15 @@ internal abstract class Program
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true,
-                WmClass = "OneWare",
+                WmClass = "OneWare"
             })
             .With(new Win32PlatformOptions
             {
                 WinUICompositionBackdropCornerRadius = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                    ? Environment.OSVersion.Version.Build >= 22000 ? 8 : 0 : 0
+                    ? Environment.OSVersion.Version.Build >= 22000 ? 8 : 0
+                    : 0
             })
-            .With(new MacOSPlatformOptions()
-            {
-                
-            })
+            .With(new MacOSPlatformOptions())
             //.WithInterFont()
             .With(new FontManagerOptions
             {
@@ -69,7 +66,8 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog") && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog") &&
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             app.UseManagedSystemDialogs();
 
         return app;
@@ -81,15 +79,15 @@ internal abstract class Program
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LockFilePath) ?? Path.GetTempPath());
-            
+
             _lockFileStream = new FileStream(
                 LockFilePath,
                 FileMode.OpenOrCreate,
                 FileAccess.ReadWrite,
                 FileShare.None,
-                bufferSize: 32,
+                32,
                 FileOptions.DeleteOnClose);
-            
+
             var pidBytes = Encoding.UTF8.GetBytes(Environment.ProcessId.ToString());
             _lockFileStream.Write(pidBytes, 0, pidBytes.Length);
             _lockFileStream.Flush();
@@ -105,8 +103,7 @@ internal abstract class Program
                 if (File.Exists(LockFilePath))
                 {
                     var pidString = File.ReadAllText(LockFilePath).Trim();
-                    if (int.TryParse(pidString, out int existingPid))
-                    {
+                    if (int.TryParse(pidString, out var existingPid))
                         try
                         {
                             Process.GetProcessById(existingPid);
@@ -120,7 +117,6 @@ internal abstract class Program
                             File.Delete(LockFilePath);
                             return TryBecomePrimaryInstance(); // Retry
                         }
-                    }
                 }
             }
             catch (Exception ex)
@@ -147,7 +143,7 @@ internal abstract class Program
             await using var writer = new StreamWriter(client, Encoding.UTF8);
             await writer.WriteAsync(message);
             await writer.FlushAsync();
-            
+
             return true;
         }
         catch
@@ -159,7 +155,6 @@ internal abstract class Program
     private static async Task RunIpcServerAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
-        {
             try
             {
                 await using var server = new NamedPipeServerStream(
@@ -175,12 +170,7 @@ internal abstract class Program
                 var message = await reader.ReadToEndAsync(cancellationToken);
 
                 if (!string.IsNullOrWhiteSpace(message))
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        HandleOpenTarget(message);
-                    });
-                }
+                    Dispatcher.UIThread.Post(() => { HandleOpenTarget(message); });
             }
             catch (OperationCanceledException)
             {
@@ -194,7 +184,6 @@ internal abstract class Program
                     await Task.Delay(1000, cancellationToken); // Wait before retry
                 }
             }
-        }
     }
 
     private static void HandleOpenTarget(string target)
@@ -206,7 +195,7 @@ internal abstract class Program
 
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
-            
+
             ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
 
             if (target == "activateWindow")
@@ -217,13 +206,14 @@ internal abstract class Program
             {
                 Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
                 logger?.Log($"Opening URL: {target}");
-                ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(new Uri(target));
+                ContainerLocator.Container?.Resolve<IApplicationStateService>()
+                    .ExecuteUrlLaunchActions(new Uri(target));
             }
             else if (File.Exists(target) || Directory.Exists(target))
             {
                 var fullPath = Path.GetFullPath(target);
                 logger?.Log($"Opening path: {fullPath}");
-                
+
                 ContainerLocator.Container?.Resolve<IApplicationStateService>().ExecutePathLaunchActions(fullPath);
             }
             else
@@ -239,30 +229,34 @@ internal abstract class Program
     }
 
     [STAThread]
-    public static int Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         try
         {
-            Option<string> dirOption = new("--oneware-dir") 
+            Option<string> dirOption = new("--oneware-dir")
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
-            Option<string> projectsDirOption = new("--oneware-projects-dir") 
+            Option<string> projectsDirOption = new("--oneware-projects-dir")
                 { Description = "Path to default projects directory for OneWare Studio. (optional)" };
-            Option<string> appdataDirOption = new("--oneware-appdata-dir") 
+            Option<string> appdataDirOption = new("--oneware-appdata-dir")
                 { Description = "Path to application data directory for OneWare Studio. (optional)" };
-            Option<string> moduleOption = new("--modules") 
+            Option<string> moduleOption = new("--modules")
                 { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
-            Option<string> autoLaunchOption = new("--autolaunch") 
-                { Description = "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)" };
+            Option<string> autoLaunchOption = new("--autolaunch")
+            {
+                Description =
+                    "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)"
+            };
             Argument<string?> openArgument = new("open")
             {
                 Description = "File/Folder path or oneware:// URI to open",
-                DefaultValueFactory = (x) => null,
+                DefaultValueFactory = x => null
             };
-            
+
             RootCommand rootCommand = new()
             {
-                Options = { 
-                    dirOption, 
+                Options =
+                {
+                    dirOption,
                     appdataDirOption,
                     projectsDirOption,
                     moduleOption,
@@ -273,8 +267,8 @@ internal abstract class Program
                     openArgument
                 }
             };
-            
-            rootCommand.SetAction((parseResult) =>
+
+            rootCommand.SetAction(parseResult =>
             {
                 var dirValue = parseResult.GetValue(dirOption);
                 if (!string.IsNullOrEmpty(dirValue))
@@ -283,88 +277,74 @@ internal abstract class Program
                 var projectsDirValue = parseResult.GetValue(projectsDirOption);
                 if (!string.IsNullOrEmpty(projectsDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_PROJECTS_DIR", Path.GetFullPath(projectsDirValue));
-                
+
                 var appdataDirValue = parseResult.GetValue(appdataDirOption);
                 if (!string.IsNullOrEmpty(appdataDirValue))
                     Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
-                
+
                 var moduleValue = parseResult.GetValue(moduleOption);
                 if (!string.IsNullOrEmpty(moduleValue))
                     Environment.SetEnvironmentVariable("ONEWARE_MODULES", moduleValue);
-                
+
                 var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
                 if (!string.IsNullOrEmpty(autoLaunchValue))
                     Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
-                
+
                 var openValue = parseResult.GetValue(openArgument);
                 if (!string.IsNullOrEmpty(openValue))
                 {
                     if (openValue.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
-                    {
                         Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", openValue);
-                    }
                     else if (File.Exists(openValue) || Directory.Exists(openValue))
-                    {
                         Environment.SetEnvironmentVariable("ONEWARE_OPEN_PATH", Path.GetFullPath(openValue));
-                    }
                 }
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
-            
-            if(args.LastOrDefault() is "--help" or "-h")
-            {
-                return 0;
-            }
+
+            if (args.LastOrDefault() is "--help" or "-h") return 0;
 
             // Check for single instance
             if (!TryBecomePrimaryInstance())
             {
                 // Not the primary instance - try to forward the message
                 Console.WriteLine("Another instance is already running. Forwarding request...");
-                
+
                 // Determine what to send to the existing instance
                 string? messageToSend = null;
-                
+
                 if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
-                {
                     messageToSend = url;
-                }
-                else if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } path)
-                {
-                    messageToSend = path;
-                }
+                else if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } path) messageToSend = path;
 
                 try
                 {
                     var sendTask = TrySendToExistingInstanceAsync(messageToSend ?? "activateWindow");
-                    sendTask.Wait(5000); // 5 second timeout
-                        
-                    if (sendTask.Result)
+                    var sendSuccess = await sendTask.WaitAsync(TimeSpan.FromSeconds(5));
+
+                    if (sendSuccess)
                     {
                         Console.WriteLine("Request forwarded successfully.");
                         return 0;
                     }
-                    else
-                    {
-                        Console.WriteLine("Failed to forward request to existing instance.");
-                    }
+
+                    Console.WriteLine("Failed to forward request to existing instance.");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error forwarding request: {ex.Message}");
                 }
-                
+
                 return 0;
             }
 
             // We are the primary instance - start IPC server
             _ipcCancellation = new CancellationTokenSource();
-            
+
             _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
 
             var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-            
+
             return result;
         }
         catch (Exception ex)

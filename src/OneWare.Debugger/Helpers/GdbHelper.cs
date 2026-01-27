@@ -39,7 +39,5 @@ public class GdbHelper
             default:
                 return Syscall.kill(pid, Signum.SIGINT);
         }
-
-        return 0;
     }
 }

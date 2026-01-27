@@ -7,9 +7,9 @@ public class HardwarePinModel : ObservableObject
 {
     private FpgaNodeModel? _connectedNode;
 
-    private string _toolTipText;
-
     private bool _isSelected;
+
+    private string _toolTipText;
 
     public HardwarePinModel(HardwarePin pin, FpgaModel fpgaModel)
     {
@@ -19,7 +19,7 @@ public class HardwarePinModel : ObservableObject
     }
 
     public HardwarePin Pin { get; }
-    
+
     public FpgaModel FpgaModel { get; }
 
     public string ToolTipText
@@ -33,7 +33,7 @@ public class HardwarePinModel : ObservableObject
         get => _isSelected;
         set => SetProperty(ref _isSelected, value);
     }
-    
+
     public FpgaNodeModel? ConnectedNode
     {
         get => _connectedNode;

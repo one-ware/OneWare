@@ -20,13 +20,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcd" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcdconf" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VerilogTest.v" />
-      <UpToDateCheckInput Remove="Assets\DemoFiles\VhdlTest.vhd" />
+        <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcd"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\VcdTest.vcdconf"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\VerilogTest.v"/>
+        <UpToDateCheckInput Remove="Assets\DemoFiles\VhdlTest.vhd"/>
     </ItemGroup>
 
 </Project>

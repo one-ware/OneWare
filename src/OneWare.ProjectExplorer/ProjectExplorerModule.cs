@@ -68,4 +68,3 @@ public class ProjectExplorerModule : OneWareModuleBase
             });
     }
 }
-

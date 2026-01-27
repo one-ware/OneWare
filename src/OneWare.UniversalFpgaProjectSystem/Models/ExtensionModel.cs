@@ -1,16 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.UniversalFpgaProjectSystem.Models;
 
 public class ExtensionModel : ObservableObject, IHardwareModel
 {
+    private bool _isSelected;
     private HardwareInterfaceModel? _parentInterfaceModel;
 
-    private bool _isSelected;
-    
     public ExtensionModel(IFpgaExtension fpgaExtension)
     {
         FpgaExtension = fpgaExtension;
@@ -21,11 +20,7 @@ public class ExtensionModel : ObservableObject, IHardwareModel
         get => _isSelected;
         set => SetProperty(ref _isSelected, value);
     }
-    
-    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
-    
-    public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
-    
+
     public IFpgaExtension FpgaExtension { get; }
 
     public HardwareInterfaceModel? ParentInterfaceModel
@@ -40,9 +35,7 @@ public class ExtensionModel : ObservableObject, IHardwareModel
                 if (_parentInterfaceModel != null)
                 {
                     foreach (var pin in FpgaExtension.Pins)
-                    {
                         PinModels[pin.Name] = _parentInterfaceModel.TranslatedPins[pin.InterfacePin!];
-                    }
                     foreach (var fpgaInterface in FpgaExtension.Interfaces)
                     {
                         InterfaceModels.TryAdd(fpgaInterface.Name, new HardwareInterfaceModel(fpgaInterface, this));
@@ -56,4 +49,8 @@ public class ExtensionModel : ObservableObject, IHardwareModel
             }
         }
     }
+
+    public Dictionary<string, HardwarePinModel> PinModels { get; } = new();
+
+    public Dictionary<string, HardwareInterfaceModel> InterfaceModels { get; } = new();
 }

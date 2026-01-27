@@ -1,30 +1,32 @@
 <controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="300" Padding="4"
-             x:Class="OneWare.SourceControl.Views.AuthenticateGitView" x:DataType="viewModels:AuthenticateGitViewModel"
-             CustomIcon="{DynamicResource Bootstrap.Github}"
-             Name="AuthenticateGitViewView" Title="{Binding Title}">
-      <DockPanel Margin="4" LastChildFill="False">
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
+                         mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="300" Padding="4"
+                         x:Class="OneWare.SourceControl.Views.AuthenticateGitView"
+                         x:DataType="viewModels:AuthenticateGitViewModel"
+                         CustomIcon="{DynamicResource Bootstrap.Github}"
+                         Name="AuthenticateGitViewView" Title="{Binding Title}">
+    <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
-            <TextBlock Text="{Binding Description}"/>
+            <TextBlock Text="{Binding Description}" />
             <Grid ColumnDefinitions="50, *">
-                <TextBlock Text="Server:" VerticalAlignment="Center"/>
+                <TextBlock Text="Server:" VerticalAlignment="Center" />
                 <TextBox Grid.Column="1" IsEnabled="False" VerticalAlignment="Center" Text="{Binding Server}" />
             </Grid>
             <Grid ColumnDefinitions="50, *, 70">
-                <TextBlock VerticalAlignment="Center" Text="Token:"/>
+                <TextBlock VerticalAlignment="Center" Text="Token:" />
                 <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Password}" PasswordChar="*" />
-                <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding Generate}" CornerRadius="3" 
-                        BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1" Content="Generate" Height="23" Padding="0" Margin="2 0 0 0" />
+                <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding Generate}" CornerRadius="3"
+                        BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1" Content="Generate"
+                        Height="23" Padding="0" Margin="2 0 0 0" />
             </Grid>
         </StackPanel>
- 
+
         <StackPanel Margin="0 8 0 0" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="WindowButtons">
-            
+
             <Button Command="{Binding Cancel}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
                     Content="Cancel" />

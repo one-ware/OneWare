@@ -120,5 +120,5 @@
     <Style Selector="idc|HostWindow.FullScreen DocumentTabStrip:singleitem">
         <Setter Property="IsVisible" Value="False" />
     </Style>
-    
+
 </Styles>

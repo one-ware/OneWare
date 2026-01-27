@@ -26,12 +26,12 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Debugger;
 

@@ -18,9 +18,8 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageViewModel : ObservableObject
 {
-    private readonly IHttpService _httpService;
-
     private readonly IApplicationStateService _applicationStateService;
+    private readonly IHttpService _httpService;
 
     private readonly IWindowService _windowService;
 
@@ -136,8 +135,8 @@ public class PackageViewModel : ObservableObject
 
         SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
             .FirstOrDefault(x => x.Version.MinStudioVersion == null
-                                 || Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
-                                 && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion);
+                                 || (Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
+                                     && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion));
 
         _resolveTabsStarted = false;
         _resolveImageStarted = false;
@@ -214,7 +213,7 @@ public class PackageViewModel : ObservableObject
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
 
             var result = await ContainerLocator.Container!.Resolve<IWindowService>()
-                .ShowMessageBoxAsync(new MessageBoxRequest()
+                .ShowMessageBoxAsync(new MessageBoxRequest
                 {
                     Title = "Confirm License",
                     Icon = MessageBoxIcon.Info,
@@ -226,14 +225,14 @@ public class PackageViewModel : ObservableObject
                             Text = "Decline",
                             Role = MessageBoxButtonRole.No,
                             Style = MessageBoxButtonStyle.Secondary,
-                            IsDefault = true,
+                            IsDefault = true
                         },
                         new MessageBoxButton
                         {
                             Text = "Accept",
                             Role = MessageBoxButtonRole.Yes,
                             Style = MessageBoxButtonStyle.Primary,
-                            IsDefault = true,
+                            IsDefault = true
                         }
                     ]
                 }, topLevel as Window);

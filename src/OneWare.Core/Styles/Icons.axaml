@@ -26,7 +26,7 @@
         <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
                          Geometry="M8,3.5 A0.5,-0.5 0 0 0 7,3.5 L7,9 A0.5,-0.5 0 0 0 7.252,9.434 L10.75,11.43 A0.5,-0.5 0 0 0 11.25,10.57 L8,8.71 L8,3.5 z M8,16 A8,-8 0 1 0 8,0 A8,-8 0 0 0 8,16 z M15,8 A7,-7 0 1 1 1,8 A7,-7 0 0 1 15,8 z" />
     </DrawingImage>
-    
+
     <DrawingImage x:Key="Bootstrap.Clipboard">
         <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
                          Geometry="M3,1.5 L2,1.5 A2,-2 0 0 0 0,3.5 L0,14 A2,-2 0 0 0 2,16 L12,16 A2,-2 0 0 0 14,14 L14,3.5 A2,-2 0 0 0 12,1.5 L11,1.5 L11,2.5 L12,2.5 A1,-1 0 0 1 13,3.5 L13,14 A1,-1 0 0 1 12,15 L2,15 A1,-1 0 0 1 1,14 L1,3.5 A1,-1 0 0 1 2,2.5 L3,2.5 L3,1.5 z M8.5,1 A0.5,-0.5 0 0 1 9,1.5 L9,2.5 A0.5,-0.5 0 0 1 8.5,3 L5.5,3 A0.5,-0.5 0 0 1 5,2.5 L5,1.5 A0.5,-0.5 0 0 1 5.5,1 L8.5,1 z M5.5,0 A1.5,-1.5 0 0 0 4,1.5 L4,2.5 A1.5,-1.5 0 0 0 5.5,4 L8.5,4 A1.5,-1.5 0 0 0 10,2.5 L10,1.5 A1.5,-1.5 0 0 0 8.5,0 L5.5,0 z" />

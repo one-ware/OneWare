@@ -6,10 +6,10 @@ namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 public interface IFpgaExtensionPackage
 {
     public string Name { get; }
-    
+
     public string Connector { get; }
-    
+
     public IFpgaExtension LoadExtension();
-    
+
     public ExtensionViewModelBase? LoadExtensionViewModel(ExtensionModel extensionModel);
 }

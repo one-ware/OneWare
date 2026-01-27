@@ -1,13 +1,13 @@
 ﻿using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Core.Services;
 
@@ -18,9 +18,9 @@ public class BackupService
 
     private readonly string _backupFolder;
     private readonly string _backupRegistryFile;
+    private readonly ILogger _logger;
 
     private readonly IMainDockService _mainDockService;
-    private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
@@ -38,7 +38,7 @@ public class BackupService
 
         _backupFolder = Path.Combine(paths.AppDataDirectory, "Backups");
         _backupRegistryFile = Path.Combine(_backupFolder, "BackupRegistry.json");
-        
+
         applicationStateService.RegisterShutdownAction(CleanUp);
     }
 

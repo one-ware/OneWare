@@ -17,7 +17,6 @@ using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
 using OneWare.CloudIntegration;
 using OneWare.Core.Data;
-using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Core.ViewModels.DockViews;
@@ -54,14 +53,13 @@ namespace OneWare.Core;
 
 public class App : Application
 {
+    private OneWareModuleManager? _moduleManager;
+    private ModuleServiceRegistry? _moduleServiceRegistry;
     protected OneWareModuleCatalog ModuleCatalog { get; } = new();
 
     protected virtual string GetDefaultLayoutName => "Default";
 
     protected IServiceProvider Services => ContainerLocator.Current;
-
-    private OneWareModuleManager? _moduleManager;
-    private ModuleServiceRegistry? _moduleServiceRegistry;
 
     public override void Initialize()
     {
@@ -161,7 +159,7 @@ public class App : Application
                 ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize",
-            new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>()));
+            new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>().ToArray()));
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_SyntaxTheme_Dark",
             new ComboBoxSetting("Editor Theme Dark", ThemeName.DarkPlus,
@@ -183,29 +181,52 @@ public class App : Application
         settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket",
             new CheckBoxSetting("Use Auto Bracket", true));
 
-        settingsService.RegisterTitled("Editor", "Folding", "Editor_UseFolding", "Use Folding",
-            "Use Folding in Editor", true);
+        settingsService.RegisterSetting("Editor", "Folding", "Editor_UseFolding",
+            new CheckBoxSetting("Use Folding", true)
+            {
+                HoverDescription = "Use Folding in Editor"
+            });
 
-        settingsService.RegisterTitled("Editor", "Backups", BackupService.KeyBackupServiceEnable,
-            "Use Automatic Backups", "Use Automatic Backups in case the IDE crashes",
-            ApplicationLifetime is IClassicDesktopStyleApplicationLifetime);
-        settingsService.RegisterTitledCombo("Editor", "Backups", BackupService.KeyBackupServiceInterval,
-            "Auto backup interval (s)",
-            "Interval the IDE uses to save files for backup", 30, 5, 10, 15, 30, 60, 120);
+        settingsService.RegisterSetting("Editor", "Backups", BackupService.KeyBackupServiceEnable,
+            new CheckBoxSetting("Use Automatic Backups",
+                ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                HoverDescription = "Use Automatic Backups in case the IDE crashes"
+            });
+        settingsService.RegisterSetting("Editor", "Backups", BackupService.KeyBackupServiceInterval,
+            new ComboBoxSetting("Auto backup interval (s)", 30, new object[] { 5, 10, 15, 30, 60, 120 })
+            {
+                HoverDescription = "Interval the IDE uses to save files for backup"
+            });
 
-        settingsService.RegisterTitled("Editor", "External Changes", "Editor_DetectExternalChanges",
-            "Detect external changes", "Detects changes that happen outside of the IDE", true);
-        settingsService.RegisterTitled("Editor", "External Changes", "Editor_NotifyExternalChanges",
-            "Notify external changes", "Notifies the user when external happen and ask for reload", false);
+        settingsService.RegisterSetting("Editor", "External Changes", "Editor_DetectExternalChanges",
+            new CheckBoxSetting("Detect external changes", true)
+            {
+                HoverDescription = "Detects changes that happen outside of the IDE"
+            });
+        settingsService.RegisterSetting("Editor", "External Changes", "Editor_NotifyExternalChanges",
+            new CheckBoxSetting("Notify external changes", false)
+            {
+                HoverDescription = "Notifies the user when external happen and ask for reload"
+            });
 
         //TypeAssistance
 
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableHover",
-            "Enable Hover Information", "Enable Hover Information", true);
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
-            "Enable Code Suggestions", "Enable completion suggestions", true);
-        settingsService.RegisterTitled("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
-            "Enable Auto Formatting", "Enable automatic formatting", true);
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableHover",
+            new CheckBoxSetting("Enable Hover Information", true)
+            {
+                HoverDescription = "Enable Hover Information"
+            });
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableAutoCompletion",
+            new CheckBoxSetting("Enable Code Suggestions", true)
+            {
+                HoverDescription = "Enable completion suggestions"
+            });
+        settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_EnableAutoFormatting",
+            new CheckBoxSetting("Enable Auto Formatting", true)
+            {
+                HoverDescription = "Enable automatic formatting"
+            });
 
         settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_DisableLargeFile_Min",
             new SliderSetting("Disable Assistance for Large Files", 100000, 50000, 1000000, 1000)
@@ -343,7 +364,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
                 }))
             {
-                IconObservable = Application.Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
+                IconObservable = Current!.GetResourceObservable("FluentIconsFilled.LightbulbFilled")
             });
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
@@ -354,7 +375,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
                 }))
             {
-                IconObservable = Application.Current!.GetResourceObservable("AI_Img"),
+                IconObservable = Current!.GetResourceObservable("AI_Img")
             });
 
         //AvaloniaEdit Hyperlink support
@@ -425,14 +446,14 @@ public class App : Application
 
             // Template / boilerplate
             [ConsoleThemeStyle.SecondaryText] = new() { Foreground = ConsoleColor.DarkGray },
-            [ConsoleThemeStyle.TertiaryText]  = new() { Foreground = ConsoleColor.DarkGray },
+            [ConsoleThemeStyle.TertiaryText] = new() { Foreground = ConsoleColor.DarkGray },
 
             // Literals / scalars
-            [ConsoleThemeStyle.String]  = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Number]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.String] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Number] = new() { Foreground = ConsoleColor.White },
             [ConsoleThemeStyle.Boolean] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Null]    = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Scalar]  = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Null] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.Scalar] = new() { Foreground = ConsoleColor.White },
 
             // Property names
             [ConsoleThemeStyle.Name] = new() { Foreground = ConsoleColor.Gray },
@@ -441,12 +462,12 @@ public class App : Application
             [ConsoleThemeStyle.Invalid] = new() { Foreground = ConsoleColor.Red },
 
             // Log levels (your requirements)
-            [ConsoleThemeStyle.LevelVerbose]     = new() { Foreground = ConsoleColor.Gray }, // brown
-            [ConsoleThemeStyle.LevelDebug]       = new() { Foreground = ConsoleColor.DarkYellow },
+            [ConsoleThemeStyle.LevelVerbose] = new() { Foreground = ConsoleColor.Gray }, // brown
+            [ConsoleThemeStyle.LevelDebug] = new() { Foreground = ConsoleColor.DarkYellow },
             [ConsoleThemeStyle.LevelInformation] = new() { Foreground = ConsoleColor.DarkCyan },
-            [ConsoleThemeStyle.LevelWarning]     = new() { Foreground = ConsoleColor.Yellow },
-            [ConsoleThemeStyle.LevelError]       = new() { Foreground = ConsoleColor.Red },
-            [ConsoleThemeStyle.LevelFatal]       = new() { Foreground = ConsoleColor.Magenta },
+            [ConsoleThemeStyle.LevelWarning] = new() { Foreground = ConsoleColor.Yellow },
+            [ConsoleThemeStyle.LevelError] = new() { Foreground = ConsoleColor.Red },
+            [ConsoleThemeStyle.LevelFatal] = new() { Foreground = ConsoleColor.Magenta }
         });
 
         Log.Logger = new LoggerConfiguration()
@@ -455,13 +476,13 @@ public class App : Application
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.File(
-                path: Path.Combine(logPath, "log-.txt"),
+                Path.Combine(logPath, "log-.txt"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 shared: true
             )
             .WriteTo.File(
-                path: Path.Combine(logPath, "current.txt"),
+                Path.Combine(logPath, "current.txt"),
                 shared: true
             )
             .WriteTo.Console(
@@ -470,7 +491,7 @@ public class App : Application
             .CreateLogger();
 
         builder.ClearProviders();
-        builder.AddSerilog(Log.Logger, dispose: true);
+        builder.AddSerilog(Log.Logger, true);
     }
 
     protected virtual void LoadStartupPlugins()
@@ -510,14 +531,10 @@ public class App : Application
         var shell = CreateShell();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime &&
             shell is Window shellWindow)
-        {
             desktopLifetime.MainWindow = shellWindow;
-        }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime &&
                  shell is Control shellView)
-        {
             singleViewLifetime.MainView = shellView;
-        }
 
         _moduleManager.InitializeModules(compositeProvider);
 
@@ -578,19 +595,13 @@ public class App : Application
     {
         //This is an macOS only feature. On Linux and macOS, we use a different method with file locks inside the Program.cs
         if (this.TryGetFeature<IActivatableLifetime>(out var events))
-        {
             events.Activated += (_, args) =>
             {
                 if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.OpenUri } protocolArgs)
-                {
                     Services.Resolve<IApplicationStateService>().ExecuteUrlLaunchActions(protocolArgs.Uri);
-                }
                 else if (args is ProtocolActivatedEventArgs { Kind: ActivationKind.File } launchArgs)
-                {
                     Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(launchArgs.Uri.ToString());
-                }
             };
-        }
 
         if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") is { } url)
         {
@@ -611,9 +622,6 @@ public class App : Application
             BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
         // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
+        foreach (var plugin in dataValidationPluginsToRemove) BindingPlugins.DataValidators.Remove(plugin);
     }
 }

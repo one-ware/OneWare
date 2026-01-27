@@ -5,7 +5,6 @@
              xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
              xmlns:models="clr-namespace:OneWare.PackageManager.Models"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:packageManager="clr-namespace:OneWare.Essentials.PackageManager;assembly=OneWare.Essentials"
@@ -76,7 +75,7 @@
                                Text="Installed version incompatible!" />
                 </StackPanel>
             </StackPanel>
-            
+
             <ItemsControl ItemsSource="{Binding SelectedVersionModel.Version.Targets, FallbackValue={x:Null}}"
                           IsVisible="{Binding !SelectedVersionModel.TargetAll, FallbackValue={x:False}}">
                 <ItemsControl.ItemsPanel>
@@ -144,7 +143,7 @@
                          IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>
-        
+
         <Panel Margin="0 10 0 0" DockPanel.Dock="Top">
             <TabControl IsVisible="{Binding IsTabsResolved}"
                         ItemsSource="{Binding Tabs}">
@@ -161,10 +160,11 @@
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
-            
-            <controls:Spinner VerticalAlignment="Center" HorizontalAlignment="Center" Height="40" Width="40" IsVisible="{Binding !IsTabsResolved}" />
+
+            <controls:Spinner VerticalAlignment="Center" HorizontalAlignment="Center" Height="40" Width="40"
+                              IsVisible="{Binding !IsTabsResolved}" />
         </Panel>
-        
+
     </DockPanel>
 
 </UserControl>

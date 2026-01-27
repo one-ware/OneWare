@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Media;
-using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
@@ -71,7 +70,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
             if (text[i] == '\n')
             {
                 _currentLineNumber++;
-                LineContexts.Add(new LineContext()
+                LineContexts.Add(new LineContext
                 {
                     LineColor = textColor,
                     Owner = owner

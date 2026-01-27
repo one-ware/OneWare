@@ -2,8 +2,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using OneWare.Essentials.Services;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 

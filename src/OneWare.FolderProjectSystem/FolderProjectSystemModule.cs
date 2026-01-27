@@ -43,4 +43,3 @@ public class FolderProjectSystemModule : OneWareModuleBase
             });
     }
 }
-

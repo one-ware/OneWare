@@ -5,10 +5,10 @@
     <PropertyGroup>
         <Version>1.0.0</Version>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
-    
+
 </Project>

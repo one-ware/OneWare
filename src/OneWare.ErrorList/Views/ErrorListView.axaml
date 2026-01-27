@@ -42,7 +42,7 @@
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
                 <StackPanel Classes="ToolBar">
-                    
+
                     <ComboBox SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
                         <ComboBoxItem>All open projects</ComboBoxItem>
                         <ComboBoxItem>Current project</ComboBoxItem>

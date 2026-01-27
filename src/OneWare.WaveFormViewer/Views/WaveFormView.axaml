@@ -14,9 +14,9 @@
 
     <UserControl.Resources>
         <x:Double x:Key="LineHeight">40</x:Double>
-        
+
         <behaviors:WaveListDropBehavior x:Key="WaveListDropBehavior" />
-        
+
         <ContextMenu x:Key="WaveModelContextMenu" x:DataType="models:WaveModel">
             <MenuItem Header="Data Format" ItemsSource="{Binding AvailableDataTypes}"
                       IsEnabled="{Binding AvailableDataTypes.Length}">
@@ -64,12 +64,12 @@
             </MenuItem>
         </ContextMenu>
     </UserControl.Resources>
-    
+
     <UserControl.Styles>
         <Style Selector="ListBox.Scroll">
-          <Setter Property="BorderThickness" Value="0" />
-          <Setter Property="Padding" Value="0" />
-          <Setter Property="Background" Value="Transparent"></Setter>
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="ListBox.Scroll ListBoxItem">
             <Setter Property="Padding" Value="3 0" />
@@ -95,7 +95,7 @@
                             ToolTip.Tip="Moves offset to left">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronLeft}" />
                     </Button>
-                    
+
                     <Button Command="{Binding XOffsetPlus}" ToolTip.Tip="Moves offset to right">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronRight}" />
                     </Button>
@@ -153,12 +153,12 @@
                     <Separator />
 
                     <TextBlock Text="Marker: " />
-                    <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}"/>
+                    <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}" />
                 </StackPanel>
 
             </DockPanel>
         </Border>
-        
+
         <ListBox Grid.Column="0" Grid.Row="2"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
@@ -195,8 +195,8 @@
                             <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
                                        FontFamily="{DynamicResource EditorFont}"
                                        ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"
-                                       FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" 
-                                       VerticalAlignment="Center"/>
+                                       FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}"
+                                       VerticalAlignment="Center" />
                         </Grid>
                     </DockPanel>
                 </DataTemplate>
@@ -212,13 +212,14 @@
 
         <ListBox Name="SimPartScroll" Grid.Row="2" Grid.Column="2" ClipToBounds="True"
                  ScrollViewer.Offset="{Binding #TextPartScroll.Scroll.Offset, Mode=TwoWay, FallbackValue=0}"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Visible"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Visible"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
                  Classes="Scroll">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0" />
-                    <Setter Property="IsHitTestVisible" Value="False"></Setter>
+                    <Setter Property="IsHitTestVisible" Value="False" />
                     <Style Selector="^:selected /template/ ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
                     </Style>

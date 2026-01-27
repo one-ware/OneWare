@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Essentials.Services;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ViewModels.Windows;
 

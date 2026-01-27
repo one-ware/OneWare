@@ -87,7 +87,7 @@
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SendText}"
-                                                          CommandParameter="{Binding #CommandBox.Text}" />
+                                                               CommandParameter="{Binding #CommandBox.Text}" />
                     </Interaction.Behaviors>
                 </TextBox>
             </DockPanel>

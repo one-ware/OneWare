@@ -85,7 +85,7 @@
                         <Setter Property="ShowLineNumbers" Value="True" />
                         <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />
                         <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
-                        <Setter Property="IsReadOnly" Value="{Binding IsReadOnly}"/>
+                        <Setter Property="IsReadOnly" Value="{Binding IsReadOnly}" />
                     </Style>
                 </ContentControl.Styles>
             </ContentControl>

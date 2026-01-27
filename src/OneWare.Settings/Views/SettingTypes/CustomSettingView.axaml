@@ -9,7 +9,7 @@
     <StackPanel Orientation="Vertical" Spacing="2">
         <StackPanel.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
             </ContextMenu>
         </StackPanel.ContextMenu>
         <ContentControl Content="{Binding Setting.Control}" />

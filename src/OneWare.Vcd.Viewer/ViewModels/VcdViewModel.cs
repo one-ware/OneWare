@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -12,7 +13,6 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
-using Microsoft.Extensions.Logging;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 
@@ -23,7 +23,6 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private CancellationTokenSource _cancellationTokenSource = new();
     private CompositeDisposable _compositeDisposable = new();
     private bool _isLiveExecution;
-    private bool _waitLiveExecution;
 
     private VcdContext? _lastContext;
 
@@ -33,8 +32,10 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
+    private bool _waitLiveExecution;
 
-    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
+    public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService,
+        IMainDockService mainDockService,
         ISettingsService settingsService, IWindowService windowService)
         : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
@@ -117,6 +118,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 _isLiveExecution = true;
                 _waitLiveExecution = false;
             }
+
             _ = LoadAsync();
         }
     }
@@ -136,10 +138,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             var token = _cancellationTokenSource.Token;
             LoadingFailed = !await LoadInternalAsync(token);
 
-            if (live && token.IsCancellationRequested)
-            {
-                LoadingFailed = !await LoadInternalAsync(token);
-            }
+            if (live && token.IsCancellationRequested) LoadingFailed = !await LoadInternalAsync(token);
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
             Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile!.Name;
@@ -236,7 +235,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
             parseLock);
-        
+
         disposable.Dispose();
 
         if (_vcdFile != null)

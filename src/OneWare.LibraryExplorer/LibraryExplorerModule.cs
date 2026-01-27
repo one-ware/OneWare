@@ -6,7 +6,6 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.LibraryExplorer.ViewModels;
-using OneWare.ProjectExplorer.ViewModels;
 
 namespace OneWare.LibraryExplorer;
 
@@ -33,4 +32,3 @@ public class LibraryExplorerModule : OneWareModuleBase
             });
     }
 }
-
