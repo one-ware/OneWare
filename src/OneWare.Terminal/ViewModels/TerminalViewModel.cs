@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
@@ -33,7 +36,7 @@ public class TerminalViewModel : ObservableObject
     {
         WorkingDir = workingDir;
         StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
+            ? BuildWindowsStartArguments(WorkingDir)
             : null);
     }
 
@@ -102,7 +105,8 @@ public class TerminalViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
+                var environment = BuildTerminalEnvironment(shellExecutable);
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, StartArguments);
 
                 if (terminal == null)
                 {
@@ -154,5 +158,65 @@ public class TerminalViewModel : ObservableObject
     public void Close()
     {
         CloseConnection();
+    }
+
+    private static string BuildWindowsStartArguments(string workingDir)
+    {
+        var marker = "$esc=[char]27; $bel=[char]7; " +
+                     "$code = if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) { $LASTEXITCODE } " +
+                     "elseif ($?) { 0 } else { 1 }; " +
+                     "Write-Host \"$esc]9;OW_DONE:$code$bel\" -NoNewline;";
+        var prompt = "function global:prompt { " + marker + " \"PS $PWD> \" }";
+
+        return $"powershell.exe -NoExit Set-Location '{workingDir}'; {prompt}";
+    }
+
+    private static string? BuildTerminalEnvironment(string? shellExecutable)
+    {
+        if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
+
+        var shellName = Path.GetFileName(shellExecutable);
+        if (!shellName.Equals("bash", StringComparison.OrdinalIgnoreCase)) return null;
+
+        var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
+        var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
+        var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
+            ? markerCommand
+            : markerCommand + ";" + existingPromptCommand;
+
+        var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["PROMPT_COMMAND"] = combined
+        };
+
+        return BuildEnvironmentBlock(overrides);
+    }
+
+    private static string BuildEnvironmentBlock(Dictionary<string, string> overrides)
+    {
+        var comparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+
+        var env = new SortedDictionary<string, string>(comparer);
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is not string key || entry.Value is not string value) continue;
+            env[key] = value;
+        }
+
+        foreach (var pair in overrides)
+        {
+            env[pair.Key] = pair.Value;
+        }
+
+        var builder = new StringBuilder();
+        foreach (var pair in env)
+        {
+            builder.Append(pair.Key).Append('=').Append(pair.Value).Append('\0');
+        }
+
+        builder.Append('\0');
+        return builder.ToString();
     }
 }

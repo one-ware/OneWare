@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Win32.SafeHandles;
 
 namespace OneWare.Terminal.Provider.Unix;
@@ -17,11 +18,31 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         };
 
         //Collect ENV Vars before fork to avoid EntryPointNotFoundException
-        var envVars = new List<string>();
+        var envMap = new Dictionary<string, string>(StringComparer.Ordinal);
         var env = Environment.GetEnvironmentVariables();
         foreach (var variable in env.Keys)
-            if (variable.ToString() is not ("TERM" or "VTE_VERSION"))
-                envVars.Add($"{variable}={env[variable]}");
+        {
+            var key = variable?.ToString();
+            if (string.IsNullOrWhiteSpace(key) || key is "TERM" or "VTE_VERSION") continue;
+            if (env[variable] is string value) envMap[key] = value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(environment))
+        {
+            foreach (var entry in environment.Split('\0'))
+            {
+                if (string.IsNullOrWhiteSpace(entry)) continue;
+                var separatorIndex = entry.IndexOf('=');
+                if (separatorIndex <= 0) continue;
+                var key = entry.Substring(0, separatorIndex);
+                var value = entry.Substring(separatorIndex + 1);
+                envMap[key] = value;
+            }
+        }
+
+        var envVars = new List<string>(envMap.Count + 2);
+        foreach (var pair in envMap)
+            envVars.Add($"{pair.Key}={pair.Value}");
 
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);

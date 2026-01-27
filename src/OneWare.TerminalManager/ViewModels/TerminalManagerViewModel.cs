@@ -17,6 +17,7 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
+    private const string PromptMarkerPrefix = "\u001b]9;OW_DONE:";
     private readonly Dictionary<string, TerminalTabModel> _automationTerminals = new(StringComparer.Ordinal);
     private readonly IMainDockService _mainDockService;
     private readonly IPaths _paths;
@@ -132,10 +133,9 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             return new TerminalExecutionResult(string.Empty, -1, true);
         }
 
-        var markerId = Guid.NewGuid().ToString("N");
-        var markerPrefix = $"\u001b]9;OW_DONE:{markerId}:";
         var output = new StringBuilder();
         var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var commandSent = false;
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
@@ -143,19 +143,22 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             output.Append(text);
 
             var current = output.ToString();
-            if (!TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned))
+            while (TryExtractOscMarker(current, PromptMarkerPrefix, out var exitCode, out var cleaned))
             {
-                return;
-            }
+                current = cleaned;
+                output.Clear();
+                output.Append(cleaned);
 
-            resultTcs.TrySetResult(new TerminalExecutionResult(cleaned, exitCode, false));
+                if (!commandSent) continue;
+
+                resultTcs.TrySetResult(new TerminalExecutionResult(cleaned, exitCode, false));
+                break;
+            }
         }
 
         terminal.Connection.DataReceived += OnDataReceived;
-
-        var payload = BuildCommandPayload(command, markerId, out var suppressSuffix);
-        terminal.SuppressEcho(suppressSuffix);
-        terminal.Send(payload);
+        commandSent = true;
+        terminal.Send(command);
 
         TerminalExecutionResult result;
 
@@ -223,21 +226,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return await resultTask.WaitAsync(linkedCts.Token);
     }
 
-    private static string BuildCommandPayload(string command, string markerId, out byte[] suppressSuffix)
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var suffix = "; if ($?) { $code = 0 } else { $code = 1 }; " +
-                         "$esc=[char]27; $bel=[char]7; " +
-                         $"Write-Output \"$esc]9;OW_DONE:{markerId}:$code$bel\"";
-            suppressSuffix = Encoding.ASCII.GetBytes(suffix);
-            return command + suffix;
-        }
-
-        var unixSuffix = $"; printf '\\033]9;OW_DONE:{markerId}:%s\\007' $?";
-        suppressSuffix = Encoding.ASCII.GetBytes(unixSuffix);
-        return command + unixSuffix;
-    }
+    // prompt marker is injected via terminal environment during shell startup
 
     private static bool TryExtractOscMarker(string current, string markerPrefix, out int exitCode,
         out string cleanedOutput)
@@ -262,7 +251,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         if (endIndex < 0) return false;
 
-        var markerContent = current.Substring(markerIndex + markerPrefix.Length, endIndex - (markerIndex + markerPrefix.Length));
+        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
+            endIndex - (markerIndex + markerPrefix.Length));
         int.TryParse(markerContent, out exitCode);
 
         cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);

@@ -9,7 +9,7 @@
              x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
     <Grid RowDefinitions="Auto, *, Auto">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="12 8">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="8">
             <DockPanel LastChildFill="False">
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock Text="OneWare Chat" FontWeight="Bold" />
