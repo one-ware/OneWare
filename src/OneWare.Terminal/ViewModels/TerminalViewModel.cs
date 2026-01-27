@@ -134,6 +134,14 @@ public class TerminalViewModel : ObservableObject
         if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
     }
 
+    public void SuppressEcho(byte[] data)
+    {
+        if (Connection is IOutputSuppressor suppressor)
+        {
+            suppressor.SuppressOutput(data);
+        }
+    }
+
     public void CloseConnection()
     {
         if (Connection != null)
