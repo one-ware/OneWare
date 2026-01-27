@@ -4,20 +4,26 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.ChatBot.ViewModels;
 
-public partial class ChatMessageViewModel : ObservableObject
+public class ChatMessageViewModel : ObservableObject
 {
-    [ObservableProperty] private string _message = string.Empty;
-    [ObservableProperty] private bool _isStreaming;
+    public string Message
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
-    public ChatMessageViewModel(string author, IImage icon, bool isUser)
+    public bool IsStreaming
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public ChatMessageViewModel(string author, bool isUser)
     {
         Author = author;
-        Icon = icon;
         IsUser = isUser;
         Timestamp = DateTimeOffset.Now;
     }
-
-    public IImage Icon { get; }
     
     public string Author { get; }
 

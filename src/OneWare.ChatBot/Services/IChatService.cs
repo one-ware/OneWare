@@ -1,14 +1,17 @@
 using System;
 using System.Threading.Tasks;
+using OneWare.ChatBot.Models;
 
 namespace OneWare.ChatBot.Services;
 
 public interface IChatService : IAsyncDisposable
 {
+    public string Name { get; }
+    
     event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     event EventHandler<ChatServiceStatusEvent>? StatusChanged;
     
-    Task<string[]> InitializeAsync();
-    Task SendAsync(string model, string prompt);
+    Task<ModelModel[]> InitializeAsync();
+    Task SendAsync(string modelId, string prompt);
     Task AbortAsync();
 }

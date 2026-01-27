@@ -1,65 +1,113 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
-using Avalonia.Styling;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using OneWare.ChatBot.Models;
 using OneWare.ChatBot.Services;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ChatBot.ViewModels;
 
-public partial class ChatBotViewModel : ExtendedTool
+public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 {
     public const string IconKey = "MaterialDesign.ChatBubbleOutline";
 
-    private const string AssistantName = "Copilot";
+    public string CurrentMessage
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnCurrentMessageChanged(value);
+        }
+    } = string.Empty;
 
-    [ObservableProperty] private string _currentMessage = string.Empty;
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private bool _isConnected;
-    [ObservableProperty] private string _statusText = "Starting Copilot...";
-    [ObservableProperty] private string _selectedModel = "gpt-5";
+    public bool IsBusy
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnIsBusyChanged(value);
+        }
+    }
+
+    public bool IsConnected
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnIsConnectedChanged(value);
+        }
+    }
+
+    public string StatusText
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = "Starting...";
 
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
 
-    public ObservableCollection<string> Models { get; } = [];
-    
-    private readonly IChatService _chatService;
+    public ObservableCollection<IChatService> ChatServices { get; } = [];
+
+    public IChatService? SelectedChatService
+    {
+        get;
+        set
+        {
+            var oldValue = field;
+            if (SetProperty(ref field, value))
+            {
+                if (oldValue != null)
+                {
+                    oldValue.MessageReceived -= OnMessageReceived;
+                    oldValue.StatusChanged -= OnStatusChanged;
+                }
+                if (value != null)
+                {
+                    value.MessageReceived += OnMessageReceived;
+                    value.StatusChanged += OnStatusChanged;
+                    _ = InitializeChatAsync(value);
+                }
+            }
+        }
+    }
+
+    public ObservableCollection<ModelModel> Models { get; } = [];
+
+    public ModelModel? SelectedModel
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
-    private readonly IImage _assistantIcon;
-
-    private readonly IImage _userIcon;
-     
-    public ChatBotViewModel(IChatService chatService) : base(IconKey)
+    public ChatBotViewModel() : base(IconKey)
     {
-        Id = "ChatBot";
-        Title = "OneAI Chat";
-        
-        using var stream = AssetLoader.Open(new Uri($"avares://OneWare.ChatBot/Assets/OneAi_Happy.png"));
-        _assistantIcon = new Bitmap(stream);
-        
-        _userIcon = Application.Current!.FindResource(ThemeVariant.Light,  "Cool.User") as IImage ?? throw new Exception();
-
-        _chatService = chatService;
-        _chatService.MessageReceived += OnMessageReceived;
-        _chatService.StatusChanged += OnStatusChanged;
+        Id = "AIAssistant";
+        Title = "AI Assistant";
     }
 
     public override void InitializeContent()
     {
         if (_initialized) return;
         _initialized = true;
-        _ = InitializeChatAsync();
+        
+        SelectedChatService = ChatServices.FirstOrDefault();
+    }
+
+    private async Task InitializeChatAsync(IChatService chatService)
+    {
+        var models = await chatService.InitializeAsync();
+
+        Models.Clear();
+        Models.AddRange(models);
+
+        SelectedModel = Models.FirstOrDefault();
     }
 
     [RelayCommand(CanExecute = nameof(CanSend))]
@@ -68,19 +116,43 @@ public partial class ChatBotViewModel : ExtendedTool
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
 
+        if (SelectedChatService == null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Messages.Add(new ChatMessageViewModel("System", false)
+                {
+                    Message = "No ChatService Selected"
+                });
+            });
+            return;
+        }
+        
         if (!IsConnected)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Messages.Add(new ChatMessageViewModel("System", _assistantIcon, false)
+                Messages.Add(new ChatMessageViewModel("System", false)
                 {
-                    Message = "Copilot is not connected yet."
+                    Message = $"{SelectedChatService.Name} is not connected yet."
                 });
             });
             return;
         }
 
-        var userMessage = new ChatMessageViewModel("You", _userIcon, true)
+        if (SelectedModel == null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Messages.Add(new ChatMessageViewModel("System", false)
+                {
+                    Message = "No Model selected."
+                });
+            });
+            return;
+        }
+
+        var userMessage = new ChatMessageViewModel("You", true)
         {
             Message = prompt
         };
@@ -98,7 +170,7 @@ public partial class ChatBotViewModel : ExtendedTool
 
         try
         {
-            await _chatService.SendAsync(SelectedModel, prompt);
+            await SelectedChatService.SendAsync(SelectedModel.Id, prompt);
         }
         catch (Exception ex)
         {
@@ -114,9 +186,11 @@ public partial class ChatBotViewModel : ExtendedTool
     [RelayCommand(CanExecute = nameof(CanAbort))]
     private async Task AbortAsync()
     {
+        if (SelectedChatService == null) return;
+        
         try
         {
-            await _chatService.AbortAsync();
+            await SelectedChatService.AbortAsync();
         }
         finally
         {
@@ -128,32 +202,23 @@ public partial class ChatBotViewModel : ExtendedTool
 
     private bool CanAbort() => IsConnected && IsBusy;
 
-    partial void OnCurrentMessageChanged(string value) => SendCommand.NotifyCanExecuteChanged();
+    private void OnCurrentMessageChanged(string value) => SendCommand.NotifyCanExecuteChanged();
 
-    partial void OnIsBusyChanged(bool value)
+    private void OnIsBusyChanged(bool value)
     {
         SendCommand.NotifyCanExecuteChanged();
         AbortCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnIsConnectedChanged(bool value)
+    private void OnIsConnectedChanged(bool value)
     {
         SendCommand.NotifyCanExecuteChanged();
         AbortCommand.NotifyCanExecuteChanged();
-    }
-
-    private async Task InitializeChatAsync()
-    {
-        var models = await _chatService.InitializeAsync();
-        
-        var selectedModel = models[0];
-        Models.Clear();
-        Models.AddRange(models);
     }
 
     private ChatMessageViewModel CreateAssistantMessage()
     {
-        return new ChatMessageViewModel(AssistantName, _assistantIcon, false)
+        return new ChatMessageViewModel(SelectedChatService?.Name ?? "System", false)
         {
             IsStreaming = true
         };
@@ -199,12 +264,12 @@ public partial class ChatBotViewModel : ExtendedTool
         Dispatcher.UIThread.Post(() =>
         {
             var errorMessage = string.IsNullOrWhiteSpace(message)
-                ? "An unexpected Copilot error occurred."
+                ? "An unexpected error occurred."
                 : message;
 
             if (_activeAssistantMessage == null)
             {
-                Messages.Add(new ChatMessageViewModel(AssistantName, _assistantIcon, false)
+                Messages.Add(new ChatMessageViewModel(SelectedChatService?.Name ?? "System", false)
                 {
                     Message = $"**Error:** {errorMessage}"
                 });
@@ -258,5 +323,10 @@ public partial class ChatBotViewModel : ExtendedTool
             IsConnected = e.IsConnected;
             StatusText = e.StatusText;
         });
+    }
+
+    public void RegisterChat(IChatService chatService)
+    {
+        ChatServices.Add(chatService);
     }
 }

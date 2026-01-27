@@ -1,7 +1,9 @@
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using GitHub.Copilot.SDK;
+using OneWare.ChatBot.Models;
 
 namespace OneWare.ChatBot.Services;
 
@@ -13,14 +15,14 @@ public sealed class CopilotChatService : IChatService
     private string? _currentModel;
 
     private IDisposable? _subscription;
+    
+    public string Name { get; } = "Copilot";
 
     public event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     public event EventHandler<ChatServiceStatusEvent>? StatusChanged;
 
-    public async Task<string[]> InitializeAsync()
+    public async Task<ModelModel[]> InitializeAsync()
     {
-        Console.WriteLine("Initializing Copilot...");
-        
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
 
@@ -28,13 +30,20 @@ public sealed class CopilotChatService : IChatService
         {
             _client = new CopilotClient(new CopilotClientOptions());
 
+            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Starting Copilot..."));
+            
             await _client.StartAsync();
 
             var models = await _client.ListModelsAsync();
 
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
+            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Copilot started"));
 
-            return models.Select(x => x.Id).ToArray();
+            return models.Select(x => new ModelModel()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Billing = $"{x.Billing?.Multiplier}x",
+            }).ToArray();
         }
         catch (Exception ex)
         {
@@ -55,13 +64,15 @@ public sealed class CopilotChatService : IChatService
 
         await DisposeSessionAsync();
 
-        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Connecting to {model}..."));
+        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connecting to {model}..."));
 
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
             Model = model,
             Streaming = true,
         });
+        
+        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
 
         _currentModel = model;
         _subscription = _session.On(HandleSessionEvent);
@@ -92,8 +103,6 @@ public sealed class CopilotChatService : IChatService
             await _client.StopAsync();
             await _client.DisposeAsync();
         }
-
-        _sync.Dispose();
     }
 
     private async Task DisposeSessionAsync()
