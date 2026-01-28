@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\OneWare.ChatBot\OneWare.ChatBot.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj"/>

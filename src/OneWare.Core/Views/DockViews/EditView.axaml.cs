@@ -144,7 +144,7 @@ public partial class EditView : UserControl
 
         (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(x =>
             {
-                if (!x) HoverBox.Close();
+                if (!x && !HoverBox.IsPointerOverPopup) HoverBox.Close();
             })
             .DisposeWith(_compositeDisposable);
     }
@@ -513,7 +513,7 @@ public partial class EditView : UserControl
     {
         if (ViewModel?.DisableEditViewEvents ?? true) return;
 
-        if (!HoverBox.IsPointerOverPopup) HoverBox.Close();
+        //if (!HoverBox.IsPointerOver) HoverBox.Close();
     }
 
     private async Task GetControlHoverActionAsync()
@@ -589,8 +589,9 @@ public partial class EditView : UserControl
                 {
                     var markdown = new MarkdownViewer
                     {
-                        Markdown = info
+                        Markdown = info,
                     };
+                    markdown.Classes.Add("ToolTip");
                     HoverBoxContent.Content = markdown;
                 }
             }

@@ -204,6 +204,11 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         RefreshCountToggle();
     }
 
+    public IEnumerable<ErrorListItem> GetErrors()
+    {
+        return _items;
+    }
+
     public IEnumerable<ErrorListItem> GetErrorsForFile(IFile file)
     {
         foreach (var error in _items.Where(x => x.File == file))

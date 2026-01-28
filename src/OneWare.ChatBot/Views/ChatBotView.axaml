@@ -3,29 +3,140 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
-             xmlns:behaviours="clr-namespace:OneWare.Essentials.Behaviours;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:behaviors="clr-namespace:OneWare.ChatBot.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatBotView" 
+             x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
-    <Grid RowDefinitions="*, 30">
-        <ScrollViewer Background="{DynamicResource ThemeControlLowBrush}">
-            <Border Margin="0 10 0 0">
-                <ItemsControl ItemsSource="{Binding Messages}"/>
+    <Grid RowDefinitions="Auto, *, Auto">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="8">
+            <DockPanel LastChildFill="False">
+                <StackPanel Spacing="8" Orientation="Horizontal">
+                    <TextBlock Text="OneWare Chat" FontWeight="Bold" />
+                    <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10"
+                            VerticalAlignment="Center">
+                    <controls:Spinner Height="16" Width="16" IsVisible="{Binding IsBusy}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
+                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Interaction.Behaviors>
+                <AutoScrollToBottomBehavior />
+            </Interaction.Behaviors>
+            
+            <Border Padding="8 12 8 0">
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
             </Border>
         </ScrollViewer>
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 1 0 0">
-            <DockPanel Margin="5 0" VerticalAlignment="Center">
-                <Button DockPanel.Dock="Right" Command="{Binding SendText}"
-                        Margin="5 0 0 0" CommandParameter="{Binding #CommandBox.Text}">
-                    <Image Source="{DynamicResource BoxIcons.SolidSend}" Height="16" />
-                </Button>
-                <TextBox Classes="ToolBar" DockPanel.Dock="Left" Name="CommandBox" Watermark="Message OneAI..."
-                         HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding CurrentMessage, Mode=TwoWay}">
-                    <Interaction.Behaviors>
-                        <behaviours:CommandOnEnterBehaviour Command="{Binding SendText}"
-                                                            CommandParameter="{Binding #CommandBox.Text}" />
-                    </Interaction.Behaviors>
-                </TextBox>
+
+        <Border Grid.Row="2">
+            <DockPanel Margin="10 8" LastChildFill="True">
+                <Border Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder">
+                    <Grid RowDefinitions="Auto, Auto">
+                        <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                                 Padding="6" BorderThickness="0" Background="Transparent"
+                                 VerticalContentAlignment="Top"
+                                 Text="{Binding CurrentMessage, Mode=TwoWay}">
+                            <Interaction.Behaviors>
+                                <behaviors:CommandOnEnterBehavior EventRoutingStrategy="Tunnel"
+                                                                  Command="{Binding SendCommand}" />
+                            </Interaction.Behaviors>
+                        </TextBox>
+
+                        <DockPanel Grid.Row="1" Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
+                                    <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />
+                                </Button>
+                                <Button Command="{Binding SendCommand}">
+                                    <Image Source="{DynamicResource FluentIcons.send_regular}" Height="16" />
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" Margin="0 0 5 0">
+                                <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
+                                           FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <Button Height="15" VerticalAlignment="Center">
+                                    <Button.Flyout>
+                                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                                Placement="TopEdgeAlignedRight">
+                                            <ListBox ItemsSource="{Binding Models}"
+                                                     SelectedItem="{Binding SelectedModel}" BorderThickness="0"
+                                                     MinWidth="200">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                                            <TextBlock Text="{Binding Name}" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ListBox>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                    <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                                           Height="8" />
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
+                                <Button VerticalAlignment="Center">
+                                    <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
+                                </Button>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
+                                               FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <Button Height="15" VerticalAlignment="Center">
+                                        <Button.Flyout>
+                                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                                    Placement="Top">
+                                                <ListBox ItemsSource="{Binding ChatServices}"
+                                                         SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
+                                                         MinWidth="200">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                                                <TextBlock Text="{Binding Name}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ListBox>
+                                            </Flyout>
+                                        </Button.Flyout>
+                                        <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                                               Height="8" />
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+
+                </Border>
+
             </DockPanel>
         </Border>
     </Grid>

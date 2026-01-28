@@ -14,19 +14,20 @@ public class TerminalManagerModule : OneWareModuleBase
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<TerminalManagerViewModel>();
+        services.AddSingleton<ITerminalManagerService>(provider => provider.Resolve<TerminalManagerViewModel>());
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
         serviceProvider.Resolve<IMainDockService>()
-            .RegisterLayoutExtension<TerminalManagerViewModel>(DockShowLocation.Bottom);
+            .RegisterLayoutExtension<ITerminalManagerService>(DockShowLocation.Bottom);
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemViewModel("Terminal")
             {
                 Header = "Terminal",
                 Command = new RelayCommand(() =>
                     serviceProvider.Resolve<IMainDockService>()
-                        .Show(serviceProvider.Resolve<TerminalManagerViewModel>())),
+                        .Show(serviceProvider.Resolve<ITerminalManagerService>())),
                 IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
             });
     }

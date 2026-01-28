@@ -3,34 +3,70 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
-             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatMessageView" x:DataType="viewModels:ChatMessageViewModel">
-    <Border Classes="RoundBorder" Margin="5 0 5 10" Background="{DynamicResource ThemeBackgroundBrush}" Padding="5">
-        <Grid ColumnDefinitions="20, 5, *" RowDefinitions="20, 5, Auto">
-            <Ellipse Fill="LightGray" Grid.Row="0" Grid.Column="0" Height="20" Width="20"/>
-            <Image Grid.Row="0" Grid.Column="0" Source="{Binding Icon}" Height="15" Width="15" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Author}" FontWeight="Bold"
-                       VerticalAlignment="Center" />
-            <md:MarkdownScrollViewer Grid.Row="2" Grid.Column="2" Margin="4"  Markdown="{Binding Message}">
-                <md:MarkdownScrollViewer.Styles>
-                    <Style Selector="md|MarkdownScrollViewer avaloniaEdit|TextEditor">
-                        <Style.Setters>
-                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
-                        </Style.Setters>
-                    </Style>
-        
-                    <Style Selector="Border.CodeBlock">
-                        <Setter Property="Margin" Value="0" />
-                        <Setter Property="Padding" Value="5" />
-                        <Setter Property="CornerRadius" Value="3" />
-                        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
-                    </Style>
-                </md:MarkdownScrollViewer.Styles>
-            </md:MarkdownScrollViewer>
-        </Grid>
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             mc:Ignorable="d"
+             x:Class="OneWare.ChatBot.Views.ChatMessageView"
+             x:DataType="viewModels:ChatMessageViewModel">
+
+    <UserControl.Styles>
+
+        <!-- Base message bubble -->
+        <Style Selector="Border.message">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8 6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+
+        <!-- User message -->
+        <Style Selector="Border.message.user">
+            <Setter Property="Background"
+                    Value="{DynamicResource ThemeControlMidBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+
+        <!-- Assistant message -->
+        <Style Selector="Border.message.assistant">
+            <Setter Property="Background"
+                    Value="{DynamicResource ThemeControlLowBrush}" />
+        </Style>
+
+        <!-- Tool message -->
+        <Style Selector="Border.message.tool">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="6 0" />
+            <Setter Property="Opacity" Value="0.7" />
+        </Style>
+
+        <!-- Streaming indicator -->
+        <Style Selector="TextBlock.streaming">
+            <Setter Property="Foreground"
+                    Value="{DynamicResource ThemeForegroundLowBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Margin" Value="2 4 0 0" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <Border Classes="message"
+            Classes.user="{Binding IsUser}"
+            Classes.assistant="{Binding IsAssistant}"
+            Classes.tool="{Binding IsToolMessage}">
+
+        <StackPanel Spacing="6">
+
+            <TextBlock Text="{Binding Message}" IsVisible="{Binding IsToolMessage}" FontSize="10" />
+            
+            <!-- Message content -->
+            <controls:MarkdownViewer IsVisible="{Binding !IsToolMessage}" Markdown="{Binding Message}" />
+
+            <!-- Streaming hint -->
+            <TextBlock Classes="streaming"
+                       Text="Thinking…"
+                       IsVisible="{Binding IsStreaming}" />
+
+        </StackPanel>
     </Border>
 </UserControl>

@@ -1,19 +1,41 @@
-﻿using Avalonia.Media;
+﻿using System;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.ChatBot.ViewModels;
 
-public class ChatMessageViewModel(string author, IImage icon) : ObservableObject
+public class ChatMessageViewModel : ObservableObject
 {
-    private string _message = string.Empty;
-    
     public string Message
     {
-        get => _message;
-        set => SetProperty(ref _message, value);
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
+
+    public bool IsStreaming
+    {
+        get;
+        set => SetProperty(ref field, value);
     }
 
-    public IImage Icon { get; } = icon;
-    
-    public string Author { get; } = author;
+    public ChatMessageViewModel(string author, bool isUser)
+    {
+        Author = author;
+        IsUser = isUser;
+        Timestamp = DateTimeOffset.Now;
+    }
+
+    public string Author { get; }
+
+    public bool IsUser { get; }
+
+    public bool IsAssistant => !IsUser;
+
+    public bool IsToolMessage
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public DateTimeOffset Timestamp { get; }
 }

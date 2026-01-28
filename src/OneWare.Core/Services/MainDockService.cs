@@ -36,8 +36,6 @@ public class MainDockService : Factory, IMainDockService
 
     public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new();
 
-    private IExtendedDocument? _currentDocument;
-
     private IDisposable? _lastSub;
 
     private RootDock? _layout;
@@ -105,11 +103,11 @@ public class MainDockService : Factory, IMainDockService
 
     public IExtendedDocument? CurrentDocument
     {
-        get => _currentDocument;
+        get;
         set
         {
-            if (value == _currentDocument) return;
-            _currentDocument = value;
+            if (value == field) return;
+            field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
         }
     }

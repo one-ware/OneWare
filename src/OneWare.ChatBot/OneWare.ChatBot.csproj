@@ -3,17 +3,15 @@
     <Import Project="..\..\build\props\OneWare.Module.props" />
 
     <ItemGroup>
-        <ProjectReference Include="..\..\OneWare\src\Markdown.Avalonia\Markdown.Avalonia.Tight\Markdown.Avalonia.Tight.csproj" />
-        <ProjectReference Include="..\..\OneWare\src\Markdown.Avalonia\Markdown.Avalonia.SyntaxHigh\Markdown.Avalonia.SyntaxHigh.csproj" />
-        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj" />
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**\*.*" />
+      <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.18" />
     </ItemGroup>
-    
+
     <ItemGroup>
-      <Folder Include="Assets\" />
+      <AvaloniaResource Include="Assets\OneAi_Happy.png" />
     </ItemGroup>
     
 </Project>

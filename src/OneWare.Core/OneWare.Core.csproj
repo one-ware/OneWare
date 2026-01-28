@@ -41,4 +41,10 @@
         <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="ColorTextBlock.Avalonia">
+        <HintPath>..\..\..\..\.homes\ubuntu-dev\.nuget\packages\oneware.colortextblock.avalonia\11.3.3\lib\net9.0\ColorTextBlock.Avalonia.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>
