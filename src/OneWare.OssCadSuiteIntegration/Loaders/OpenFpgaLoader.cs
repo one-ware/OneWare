@@ -1,12 +1,16 @@
+using Avalonia.Threading;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Loaders;
 
-public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService settingsService, ILogger logger)
+public class OpenFpgaLoader(IChildProcessService childProcess, 
+    ISettingsService settingsService, ILogger logger, IOutputService outputService, 
+    IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
     public string Name => "OpenFpgaLoader";
@@ -43,7 +47,18 @@ public class OpenFpgaLoader(IChildProcessService childProcess, ISettingsService 
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
         openFpgaLoaderArguments.Add("./build/pack.bin");
 
-        await childProcess.ExecuteShellAsync("openFPGALoader", openFpgaLoaderArguments,
-            project.FullPath, "Running OpenFPGALoader...", AppState.Loading, true);
+        var path = settingsService.GetSetting(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting).Value as string;
+        
+        var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments,
+            project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
+            {
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                return true;
+            });
+        
+        await toolExecutionDispatcherService.ExecuteAsync(command);
+        
+        //await childProcess.ExecuteShellAsync(path, openFpgaLoaderArguments,
+        //    project.FullPath, "Running OpenFPGALoader...", AppState.Loading, true);
     }
 }

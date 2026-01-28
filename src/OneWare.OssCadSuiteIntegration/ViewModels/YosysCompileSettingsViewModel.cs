@@ -58,7 +58,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "synth_nexus",
                 "synth_quicklogic",
                 "synth_sf2",
-                "synth_xilinx"
+                "synth_xilinx",
+                "synth_gatemate"
             ])
         {
             HoverDescription = "Set Yosys Synth tool"
@@ -76,7 +77,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
                 "nextpnr-gowin",
                 "nextpnr-ice40",
                 "nextpnr-machxo2",
-                "nextpnr-nexus"
+                "nextpnr-nexus",
+                "nextpnr-himbachel"
             ])
         {
             HoverDescription = "Set NextPnr tool"
@@ -92,7 +94,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             defaultProperties.GetValueOrDefault("yosysToolchainPackTool") ?? "", [
                 "ecppack",
                 "gowin_pack",
-                "icepack"
+                "icepack",
+                "gmpack"
             ])
         {
             HoverDescription = "Set Pack tool"

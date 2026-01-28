@@ -164,40 +164,40 @@ public class YosysService(
         packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
         
-        var status = await childProcessService.ExecuteShellAsync(packTool, packToolArguments,
-            project.FullPath,
-            $"Running {packTool}...");
-
+        var command = ToolCommand.FromShellParams(packTool, packToolArguments,
+            project.FullPath, $"Running {packTool}...", AppState.Loading, true, null, s =>
+            {
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                return true;
+            });
+        
+        var status = await toolExecutionDispatcherService.ExecuteAsync(command);
+        
         return status.success;
     }
 
     [Obsolete (message: "Use CreateJsonNetListAsync instead")]
     public async Task CreateNetListJsonAsync(IProjectFile verilog)
     {
-        await childProcessService.ExecuteShellAsync("yosys", [
-                "-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean", "-o",
-                $"{verilog.Header}.json", verilog.Header
-            ],
-            Path.GetDirectoryName(verilog.FullPath)!, "Create Netlist...");
-    }
-    
-    public async Task<bool> CreateJsonNetListAsync(IProjectFile verilog)
-    {
-        var result = await childProcessService.ExecuteShellAsync("yosys", [
-                "-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean", "-o",
-                $"{verilog.Header}.json", verilog.Header
-            ],
-            Path.GetDirectoryName(verilog.FullPath)!, "Create Netlist...");
         
-        return result.success;
+        var command = ToolCommand.FromShellParams("yosys", [
+                "-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean", "-o",
+                $"{verilog.Header}.json", verilog.Header
+            ],
+            Path.GetDirectoryName(verilog.FullPath)!, $"Create Netlist...");
+        
+        await toolExecutionDispatcherService.ExecuteAsync(command);
+        
     }
 
     public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {
         var buildpath = Path.Combine(file.Root.FullPath, "build");
         Directory.CreateDirectory(buildpath);
-        await childProcessService.ExecuteShellAsync("yosys", ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
-            file.Root.FullPath, "Running Yosys...", AppState.Loading, true);
+        
+        var command = ToolCommand.FromShellParams("yosys",  ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
+            file.Root.FullPath, $"Running Yosys...", AppState.Loading, true);
+        await toolExecutionDispatcherService.ExecuteAsync(command);
         return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
     }
     

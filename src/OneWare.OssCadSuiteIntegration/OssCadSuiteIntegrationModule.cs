@@ -36,6 +36,7 @@ namespace OneWare.OssCadSuiteIntegration;
 public class OssCadSuiteIntegrationModule : IModule
 {
     public const string OssPathSetting = "OssCadSuite_Path";
+    public const string OpenFpgaLoaderPathSetting = "OpenFpgaLoader_Path";
 
     public static readonly Package OssCadPackage = new()
     {
@@ -318,8 +319,17 @@ public class OssCadSuiteIntegrationModule : IModule
         toolService.Register(new ToolContext("nextpnr-nexus", "Place and Routing Tool", "nextpnr-nexus"), new NativeStrategy());
         
         toolService.Register(new ToolContext("openFPGALoader", "FPGA Loader", "openFPGALoader"), new NativeStrategy());
+        toolService.Register(new ToolContext("iceprog", "Packing", "FPGA Loader"), new NativeStrategy());
+        
         toolService.Register(new ToolContext("icepack", "Packing", "icepack"), new NativeStrategy());
-        toolService.Register(new ToolContext("iceprog", "Packing", "iceprog"), new NativeStrategy());
+        toolService.Register(new ToolContext("gmpack", "Packing", "gmpack"), new NativeStrategy());
+        toolService.Register(new ToolContext("gowin_pack", "Packing", "gowin_pack"), new NativeStrategy());
+        toolService.Register(new ToolContext("gmupack", "Packing", "gmupack"), new NativeStrategy());
+        
+        toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
+        
+        
+        
 
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
@@ -451,6 +461,9 @@ public class OssCadSuiteIntegrationModule : IModule
 
         settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
+        
+        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
+            "Sets the path for the OpenFPGALoader", "openFPGALoader", null, null, null);
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
         {
