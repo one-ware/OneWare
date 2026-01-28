@@ -11,7 +11,7 @@ public class NativeStrategy : IToolExecutionStrategy
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command)
     {
         IChildProcessService childProcessService = ContainerLocator.Container.Resolve<IChildProcessService>();
-        return childProcessService.ExecuteShellAsync(command.ToolName, command.Arguments, command.WorkingDirectory, command.StatusMessage, 
+        return childProcessService.ExecuteShellAsync(command.Executable ?? command.ToolName, command.Arguments, command.WorkingDirectory, command.StatusMessage, 
             command.State,
             command.ShowTimer, command.OutputHandler, command.ErrorHandler);
     }

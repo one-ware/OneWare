@@ -45,10 +45,24 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
 
         openFpgaLoaderArguments.AddRange(properties.GetValueOrDefault("OpenFpgaLoader_Flags")?.Split(' ',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-        openFpgaLoaderArguments.Add("./build/pack.bin");
-
-        var path = settingsService.GetSetting(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting).Value as string;
         
+        var bitstreamFormat = properties
+            .GetValueOrDefault("openFpgaLoaderBitstreamFormat", "bin");
+        
+        switch (bitstreamFormat)
+        {
+            case "bin":
+                openFpgaLoaderArguments.Add("./build/pack.bin");
+                break;
+            case "bit":
+                openFpgaLoaderArguments.Add("./build/pack.bit");
+                break;
+            default:
+                outputService.WriteLine($"Could not find output type: {bitstreamFormat}");
+                return;
+        }
+        
+        var path = settingsService.GetSettingValue<string>(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting);
         var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments,
             project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
             {

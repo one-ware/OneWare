@@ -430,7 +430,7 @@ public class OssCadSuiteIntegrationModule : IModule
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                await yosysService.OpenNextpnrGuiAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null),
                             Icon = new Image()
                             {
@@ -462,7 +462,7 @@ public class OssCadSuiteIntegrationModule : IModule
         settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
         
-        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
+        settingsService.RegisterTitledFilePath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
             "Sets the path for the OpenFPGALoader", "openFPGALoader", null, null, null);
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>

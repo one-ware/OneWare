@@ -76,14 +76,30 @@ public class YosysService(
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
 
-            List<string> yosysArguments =
-                ["-q", "-p", $"{yosysSynthTool} -json build/synth.json"];
+            var yosysCommand = properties.GetValueOrDefault("yosysToolchainCommand") ?? "";
+            var yosysQuiet = Boolean.Parse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true");
+            List<string> yosysArguments = [];
+            
+            if (yosysQuiet)
+                yosysArguments.Add("-q");
+            
+            if (string.IsNullOrWhiteSpace(yosysCommand))
+            {
+                yosysArguments.AddRange( ["-p", $"{yosysSynthTool} -json build/synth.json"]);
+            }
+            else
+            {
+                yosysCommand = yosysCommand.Replace("$TOP", top.Split(".")[0]);
+                yosysCommand = yosysCommand.Replace("$SYNTH_TOOL", yosysSynthTool);
+                yosysCommand = yosysCommand.Replace("$OUTPUT", "build/synth.json");
+                
+                yosysArguments.AddRange([ "-p", yosysCommand]);
+            }
             
             yosysArguments.AddRange(properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
             
             yosysArguments.AddRange(includedFiles);
-            
             
             yosysArguments.AddRange(mandatoryFiles ?? []);
 
@@ -114,7 +130,7 @@ public class YosysService(
     public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
         => RunNextpnrAsync(project, fpgaModel, withGui: false);
 
-    public Task<bool> OpenNextpnrGui(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
+    public Task<bool> OpenNextpnrGuiAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
         => RunNextpnrAsync(project, fpgaModel, withGui: true);
     
     private async Task<bool> RunNextpnrAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, bool withGui)
@@ -125,13 +141,60 @@ public class YosysService(
                           ?? throw new Exception("NextPnr Tool not set!");
 
         var pcfFile = YosysSettingHelper.GetConstraintFile(project);
+        var cFileType = properties
+            .GetValueOrDefault("yosysToolchainConstraintFileType", "pcf");
+        
+        
         
         var nextPnrArguments = new List<string>
         {
             "--json", "./build/synth.json",
-            "--pcf", pcfFile,
-            "--asc", "./build/nextpnr.asc"
         };
+
+        switch (cFileType)
+        {
+            case "pcf":
+                nextPnrArguments.Add("--pcf");
+                nextPnrArguments.Add(pcfFile);
+                break;
+            case "ccf":
+                var absolutePcfPath = Path.Combine(project.RootFolderPath, pcfFile);
+                outputService.WriteLine($"Converting {absolutePcfPath} to CCF File");
+                if(Path.Exists(absolutePcfPath))
+                    ConstraintFileHelper.Convert(absolutePcfPath, Path.Combine(project.RootFolderPath, 
+                        "./build/constrains.ccf"));
+                else
+                {
+                    outputService.WriteLine($"Could not generate CCF file from {pcfFile}");
+                    return false;
+                } 
+                    
+                nextPnrArguments.Add("-o");
+                nextPnrArguments.Add($"ccf=./build/constrains.ccf");
+                break;
+            default:
+                outputService.WriteLine($"Could not find Constraint file type: {cFileType}");
+                return false;
+        }
+        
+        var cOutputType = properties
+            .GetValueOrDefault("yosysToolchainOutputType", "asc");
+        
+        switch (cOutputType)
+        {
+            case "asc":
+                nextPnrArguments.Add("--asc");
+                nextPnrArguments.Add("./build/nextpnr.asc");
+                break;
+            case "txt":
+                nextPnrArguments.Add("-o");
+                nextPnrArguments.Add("out=./build/impl.txt");
+                break;
+            default:
+                outputService.WriteLine($"Could not find output type: {cOutputType}");
+                return false;
+        }
+        
 
         if (withGui)
             nextPnrArguments.Add("--gui");
@@ -160,7 +223,41 @@ public class YosysService(
         var packTool = properties.GetValueOrDefault("yosysToolchainPackTool") ??
                        throw new Exception("Pack Tool not set!");
         ;
-        List<string> packToolArguments = ["./build/nextpnr.asc", "./build/pack.bin"];
+        List<string> packToolArguments = [];
+        
+        var cOutputType = properties
+            .GetValueOrDefault("yosysToolchainOutputType", "asc");
+        
+        switch (cOutputType)
+        {
+            case "asc":
+                packToolArguments.Add("./build/nextpnr.asc");
+                break;
+            case "txt":
+                packToolArguments.Add("./build/impl.txt");
+                break;
+            default:
+                outputService.WriteLine($"Could not find input type: {cOutputType}");
+                return false;
+        }
+        
+        var pOutputFormat = properties
+            .GetValueOrDefault("packToolOutputFormat", "bin");
+        
+        switch (pOutputFormat)
+        {
+            case "bin":
+                packToolArguments.Add("./build/pack.bin");
+                break;
+            case "bit":
+                packToolArguments.Add("./build/pack.bit");
+                break;
+            default:
+                outputService.WriteLine($"Could not find output type: {pOutputFormat}");
+                return false;
+        }
+        
+        
         packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
         
