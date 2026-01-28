@@ -36,6 +36,7 @@ namespace OneWare.OssCadSuiteIntegration;
 public class OssCadSuiteIntegrationModule : IModule
 {
     public const string OssPathSetting = "OssCadSuite_Path";
+    public const string OpenFpgaLoaderPathSetting = "OpenFpgaLoader_Path";
 
     public static readonly Package OssCadPackage = new()
     {
@@ -310,16 +311,25 @@ public class OssCadSuiteIntegrationModule : IModule
         var toolService = containerProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
         
-        toolService.Register(new ToolContext("nextpnr-ecp5", "Synth Tool", "nextpnr-ecp5"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-generic", "Synth Tool", "nextpnr-generic"),new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-himbaechel", "Synth Tool", " nextpnr-himbaechel"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-ice40", "Synth Tool", "nextpnr-ice40"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-machxo2", "Synth Tool", "nextpnr-machxo2"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-nexus", "Synth Tool", "nextpnr-nexus"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ecp5", "Place and Routing Tool", "nextpnr-ecp5"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Place and Routing Tool", "nextpnr-generic"),new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Place and Routing Tool", "nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ice40", "Place and Routing Tool", "nextpnr-ice40"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-machxo2", "Place and Routing Tool", "nextpnr-machxo2"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-nexus", "Place and Routing Tool", "nextpnr-nexus"), new NativeStrategy());
         
-        toolService.Register(new ToolContext("openFPGALoader", "Synth Tool", "openFPGALoader"), new NativeStrategy());
-        toolService.Register(new ToolContext("icepack", "Synth Tool", "icepack"), new NativeStrategy());
-        toolService.Register(new ToolContext("iceprog", "Synth Tool", "iceprog"), new NativeStrategy());
+        toolService.Register(new ToolContext("openFPGALoader", "FPGA Loader", "openFPGALoader"), new NativeStrategy());
+        toolService.Register(new ToolContext("iceprog", "Packing", "FPGA Loader"), new NativeStrategy());
+        
+        toolService.Register(new ToolContext("icepack", "Packing", "icepack"), new NativeStrategy());
+        toolService.Register(new ToolContext("gmpack", "Packing", "gmpack"), new NativeStrategy());
+        toolService.Register(new ToolContext("gowin_pack", "Packing", "gowin_pack"), new NativeStrategy());
+        toolService.Register(new ToolContext("gmupack", "Packing", "gmupack"), new NativeStrategy());
+        
+        toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
+        
+        
+        
 
         
         containerProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
@@ -420,7 +430,7 @@ public class OssCadSuiteIntegrationModule : IModule
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                await yosysService.OpenNextpnrGui(root, new FpgaModel(fpga!));
+                                await yosysService.OpenNextpnrGuiAsync(root, new FpgaModel(fpga!));
                             }, () => fpga != null),
                             Icon = new Image()
                             {
@@ -451,6 +461,9 @@ public class OssCadSuiteIntegrationModule : IModule
 
         settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
             "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
+        
+        settingsService.RegisterTitledFilePath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
+            "Sets the path for the OpenFPGALoader", "openFPGALoader", null, null, null);
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
         {

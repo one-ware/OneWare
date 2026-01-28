@@ -49,7 +49,7 @@ public class YosysSettingHelper
         
         foreach (var projectFile in universalFpgaProjectRoot.Files)
         {
-            if (projectFile.RelativePath.Equals(path))
+            if (projectFile.RelativePath.Equals(path) && projectFile.Extension.Equals(".pcf"))
             {
                 projectFile.IconOverlays.Add(_icon!);
                 return;
@@ -77,7 +77,6 @@ public class YosysSettingHelper
 
         if (ccfInclude)
         {
-
             project.Properties["Include"]?.AsArray().Add("*.pcf");
         }
 
