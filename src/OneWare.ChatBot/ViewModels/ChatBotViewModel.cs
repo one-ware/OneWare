@@ -1,9 +1,15 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using Microsoft.Extensions.AI;
 using OneWare.ChatBot.Models;
 using OneWare.ChatBot.Services;
+using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ChatBot.ViewModels;
@@ -82,14 +88,20 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         get;
         set => SetProperty(ref field, value);
     }
-
+    
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
-    public ChatBotViewModel() : base(IconKey)
+    public ChatBotViewModel(
+        IAiFunctionProvider aiFunctionProvider) : base(IconKey)
     {
         Id = "AIAssistant";
         Title = "AI Assistant";
+
+        aiFunctionProvider.FunctionUsed += (sender, s) =>
+        {
+            
+        };
     }
 
     public override void InitializeContent()

@@ -15,6 +15,8 @@ public class ChatBotModule : OneWareModuleBase
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<CopilotChatService>();
+        services.AddSingleton<AiFunctionProvider>();
+        services.AddSingleton<IAiFunctionProvider>(provider => provider.Resolve<AiFunctionProvider>());
         services.AddSingleton<ChatBotViewModel>();
         services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatBotViewModel>());
     }
