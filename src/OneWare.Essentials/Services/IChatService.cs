@@ -1,17 +1,18 @@
-using System;
-using System.Threading.Tasks;
-using OneWare.ChatBot.Models;
+using Avalonia.Controls;
+using OneWare.Essentials.Models;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Essentials.Services;
 
 public interface IChatService : IAsyncDisposable
 {
     public string Name { get; }
     
+    public Control? UiExtension { get; }
+    
     event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     event EventHandler<ChatServiceStatusEvent>? StatusChanged;
     
-    Task<ModelModel[]> InitializeAsync();
-    Task SendAsync(string modelId, string prompt);
+    Task InitializeAsync();
+    Task SendAsync(string prompt);
     Task AbortAsync();
 }

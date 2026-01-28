@@ -43,6 +43,7 @@
     <File Path="build/props/Svg.Controls.Skia.Avalonia.props" />
     <File Path="build/props/Xaml.Behaviors.Avalonia.props" />
     <File Path="build/props/XUnit.props" />
+    <File Path="build\props\Microsoft.Extensions.AI.Abstractions.props" />
     <File Path="build\props\Microsoft.Extensions.DependencyInjection.Abstractions.props" />
     <File Path="build\props\Microsoft.Extensions.DependencyInjection.props" />
     <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props" />
@@ -80,6 +81,7 @@
   <Folder Name="/Extensions/">
     <Project Path="src/OneWare.ChatBot/OneWare.ChatBot.csproj" />
     <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
+    <Project Path="src/OneWare.Copilot/OneWare.Copilot.csproj" />
     <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
     <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
   </Folder>

@@ -13,6 +13,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.ChatBot;
+using OneWare.Copilot;
 using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Studio;
@@ -74,5 +75,6 @@ public class StudioApp : App
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
         moduleCatalog.AddModule<ChatBotModule>();
+        moduleCatalog.AddModule<CopilotModule>();
     }
 }

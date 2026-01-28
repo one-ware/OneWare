@@ -14,7 +14,6 @@ public class ChatBotModule : OneWareModuleBase
 {
     public override void RegisterServices(IServiceCollection services)
     {
-        services.AddTransient<CopilotChatService>();
         services.AddSingleton<AiFunctionProvider>();
         services.AddSingleton<IAiFunctionProvider>(provider => provider.Resolve<AiFunctionProvider>());
         services.AddSingleton<ChatBotViewModel>();
@@ -34,7 +33,5 @@ public class ChatBotModule : OneWareModuleBase
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
             IconObservable = Application.Current!.GetResourceObservable(ChatBotViewModel.IconKey),
         });
-        
-        serviceProvider.Resolve<IChatManagerService>().RegisterChat(serviceProvider.Resolve<CopilotChatService>());
     }
 }

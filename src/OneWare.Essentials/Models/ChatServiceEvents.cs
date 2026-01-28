@@ -1,4 +1,4 @@
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Essentials.Models;
 
 public enum ChatServiceMessageType
 {

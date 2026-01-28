@@ -1,4 +1,4 @@
-namespace OneWare.ChatBot.Models;
+namespace OneWare.Copilot.Models;
 
 public class ModelModel
 {

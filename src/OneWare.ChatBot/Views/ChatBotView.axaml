@@ -65,43 +65,7 @@
                                 </Button>
                             </StackPanel>
 
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" Margin="0 0 5 0">
-                                <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
-                                           FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                <Button Height="15" VerticalAlignment="Center">
-                                    <Button.Flyout>
-                                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                                Placement="TopEdgeAlignedRight">
-                                            <ListBox ItemsSource="{Binding Models}"
-                                                     SelectedItem="{Binding SelectedModel}" BorderThickness="0"
-                                                     MinWidth="200">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
-                                                            <TextBlock Text="{Binding Name}" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding Billing}" />
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ListBox>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                    <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
-                                           Height="8" />
-                                </Button>
-                            </StackPanel>
-
                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
-                                <Button VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
-                                </Button>
-
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
                                                FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
@@ -132,6 +96,9 @@
                                     </Button>
                                 </StackPanel>
                             </StackPanel>
+                            
+                            <ContentControl DockPanel.Dock="Right" Content="{Binding SelectedChatService.UiExtension, FallbackValue={x:Null}}" />
+                            
                         </DockPanel>
                     </Grid>
 

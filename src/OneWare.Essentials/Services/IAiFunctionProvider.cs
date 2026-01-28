@@ -1,7 +1,6 @@
-using System.Collections.Generic;
 using Microsoft.Extensions.AI;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Essentials.Services;
 
 public interface IAiFunctionProvider
 {

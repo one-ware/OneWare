@@ -6,9 +6,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using Microsoft.Extensions.AI;
-using OneWare.ChatBot.Models;
 using OneWare.ChatBot.Services;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -53,7 +53,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         get;
         set => SetProperty(ref field, value);
     } = "Starting...";
-
+    
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
@@ -80,24 +80,15 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
             }
         }
     }
-
-    public ObservableCollection<ModelModel> Models { get; } = [];
-
-    public ModelModel? SelectedModel
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
     
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
-    public ChatBotViewModel(
-        IAiFunctionProvider aiFunctionProvider) : base(IconKey)
+    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, IWindowService windowService) : base(IconKey)
     {
         Id = "AIAssistant";
         Title = "AI Assistant";
-
+        
         aiFunctionProvider.FunctionUsed += OnFunctionUsed;
     }
 
@@ -111,12 +102,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 
     private async Task InitializeChatAsync(IChatService chatService)
     {
-        var models = await chatService.InitializeAsync();
-
-        Models.Clear();
-        Models.AddRange(models);
-
-        SelectedModel = Models.LastOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
+        await chatService.InitializeAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanSend))]
@@ -149,18 +135,6 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
             return;
         }
 
-        if (SelectedModel == null)
-        {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                Messages.Add(new ChatMessageViewModel("System", false)
-                {
-                    Message = "No Model selected."
-                });
-            });
-            return;
-        }
-
         var userMessage = new ChatMessageViewModel("You", true)
         {
             Message = prompt
@@ -179,7 +153,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 
         try
         {
-            await SelectedChatService.SendAsync(SelectedModel.Id, prompt);
+            await SelectedChatService.SendAsync(prompt);
         }
         catch (Exception ex)
         {
@@ -334,7 +308,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         });
     }
 
-    public void RegisterChat(IChatService chatService)
+    public void RegisterChatService(IChatService chatService)
     {
         ChatServices.Add(chatService);
     }

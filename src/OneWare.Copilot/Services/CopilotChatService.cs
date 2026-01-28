@@ -1,31 +1,45 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using GitHub.Copilot.SDK;
-using OneWare.ChatBot.Models;
+using OneWare.Copilot.Models;
+using OneWare.Copilot.Views;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Copilot.Services;
 
 public sealed class CopilotChatService(
     IAiFunctionProvider toolProvider,
     IPaths paths)
-    : IChatService
+    : ObservableObject, IChatService
 {
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
-    private string? _currentModel;
-    private readonly IAiFunctionProvider _toolProvider = toolProvider;
-
     private IDisposable? _subscription;
+    private string? _initializedModel;
 
+    public ObservableCollection<ModelModel> Models { get; } = [];
+
+    public ModelModel? SelectedModel
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
     public string Name { get; } = "Copilot";
+
+    public Control UiExtension => new CopilotChatBotExtensionView()
+    {
+        DataContext = this
+    };
 
     public event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     public event EventHandler<ChatServiceStatusEvent>? StatusChanged;
 
-    public async Task<ModelModel[]> InitializeAsync()
+    public async Task InitializeAsync()
     {
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
@@ -45,19 +59,20 @@ public sealed class CopilotChatService(
 
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Copilot started"));
 
-            return models.Select(x => new ModelModel()
+            Models.Clear();
+            Models.AddRange(models.Select(x => new ModelModel()
             {
                 Id = x.Id,
                 Name = x.Name,
                 Billing = $"{x.Billing?.Multiplier}x",
-            }).ToArray();
+            }).ToArray());
+            
+            SelectedModel = Models.LastOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Copilot unavailable"));
             MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error, ex.Message));
-
-            return [];
         }
         finally
         {
@@ -97,20 +112,27 @@ public sealed class CopilotChatService(
                           If a required tool is missing, ask the user.
                           """
             },
-            Tools = _toolProvider.GetTools()
+            Tools = toolProvider.GetTools()
         });
 
         StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
 
-        _currentModel = model;
+        _initializedModel = model;
         _subscription = _session.On(HandleSessionEvent);
     }
 
-    public async Task SendAsync(string model, string prompt)
+    public async Task SendAsync(string prompt)
     {
-        if (_session == null || _currentModel != model)
+        if (SelectedModel == null)
         {
-            await InitializeSessionAsync(model);
+            MessageReceived?.Invoke(this,
+                new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
+            return;
+        }
+        
+        if (_session == null || SelectedModel.Id != _initializedModel)
+        {
+            await InitializeSessionAsync(SelectedModel.Id);
         }
 
         if (_session == null) return;
@@ -142,7 +164,7 @@ public sealed class CopilotChatService(
         {
             await _session.DisposeAsync().ConfigureAwait(false);
             _session = null;
-            _currentModel = null;
+            _initializedModel = null;
         }
     }
 
