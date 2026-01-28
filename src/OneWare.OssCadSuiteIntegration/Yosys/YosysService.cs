@@ -19,9 +19,9 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService, 
-    ToolService toolService,
-    ToolExecutionDispatcherService toolExecutionDispatcherService)
+    IMainDockService dockService, 
+    IToolService toolService,
+    IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
