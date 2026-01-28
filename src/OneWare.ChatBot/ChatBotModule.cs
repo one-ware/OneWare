@@ -27,9 +27,9 @@ public class ChatBotModule : OneWareModuleBase
 
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.Right);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Chat")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("AI Chat")
         {
-            Header = "Chat",
+            Header = "AI Chat",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
             IconObservable = Application.Current!.GetResourceObservable(ChatBotViewModel.IconKey),
         });

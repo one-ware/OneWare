@@ -86,8 +86,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 
     public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, IWindowService windowService) : base(IconKey)
     {
-        Id = "AIAssistant";
-        Title = "AI Assistant";
+        Id = "AI_Chat";
+        Title = "AI Chat";
         
         aiFunctionProvider.FunctionUsed += OnFunctionUsed;
     }
