@@ -4,10 +4,6 @@
     <Import Project="..\..\build\props\Devlooped.CredentialManager.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
     
-    <PropertyGroup>
-        <Version>0.31.18.1</Version>
-    </PropertyGroup>
-    
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
