@@ -501,8 +501,8 @@ public class OssCadSuiteIntegrationModule : IModule
                 l.Add(new MenuItemViewModel("GtkWaveOpen")
                 {
                     Header = "Open with GTKWave",
-                    Command = new RelayCommand(() =>
-                        containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(wave.FullPath))
+                    Command = new AsyncRelayCommand(async () =>
+                        await containerProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(wave))
                 });
             if (x is [IProjectFile { Extension: ".pcf" } pcf])
             {
@@ -530,7 +530,7 @@ public class OssCadSuiteIntegrationModule : IModule
 
         containerProvider.Resolve<IDockService>().RegisterFileOpenOverwrite(x =>
         {
-            containerProvider.Resolve<GtkWaveService>().OpenInGtkWave(x.FullPath);
+            containerProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
         }, ".ghw", ".fst");
     }
