@@ -1,4 +1,6 @@
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using Prism.Ioc;
 
 namespace OneWare.Essentials.ToolEngine.Strategies;
 
@@ -8,9 +10,8 @@ public class NativeStrategy : IToolExecutionStrategy
 
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command)
     {
-        var childProcessService = ContainerLocator.Container.Resolve<IChildProcessService>();
-        return childProcessService.ExecuteShellAsync(command.ToolName, command.Arguments, command.WorkingDirectory,
-            command.StatusMessage,
+        IChildProcessService childProcessService = ContainerLocator.Container.Resolve<IChildProcessService>();
+        return childProcessService.ExecuteShellAsync(command.Executable ?? command.ToolName, command.Arguments, command.WorkingDirectory, command.StatusMessage, 
             command.State,
             command.ShowTimer, command.OutputHandler, command.ErrorHandler);
     }

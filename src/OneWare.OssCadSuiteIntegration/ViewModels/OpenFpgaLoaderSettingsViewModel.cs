@@ -16,6 +16,7 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
     private readonly UniversalFpgaProjectRoot _projectRoot;
     private readonly Dictionary<string, string> _settings;
     private readonly TextBoxSetting _shortTermFlagsSetting;
+    private readonly ComboBoxSetting _inputBitstreamFormat;
 
     public OpenFpgaLoaderSettingsViewModel(UniversalFpgaProjectRoot projectRoot, IFpga fpga)
     {
@@ -45,19 +46,29 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         {
             HoverDescription = "OpenFPGALoader Flags for Long Term Programming"
         };
+        
+        _inputBitstreamFormat = new ComboBoxSetting("Pack output format",
+            defaultProperties.GetValueOrDefault("openFpgaLoaderBitstreamFormat") ?? "", [
+                "bin",
+                "bit"
+            ])
+        {
+            HoverDescription = "Set Pack tool output format"
+        };
 
         if (_settings.TryGetValue("openFpgaLoaderBoard", out var oflBoard))
             _boardSetting.Value = oflBoard;
-
         if (_settings.TryGetValue("openFpgaLoaderShortTermFlags", out var oflSFlags))
             _shortTermFlagsSetting.Value = oflSFlags;
-
         if (_settings.TryGetValue("openFpgaLoaderLongTermFlags", out var oflLFlags))
             _longTermFlagsSetting.Value = oflLFlags;
+        if (_settings.TryGetValue("openFpgaLoaderBitstreamFormat", out var bitFormat))
+            _inputBitstreamFormat.Value = bitFormat;
 
         SettingsCollection.SettingModels.Add(_boardSetting);
         SettingsCollection.SettingModels.Add(_shortTermFlagsSetting);
         SettingsCollection.SettingModels.Add(_longTermFlagsSetting);
+        SettingsCollection.SettingModels.Add(_inputBitstreamFormat);
     }
 
     public SettingsCollectionViewModel SettingsCollection { get; } = new("OpenFPGALoader Settings")
@@ -70,6 +81,7 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         _settings["openFpgaLoaderBoard"] = _boardSetting.Value.ToString()!;
         _settings["openFpgaLoaderShortTermFlags"] = _shortTermFlagsSetting.Value.ToString()!;
         _settings["openFpgaLoaderLongTermFlags"] = _longTermFlagsSetting.Value.ToString()!;
+        _settings["openFpgaLoaderBitstreamFormat"] = _inputBitstreamFormat.Value.ToString()!;
 
         FpgaSettingsParser.SaveSettings(_projectRoot, _fpga.Name, _settings);
 
