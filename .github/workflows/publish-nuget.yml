@@ -40,6 +40,7 @@ jobs:
       - run: dotnet pack ./src/OneWare.WaveFormViewer/OneWare.WaveFormViewer.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj --configuration Release --output ${{ env.NuGetDirectory }}
       - run: dotnet pack ./src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+      - run: dotnet pack ./src/OneWare.ToolEngine/OneWare.ToolEngine.csproj --configuration Release --output ${{ env.NuGetDirectory }}
 
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
