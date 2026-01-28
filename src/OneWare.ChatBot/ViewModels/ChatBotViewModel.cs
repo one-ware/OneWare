@@ -98,10 +98,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         Id = "AIAssistant";
         Title = "AI Assistant";
 
-        aiFunctionProvider.FunctionUsed += (sender, s) =>
-        {
-            
-        };
+        aiFunctionProvider.FunctionUsed += OnFunctionUsed;
     }
 
     public override void InitializeContent()
@@ -340,5 +337,25 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     public void RegisterChat(IChatService chatService)
     {
         ChatServices.Add(chatService);
+    }
+
+    private void OnFunctionUsed(object? sender, string functionName)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var lastMessageStreaming = Messages.LastOrDefault(x => x.IsStreaming);
+ 
+            var newMessage = new ChatMessageViewModel(string.Empty, false)
+            {
+                Message = $"> {functionName}",
+                IsToolMessage = true
+            };
+            
+            if (lastMessageStreaming != null)
+            {
+                Messages.Insert(Messages.IndexOf(lastMessageStreaming), newMessage);
+            }
+            else Messages.Add(newMessage);
+        });
     }
 }

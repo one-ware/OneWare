@@ -24,12 +24,18 @@ public class ChatMessageViewModel : ObservableObject
         IsUser = isUser;
         Timestamp = DateTimeOffset.Now;
     }
-    
+
     public string Author { get; }
 
     public bool IsUser { get; }
 
     public bool IsAssistant => !IsUser;
+
+    public bool IsToolMessage
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
 
     public DateTimeOffset Timestamp { get; }
 }

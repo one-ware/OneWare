@@ -18,7 +18,7 @@ public class AiFunctionProvider(
     {
         var getActiveProject = AIFunctionFactory.Create(
             () => WrapWithNotification(
-                "getActiveProject",
+                "Get Active Project",
                 () => new
                 {
                     activeProject = projectExplorerService.ActiveProject?.FullPath
@@ -29,7 +29,7 @@ public class AiFunctionProvider(
 
         var getOpenFiles = AIFunctionFactory.Create(
             () => WrapWithNotification(
-                "getOpenFiles",
+                "Get Open Files",
                 () => new
                 {
                     openFiles = dockService.OpenFiles.Select(x => x.Key.FullPath).ToArray()
@@ -44,7 +44,7 @@ public class AiFunctionProvider(
 
         var getOpenFile = AIFunctionFactory.Create(
             () => WrapWithNotification(
-                "getFocusedFile",
+                "Get Focused File",
                 () => new
                 {
                     currentFile = dockService.CurrentDocument?.FullPath
@@ -58,7 +58,7 @@ public class AiFunctionProvider(
 
         var getErrorsForFile = AIFunctionFactory.Create(
             ([Description("path of the file to get errors")] string path) => WrapWithNotification(
-                "getErrorsForFile",
+                $"Get Errors for {Path.GetFileName(path)}",
                 () => new
                 {
                     errorsForFile = Dispatcher.UIThread.InvokeAsync(() =>
@@ -78,7 +78,7 @@ public class AiFunctionProvider(
 
         var getErrors = AIFunctionFactory.Create(
             () => WrapWithNotification(
-                "getAllErrors",
+                "Get Errors",
                 () => new
                 {
                     errors = Dispatcher.UIThread.InvokeAsync(() =>
@@ -100,7 +100,7 @@ public class AiFunctionProvider(
                 [Description("Working directory for execution")]
                 string workDir
             ) => WrapWithNotification(
-                "runTerminalCommand",
+                $"Execute In Terminal: {command}",
                 () => new
                 {
                     result = Dispatcher.UIThread.InvokeAsync(async () =>
@@ -122,9 +122,9 @@ public class AiFunctionProvider(
         return [getActiveProject, getOpenFiles, getOpenFile, getErrorsForFile, getErrors, executeInTerminal];
     }
 
-    private T WrapWithNotification<T>(string functionName, Func<T> handler)
+    private T WrapWithNotification<T>(string friendlyName, Func<T> handler)
     {
-        Dispatcher.UIThread.Post(() => FunctionUsed?.Invoke(this, functionName));
+        Dispatcher.UIThread.Post(() => FunctionUsed?.Invoke(this, friendlyName));
         return handler();
     }
 }

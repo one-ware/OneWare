@@ -14,7 +14,7 @@
         <!-- Base message bubble -->
         <Style Selector="Border.message">
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10 8" />
+            <Setter Property="Padding" Value="8 6" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Left" />
         </Style>
@@ -32,6 +32,13 @@
                     Value="{DynamicResource ThemeControlLowBrush}" />
         </Style>
 
+        <!-- Tool message -->
+        <Style Selector="Border.message.tool">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="6 0" />
+            <Setter Property="Opacity" Value="0.7" />
+        </Style>
+
         <!-- Streaming indicator -->
         <Style Selector="TextBlock.streaming">
             <Setter Property="Foreground"
@@ -45,12 +52,15 @@
 
     <Border Classes="message"
             Classes.user="{Binding IsUser}"
-            Classes.assistant="{Binding IsAssistant}">
+            Classes.assistant="{Binding IsAssistant}"
+            Classes.tool="{Binding IsToolMessage}">
 
         <StackPanel Spacing="6">
 
+            <TextBlock Text="{Binding Message}" IsVisible="{Binding IsToolMessage}" FontSize="10" />
+            
             <!-- Message content -->
-            <controls:MarkdownViewer Markdown="{Binding Message}" />
+            <controls:MarkdownViewer IsVisible="{Binding !IsToolMessage}" Markdown="{Binding Message}" />
 
             <!-- Streaming hint -->
             <TextBlock Classes="streaming"
