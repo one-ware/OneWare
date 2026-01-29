@@ -7,7 +7,7 @@ using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
-using OneWare.SourceControl.Models;
+using OneWare.Essentials.Models;
 
 namespace OneWare.SourceControl.EditorExtensions;
 
@@ -56,9 +56,9 @@ public class DiffInfoMargin : AbstractMargin
         var maxLines = 2;
         if (Lines.Count > 0)
             for (var i = Lines.Count - 1; i >= 0; i--)
-                if (Lines[i].Style != DiffContext.Blank && !string.IsNullOrEmpty(Lines[i].LineNumber))
+                if (Lines[i].Style != DiffContext.Blank)
                 {
-                    maxLines = Lines[i].LineNumber.Length + 1;
+                    maxLines = Lines[i].LineNumber.ToString().Length + 1;
                     break;
                 }
 
@@ -119,11 +119,10 @@ public class DiffInfoMargin : AbstractMargin
                 }
             }
 
-            if (!string.IsNullOrEmpty(diffLine.LineNumber))
+            if (diffLine.LineNumber >= 0)
             {
-                ft = new FormattedText(diffLine.LineNumber, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                ft = new FormattedText(diffLine.LineNumber.ToString(), CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                     Avalonia.Media.Typeface.Default, EmSize, foreground);
-                //drawingContext.DrawText(ft, new Point(left, ));
                 drawingContext.DrawText(ft,
                     new Point(renderSize.Width - ft.Width - testPrefixWidth.Width, rcs[0].Top));
             }

@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -19,7 +19,7 @@ public class SourceControlModule : OneWareModuleBase
 
     public override void RegisterServices(IServiceCollection services)
     {
-        services.AddTransient<CompareFileViewModel>();
+        services.AddTransient<CompareGitViewModel>();
         services.AddSingleton<SourceControlViewModel>();
         services.AddSingleton<GitHubAccountSettingViewModel>();
     }

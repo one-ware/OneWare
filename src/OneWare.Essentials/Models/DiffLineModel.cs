@@ -1,6 +1,6 @@
 ﻿using OneWare.SourceControl.EditorExtensions;
 
-namespace OneWare.SourceControl.Models;
+namespace OneWare.Essentials.Models;
 
 public enum DiffContext
 {
@@ -12,7 +12,7 @@ public enum DiffContext
 
 public class DiffLineModel
 {
-    public DiffLineModel(string text, DiffContext style, string lineNumber, string prefixForStyle)
+    public DiffLineModel(string text, DiffContext style, int lineNumber, string prefixForStyle)
     {
         Text = text;
         Style = style;
@@ -22,16 +22,17 @@ public class DiffLineModel
 
     public string Text { get; }
     public DiffContext Style { get; }
-    public string LineNumber { get; }
+    public int LineNumber { get; }
     public string PrefixForStyle { get; }
+    
     public List<LineDifferenceOffset> LineDiffs { get; } = new();
 
     public static DiffLineModel CreateBlank()
     {
-        return new DiffLineModel("", DiffContext.Blank, "", "");
+        return new DiffLineModel("", DiffContext.Blank, -1, "");
     }
 
-    public static DiffLineModel Create(string lineNumber, string s)
+    public static DiffLineModel Create(int lineNumber, string s)
     {
         if (s.StartsWith("+")) return new DiffLineModel(s[1..], DiffContext.Added, lineNumber, "+");
         if (s.StartsWith("-")) return new DiffLineModel(s[1..], DiffContext.Deleted, lineNumber, "-");

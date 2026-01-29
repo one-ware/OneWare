@@ -1042,9 +1042,9 @@ public class SourceControlViewModel : ExtendedTool
                 ? path
                 : Path.Combine(repository.Info.WorkingDirectory, path.Replace('/', Path.DirectorySeparatorChar));
 
-            var openTab = _mainDockService.SearchView<CompareFileViewModel>()
+            var openTab = _mainDockService.SearchView<CompareGitViewModel>()
                 .FirstOrDefault(x => x.FullPath == fullPath);
-            openTab ??= ContainerLocator.Container.Resolve<CompareFileViewModel>((typeof(string), fullPath));
+            openTab ??= ContainerLocator.Container.Resolve<CompareGitViewModel>((typeof(string), fullPath));
 
             openTab.Title = titlePrefix + Path.GetFileName(path);
             openTab.Id = titlePrefix + fullPath;

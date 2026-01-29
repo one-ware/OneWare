@@ -23,6 +23,7 @@
     <Import Project="..\..\build\props\OpenCvSharp4.props"/>
     <Import Project="..\..\build\props\Microsoft.ML.OnnxRuntime.Managed.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.AI.Abstractions.props"/>
+    <Import Project="..\..\build\props\DiffPlex.props"/>
 
     <Import Project="..\..\build\props\LiveChartsCore.SkiaSharpView.Avalonia.props"/>
 

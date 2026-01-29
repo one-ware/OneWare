@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using OneWare.SourceControl.Models;
+using OneWare.Essentials.Models;
 
 namespace OneWare.SourceControl.EditorExtensions;
 

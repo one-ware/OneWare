@@ -10,12 +10,25 @@ public class AiFunctionProvider(
     IProjectExplorerService projectExplorerService,
     IMainDockService dockService,
     IErrorService errorService,
-    ITerminalManagerService terminalManagerService) : IAiFunctionProvider
+    ITerminalManagerService terminalManagerService,
+    FileEditService fileEditService) : IAiFunctionProvider
 {
     public event EventHandler<string>? FunctionUsed;
     
     public ICollection<AIFunction> GetTools()
     {
+        var editFile = AIFunctionFactory.Create(
+            ([Description("path of the file to edit")] string path, 
+                [Description("new content of the file")] string content) => WrapWithNotification(
+                $"Edit File {Path.GetFileName(path)}",
+                () => new
+                {
+                    _ = fileEditService.ProposeEditAsync(path, content)
+                }),
+            "editFile",
+            "Edits the specified file with the provided content."
+        );
+        
         var getActiveProject = AIFunctionFactory.Create(
             () => WrapWithNotification(
                 "Get Active Project",

@@ -8,8 +8,11 @@
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>
     </ItemGroup>
+    
     <ItemGroup>
-        <PackageReference Include="DiffPlex" Version="1.9.0"/>
         <PackageReference Include="LibGit2Sharp" Version="0.31.0"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="EditorExtensions\" />
     </ItemGroup>
 </Project>

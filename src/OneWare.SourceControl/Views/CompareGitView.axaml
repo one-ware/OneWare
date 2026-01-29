@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.SourceControl.Views.CompareGitView" x:DataType="viewModels:CompareGitViewModel">
+    <Panel>
+        <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />
+        
+        <Panel IsVisible="{Binding IsLoading}"
+               Background="{DynamicResource ThemeControlLowBrush}">
+            <controls:Spinner Height="30" Width="30" IsVisible="{Binding IsLoading}" />
+        </Panel>
+    </Panel>
+</UserControl>
