@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using OneWare.Essentials.Extensions;
@@ -19,11 +21,46 @@ public class AiFunctionProvider(
 
     public ICollection<AIFunction> GetTools()
     {
+        var searchFiles = AIFunctionFactory.Create(
+            ([Description("regex pattern to search for")] string pattern,
+                [Description("root directory to search (optional, defaults to active project)")] string? rootPath = null,
+                [Description("file name glob(s), e.g. \"*.cs\" or \"*.cs;*.md\" (optional)")] string? fileGlob = null,
+                [Description("case-insensitive search")] bool ignoreCase = true,
+                [Description("max total matches to return")] int maxResults = 200,
+                [Description("max matches per file")] int maxResultsPerFile = 20) =>
+                WrapWithNotificationTask<object>(
+                    "Search Files",
+                    async () =>
+                    {
+                        var resolvedRoot = rootPath ?? projectExplorerService.ActiveProject?.FullPath;
+                        if (string.IsNullOrWhiteSpace(resolvedRoot))
+                            return new { results = Array.Empty<SearchMatch>(), error = "No active project and no root path provided." };
+
+                        if (!Directory.Exists(resolvedRoot))
+                            return new { results = Array.Empty<SearchMatch>(), error = $"Root path does not exist: {resolvedRoot}" };
+
+                        var results = await SearchInFilesAsync(
+                            resolvedRoot,
+                            pattern,
+                            fileGlob,
+                            ignoreCase,
+                            maxResults,
+                            maxResultsPerFile);
+
+                        return new { results };
+                    }),
+            "searchFiles",
+            """
+            Searches files using a regular expression.
+            Returns matching lines with file path, line number, column, and match text.
+            """
+        );
+
         var readFile = AIFunctionFactory.Create(
             ([Description("path of the file to read")] string path,
                 [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
                 [Description("number of lines to read from startLine (omit for full file)")] int? lineCount = null) =>
-                WrapWithNotificationUiThread(
+                WrapWithNotificationTaskUiThread(
                     $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
                     async () => new
                     {
@@ -38,7 +75,7 @@ public class AiFunctionProvider(
                 [Description("new text to write (full file or replacement lines)")] string content,
                 [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                 [Description("number of lines to replace from startLine; 0 inserts before startLine")] int? lineCount = null) =>
-            WrapWithNotificationUiThread(
+            WrapWithNotificationTaskUiThread(
                 $"Edit File {Path.GetFileName(path)}",
                 async () => new
                 {
@@ -49,7 +86,7 @@ public class AiFunctionProvider(
         );
 
         var getActiveProject = AIFunctionFactory.Create(
-            () => WrapWithNotification(
+            () => WrapWithNotificationUiThread(
                 "Get Active Project",
                 () => new
                 {
@@ -60,7 +97,7 @@ public class AiFunctionProvider(
         );
 
         var getOpenFiles = AIFunctionFactory.Create(
-            () => WrapWithNotification(
+            () => WrapWithNotificationUiThread(
                 "Get Open Files",
                 () => new
                 {
@@ -75,7 +112,7 @@ public class AiFunctionProvider(
         );
 
         var getOpenFile = AIFunctionFactory.Create(
-            () => WrapWithNotification(
+            () => WrapWithNotificationUiThread(
                 "Get Focused File",
                 () => new
                 {
@@ -89,7 +126,7 @@ public class AiFunctionProvider(
         );
 
         var getErrorsForFile = AIFunctionFactory.Create(
-            ([Description("path of the file to get errors")] string path) => WrapWithNotification(
+            ([Description("path of the file to get errors")] string path) => WrapWithNotificationUiThread(
                 $"Get Errors for {Path.GetFileName(path)}",
                 () =>
                 {
@@ -110,7 +147,7 @@ public class AiFunctionProvider(
         );
 
         var getErrors = AIFunctionFactory.Create(
-            () => WrapWithNotification(
+            () => WrapWithNotificationUiThread(
                 "Get Errors",
                 () =>
                 {
@@ -133,7 +170,7 @@ public class AiFunctionProvider(
                 string command,
                 [Description("Working directory for execution")]
                 string workDir
-            ) => WrapWithNotificationUiThread(
+            ) => WrapWithNotificationTaskUiThread(
                 $"Execute In Terminal: {command}",
                 async () =>
                 {
@@ -159,12 +196,12 @@ public class AiFunctionProvider(
 
         return
         [
-            getActiveProject, getOpenFile, getOpenFiles, readFile, editFile, getErrorsForFile, getErrors,
+            getActiveProject, getOpenFile, getOpenFiles, searchFiles, readFile, editFile, getErrorsForFile, getErrors,
             executeInTerminal
         ];
     }
 
-    private async Task<T> WrapWithNotification<T>(string friendlyName, Func<T> handler)
+    private async Task<T> WrapWithNotificationUiThread<T>(string friendlyName, Func<T> handler)
     {
         return await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -180,7 +217,25 @@ public class AiFunctionProvider(
         });
     }
 
-    private async Task<T> WrapWithNotificationUiThread<T>(
+    private async Task<T> WrapWithNotificationTask<T>(
+        string friendlyName,
+        Func<Task<T>> handler)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            FunctionStarted?.Invoke(this, friendlyName));
+
+        try
+        {
+            return await handler().ConfigureAwait(false);
+        }
+        finally
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                FunctionCompleted?.Invoke(this, friendlyName));
+        }
+    }
+    
+    private async Task<T> WrapWithNotificationTaskUiThread<T>(
         string friendlyName,
         Func<Task<T>> handler)
     {
@@ -198,21 +253,90 @@ public class AiFunctionProvider(
         });
     }
 
-    private async Task<T> WrapWithNotification<T>(
-        string friendlyName,
-        Func<Task<T>> handler)
+    private static async Task<IReadOnlyList<SearchMatch>> SearchInFilesAsync(
+        string rootPath,
+        string pattern,
+        string? fileGlob,
+        bool ignoreCase,
+        int maxResults,
+        int maxResultsPerFile)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-            FunctionStarted?.Invoke(this, friendlyName));
+        var results = new List<SearchMatch>();
+        var options = RegexOptions.Compiled | RegexOptions.Multiline;
+        if (ignoreCase)
+            options |= RegexOptions.IgnoreCase;
 
-        try
+        var regex = new Regex(pattern, options, TimeSpan.FromSeconds(1));
+        var globs = ParseGlobs(fileGlob);
+
+        foreach (var filePath in Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories))
         {
-            return await handler().ConfigureAwait(false);
+            if (globs.Length > 0 && !IsGlobMatch(Path.GetFileName(filePath), globs))
+                continue;
+
+            var fileMatchCount = 0;
+            var lineNumber = 0;
+
+            try
+            {
+                using var reader = new StreamReader(filePath);
+                while (true)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (line is null) break;
+
+                    lineNumber++;
+                    foreach (Match match in regex.Matches(line))
+                    {
+                        results.Add(new SearchMatch(
+                            filePath,
+                            lineNumber,
+                            match.Index + 1,
+                            line,
+                            match.Value));
+
+                        fileMatchCount++;
+                        if (fileMatchCount >= maxResultsPerFile)
+                            break;
+                        if (results.Count >= maxResults)
+                            return results;
+                    }
+
+                    if (fileMatchCount >= maxResultsPerFile)
+                        break;
+                }
+            }
+            catch
+            {
+                // Ignore unreadable files.
+            }
+
+            if (results.Count >= maxResults)
+                break;
         }
-        finally
-        {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-                FunctionCompleted?.Invoke(this, friendlyName));
-        }
+
+        return results;
     }
+
+    private static string[] ParseGlobs(string? fileGlob)
+    {
+        if (string.IsNullOrWhiteSpace(fileGlob))
+            return Array.Empty<string>();
+
+        return fileGlob.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    private static bool IsGlobMatch(string fileName, string[] globs)
+    {
+        foreach (var glob in globs)
+        {
+            var pattern = "^" + Regex.Escape(glob).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            if (Regex.IsMatch(fileName, pattern, RegexOptions.IgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private sealed record SearchMatch(string File, int Line, int Column, string LineText, string Match);
 }
