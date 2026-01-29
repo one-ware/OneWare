@@ -19,7 +19,7 @@ public class ChatBotModule : OneWareModuleBase
         services.AddSingleton<ChatBotViewModel>();
         services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatBotViewModel>());
 
-        services.AddSingleton<FileEditService>();
+        services.AddSingleton<AiFileEditService>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)

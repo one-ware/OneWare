@@ -28,6 +28,12 @@ public class AiEditViewModel : Document, INoSerializeLayout
         get => field;
         set => SetProperty(ref field, value);
     }
+    
+    public string FileName => Path.GetFileName(FullPath);
+    
+    public string AddedLines => $"+{Chunks?.Sum(x => x.RightDiff.Where(x => x.Style == DiffContext.Added).Count()) ?? 0}";
+    
+    public string RemovedLines => $"-{Chunks?.Sum(x => x.RightDiff.Where(x => x.Style == DiffContext.Deleted).Count()) ?? 0}";
 
     public string LanguageExtension { get; }
 
@@ -47,11 +53,11 @@ public class AiEditViewModel : Document, INoSerializeLayout
 
     public async Task UndoAsync()
     {
-        await ContainerLocator.Container.Resolve<FileEditService>().UndoAsync(this);
+        await ContainerLocator.Container.Resolve<AiFileEditService>().UndoAsync(this);
     }
     
     public async Task AcceptAsync()
     {
-        await ContainerLocator.Container.Resolve<FileEditService>().AcceptAsync(this);
+        await ContainerLocator.Container.Resolve<AiFileEditService>().AcceptAsync(this);
     }
 }

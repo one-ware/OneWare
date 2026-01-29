@@ -84,14 +84,17 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
-    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider) : base(IconKey)
+    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, AiFileEditService aiFileEditService) : base(IconKey)
     {
         Id = "AI_Chat";
         Title = "AI Chat";
         
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
+        aiFileEditService = aiFileEditService;
     }
+    
+    public AiFileEditService AiFileEditService { get; }
 
     public override void InitializeContent()
     {

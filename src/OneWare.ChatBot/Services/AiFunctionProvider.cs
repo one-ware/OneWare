@@ -13,7 +13,7 @@ public class AiFunctionProvider(
     IMainDockService dockService,
     IErrorService errorService,
     ITerminalManagerService terminalManagerService,
-    FileEditService fileEditService) : IAiFunctionProvider
+    AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
     public event EventHandler<string>? FunctionStarted;
 
@@ -64,7 +64,7 @@ public class AiFunctionProvider(
                     $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
                     async () => new
                     {
-                        result = await fileEditService.ReadFileAsync(path, startLine, lineCount)
+                        result = await aiFileEditService.ReadFileAsync(path, startLine, lineCount)
                     }),
             "readFile",
             "Read the specified file (optionally by line range). This is the only way to read files in the application."
@@ -76,10 +76,10 @@ public class AiFunctionProvider(
                 [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                 [Description("number of lines to replace from startLine; 0 inserts before startLine")] int? lineCount = null) =>
             WrapWithNotificationTaskUiThread(
-                $"Edit File {Path.GetFileName(path)}",
+                $"Edit File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
                 async () => new
                 {
-                    result = await fileEditService.EditFileAsync(path, content, startLine, lineCount)
+                    result = await aiFileEditService.EditFileAsync(path, content, startLine, lineCount)
                 }),
             "editFile",
             "Replaces file contents with new text (optionally by line range). This is the only way to edit files in the application."

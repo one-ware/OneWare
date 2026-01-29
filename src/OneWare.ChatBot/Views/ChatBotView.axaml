@@ -8,7 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.ChatBot.Views.ChatBotView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
-    <Grid RowDefinitions="Auto, *, Auto">
+    <Grid RowDefinitions="Auto, *, Auto, Auto">
         <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0 0 0 1" Padding="8">
             <DockPanel LastChildFill="False">
                 <StackPanel Spacing="8" Orientation="Horizontal">
@@ -35,8 +35,22 @@
                 </ItemsControl>
             </Border>
         </ScrollViewer>
+        
+        <Border Grid.Row="2" IsVisible="{Binding AiFileEditService.ActiveEdits.Count}">
+            <ListBox MaxHeight="100" ItemsSource="{Binding AiFileEditService.ActiveEdits}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
+                            <TextBlock Text="{Binding FileName}" />
+                            <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
+                            <TextBlock Grid.Column="2" Text="{Binding RemovedLines}" Foreground="OrangeRed" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
 
-        <Border Grid.Row="2">
+        <Border Grid.Row="3">
             <DockPanel Margin="10 8" LastChildFill="True">
                 <Border Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder">
                     <Grid RowDefinitions="Auto, Auto">

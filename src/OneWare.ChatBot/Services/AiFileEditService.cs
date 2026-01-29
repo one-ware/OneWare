@@ -10,7 +10,7 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ChatBot.Services;
 
-public class FileEditService(IMainDockService mainDockService)
+public class AiFileEditService(IMainDockService mainDockService)
 {
     public ObservableCollection<AiEditViewModel> ActiveEdits { get; } = new();
     private readonly Dictionary<string, string> _currentEdits = new();
