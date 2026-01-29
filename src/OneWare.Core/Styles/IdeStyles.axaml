@@ -1,5 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonia="clr-namespace:LoadingIndicators.Avalonia;assembly=LoadingIndicators.Avalonia">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -58,7 +59,7 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/ComboBoxes.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Borders.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/MarkdownViewer.axaml" />
-
+    
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>

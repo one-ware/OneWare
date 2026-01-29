@@ -20,27 +20,32 @@ public class AiFunctionProvider(
     public ICollection<AIFunction> GetTools()
     {
         var readFile = AIFunctionFactory.Create(
-            ([Description("path of the file to read")] string path) =>
+            ([Description("path of the file to read")] string path,
+                [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
+                [Description("number of lines to read from startLine (omit for full file)")] int? lineCount = null) =>
                 WrapWithNotificationUiThread(
-                    $"Read File {Path.GetFileName(path)}",
+                    $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
                     async () => new
                     {
-                        result = await fileEditService.ReadFileAsync(path)
+                        result = await fileEditService.ReadFileAsync(path, startLine, lineCount)
                     }),
             "readFile",
-            "Read the specified file. This is the only way to read files in the application."
+            "Read the specified file (optionally by line range). This is the only way to read files in the application."
         );
 
         var editFile = AIFunctionFactory.Create(
             ([Description("path of the file to edit")] string path,
-                [Description("new text of the file")] string content) => WrapWithNotificationUiThread(
+                [Description("new text to write (full file or replacement lines)")] string content,
+                [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
+                [Description("number of lines to replace from startLine; 0 inserts before startLine")] int? lineCount = null) =>
+            WrapWithNotificationUiThread(
                 $"Edit File {Path.GetFileName(path)}",
                 async () => new
                 {
-                    result = await fileEditService.EditFileAsync(path, content)
+                    result = await fileEditService.EditFileAsync(path, content, startLine, lineCount)
                 }),
             "editFile",
-            "Replaces the specified file contents with new text. This is the only way to edit files in the application."
+            "Replaces file contents with new text (optionally by line range). This is the only way to edit files in the application."
         );
 
         var getActiveProject = AIFunctionFactory.Create(

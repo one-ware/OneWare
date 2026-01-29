@@ -37,6 +37,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="6 0" />
             <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
 
         <!-- Streaming indicator -->
@@ -45,7 +46,6 @@
                     Value="{DynamicResource ThemeForegroundLowBrush}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontStyle" Value="Italic" />
-            <Setter Property="Margin" Value="2 4 0 0" />
         </Style>
 
     </UserControl.Styles>
@@ -55,21 +55,26 @@
             Classes.assistant="{Binding IsAssistant}"
             Classes.tool="{Binding IsToolMessage}">
 
-        <StackPanel Spacing="6">
+        <Panel>
 
-            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsToolMessage}">
+            <Grid ColumnDefinitions="*, 10" ColumnSpacing="5" IsVisible="{Binding IsToolMessage}">
                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
-                <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" IsVisible="{Binding IsToolRunning}" />
+                <controls:ThreeDotLoader IsVisible="{Binding IsToolRunning}" Grid.Column="1" Height="10" Width="10" VerticalAlignment="Center" />
+            </Grid>
+            
+            <StackPanel Spacing="6" IsVisible="{Binding !IsToolMessage}">
+                <!-- Message content -->
+                <controls:MarkdownViewer Markdown="{Binding Message}" />
+
+                <!-- Streaming hint -->
+                <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5" IsVisible="{Binding IsStreaming}">
+                    <TextBlock Classes="streaming"
+                               Text="Thinking…" />
+                
+                    <controls:Spinner Grid.Column="1" Width="12" Height="12"></controls:Spinner>
+                </Grid>
             </StackPanel>
 
-            <!-- Message content -->
-            <controls:MarkdownViewer IsVisible="{Binding !IsToolMessage}" Markdown="{Binding Message}" />
-
-            <!-- Streaming hint -->
-            <TextBlock Classes="streaming"
-                       Text="Thinking…"
-                       IsVisible="{Binding IsStreaming}" />
-
-        </StackPanel>
+        </Panel>
     </Border>
 </UserControl>

@@ -16,10 +16,6 @@
                     <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10"
-                            VerticalAlignment="Center">
-                    <controls:Spinner Height="16" Width="16" IsVisible="{Binding IsBusy}" />
-                </StackPanel>
             </DockPanel>
         </Border>
 
