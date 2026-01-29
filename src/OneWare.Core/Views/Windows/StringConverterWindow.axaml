@@ -36,7 +36,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Text="Text to convert:" Grid.ColumnSpan="2" Margin="0, 0, 0, 2" />
-            <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <Border Grid.Row="1">
                 <avaloniaEdit:TextEditor Name="SourceBox"
                                          HorizontalScrollBarVisibility="Auto"
                                          VerticalScrollBarVisibility="Visible"
@@ -61,11 +61,11 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Button Command="{Binding Convert}" CommandParameter="StringToHEX" Classes="BorderButton"
+            <Button Command="{Binding Convert}" CommandParameter="StringToHEX" Classes="RoundButton"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.Column="0">
                 String to HEX
             </Button>
-            <Button Command="{Binding Convert}" CommandParameter="StringToROM" Classes="BorderButton"
+            <Button Command="{Binding Convert}" CommandParameter="StringToROM" Classes="RoundButton"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" Margin="0,2,0,0" Grid.Column="0" Grid.Row="1">
                 String to Byte Array
             </Button>
@@ -74,11 +74,11 @@
                 <Image Source="{DynamicResource Zondicons.ArrowThickDown}" Height="40" Width="40" />
             </Border>
 
-            <Button Command="{Binding Convert}" CommandParameter="HEXToString" Classes="BorderButton"
+            <Button Command="{Binding Convert}" CommandParameter="HEXToString" Classes="RoundButton"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" Grid.Column="2">
                 HEX to String
             </Button>
-            <Button Command="{Binding Convert}" CommandParameter="ROMToString" Classes="BorderButton"
+            <Button Command="{Binding Convert}" CommandParameter="ROMToString" Classes="RoundButton"
                     BorderBrush="{DynamicResource ThemeBorderLowBrush}" Margin="0,2,0,0" Grid.Column="2" Grid.Row="1">
                 Byte Array to String
             </Button>
@@ -90,7 +90,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Text="Result:" Grid.ColumnSpan="2" Margin="0, 0, 0, 2" />
-            <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <Border Grid.Row="1">
                 <avaloniaEdit:TextEditor Name="ResultBox"
                                          HorizontalScrollBarVisibility="Auto"
                                          VerticalScrollBarVisibility="Visible"

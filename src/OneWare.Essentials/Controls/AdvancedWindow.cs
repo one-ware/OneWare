@@ -83,27 +83,22 @@ public class AdvancedWindow : Window
         base.OnPropertyChanged(change);
         if (change.Property == WindowStateProperty)
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                ExtendClientAreaTitleBarHeightHint = WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
-            }
+                ExtendClientAreaTitleBarHeightHint =
+                    WindowState is WindowState.Maximized or WindowState.FullScreen ? 37 : 30;
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase vm } flexibleWindow)
-        {
-           vm.OnWindowOpened(flexibleWindow);
-        }
-        
+            vm.OnWindowOpened(flexibleWindow);
+
         base.OnAttachedToVisualTree(e);
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (Content is FlexibleWindow { DataContext: FlexibleWindowViewModelBase vm } flexibleWindow)
-        {
             e.Cancel = !vm.OnWindowClosing(flexibleWindow);
-        }
 
         base.OnClosing(e);
     }

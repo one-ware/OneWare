@@ -12,18 +12,16 @@ using DynamicData;
 using DynamicData.Binding;
 using OneWare.ApplicationCommands.ViewModels;
 using OneWare.ApplicationCommands.Views;
-using OneWare.CloudIntegration;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
-using Prism.Ioc;
-using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.ViewModels.Windows;
 
@@ -34,18 +32,20 @@ public class MainWindowViewModel : ObservableObject
     private readonly IWindowService _windowService;
 
     private IEditor? _currentEditor;
+
+    private CompositeDisposable _currentEditorSubscriptionDisposable = new();
     private FlexibleWindow? _lastManagerWindow;
 
     private string _title;
 
     public MainWindowViewModel(IPaths paths, IApplicationStateService applicationStateService,
-        IWindowService windowService, IDockService dockService,
+        IWindowService windowService, IMainDockService mainDockService,
         ISettingsService settingsService, IApplicationCommandService applicationCommandService)
     {
         _applicationCommandService = applicationCommandService;
         ApplicationStateService = applicationStateService;
         _windowService = windowService;
-        DockService = dockService;
+        MainDockService = mainDockService;
         Paths = paths;
         _settingsService = settingsService;
 
@@ -58,7 +58,7 @@ public class MainWindowViewModel : ObservableObject
 
         _title = paths.AppName;
 
-        DockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
+        MainDockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(x =>
         {
             if (x != null)
             {
@@ -92,7 +92,7 @@ public class MainWindowViewModel : ObservableObject
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
     }
 
-    public IDockService DockService { get; }
+    public IMainDockService MainDockService { get; }
     public IApplicationStateService ApplicationStateService { get; }
     public IPaths Paths { get; }
 
@@ -104,8 +104,6 @@ public class MainWindowViewModel : ObservableObject
         set => SetProperty(ref _title, value);
     }
 
-    private CompositeDisposable _currentEditorSubscriptionDisposable = new();
-    
     public IEditor? CurrentEditor
     {
         get => _currentEditor;
@@ -113,30 +111,29 @@ public class MainWindowViewModel : ObservableObject
         {
             _currentEditorSubscriptionDisposable.Dispose();
             _currentEditorSubscriptionDisposable = new CompositeDisposable();
-            
+
             SetProperty(ref _currentEditor, value);
 
             TypeAssistanceQuickOptions.Clear();
 
             if (_currentEditor is EditViewModel evm)
-            {
                 evm.WhenValueChanged(x => x.TypeAssistance).Subscribe(x =>
                 {
                     TypeAssistanceQuickOptions.Clear();
-                    var quickOptions = (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
+                    var quickOptions =
+                        (CurrentEditor as EditViewModel)?.TypeAssistance?.GetTypeAssistanceQuickOptions();
                     if (quickOptions != null) TypeAssistanceQuickOptions.AddRange(quickOptions);
                 }).DisposeWith(_currentEditorSubscriptionDisposable);
-            }
         }
     }
 
-    public ObservableCollection<UiExtension> RoundToolBarExtension { get; }
-    public ObservableCollection<UiExtension> LeftToolBarExtension { get; }
-    
-    public ObservableCollection<UiExtension> RightToolBarExtension { get; }
-    public ObservableCollection<UiExtension> BottomRightExtension { get; }
+    public ObservableCollection<OneWareUiExtension> RoundToolBarExtension { get; }
+    public ObservableCollection<OneWareUiExtension> LeftToolBarExtension { get; }
+
+    public ObservableCollection<OneWareUiExtension> RightToolBarExtension { get; }
+    public ObservableCollection<OneWareUiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
-    
+
     #region MainWindowButtons
 
     private Control GetMainView()

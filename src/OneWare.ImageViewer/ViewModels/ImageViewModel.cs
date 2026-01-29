@@ -1,10 +1,10 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.ImageViewer.ViewModels;
 
@@ -12,9 +12,10 @@ public class ImageViewModel : ExtendedDocument
 {
     private IImage? _image;
 
-    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService, IDockService dockService,
+    public ImageViewModel(string fullPath, IProjectExplorerService projectExplorerService,
+        IMainDockService mainDockService,
         IWindowService windowService) :
-        base(fullPath, projectExplorerService, dockService, windowService)
+        base(fullPath, projectExplorerService, mainDockService, windowService)
     {
     }
 

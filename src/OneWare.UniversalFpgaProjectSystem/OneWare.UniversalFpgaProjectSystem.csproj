@@ -5,7 +5,7 @@
     <PropertyGroup>
         <Version>$(UniversalFpgaProjectSystemVersion)</Version>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\OneWare.ProjectSystem\OneWare.ProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>

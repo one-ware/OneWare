@@ -10,5 +10,6 @@ public interface IErrorService : IDockable
     public void Clear(string source);
     public void Clear(IFile file);
     public void RefreshErrors(IList<ErrorListItem> errors, string source, IFile entry);
+    public IEnumerable<ErrorListItem> GetErrors();
     public IEnumerable<ErrorListItem> GetErrorsForFile(IFile file);
 }

@@ -11,7 +11,7 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 {
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
 
     private readonly INotifyCollectionChanged? _testBenchCollection;
 
@@ -21,10 +21,11 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 
     private TestBenchContext? _testBenchContext;
 
-    public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IDockService dockService, FpgaService fpgaService)
+    public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IMainDockService mainDockService,
+        FpgaService fpgaService)
     {
         File = file;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         Simulators = fpgaService.Simulators;
 
         if (file is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
@@ -99,7 +100,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
     {
         if (SelectedSimulator == null) return;
         if (TestBenchContext == null) throw new NullReferenceException(nameof(TestBenchContext));
-        if (_dockService.OpenFiles.TryGetValue(File, out var fileView))
+        if (_mainDockService.OpenFiles.TryGetValue(File, out var fileView))
             await fileView.SaveAsync();
         await TestBenchContextManager.SaveContextAsync(TestBenchContext);
         await SelectedSimulator.SimulateAsync(File);

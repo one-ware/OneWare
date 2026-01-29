@@ -1,4 +1,3 @@
-using OneWare.Essentials.Models;
 using OneWare.Essentials.ToolEngine;
 
 namespace OneWare.Essentials.Services;

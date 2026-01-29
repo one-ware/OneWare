@@ -8,7 +8,7 @@ namespace OneWare.Cyc5000;
 public class Cyc5000FpgaPackage : IFpgaPackage
 {
     public string Name => "CYC5000";
-    
+
     public IFpga LoadFpga()
     {
         return new GenericFpga(Name, "avares://OneWare.Cyc5000/Assets/Cyc5000.json");

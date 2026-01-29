@@ -4,15 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView" FontFamily="{DynamicResource EditorFont}"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.GenericFpgaView"
+             FontFamily="{DynamicResource EditorFont}"
              x:DataType="viewModels:GenericFpgaViewModel"
              ClipToBounds="False">
     <UserControl.Styles>
         <Style Selector="MenuItem MenuItem">
-            <Setter Property="FontFamily" Value="{DynamicResource Noto Sans}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource Noto Sans}" />
         </Style>
     </UserControl.Styles>
     <Panel>

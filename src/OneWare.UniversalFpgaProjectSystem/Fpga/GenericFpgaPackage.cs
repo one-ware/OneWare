@@ -6,14 +6,11 @@ namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 public class GenericFpgaPackage(string name, string packagePath) : IFpgaPackage
 {
     public string Name { get; } = name;
-    
+
     public IFpga LoadFpga()
     {
         var fpgaFile = Path.Combine(packagePath, "fpga.json");
-        if (File.Exists(fpgaFile))
-        {
-            return new GenericFpga(Name, fpgaFile);
-        }
+        if (File.Exists(fpgaFile)) return new GenericFpga(Name, fpgaFile);
         throw new Exception("fpga.json not found");
     }
 

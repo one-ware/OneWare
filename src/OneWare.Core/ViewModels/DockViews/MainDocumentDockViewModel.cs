@@ -12,6 +12,8 @@ public class MainDocumentDockViewModel : DocumentDock
         IsCollapsable = false;
 
         VisibleDockables = new ObservableCollection<IDockable>();
+
+        LayoutMode = DocumentLayoutMode.Tabbed;
     }
 
     public new bool IsEmpty => false;

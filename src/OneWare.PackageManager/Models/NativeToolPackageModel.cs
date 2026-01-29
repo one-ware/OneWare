@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Enums;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;

@@ -2,7 +2,8 @@ using Avalonia.LogicalTree;
 
 namespace OneWare.Essentials.Commands;
 
-public class SimpleApplicationCommand(string name, Action action, Func<bool>? canExecute = null) : ApplicationCommandBase(name)
+public class SimpleApplicationCommand(string name, Action action, Func<bool>? canExecute = null)
+    : ApplicationCommandBase(name)
 {
     public override bool Execute(ILogical source)
     {

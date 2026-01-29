@@ -8,15 +8,12 @@ public class SliderSettingViewModel : TitledSettingViewModel
     public SliderSettingViewModel(SliderSetting setting) : base(setting)
     {
         Setting = setting;
-        
-        setting.WhenValueChanged(x => x.Value).Subscribe(x =>
-        {
-            OnPropertyChanged(nameof(TextBoxValue));
-        });
+
+        setting.WhenValueChanged(x => x.Value).Subscribe(x => { OnPropertyChanged(nameof(TextBoxValue)); });
     }
 
     public new SliderSetting Setting { get; }
-    
+
     public double TextBoxValue
     {
         get => Math.Round((double)Setting.Value, GetPrecision(Setting.Step));
@@ -24,7 +21,7 @@ public class SliderSettingViewModel : TitledSettingViewModel
         {
             if (value < Setting.Min || value > Setting.Max)
                 throw new ArgumentException();
-            
+
             Setting.Value = Math.Round(value, GetPrecision(Setting.Step));
         }
     }
@@ -35,14 +32,13 @@ public class SliderSettingViewModel : TitledSettingViewModel
         if (step >= 1)
             return 0;
 
-        int precision = 0;
+        var precision = 0;
         while (step < 1)
         {
             step *= 10;
             precision++;
         }
+
         return precision;
     }
-
-
 }

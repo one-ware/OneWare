@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
-             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.AdvancedComboBoxSettingView"
              x:DataType="settingTypes:AdvancedComboBoxSettingViewModel">
@@ -22,9 +22,9 @@
                 <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
                        VerticalAlignment="Center" />
                 <Button.Flyout>
-                    <Flyout>
-                        <mdxaml:MarkdownScrollViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
-                                                     MaxWidth="900" MaxHeight="500" />
+                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                        <controls:MarkdownViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
+                                                 MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
             </Button>
@@ -41,14 +41,15 @@
             <ComboBox.ItemTemplate>
                 <DataTemplate DataType="models:AdvancedComboBoxOption">
                     <DockPanel>
-                        <Button Padding="0" VerticalAlignment="Center" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                        <Button Padding="0" VerticalAlignment="Center" DockPanel.Dock="Right"
+                                HorizontalAlignment="Right"
                                 IsVisible="{Binding MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="13" Width="13"
                                    VerticalAlignment="Center" />
                             <Button.Flyout>
-                                <Flyout>
-                                    <mdxaml:MarkdownScrollViewer Markdown="{Binding MarkdownDocumentation}"
-                                                                 MaxWidth="900" MaxHeight="500" />
+                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                                    <controls:MarkdownViewer Markdown="{Binding MarkdownDocumentation}"
+                                                             MaxWidth="900" MaxHeight="500" />
                                 </Flyout>
                             </Button.Flyout>
                         </Button>

@@ -2,25 +2,23 @@
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
+    private readonly IApplicationStateService _applicationStateService;
+    private readonly IHttpService _httpService;
+    private readonly ILogger _logger;
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
-    private readonly ILogger _logger;
-    private readonly IApplicationStateService _applicationStateService;
 
     private string _filter = string.Empty;
     private bool _isLoading;
@@ -29,10 +27,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, ILogger logger, IWindowService windowService,
+    public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger,
+        IWindowService windowService,
         IApplicationStateService applicationStateService)
     {
         _packageService = packageService;
+        _httpService = httpService;
         _windowService = windowService;
         _logger = logger;
         _applicationStateService = applicationStateService;
@@ -127,6 +127,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
 
+    public bool AskForRestart { get; set; } = true;
+
     public async Task RefreshPackagesAsync()
     {
         await _packageService.LoadPackagesAsync();
@@ -150,11 +152,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         return ShowExtensionManager();
     }
-    
+
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId)
     {
-        var category = PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageModel.Package.Id == packageId));
-        
+        var category =
+            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageModel.Package.Id == packageId));
+
         if (await FocusPluginAsync(category!.Header, packageId) is not { } pvm)
             return false;
 
@@ -168,18 +171,15 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     {
         var packageModel = _packageService.Packages.GetValueOrDefault(packageId);
 
-        if (packageModel == null)
-        {
-            return false;
-        }
+        if (packageModel == null) return false;
 
         var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService);
-        
-        var view = new PackageQuickInstallView()
+
+        var view = new PackageQuickInstallView
         {
             DataContext = quickInstallViewModel
         };
-        
+
         await _windowService.ShowDialogAsync(view);
 
         return quickInstallViewModel.Success;
@@ -187,7 +187,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private bool FocusCategory(string category, string? subcategory)
     {
-        PackageCategoryViewModel? categoryVm = PackageCategories
+        var categoryVm = PackageCategories
             .FirstOrDefault(x => x.Header == category);
 
         if (categoryVm == null)
@@ -207,12 +207,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
     {
-        PackageCategoryViewModel? categoryVm = PackageCategories
+        var categoryVm = PackageCategories
             .FirstOrDefault(x => x.Header == category);
 
-        if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out PackageModel? packageModel))
+        if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
-            PackageViewModel? packageVm = categoryVm.VisiblePackages
+            var packageVm = categoryVm.VisiblePackages
                 .FirstOrDefault(x => x.PackageModel == packageModel);
 
             if (packageVm == null)
@@ -241,7 +241,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         foreach (var (_, packageModel) in _packageService.Packages)
             try
             {
-                var model = ContainerLocator.Container.Resolve<PackageViewModel>((typeof(PackageModel), packageModel));
+                var viewModel =
+                    new PackageViewModel(packageModel, _httpService, _applicationStateService, _windowService);
 
                 var category = packageModel.Package.Type switch
                 {
@@ -267,10 +268,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                     category.SubCategories.Add(subCategory);
                 }
 
-                subCategory?.Add(model);
+                subCategory?.Add(viewModel);
 
                 if (subCategory == null)
-                    category.Add(model);
+                    category.Add(viewModel);
             }
             catch (Exception e)
             {
@@ -299,8 +300,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         AskForRestart = true;
         return base.OnWindowClosing(window);
     }
-
-    public bool AskForRestart { get; set; } = true;
 
     private async Task AskForRestartAsync(Window? window)
     {

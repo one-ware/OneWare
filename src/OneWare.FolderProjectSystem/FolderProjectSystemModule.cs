@@ -1,44 +1,44 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem.Models;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.FolderProjectSystem;
 
-public class FolderProjectSystemModule : IModule
+public class FolderProjectSystemModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<FolderProjectManager>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var manager = containerProvider.Resolve<FolderProjectManager>();
+        var manager = serviceProvider.Resolve<FolderProjectManager>();
 
-        containerProvider
+        serviceProvider
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
 
-        var welcomeScreenService = containerProvider.Resolve<IWelcomeScreenService>();
-        
-        welcomeScreenService.RegisterItemToOpen("open_folder", 
+        var welcomeScreenService = serviceProvider.Resolve<IWelcomeScreenService>();
+
+        welcomeScreenService.RegisterItemToOpen("open_folder",
             new WelcomeScreenStartItem("open_folder", "Open folder...", new RelayCommand(() =>
-                _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)))
+                _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)))
             {
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Folder16X")
             });
-        
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
+
+        serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemViewModel("Folder")
             {
                 Header = "Folder",
                 Command = new RelayCommand(() =>
-                    _ = containerProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
+                    _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.OpenFolder16X")
             });
     }

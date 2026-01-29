@@ -6,7 +6,7 @@ public class GenericFpgaExtension : FpgaExtensionBase
     {
         if (jsonPath.StartsWith("avares://"))
             LoadFromJsonAsset(jsonPath);
-        else 
+        else
             LoadFromJsonFile(jsonPath);
     }
 }

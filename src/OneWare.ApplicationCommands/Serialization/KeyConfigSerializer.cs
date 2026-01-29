@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Avalonia.Input;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ApplicationCommands.Serialization;
 

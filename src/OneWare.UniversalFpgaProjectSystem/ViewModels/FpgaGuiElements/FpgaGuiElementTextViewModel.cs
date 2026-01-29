@@ -4,10 +4,14 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements;
 
 public class FpgaGuiElementTextViewModel : FpgaGuiElementViewModelBase
 {
+    private IBrush? _foreground;
+
+    public FpgaGuiElementTextViewModel(double x, double y) : base(x, y)
+    {
+    }
+
     public string? Text { get; init; }
 
-    private IBrush? _foreground;
-    
     public IBrush? Foreground
     {
         get => _foreground;
@@ -15,11 +19,6 @@ public class FpgaGuiElementTextViewModel : FpgaGuiElementViewModelBase
     }
 
     public int FontSize { get; init; } = 10;
-    
+
     public FontWeight FontWeight { get; init; }
-    
-    public FpgaGuiElementTextViewModel(double x, double y) : base(x, y)
-    {
-       
-    }
 }

@@ -32,7 +32,7 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
-        <StyleInclude Source="ProjectExplorerTheme.axaml"></StyleInclude>
+        <StyleInclude Source="ProjectExplorerTheme.axaml" />
     </UserControl.Styles>
 
     <Grid>
@@ -43,22 +43,23 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Border Grid.ColumnSpan="2" BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="0 1 0 1">
+        <Border Grid.ColumnSpan="2" BorderThickness="0 1 0 1">
             <controls:SearchBox Background="{DynamicResource ThemeBackgroundBrush}"
                                 SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
                                 VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
         </Border>
 
         <projectExplorer:TreeDataGridCustom Grid.Row="1" CanUserSortColumns="False"
-                      ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                      CanUserResizeColumns="False"
-                      AutoDragDropRows="False"
-                      Source="{Binding Source}">
+                                            ShowColumnHeaders="False"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            CanUserResizeColumns="False"
+                                            AutoDragDropRows="False"
+                                            Source="{Binding Source}">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource ProjectExplorerViewDropHandler}" />
                 <behaviors:CommandOnPasteBehavior Command="{Binding PasteAsync}" />
                 <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
-                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialog}"
+                <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialogAsync}"
                                                        TriggerKey="Delete" />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>
@@ -72,7 +73,7 @@
                             <behaviors:CommandOnDoubleTapBehavior
                                 Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding}" />
-                            <behaviors1:TreeDataGridDragBehavior />
+                            <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
@@ -115,8 +116,7 @@
                                                       Margin="4 0 0 0"
                                                       Text="{Binding Header, Mode=OneWay}"
                                                       RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                                                      Opacity="{Binding TextOpacity}">
-                            </controls:RenamingTextBox>
+                                                      Opacity="{Binding TextOpacity}" />
                         </DockPanel>
                     </DockPanel>
                 </DataTemplate>

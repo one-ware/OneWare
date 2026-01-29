@@ -17,6 +17,7 @@ public interface IChildProcessService
         string status, AppState state = AppState.Loading, bool showTimer = false,
         Func<string, bool>? outputAction = null,
         Func<string, bool>? errorAction = null);
-    
-    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory);
+
+    public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments,
+        string workingDirectory);
 }

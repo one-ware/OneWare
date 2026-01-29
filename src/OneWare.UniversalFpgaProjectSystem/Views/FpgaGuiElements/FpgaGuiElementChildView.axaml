@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="150" ClipToBounds="False"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementChildView" x:DataType="fpgaGuiElements:FpgaGuiElementChildViewModel">
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementChildView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementChildViewModel">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <ContentControl ClipToBounds="False" Content="{Binding Child, FallbackValue={x:Null}}" />
 </UserControl>

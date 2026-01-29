@@ -14,7 +14,6 @@ public class YosysModule
     [JsonPropertyName("attributes")] public Dictionary<string, string> Attributes { get; set; } = null!;
 
     [JsonPropertyName("ports")] public Dictionary<string, YosysPort> Ports { get; set; } = null!;
-
 }
 
 public class YosysPort

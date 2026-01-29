@@ -21,7 +21,7 @@
                     CommandParameter="{Binding #AssignGestureViewView}">
                 <TextBlock Text="Cancel" />
             </Button>
-            <Button Background="{DynamicResource HighlightBrush}" Command="{Binding Save}"
+            <Button Classes="PrimaryButton" Command="{Binding Save}"
                     CommandParameter="{Binding #AssignGestureViewView}">
                 <TextBlock Text="Save" />
             </Button>

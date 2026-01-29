@@ -30,9 +30,9 @@ namespace OneWare.Debugger;
 
 public class ResultData : IEnumerable
 {
-    private object[] _array;
+    private object?[]? _array;
     private bool _isArrayProperty;
-    private Hashtable _props;
+    private Hashtable? _props;
 
     public int Count
     {
@@ -52,46 +52,48 @@ public class ResultData : IEnumerable
             return _props.Values.GetEnumerator();
         if (_array != null)
             return _array.GetEnumerator();
-        return new object[0].GetEnumerator();
+        return Array.Empty<object>().GetEnumerator();
     }
 
     public string GetValue(string name)
     {
-        return (string)_props[name];
+        return _props?[name] as string ?? string.Empty;
     }
 
     public int GetInt(string name)
     {
         var value = GetValue(name);
 
-        if (value == null) return 0;
+        if (string.IsNullOrEmpty(value)) return 0;
 
         return int.Parse(value);
     }
 
     public string GetValue(int index)
     {
-        return (string)_array[index];
+        if (_array == null || index < 0 || index >= _array.Length) return string.Empty;
+        return _array[index] as string ?? string.Empty;
     }
 
     public ResultData GetObject(string name)
     {
-        return (ResultData)_props[name];
+        return _props?[name] as ResultData ?? new ResultData();
     }
 
     public ResultData GetObject(int index)
     {
-        return (ResultData)_array[index];
+        if (_array == null || index < 0 || index >= _array.Length) return new ResultData();
+        return _array[index] as ResultData ?? new ResultData();
     }
 
-    protected object[] GetAllValues(string name)
+    protected object?[] GetAllValues(string name)
     {
-        var ob = _props[name];
+        var ob = _props?[name];
         if (ob == null)
-            return new object[0];
+            return Array.Empty<object?>();
         var rd = ob as ResultData;
         if (rd != null && rd._isArrayProperty)
-            return rd._array;
+            return rd._array ?? Array.Empty<object?>();
         return new[] { ob };
     }
 
@@ -100,11 +102,8 @@ public class ResultData : IEnumerable
         ReadTuple(str, ref pos, this);
     }
 
-    private void ReadResult(string str, ref int pos, out string name, out object value)
+    private void ReadResult(string str, ref int pos, out string name, out object? value)
     {
-        name = null;
-        value = null;
-
         name = ReadString(str, '=', ref pos);
         ReadChar(str, ref pos, '=');
         value = ReadValue(str, ref pos);
@@ -131,7 +130,7 @@ public class ResultData : IEnumerable
         return sb.ToString();
     }
 
-    private object ReadValue(string str, ref int pos)
+    private object? ReadValue(string str, ref int pos)
     {
         if (str[pos] == '"')
         {
@@ -157,7 +156,7 @@ public class ResultData : IEnumerable
 
         // Single value tuple
         string name;
-        object val;
+        object? val;
         ReadResult(str, ref pos, out name, out val);
         var sdata = new ResultData();
         sdata._props = new Hashtable();
@@ -173,7 +172,7 @@ public class ResultData : IEnumerable
         while (pos < str.Length && str[pos] != '}')
         {
             string name;
-            object val;
+            object? val;
             ReadResult(str, ref pos, out name, out val);
             if (data._props.ContainsKey(name))
             {
@@ -181,16 +180,17 @@ public class ResultData : IEnumerable
                 var rd = ob as ResultData;
                 if (rd != null && rd._isArrayProperty)
                 {
-                    var newArr = new object[rd._array.Length + 1];
-                    Array.Copy(rd._array, newArr, rd._array.Length);
-                    newArr[rd._array.Length] = val;
+                    var currentArray = rd._array ?? Array.Empty<object?>();
+                    var newArr = new object?[currentArray.Length + 1];
+                    Array.Copy(currentArray, newArr, currentArray.Length);
+                    newArr[currentArray.Length] = val;
                     rd._array = newArr;
                 }
                 else
                 {
                     rd = new ResultData();
                     rd._isArrayProperty = true;
-                    rd._array = new object[2];
+                    rd._array = new object?[2];
                     rd._array[0] = ob;
                     rd._array[1] = val;
                     data._props[name] = rd;
@@ -219,7 +219,7 @@ public class ResultData : IEnumerable
 
         TryReadChar(str, ref pos, ']');
         var arr = new ResultData();
-        arr._array = list.ToArray();
+        arr._array = list.Cast<object?>().ToArray();
         return arr;
     }
 

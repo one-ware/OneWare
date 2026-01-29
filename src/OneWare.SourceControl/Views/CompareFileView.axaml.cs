@@ -7,7 +7,6 @@ using DynamicData.Binding;
 using OneWare.Essentials.Services;
 using OneWare.SourceControl.EditorExtensions;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.Views;
 

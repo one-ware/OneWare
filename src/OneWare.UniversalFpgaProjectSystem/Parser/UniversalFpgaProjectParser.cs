@@ -2,9 +2,9 @@
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Parser;
 
@@ -29,7 +29,7 @@ public static class UniversalFpgaProjectParser
                 {
                     AllowTrailingCommas = true
                 });
-                
+
                 var root = new UniversalFpgaProjectRoot(path, properties!.AsObject());
                 return root;
             });

@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Core.ViewModels.Windows;
 

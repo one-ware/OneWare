@@ -3,7 +3,6 @@ using Avalonia.Interactivity;
 using DynamicData.Binding;
 using OneWare.Essentials.Controls;
 using OneWare.LibraryExplorer.ViewModels;
-using OneWare.ProjectExplorer.ViewModels;
 
 namespace OneWare.LibraryExplorer.Views;
 

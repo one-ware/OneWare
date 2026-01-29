@@ -9,21 +9,23 @@ namespace OneWare.CloudIntegration.ViewModels;
 public class FeedbackViewModel : FlexibleWindowViewModelBase
 {
     private readonly OneWareCloudLoginService _loginService;
-    
+
     private string _header = string.Empty;
 
     public FeedbackViewModel(OneWareCloudLoginService loginService, OneWareCloudAccountSetting setting)
     {
         _loginService = loginService;
         UserIsAuthenticated = setting.IsLoggedIn;
-        
-        Title = $"Send Feedback";
+
+        Title = "Send Feedback";
         Category = "General Feedback";
     }
-    
+
     public bool? Result { get; private set; }
     public bool UserIsAuthenticated { get; private set; }
-    public ObservableCollection<string> Categories { get; } = [
+
+    public ObservableCollection<string> Categories { get; } =
+    [
         "General Feedback",
         "Bug Report",
         "Feature Request",
@@ -44,7 +46,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         get;
         set => SetProperty(ref field, value);
     } = string.Empty;
-    
+
     public string Mail
     {
         get;
@@ -77,6 +79,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
         IsLoading = false;
         window.Close();
     }
+
     public void Cancel(Window window)
     {
         window.Close();

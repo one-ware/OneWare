@@ -8,7 +8,6 @@ using Avalonia.Threading;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 
@@ -176,14 +175,14 @@ public class FlexibleWindow : UserControl
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             Host = CreateHost();
-            
+
             //Check available Size
-            if (owner.Screens.ScreenFromWindow(owner) is {} screen)
+            if (owner.Screens.ScreenFromWindow(owner) is { } screen)
             {
                 Host.Height = Math.Min(PrefHeight, screen.WorkingArea.Height / screen.Scaling);
                 Host.Width = Math.Min(PrefWidth, screen.WorkingArea.Width / screen.Scaling);
             }
-            
+
             Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
             if (owner != null)
             {
@@ -206,7 +205,7 @@ public class FlexibleWindow : UserControl
             if (DataContext is not Document doc)
                 throw new Exception("ViewModel for FlexibleWindow must be Document");
 
-            ContainerLocator.Container.Resolve<IDockService>().Show(doc, DockShowLocation.Document);
+            ContainerLocator.Container.Resolve<IMainDockService>().Show(doc, DockShowLocation.Document);
         }
 
         AttachedToHost();
@@ -216,14 +215,14 @@ public class FlexibleWindow : UserControl
     {
         if (owner == null) throw new NullReferenceException("Owner is needed on Classic Desktop Environment");
         Host = CreateHost();
-        
+
         //Check available Size
-        if (owner.Screens.ScreenFromWindow(owner) is {} screen)
+        if (owner.Screens.ScreenFromWindow(owner) is { } screen)
         {
             Host.Height = Math.Min(PrefHeight, screen.WorkingArea.Height / screen.Scaling);
             Host.Width = Math.Min(PrefWidth, screen.WorkingArea.Width / screen.Scaling);
         }
-        
+
         Host.Opened += (sender, args) => Opened?.Invoke(sender, args);
         return Host.ShowDialog(owner);
     }

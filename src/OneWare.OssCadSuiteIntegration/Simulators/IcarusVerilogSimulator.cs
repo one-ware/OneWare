@@ -3,10 +3,8 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
-using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Context;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -16,16 +14,16 @@ namespace OneWare.OssCadSuiteIntegration.Simulators;
 public class IcarusVerilogSimulator : IFpgaSimulator
 {
     private readonly IChildProcessService _childProcessService;
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    public IcarusVerilogSimulator(IChildProcessService childProcessService, IDockService dockService,
+    public IcarusVerilogSimulator(IChildProcessService childProcessService, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService)
     {
         _childProcessService = childProcessService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
-        TestBenchToolbarTopUiExtension = new UiExtension(x =>
+        TestBenchToolbarTopUiExtension = new OneWareUiExtension(x =>
         {
             if (x is TestBenchContext tb)
                 return new IcarusVerilogSimulatorToolbarView
@@ -38,11 +36,11 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public string Name => "IVerilog";
 
-    public UiExtension? TestBenchToolbarTopUiExtension { get; }
+    public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
     public async Task<bool> SimulateAsync(IFile file)
     {
-        if (file is IProjectFile {Root: UniversalFpgaProjectRoot root } projectFile)
+        if (file is IProjectFile { Root: UniversalFpgaProjectRoot root } projectFile)
         {
             var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
                 Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
@@ -52,7 +50,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                 .Where(x => !root.CompileExcluded.Contains(x))
                 .Select(x => $"{x.RelativePath.ToUnixPath()}");
 
-            _dockService.Show<IOutputService>();
+            _mainDockService.Show<IOutputService>();
 
             List<string> icarusVerilogArguments = ["-o", vvpPath];
             icarusVerilogArguments.AddRange(verilogFiles);
@@ -75,11 +73,11 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             {
                 var vcdFileRelativePath = match.Groups[1].Value;
                 var vcdFileFullPath = Path.Combine(projectFile.Root!.FullPath, vcdFileRelativePath);
-                
+
                 var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 
-                var doc = await _dockService.OpenFileAsync(vcdFile);
+                var doc = await _mainDockService.OpenFileAsync(vcdFile);
             }
 
             return true;

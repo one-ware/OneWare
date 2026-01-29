@@ -1,9 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Converters;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -11,25 +10,23 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.UniversalFpgaProjectSystem;
 
-public class UniversalFpgaProjectSystemModule : IModule
+public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<UniversalFpgaProjectManager>();
-        containerRegistry.RegisterSingleton<FpgaService>();
+        services.AddSingleton<UniversalFpgaProjectManager>();
+        services.AddSingleton<FpgaService>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var manager = containerProvider.Resolve<UniversalFpgaProjectManager>();
-        var windowService = containerProvider.Resolve<IWindowService>();
-        var settingsService = containerProvider.Resolve<ISettingsService>();
-        var welcomeScreenService = containerProvider.Resolve<IWelcomeScreenService>();
+        var manager = serviceProvider.Resolve<UniversalFpgaProjectManager>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var welcomeScreenService = serviceProvider.Resolve<IWelcomeScreenService>();
 
         welcomeScreenService.RegisterItemToNew("new_project",
             new WelcomeScreenStartItem("new_file", "New FPGA Project...",
@@ -40,7 +37,7 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         welcomeScreenService.RegisterItemToOpen("open_project",
             new WelcomeScreenStartItem("open_project", "Open FPGA project...", new AsyncRelayCommand(() =>
-                containerProvider.Resolve<IProjectExplorerService>()
+                serviceProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(
                             $"Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
@@ -53,11 +50,10 @@ public class UniversalFpgaProjectSystemModule : IModule
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
 
-        containerProvider
-            .Resolve<IProjectManagerService>()
+        serviceProvider.Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
 
-        containerProvider.Resolve<ILanguageManager>()
+        serviceProvider.Resolve<ILanguageManager>()
             .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
@@ -73,7 +69,7 @@ public class UniversalFpgaProjectSystemModule : IModule
             new MenuItemViewModel("FpgaProject")
             {
                 Header = "FPGA Project",
-                Command = new AsyncRelayCommand(() => containerProvider.Resolve<IProjectExplorerService>()
+                Command = new AsyncRelayCommand(() => serviceProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(
                             $"Project (*{UniversalFpgaProjectRoot.ProjectFileExtension})")
@@ -83,7 +79,7 @@ public class UniversalFpgaProjectSystemModule : IModule
                 IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
             });
 
-        var toolBarViewModel = containerProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
+        var toolBarViewModel = serviceProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu",
             new MenuItemViewModel("FPGA")
@@ -92,37 +88,33 @@ public class UniversalFpgaProjectSystemModule : IModule
                 Priority = 200
             });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
-        [
-            new MenuItemViewModel("Download")
-            {
-                Header = "Download",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
-            },
-            new MenuItemViewModel("Compile")
-            {
-                Header = "Compile",
-                Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
-            }
-        ]);
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemViewModel("Download")
+        {
+            Header = "Download",
+            Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
+            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
+        }, new MenuItemViewModel("Compile")
+        {
+            Header = "Compile",
+            Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
+            IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+        });
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
-            new UiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
+            new OneWareUiExtension(x => new UniversalFpgaProjectToolBarView { DataContext = toolBarViewModel }));
 
-        windowService.RegisterUiExtension("EditView_Top", new UiExtension(x =>
+        windowService.RegisterUiExtension("EditView_Top", new OneWareUiExtension(x =>
         {
             if (x is IFile)
                 return new UniversalFpgaProjectTestBenchToolBarView
                 {
                     DataContext =
-                        containerProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
+                        serviceProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
                 };
             return null;
         }));
 
-        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
-        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
+        serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
+        serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
     }
 }

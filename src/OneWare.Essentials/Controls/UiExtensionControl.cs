@@ -9,8 +9,8 @@ public class UiExtensionControl : ContentControl
     public static readonly StyledProperty<object?> ContextProperty =
         AvaloniaProperty.Register<UiExtensionControl, object?>(nameof(Context));
 
-    public static readonly StyledProperty<UiExtension?> UiExtensionProperty =
-        AvaloniaProperty.Register<UiExtensionControl, UiExtension?>(nameof(UiExtension));
+    public static readonly StyledProperty<OneWareUiExtension?> UiExtensionProperty =
+        AvaloniaProperty.Register<UiExtensionControl, OneWareUiExtension?>(nameof(UiExtension));
 
     public object? Context
     {
@@ -18,7 +18,7 @@ public class UiExtensionControl : ContentControl
         set => SetValue(ContextProperty, value);
     }
 
-    public UiExtension? UiExtension
+    public OneWareUiExtension? UiExtension
     {
         get => GetValue(UiExtensionProperty);
         set => SetValue(UiExtensionProperty, value);

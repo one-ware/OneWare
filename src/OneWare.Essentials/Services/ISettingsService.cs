@@ -11,7 +11,7 @@ public class SaveEventArgs(bool autoSave) : EventArgs
 public interface ISettingsService
 {
     public event EventHandler<SaveEventArgs>? Saved;
-    
+
     public void RegisterSettingCategory(string category, int priority = 0, string? iconKey = null);
 
     public void RegisterSettingSubCategory(string category, string subCategory, int priority = 0,
@@ -24,14 +24,17 @@ public interface ISettingsService
     [Obsolete("Use RegisterSetting instead")]
     public void RegisterTitled<T>(string category, string subCategory, string key, string title, string description,
         T defaultValue);
-    
+
     [Obsolete("Use RegisterSetting instead")]
-    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title, string description,
+    public void RegisterTitledFolderPath(string category, string subCategory, string key, string title,
+        string description,
         string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate);
-    
+
     [Obsolete("Use RegisterSetting instead")]
-    public void RegisterTitledFilePath(string category, string subCategory, string key, string title, string description,
-        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate, params FilePickerFileType[] fileTypes);
+    public void RegisterTitledFilePath(string category, string subCategory, string key, string title,
+        string description,
+        string defaultValue, string? watermark, string? startDir, Func<string, bool>? validate,
+        params FilePickerFileType[] fileTypes);
 
     [Obsolete("Use RegisterSetting instead")]
     public void RegisterTitledSlider(string category, string subCategory, string key, string title, string description,
@@ -41,7 +44,7 @@ public interface ISettingsService
     public void RegisterTitledCombo<T>(string category, string subCategory, string key, string title,
         string description,
         T defaultValue, params T[] options);
-    
+
     [Obsolete("Use RegisterSetting instead")]
     public void RegisterTitledComboSearch<T>(string category, string subCategory, string key, string title,
         string description,
@@ -54,11 +57,11 @@ public interface ISettingsService
     public void RegisterSetting(string cateogory, string subCategory, string key, TitledSetting setting);
 
     public void UpdateSetting(string key, TitledSetting setting);
-    
+
     public void RegisterCustom(string category, string subCategory, string key, CustomSetting customSetting);
-    
+
     public Setting GetSetting(string key);
-    
+
     public bool HasSetting(string key);
 
     public T GetSettingValue<T>(string key);

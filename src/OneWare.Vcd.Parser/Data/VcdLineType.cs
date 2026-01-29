@@ -7,5 +7,5 @@ public enum VcdLineType
     Integer,
     Vector,
     Real,
-    Event,
+    Event
 }

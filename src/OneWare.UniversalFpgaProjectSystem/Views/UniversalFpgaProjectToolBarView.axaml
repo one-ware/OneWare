@@ -3,9 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
-             xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:services="clr-namespace:OneWare.UniversalFpgaProjectSystem.Services"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" IsVisible="{Binding IsVisible}"
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectToolBarView"
@@ -28,7 +25,7 @@
                         <MenuItem Header="Project Settings"
                                   Command="{Binding OpenProjectSettingsAsync}">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource Material.SettingsOutline}"/>
+                                <Image Source="{DynamicResource Material.SettingsOutline}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <controls:UiExtensionCollection

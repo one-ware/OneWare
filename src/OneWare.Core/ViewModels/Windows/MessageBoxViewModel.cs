@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.ViewModels.Windows;
@@ -20,65 +22,53 @@ public enum MessageBoxMode
 
 public class MessageBoxViewModel : FlexibleWindowViewModelBase
 {
+    private readonly MessageBoxRequest _request;
     private string? _input;
-
     private object? _selectedItem;
-
     private ObservableCollection<object> _selectionItems = new();
+    private FlexibleWindow? _window;
 
-    public MessageBoxViewModel(string title, string message, MessageBoxMode mode)
+    public MessageBoxViewModel(MessageBoxRequest request)
     {
-        Title = title;
-        Message = message;
+        _request = request;
+        Title = request.Title;
+        Message = request.Message;
         Id = "MessageBox...";
 
-        //TODO USE FLAGS
+        if (request.Input is { DefaultValue: { } defaultValue })
+            _input = defaultValue;
 
-        if (mode == MessageBoxMode.PasswordInput) PasswordChar = "*";
-        else if (mode == MessageBoxMode.SelectFolder) ShowFolderButton = true;
+        if (request.SelectionItems != null)
+            SelectionItems = new ObservableCollection<object>(request.SelectionItems);
 
-        switch (mode)
-        {
-            case MessageBoxMode.NoCancel:
-                ShowCancel = false;
-                break;
+        SelectedItem = request.SelectedItem;
 
-            case MessageBoxMode.Input:
-            case MessageBoxMode.PasswordInput:
-            case MessageBoxMode.SelectFolder:
-                ShowInput = true;
-                ShowOk = true;
-                ShowYes = false;
-                ShowNo = false;
-                break;
+        Buttons = new ObservableCollection<MessageBoxButtonViewModel>(
+            (request.Buttons.Count > 0 ? request.Buttons : CreateFallbackButtons())
+            .Select(button => new MessageBoxButtonViewModel(button))
+        );
 
-            case MessageBoxMode.OnlyOk:
-                ShowInput = false;
-                ShowOk = true;
-                ShowYes = false;
-                ShowNo = false;
-                ShowCancel = false;
-                break;
-
-            case MessageBoxMode.SelectItem:
-                ShowSelection = true;
-                ShowOk = true;
-                ShowYes = false;
-                ShowNo = false;
-                break;
-        }
+        ButtonCommand = new RelayCommand<MessageBoxButtonViewModel>(ExecuteButton, CanExecuteButton);
     }
 
     public string? Input
     {
         get => _input;
-        set => SetProperty(ref _input, value);
+        set
+        {
+            if (SetProperty(ref _input, value))
+                ButtonCommand.NotifyCanExecuteChanged();
+        }
     }
 
     public object? SelectedItem
     {
         get => _selectedItem;
-        set => SetProperty(ref _selectedItem, value);
+        set
+        {
+            if (SetProperty(ref _selectedItem, value))
+                ButtonCommand.NotifyCanExecuteChanged();
+        }
     }
 
     public ObservableCollection<object> SelectionItems
@@ -87,41 +77,126 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref _selectionItems, value);
     }
 
-    public MessageBoxStatus BoxStatus { get; set; } = MessageBoxStatus.Canceled;
+    public ObservableCollection<MessageBoxButtonViewModel> Buttons { get; }
+
+    public IRelayCommand<MessageBoxButtonViewModel> ButtonCommand { get; }
+
+    public MessageBoxResult Result { get; private set; } = MessageBoxResult.Canceled();
+
     public string Message { get; }
-    public bool ShowYes { get; } = true;
-    public bool ShowNo { get; } = true;
-    public bool ShowCancel { get; } = true;
-    public bool ShowOk { get; }
-    public bool ShowInput { get; }
-    public bool ShowFolderButton { get; }
-    public bool ShowSelection { get; }
-    public string PasswordChar { get; } = "";
 
-    public void No(FlexibleWindow window)
+    public bool ShowInput => _request.Input != null;
+    public bool ShowFolderButton => _request.Input?.ShowFolderButton == true;
+    public bool ShowSelection => SelectionItems.Count > 0;
+    public string? InputLabel => _request.Input?.Label;
+    public bool ShowInputLabel => !string.IsNullOrWhiteSpace(InputLabel);
+    public string? InputPlaceholder => _request.Input?.Placeholder;
+    public char PasswordChar => _request.Input?.Kind == MessageBoxInputKind.Password ? '*' : '\0';
+    public bool InputRequired => _request.Input?.IsRequired == true;
+    public bool SelectionRequired => _request.SelectionRequired;
+
+    public void AttachWindow(FlexibleWindow window)
     {
-        BoxStatus = MessageBoxStatus.No;
-        window.Close();
+        _window = window;
     }
 
-    public void Yes(FlexibleWindow window)
+    public bool TryExecuteDefault()
     {
-        BoxStatus = MessageBoxStatus.Yes;
-        window.Close();
+        var button = Buttons.FirstOrDefault(x => x.IsDefault) ?? Buttons.FirstOrDefault();
+        if (button == null || !ButtonCommand.CanExecute(button))
+            return false;
+
+        ButtonCommand.Execute(button);
+        return true;
     }
 
-    public void Cancel(FlexibleWindow window)
+    public bool TryExecuteCancel()
     {
-        BoxStatus = MessageBoxStatus.Canceled;
-        window.Close();
+        var button = Buttons.FirstOrDefault(x => x.IsCancel || x.Role == MessageBoxButtonRole.Cancel);
+        if (button == null || !ButtonCommand.CanExecute(button))
+            return false;
+
+        ButtonCommand.Execute(button);
+        return true;
+    }
+
+    public void EnsureCanceled()
+    {
+        if (Result.Button == null)
+            Result = MessageBoxResult.Canceled();
     }
 
     public async Task SelectPathAsync(FlexibleWindow window)
     {
-        if (window.Host == null) throw new NullReferenceException(nameof(TopLevel));
+        if (window.Host == null) throw new NullReferenceException(nameof(FlexibleWindow));
 
         var folder = await StorageProviderHelper.SelectFolderAsync(window.Host, "Select Directory", Input);
 
         Input = folder ?? "";
     }
+
+    private void ExecuteButton(MessageBoxButtonViewModel? button)
+    {
+        if (button == null)
+            return;
+
+        Result = new MessageBoxResult
+        {
+            Button = button.Model,
+            Input = Input,
+            SelectedItem = SelectedItem
+        };
+
+        _window?.Close();
+    }
+
+    private bool CanExecuteButton(MessageBoxButtonViewModel? button)
+    {
+        if (button == null)
+            return false;
+
+        if (button.Role == MessageBoxButtonRole.Cancel)
+            return true;
+
+        if (InputRequired && string.IsNullOrWhiteSpace(Input))
+            return false;
+
+        if (SelectionRequired && SelectedItem == null)
+            return false;
+
+        return true;
+    }
+
+    private static IEnumerable<MessageBoxButton> CreateFallbackButtons()
+    {
+        yield return new MessageBoxButton
+        {
+            Text = "Ok",
+            Role = MessageBoxButtonRole.Yes,
+            Style = MessageBoxButtonStyle.Primary,
+            IsDefault = true
+        };
+    }
+}
+
+public class MessageBoxButtonViewModel : ObservableObject
+{
+    public MessageBoxButtonViewModel(MessageBoxButton model)
+    {
+        Model = model;
+    }
+
+    public MessageBoxButton Model { get; }
+    public string Text => Model.Text;
+    public bool IsDefault => Model.IsDefault;
+    public bool IsCancel => Model.IsCancel;
+    public MessageBoxButtonRole Role => Model.Role;
+
+    public Classes StyleClass => Model.Style switch
+    {
+        MessageBoxButtonStyle.Primary => new Classes("PrimaryButton"),
+        MessageBoxButtonStyle.Secondary => new Classes("SecondaryButton"),
+        MessageBoxButtonStyle.Danger => new Classes("MessageBoxDanger"),
+        _ => new Classes()
+    };
 }

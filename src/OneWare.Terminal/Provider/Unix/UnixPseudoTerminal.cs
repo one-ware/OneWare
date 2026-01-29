@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace OneWare.Terminal.Provider.Unix;
@@ -47,10 +47,10 @@ public class UnixPseudoTerminal : IPseudoTerminal
             Marshal.FreeHGlobal(buf);
         });
     }
-    
+
     public void SetSize(int columns, int rows)
     {
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             _ = Task.Run(() =>
             {
@@ -58,7 +58,7 @@ public class UnixPseudoTerminal : IPseudoTerminal
                 {
                     var namePtr = Native.ptsname(_cfg);
                     var name = Marshal.PtrToStringAnsi(namePtr);
-            
+
                     var psi = new ProcessStartInfo
                     {
                         FileName = "/bin/bash",
@@ -80,17 +80,17 @@ public class UnixPseudoTerminal : IPseudoTerminal
         else
         {
             // TODO Find out why this method doesnt work on macos
-            
+
             var size = new Native.winsize
             {
                 ws_row = (ushort)(rows > 0 ? rows : 24),
                 ws_col = (ushort)(columns > 0 ? columns : 80)
             };
-            
+
             if (Native.ioctl(_cfg, Native.TIOCSWINSZ, ref size) == -1)
             {
                 var errno = Marshal.GetLastWin32Error();
-                var errorMessage = new System.ComponentModel.Win32Exception(errno).Message;
+                var errorMessage = new Win32Exception(errno).Message;
                 throw new Exception($"Failed to resize terminal: {errorMessage} (errno: {errno})");
             }
         }

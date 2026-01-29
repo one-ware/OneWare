@@ -1,11 +1,12 @@
-﻿using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.Verilog.Templates;
 
-public class VerilogBlinkTemplate(ILogger logger, IDockService dockService) : IFpgaProjectTemplate
+public class VerilogBlinkTemplate(ILogger logger, IMainDockService mainDockService) : IFpgaProjectTemplate
 {
     public string Name => "Verilog Blink";
 
@@ -20,7 +21,7 @@ public class VerilogBlinkTemplate(ILogger logger, IDockService dockService) : IF
             var file = root.AddFile(name + ".v");
             root.TopEntity = file;
 
-            _ = dockService.OpenFileAsync(file);
+            _ = mainDockService.OpenFileAsync(file);
         }
         catch (Exception e)
         {

@@ -1,12 +1,10 @@
 ﻿using Avalonia.Input;
-using AvaloniaEdit.CodeCompletion;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.Settings;
 using OneWare.Vhdl.Folding;
 using OneWare.Vhdl.Formatting;
 using OneWare.Vhdl.Indentation;
@@ -44,12 +42,10 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
         var items = new List<CompletionData>();
 
         if (_settingsService.GetSettingValue<bool>(VhdlModule.EnableSnippetsSetting) && _snippets != null)
-        {
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
                 CodeBox.CaretOffset, CurrentFile)));
-        }
-        
+
         return Task.FromResult(items);
     }
 

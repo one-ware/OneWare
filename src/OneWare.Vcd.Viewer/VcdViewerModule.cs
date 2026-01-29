@@ -1,31 +1,37 @@
-﻿using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
 using OneWare.Vcd.Viewer.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Vcd.Viewer;
 
-public class VcdViewerModule : IModule
+public class VcdViewerModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.Register<VcdViewModel>();
+        services.AddTransient<VcdViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerProvider.Resolve<IDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
+        serviceProvider.Resolve<IMainDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
 
-        containerProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".vcdconf", ".json");
+        serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".vcdconf", ".json");
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitled("Simulator", "VCD Viewer",
-            "VcdViewer_SaveView_Enable", "Enable Save File",
-            "Enables storing view settings like open signals in a separate file", true);
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Simulator", "VCD Viewer",
+            "VcdViewer_SaveView_Enable",
+            new CheckBoxSetting("Enable Save File", true)
+            {
+                HoverDescription = "Enables storing view settings like open signals in a separate file"
+            });
 
-        containerProvider.Resolve<ISettingsService>().RegisterSettingCategory("Simulator", 0, "Material.Pulse");
-        containerProvider.Resolve<ISettingsService>().RegisterTitledCombo("Simulator", "VCD Viewer",
-            "VcdViewer_LoadingThreads", "Loading Threads",
-            "Sets amount of threads used to loading VCD Files", 1,
-            Enumerable.Range(1, Environment.ProcessorCount).ToArray());
+        serviceProvider.Resolve<ISettingsService>().RegisterSettingCategory("Simulator", 0, "Material.Pulse");
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Simulator", "VCD Viewer",
+            "VcdViewer_LoadingThreads",
+            new ComboBoxSetting("Loading Threads", 1,
+                Enumerable.Range(1, Environment.ProcessorCount).Cast<object>().ToArray())
+            {
+                HoverDescription = "Sets amount of threads used to loading VCD Files"
+            });
     }
 }

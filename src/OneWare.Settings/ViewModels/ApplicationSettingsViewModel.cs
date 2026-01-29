@@ -1,11 +1,8 @@
-﻿using Avalonia.Media;
-using DynamicData;
+﻿using DynamicData;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.Settings.ViewModels.SettingTypes;
 
 namespace OneWare.Settings.ViewModels;
 
@@ -86,7 +83,8 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
     public async Task ResetDialogAsync(FlexibleWindow window)
     {
         var result = await _windowService.ShowYesNoCancelAsync("Warning",
-            "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning, window.Host);
+            "Are you sure you want to reset all settings? Paths will not be affected by this!", MessageBoxIcon.Warning,
+            window.Host);
 
         if (result == MessageBoxStatus.Yes)
             _settingsService.ResetAll();

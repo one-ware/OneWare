@@ -83,8 +83,9 @@
         </Setter>
     </Style>
 
-    <Style Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem, MenuFlyoutPresenter.BindMenu > MenuItem"
-           x:DataType="viewModels:MenuItemViewModel">
+    <Style
+        Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem, MenuFlyoutPresenter.BindMenu > MenuItem"
+        x:DataType="viewModels:MenuItemViewModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -99,5 +100,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
 </Styles>

@@ -5,10 +5,10 @@
     <PropertyGroup>
         <Version>$(UniversalFpgaProjectSystemVersion)</Version>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
-        <ProjectReference Include="..\OneWare.ToolEngine\OneWare.ToolEngine.csproj" />
+        <ProjectReference Include="..\OneWare.ToolEngine\OneWare.ToolEngine.csproj"/>
         <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
     </ItemGroup>
 </Project>

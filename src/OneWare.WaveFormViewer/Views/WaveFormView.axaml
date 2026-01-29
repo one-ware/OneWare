@@ -14,9 +14,9 @@
 
     <UserControl.Resources>
         <x:Double x:Key="LineHeight">40</x:Double>
-        
+
         <behaviors:WaveListDropBehavior x:Key="WaveListDropBehavior" />
-        
+
         <ContextMenu x:Key="WaveModelContextMenu" x:DataType="models:WaveModel">
             <MenuItem Header="Data Format" ItemsSource="{Binding AvailableDataTypes}"
                       IsEnabled="{Binding AvailableDataTypes.Length}">
@@ -64,12 +64,12 @@
             </MenuItem>
         </ContextMenu>
     </UserControl.Resources>
-    
+
     <UserControl.Styles>
         <Style Selector="ListBox.Scroll">
-          <Setter Property="BorderThickness" Value="0" />
-          <Setter Property="Padding" Value="0" />
-          <Setter Property="Background" Value="Transparent"></Setter>
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="ListBox.Scroll ListBoxItem">
             <Setter Property="Padding" Value="3 0" />
@@ -86,16 +86,16 @@
 
         <Border Grid.Row="0" Grid.Column="0" Height="30" Grid.ColumnSpan="3"
                 Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                 BorderThickness="0, 0, 0, 1">
             <DockPanel LastChildFill="False">
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+                <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
 
                     <Button Command="{Binding XOffsetMinus}"
                             IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}"
                             ToolTip.Tip="Moves offset to left">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronLeft}" />
                     </Button>
+
                     <Button Command="{Binding XOffsetPlus}" ToolTip.Tip="Moves offset to right">
                         <Image Source="{DynamicResource BoxIcons.RegularChevronRight}" />
                     </Button>
@@ -104,7 +104,7 @@
                                                InOut="{Binding Offset, Mode=TwoWay}"
                                                InOutTimeScale="{Binding TimeScale}" />
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <Button Command="{Binding ResetView}" ToolTip.Tip="Reset View">
                         <Image Source="{DynamicResource FluentIconsFilled.FullScreenZoomFilled}" />
@@ -137,28 +137,28 @@
                     </Button>
                 </StackPanel>
 
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Right">
+                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
 
                     <TextBlock Margin="3,0,0,0" VerticalAlignment="Center" Text="Zoom: " />
                     <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"
                                Text="{Binding ZoomMultiply}" />
                     <TextBlock Margin="3,0,3,0" VerticalAlignment="Center" Text="x" />
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <TextBlock Margin="3,0,0,0" VerticalAlignment="Center" Text="Cursor: " />
                     <TextBlock Margin="3,0,3,0" VerticalAlignment="Center" Text="{Binding CursorText}" />
 
 
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
 
                     <TextBlock Text="Marker: " />
-                    <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}"/>
+                    <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}" />
                 </StackPanel>
 
             </DockPanel>
         </Border>
-        
+
         <ListBox Grid.Column="0" Grid.Row="2"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
@@ -195,8 +195,8 @@
                             <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis"
                                        FontFamily="{DynamicResource EditorFont}"
                                        ToolTip.Tip="{Binding MarkerValue}" Text="{Binding MarkerValue}"
-                                       FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}" 
-                                       VerticalAlignment="Center"/>
+                                       FontWeight="Bold" Foreground="{DynamicResource ThemeAccentBrush}"
+                                       VerticalAlignment="Center" />
                         </Grid>
                     </DockPanel>
                 </DataTemplate>
@@ -212,13 +212,14 @@
 
         <ListBox Name="SimPartScroll" Grid.Row="2" Grid.Column="2" ClipToBounds="True"
                  ScrollViewer.Offset="{Binding #TextPartScroll.Scroll.Offset, Mode=TwoWay, FallbackValue=0}"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Visible"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Visible"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
                  Classes="Scroll">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0" />
-                    <Setter Property="IsHitTestVisible" Value="False"></Setter>
+                    <Setter Property="IsHitTestVisible" Value="False" />
                     <Style Selector="^:selected /template/ ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
                     </Style>

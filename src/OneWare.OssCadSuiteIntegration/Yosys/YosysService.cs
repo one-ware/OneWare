@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -18,9 +19,9 @@ public class YosysService(
     IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
-    IDockService dockService, 
-    ToolService toolService,
-    ToolExecutionDispatcherService toolExecutionDispatcherService)
+    IMainDockService dockService, 
+    IToolService toolService,
+    IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)

@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace OneWare.Essentials.Helpers;
+﻿namespace OneWare.Essentials.Helpers;
 
 public static class TimeHelper
 {
@@ -8,12 +6,12 @@ public static class TimeHelper
     {
         string[] units = ["fs", "ps", "ns", "µs", "ms", "s"];
         double[] scales = [1, 1e3, 1e6, 1e9, 1e12, 1e15];
-        
+
         var unitIndex = 0;
 
         var invert = time < 0;
         double value = Math.Abs(time * timeScale);
-        
+
         // Find the appropriate unit
         while (unitIndex < units.Length - 1 && value >= 1000)
         {
@@ -22,12 +20,12 @@ public static class TimeHelper
         }
 
         if (invert) value *= -1;
-        
+
         var precision = CalculatePrecision(range * timeScale, scales[unitIndex]);
-        
+
         return $"{value.ToString($"F{precision}")} {units[unitIndex]}";
     }
-    
+
     private static int CalculatePrecision(long rangeFs, double scale)
     {
         var normalizedRange = rangeFs / scale;
@@ -41,7 +39,7 @@ public static class TimeHelper
             _ => 0
         };
     }
-    
+
     public static string GetTimeScaleFromUnit(long timescale)
     {
         return timescale switch
@@ -51,7 +49,7 @@ public static class TimeHelper
             >= 1000_000 and < 1000_000_000 => "ns",
             >= 1000_000_000 and < 1000_000_000_000 => "us",
             >= 1000_000_000_000 and < 1000_000_000_000_000 => "ms",
-            >= 1000_000_000_000_000 => "s",
+            >= 1000_000_000_000_000 => "s"
         };
     }
 }

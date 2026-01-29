@@ -9,7 +9,7 @@ namespace OneWare.Essentials.ViewModels;
 
 public abstract class ExtendedDocument : Document, IExtendedDocument
 {
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
 
@@ -26,15 +26,13 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     private bool _loadingFailed;
 
     protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService,
-        IDockService dockService, IWindowService windowService)
+        IMainDockService mainDockService, IWindowService windowService)
     {
         _fullPath = fullPath;
         _projectExplorerService = projectExplorerService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
     }
-
-    public IAsyncRelayCommand? TryClose { get; protected set; }
 
     public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Name}?";
     public IRelayCommand? Undo { get; protected set; }
@@ -85,11 +83,11 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     {
         if (IsDirty)
         {
-            if (CurrentFile != null) _ = _dockService.CloseFileAsync(CurrentFile);
+            if (CurrentFile != null) _ = _mainDockService.CloseFileAsync(CurrentFile);
             return false;
         }
 
-        if (CurrentFile != null) _dockService.OpenFiles.Remove(CurrentFile);
+        if (CurrentFile != null) _mainDockService.OpenFiles.Remove(CurrentFile);
         if (CurrentFile is ExternalFile externalFile)
             _projectExplorerService.RemoveTemporaryFile(externalFile);
 
@@ -102,7 +100,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         if (!IsDirty) return true;
 
         var result = await _windowService.ShowYesNoCancelAsync("Warning", CloseWarningMessage, MessageBoxIcon.Warning,
-            _dockService.GetWindowOwner(this));
+            _mainDockService.GetWindowOwner(this));
 
         if (result == MessageBoxStatus.Yes)
         {
@@ -125,19 +123,20 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public virtual void InitializeContent()
     {
         var oldCurrentFile = CurrentFile;
-        
+
         CurrentFile = _projectExplorerService.SearchFullPath(FullPath) as IFile ??
                       _projectExplorerService.GetTemporaryFile(FullPath);
         Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile.Name;
 
-        if (CurrentFile != oldCurrentFile && oldCurrentFile != null)
-        {
-            _dockService.OpenFiles.Remove(oldCurrentFile);
-        }
-        
-        _dockService.OpenFiles.TryAdd(CurrentFile, this);
-        
+        if (CurrentFile != oldCurrentFile && oldCurrentFile != null) _mainDockService.OpenFiles.Remove(oldCurrentFile);
+
+        _mainDockService.OpenFiles.TryAdd(CurrentFile, this);
+
         UpdateCurrentFile(oldCurrentFile);
+    }
+
+    public virtual void GoToDiagnostic(ErrorListItem item)
+    {
     }
 
     protected virtual void Reset()

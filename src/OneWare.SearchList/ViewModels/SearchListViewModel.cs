@@ -1,14 +1,17 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
+using Avalonia.ReactiveUI;
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using DynamicData;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.Models;
-using IDockService = OneWare.Essentials.Services.IDockService;
+using ReactiveUI;
 
 namespace OneWare.SearchList.ViewModels;
 
@@ -16,7 +19,7 @@ public class SearchListViewModel : ExtendedTool
 {
     public const string IconKey = "VsImageLib.Search16XMd";
 
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
     private bool _caseSensitive;
@@ -35,23 +38,25 @@ public class SearchListViewModel : ExtendedTool
 
     private bool _wholeWord;
 
-    public SearchListViewModel(IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) :
+        base(IconKey)
     {
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
         Title = "Search";
         Id = "Search";
+
+        this.WhenAnyValue(x => x.SearchString)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Subscribe(Search);
     }
 
     public string SearchString
     {
         get => _searchString;
-        set
-        {
-            SetProperty(ref _searchString, value);
-            Search(_searchString);
-        }
+        set => SetProperty(ref _searchString, value);
     }
 
     public ObservableCollection<SearchResultModel> Items { get; } = new();
@@ -120,9 +125,11 @@ public class SearchListViewModel : ExtendedTool
                 await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
                     _lastCancellationToken.Token);
                 break;
-            case 2 when _dockService.CurrentDocument is IEditor { CurrentFile: not null } editor:
-                Items.AddRange(await FindAllIndexesAsync(editor.CurrentFile,
-                    searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
+            case 2 when _mainDockService.CurrentDocument is IEditor editor:
+                var currentFile = editor.CurrentFile;
+                if (currentFile != null)
+                    Items.AddRange(await FindAllIndexesAsync(currentFile,
+                        searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
                 break;
         }
 
@@ -244,10 +251,10 @@ public class SearchListViewModel : ExtendedTool
     {
         if (resultModel?.File == null) return;
 
-        if (await _dockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
+        if (await _mainDockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
 
-        if (_dockService.GetWindowOwner(this) is IHostWindow) ;
-        _dockService.CloseDockable(this);
+        if (_mainDockService.GetWindowOwner(this) is IHostWindow)
+            _mainDockService.CloseDockable(this);
 
         //JUMP TO LINE
         if (resultModel.Line > 0)

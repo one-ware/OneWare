@@ -2,9 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
+using ITextSource = Avalonia.Media.TextFormatting.ITextSource;
 
 namespace OneWare.Essentials.EditorExtensions;
 
@@ -19,7 +21,12 @@ internal class InlayHintWithAnchor
 {
     public required InlayHint Hint { get; init; }
     public required TextAnchor Anchor { get; set; }
-    public required Control Control { get; set; }
+    
+    public IBrush? Foreground {get; set;}
+    
+    public IBrush? Background { get; set; }
+    
+    public required string Text { get; set; }
 }
 
 public class InlayHintGenerator : VisualLineElementGenerator
@@ -42,24 +49,14 @@ public class InlayHintGenerator : VisualLineElementGenerator
         var background =
             Application.Current!.FindResource(Application.Current!.RequestedThemeVariant, "ThemeBackgroundBrush") as
                 IBrush;
-
+        
         _hints.AddRange(hints.Select(x => new InlayHintWithAnchor
         {
             Hint = x,
             Anchor = _editor.Document.CreateAnchor(x.Offset),
-            Control = new Border
-            {
-                Margin = new Thickness(1, 0, 5, 0),
-                Background = background,
-                CornerRadius = new CornerRadius(3),
-                VerticalAlignment = VerticalAlignment.Bottom,
-                Child = new TextBlock
-                {
-                    Text = x.Text,
-                    Foreground = foreground,
-                    Margin = new Thickness(2, 0),
-                }
-            }
+            Text = x.Text,
+            Foreground = foreground,
+            Background = background
         }));
 
         _editor.TextArea.TextView.Redraw();
@@ -85,6 +82,7 @@ public class InlayHintGenerator : VisualLineElementGenerator
         // return -1;
 
         var element = _hints.FirstOrDefault(x => !x.Anchor.IsDeleted && x.Anchor.Offset >= startOffset);
+        
         return element?.Anchor.Offset ?? -1;
     }
 
@@ -93,8 +91,38 @@ public class InlayHintGenerator : VisualLineElementGenerator
         // var index = _hints.BinarySearch(offset, (a, b) => a.CompareTo(b.Anchor.Offset));
         //
         // return index < 0 ? null : new InlineObjectElement(0, _hints[index].Control);
-
         var element = _hints.FirstOrDefault(x => !x.Anchor.IsDeleted && x.Anchor.Offset == offset);
-        return element != null ? new InlineObjectElement(0, element.Control) : null;
+
+        if (element == null) return null;
+        
+        var properties = new VisualLineElementTextRunProperties(CurrentContext.GlobalTextRunProperties);
+        properties.SetForegroundBrush(element.Foreground);
+        properties.SetBackgroundBrush(element.Background);
+
+        return new FormattedTextElement(
+            TextFormatter.Current.FormatLine(new SimpleTextSource($" {element.Text}", properties), 0, double.MaxValue,
+                new GenericTextParagraphProperties(properties)), 0);
+    }
+    
+    internal sealed class SimpleTextSource : ITextSource
+    {
+        private readonly string _text;
+        private readonly TextRunProperties _properties;
+
+        public SimpleTextSource(string text, TextRunProperties properties)
+        {
+            _text = text;
+            _properties = properties;
+        }
+
+        public TextRun GetTextRun(int textSourceCharacterIndex)
+        {
+            if (textSourceCharacterIndex < _text.Length)
+                return new TextCharacters(
+                    _text.AsMemory().Slice(textSourceCharacterIndex,
+                        _text.Length - textSourceCharacterIndex), _properties);
+			
+            return new TextEndOfParagraph(_text.Length);
+        }
     }
 }

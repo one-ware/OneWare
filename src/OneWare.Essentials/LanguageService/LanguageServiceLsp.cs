@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using Nerdbank.Streams;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
@@ -18,7 +19,6 @@ using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OneWare.Essentials.LanguageService;
@@ -80,7 +80,6 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         var argumentArray = Arguments != null
             ? Arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries)
-                .ToArray()
             : Array.Empty<string>();
 
         var processStartInfo = new ChildProcessStartInfo(ExecutablePath, argumentArray)
@@ -144,8 +143,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
     private async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
     {
-        Client = LanguageClient.PreInit(
-            options =>
+        Client = LanguageClient.PreInit(options =>
             {
                 options.WithClientInfo(new ClientInfo { Name = "OneWare.Core" });
                 options.WithInput(input).WithOutput(output);
@@ -160,15 +158,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.OnWorkDoneProgressCreate(CreateWorkDoneProgress);
                 options.OnProgress(OnProgress);
                 options.OnLogTrace(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.Red));
+                    ContainerLocator.Container.Resolve<ILogger>()?.Warning(x.Message));
                 options.OnPublishDiagnostics(PublishDiag);
                 options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
                 options.OnShowMessage(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message, ConsoleColor.DarkCyan));
-                options.OnTelemetryEvent(x =>
-                {
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x, ConsoleColor.Magenta);
-                });
+                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message));
+                options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x); });
 
                 options.WithCapability(new TextSynchronizationCapability
                 {
@@ -313,7 +308,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         var cancelToken = new CancellationToken();
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name, ConsoleColor.DarkCyan);
+        ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name);
 
         try
         {
@@ -326,7 +321,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             return;
         }
 
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name, ConsoleColor.DarkCyan);
+        ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name);
 
         IsLanguageServiceReady = true;
         await base.ActivateAsync();

@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Numerics;
 using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
@@ -19,11 +18,10 @@ public class Marker
 
 public class WaveFormScale : Control
 {
+    private const int MinScaleNumberWidth = 150;
     private readonly IPen _markerBrushPen;
 
     private CompositeDisposable _disposableReg = new();
-
-    private const int MinScaleNumberWidth = 150;
 
     public WaveFormScale()
     {
@@ -58,17 +56,15 @@ public class WaveFormScale : Control
         var range = (double)(endOffset - beginOffset);
         var mainStep = FindBeautifulStep(range, maxMainMarkers);
 
-        var intermediateStep = (mainStep / 10);
+        var intermediateStep = mainStep / 10;
 
         var firstMainMarker = Math.Ceiling(beginOffset / mainStep) * mainStep;
 
         for (var i = firstMainMarker; i >= beginOffset; i -= intermediateStep)
-        {
             markers.Insert(0, new Marker { Position = (long)i, IsMainMarker = false });
-        }
 
         if (mainStep < 0) mainStep = 1;
-        
+
         for (var mainMarker = firstMainMarker; mainMarker <= endOffset; mainMarker += mainStep)
         {
             markers.Add(new Marker { Position = (long)mainMarker, IsMainMarker = true });
@@ -78,9 +74,7 @@ public class WaveFormScale : Control
             {
                 var intermediateMarker = mainMarker + i * intermediateStep;
                 if (intermediateMarker < endOffset && intermediateMarker > beginOffset)
-                {
                     markers.Add(new Marker { Position = (long)intermediateMarker, IsMainMarker = false });
-                }
             }
         }
 

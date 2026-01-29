@@ -4,11 +4,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Media;
 using Avalonia.Styling;
+using DynamicData;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.ViewModels;
 
@@ -25,23 +26,20 @@ public abstract class ProjectViewModelBase : ExtendedTool
             {
                 new HierarchicalExpanderColumn<IProjectExplorerNode>(
                     new TemplateColumn<IProjectExplorerNode>("Header", "ProjectExplorerColumnTemplate", null,
-                        GridLength.Star), x => x.Children),
-            },
+                        GridLength.Star), x => x.Children)
+            }
         };
 
-        if (Source.RowSelection != null)
-        {
-            Source.RowSelection.SingleSelect = false;
-            SelectedItems = Source.RowSelection.SelectedItems!;
-        }
+        Source.RowSelection!.SingleSelect = false;
+        SelectedItems = Source.RowSelection.SelectedItems!;
     }
-    
+
     public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
     {
         get => _treeViewContextMenu;
         set => SetProperty(ref _treeViewContextMenu, value);
     }
-    
+
     public string SearchString
     {
         get => _searchString;
@@ -50,12 +48,12 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public ObservableCollection<IProjectRoot> Projects { get; } = new();
 
-    public IReadOnlyList<IProjectExplorerNode>? SelectedItems { get; }
+    public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
 
     public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
-    
+
     public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
-    
+
 
     public virtual void Insert(IProjectRoot entry)
     {
@@ -95,15 +93,14 @@ public abstract class ProjectViewModelBase : ExtendedTool
         try
         {
             indexPath = GetIndexPathFromNode(node);
-            if (indexPath.Count == 0) 
+            if (indexPath.Count == 0)
                 return;
-            
+
             indexPath.Reverse();
             Source.RowSelection?.Select(new IndexPath(indexPath));
         }
         catch
         {
-            return;
         }
     }
 
@@ -112,9 +109,10 @@ public abstract class ProjectViewModelBase : ExtendedTool
         List<int> indexPath = [];
         if (node.Parent != null)
         {
-            indexPath.Add(node.Parent.Children.IndexOf(node)); 
+            indexPath.Add(node.Parent.Children.IndexOf(node));
             indexPath.AddRange(GetIndexPathFromNode(node.Parent));
         }
+
         return indexPath;
     }
 
@@ -127,11 +125,10 @@ public abstract class ProjectViewModelBase : ExtendedTool
         if (SearchString.Length < 3) return;
 
         SearchResult.AddRange(DeepSearchName(SearchString));
-        
+
         foreach (var r in SearchResult)
-        {
-            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ?? Brushes.Transparent;
-        }
+            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
+                           Brushes.Transparent;
     }
 
     public void ExpandToRoot(IProjectExplorerNode node)

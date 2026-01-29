@@ -1,7 +1,8 @@
-using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Core;
 using OneWare.Core.Data;
+using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
 using OneWare.Essentials.Models;
@@ -10,43 +11,50 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using Prism.Ioc;
-using Prism.Modularity;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.ChatBot;
+using OneWare.Copilot;
+using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Studio;
 
 public class StudioApp : App
 {
     public static readonly IProjectSettingsService ProjectSettingsService = new ProjectSettingsService();
-    
+
     public static readonly ISettingsService SettingsService = new SettingsService();
 
     public static readonly IPaths Paths = new Paths("OneWare Studio", "avares://OneWare.Studio/Assets/icon.ico");
-
-    private static readonly ILogger Logger = new Logger(Paths);
 
     static StudioApp()
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
         SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_UseManagedFileDialog",
-            "Use Managed File Dialog (restart required)",
-            "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!",
-            false);
-        SettingsService.RegisterTitled("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
-            "Automatically download Binaries",
-            "Automatically download binaries for features when possible", true);
+        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_UseManagedFileDialog",
+            new CheckBoxSetting("Use Managed File Dialog (restart required)", false)
+            {
+                HoverDescription =
+                    "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!"
+            });
+        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
+            new CheckBoxSetting("Automatically download Binaries", true)
+            {
+                HoverDescription = "Automatically download binaries for features when possible"
+            });
         SettingsService.Load(Paths.SettingsPath);
     }
 
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    protected override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterInstance(SettingsService);
-        containerRegistry.RegisterInstance(ProjectSettingsService);
-        containerRegistry.RegisterInstance(Paths);
-        containerRegistry.RegisterInstance(Logger);
+        services.AddSingleton(SettingsService);
+        services.AddSingleton(ProjectSettingsService);
+        services.AddSingleton(Paths);
+        base.RegisterServices(services);
+    }
 
-        base.RegisterTypes(containerRegistry);
+    protected override string GetLogFilePath()
+    {
+        return Path.Combine(Paths.DocumentsDirectory, "Logs", $"{Paths.AppName.Replace(" ", "_").ToLower()}_.txt");
     }
 
     public override void Initialize()
@@ -60,12 +68,13 @@ public class StudioApp : App
         });
     }
 
-    protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
+    protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
     {
         base.ConfigureModuleCatalog(moduleCatalog);
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
-        //moduleCatalog.AddModule<ChatBotModule>();
+        moduleCatalog.AddModule<ChatBotModule>();
+        moduleCatalog.AddModule<CopilotModule>();
     }
 }

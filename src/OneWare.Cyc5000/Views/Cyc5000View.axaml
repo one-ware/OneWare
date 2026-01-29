@@ -230,7 +230,8 @@
                 IsVisible="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1].ConnectedExtension, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="244" Height="105" BoxShadow="0 0 5 5 #77000000" VerticalAlignment="Center"
                 HorizontalAlignment="Left" Margin="0, 0, -70, 0">
-            <ContentPresenter Margin="-100, 0, 0,0" DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1].ConnectedExtension}"
+            <ContentPresenter Margin="-100, 0, 0,0"
+                              DataContext="{Binding FpgaModel.InterfaceModels[CRUVI_HS_1].ConnectedExtension}"
                               Content="{Binding}" Foreground="White" />
         </Border>
     </Grid>

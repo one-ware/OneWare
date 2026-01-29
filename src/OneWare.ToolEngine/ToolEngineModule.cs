@@ -1,29 +1,24 @@
-using System.Collections.ObjectModel;
-using OneWare.Essentials.Models;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Services;
 using OneWare.ToolEngine.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.ToolEngine;
 
-public class ToolEngineModule : IModule
+public class ToolEngineModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<IToolService, ToolService>();
-        containerRegistry.RegisterSingleton<IToolExecutionDispatcherService, ToolExecutionDispatcherService>();
+        services.AddSingleton<IToolService, ToolService>();
+        services.AddSingleton<IToolExecutionDispatcherService, ToolExecutionDispatcherService>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var settingsService = containerProvider.Resolve<ISettingsService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
         settingsService.RegisterSettingCategory("Binary Management", iconKey: "VSImageLib.BinaryManagement_16x");
         settingsService.RegisterSettingSubCategory("Binary Management", "Execution Strategy");
 
-        var toolService = containerProvider.Resolve<IToolService>();
-        var executionDispatcherService = containerProvider.Resolve<IToolExecutionDispatcherService>();
-        
-        
+        _ = serviceProvider.Resolve<IToolService>();
+        _ = serviceProvider.Resolve<IToolExecutionDispatcherService>();
     }
 }

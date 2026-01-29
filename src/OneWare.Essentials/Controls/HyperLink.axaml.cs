@@ -4,7 +4,6 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Controls;
 
@@ -47,7 +46,7 @@ public partial class HyperLink : UserControl
         if (File.Exists(Url))
         {
             var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(Url);
-            _ = ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+            _ = ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
         }
         else
         {

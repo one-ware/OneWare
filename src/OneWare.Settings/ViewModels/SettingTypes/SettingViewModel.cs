@@ -9,8 +9,5 @@ public abstract class SettingViewModel : ObservableObject
 {
     public abstract CollectionSetting Setting { get; }
 
-    public ICommand RestoreDefaultCommand => new RelayCommand(() =>
-    {
-        Setting.Value = Setting.DefaultValue;
-    });
+    public ICommand RestoreDefaultCommand => new RelayCommand(() => { Setting.Value = Setting.DefaultValue; });
 }

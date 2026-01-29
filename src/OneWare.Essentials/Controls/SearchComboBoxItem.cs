@@ -4,10 +4,9 @@ namespace OneWare.Essentials.Controls;
 
 public class SearchComboBoxItem : ComboBoxItem
 {
+    private bool _isSearchResult;
     protected override Type StyleKeyOverride => typeof(ComboBoxItem);
 
-    private bool _isSearchResult;
-    
     public bool IsSearchResult
     {
         get => _isSearchResult;

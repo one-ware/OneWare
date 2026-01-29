@@ -5,22 +5,28 @@
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              xmlns:fpgaGuiElements1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="150" ClipToBounds="False"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementUsbView" x:DataType="fpgaGuiElements:FpgaGuiElementUsbViewModel"
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementUsbView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementUsbViewModel"
              Height="40" Width="30">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <Grid RowDefinitions="20, 20" ColumnDefinitions="2, 10, 6, 10, 2">
-        <Grid IsVisible="{Binding BindRx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0" Grid.Column="1" RowDefinitions="12, 8">
-            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding RxPin}"/>
-            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongDown}" HorizontalAlignment="Center"/>
+        <Grid IsVisible="{Binding BindRx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0"
+              Grid.Column="1" RowDefinitions="12, 8">
+            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding RxPin}" />
+            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongDown}"
+                   HorizontalAlignment="Center" />
         </Grid>
-        <Grid IsVisible="{Binding BindTx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0" Grid.Column="3" RowDefinitions="12, 8">
-            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding TxPin}"/>
-            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongUp}" HorizontalAlignment="Center"/>
+        <Grid IsVisible="{Binding BindTx, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Row="0"
+              Grid.Column="3" RowDefinitions="12, 8">
+            <fpgaGuiElements1:FpgaGuiElementPinView Grid.Row="0" Grid.Column="0" DataContext="{Binding TxPin}" />
+            <Image Grid.Row="1" Grid.Column="0" Source="{DynamicResource Entypo+.ArrowLongUp}"
+                   HorizontalAlignment="Center" />
         </Grid>
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Background="#444444">
-            <TextBlock Text="USB" Foreground="White" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="USB" Foreground="White" TextAlignment="Center" VerticalAlignment="Center"
+                       HorizontalAlignment="Center" />
         </Border>
     </Grid>
 </UserControl>

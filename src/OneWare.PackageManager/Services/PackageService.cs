@@ -1,20 +1,15 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Avalonia;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
-using OpenCvSharp;
-using Prism.Ioc;
 
 namespace OneWare.PackageManager.Services;
 
@@ -26,19 +21,19 @@ public partial class PackageService : ObservableObject, IPackageService
         AllowTrailingCommas = true,
         WriteIndented = true
     };
-    
-    private bool _isUpdating;
 
     private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
 
     private readonly IHttpService _httpService;
-    private readonly ISettingsService _settingsService;
 
     private readonly Lock _installLock = new();
     private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
 
     private readonly ILogger _logger;
+    private readonly ISettingsService _settingsService;
     private Task<bool>? _currentLoadTask;
+
+    private bool _isUpdating;
 
     public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
     {
@@ -51,7 +46,13 @@ public partial class PackageService : ObservableObject, IPackageService
 
         LoadInstalledPackagesDatabase();
     }
-    
+
+    private string PackageDataBasePath { get; }
+
+    public List<string> PackageRepositories { get; } = [];
+
+    private List<Package> StandalonePackages { get; } = [];
+
     public bool IsUpdating
     {
         get => _isUpdating;
@@ -59,12 +60,6 @@ public partial class PackageService : ObservableObject, IPackageService
     }
 
     public event EventHandler? PackagesUpdated;
-
-    private string PackageDataBasePath { get; }
-
-    public List<string> PackageRepositories { get; } = [];
-
-    private List<Package> StandalonePackages { get; } = [];
 
     public Dictionary<string, PackageModel> Packages { get; } = [];
 
@@ -118,61 +113,6 @@ public partial class PackageService : ObservableObject, IPackageService
         return await _currentLoadTask;
     }
 
-    private async Task<bool> LoadPackagesInternalAsync()
-    {
-        await WaitForInstallsAsync();
-
-        IsUpdating = true;
-
-        var result = true;
-
-        try
-        {
-            var customRepositories =
-                _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
-
-            var allRepos = PackageRepositories.Concat(customRepositories);
-            var newPackages = new List<Package>();
-            
-            foreach (var repository in allRepos)
-            {
-                var loadedPackages = await LoadPackageRepositoryAsync(repository);
-                
-                if (loadedPackages != null)
-                    foreach (var package in loadedPackages)
-                    {
-                        newPackages.Add(package);
-                        
-                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
-                        {
-                            pkg.Package = package;
-                        }
-                        else
-                        {
-                            AddPackage(package);
-                        }
-                    }
-
-                result = result && loadedPackages != null;
-            }
-
-            foreach (var removedPackage in Packages.Select(x => x.Value.Package)
-                         .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
-                         .ToArray())
-            {
-                Packages.Remove(removedPackage.Id!);
-            }
-
-            PackagesUpdated?.Invoke(this, EventArgs.Empty);
-        }
-        finally
-        {
-            IsUpdating = false;
-        }
-
-        return result;
-    }
-
 
     /// <summary>
     ///     Will install the package if not already installed
@@ -189,7 +129,7 @@ public partial class PackageService : ObservableObject, IPackageService
                 switch (model.Status)
                 {
                     case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", ConsoleColor.DarkCyan, true,
+                        _logger.Log($"Downloading {model.Package.Name}...", true,
                             Brushes.DarkCyan);
                         return model.DownloadAsync(model.Package.Versions.Last());
                     case PackageStatus.Installing:
@@ -223,6 +163,55 @@ public partial class PackageService : ObservableObject, IPackageService
         return icon;
     }
 
+    private async Task<bool> LoadPackagesInternalAsync()
+    {
+        await WaitForInstallsAsync();
+
+        IsUpdating = true;
+
+        var result = true;
+
+        try
+        {
+            var customRepositories =
+                _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
+
+            var allRepos = PackageRepositories.Concat(customRepositories);
+            var newPackages = new List<Package>();
+
+            foreach (var repository in allRepos)
+            {
+                var loadedPackages = await LoadPackageRepositoryAsync(repository);
+
+                if (loadedPackages != null)
+                    foreach (var package in loadedPackages)
+                    {
+                        newPackages.Add(package);
+
+                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
+                            pkg.Package = package;
+                        else
+                            AddPackage(package);
+                    }
+
+                result = result && loadedPackages != null;
+            }
+
+            foreach (var removedPackage in Packages.Select(x => x.Value.Package)
+                         .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
+                         .ToArray())
+                Packages.Remove(removedPackage.Id!);
+
+            PackagesUpdated?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            IsUpdating = false;
+        }
+
+        return result;
+    }
+
     private void AddPackage(Package package, string? installedVersion = null)
     {
         if (package.Id == null) throw new Exception("Package ID cannot be empty");
@@ -231,7 +220,7 @@ public partial class PackageService : ObservableObject, IPackageService
             Console.WriteLine(package.Id + " is already installed.");
             return;
         }
-        
+
         PackageModel model = package.Type switch
         {
             "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
@@ -242,7 +231,7 @@ public partial class PackageService : ObservableObject, IPackageService
         };
 
         model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
-        
+
         Packages.Add(package.Id, model);
 
         Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
@@ -284,7 +273,6 @@ public partial class PackageService : ObservableObject, IPackageService
 
                 if (repository is { Packages: not null })
                     foreach (var manifest in repository.Packages)
-                    {
                         try
                         {
                             if (manifest.ManifestUrl == null) continue;
@@ -302,7 +290,6 @@ public partial class PackageService : ObservableObject, IPackageService
                         {
                             _logger.Error(e.Message, e);
                         }
-                    }
                 else throw new Exception("Packages empty");
             }
             catch (Exception e)

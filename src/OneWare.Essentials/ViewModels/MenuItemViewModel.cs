@@ -18,14 +18,14 @@ public class MenuItemViewModel(string partId)
 
     private IImage? _icon;
 
+    private IObservable<object?>? _iconObservable;
+
     private KeyGesture? _inputGesture;
 
     private bool _isEnabled = true;
 
     private ObservableCollection<MenuItemViewModel>? _items;
 
-    private IObservable<object?>? _iconObservable;
-    
     private IDisposable? _subscription;
     public string PartId { get; } = partId;
     public int Priority { get; init; }
@@ -60,10 +60,7 @@ public class MenuItemViewModel(string partId)
         set
         {
             _iconObservable = value;
-            if (value == null)
-            {
-                Icon = null;
-            }
+            if (value == null) Icon = null;
             _subscription?.Dispose();
             _subscription = value?.Subscribe(x => Icon = x as IImage);
         }

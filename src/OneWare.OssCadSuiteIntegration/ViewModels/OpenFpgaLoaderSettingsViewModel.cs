@@ -1,9 +1,7 @@
 ﻿using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
-using OneWare.Settings;
 using OneWare.Settings.ViewModels;
-using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -31,7 +29,8 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         var defaultProperties = fpga.Properties;
         _settings = FpgaSettingsParser.LoadSettings(projectRoot, fpga.Name);
 
-        _boardSetting = new TextBoxSetting("Board", defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "", null)
+        _boardSetting = new TextBoxSetting("Board", defaultProperties.GetValueOrDefault("openFpgaLoaderBoard") ?? "",
+            null)
         {
             HoverDescription = "OpenFPGALoader Board"
         };
@@ -45,7 +44,7 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         _longTermFlagsSetting = new TextBoxSetting("Long Term Arguments",
             defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "", null)
         {
-            HoverDescription = "OpenFPGALoader Flags for Long Term Programming",
+            HoverDescription = "OpenFPGALoader Flags for Long Term Programming"
         };
         
         _inputBitstreamFormat = new ComboBoxSetting("Pack output format",

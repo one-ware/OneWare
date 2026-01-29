@@ -5,31 +5,28 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using OneWare.Core.ViewModels.Controls;
-using OneWare.Core.ViewModels.Windows;
-using OneWare.Core.Views.Controls;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using MessageBoxWindow = OneWare.Core.Views.Windows.MessageBoxWindow;
-using UiExtension = OneWare.Essentials.Models.UiExtension;
 
 namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
     private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
-    private readonly Dictionary<string, ObservableCollection<UiExtension>> _uiExtensions = new();
+    private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _uiExtensions = new();
 
-    public void RegisterUiExtension(string key, UiExtension extension)
+    public void RegisterUiExtension(string key, OneWareUiExtension extension)
     {
         _uiExtensions.TryAdd(key, []);
         _uiExtensions[key].Add(extension);
     }
 
-    public ObservableCollection<UiExtension> GetUiExtensions(string key)
+    public ObservableCollection<OneWareUiExtension> GetUiExtensions(string key)
     {
         _uiExtensions.TryAdd(key, []);
         return _uiExtensions[key];
@@ -109,71 +106,214 @@ public class WindowService : IWindowService
             owner ??= ContainerLocator.Container.Resolve<MainWindow>();
             await window.ShowDialogAsync(owner);
         }
-        else await ContainerLocator.Container.Resolve<MainView>().ShowVirtualDialogAsync(window);
-        
+        else
+        {
+            await ContainerLocator.Container.Resolve<MainSingleView>().ShowVirtualDialogAsync(window);
+        }
+
         window.Focus();
+    }
+
+    public async Task<MessageBoxResult> ShowMessageBoxAsync(MessageBoxRequest request, Window? owner = null)
+    {
+        var msg = new MessageBoxWindow(request);
+        await ShowDialogAsync(msg, owner);
+        return msg.Result;
     }
 
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        return ShowDialogAsync(new MessageBoxWindow(title, message, MessageBoxMode.OnlyOk, icon), owner);
+        var request = new MessageBoxRequest
+        {
+            Title = title,
+            Message = message,
+            Icon = icon,
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Ok",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                }
+            }
+        };
+
+        return ShowDialogAsync(new MessageBoxWindow(request), owner);
     }
 
     public async Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon, Window? owner)
     {
-        var msg = new MessageBoxWindow(title, message, MessageBoxMode.NoCancel, icon);
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus;
+        var request = new MessageBoxRequest
+        {
+            Title = title,
+            Message = message,
+            Icon = icon,
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Yes",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "No",
+                    Role = MessageBoxButtonRole.No,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            }
+        };
+
+        var result = await ShowMessageBoxAsync(request, owner);
+        return result.Status;
     }
 
     public async Task<MessageBoxStatus> ShowYesNoCancelAsync(string title, string message, MessageBoxIcon icon,
         Window? owner)
     {
-        var msg = new MessageBoxWindow(title, message, MessageBoxMode.AllButtons, icon);
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus;
+        var request = new MessageBoxRequest
+        {
+            Title = title,
+            Message = message,
+            Icon = icon,
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Yes",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "No",
+                    Role = MessageBoxButtonRole.No,
+                    Style = MessageBoxButtonStyle.Secondary
+                },
+                new MessageBoxButton
+                {
+                    Text = "Cancel",
+                    Role = MessageBoxButtonRole.Cancel,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            }
+        };
+
+        var result = await ShowMessageBoxAsync(request, owner);
+        return result.Status;
     }
 
     public async Task<MessageBoxStatus> ShowProceedWarningAsync(string message, Window? owner = null)
     {
-        var msg = new MessageBoxWindow("Warning", message, MessageBoxMode.NoCancel);
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus;
+        var result = await ShowYesNoAsync("Warning", message, MessageBoxIcon.Warning, owner);
+        return result;
     }
 
     public async Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
         Window? owner = null)
     {
-        var msg = new MessageBoxWindow(title, message,
-            MessageBoxMode.Input, icon)
+        var request = new MessageBoxRequest
         {
-            Input = defaultValue
+            Title = title,
+            Message = message,
+            Icon = icon,
+            Input = new MessageBoxInputOptions
+            {
+                DefaultValue = defaultValue
+            },
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Ok",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "Cancel",
+                    Role = MessageBoxButtonRole.Cancel,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            }
         };
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus == MessageBoxStatus.Canceled ? null : msg.Input;
+
+        var result = await ShowMessageBoxAsync(request, owner);
+        return result.IsCanceled ? null : result.Input;
     }
 
-    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
+    public async Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon,
+        string? defaultValue,
         Window? owner = null)
     {
-        var msg = new MessageBoxWindow(title, message,
-            MessageBoxMode.SelectFolder, icon)
+        var request = new MessageBoxRequest
         {
-            Input = defaultValue
+            Title = title,
+            Message = message,
+            Icon = icon,
+            Input = new MessageBoxInputOptions
+            {
+                DefaultValue = defaultValue,
+                ShowFolderButton = true
+            },
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Ok",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "Cancel",
+                    Role = MessageBoxButtonRole.Cancel,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            }
         };
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus == MessageBoxStatus.Canceled ? null : msg.Input;
+
+        var result = await ShowMessageBoxAsync(request, owner);
+        return result.IsCanceled ? null : result.Input;
     }
 
     public async Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon,
         IEnumerable<object> options, object? defaultOption, Window? owner = null)
     {
-        var msg = new MessageBoxWindow(title, message,
-            MessageBoxMode.SelectItem, MessageBoxIcon.Info);
-        msg.SelectionItems.AddRange(options);
-        msg.SelectedItem = defaultOption;
-        await ShowDialogAsync(msg, owner);
-        return msg.BoxStatus != MessageBoxStatus.Canceled ? msg.SelectedItem : null;
+        var request = new MessageBoxRequest
+        {
+            Title = title,
+            Message = message,
+            Icon = icon,
+            SelectionItems = options.ToArray(),
+            SelectedItem = defaultOption,
+            Buttons = new[]
+            {
+                new MessageBoxButton
+                {
+                    Text = "Ok",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "Cancel",
+                    Role = MessageBoxButtonRole.Cancel,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            }
+        };
+
+        var result = await ShowMessageBoxAsync(request, owner);
+        return result.IsCanceled ? null : result.SelectedItem;
     }
 
     public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information,
@@ -189,7 +329,8 @@ public class WindowService : IWindowService
         Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information,
         TimeSpan? expiration = null)
     {
-        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10), buttonText, buttonAction, icon);
+        var model = new CustomNotificationViewModel(title, message, type, expiration ?? TimeSpan.FromSeconds(10),
+            buttonText, buttonAction, icon);
 
         ContainerLocator.Container.Resolve<MainWindow>().NotificationManager?.Show(model);
     }

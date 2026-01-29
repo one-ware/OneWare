@@ -11,7 +11,7 @@ public class SignalConverterTests
         Assert.Equal(4294966296, SignalConverter.ConvertToUnsignedInt("11111111111111111111110000011000"));
         Assert.Equal(16191, SignalConverter.ConvertToUnsignedInt("11111100111111"));
         Assert.Equal(268434456, SignalConverter.ConvertToUnsignedInt("00001111111111111111110000011000"));
-        
+
         Assert.Equal(-1000, SignalConverter.ConvertToSignedInt("11111111111111111111110000011000"));
         Assert.Equal(-193, SignalConverter.ConvertToSignedInt("11111100111111"));
         Assert.Equal(268434456, SignalConverter.ConvertToSignedInt("00001111111111111111110000011000"));

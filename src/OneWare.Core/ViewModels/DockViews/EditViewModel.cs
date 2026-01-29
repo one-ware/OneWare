@@ -7,6 +7,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -15,7 +16,6 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -25,27 +25,27 @@ public class EditViewModel : ExtendedDocument, IEditor
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     private readonly BackupService _backupService;
-
-    private readonly IDockService _dockService;
     private readonly IErrorService _errorService;
     private readonly ILanguageManager _languageManager;
+
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
     private CompositeDisposable _composite = new();
-    
+
     private IEnumerable<ErrorListItem>? _diagnostics;
 
     private ITypeAssistance? _typeAssistance;
 
     public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
-        IDockService dockService, ILanguageManager languageManager, IWindowService windowService,
+        IMainDockService mainDockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
-        BackupService backupService) : base(fullPath, projectExplorerService, dockService, windowService)
+        BackupService backupService) : base(fullPath, projectExplorerService, mainDockService, windowService)
     {
         _settingsService = settingsService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
         _projectExplorerService = projectExplorerService;
         _languageManager = languageManager;
@@ -57,7 +57,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         Title = $"Loading {Path.GetFileName(fullPath)}";
 
-        logger.Log("Initializing " + fullPath + "", ConsoleColor.DarkGray);
+        logger.Log("Initializing " + fullPath);
 
         Undo = new RelayCommand(() => Editor.Undo());
         Redo = new RelayCommand(() => Editor.Redo());
@@ -125,8 +125,8 @@ public class EditViewModel : ExtendedDocument, IEditor
         set => SetProperty(ref _diagnostics, value);
     }
 
-    public ObservableCollection<UiExtension> TopExtensions { get; }
-    public ObservableCollection<UiExtension> BottomExtensions { get; }
+    public ObservableCollection<OneWareUiExtension> TopExtensions { get; }
+    public ObservableCollection<OneWareUiExtension> BottomExtensions { get; }
 
     public ExtendedTextEditor Editor { get; } = new();
 
@@ -146,7 +146,8 @@ public class EditViewModel : ExtendedDocument, IEditor
         {
             var result = await LoadAsync();
 
-            var disableAfterSetting = (int)_settingsService.GetSettingValue<double>("TypeAssistance_DisableLargeFile_Min");
+            var disableAfterSetting =
+                (int)_settingsService.GetSettingValue<double>("TypeAssistance_DisableLargeFile_Min");
             DisableEditViewEvents = CurrentDocument.TextLength > disableAfterSetting;
             if (DisableEditViewEvents)
             {
@@ -248,8 +249,14 @@ public class EditViewModel : ExtendedDocument, IEditor
     {
         TypeAssistance?.Uncomment();
     }
-    
+
     #region Jump
+
+    public override void GoToDiagnostic(ErrorListItem item)
+    {
+        var offset = item.GetOffset(CurrentDocument);
+        Select(offset.startOffset, offset.endOffset - offset.startOffset);
+    }
 
     public async Task<bool> WaitForEditorReadyAsync()
     {
@@ -334,7 +341,7 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
 
         ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!", ConsoleColor.Green);
+            ?.Log($"Saved {CurrentFile.Name}!");
 
         IsDirty = false;
         CurrentFile.LastSaveTime = DateTime.Now;

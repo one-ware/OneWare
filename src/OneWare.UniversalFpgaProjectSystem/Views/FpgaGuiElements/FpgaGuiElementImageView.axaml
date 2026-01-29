@@ -13,7 +13,7 @@
             CornerRadius="{Binding CornerRadius}"
             BoxShadow="{Binding BoxShadow}"
             ClipToBounds="True">
-        <Image Source="{Binding Image}" 
+        <Image Source="{Binding Image}"
                Width="{Binding Width}"
                Height="{Binding Height}" />
     </Border>

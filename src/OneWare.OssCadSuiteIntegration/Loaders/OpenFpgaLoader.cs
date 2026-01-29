@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;

@@ -49,6 +49,8 @@ public partial class CompletionData : ICompletionData
 
     public string? Detail { get; }
 
+    public IFile? File { get; set; }
+
     public IImage? Image { get; }
 
     public string InsertText { get; }
@@ -58,8 +60,6 @@ public partial class CompletionData : ICompletionData
     public object? Description { get; }
 
     public double Priority { get; }
-    
-    public IFile? File { get; set; }
 
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {

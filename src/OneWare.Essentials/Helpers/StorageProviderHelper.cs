@@ -42,15 +42,16 @@ public static class StorageProviderHelper
         return folders;
     }
 
-    [Obsolete ("Use SelectSaveFileAsync with more options instead")]
+    [Obsolete("Use SelectSaveFileAsync with more options instead")]
     public static Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir,
         string defaultExtension, params FilePickerFileType[] filters)
     {
         return SelectSaveFileAsync(owner, title, startDir, defaultExtension, null, true, filters);
     }
-    
+
     public static async Task<string?> SelectSaveFileAsync(TopLevel owner, string title, string? startDir,
-        string defaultExtension, string? suggestedFileName, bool showOverwritePrompt, params FilePickerFileType[] filters)
+        string defaultExtension, string? suggestedFileName, bool showOverwritePrompt,
+        params FilePickerFileType[] filters)
     {
         var startUpLocation = startDir == null
             ? null

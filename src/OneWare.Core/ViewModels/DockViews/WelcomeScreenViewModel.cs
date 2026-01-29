@@ -6,8 +6,6 @@ using OneWare.Core.Data;
 using OneWare.Core.Services;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using OneWare.FolderProjectSystem;
-using Prism.Ioc;
 
 namespace OneWare.Core.ViewModels.DockViews;
 
@@ -25,7 +23,7 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
         Id = "WelcomeScreen";
         Title = "Welcome";
     }
-    
+
     public ObservableCollection<IWelcomeScreenStartItem> NewItems { get; set; } = [];
     public ObservableCollection<IWelcomeScreenStartItem> OpenItems { get; set; } = [];
     public ObservableCollection<IWelcomeScreenWalkthroughItem> WalkthroughItems { get; set; } = [];
@@ -40,16 +38,29 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
         get => _recentProjectsAreEmpty;
         set => SetProperty(ref _recentProjectsAreEmpty, value);
     }
-    
+
+    public void HandleRegisterItemToNew(IWelcomeScreenStartItem item)
+    {
+        NewItems.Add(item);
+    }
+
+    public void HandleRegisterItemToOpen(IWelcomeScreenStartItem item)
+    {
+        OpenItems.Add(item);
+    }
+
+    public void HandleRegisterItemToWalkthrough(IWelcomeScreenWalkthroughItem item)
+    {
+        WalkthroughItems.Add(item);
+    }
+
     public void LoadRecentProjects()
     {
         var explorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
-        foreach (var item in explorerService.LoadRecentProjects())
-        {
-            RecentProjects.Add(new RecentFileViewModel(item));
-        }
+        foreach (var item in explorerService.LoadRecentProjects()) RecentProjects.Add(new RecentFileViewModel(item));
         RecentProjectsAreEmpty = RecentProjects.Count == 0;
     }
+
     public async Task OpenRecentFileAsync(RecentFileViewModel item)
     {
         string managerId;
@@ -59,21 +70,9 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
             managerId = "Folder";
         else
             return;
-        
+
         var manager = _projectManager.GetManager(managerId);
         await ContainerLocator.Container.Resolve<IProjectExplorerService>().LoadProjectAsync(item.Path, manager!);
-    }
-    public void HandleRegisterItemToNew(IWelcomeScreenStartItem item)
-    {
-        NewItems.Add(item);
-    }
-    public void HandleRegisterItemToOpen(IWelcomeScreenStartItem item)
-    {
-        OpenItems.Add(item);
-    }
-    public void HandleRegisterItemToWalkthrough(IWelcomeScreenWalkthroughItem item)
-    {
-        WalkthroughItems.Add(item);
     }
 }
 
@@ -85,12 +84,12 @@ public class RecentFileViewModel : ObservableObject
     {
         Name = System.IO.Path.GetFileName(path);
         Path = path;
-        ShortenPath = Path.Length > MaxCharLength - Name.Length 
-            ? string.Concat(Path[..(MaxCharLength - Name.Length)], "...") 
+        ShortenPath = Path.Length > MaxCharLength - Name.Length
+            ? string.Concat(Path[..(MaxCharLength - Name.Length)], "...")
             : Path;
     }
-    
-    public string Name { get; } 
+
+    public string Name { get; }
     public string Path { get; }
     public string ShortenPath { get; }
 }

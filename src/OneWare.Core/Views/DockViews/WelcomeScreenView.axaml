@@ -5,8 +5,6 @@
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:services="clr-namespace:OneWare.Core.Services"
-             xmlns:models="clr-namespace:OneWare.Core.Models"
              xmlns:models1="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
@@ -30,7 +28,7 @@
                                 </Image.Styles>
                             </Image>
                         </Panel>
-                        <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}" />
                     </StackPanel>
                 </HyperlinkButton.Content>
             </HyperlinkButton>
@@ -40,10 +38,8 @@
             <DockPanel>
                 <HyperlinkButton DockPanel.Dock="Left" Margin="0,0,8,0" Content="{Binding Name}"
                                  Command="{Binding $parent[UserControl].((dockViews:WelcomeScreenViewModel)DataContext).OpenRecentFileAsync, FallbackValue={x:Null}}"
-                                 CommandParameter="{Binding .}">
-                </HyperlinkButton>
-                <TextBlock DockPanel.Dock="Right" Text="{Binding ShortenPath}" ToolTip.Tip="{Binding Path}">
-                </TextBlock>
+                                 CommandParameter="{Binding .}" />
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ShortenPath}" ToolTip.Tip="{Binding Path}" />
             </DockPanel>
         </DataTemplate>
 
@@ -52,7 +48,7 @@
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <Button.Styles>
                     <Style Selector="Button">
-                        <Setter Property="Cursor" Value="Hand"></Setter>
+                        <Setter Property="Cursor" Value="Hand" />
                         <Style Selector="^:pointerover">
                             <Setter Property="Background" Value="{x:Null}" />
                         </Style>
@@ -63,19 +59,17 @@
                 </Button.Styles>
                 <Panel>
                     <Border CornerRadius="6"
-                            Opacity=".4" Background="{DynamicResource ThemeControlMidColor}">
-                    </Border>
+                            Opacity=".4" Background="{DynamicResource ThemeControlMidColor}" />
                     <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="40,*" Margin="6">
                         <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" FontWeight="SemiBold"
-                                   Text="{Binding Name}">
-                        </TextBlock>
+                                   Text="{Binding Name}" />
                         <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
                                    Classes.Hide="{Binding HideDescription}"
                                    Text="{Binding Description}"
                                    TextWrapping="Wrap" Name="DescriptionContainer">
                             <TextBlock.Styles>
                                 <Style Selector="TextBlock.Hide">
-                                    <Setter Property="IsVisible" Value="False"></Setter>
+                                    <Setter Property="IsVisible" Value="False" />
                                 </Style>
                             </TextBlock.Styles>
                         </TextBlock>
@@ -119,42 +113,42 @@
             <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
                 <!-- NEW -->
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="New" Classes="header"></TextBlock>
-                    <ItemsControl ItemsSource="{Binding NewItems}"></ItemsControl>
+                    <TextBlock Text="New" Classes="header" />
+                    <ItemsControl ItemsSource="{Binding NewItems}" />
                 </StackPanel>
 
                 <!-- OPEN -->
                 <StackPanel Orientation="Vertical" Margin="0,10">
-                    <TextBlock Text="Open" Classes="header"></TextBlock>
-                    <ItemsControl ItemsSource="{Binding OpenItems}"></ItemsControl>
+                    <TextBlock Text="Open" Classes="header" />
+                    <ItemsControl ItemsSource="{Binding OpenItems}" />
                 </StackPanel>
 
                 <!-- RECENTS -->
                 <StackPanel Orientation="Vertical" MinWidth="360">
-                    <TextBlock Text="Recents" Classes="header"></TextBlock>
+                    <TextBlock Text="Recents" Classes="header" />
                     <TextBlock Text="No recent projects were found..."
                                Foreground="{DynamicResource ThemeControlHighColor}"
                                Classes.Hide="{Binding !RecentProjectsAreEmpty}">
                         <TextBlock.Styles>
                             <Style Selector="TextBlock">
-                                <Setter Property="IsVisible" Value="True"></Setter>
+                                <Setter Property="IsVisible" Value="True" />
                             </Style>
                             <Style Selector="TextBlock.Hide">
-                                <Setter Property="IsVisible" Value="False"></Setter>
+                                <Setter Property="IsVisible" Value="False" />
                             </Style>
                         </TextBlock.Styles>
                     </TextBlock>
-                    <ItemsControl ItemsSource="{Binding RecentProjects}" MinWidth="180"></ItemsControl>
+                    <ItemsControl ItemsSource="{Binding RecentProjects}" MinWidth="180" />
                 </StackPanel>
             </StackPanel>
 
             <!-- WALKTHROUGH -->
             <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="2">
-                <TextBlock Text="Walkthrough" Classes="header" Margin="0,0,0,4"></TextBlock>
+                <TextBlock Text="Walkthrough" Classes="header" Margin="0,0,0,4" />
                 <ItemsControl ItemsSource="{Binding WalkthroughItems}" MinWidth="320">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Vertical" Spacing="6"></StackPanel>
+                            <StackPanel Orientation="Vertical" Spacing="6" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
@@ -165,8 +159,7 @@
                     HorizontalAlignment="Right">
             <TextBlock Text="OneWare Studio is licensed under the " />
             <controls:HyperLink Label="GPL 3.0 license"
-                                Url="https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#">
-            </controls:HyperLink>
+                                Url="https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#" />
         </StackPanel>
 
         <controls:HyperLink Label="https://one-ware.com" Url="https://one-ware.com" HorizontalAlignment="Left"

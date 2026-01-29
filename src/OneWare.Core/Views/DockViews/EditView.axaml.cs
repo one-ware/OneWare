@@ -14,13 +14,15 @@ using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using DynamicData.Binding;
-using Markdown.Avalonia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Core.Models;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Controls;
 using OneWare.ErrorList.ViewModels;
+using OneWare.Essentials.Controls;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -28,7 +30,6 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using Range = System.Range;
 
 namespace OneWare.Core.Views.DockViews;
@@ -141,11 +142,10 @@ public partial class EditView : UserControl
             i.Handled = true;
         }, RoutingStrategies.Tunnel, true).DisposeWith(_compositeDisposable);
 
-        (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(
-                x =>
-                {
-                    if (!x) HoverBox.Close();
-                })
+        (TopLevel.GetTopLevel(this) as Window)?.WhenValueChanged(x => x.IsKeyboardFocusWithin).Subscribe(x =>
+            {
+                if (!x && !HoverBox.IsPointerOverPopup) HoverBox.Close();
+            })
             .DisposeWith(_compositeDisposable);
     }
 
@@ -513,7 +513,7 @@ public partial class EditView : UserControl
     {
         if (ViewModel?.DisableEditViewEvents ?? true) return;
 
-        if (!HoverBox.IsPointerOverPopup) HoverBox.Close();
+        //if (!HoverBox.IsPointerOver) HoverBox.Close();
     }
 
     private async Task GetControlHoverActionAsync()
@@ -587,10 +587,11 @@ public partial class EditView : UserControl
                 }
                 else if (!string.IsNullOrWhiteSpace(info))
                 {
-                    var markdown = new MarkdownScrollViewer
+                    var markdown = new MarkdownViewer
                     {
-                        Markdown = info
+                        Markdown = info,
                     };
+                    markdown.Classes.Add("ToolTip");
                     HoverBoxContent.Content = markdown;
                 }
             }

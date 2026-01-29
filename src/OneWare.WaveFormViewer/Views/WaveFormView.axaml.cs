@@ -10,7 +10,6 @@ namespace OneWare.WaveFormViewer.Views;
 
 public partial class WaveFormView : UserControl
 {
-    private double _horizontalScrollDelta = 0;
     private bool _pointerPressed;
     private WaveFormViewModel? _viewModel;
     private double _zoomDelta;

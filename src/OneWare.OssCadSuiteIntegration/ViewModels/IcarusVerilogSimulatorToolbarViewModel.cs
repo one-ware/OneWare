@@ -4,15 +4,22 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 
-public class IcarusVerilogSimulatorToolbarViewModel(TestBenchContext context, IFpgaSimulator simulator)
-    : ObservableObject
+public class IcarusVerilogSimulatorToolbarViewModel : ObservableObject
 {
+    private readonly TestBenchContext _context;
+
+    public IcarusVerilogSimulatorToolbarViewModel(TestBenchContext context, IFpgaSimulator simulator)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _ = simulator ?? throw new ArgumentNullException(nameof(simulator));
+    }
+
     public string IcarusVerilogArguments
     {
-        get => context.GetBenchProperty(nameof(IcarusVerilogArguments)) ?? "";
+        get => _context.GetBenchProperty(nameof(IcarusVerilogArguments)) ?? "";
         set
         {
-            context.SetBenchProperty(nameof(IcarusVerilogArguments), value);
+            _context.SetBenchProperty(nameof(IcarusVerilogArguments), value);
             OnPropertyChanged();
         }
     }

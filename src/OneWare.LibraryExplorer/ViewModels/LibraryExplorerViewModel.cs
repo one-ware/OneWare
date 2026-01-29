@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using Dock.Model.Core;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -9,8 +7,6 @@ using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
-using Prism.Ioc;
-using IDockService = OneWare.Essentials.Services.IDockService;
 
 namespace OneWare.LibraryExplorer.ViewModels;
 
@@ -18,32 +14,33 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 {
     public const string IconKey = "BoxIcons.RegularLibrary";
 
-    private string _libraryFolderPath;
-    
     private readonly IFileWatchService _fileWatchService;
-    private readonly IDockService _dockService;
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IDockService dockService, IProjectExplorerService projectExplorerService) : base(IconKey)
+    private readonly string _libraryFolderPath;
+
+    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IMainDockService mainDockService,
+        IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
-        
+
         _fileWatchService = fileWatchService;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
         _libraryFolderPath = Path.Combine(paths.PackagesDirectory, "Libraries");
-        
+
         _ = LoadAsync();
     }
-    
+
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
         _fileWatchService.Register(project);
     }
-    
+
     public void DoubleTab(IProjectEntry entry)
     {
         if (entry is IProjectFile file)
@@ -73,7 +70,6 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         var menuItems = new List<MenuItemViewModel>();
 
         if (SelectedItems is [{ } item])
-        {
             switch (item)
             {
                 case IProjectFile file:
@@ -84,7 +80,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
                     });
                     break;
             }
-        }
+
         if (SelectedItems.Count > 0)
         {
             menuItems.Add(new MenuItemViewModel("Copy to Project")
@@ -99,7 +95,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
             menuItems.Add(new MenuItemViewModel("Refresh")
             {
                 Header = "Refresh",
-                Command = new AsyncRelayCommand(async() => await LoadAsync())
+                Command = new AsyncRelayCommand(async () => await LoadAsync())
             });
             menuItems.Add(new MenuItemViewModel("Open Library Folder")
             {
@@ -107,13 +103,13 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
             });
         }
-        
+
         TreeViewContextMenu = menuItems;
     }
 
     private async Task PreviewFileAsync(IProjectFile file)
     {
-        var extendedDocument = await _dockService.OpenFileAsync(file);
+        var extendedDocument = await _mainDockService.OpenFileAsync(file);
         if (extendedDocument != null)
         {
             extendedDocument.IsReadOnly = true;
@@ -124,8 +120,8 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     private async Task CopyLibraryAsync(params IProjectEntry[] entries)
     {
         var proj = _projectExplorerService.ActiveProject;
-        
-        if(proj == null) return;
+
+        if (proj == null) return;
 
         var libFolder = proj.AddFolder("lib");
 

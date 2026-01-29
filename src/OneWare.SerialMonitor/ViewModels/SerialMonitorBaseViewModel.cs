@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Threading;
+using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Services;
 using OneWare.Output.ViewModels;

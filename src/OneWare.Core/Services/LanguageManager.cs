@@ -2,12 +2,12 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
+using Markdown.Avalonia.SyntaxHigh.Extensions;
 using OneWare.Core.Extensions.TextMate;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
@@ -44,13 +44,13 @@ internal class LanguageManager : ObservableObject, ILanguageManager
                 sub = settingsService.GetSettingObservable<ThemeName>(x).Subscribe(b =>
                 {
                     CurrentEditorTheme = _textMateRegistryOptions.LoadTheme(b);
-                    SyntaxOverride.CurrentEditorTheme = CurrentEditorTheme;
+                    CodeBlockElement.CurrentEditorTheme = CurrentEditorTheme;
                 });
             });
-
-        //Hoverbox hack
-        SyntaxOverride.RegistryOptions = _textMateRegistryOptions;
         
+        //Hoverbox hack
+        CodeBlockElement.RegistryOptions = _textMateRegistryOptions;
+
         applicationStateService.RegisterShutdownTask(CleanResourcesAsync);
     }
 

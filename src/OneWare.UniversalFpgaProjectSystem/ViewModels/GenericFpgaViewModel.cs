@@ -7,13 +7,12 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class GenericFpgaViewModel : FpgaViewModelBase
 {
+    private readonly IDisposable? _fileWatcher;
     private readonly string _guiPath;
 
-    private readonly IDisposable? _fileWatcher;
+    private HardwareGuiViewModel? _guiViewModel;
 
     private bool _isLoading;
-
-    private HardwareGuiViewModel? _guiViewModel;
 
     public GenericFpgaViewModel(FpgaModel fpgaModel, string guiPath) : base(fpgaModel)
     {
