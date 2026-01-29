@@ -10,16 +10,18 @@
     <Panel>
         <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />
         
-        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" Orientation="Horizontal" Spacing="10">
-            <Button  Command="{Binding AcceptAsync}" 
-                     CommandParameter="{Binding $self}" Width="60" Height="30" Classes="RoundButton PrimaryButton">
-                <TextBlock Text="Accept" FontWeight="Bold" />
-            </Button>
-            <Button  Command="{Binding UndoAsync}" 
-                     CommandParameter="{Binding $self}" Width="60" Height="30" Classes="RoundButton SecondaryButton">
-                <TextBlock Text="Undo" FontWeight="Bold" />
-            </Button>
-        </StackPanel>
+        <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" Padding="5" Classes="RoundBorder" Background="{DynamicResource ThemeBackgroundBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button  Command="{Binding AcceptAsync}" 
+                         CommandParameter="{Binding $self}" Width="60" Height="25" Classes="RoundButton PrimaryButton">
+                    <TextBlock Text="Accept" FontWeight="Bold" />
+                </Button>
+                <Button  Command="{Binding UndoAsync}" 
+                         CommandParameter="{Binding $self}" Width="60" Height="25" Classes="RoundButton SecondaryButton">
+                    <TextBlock Text="Undo" FontWeight="Bold" />
+                </Button>
+            </StackPanel>
+        </Border>
 
     </Panel>
 </UserControl>

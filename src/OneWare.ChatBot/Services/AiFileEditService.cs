@@ -14,7 +14,7 @@ public class AiFileEditService(IMainDockService mainDockService)
 {
     public ObservableCollection<AiEditViewModel> ActiveEdits { get; } = new();
     private readonly Dictionary<string, string> _currentEdits = new();
-
+    
     public async Task<string?> ReadFileAsync(string filePath, int? startLine = null, int? lineCount = null)
     {
         var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
@@ -71,9 +71,9 @@ public class AiFileEditService(IMainDockService mainDockService)
                 if (lineCount is null || lineCount < 0)
                     return false;
 
-                await ReplaceLinesInFileAsync(filePath, startLine.Value, lineCount.Value, newContent);
                 var currentContent = _currentEdits.TryGetValue(filePath, out var value) ? value : openTab.Original;
                 var updatedContent = ApplyLineEdit(currentContent, startLine.Value, lineCount.Value, newContent);
+                await File.WriteAllTextAsync(filePath, updatedContent);
                 _currentEdits[filePath] = updatedContent;
                 await openTab.RefreshChanges(updatedContent);
             }
@@ -157,67 +157,6 @@ public class AiFileEditService(IMainDockService mainDockService)
         return builder.ToString();
     }
 
-    private static async Task ReplaceLinesInFileAsync(string filePath, int startLine, int lineCount, string newContent)
-    {
-        var newline = DetectNewLineFromFile(filePath) ?? Environment.NewLine;
-        var originalEndsWithNewLine = FileEndsWithNewLine(filePath);
-
-        var tempPath = Path.GetTempFileName();
-        using var input = new StreamReader(filePath);
-        await using var output = new StreamWriter(tempPath);
-        output.NewLine = newline;
-
-        var lineNumber = 1;
-        var endLineExclusive = startLine + lineCount;
-        var inserted = false;
-
-        while (true)
-        {
-            var line = await input.ReadLineAsync();
-            if (line is null) break;
-
-            if (lineNumber < startLine)
-            {
-                await output.WriteLineAsync(line);
-            }
-            else if (lineNumber >= startLine && lineNumber < endLineExclusive)
-            {
-                // skip lines being replaced
-            }
-            else
-            {
-                if (!inserted)
-                {
-                    await WriteContentLinesAsync(output, newContent);
-                    inserted = true;
-                }
-
-                await output.WriteLineAsync(line);
-            }
-
-            lineNumber++;
-        }
-
-        if (!inserted)
-            await WriteContentLinesAsync(output, newContent);
-
-        await output.FlushAsync();
-        File.Move(tempPath, filePath, true);
-
-        if (!originalEndsWithNewLine)
-            TrimTrailingNewLine(filePath);
-    }
-
-    private static async Task WriteContentLinesAsync(StreamWriter writer, string content)
-    {
-        if (string.IsNullOrEmpty(content))
-            return;
-
-        var lines = SplitLines(content);
-        foreach (var line in lines)
-            await writer.WriteLineAsync(line);
-    }
-
     private static string ApplyLineEdit(string original, int startLine, int lineCount, string newContent)
     {
         var newline = DetectNewLineFromText(original) ?? Environment.NewLine;
@@ -250,52 +189,4 @@ public class AiFileEditService(IMainDockService mainDockService)
         return index > 0 && content[index - 1] == '\r' ? "\r\n" : "\n";
     }
 
-    private static string? DetectNewLineFromFile(string filePath)
-    {
-        using var stream = File.OpenRead(filePath);
-        var previous = -1;
-        while (true)
-        {
-            var current = stream.ReadByte();
-            if (current < 0)
-                return null;
-            if (current == '\n')
-                return previous == '\r' ? "\r\n" : "\n";
-            previous = current;
-        }
-    }
-
-    private static bool FileEndsWithNewLine(string filePath)
-    {
-        using var stream = File.OpenRead(filePath);
-        if (stream.Length == 0)
-            return false;
-
-        stream.Seek(-1, SeekOrigin.End);
-        var last = stream.ReadByte();
-        return last == '\n';
-    }
-
-    private static void TrimTrailingNewLine(string filePath)
-    {
-        using var stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
-        if (stream.Length == 0)
-            return;
-
-        stream.Seek(-1, SeekOrigin.End);
-        var last = stream.ReadByte();
-        if (last != '\n')
-            return;
-
-        long removeCount = 1;
-        if (stream.Length >= 2)
-        {
-            stream.Seek(-2, SeekOrigin.End);
-            var prev = stream.ReadByte();
-            if (prev == '\r')
-                removeCount = 2;
-        }
-
-        stream.SetLength(stream.Length - removeCount);
-    }
 }

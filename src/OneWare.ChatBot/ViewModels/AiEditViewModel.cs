@@ -26,14 +26,19 @@ public class AiEditViewModel : Document, INoSerializeLayout
     public ICollection<ComparisonControlSection>? Chunks
     {
         get => field;
-        set => SetProperty(ref field, value);
+        set
+        {
+            SetProperty(ref field, value);
+            OnPropertyChanged(nameof(AddedLines));
+            OnPropertyChanged(nameof(RemovedLines));
+        }
     }
-    
+
     public string FileName => Path.GetFileName(FullPath);
     
-    public string AddedLines => $"+{Chunks?.Sum(x => x.RightDiff.Where(x => x.Style == DiffContext.Added).Count()) ?? 0}";
+    public string AddedLines => $"+{Chunks?.Sum(x => x.RightDiff.Count(b => b.Style is DiffContext.Added)) ?? 0}";
     
-    public string RemovedLines => $"-{Chunks?.Sum(x => x.RightDiff.Where(x => x.Style == DiffContext.Deleted).Count()) ?? 0}";
+    public string RemovedLines => $"-{Chunks?.Sum(x => x.LeftDiff.Count(b => b.Style is DiffContext.Deleted)) ?? 0}";
 
     public string LanguageExtension { get; }
 

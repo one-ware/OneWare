@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using Microsoft.Extensions.AI;
 using OneWare.ChatBot.Services;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -17,7 +18,22 @@ namespace OneWare.ChatBot.ViewModels;
 public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 {
     public const string IconKey = "MaterialDesign.ChatBubbleOutline";
+    
+    private readonly IMainDockService _mainDockService;
+    private ChatMessageViewModel? _activeAssistantMessage;
+    private bool _initialized;
 
+    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, IMainDockService mainDockService, AiFileEditService aiFileEditService) : base(IconKey)
+    {
+        Id = "AI_Chat";
+        Title = "AI Chat";
+        
+        _mainDockService = mainDockService;
+        aiFunctionProvider.FunctionStarted += OnFunctionStarted;
+        aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
+        AiFileEditService = aiFileEditService;
+    }
+    
     public string CurrentMessage
     {
         get;
@@ -81,20 +97,9 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         }
     }
     
-    private ChatMessageViewModel? _activeAssistantMessage;
-    private bool _initialized;
-
-    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, AiFileEditService aiFileEditService) : base(IconKey)
-    {
-        Id = "AI_Chat";
-        Title = "AI Chat";
-        
-        aiFunctionProvider.FunctionStarted += OnFunctionStarted;
-        aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
-        aiFileEditService = aiFileEditService;
-    }
-    
     public AiFileEditService AiFileEditService { get; }
+
+    public RelayCommand<AiEditViewModel> ShowEditCommand => new(ShowEdit);
 
     public override void InitializeContent()
     {
@@ -339,5 +344,12 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     {
         var toolFinished = Messages.LastOrDefault(x => x.IsToolMessage && x.Message == $"> {functionName}");
         toolFinished?.IsToolRunning = false;
+    }
+
+    public void ShowEdit(AiEditViewModel? editViewModel)
+    {
+        if (editViewModel == null) return;
+        
+        _mainDockService.Show(editViewModel, DockShowLocation.Document);
     }
 }
