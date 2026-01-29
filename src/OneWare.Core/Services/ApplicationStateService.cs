@@ -193,7 +193,18 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         {
             var executablePath = Environment.ProcessPath;
             var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            
+            // Remove last argument if it's not a flag
+            if (args.Length > 0)
+            {
+                var lastArg = args.Last();
 
+                if (!lastArg.StartsWith("-", StringComparison.Ordinal))
+                {
+                    args = args.Take(args.Length - 1).ToArray();
+                }
+            }
+            
             if (string.IsNullOrEmpty(executablePath))
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error("Cannot restart: executable path not found");
