@@ -18,6 +18,8 @@ public class ChatBotModule : OneWareModuleBase
         services.AddSingleton<IAiFunctionProvider>(provider => provider.Resolve<AiFunctionProvider>());
         services.AddSingleton<ChatBotViewModel>();
         services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatBotViewModel>());
+
+        services.AddSingleton<FileEditService>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)

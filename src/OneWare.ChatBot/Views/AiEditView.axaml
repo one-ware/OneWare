@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.ChatBot.Views.AiEditView" x:DataType="viewModels:AiEditViewModel">
+
+    <Panel>
+        <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />
+        
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" Orientation="Horizontal" Spacing="10">
+            <Button  Command="{Binding AcceptAsync}" 
+                     CommandParameter="{Binding $self}" Width="60" Height="30" Classes="RoundButton PrimaryButton">
+                <TextBlock Text="Accept" FontWeight="Bold" />
+            </Button>
+            <Button  Command="{Binding UndoAsync}" 
+                     CommandParameter="{Binding $self}" Width="60" Height="30" Classes="RoundButton SecondaryButton">
+                <TextBlock Text="Undo" FontWeight="Bold" />
+            </Button>
+        </StackPanel>
+
+    </Panel>
+</UserControl>

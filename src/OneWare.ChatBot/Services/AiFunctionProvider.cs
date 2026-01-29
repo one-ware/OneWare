@@ -13,22 +13,36 @@ public class AiFunctionProvider(
     ITerminalManagerService terminalManagerService,
     FileEditService fileEditService) : IAiFunctionProvider
 {
-    public event EventHandler<string>? FunctionUsed;
-    
+    public event EventHandler<string>? FunctionStarted;
+
+    public event EventHandler<string>? FunctionCompleted;
+
     public ICollection<AIFunction> GetTools()
     {
+        var readFile = AIFunctionFactory.Create(
+            ([Description("path of the file to read")] string path) =>
+                WrapWithNotificationUiThread(
+                    $"Read File {Path.GetFileName(path)}",
+                    async () => new
+                    {
+                        result = await fileEditService.ReadFileAsync(path)
+                    }),
+            "readFile",
+            "Read the specified file. This is the only way to read files in the application."
+        );
+
         var editFile = AIFunctionFactory.Create(
-            ([Description("path of the file to edit")] string path, 
-                [Description("new content of the file")] string content) => WrapWithNotification(
+            ([Description("path of the file to edit")] string path,
+                [Description("new text of the file")] string content) => WrapWithNotificationUiThread(
                 $"Edit File {Path.GetFileName(path)}",
-                () => new
+                async () => new
                 {
-                    _ = fileEditService.ProposeEditAsync(path, content)
+                    result = await fileEditService.EditFileAsync(path, content)
                 }),
             "editFile",
-            "Edits the specified file with the provided content."
+            "Replaces the specified file contents with new text. This is the only way to edit files in the application."
         );
-        
+
         var getActiveProject = AIFunctionFactory.Create(
             () => WrapWithNotification(
                 "Get Active Project",
@@ -72,16 +86,17 @@ public class AiFunctionProvider(
         var getErrorsForFile = AIFunctionFactory.Create(
             ([Description("path of the file to get errors")] string path) => WrapWithNotification(
                 $"Get Errors for {Path.GetFileName(path)}",
-                () => new
+                () =>
                 {
-                    errorsForFile = Dispatcher.UIThread.InvokeAsync(() =>
+                    var errors = errorService.GetErrors();
+                    var errorStrings = errors
+                        .Where(x => x.File.FullPath.EqualPaths(path))
+                        .Select(x => x.ToString()).ToArray();
+
+                    return new
                     {
-                        var errors = errorService.GetErrors();
-                        var errorStrings = errors
-                            .Where(x => x.File.FullPath.EqualPaths(path))
-                            .Select(x => x.ToString()).ToArray();
-                        return errorStrings;
-                    })
+                        errorsForFile = errorStrings
+                    };
                 }),
             "getErrorsForFile",
             """
@@ -92,15 +107,16 @@ public class AiFunctionProvider(
         var getErrors = AIFunctionFactory.Create(
             () => WrapWithNotification(
                 "Get Errors",
-                () => new
+                () =>
                 {
-                    errors = Dispatcher.UIThread.InvokeAsync(() =>
+                    var errors = errorService.GetErrors();
+                    var errorStrings = errors
+                        .Select(x => x.ToString()).ToArray();
+
+                    return new
                     {
-                        var errors = errorService.GetErrors();
-                        var errorStrings = errors
-                            .Select(x => x.ToString()).ToArray();
-                        return errorStrings;
-                    })
+                        errors = errorStrings
+                    };
                 }),
             "getAllErrors",
             "Returns all the errors found by LSP"
@@ -112,17 +128,21 @@ public class AiFunctionProvider(
                 string command,
                 [Description("Working directory for execution")]
                 string workDir
-            ) => WrapWithNotification(
+            ) => WrapWithNotificationUiThread(
                 $"Execute In Terminal: {command}",
-                () => new
+                async () =>
                 {
-                    result = Dispatcher.UIThread.InvokeAsync(async () =>
-                        await terminalManagerService.ExecuteInTerminalAsync(
-                            command,
-                            "Copilot",
-                            workDir,
-                            true,
-                            TimeSpan.FromMinutes(1)))
+                    var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
+                        command,
+                        "Copilot",
+                        workDir,
+                        true,
+                        TimeSpan.FromMinutes(1));
+
+                    return new
+                    {
+                        result = terminalResult
+                    };
                 }),
             "runTerminalCommand",
             """
@@ -132,12 +152,62 @@ public class AiFunctionProvider(
             """
         );
 
-        return [getActiveProject, getOpenFiles, getOpenFile, getErrorsForFile, getErrors, executeInTerminal];
+        return
+        [
+            getActiveProject, getOpenFile, getOpenFiles, readFile, editFile, getErrorsForFile, getErrors,
+            executeInTerminal
+        ];
     }
 
-    private T WrapWithNotification<T>(string friendlyName, Func<T> handler)
+    private async Task<T> WrapWithNotification<T>(string friendlyName, Func<T> handler)
     {
-        Dispatcher.UIThread.Post(() => FunctionUsed?.Invoke(this, friendlyName));
-        return handler();
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            try
+            {
+                FunctionStarted?.Invoke(this, friendlyName);
+                return handler();
+            }
+            finally
+            {
+                FunctionCompleted?.Invoke(this, friendlyName);
+            }
+        });
+    }
+
+    private async Task<T> WrapWithNotificationUiThread<T>(
+        string friendlyName,
+        Func<Task<T>> handler)
+    {
+        return await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            try
+            {
+                FunctionStarted?.Invoke(this, friendlyName);
+                return await handler().ConfigureAwait(false);
+            }
+            finally
+            {
+                FunctionCompleted?.Invoke(this, friendlyName);
+            }
+        });
+    }
+
+    private async Task<T> WrapWithNotification<T>(
+        string friendlyName,
+        Func<Task<T>> handler)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            FunctionStarted?.Invoke(this, friendlyName));
+
+        try
+        {
+            return await handler().ConfigureAwait(false);
+        }
+        finally
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                FunctionCompleted?.Invoke(this, friendlyName));
+        }
     }
 }

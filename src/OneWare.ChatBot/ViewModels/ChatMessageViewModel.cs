@@ -31,7 +31,9 @@ public class ChatMessageViewModel : ObservableObject
 
     public bool IsAssistant => !IsUser;
 
-    public bool IsToolMessage
+    public bool IsToolMessage { get; init; }
+    
+    public bool IsToolRunning
     {
         get;
         set => SetProperty(ref field, value);

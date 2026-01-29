@@ -1,17 +1,57 @@
+using Dock.Model.Mvvm.Controls;
+using Microsoft.Extensions.Logging;
+using OneWare.ChatBot.Services;
+using OneWare.Essentials.Controls;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ChatBot.ViewModels;
 
-public class AiEditViewModel : ExtendedDocument
+public class AiEditViewModel : Document, INoSerializeLayout
 {
-    public AiEditViewModel(string fullPath, IProjectExplorerService projectExplorerService, IMainDockService mainDockService, IWindowService windowService) : base(fullPath, projectExplorerService, mainDockService, windowService)
+    public string Original { get; set; }
+
+    public AiEditViewModel(string filePath, string originalText)
     {
+        FullPath = filePath;
+        Original = originalText;
+        Title = $"Edit {Path.GetFileName(filePath)}";
+        LanguageExtension = Path.GetExtension(filePath);
     }
 
-    protected override void UpdateCurrentFile(IFile? oldFile)
+    public string FullPath { get; }
+
+    public ICollection<ComparisonControlSection>? Chunks
     {
-        
+        get => field;
+        set => SetProperty(ref field, value);
+    }
+
+    public string LanguageExtension { get; }
+
+    public async Task RefreshChanges(string modifiedText)
+    {
+        try
+        {
+            if (Original == null) throw new NullReferenceException(nameof(Original));
+
+            Chunks = await Task.Run(() => DiffHelper.BuildDiff(Original, modifiedText));
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+    }
+
+    public async Task UndoAsync()
+    {
+        await ContainerLocator.Container.Resolve<FileEditService>().UndoAsync(this);
+    }
+    
+    public async Task AcceptAsync()
+    {
+        await ContainerLocator.Container.Resolve<FileEditService>().AcceptAsync(this);
     }
 }

@@ -4,6 +4,7 @@ namespace OneWare.Essentials.Services;
 
 public interface IAiFunctionProvider
 {
-    event EventHandler<string>? FunctionUsed;
+    event EventHandler<string>? FunctionStarted;
+    event EventHandler<string>? FunctionCompleted;
     ICollection<AIFunction> GetTools();
 }

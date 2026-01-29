@@ -89,14 +89,14 @@ public class ComparisonControl : TemplatedControl
     {
         base.OnDetachedFromLogicalTree(e);
         _compositeDisposable.Dispose();
+        DetachTemplateHandlers();
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-
         DetachTemplateHandlers();
-
+        
         _diffEditor = e.NameScope.Find<TextEditor>("DiffEditor");
         _headEditor = e.NameScope.Find<TextEditor>("HeadEditor");
         _scrollLeft = e.NameScope.Find<ScrollViewer>("ScrollLeft");
@@ -130,7 +130,8 @@ public class ComparisonControl : TemplatedControl
             _headEditor.TextArea.TextView.ScrollOffsetChanged += OnHeadScrollOffsetChanged;
         }
         
-        ApplyLanguage();
+        if(Language != null) ApplyLanguage();
+        if(Chunks != null) ApplyChunks();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

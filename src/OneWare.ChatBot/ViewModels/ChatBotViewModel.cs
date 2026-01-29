@@ -84,12 +84,13 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
-    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider, IWindowService windowService) : base(IconKey)
+    public ChatBotViewModel(IAiFunctionProvider aiFunctionProvider) : base(IconKey)
     {
         Id = "AI_Chat";
         Title = "AI Chat";
         
-        aiFunctionProvider.FunctionUsed += OnFunctionUsed;
+        aiFunctionProvider.FunctionStarted += OnFunctionStarted;
+        aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
     }
 
     public override void InitializeContent()
@@ -313,23 +314,27 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         ChatServices.Add(chatService);
     }
 
-    private void OnFunctionUsed(object? sender, string functionName)
+    private void OnFunctionStarted(object? sender, string functionName)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var lastMessageStreaming = Messages.LastOrDefault(x => x.IsStreaming);
+        var lastMessageStreaming = Messages.LastOrDefault(x => x.IsStreaming);
  
-            var newMessage = new ChatMessageViewModel(string.Empty, false)
-            {
-                Message = $"> {functionName}",
-                IsToolMessage = true
-            };
+        var newMessage = new ChatMessageViewModel(string.Empty, false)
+        {
+            Message = $"> {functionName}",
+            IsToolMessage = true,
+            IsToolRunning = true
+        };
             
-            if (lastMessageStreaming != null)
-            {
-                Messages.Insert(Messages.IndexOf(lastMessageStreaming), newMessage);
-            }
-            else Messages.Add(newMessage);
-        });
+        if (lastMessageStreaming != null)
+        {
+            Messages.Insert(Messages.IndexOf(lastMessageStreaming), newMessage);
+        }
+        else Messages.Add(newMessage);
+    }
+    
+    private void OnFunctionCompleted(object? sender, string functionName)
+    {
+        var toolFinished = Messages.LastOrDefault(x => x.IsToolMessage && x.Message == $"> {functionName}");
+        toolFinished?.IsToolRunning = false;
     }
 }

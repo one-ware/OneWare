@@ -57,8 +57,11 @@
 
         <StackPanel Spacing="6">
 
-            <TextBlock Text="{Binding Message}" IsVisible="{Binding IsToolMessage}" FontSize="10" />
-            
+            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsToolMessage}">
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" IsVisible="{Binding IsToolRunning}" />
+            </StackPanel>
+
             <!-- Message content -->
             <controls:MarkdownViewer IsVisible="{Binding !IsToolMessage}" Markdown="{Binding Message}" />
 
