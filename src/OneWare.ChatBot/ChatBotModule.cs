@@ -26,7 +26,10 @@ public class ChatBotModule : OneWareModuleBase
     {
         var dockService = serviceProvider.Resolve<IMainDockService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
-
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        
+        settingsService.RegisterSettingCategory("AI Chat", 0, "Bootstrap.ChatLeft");
+        
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.Right);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("AI Chat")

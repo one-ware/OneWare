@@ -17,7 +17,7 @@ namespace OneWare.ChatBot.ViewModels;
 
 public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 {
-    public const string IconKey = "MaterialDesign.ChatBubbleOutline";
+    public const string IconKey = "Bootstrap.ChatLeft";
     
     private readonly IMainDockService _mainDockService;
     private ChatMessageViewModel? _activeAssistantMessage;
@@ -113,7 +113,19 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     {
         await chatService.InitializeAsync();
     }
-
+    
+    [RelayCommand]
+    private async Task NewChatAsync()
+    {
+        if (SelectedChatService != null)
+        {
+            await AbortAsync();
+            await SelectedChatService.NewChatAsync();
+        }
+        
+        Messages.Clear();
+    }
+    
     [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
     {
@@ -122,24 +134,18 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
 
         if (SelectedChatService == null)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            Messages.Add(new ChatMessageViewModel("System", false)
             {
-                Messages.Add(new ChatMessageViewModel("System", false)
-                {
-                    Message = "No ChatService Selected"
-                });
+                Message = "No ChatService Selected"
             });
             return;
         }
         
         if (!IsConnected)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            Messages.Add(new ChatMessageViewModel("System", false)
             {
-                Messages.Add(new ChatMessageViewModel("System", false)
-                {
-                    Message = $"{SelectedChatService.Name} is not connected yet."
-                });
+                Message = $"{SelectedChatService.Name} is not connected yet."
             });
             return;
         }
@@ -150,11 +156,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         };
         var assistantMessage = CreateAssistantMessage();
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            Messages.Add(userMessage);
-            Messages.Add(assistantMessage);
-        });
+        Messages.Add(userMessage);
+        Messages.Add(assistantMessage);
 
         _activeAssistantMessage = assistantMessage;
         CurrentMessage = string.Empty;
@@ -166,12 +169,9 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         }
         catch (Exception ex)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                assistantMessage.IsStreaming = false;
-                assistantMessage.Message = $"**Error:** {ex.Message}";
-                IsBusy = false;
-            });
+            assistantMessage.IsStreaming = false;
+            assistantMessage.Message = $"**Error:** {ex.Message}";
+            IsBusy = false;
         }
     }
 

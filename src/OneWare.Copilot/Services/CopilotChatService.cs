@@ -11,6 +11,7 @@ using OneWare.Essentials.Services;
 namespace OneWare.Copilot.Services;
 
 public sealed class CopilotChatService(
+    ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
     IPaths paths)
     : ObservableObject, IChatService
@@ -41,6 +42,8 @@ public sealed class CopilotChatService(
 
     public async Task InitializeAsync()
     {
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+        
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
 
@@ -49,6 +52,7 @@ public sealed class CopilotChatService(
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 Cwd = paths.ProjectsDirectory,
+                CliPath = cliPath
             });
 
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Starting Copilot..."));
@@ -80,17 +84,24 @@ public sealed class CopilotChatService(
         }
     }
 
-    private async Task InitializeSessionAsync(string model)
+    private async Task InitializeSessionAsync()
     {
         if (_client == null) return;
 
         await DisposeSessionAsync();
 
-        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connecting to {model}..."));
+        if (SelectedModel == null)
+        {
+            MessageReceived?.Invoke(this,
+                new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
+            return;
+        }
+        
+        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
-            Model = model,
+            Model = SelectedModel.ToString(),
             Streaming = true,
             SystemMessage = new SystemMessageConfig
             {
@@ -117,7 +128,7 @@ public sealed class CopilotChatService(
 
         StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
 
-        _initializedModel = model;
+        _initializedModel = SelectedModel.Id;
         _subscription = _session.On(HandleSessionEvent);
     }
 
@@ -132,7 +143,7 @@ public sealed class CopilotChatService(
         
         if (_session == null || SelectedModel.Id != _initializedModel)
         {
-            await InitializeSessionAsync(SelectedModel.Id);
+            await InitializeSessionAsync();
         }
 
         if (_session == null) return;
@@ -142,7 +153,12 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         if (_session == null) return;
-        await _session.AbortAsync().ConfigureAwait(false);
+        await _session.AbortAsync();
+    }
+
+    public async Task NewChatAsync()
+    {
+        await InitializeSessionAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -162,7 +178,7 @@ public sealed class CopilotChatService(
 
         if (_session != null)
         {
-            await _session.DisposeAsync().ConfigureAwait(false);
+            await _session.DisposeAsync();
             _session = null;
             _initializedModel = null;
         }

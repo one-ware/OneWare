@@ -15,4 +15,5 @@ public interface IChatService : IAsyncDisposable
     Task InitializeAsync();
     Task SendAsync(string prompt);
     Task AbortAsync();
+    Task NewChatAsync();
 }

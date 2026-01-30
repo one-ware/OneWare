@@ -189,7 +189,7 @@ public class CppModule : OneWareModuleBase
 
         serviceProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "C++", LspPathSetting,
             new FilePathSetting("Clangd Path", "", null,
-                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile)
+                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath, PlatformHelper.ExeFile)
             {
                 HoverDescription = "Path for clangd executable"
             });
