@@ -8,14 +8,14 @@ namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 {
-    public string Name => "Yosys";
+    public virtual string Name => "Yosys";
 
-    public void OnProjectCreated(UniversalFpgaProjectRoot project)
+    public virtual void OnProjectCreated(UniversalFpgaProjectRoot project)
     {
         YosysSettingHelper.UpdateProjectProperties(project, null);
     }
 
-    public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         try
         {
@@ -52,7 +52,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
     }
 
-    public void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual void SaveConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         var pcfPath = Path.Combine(project.FullPath, YosysSettingHelper.GetConstraintFile(project));
 
@@ -78,22 +78,22 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
         }
     }
 
-    public Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         return yosysService.CompileAsync(project, fpga);
     }
 
-    public Task<bool> SynthesisAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual Task<bool> SynthesisAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         return yosysService.SynthAsync(project, fpga);
     }
 
-    public Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         return yosysService.FitAsync(project, fpga);
     }
 
-    public Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
+    public virtual Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         return yosysService.AssembleAsync(project, fpga);
     }
