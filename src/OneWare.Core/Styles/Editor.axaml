@@ -3,12 +3,12 @@
         xmlns:cc="clr-namespace:AvaloniaEdit.CodeCompletion;assembly=AvaloniaEdit"
         xmlns:search="clr-namespace:AvaloniaEdit.Search;assembly=AvaloniaEdit"
         xmlns:editing="clr-namespace:AvaloniaEdit.Editing;assembly=AvaloniaEdit"
-        xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
         xmlns:editorEx="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
         xmlns:snippets="clr-namespace:AvaloniaEdit.Snippets;assembly=AvaloniaEdit"
-        xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia">
+        xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
 
     <Design.PreviewWith>
         <Border Padding="20">
@@ -32,9 +32,8 @@
     <Style Selector="cc|CompletionList">
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="{DynamicResource ThemeBackgroundBrush}" CornerRadius="3" BorderThickness="1"
+                <Border Background="{DynamicResource ThemeBackgroundBrush}" Classes="RoundBorder"
                         Padding="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                         IsVisible="{Binding $parent[cc:CompletionWindow].IsVisible}">
                     <cc:CompletionListBox ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -100,8 +99,8 @@
                             BorderThickness="1"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             Background="{TemplateBinding Background}">
-                        <md:MarkdownScrollViewer Markdown="{TemplateBinding Content}">
-                            <md:MarkdownScrollViewer.Styles>
+                        <controls:MarkdownViewer Markdown="{TemplateBinding Content}">
+                            <controls:MarkdownViewer.Styles>
                                 <Style Selector="avaloniaEdit|TextEditor">
                                     <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                     <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
@@ -110,8 +109,8 @@
                                     <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                     <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                 </Style>
-                            </md:MarkdownScrollViewer.Styles>
-                        </md:MarkdownScrollViewer>
+                            </controls:MarkdownViewer.Styles>
+                        </controls:MarkdownViewer>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -175,10 +174,10 @@
                         </Border>
 
                         <Border Grid.Row="0" Grid.Column="1" Padding="5">
-                            <md:MarkdownScrollViewer VerticalAlignment="Center" MaxWidth="800"
+                            <controls:MarkdownViewer VerticalAlignment="Center" MaxWidth="800"
                                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
-                                <md:MarkdownScrollViewer.Styles>
+                                <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">
                                         <Setter Property="WordWrap" Value="True" />
                                         <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
@@ -189,17 +188,17 @@
                                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                     </Style>
-                                </md:MarkdownScrollViewer.Styles>
-                            </md:MarkdownScrollViewer>
+                                </controls:MarkdownViewer.Styles>
+                            </controls:MarkdownViewer>
                         </Border>
 
                         <Border
                             IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <md:MarkdownScrollViewer VerticalAlignment="Center"
+                            <controls:MarkdownViewer VerticalAlignment="Center"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
-                                <md:MarkdownScrollViewer.Styles>
+                                <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">
                                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
@@ -208,8 +207,8 @@
                                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                     </Style>
-                                </md:MarkdownScrollViewer.Styles>
-                            </md:MarkdownScrollViewer>
+                                </controls:MarkdownViewer.Styles>
+                            </controls:MarkdownViewer>
                         </Border>
                     </Grid>
                 </Border>
@@ -223,7 +222,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <TextBox Background="{DynamicResource ThemeControlLowBrush}" Name="inputBox" IsReadOnly="False" />
+                    <TextBox Name="inputBox" IsReadOnly="False" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

@@ -1,12 +1,12 @@
-﻿using OneWare.Essentials.Helpers;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Cpp;
 
-public class CppModule : IModule
+public class CppModule : OneWareModuleBase
 {
     public const string LspName = "clangd";
     public const string LspPathSetting = "CppModule_ClangdPath";
@@ -179,21 +179,24 @@ public class CppModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerProvider.Resolve<IPackageService>().RegisterPackage(ClangdPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(ClangdPackage);
 
-        containerProvider.Resolve<ISettingsService>().RegisterTitledFilePath("Languages", "C++", LspPathSetting,
-            "Clangd Path", "Path for clangd executable", "", null,
-            containerProvider.Resolve<IPaths>().NativeToolsDirectory, File.Exists, PlatformHelper.ExeFile);
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "C++", LspPathSetting,
+            new FilePathSetting("Clangd Path", "", null,
+                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath, PlatformHelper.ExeFile)
+            {
+                HoverDescription = "Path for clangd executable"
+            });
 
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
+        serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
 
-        containerProvider.Resolve<ILanguageManager>()
+        serviceProvider.Resolve<ILanguageManager>()
             .RegisterService(typeof(LanguageServiceCpp), false, ".cpp", ".h", ".c", ".hpp");
     }
 }

@@ -1,13 +1,13 @@
 ﻿using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
@@ -18,9 +18,9 @@ public class BackupService
 
     private readonly string _backupFolder;
     private readonly string _backupRegistryFile;
-
-    private readonly IDockService _dockService;
     private readonly ILogger _logger;
+
+    private readonly IMainDockService _mainDockService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
@@ -28,17 +28,17 @@ public class BackupService
 
     private DispatcherTimer? _timer;
 
-    public BackupService(IPaths paths, IDockService dockService, ISettingsService settingsService,
+    public BackupService(IPaths paths, IMainDockService mainDockService, ISettingsService settingsService,
         ILogger logger, IWindowService windowService, IApplicationStateService applicationStateService)
     {
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _logger = logger;
         _windowService = windowService;
         _settingsService = settingsService;
 
         _backupFolder = Path.Combine(paths.AppDataDirectory, "Backups");
         _backupRegistryFile = Path.Combine(_backupFolder, "BackupRegistry.json");
-        
+
         applicationStateService.RegisterShutdownAction(CleanUp);
     }
 
@@ -110,13 +110,13 @@ public class BackupService
     private void Save()
     {
         var closedFiles =
-            _backups.Where(x => !_dockService.OpenFiles.Any(b => b.Key.FullPath.EqualPaths(x.RealPath)));
+            _backups.Where(x => !_mainDockService.OpenFiles.Any(b => b.Key.FullPath.EqualPaths(x.RealPath)));
 
         foreach (var closedFile in closedFiles.ToList()) RemoveBackup(closedFile);
 
         Directory.CreateDirectory(_backupFolder);
 
-        foreach (var doc in _dockService.OpenFiles)
+        foreach (var doc in _mainDockService.OpenFiles)
             if (doc.Value is EditViewModel { IsDirty: true } evm)
                 try
                 {
@@ -170,13 +170,13 @@ public class BackupService
             {
                 if (backup.SaveTime > file.LastSaveTime)
                 {
-                    var dockable = await _dockService.OpenFileAsync(file);
+                    var dockable = await _mainDockService.OpenFileAsync(file);
 
                     if (dockable is not EditViewModel evm) continue;
 
                     var result = await _windowService.ShowYesNoAsync("Warning",
                         $"There is a more recent version of {file.Name} stored in backups! Do you  want to restore it?",
-                        MessageBoxIcon.Warning, _dockService.GetWindowOwner(dockable));
+                        MessageBoxIcon.Warning, _mainDockService.GetWindowOwner(dockable));
 
                     if (result == MessageBoxStatus.Yes)
                         try
@@ -186,8 +186,7 @@ public class BackupService
 
                             evm.CurrentDocument.Text = backupText;
 
-                            _logger.Log("File " + file.Name + " restored from backup!",
-                                ConsoleColor.Green, true, Brushes.Green);
+                            _logger.Log("File " + file.Name + " restored from backup!", true, Brushes.Green);
                         }
                         catch (Exception e)
                         {

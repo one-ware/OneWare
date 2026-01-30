@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 
@@ -73,7 +73,7 @@ public abstract class FpgaExtensionBase : IFpgaExtension
                         var name = pin["name"]?.ToString();
                         var pinName = pin["pin"]?.ToString();
 
-                        if (name == null) throw new Exception($"interface name not defined");
+                        if (name == null) throw new Exception("interface name not defined");
                         if (pinName == null) throw new Exception($"pinname not found in interface {name}");
 
                         newInterface.Pins.Add(new HardwareInterfacePin(name, pinName));
@@ -84,7 +84,7 @@ public abstract class FpgaExtensionBase : IFpgaExtension
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message,e);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
     }
 }

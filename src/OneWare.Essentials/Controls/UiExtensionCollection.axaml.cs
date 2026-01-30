@@ -16,8 +16,8 @@ public class UiExtensionCollection : TemplatedControl
     public static readonly StyledProperty<object?> ContextProperty =
         AvaloniaProperty.Register<UiExtensionControl, object?>(nameof(Context));
 
-    public static readonly StyledProperty<ObservableCollection<UiExtension>?> ExtensionsProperty =
-        AvaloniaProperty.Register<UiExtensionCollection, ObservableCollection<UiExtension>?>(nameof(Extensions));
+    public static readonly StyledProperty<ObservableCollection<OneWareUiExtension>?> ExtensionsProperty =
+        AvaloniaProperty.Register<UiExtensionCollection, ObservableCollection<OneWareUiExtension>?>(nameof(Extensions));
 
     public static readonly StyledProperty<ITemplate<Panel?>> ItemsPanelProperty =
         AvaloniaProperty.Register<UiExtensionCollection, ITemplate<Panel?>>(nameof(ItemsPanel), DefaultPanel);
@@ -28,7 +28,7 @@ public class UiExtensionCollection : TemplatedControl
         set => SetValue(ContextProperty, value);
     }
 
-    public ObservableCollection<UiExtension>? Extensions
+    public ObservableCollection<OneWareUiExtension>? Extensions
     {
         get => GetValue(ExtensionsProperty);
         set => SetValue(ExtensionsProperty, value);

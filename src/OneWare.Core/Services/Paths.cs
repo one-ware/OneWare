@@ -1,11 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using ImTools;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using OneWare.Essentials.Models;
 
 namespace OneWare.Core.Services;
 
@@ -18,18 +14,19 @@ public class Paths : IPaths
         AppName = appName;
         AppIconPath = appIconPath;
         AppFolderName = appName.Replace(" ", "");
-        
-        DocumentsDirectory = Environment.GetEnvironmentVariable("ONEWARE_DIR") ?? 
-                           Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AppFolderName);
-        
-        AppDataDirectory = Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR") ?? 
-                             Path.Combine(Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) 
-                                 ? Environment.SpecialFolder.LocalApplicationData 
-                                 : Environment.SpecialFolder.ApplicationData), AppFolderName);
-        
-        ProjectsDirectory = Environment.GetEnvironmentVariable("ONEWARE_PROJECTS_DIR") 
+
+        DocumentsDirectory = Environment.GetEnvironmentVariable("ONEWARE_DIR") ??
+                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                                 AppFolderName);
+
+        AppDataDirectory = Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR") ??
+                           Path.Combine(Environment.GetFolderPath(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                               ? Environment.SpecialFolder.LocalApplicationData
+                               : Environment.SpecialFolder.ApplicationData), AppFolderName);
+
+        ProjectsDirectory = Environment.GetEnvironmentVariable("ONEWARE_PROJECTS_DIR")
                             ?? Path.Combine(DocumentsDirectory, "Projects");
-        
+
         Directory.CreateDirectory(AppDataDirectory);
         Directory.CreateDirectory(DocumentsDirectory);
         Directory.CreateDirectory(PackagesDirectory);
@@ -65,7 +62,7 @@ public class Paths : IPaths
     public string DocumentsDirectory { get; }
 
     public string ProjectsDirectory { get; }
-    
+
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
     public string NativeToolsDirectory => Path.Combine(PackagesDirectory, "NativeTools");

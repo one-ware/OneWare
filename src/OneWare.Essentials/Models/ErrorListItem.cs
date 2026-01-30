@@ -1,4 +1,5 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using System.Text;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
@@ -82,5 +83,39 @@ public class ErrorListItem(
     public override bool Equals(object? obj)
     {
         return Equals(obj as ErrorListItem);
+    }
+
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("Type=").Append(Type);
+        builder.Append("; Description=").Append(Description);
+        if (!string.IsNullOrWhiteSpace(Source))
+        {
+            builder.Append("; Source=").Append(Source);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Code))
+        {
+            builder.Append("; Code=").Append(Code);
+        }
+
+        builder.Append("; StartLine=").Append(StartLine);
+        builder.Append("; StartColumn=").Append(StartColumn?.ToString() ?? "null");
+        builder.Append("; EndLine=").Append(EndLine?.ToString() ?? "null");
+        builder.Append("; EndColumn=").Append(EndColumn?.ToString() ?? "null");
+
+        builder.Append("; FileName=").Append(File.Name);
+        builder.Append("; FilePath=").Append(File.FullPath);
+        builder.Append("; FileExtension=").Append(File.Extension);
+
+        if (Root != null)
+        {
+            builder.Append("; ProjectTypeId=").Append(Root.ProjectTypeId);
+            builder.Append("; ProjectPath=").Append(Root.ProjectPath);
+            builder.Append("; RootFolderPath=").Append(Root.RootFolderPath);
+        }
+
+        return builder.ToString();
     }
 }

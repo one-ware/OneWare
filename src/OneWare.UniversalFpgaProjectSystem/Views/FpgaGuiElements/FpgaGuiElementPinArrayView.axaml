@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fpgaGuiElements="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels.FpgaGuiElements"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" ClipToBounds="False"
-             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinArrayView" x:DataType="fpgaGuiElements:FpgaGuiElementPinArrayViewModel">
+             x:Class="OneWare.UniversalFpgaProjectSystem.Views.FpgaGuiElements.FpgaGuiElementPinArrayView"
+             x:DataType="fpgaGuiElements:FpgaGuiElementPinArrayViewModel">
     <UserControl.RenderTransform>
-        <RotateTransform Angle="{Binding Rotation}"/>
+        <RotateTransform Angle="{Binding Rotation}" />
     </UserControl.RenderTransform>
     <ItemsControl Classes.Horizontal="{Binding IsHorizontal}" ItemsSource="{Binding Pins}" ClipToBounds="False">
         <ItemsControl.ItemsPanel>
@@ -15,9 +16,10 @@
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.Styles>
-            <Style Selector="ItemsControl.Horizontal > ContentPresenter" x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
-                <Setter Property="Height" Value="{Binding Width}"/>
-                <Setter Property="Width" Value="{Binding Height}"/>
+            <Style Selector="ItemsControl.Horizontal > ContentPresenter"
+                   x:DataType="fpgaGuiElements:FpgaGuiElementPinViewModel">
+                <Setter Property="Height" Value="{Binding Width}" />
+                <Setter Property="Width" Value="{Binding Height}" />
             </Style>
         </ItemsControl.Styles>
     </ItemsControl>

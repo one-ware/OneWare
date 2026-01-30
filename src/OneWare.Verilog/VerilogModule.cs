@@ -1,4 +1,4 @@
-﻿using OneWare.Essentials.Enums;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -6,12 +6,10 @@ using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Verilog.Parsing;
 using OneWare.Verilog.Templates;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Verilog;
 
-public class VerilogModule : IModule
+public class VerilogModule : OneWareModuleBase
 {
     public const string LspName = "Verible";
     public const string LspPathSetting = "VerilogModule_VeriblePath";
@@ -53,7 +51,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-win64.zip",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-win64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -67,7 +66,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-linux-static-x86_64.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -80,7 +80,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-macOS.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3582-g25611a89/verible-v0.0-3582-g25611a89-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -101,7 +102,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-win64.zip",
                         AutoSetting =
                         [
@@ -116,7 +117,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -130,7 +131,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-macOS.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3716-g914652db/verible-v0.0-3716-g914652db-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -143,7 +145,7 @@ public class VerilogModule : IModule
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.0.3836",
                 Targets =
@@ -151,7 +153,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-win64.zip",
                         AutoSetting =
                         [
@@ -166,7 +168,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -180,7 +182,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-macOS.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-3836-g86ee9bab/verible-v0.0-3836-g86ee9bab-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -193,7 +196,7 @@ public class VerilogModule : IModule
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.0.4003",
                 Targets =
@@ -201,7 +204,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-win64.zip",
                         AutoSetting =
                         [
@@ -216,7 +219,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -230,7 +233,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-macOS.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4003-gd42da6b9/verible-v0.0-4003-gd42da6b9-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -243,7 +247,7 @@ public class VerilogModule : IModule
                     }
                 ]
             },
-            new PackageVersion()
+            new PackageVersion
             {
                 Version = "0.0.4023",
                 Targets =
@@ -251,7 +255,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-win64.zip",
                         AutoSetting =
                         [
@@ -266,7 +270,7 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = 
+                        Url =
                             "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-linux-static-x86_64.tar.gz",
                         AutoSetting =
                         [
@@ -280,7 +284,8 @@ public class VerilogModule : IModule
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-macOS.tar.gz",
+                        Url =
+                            "https://github.com/chipsalliance/verible/releases/download/v0.0-4023-gc1271a00/verible-v0.0-4023-gc1271a00-macOS.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -296,34 +301,35 @@ public class VerilogModule : IModule
         ]
     };
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var settingsService = containerProvider.Resolve<ISettingsService>();
-        var fpgaService = containerProvider.Resolve<FpgaService>();
-        
-        fpgaService.RegisterLanguage("Verilog", SupportedExtensions);
-        
-        containerProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var fpgaService = serviceProvider.Resolve<FpgaService>();
 
-        var pathSetting = new FilePathSetting("Verible Path", "", null, containerProvider.Resolve<IPaths>().PackagesDirectory,
+        fpgaService.RegisterLanguage("Verilog", SupportedExtensions);
+
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
+
+        var pathSetting = new FilePathSetting("Verible Path", "", null,
+            serviceProvider.Resolve<IPaths>().PackagesDirectory,
             File.Exists, PlatformHelper.ExeFile);
         settingsService.RegisterSetting("Languages", "Verilog", LspPathSetting, pathSetting);
-        settingsService.RegisterSetting("Languages", "Verilog", EnableSnippetsSetting, 
+        settingsService.RegisterSetting("Languages", "Verilog", EnableSnippetsSetting,
             new CheckBoxSetting("Enable Snippets", true));
-        
-        containerProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
-        containerProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",
+
+        serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
+        serviceProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("verilog",
             "avares://OneWare.Verilog/Assets/verilog.tmLanguage.json", SupportedExtensions);
-        containerProvider.Resolve<ILanguageManager>()
+        serviceProvider.Resolve<ILanguageManager>()
             .RegisterService(typeof(LanguageServiceVerilog), true, SupportedExtensions);
-        
+
         fpgaService.RegisterTemplate<VerilogBlinkTemplate>();
         fpgaService.RegisterTemplate<VerilogBlinkSimulationTemplate>();
-        
+
         fpgaService.RegisterNodeProvider<VerilogNodeProvider>();
     }
 }

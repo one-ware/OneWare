@@ -10,7 +10,7 @@ public class HardwarePin
     }
 
     public string Name { get; }
-    
+
     public string? InterfacePin { get; }
 
     public string? Description { get; }

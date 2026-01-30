@@ -52,7 +52,7 @@ public class RemoveClassAction : AvaloniaObject, IAction
         if (target is null || string.IsNullOrEmpty(ClassName)) return false;
 
         if (target.Classes.Contains(ClassName)) target.Classes.Remove(ClassName);
-        
+
         return true;
     }
 }

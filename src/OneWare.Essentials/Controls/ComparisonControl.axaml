@@ -1,0 +1,112 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:OneWare.Essentials.Controls"
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+        xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels">
+    <Design.PreviewWith>
+        <controls:ComparisonControl />
+    </Design.PreviewWith>
+    
+    <Style Selector="controls|ComparisonControl avaloniaEdit|TextEditor">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="ShowLineNumbers" Value="True" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+    </Style>
+
+    <Style Selector="controls|ComparisonControl GridSplitter">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="1, 0, 1, 0" />
+    </Style>
+
+    <Style Selector="controls|ComparisonControl">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Name="RootGrid" ColumnDefinitions="*,6,*">
+                    <avaloniaEdit:TextEditor Name="HeadEditor"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             VerticalScrollBarVisibility="Visible"
+                                             Foreground="{DynamicResource ThemeEditorBrush}"
+                                             IsReadOnly="True" IsVisible="False">
+                        <avaloniaEdit:TextEditor.Styles>
+                            <Style Selector="ScrollBar:vertical">
+                                <Setter Property="Cursor" Value="Arrow" />
+                                <Setter Property="Template">
+                                    <ControlTemplate>
+                                        <Border Background="Transparent"
+                                                UseLayoutRounding="False">
+                                            <Grid RowDefinitions="*">
+                                                <controls:ScrollBarRenderer CodeBox="{Binding #HeadEditor}"
+                                                                            ScrollInfo="{Binding $parent[controls:ComparisonControl].ScrollInfoLeft}"
+                                                                            IsHitTestVisible="False" />
+                                                <Track Minimum="{TemplateBinding Minimum}"
+                                                       Maximum="{TemplateBinding Maximum}"
+                                                       Value="{TemplateBinding Value, Mode=TwoWay}"
+                                                       ViewportSize="{TemplateBinding ViewportSize}"
+                                                       Orientation="{TemplateBinding Orientation}"
+                                                       IsDirectionReversed="True">
+                                                    <Thumb Name="thumb" />
+                                                </Track>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter>
+                            </Style>
+                        </avaloniaEdit:TextEditor.Styles>
+                    </avaloniaEdit:TextEditor>
+
+                    <ScrollViewer Grid.Column="0" Name="ScrollLeft" Offset="{Binding #ScrollRight.Offset, Mode=TwoWay}"
+                                  HorizontalScrollBarVisibility="Visible" AllowAutoHide="True">
+                        <Grid Name="LeftSide" />
+                    </ScrollViewer>
+
+                    <GridSplitter Background="{DynamicResource ThemeBackgroundBrush}"
+                                  BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                  VerticalAlignment="Stretch" Grid.Column="1" BorderThickness="1, 0, 1, 0" />
+
+                    <ScrollViewer Name="ScrollRight" Grid.Column="2" HorizontalScrollBarVisibility="Visible"
+                                  AllowAutoHide="True">
+                        <Grid Name="RightSide" />
+                    </ScrollViewer>
+
+                    <avaloniaEdit:TextEditor Name="DiffEditor" Grid.Column="2"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             VerticalScrollBarVisibility="Visible"
+                                             Foreground="{DynamicResource ThemeEditorBrush}"
+                                             IsReadOnly="True" IsVisible="False">
+                        <avaloniaEdit:TextEditor.Styles>
+                            <Style Selector="ScrollBar:vertical">
+                                <Setter Property="Cursor" Value="Arrow" />
+                                <Setter Property="Template">
+                                    <ControlTemplate>
+                                        <Border Background="Transparent"
+                                                UseLayoutRounding="False">
+                                            <Grid RowDefinitions="*">
+                                                <controls:ScrollBarRenderer CodeBox="{Binding #DiffEditor}"
+                                                                            ScrollInfo="{Binding $parent[controls:ComparisonControl].ScrollInfoRight}"
+                                                                            IsHitTestVisible="False" />
+                                                <Track Minimum="{TemplateBinding Minimum}"
+                                                       Maximum="{TemplateBinding Maximum}"
+                                                       Value="{TemplateBinding Value, Mode=TwoWay}"
+                                                       ViewportSize="{TemplateBinding ViewportSize}"
+                                                       Orientation="{TemplateBinding Orientation}"
+                                                       IsDirectionReversed="True">
+                                                    <Thumb Name="thumb" />
+                                                </Track>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter>
+                            </Style>
+                        </avaloniaEdit:TextEditor.Styles>
+                    </avaloniaEdit:TextEditor>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -1,4 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Settings.ViewModels.SettingTypes;
@@ -9,6 +8,6 @@ public class CustomSettingViewModel : SettingViewModel
     {
         Setting = setting;
     }
-    
+
     public override CustomSetting Setting { get; }
 }

@@ -4,11 +4,11 @@ namespace OneWare.Essentials.Helpers;
 
 public class ProjectSettingBuilder
 {
-    private string? _key;
-    private TitledSetting? _setting;
     private Func<IProjectRootWithFile, bool>? _activationFunction;
     private string? _category;
-    private int _displayOrder = 0;
+    private int _displayOrder;
+    private string? _key;
+    private TitledSetting? _setting;
 
     public ProjectSettingBuilder WithKey(string key)
     {
@@ -44,7 +44,7 @@ public class ProjectSettingBuilder
     {
         if (_key == null) throw new InvalidOperationException("Key must be provided.");
         if (_setting == null) throw new InvalidOperationException("Setting must be provided.");
-        
+
         _setting.Priority = _displayOrder;
         _activationFunction ??= _ => true;
 

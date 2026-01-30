@@ -6,7 +6,7 @@ namespace OneWare.Essentials.Commands;
 public class CommandApplicationCommand : ApplicationCommandBase
 {
     private readonly ICommand _command;
-    
+
     public CommandApplicationCommand(string name, ICommand command) : base(name)
     {
         _command = command;
@@ -18,7 +18,7 @@ public class CommandApplicationCommand : ApplicationCommandBase
         _command.Execute(source);
         return true;
     }
-    
+
     public override bool CanExecute(ILogical source)
     {
         return _command.CanExecute(source);

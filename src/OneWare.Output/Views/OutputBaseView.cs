@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia;
@@ -12,18 +11,17 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
-using ReactiveUI;
 
 namespace OneWare.Output.Views;
 
 public abstract class OutputBaseView : UserControl
 {
+    private bool _isAttached;
     private TextEditor? _output;
-    private OutputBaseViewModel? _viewModel;
+    private bool _stopScroll;
 
     private CompositeDisposable _subscriptions = new();
-    private bool _stopScroll;
-    private bool _isAttached;
+    private OutputBaseViewModel? _viewModel;
 
     protected OutputBaseView()
     {
@@ -113,20 +111,15 @@ public abstract class OutputBaseView : UserControl
         var transformers = _output.TextArea.TextView.LineTransformers;
 
         // Remove old colorizers safely
-        for (int i = transformers.Count - 1; i >= 0; i--)
-        {
+        for (var i = transformers.Count - 1; i >= 0; i--)
             if (transformers[i] is LineColorizer)
                 transformers.RemoveAt(i);
-        }
 
         // Apply current line colors
-        for (int i = 0; i < _viewModel.LineContexts.Count; i++)
+        for (var i = 0; i < _viewModel.LineContexts.Count; i++)
         {
             var ctx = _viewModel.LineContexts[i];
-            if (ctx.LineColor != null)
-            {
-                transformers.Add(new LineColorizer(i + 1, ctx.LineColor));
-            }
+            if (ctx.LineColor != null) transformers.Add(new LineColorizer(i + 1, ctx.LineColor));
         }
 
         _output.TextArea.TextView.Redraw();

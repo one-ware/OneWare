@@ -5,7 +5,7 @@
                          xmlns:viewModels="clr-namespace:OneWare.UniversalFpgaProjectSystem.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
-                         SizeToContent="Height" PrefWidth="600" Padding="4"
+                         PrefWidth="550" PrefHeight="400" Padding="4"
                          WindowBackground="{DynamicResource ThemeBackgroundBrush}"
                          WindowStartupLocation="CenterOwner"
                          Title="{Binding Title}"
@@ -13,53 +13,47 @@
                          Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
                          x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectSettingsEditorView"
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
-                         Name="UniversalFpgaProjectCompileViewView">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-    
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+                         Name="UniversalFpgaProjectSettingsViewView">
+    <controls:FlexibleWindow.Styles>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
 
-        <!-- Linke Spalte -->
-        <StackPanel Grid.Row="0" Grid.Column="0">
-            <TextBlock Text="Categories" FontWeight="Bold" Margin="5"/>
-            <ListBox
-                Margin="5"
-                ItemsSource="{Binding SettingCategories}"
-                SelectedItem="{Binding SelectedCategory}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </StackPanel>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </controls:FlexibleWindow.Styles>
 
-        <!-- Rechte Spalte -->
-        <ScrollViewer Grid.Row="0" Grid.Column="1">
-            <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
-        </ScrollViewer>
+    <Border BorderThickness="0 1 0 0">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
 
-        <StackPanel Grid.Row="1" Grid.Column="1"
-                    Orientation="Horizontal"
-                    Margin="8"
-                    Classes="WindowButtons"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom">
-            <Button Command="{Binding SaveAsync}"
-                    Background="{DynamicResource HighlightBrush}">
-                <TextBlock Text="Apply" Margin="5 0"/>
-            </Button>
-            <Button Command="{Binding SaveAndCloseAsync}"
-                    Background="{DynamicResource HighlightBrush}"
-                    CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}">
-                <TextBlock Text="Save and Close" Margin="5 0"/>
-            </Button>
-        </StackPanel>
-    </Grid>
+            <Border BorderThickness="0, 0, 1, 0" Grid.RowSpan="2"
+                    Background="{DynamicResource ThemeControlLowBrush}">
+                <StackPanel>
+                    <ListBox Padding="3"
+                             ItemsSource="{Binding SettingCategories}"
+                             SelectedItem="{Binding SelectedCategory}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock FontSize="13" Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <ScrollViewer Grid.Row="0" Grid.Column="1">
+                <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
+            </ScrollViewer>
+
+            <StackPanel Margin="8" Classes="WindowButtons" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
+                <Button Command="{Binding SaveAndCloseAsync}"
+                        Classes="PrimaryButton"
+                        CommandParameter="{Binding #UniversalFpgaProjectSettingsViewView}">
+                    <TextBlock Text="Save and Close" />
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
 </controls:FlexibleWindow>

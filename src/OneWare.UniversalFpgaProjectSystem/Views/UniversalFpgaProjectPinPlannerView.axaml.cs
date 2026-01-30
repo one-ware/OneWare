@@ -13,17 +13,13 @@ public partial class UniversalFpgaProjectPinPlannerView : FlexibleWindow
         VisiblePinDataGrid.SelectionChanged += (_, _) =>
         {
             if (VisiblePinDataGrid.SelectedItem != null)
-            {
                 VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
-            }
         };
-        
+
         VisiblePinDataGrid.SelectionChanged += (_, _) =>
         {
             if (VisiblePinDataGrid.SelectedItem != null)
-            {
                 VisiblePinDataGrid.ScrollIntoView(VisiblePinDataGrid.SelectedItem, null);
-            }
         };
 
         ZoomContentControl.WhenValueChanged(x => x.Content).Subscribe(x =>

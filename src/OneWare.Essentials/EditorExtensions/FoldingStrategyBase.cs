@@ -1,7 +1,7 @@
 ﻿using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.EditorExtensions;
 

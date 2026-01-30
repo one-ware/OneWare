@@ -2,16 +2,12 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Core.Views.Windows;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
-using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.Core.Services;
 
@@ -20,15 +16,15 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private readonly Lock _activeLock = new();
 
     private readonly ObservableCollection<ApplicationProcess> _activeStates = new();
+    private readonly List<Action<string?>> _autoLaunchActions = new();
+    private readonly ILogger _logger;
 
     private readonly List<Action<string?>> _pathLaunchActions = new();
-    private readonly List<Action<string?>> _autoLaunchActions = new();
-    private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly List<Action> _shutdownActions = new();
     private readonly List<Func<Task<bool>>> _shutdownTasks = new();
+    private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly IWindowService _windowService;
-    private readonly ILogger _logger;
-    
+
     private ApplicationProcess _activeProcess = new() { State = AppState.Idle, StatusMessage = "Ready" };
 
     public ApplicationStateService(IWindowService windowService, ILogger logger)
@@ -121,7 +117,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     {
         _shutdownActions.Add(action);
     }
-    
+
     public void RegisterShutdownTask(Func<Task<bool>> task)
     {
         _shutdownTasks.Add(task);
@@ -139,20 +135,13 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public void ExecuteUrlLaunchActions(Uri uri)
     {
-        if(_urlLaunchActions.TryGetValue(uri.Authority, out var action))
+        if (_urlLaunchActions.TryGetValue(uri.Authority, out var action))
             action.Invoke(uri.LocalPath);
         else
-        {
             //Try to auto download extension if possible
             _ = AttemptAutoDownloadExtensionAsync(uri.Authority, uri.LocalPath);
-        }
     }
 
-    public void ExecuteShutdownActions()
-    {
-        foreach (var action in _shutdownActions) action.Invoke();
-    }
-    
     public async Task<bool> TryRestartAsync()
     {
         var result = await TryShutdownAsync();
@@ -161,9 +150,43 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
             PerformRestart();
             return true;
         }
+
         return false;
     }
-    
+
+    public async Task<bool> TryShutdownAsync()
+    {
+        try
+        {
+            foreach (var shutdownTask in _shutdownTasks)
+            {
+                var result = await shutdownTask.Invoke();
+                if (!result)
+                {
+                    _logger.Log("Shutdown aborted by shutdown task.");
+                    return false;
+                }
+            }
+
+            ShutdownComplete = true;
+
+            Shutdown();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+        }
+
+        return false;
+    }
+
+    public void ExecuteShutdownActions()
+    {
+        foreach (var action in _shutdownActions) action.Invoke();
+    }
+
     private void PerformRestart()
     {
         try
@@ -209,46 +232,65 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 case PlatformId.LinuxX64:
                 case PlatformId.LinuxArm64:
                 {
-                    string command;
-                    string commandArgs;
-                    
                     // Linux: Check if running in Flatpak or Snap
                     if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
                     {
                         // Running in Flatpak
                         var flatpakId = Environment.GetEnvironmentVariable("FLATPAK_ID");
-                        command = "flatpak";
-                        commandArgs = $"run {flatpakId}";
+                        var commandArgs = $"--host flatpak run {flatpakId}";
                         if (args.Length > 0)
                             commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "flatpak-spawn",
+                            Arguments = commandArgs,
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                        break;
                     }
                     else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
                     {
                         // Running in Snap
                         var snapName = Environment.GetEnvironmentVariable("SNAP_NAME");
-                        command = "snap";
-                        commandArgs = $"run {snapName}";
+                        var command = "snap";
+                        var commandArgs = $"run {snapName}";
                         if (args.Length > 0)
                             commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-                    }
-                    else
-                    {
-                        // Regular Linux binary - use the executable path
-                        command = executablePath;
-                        commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+
+                        // Use sh -c with nohup and & to properly detach the process
+                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "/bin/sh",
+                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                        break;
                     }
 
-                    // Use sh -c with nohup and & to properly detach the process
-                    var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
-                    var startInfo = new ProcessStartInfo
+                    // Regular Linux binary - use the executable path
                     {
-                        FileName = "/bin/sh",
-                        Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = Environment.CurrentDirectory
-                    };
-                    Process.Start(startInfo);
+                        var command = executablePath;
+                        var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
+
+                        // Use sh -c with nohup and & to properly detach the process
+                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "/bin/sh",
+                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = Environment.CurrentDirectory
+                        };
+                        Process.Start(startInfo);
+                    }
                     break;
                 }
 
@@ -259,11 +301,14 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                     if (executablePath.Contains(".app/Contents/MacOS/"))
                     {
                         // Get the .app path - use 'open -n' which naturally detaches
-                        var appPath = executablePath.Substring(0, executablePath.IndexOf(".app/Contents/MacOS/", StringComparison.Ordinal) + 4);
+                        var appPath = executablePath.Substring(0,
+                            executablePath.IndexOf(".app/Contents/MacOS/", StringComparison.Ordinal) + 4);
                         var startInfo = new ProcessStartInfo
                         {
                             FileName = "open",
-                            Arguments = $"-n \"{appPath}\"" + (args.Length > 0 ? " --args " + string.Join(" ", args.Select(arg => $"\"{arg}\"")) : ""),
+                            Arguments = $"-n \"{appPath}\"" + (args.Length > 0
+                                ? " --args " + string.Join(" ", args.Select(arg => $"\"{arg}\""))
+                                : ""),
                             UseShellExecute = false,
                             CreateNoWindow = true,
                             WorkingDirectory = Environment.CurrentDirectory
@@ -285,11 +330,13 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                         };
                         Process.Start(startInfo);
                     }
+
                     break;
                 }
 
                 default:
-                    ContainerLocator.Container.Resolve<ILogger>()?.Error($"Restart not supported on platform: {PlatformHelper.Platform}");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        ?.Error($"Restart not supported on platform: {PlatformHelper.Platform}");
                     return;
             }
         }
@@ -302,82 +349,60 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private async Task AttemptAutoDownloadExtensionAsync(string autoLaunchId, string? value)
     {
         var state = AddState($"Running Autolaunch Action: {autoLaunchId}", AppState.Loading);
-        
+
         try
         {
             var packageService = ContainerLocator.Container.Resolve<IPackageService>();
             await packageService.LoadPackagesAsync();
             var package = packageService.Packages.Values
                 .Where(x => x.Status != PackageStatus.Installed)
-                .FirstOrDefault(x => x.Package.UrlLaunchIds != null && x.Package.UrlLaunchIds.Split(';').Select(y => y.Trim()).Contains(autoLaunchId));
-        
+                .FirstOrDefault(x =>
+                    x.Package.UrlLaunchIds != null &&
+                    x.Package.UrlLaunchIds.Split(';').Select(y => y.Trim()).Contains(autoLaunchId));
+
             var packageWindowService = ContainerLocator.Container.Resolve<IPackageWindowService>();
-            if (package is { Package: { Id: not null }, Status: PackageStatus.UpdateAvailable or PackageStatus.Available })
+            if (package is
+                {
+                    Package: { Id: not null }, Status: PackageStatus.UpdateAvailable or PackageStatus.Available
+                })
             {
                 var result = await packageWindowService.QuickInstallPackageAsync(package.Package.Id);
                 if (result)
                 {
-                    if(_urlLaunchActions.TryGetValue(autoLaunchId, out var action))
+                    if (_urlLaunchActions.TryGetValue(autoLaunchId, out var action))
                         action.Invoke(value);
                 }
                 else
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning($"Failed downloading package for ID: {autoLaunchId}");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        .Warning($"Failed downloading package for ID: {autoLaunchId}");
                 }
             }
             else
             {
-                ContainerLocator.Container.Resolve<ILogger>().Warning($"No package found for auto launch id: {autoLaunchId}");
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .Warning($"No package found for auto launch id: {autoLaunchId}");
             }
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
-        
+
         RemoveState(state);
     }
-    
-    public async Task<bool> TryShutdownAsync()
-    {
-        try
-        {
-            foreach (var shutdownTask in _shutdownTasks)
-            {
-                var result = await shutdownTask.Invoke();
-                if (!result)
-                {
-                    _logger.Log("Shutdown aborted by shutdown task.", ConsoleColor.Yellow);
-                    return false;
-                }
-            }
-            
-            ShutdownComplete = true;
-            
-            Shutdown();
-            
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex.Message, ex);
-        }
 
-        return false;
-    }
-    
     private void Shutdown()
     {
-        _logger.Log("Closed!", ConsoleColor.DarkGray);
-        
+        _logger.Log("Closed!");
+
         //Save settings
-        ContainerLocator.Container.Resolve<ISettingsService>().Save(ContainerLocator.Container.Resolve<IPaths>().SettingsPath);
+        ContainerLocator.Container.Resolve<ISettingsService>()
+            .Save(ContainerLocator.Container.Resolve<IPaths>().SettingsPath);
 
         ExecuteShutdownActions();
-        
+
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
-        {
             desktopApp.Shutdown();
-        }
     }
 }

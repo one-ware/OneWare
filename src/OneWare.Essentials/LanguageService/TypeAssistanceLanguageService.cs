@@ -14,6 +14,7 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Extensions;
@@ -21,7 +22,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
 using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
@@ -36,6 +36,7 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 {
     private readonly IBrush _highlightBackground = SolidColorBrush.Parse("#3300c8ff");
+    private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
 
     private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(100);
 
@@ -45,7 +46,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private DispatcherTimer? _dispatcherTimer;
     private TimeSpan _lastCaretChangedRefreshTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastCaretChangeTime = DateTime.Now.TimeOfDay;
-    private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastCompletionItemResolveTime = DateTime.Now.TimeOfDay;
     private TimeSpan _lastDocumentChangedRefreshTime = DateTime.Now.TimeOfDay;
 
@@ -300,7 +300,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
         file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
-        var dockable = await ContainerLocator.Container.Resolve<IDockService>().OpenFileAsync(file);
+        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
@@ -462,15 +462,19 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual async Task UpdateInlayHintsAsync()
     {
         if (CodeBox.Document.LineCount == 0) return;
-        
+
         var inlayHintContainer =
-            await Service.RequestInlayHintsAsync(CurrentFile.FullPath, new Range(0, 0, CodeBox.Document.LineCount, CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
+            await Service.RequestInlayHintsAsync(CurrentFile.FullPath,
+                new Range(0, 0, CodeBox.Document.LineCount,
+                    CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
 
         if (inlayHintContainer is not null)
             Editor.Editor.InlayHintGenerator.SetInlineHints(inlayHintContainer.Select(x => new InlayHint
             {
                 Offset = Editor.CurrentDocument.GetOffset(x.Position.Line + 1, x.Position.Character + 1),
-                Text = x.Label.HasInlayHintLabelParts ? (x.Label.InlayHintLabelParts?.FirstOrDefault()?.Value ?? "") : x.Label.String ?? ""
+                Text = x.Label.HasInlayHintLabelParts
+                    ? x.Label.InlayHintLabelParts?.FirstOrDefault()?.Value ?? ""
+                    : x.Label.String ?? ""
             }));
         else
             Editor.Editor.InlayHintGenerator.ClearInlineHints();
@@ -552,13 +556,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 {
                     var compare = string.Compare(Completion.CompletionList.CompletionData[c].Label, customItem.Label,
                         StringComparison.Ordinal);
-                    
+
                     if (compare > 0)
                     {
                         Completion.CompletionList.CompletionData.Insert(c, customItem);
                         insert = true;
                         break;
                     }
+
                     if (compare == 0)
                     {
                         //Do not insert duplicates
@@ -566,7 +571,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         break;
                     }
                 }
-                
+
                 if (!insert) Completion.CompletionList.CompletionData.Add(customItem);
             }
 
@@ -705,7 +710,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 : comp.Documentation.String
             : null;
 
-        return new CompletionData(comp.InsertText ?? comp.FilterText ?? "", comp.Label, comp.Detail, description, icon,
+        return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
             0,
             comp, offset, CurrentFile, AfterComplete);
     }

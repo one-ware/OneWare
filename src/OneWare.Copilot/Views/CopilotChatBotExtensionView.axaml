@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:OneWare.Copilot.Services"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Copilot.Views.CopilotChatBotExtensionView" x:DataType="services:CopilotChatService">
+    <StackPanel Orientation="Horizontal" Spacing="2" Margin="0 0 5 0">
+        <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
+                   FontSize="11" VerticalAlignment="Center"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+        <Button Height="15" VerticalAlignment="Center">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Placement="TopEdgeAlignedRight">
+                    <ListBox ItemsSource="{Binding Models}"
+                             SelectedItem="{Binding SelectedModel}" BorderThickness="0"
+                             MinWidth="200">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </Flyout>
+            </Button.Flyout>
+            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                   Height="8" />
+        </Button>
+    </StackPanel>
+</UserControl>

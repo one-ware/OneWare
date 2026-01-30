@@ -1,6 +1,7 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -8,30 +9,28 @@ using OneWare.Essentials.ViewModels;
 using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 using OneWare.ProjectExplorer.Views;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.ProjectExplorer;
 
-public class ProjectExplorerModule : IModule
+public class ProjectExplorerModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
-        containerRegistry.RegisterSingleton<IFileWatchService, FileWatchService>();
-        containerRegistry.RegisterManySingleton<ProjectExplorerViewModel>(typeof(IProjectExplorerService),
-            typeof(ProjectExplorerViewModel));
+        services.AddSingleton<IFileWatchService, FileWatchService>();
+        services.AddSingleton<ProjectExplorerViewModel>();
+        services.AddSingleton<IProjectExplorerService>(provider => provider.Resolve<ProjectExplorerViewModel>());
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        if (containerProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
+        if (serviceProvider.Resolve<IProjectExplorerService>() is not ProjectExplorerViewModel vm) return;
 
-        var dockService = containerProvider.Resolve<IDockService>();
-        var windowService = containerProvider.Resolve<IWindowService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
         dockService.RegisterLayoutExtension<IProjectExplorerService>(DockShowLocation.Left);
 
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new UiExtension(x =>
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new OneWareUiExtension(_ =>
             new ProjectExplorerMainWindowToolBarExtension
             {
                 DataContext = vm
@@ -56,7 +55,7 @@ public class ProjectExplorerModule : IModule
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
-                Priority = 10,           
+                Priority = 10,
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
             });
 
@@ -64,8 +63,7 @@ public class ProjectExplorerModule : IModule
             new MenuItemViewModel("Project Explorer")
             {
                 Header = "Project Explorer",
-                Command =
-                    new RelayCommand(() => dockService.Show(containerProvider.Resolve<IProjectExplorerService>())),
+                Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>())),
                 IconObservable = Application.Current!.GetResourceObservable(ProjectExplorerViewModel.IconKey)
             });
     }

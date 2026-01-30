@@ -13,11 +13,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
 </Project>

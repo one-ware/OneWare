@@ -1,25 +1,25 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class FileWatchInstance : IDisposable
 {
     private readonly List<FileSystemEventArgs> _changes = new();
-    private readonly IDockService _dockService;
     private readonly IFile _file;
     private readonly FileSystemWatcher? _fileSystemWatcher;
     private readonly object _lock = new();
+    private readonly IMainDockService _mainDockService;
     private readonly IWindowService _windowService;
     private DispatcherTimer? _timer;
 
-    public FileWatchInstance(IFile file, IDockService dockService, ISettingsService settingsService,
+    public FileWatchInstance(IFile file, IMainDockService mainDockService, ISettingsService settingsService,
         IWindowService windowService, ILogger logger)
     {
         _file = file;
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _windowService = windowService;
 
         if (!File.Exists(file.FullPath)) return;
@@ -87,16 +87,14 @@ public class FileWatchInstance : IDisposable
         {
             var lastArg = changes.Last();
 
-            _dockService.OpenFiles.TryGetValue(_file, out var tab);
+            _mainDockService.OpenFiles.TryGetValue(_file, out var tab);
 
             // Can happen naturally if the file is opened in an external tool
             // Also when a temporary file is registered but not opened yet, we can ignore the changes
             if (tab == null)
-            {
                 //Dispose();
                 //throw new NullReferenceException(nameof(tab));
                 return;
-            }
 
             switch (lastArg.ChangeType)
             {

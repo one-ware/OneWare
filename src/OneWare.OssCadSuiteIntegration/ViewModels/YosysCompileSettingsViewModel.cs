@@ -1,14 +1,10 @@
 ﻿using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
-using OneWare.Settings;
 using OneWare.Settings.ViewModels;
-using OneWare.Settings.ViewModels.SettingTypes;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
-using OneWare.UniversalFpgaProjectSystem.Services;
-using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 namespace OneWare.OssCadSuiteIntegration.ViewModels;
 

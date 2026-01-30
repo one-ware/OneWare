@@ -26,47 +26,38 @@
                                  FontSize="{DynamicResource EditorFontSize}"
                                  Padding="5" />
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2">
 
             <DockPanel>
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Left">
+                <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
                     <TextBlock Text="AutoScroll" />
                     <CheckBox IsChecked="{Binding AutoScroll}" />
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <TextBlock Text="Line Ending" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableLineEndings}" BorderThickness="0"
-                                  SelectedItem="{Binding SelectedLineEnding}" />
-                    </Border>
-                    <Border Classes="SplitterBorder" />
+                    <ComboBox ItemsSource="{Binding AvailableLineEndings}"
+                              SelectedItem="{Binding SelectedLineEnding}" />
+                    <Separator />
                     <TextBlock Text="Encoding" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox ItemsSource="{Binding AvailableEncodings}" BorderThickness="0"
-                                  SelectedItem="{Binding SelectedLineEncoding}" />
-                    </Border>
-                    <Border Classes="SplitterBorder" />
+                    <ComboBox ItemsSource="{Binding AvailableEncodings}"
+                              SelectedItem="{Binding SelectedLineEncoding}" />
+                    <Separator />
                 </StackPanel>
 
-                <StackPanel Classes="HToolBar" DockPanel.Dock="Right">
+                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
                     <Button Command="{Binding SendText}"
                             CommandParameter="{Binding #CommandBox.Text}">
                         <Image Source="{DynamicResource BoxIcons.SolidSend}" />
                     </Button>
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}" BorderThickness="0"
-                                  SelectedItem="{Binding SelectedBaudRate}" />
-                    </Border>
-                    <Border Classes="SplitterBorder" />
+                    <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
+                              SelectedItem="{Binding SelectedBaudRate}" />
+                    <Separator />
 
                     <TextBlock Text="Serial Port:" />
-                    <Border Classes="RoundToolBar">
-                        <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                                  ItemsSource="{Binding SerialPorts}" BorderThickness="0"
-                                  SelectedItem="{Binding SelectedSerialPort}" />
-                    </Border>
+                    <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
+                              ItemsSource="{Binding SerialPorts}"
+                              SelectedItem="{Binding SelectedSerialPort}" />
                     <Button IsEnabled="{Binding AllowConnecting}"
                             Command="{Binding RefreshSerialPorts}"
                             ToolTip.Tip="Refresh serial ports">
@@ -79,7 +70,7 @@
                     <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
                         <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" Width="15" />
                     </Button>
-                    <Border Classes="SplitterBorder" />
+                    <Separator />
                     <Menu DockPanel.Dock="Right">
                         <Menu.Items>
                             <MenuItem Width="24" Height="24">
@@ -91,12 +82,12 @@
                     </Menu>
                 </StackPanel>
 
-                <TextBox Classes="ToolBar" DockPanel.Dock="Right" Name="CommandBox" Height="24"
-                         Watermark="Enter Message..."
+                <TextBox DockPanel.Dock="Right" Name="CommandBox"
+                         Watermark="Enter Message..." Margin="5 0"
                          HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SendText}"
-                                                          CommandParameter="{Binding #CommandBox.Text}" />
+                                                               CommandParameter="{Binding #CommandBox.Text}" />
                     </Interaction.Behaviors>
                 </TextBox>
             </DockPanel>

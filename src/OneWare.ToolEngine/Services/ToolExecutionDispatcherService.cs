@@ -1,4 +1,3 @@
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
 
@@ -10,5 +9,4 @@ public class ToolExecutionDispatcherService(IToolService service) : IToolExecuti
     {
         return service.GetStrategy(command.ToolName).ExecuteAsync(command);
     }
-    
 }

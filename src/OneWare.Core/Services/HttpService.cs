@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.Net.Http.Headers;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Extensions;
 using OneWare.Essentials.Services;
 using SharpCompress.Common;
@@ -58,7 +59,7 @@ public class HttpService : IHttpService
             var extension = Path.GetExtension(url);
 
             await using var stream = await download.Content.ReadAsStreamAsync(cancellationToken);
-            
+
             switch (extension)
             {
                 case ".svg":
@@ -75,7 +76,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -93,8 +94,8 @@ public class HttpService : IHttpService
             var client = HttpClient;
             if (timeout != default)
                 client.Timeout = timeout;
-            
-            client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+
+            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
             {
                 NoCache = true
             };
@@ -106,7 +107,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -126,7 +127,7 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Log(e, ConsoleColor.Yellow);
+            _logger.Warning(e.Message, e);
         }
         catch (Exception e)
         {
@@ -140,12 +141,6 @@ public class HttpService : IHttpService
         IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
     {
         var tempPath = Path.Combine(_paths.TempDirectory, Path.GetFileName(url));
-
-        //if (Directory.Exists(location))
-        //{
-        //    _logger.Error("Destination dir already exists");
-        //    return false;
-        //}
 
         try
         {
@@ -161,31 +156,25 @@ public class HttpService : IHttpService
                 while (reader.MoveToNextEntry())
                     if (!reader.Entry.IsDirectory)
                         reader.WriteEntryToDirectory(location,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true, WriteSymbolicLink = (
-                                (path, targetPath) =>
-                                {
-                                    File.CreateSymbolicLink(path, targetPath);
-                                })});
+                            new ExtractionOptions
+                            {
+                                ExtractFullPath = true, Overwrite = true,
+                                WriteSymbolicLink = (path, targetPath) => { File.CreateSymbolicLink(path, targetPath); }
+                            });
             }, cancellationToken);
 
             File.Delete(tempPath);
             return true;
         }
+        catch (HttpRequestException e)
+        {
+            _logger.Warning(e.Message, e);
+        }
         catch (Exception e)
         {
-            if (e is not HttpRequestException)
-                _logger.Error(e.Message, e);
-            else _logger.Log(e.Message, ConsoleColor.Yellow);
-            try
-            {
-                Directory.Delete(location);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-
-            return false;
+            _logger.Error(e.Message, e);
         }
+
+        return false;
     }
 }

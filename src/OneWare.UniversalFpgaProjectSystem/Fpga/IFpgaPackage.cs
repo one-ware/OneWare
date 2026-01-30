@@ -6,8 +6,8 @@ namespace OneWare.UniversalFpgaProjectSystem.Fpga;
 public interface IFpgaPackage
 {
     public string Name { get; }
-    
+
     public IFpga LoadFpga();
-    
+
     public FpgaViewModelBase? LoadFpgaViewModel(FpgaModel fpgaModel);
 }

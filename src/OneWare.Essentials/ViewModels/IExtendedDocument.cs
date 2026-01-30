@@ -16,4 +16,5 @@ public interface IExtendedDocument : IDocument, IWaitForContent
     public bool IsDirty { get; }
     public Task<bool> TryCloseAsync();
     public Task<bool> SaveAsync();
+    public void GoToDiagnostic(ErrorListItem item);
 }

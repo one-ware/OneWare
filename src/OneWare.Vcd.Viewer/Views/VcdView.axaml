@@ -6,7 +6,6 @@
              xmlns:models="clr-namespace:OneWare.Vcd.Viewer.Models"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
-             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:behaviors1="clr-namespace:OneWare.Vcd.Viewer.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
@@ -23,15 +22,19 @@
         </Grid.ColumnDefinitions>
 
         <Grid RowDefinitions="30, *, 5, *">
-            <Border BorderThickness="0 0 0 1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                <StackPanel Height="26" Orientation="Horizontal" Margin="5 0" Spacing="5">
-                    <Button VerticalAlignment="Center" Command="{Binding Refresh}">
-                        <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
-                    </Button>
-                    <TextBlock VerticalAlignment="Center" Text="Threads" />
-                    <ComboBox MinWidth="50" ItemsSource="{Binding LoadingThreadOptions}"
+            <Border BorderThickness="0 0 0 1">
+                <DockPanel>
+                    <StackPanel Classes="ToolBar" DockPanel.Dock="Left">
+                        <Button Command="{Binding Refresh}">
+                            <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                        </Button>
+                        <TextBlock VerticalAlignment="Center" Text="Threads" />
+                    </StackPanel>
+
+                    <ComboBox Margin="5 0" DockPanel.Dock="Right" ItemsSource="{Binding LoadingThreadOptions}"
                               SelectedItem="{Binding LoadingThreads}" />
-                </StackPanel>
+                </DockPanel>
+
             </Border>
 
             <TreeView Grid.Row="1" BorderThickness="0" Background="{DynamicResource ThemeControlLowBrush}"
@@ -69,7 +72,7 @@
                         <Setter Property="Interaction.Behaviors">
                             <BehaviorCollectionTemplate>
                                 <BehaviorCollection>
-                                    <behaviors:ContextDragBubbleBehavior />
+                                    <ContextDragBehavior />
                                 </BehaviorCollection>
                             </BehaviorCollectionTemplate>
                         </Setter>

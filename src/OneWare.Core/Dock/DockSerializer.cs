@@ -28,6 +28,7 @@ public sealed class DockSerializer : IDockSerializer
             NullValueHandling = NullValueHandling.Ignore,
             Converters =
             {
+                new NoSerializeLayoutListConverter(),
                 new KeyValuePairConverter()
             }
         };

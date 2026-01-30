@@ -17,6 +17,7 @@
     <FontFamily x:Key="EditorFont">avares://OneWare.Core/Assets/Fonts#JetBrains Mono NL</FontFamily>
     <FontFamily x:Key="ContentControlThemeFontFamily">avares://OneWare.Core/Assets/Fonts#Noto Sans</FontFamily>
 
+    <Color x:Key="HighlightColor">#FF007ab8</Color>
     <Color x:Key="ThemeAccentColor">#FF007ab8</Color>
     <Color x:Key="ThemeForegroundLowColor">#FFb2b2b2</Color>
     <Color x:Key="HighlightForegroundColor">#FFFFFFFF</Color>
@@ -68,9 +69,9 @@
 
     <SolidColorBrush x:Key="SelectionBrush">#606e6e6e</SolidColorBrush>
     <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
-    
+
     <sys:Double x:Key="TextControlPlaceholderOpacity">0.5</sys:Double>
-    
+
     <ResourceDictionary.ThemeDictionaries>
 
         <ResourceDictionary x:Key="Default">
@@ -79,7 +80,7 @@
             <Color x:Key="ThemeBorderMidColor">#FF808080</Color>
             <Color x:Key="ThemeBorderHighColor">#FFA0A0A0</Color>
             <Color x:Key="ThemeControlLowColor">#FF1e1e1e</Color>
-            <Color x:Key="ThemeControlMidColor">#FF505050</Color>
+            <Color x:Key="ThemeControlMidColor">#FF202020</Color>
             <Color x:Key="ThemeControlMidHighColor">#FF686868</Color>
             <Color x:Key="ThemeControlHighColor">#FF808080</Color>
             <Color x:Key="ThemeControlVeryHighColor">#FFEFEBEF</Color>
@@ -110,8 +111,9 @@
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
-            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95" Color="{StaticResource ThemeBackgroundColor}" />
-            
+            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95"
+                             Color="{StaticResource ThemeBackgroundColor}" />
+
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
@@ -124,8 +126,8 @@
             <Color x:Key="ThemeBorderMidColor">#FF808080</Color>
             <Color x:Key="ThemeBorderHighColor">#FFA0A0A0</Color>
             <Color x:Key="ThemeControlLowColor">#FF1e1e1e</Color>
-            <Color x:Key="ThemeControlMidColor">#FF505050</Color>
-            <Color x:Key="ThemeControlMidHighColor">#FF686868</Color>
+            <Color x:Key="ThemeControlMidColor">#FF292929</Color>
+            <Color x:Key="ThemeControlMidHighColor">#FF373737</Color>
             <Color x:Key="ThemeControlHighColor">#FF808080</Color>
             <Color x:Key="ThemeControlVeryHighColor">#FFEFEBEF</Color>
             <Color x:Key="ThemeControlHighlightLowColor">#88A8A8A8</Color>
@@ -161,22 +163,24 @@
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
-            
+
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
-            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95" Color="{StaticResource ThemeBackgroundColor}" />
-            
+            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95"
+                             Color="{StaticResource ThemeBackgroundColor}" />
+
             <DrawingBrush x:Key="CheckerBoardBrush16" TileMode="Tile" DestinationRect="0 0 16 16" Opacity="0.2">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z" Brush="{DynamicResource ThemeBorderLowColor}"/>
+                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z"
+                                         Brush="{DynamicResource ThemeBorderLowColor}" />
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
-            
+
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
- 
+
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -223,18 +227,20 @@
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
-            
+
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95" Color="{StaticResource ThemeBackgroundColor}" />
-            
+            <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.95"
+                             Color="{StaticResource ThemeBackgroundColor}" />
+
             <DrawingBrush x:Key="CheckerBoardBrush16" TileMode="Tile" DestinationRect="0 0 16 16" Opacity="0.2">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z" Brush="{DynamicResource ThemeBorderLowColor}"/>
+                        <GeometryDrawing Geometry="M0,1 L2,1 2,2, 1,2 1,0 0,0Z"
+                                         Brush="{DynamicResource ThemeBorderLowColor}" />
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
-            
+
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -41,6 +41,9 @@
         <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ Border">
             <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
+        <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
         <Style Selector="Expander ToggleButton">
             <Setter Property="Height" Value="24" />
         </Style>
@@ -156,7 +159,7 @@
         <DockPanel Grid.Row="1">
             <TextBox IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                      Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                     Name="CommitMessageBox" Background="{DynamicResource ThemeBackgroundBrush}"
+                     Name="CommitMessageBox"
                      BorderThickness="0,1,0,1" Watermark="Message for commit...">
                 <TextBox.Styles>
                     <Style Selector="TextBox:focus /template/ Border#border">
@@ -177,11 +180,11 @@
                            TextWrapping="Wrap" />
                 <Button
                     IsEnabled="{Binding ActiveRepository, Converter={x:Static ObjectConverters.IsNull}}"
-                    Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
+                    Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Height="30"
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource BoxIcons.RegularGitRepoForked}" />
                             <TextBlock Text="Initialize Repository" VerticalAlignment="Center" />
                         </StackPanel>
@@ -191,11 +194,12 @@
                 <TextBlock Margin="0, 20, 0, 0" Text="Alternatively you can clone an existing repository"
                            TextWrapping="Wrap" />
 
-                <Button Margin="0, 10, 0, 10" Width="180" Classes="BorderButton"
+                <Button Margin="0, 10, 0, 10" Width="180" Classes="RoundButton"
+                        Height="30"
                         Command="{Binding CloneDialogAsync}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15"
+                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
                                    Source="{DynamicResource FontAwesome.DownloadSolid}" />
                             <TextBlock Text="Clone existing Repository" VerticalAlignment="Center" />
                         </StackPanel>
@@ -208,9 +212,11 @@
                                         HorizontalAlignment="Left" />
                 </StackPanel>
             </StackPanel>
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
-                <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
-                    <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            <Grid DockPanel.Dock="Top"
+                  IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
+                <Expander BorderThickness="0" Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
+                    <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="MergeChangeListBox">
                         <ListBox.Styles>
@@ -254,7 +260,8 @@
                 <TextBlock Text="{Binding ActiveRepository.StagedChanges.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
 
-            <Grid DockPanel.Dock="Top" IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
+            <Grid DockPanel.Dock="Top"
+                  IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
                 <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
                     <ListBox ItemsSource="{Binding ActiveRepository.StagedChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
@@ -306,7 +313,8 @@
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                 <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
-                    <ListBox ItemsSource="{Binding ActiveRepository.Changes}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    <ListBox ItemsSource="{Binding ActiveRepository.Changes}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
                              Name="ChangeListBox">
                         <ListBox.Styles>

@@ -1,29 +1,33 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneWare.Core.Models;
+using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
-    private readonly IModuleCatalog _moduleCatalog;
-    private readonly IModuleManager _moduleManager;
+    private readonly OneWareModuleCatalog _moduleCatalog;
+    private readonly OneWareModuleManager _moduleManager;
+    private readonly ModuleServiceRegistry _moduleServiceRegistry;
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
 
     private List<Assembly> _initAssemblies;
 
-    public PluginService(IModuleCatalog moduleCatalog, IModuleManager moduleManager, IPaths paths)
+    public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
+        ModuleServiceRegistry moduleServiceRegistry, IPaths paths)
     {
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
+        _moduleServiceRegistry = moduleServiceRegistry;
 
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
@@ -44,7 +48,7 @@ public class PluginService : IPluginService
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
-            ContainerLocator.Container.Resolve<ILogger>().Error($"Plugin {path} failed loading: \n {test.Report}");
+            ContainerLocator.Container?.Resolve<ILogger>().Error($"Plugin {path} failed loading:\n{test.Report}");
             return plugin;
         }
 
@@ -55,28 +59,20 @@ public class PluginService : IPluginService
             var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
             PlatformHelper.CopyDirectory(path, realPath);
 
-            var catalog = new DirectoryModuleCatalog
-            {
-                ModulePath = realPath
-            };
-            catalog.Initialize();
+            var addedModules = LoadModulesFromPath(realPath);
 
-            foreach (var module in catalog.Modules)
+            if (addedModules.Count > 0 && ContainerLocator.Container != null)
             {
-                _moduleCatalog.AddModule(module);
-                if (_moduleCatalog.Modules.FirstOrDefault()?.State == ModuleState.Initialized)
-                    _moduleManager.LoadModule(module.ModuleName);
-
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Log($"Module {module.ModuleName} loaded", ConsoleColor.Cyan, true);
+                var pluginServices = new ServiceCollection();
+                _moduleManager.RegisterModuleServices(pluginServices, addedModules);
+                _moduleServiceRegistry.AddDescriptors(pluginServices);
+                if (_moduleManager.InitializationCompleted)
+                    _moduleManager.InitializeModules(ContainerLocator.Current, addedModules);
             }
 
             //We should not use that anymore, since it can break compatibility with code signed apps
             //We keep it for now except on MacOS
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                SetupNativeImports(realPath);
-            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
@@ -99,7 +95,30 @@ public class PluginService : IPluginService
         }
     }
 
-    [Obsolete]
+    private IReadOnlyList<IOneWareModule> LoadModulesFromPath(string path)
+    {
+        var assemblies = new List<Assembly>();
+        foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories))
+            try
+            {
+                assemblies.Add(Assembly.LoadFrom(file));
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container?.Resolve<ILogger>()
+                    .Warning($"Skipping plugin assembly '{Path.GetFileName(file)}': {ex.Message}", ex);
+            }
+
+        var added = new List<IOneWareModule>();
+        foreach (var assembly in assemblies) added.AddRange(_moduleCatalog.AddModulesFromAssembly(assembly));
+
+        foreach (var module in added)
+            ContainerLocator.Container?.Resolve<ILogger>()
+                .Log($"Module '{module.Id}' loaded");
+
+        return added;
+    }
+
     private void SetupNativeImports(string pluginPath)
     {
         var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));
@@ -123,46 +142,29 @@ public class PluginService : IPluginService
 
                     // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             libFileName);
-                    }
 
                     // Try 3: add lib infront of it
-                    if (!File.Exists(libPath))
-                    {
-                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
-                    }
+                    if (!File.Exists(libPath)) libPath = Path.Combine(pluginPath, $"lib{libFileName}");
 
                     // Try 4 : look in (plugin) runtimes folder with lib infront
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             $"lib{libFileName}");
-                    }
 
                     // Try 5: MacOS weirdness, look in (own) base folder
                     // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
-                    }
 
                     // Try 6: Same as 5 but added lib Prefix
                     if (!File.Exists(libPath))
-                    {
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
-                    }
 
-                    if (NativeLibrary.TryLoad(libPath, out var customHandle))
-                    {
-                        return customHandle;
-                    }
+                    if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
 
-                    if (NativeLibrary.TryLoad(libraryName, out var handle))
-                    {
-                        return handle;
-                    }
+                    if (NativeLibrary.TryLoad(libraryName, out var handle)) return handle;
 
                     Console.WriteLine($"Loading native library {libraryName} failed");
                     return IntPtr.Zero;
@@ -173,9 +175,8 @@ public class PluginService : IPluginService
             catch (InvalidOperationException)
             {
                 // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Log(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.",
-                    ConsoleColor.DarkYellow, true);
+                ContainerLocator.Container.Resolve<ILogger>().Warning(
+                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
             }
         }
     }

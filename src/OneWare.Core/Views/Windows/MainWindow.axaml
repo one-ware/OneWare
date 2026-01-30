@@ -21,6 +21,7 @@
                             xmlns:viewmodels="clr-namespace:OneWare.Core.ViewModels.Windows"
                             xmlns:sdkControls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                             xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
+                            xmlns:windows="clr-namespace:OneWare.Core.Views.Windows"
                             x:DataType="viewmodels:MainWindowViewModel">
 
     <Window.DataTemplates>
@@ -29,55 +30,7 @@
         </DataTemplate>
     </Window.DataTemplates>
 
-    <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
-
-        <!--Icon Tray-->
-        <DockPanel Margin="3 0" Grid.Row="0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
-
-            <StackPanel DockPanel.Dock="Left" Classes="HToolBar" Orientation="Horizontal" HorizontalAlignment="Left">
-
-                <Button ToolTip.Tip="Undo" x:CompileBindings="False"
-                        Command="{Binding DockService.CurrentDocument.Undo}">
-                    <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
-                </Button>
-                <Button ToolTip.Tip="Redo" x:CompileBindings="False"
-                        Command="{Binding DockService.CurrentDocument.Redo}">
-                    <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
-                </Button>
-
-                <Border Classes="RoundToolBar" Margin="5 0 0 0"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-
-                    <StackPanel Orientation="Horizontal">
-                        <sdkControls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
-                        <StackPanel Orientation="Horizontal"
-                                    IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
-                                       Height="24" />
-                            <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
-                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
-                            </Button>
-                        </StackPanel>
-                    </StackPanel>
-
-                </Border>
-
-                <sdkControls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}" />
-
-            </StackPanel>
-
-            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
-                <sdkControls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
-                <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
-                    <Button.Content>
-                        <Image Source="{DynamicResource Material.SettingsOutline}" />
-                    </Button.Content>
-                </Button>
-            </StackPanel>
-        </DockPanel>
-
-        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding DockService.Layout}" />
-    </Grid>
+    <windows:MainDock />
 
     <sdkControls:AdvancedWindow.TitleBarContent>
         <StackPanel Orientation="Horizontal" Spacing="5">
@@ -130,30 +83,6 @@
                             </MenuItem.Header>
                         </MenuItem>
                     </Menu>
-
-                    <!--
-                    <Menu IsVisible="{Binding States.ActiveArduinoProject^}">
-                        <MenuItem>
-                            <MenuItem.Header>
-                                <StackPanel Orientation="Horizontal" Cursor="Hand">
-                                    <TextBlock
-                                        Text="{Binding SelectedFqbnName, Source={x:Static data:Global.Options}}"
-                                        Foreground="White" />
-                                </StackPanel>
-                            </MenuItem.Header>
-                            <MenuItem.Items>
-                                <MenuItem Command="{Binding ShowWindow}" IsEnabled="{Binding States.ArduinoCliValid^}"
-                                          CommandParameter="{x:Type windows:ArduinoBoardManagerWindow}">
-                                    <MenuItem.Header>Arduino Board Manager</MenuItem.Header>
-                                    <MenuItem.Icon>
-                                        <Image Source="{DynamicResource NiosIcon}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </MenuItem.Items>
-                        </MenuItem>
-                    </Menu>
-                    -->
-
 
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 

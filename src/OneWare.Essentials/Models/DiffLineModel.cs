@@ -1,0 +1,46 @@
+﻿using OneWare.SourceControl.EditorExtensions;
+
+namespace OneWare.Essentials.Models;
+
+public enum DiffContext
+{
+    Added,
+    Deleted,
+    Context,
+    Blank
+}
+
+public class DiffLineModel
+{
+    public DiffLineModel(string text, DiffContext style, int lineNumber, string prefixForStyle)
+    {
+        Text = text;
+        Style = style;
+        LineNumber = lineNumber;
+        PrefixForStyle = prefixForStyle;
+    }
+
+    public string Text { get; }
+    public DiffContext Style { get; }
+    public int LineNumber { get; }
+    public string PrefixForStyle { get; }
+    
+    public List<LineDifferenceOffset> LineDiffs { get; } = new();
+
+    public static DiffLineModel CreateBlank()
+    {
+        return new DiffLineModel("", DiffContext.Blank, -1, "");
+    }
+
+    public static DiffLineModel Create(int lineNumber, string s)
+    {
+        if (s.StartsWith("+")) return new DiffLineModel(s[1..], DiffContext.Added, lineNumber, "+");
+        if (s.StartsWith("-")) return new DiffLineModel(s[1..], DiffContext.Deleted, lineNumber, "-");
+        return new DiffLineModel(s.Length > 1 ? s.Substring(1) : s, DiffContext.Context, lineNumber, "");
+    }
+
+    public override string ToString()
+    {
+        return string.Format("{0}{1}", PrefixForStyle, Text);
+    }
+}

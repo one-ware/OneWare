@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using OneWare.Essentials.Enums;
 
 namespace OneWare.PackageManager.ViewModels;
@@ -14,6 +15,7 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
         get => _isExpanded;
         set => SetProperty(ref _isExpanded, value);
     }
+
     public PackageViewModel? SelectedPackage
     {
         get => _selectedPackage;

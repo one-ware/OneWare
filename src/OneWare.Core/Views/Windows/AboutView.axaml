@@ -32,6 +32,6 @@
         </StackPanel>
 
         <TextBox Margin="4" Text="{Binding License}" IsReadOnly="True"
-                 Background="{DynamicResource ThemeControlLowBrush}" />
+                 Classes="MultilineTextBox" />
     </DockPanel>
 </controls1:FlexibleWindow>

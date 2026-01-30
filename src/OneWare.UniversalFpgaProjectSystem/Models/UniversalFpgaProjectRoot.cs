@@ -21,7 +21,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     private readonly ObservableCollection<IFpgaPreCompileStep> _preCompileSteps = [];
 
     private readonly ObservableCollection<IProjectFile> _testBenches = [];
-    
+
     private readonly IImage _testBenchOverlay;
 
     private readonly IImage _topEntityOverlay;

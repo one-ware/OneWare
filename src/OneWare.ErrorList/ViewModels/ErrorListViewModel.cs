@@ -21,9 +21,9 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 {
     public const string IconKey = "MaterialDesign.ErrorOutline";
 
-    private readonly IDockService _dockService;
-
     private readonly ObservableCollection<ErrorListItem> _items = new();
+
+    private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
     private readonly ISettingsService _settingsService;
 
@@ -47,10 +47,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     private bool _warningEnabled = true;
 
-    public ErrorListViewModel(IDockService dockService, ISettingsService settingsService,
+    public ErrorListViewModel(IMainDockService mainDockService, ISettingsService settingsService,
         IProjectExplorerService projectExplorerExplorerViewModel) : base(IconKey)
     {
-        _dockService = dockService;
+        _mainDockService = mainDockService;
         _settingsService = settingsService;
         _projectExplorerExplorerViewModel = projectExplorerExplorerViewModel;
 
@@ -63,12 +63,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         };
 
         Observable.FromEventPattern<IFile>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(
-            x => { Clear(x.EventArgs); });
+            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(x => { Clear(x.EventArgs); });
 
         Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(
-            x => { Clear(x.EventArgs); });
+            nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(x => { Clear(x.EventArgs); });
 
         _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
             .Subscribe(x => ErrorListFilterMode = x);
@@ -76,7 +74,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
                 this.WhenValueChanged(x => x.ShowExternalErrors))
             .Subscribe(x => ShowExternalErrors = x);
 
-        _dockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
+        _mainDockService.WhenValueChanged(x => x.CurrentDocument).Subscribe(_ => Filter());
     }
 
     public ObservableCollection<string> ErrorListVisibleSources { get; } = new() { "All Sources" };
@@ -198,15 +196,17 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     {
         var errors = _items.Where(x => x.Source == source).ToList();
         var files = errors.Select(x => x.File).Distinct();
-        
+
         ListEx.RemoveMany(_items, errors);
 
-        foreach (var file in files)
-        {
-            ErrorRefresh?.Invoke(this, file);
-        }
-        
+        foreach (var file in files) ErrorRefresh?.Invoke(this, file);
+
         RefreshCountToggle();
+    }
+
+    public IEnumerable<ErrorListItem> GetErrors()
+    {
+        return _items;
     }
 
     public IEnumerable<ErrorListItem> GetErrorsForFile(IFile file)
@@ -252,7 +252,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
                     return true;
                 break;
             case ErrorListFilterMode.CurrentFile:
-                if (_dockService.CurrentDocument?.CurrentFile == error.File) return true;
+                if (_mainDockService.CurrentDocument?.CurrentFile == error.File) return true;
                 break;
         }
 
@@ -261,7 +261,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     private bool FilterExternal(ErrorListItem error)
     {
-        return ShowExternalErrors || error.File is IProjectFile || _dockService.OpenFiles.ContainsKey(error.File);
+        return ShowExternalErrors || error.File is IProjectFile || _mainDockService.OpenFiles.ContainsKey(error.File);
     }
 
     private bool FilterEnabledType(ErrorListItem error)
@@ -285,8 +285,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     private bool FilterSearchString(ErrorListItem error)
     {
         if (string.IsNullOrWhiteSpace(SearchString)) return true;
-        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ||
-               (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
+        return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
+               || error.File.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
+               || (error.Root?.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private int CountToggle(ErrorType type)
@@ -351,10 +353,8 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     public async Task GoToErrorAsync()
     {
         if (SelectedItem is not { } error) return;
-        var doc = await _dockService.OpenFileAsync(error.File);
+        var doc = await _mainDockService.OpenFileAsync(error.File);
 
-        if (doc is not IEditor evb) return;
-        var offset = error.GetOffset(evb.CurrentDocument);
-        evb.Select(offset.startOffset, offset.endOffset - offset.startOffset);
+        doc?.GoToDiagnostic(error);
     }
 }

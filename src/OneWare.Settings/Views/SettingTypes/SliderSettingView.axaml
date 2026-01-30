@@ -3,15 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
-             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.SliderSettingView"
-             x:DataType="settingTypes:SliderSettingViewModel" >
+             x:DataType="settingTypes:SliderSettingViewModel">
     <StackPanel Orientation="Vertical" Spacing="2" Margin="0 3 0 0">
         <StackPanel.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}"/>
+                <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
@@ -22,9 +22,9 @@
                 <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
                        VerticalAlignment="Center" />
                 <Button.Flyout>
-                    <Flyout>
-                        <mdxaml:MarkdownScrollViewer Markdown="{Binding Setting.MarkdownDocumentation}"
-                                                     MaxWidth="900" MaxHeight="500" />
+                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                        <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                 MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
             </Button>
@@ -33,10 +33,9 @@
             <TextBox DockPanel.Dock="Right"
                      Width="100"
                      IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                     Text="{Binding TextBoxValue}" >
+                     Text="{Binding TextBoxValue}">
                 <Interaction.Behaviors>
-                    <behaviors:ClearValidationErrorsLostFocusBehavior Text="{Binding TextBoxValue, Mode=OneWay}">
-                    </behaviors:ClearValidationErrorsLostFocusBehavior>
+                    <behaviors:ClearValidationErrorsLostFocusBehavior Text="{Binding TextBoxValue, Mode=OneWay}" />
                 </Interaction.Behaviors>
             </TextBox>
             <Slider DockPanel.Dock="Left"
@@ -49,6 +48,6 @@
                     TickPlacement="None" />
         </DockPanel>
         <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
-                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>
 </UserControl>

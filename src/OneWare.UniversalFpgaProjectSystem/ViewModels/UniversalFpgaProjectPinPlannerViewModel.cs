@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Input;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -13,29 +14,28 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBase
 {
+    private readonly FpgaService _fpgaService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-    private readonly FpgaService _fpgaService;
 
     private CompositeDisposable? _compositeDisposable;
 
     private bool _hideExtensions;
 
-    private IFpgaPackage? _selectedPackage;
+    private bool _isLoading;
+
+    private FpgaNode[]? _nodes;
 
     private FpgaModel? _selectedModel;
 
-    private FpgaViewModelBase? _selectedViewModel;
+    private IFpgaPackage? _selectedPackage;
 
-    private FpgaNode[]? _nodes;
-    
-    private bool _isLoading;
+    private FpgaViewModelBase? _selectedViewModel;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
@@ -54,48 +54,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
         _ = InitializeAsync();
     }
-    
-    private async Task InitializeAsync()
-    {
-        try
-        {
-            IsLoading = true; 
 
-            IProjectFile? file = Project.TopEntity as IProjectFile;
-            if (file == null)
-            {
-                return; 
-            }
-            
-            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
-            
-            if (nodeProvider == null)
-            {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"No node provider found for extension {file.Extension}");
-                return;
-            }
-            
-            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
-            
-            _nodes = nodesEnumerable.ToArray();
-            RefreshHardware();
-            
-            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.GetProjectProperty("Fpga")) ??
-                                  FpgaPackages.FirstOrDefault();
-
-            IsDirty = false;
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error("Error initializing pin planner", e);
-        }
-        finally
-        {
-            IsLoading = false; 
-        }
-    }
-    
     public bool IsLoading
     {
         get => _isLoading;
@@ -104,7 +63,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
 
-    public ObservableCollection<UiExtension> TopRightExtension { get; }
+    public ObservableCollection<OneWareUiExtension> TopRightExtension { get; }
 
     public UniversalFpgaProjectRoot Project { get; }
 
@@ -145,10 +104,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             if (value is not null)
             {
                 if (_nodes != null)
-                {
                     foreach (var nodeModel in _nodes)
                         value.AddNode(nodeModel);
-                }
 
                 Project.Toolchain?.LoadConnections(Project, value);
 
@@ -170,6 +127,44 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     {
         get => _hideExtensions;
         set => SetProperty(ref _hideExtensions, value);
+    }
+
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            IsLoading = true;
+
+            var file = Project.TopEntity as IProjectFile;
+            if (file == null) return;
+
+            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+
+            if (nodeProvider == null)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .Error($"No node provider found for extension {file.Extension}");
+                return;
+            }
+
+            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
+
+            _nodes = nodesEnumerable.ToArray();
+            RefreshHardware();
+
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.GetProjectProperty("Fpga")) ??
+                                  FpgaPackages.FirstOrDefault();
+
+            IsDirty = false;
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error("Error initializing pin planner", e);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     public async Task RefreshFpgasButtonAsync(FlexibleWindow window)
@@ -205,15 +200,10 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         SelectedFpgaPackage = null;
 
         //Construct FpgaModels
-        foreach (var package in _fpgaService.FpgaPackages)
-        {
-            FpgaPackages.Add(package);
-        }
+        foreach (var package in _fpgaService.FpgaPackages) FpgaPackages.Add(package);
 
         if (oldSelectedFpgaPackageName != null)
-        {
             SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == oldSelectedFpgaPackageName);
-        }
 
         IsDirty = false;
     }
@@ -225,6 +215,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             SelectedFpgaPackage = null;
             return true;
         }
+
         _ = SafeQuitAsync(window);
         return false;
     }

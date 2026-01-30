@@ -1,8 +1,8 @@
-﻿using OneWare.Essentials.Services;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.OssCadSuiteIntegration.Yosys;
 

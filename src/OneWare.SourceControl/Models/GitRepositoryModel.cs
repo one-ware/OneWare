@@ -4,12 +4,12 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LibGit2Sharp;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.ViewModels;
-using Prism.Ioc;
 
 namespace OneWare.SourceControl.Models;
 
@@ -30,7 +30,7 @@ public class GitRepositoryModel : ObservableObject
     }
 
     public IProjectRoot Project { get; private set; }
-    public Repository Repository { get; private set; }
+    public Repository Repository { get; }
 
     public ObservableCollection<SourceControlFileModel> Changes { get; set; } = [];
 
@@ -75,7 +75,7 @@ public class GitRepositoryModel : ObservableObject
         try
         {
             HeadBranch = Repository.Head;
-            
+
             var branchesMenu = new List<MenuItemViewModel>();
 
             foreach (var branch in Repository.Branches)
@@ -83,7 +83,7 @@ public class GitRepositoryModel : ObservableObject
                 var menuItem = new MenuItemViewModel("BranchName")
                 {
                     Header = branch.FriendlyName,
-                    Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch)),
+                    Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch))
                 };
                 if (branch.IsCurrentRepositoryHead)
                 {
@@ -112,13 +112,14 @@ public class GitRepositoryModel : ObservableObject
                         a.Command = b.Command;
                         a.CommandParameter = b.CommandParameter;
                     }
+
                     return equal;
                 },
                 (a, b) =>
                 {
                     if (a.Name == "New Branch...") return -1;
                     if (b.Name == "New Branch...") return 1;
-                    
+
                     var aTracking = a.Name.StartsWith("origin/");
                     var bTracking = b.Name.StartsWith("origin/");
 
@@ -144,23 +145,16 @@ public class GitRepositoryModel : ObservableObject
                     item.State.HasFlag(FileStatus.DeletedFromIndex) ||
                     item.State.HasFlag(FileStatus.NewInIndex) ||
                     item.State.HasFlag(FileStatus.ModifiedInIndex))
-                {
                     stagedChanges.Add(sModel);
-                }
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInWorkdir) ||
                     item.State.HasFlag(FileStatus.RenamedInWorkdir) ||
                     item.State.HasFlag(FileStatus.DeletedFromWorkdir) ||
                     item.State.HasFlag(FileStatus.NewInWorkdir) ||
                     item.State.HasFlag(FileStatus.ModifiedInWorkdir))
-                {
                     changes.Add(sModel);
-                }
 
-                if (item.State.HasFlag(FileStatus.Conflicted))
-                {
-                    mergeChanges.Add(sModel);
-                }
+                if (item.State.HasFlag(FileStatus.Conflicted)) mergeChanges.Add(sModel);
             }
 
             PullCommits = Repository?.Head.TrackingDetails.BehindBy ?? 0;

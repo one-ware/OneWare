@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using Avalonia.Controls;
 using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -9,7 +8,7 @@ namespace OneWare.Essentials.Services;
 public interface IPackageService : INotifyPropertyChanged
 {
     public bool IsUpdating { get; }
-    
+
     public Dictionary<string, PackageModel> Packages { get; }
 
     public event EventHandler PackagesUpdated;
@@ -23,8 +22,8 @@ public interface IPackageService : INotifyPropertyChanged
     public Task<bool> LoadPackagesAsync();
 
     public Task<bool> InstallAsync(Package package);
-    
+
     public Task<string?> DownloadLicenseAsync(Package package);
-    
+
     public Task<IImage?> DownloadPackageIconAsync(Package package);
 }

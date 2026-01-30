@@ -2,41 +2,34 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.SearchList;
 
-public class SearchListModule : IModule
+public class SearchListModule : OneWareModuleBase
 {
-    private readonly IDockService _dockService;
-    private readonly IWindowService _windowService;
-
-    public SearchListModule(IWindowService windowService, IDockService dockService)
+    public override void RegisterServices(IServiceCollection services)
     {
-        _windowService = windowService;
-        _dockService = dockService;
+        services.AddSingleton<SearchListViewModel>();
     }
 
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        containerRegistry.RegisterSingleton<SearchListViewModel>();
-    }
+        var windowService = serviceProvider.Resolve<IWindowService>();
+        var dockService = serviceProvider.Resolve<IMainDockService>();
 
-    public void OnInitialized(IContainerProvider containerProvider)
-    {
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() =>
             {
-                var vm = containerProvider.Resolve<SearchListViewModel>();
+                var vm = serviceProvider.Resolve<SearchListViewModel>();
                 vm.SearchString = string.Empty;
-                _dockService.Show(vm);
+                dockService.Show(vm);
             }),
             IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)

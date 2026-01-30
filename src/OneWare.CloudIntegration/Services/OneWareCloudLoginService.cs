@@ -1,35 +1,34 @@
-using System.Collections.Specialized;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Web;
 using Avalonia.Threading;
 using GitCredentialManager;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
 public sealed class OneWareCloudLoginService
 {
+    private readonly IHttpService _httpService;
     private readonly Dictionary<string, JwtSecurityToken> _jwtTokenCache = new();
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
     private readonly ILogger _logger;
-    private readonly ISettingsService _settingService;
-    private readonly IHttpService _httpService;
     private readonly IPaths _paths;
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private readonly ISettingsService _settingService;
     private readonly string _tokenPath;
 
-    private int? _port = null;
+    private int? _port;
 
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
@@ -53,13 +52,15 @@ public sealed class OneWareCloudLoginService
             OneWareCloudIntegrationModule.CredentialStore;
     }
 
+    public bool OneWareCloudIsUsed { get; }
+
     public RestClient GetRestClient()
     {
         var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
 
-    public Task<(string? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
+    public Task<(JwtSecurityToken? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {
         var userId = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
 
@@ -67,10 +68,10 @@ public sealed class OneWareCloudLoginService
     }
 
     /// <summary>
-    /// Gives a JWT Token that has at least 5 minutes left before expiration
-    /// TODO Change this to return the full token implementation
+    ///     Returns a JWT Token that has at least 2 minutes left before expiration
+    ///     If the token is null, the HttpStatusCode can be used to get the reason
     /// </summary>
-    public async Task<(string? token, HttpStatusCode status)> GetJwtTokenAsync(string userId)
+    public async Task<(JwtSecurityToken? token, HttpStatusCode status)> GetJwtTokenAsync(string userId)
     {
         await _semaphoreSlim.WaitAsync();
 
@@ -80,10 +81,8 @@ public sealed class OneWareCloudLoginService
 
             _jwtTokenCache.TryGetValue(userId, out var existingToken);
 
-            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(5))
-            {
-                return (existingToken.RawData, HttpStatusCode.NoContent);
-            }
+            if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
+                return (existingToken, HttpStatusCode.NoContent);
 
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
@@ -91,7 +90,7 @@ public sealed class OneWareCloudLoginService
 
             if (!_jwtTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
 
-            return (regeneratedToken.RawData, status);
+            return (regeneratedToken, status);
         }
         finally
         {
@@ -139,7 +138,7 @@ public sealed class OneWareCloudLoginService
     private async Task<(bool success, HttpStatusCode status)> RefreshAsync(string refreshToken)
     {
         var request = new RestRequest("/api/auth/refresh");
-        request.AddJsonBody(new RefreshModel()
+        request.AddJsonBody(new RefreshModel
         {
             RefreshToken = refreshToken
         });
@@ -190,10 +189,8 @@ public sealed class OneWareCloudLoginService
 
                 return (true, HttpStatusCode.OK);
             }
-            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
-            {
-                return (false, response.StatusCode);
-            }
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests) return (false, response.StatusCode);
 
             return (false, response.StatusCode);
         }
@@ -237,11 +234,8 @@ public sealed class OneWareCloudLoginService
         try
         {
             RestRequest? request;
-            string? jwt = null;
-            if (OneWareCloudIsUsed)
-            {
-                (jwt, _) = await GetLoggedInJwtTokenAsync();
-            }
+            JwtSecurityToken? jwt = null;
+            if (OneWareCloudIsUsed) (jwt, _) = await GetLoggedInJwtTokenAsync();
 
             if (jwt == null)
             {
@@ -250,7 +244,7 @@ public sealed class OneWareCloudLoginService
             else
             {
                 request = new RestRequest("/api/feedback");
-                request.AddHeader("Authorization", $"Bearer {jwt}");
+                request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
             }
 
             request.AddHeader("Accept", "application/json");
@@ -279,10 +273,7 @@ public sealed class OneWareCloudLoginService
     {
         var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
         var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value ?? null;
-        if (userId == null)
-        {
-            throw new Exception("User ID not found in token");
-        }
+        if (userId == null) throw new Exception("User ID not found in token");
 
         _jwtTokenCache[userId] = jwtToken;
 
@@ -312,33 +303,17 @@ public sealed class OneWareCloudLoginService
         _settingService.Save(_paths.SettingsPath);
     }
 
-    private class LoginModel
-    {
-        [JsonPropertyName("email")] public required string Email { get; set; }
-
-        [JsonPropertyName("password")] public required string Password { get; set; }
-    }
-
-    private class RefreshModel
-    {
-        [JsonPropertyName("refreshToken")] public required string RefreshToken { get; set; }
-    }
-
-    public bool OneWareCloudIsUsed { get; }
-    
 
     //Returns if new listener was started
     public async Task<bool> LoginWithBrowserAsync(CancellationToken cancellationToken = default)
     {
-        bool startNewListener = false;
-        if (_port == null)
-        {
-            startNewListener = true;
-        }
+        var startNewListener = false;
+        if (_port == null) startNewListener = true;
         _port ??= PlatformHelper.GetAvailablePort();
-        string prefix = $"http://{IPAddress.Loopback}:{_port}/";
-        string host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey).TrimEnd('/');
-        string url = $"{host}/Account/LoginInApplication/?redirectPort={_port}";
+        var prefix = $"http://{IPAddress.Loopback}:{_port}/";
+        var host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+            .TrimEnd('/');
+        var url = $"{host}/Account/LoginInApplication/?redirectPort={_port}";
         using HttpListener listener = new();
 
         if (startNewListener)
@@ -346,23 +321,22 @@ public sealed class OneWareCloudLoginService
             listener.Prefixes.Add(prefix);
             listener.Start();
         }
-        
+
         PlatformHelper.OpenHyperLink(url);
 
         if (startNewListener)
-        {
             try
             {
                 // Register cancellation callback to stop the listener
                 using var registration = cancellationToken.Register(() => listener.Stop());
-                
-                HttpListenerContext context = await listener.GetContextAsync();
-                
+
+                var context = await listener.GetContextAsync();
+
                 // Check if cancelled after getting context
                 cancellationToken.ThrowIfCancellationRequested();
-                
-                HttpListenerResponse response = context.Response;
-                
+
+                var response = context.Response;
+
                 await HandleLoginResponseAsync(context);
                 response.Redirect(host);
                 response.KeepAlive = false;
@@ -377,21 +351,30 @@ public sealed class OneWareCloudLoginService
                 listener.Stop();
                 _port = null;
             }
-        }
+
         return startNewListener;
     }
 
     private async Task HandleLoginResponseAsync(HttpListenerContext context)
     {
-        NameValueCollection query = System.Web.HttpUtility.ParseQueryString(context!.Request!.Url!.Query);
-        string? refreshToken = query["refreshToken"];
+        var query = HttpUtility.ParseQueryString(context!.Request!.Url!.Query);
+        var refreshToken = query["refreshToken"];
 
-        if (refreshToken == null)
-        {
-            return;
-        }
+        if (refreshToken == null) return;
 
         await Dispatcher.UIThread.InvokeAsync(() => RefreshAsync(refreshToken));
         _settingService.Save(_paths.SettingsPath);
+    }
+
+    private class LoginModel
+    {
+        [JsonPropertyName("email")] public required string Email { get; set; }
+
+        [JsonPropertyName("password")] public required string Password { get; set; }
+    }
+
+    private class RefreshModel
+    {
+        [JsonPropertyName("refreshToken")] public required string RefreshToken { get; set; }
     }
 }

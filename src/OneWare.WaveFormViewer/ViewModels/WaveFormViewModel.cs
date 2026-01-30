@@ -27,14 +27,14 @@ public class WaveFormViewModel : ObservableObject
 
     private long _secondMarkerOffset = long.MaxValue;
 
+    private WaveModel? _selectedSignal;
+
     private long _timeScale = 1;
 
     private int _zoomLevel;
 
-    private WaveModel? _selectedSignal;
-    
     private double _zoomMultiply = 1;
-    
+
     public int MinZoomLevel { get; } = -2;
     public int MaxZoomLevel { get; private set; } = 1;
 
@@ -83,7 +83,7 @@ public class WaveFormViewModel : ObservableObject
             SetProperty(ref _max, value);
             OnPropertyChanged(nameof(ViewPortWidth));
             OnPropertyChanged(nameof(MaxScroll));
-            
+
             MaxZoomLevel = Max > 0 ? (int)Math.Log2(Max) : 0;
         }
     }
@@ -187,18 +187,17 @@ public class WaveFormViewModel : ObservableObject
             return (dist > 0 ? "+" : "") + $"{dist} {TimeScaleUnit}";
         }
     }
-    
+
     public string MarkerText
     {
         get
         {
-            if (MarkerOffset != long.MaxValue && (LoadingMarkerOffset != long.MaxValue || SecondMarkerOffset == long.MaxValue))
-            {
+            if (MarkerOffset != long.MaxValue &&
+                (LoadingMarkerOffset != long.MaxValue || SecondMarkerOffset == long.MaxValue))
                 return TimeHelper.FormatTime(MarkerOffset, TimeScale, ViewPortWidth);
-            }
 
             if (MarkerOffset == long.MaxValue) return "?";
-            
+
             var dist = SecondMarkerOffset - MarkerOffset;
             return (dist > 0 ? "+" : "") + TimeHelper.FormatTime(dist, TimeScale, ViewPortWidth);
         }

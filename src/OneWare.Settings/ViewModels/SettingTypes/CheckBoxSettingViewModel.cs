@@ -7,6 +7,5 @@ public class CheckBoxSettingViewModel : TitledSettingViewModel
     public CheckBoxSettingViewModel(TitledSetting setting) :
         base(setting)
     {
-     
     }
 }

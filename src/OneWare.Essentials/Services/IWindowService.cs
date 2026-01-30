@@ -11,12 +11,13 @@ namespace OneWare.Essentials.Services;
 
 public interface IWindowService
 {
-    public void RegisterUiExtension(string key, UiExtension extension);
-    public ObservableCollection<UiExtension> GetUiExtensions(string key);
+    public void RegisterUiExtension(string key, OneWareUiExtension extension);
+    public ObservableCollection<OneWareUiExtension> GetUiExtensions(string key);
     public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems);
     public ObservableCollection<MenuItemViewModel> GetMenuItems(string key);
     public void Show(FlexibleWindow window, Window? owner = null);
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner = null);
+    public Task<MessageBoxResult> ShowMessageBoxAsync(MessageBoxRequest request, Window? owner = null);
     public Task ShowMessageAsync(string title, string message, MessageBoxIcon icon, Window? owner = null);
 
     public Task<MessageBoxStatus> ShowYesNoAsync(string title, string message, MessageBoxIcon icon,
@@ -30,15 +31,18 @@ public interface IWindowService
     public Task<string?> ShowInputAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
         Window? owner = null);
 
-    public Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue, Window? owner = null);
+    public Task<string?> ShowFolderSelectAsync(string title, string message, MessageBoxIcon icon, string? defaultValue,
+        Window? owner = null);
 
     public Task<object?> ShowInputSelectAsync(string title, string message, MessageBoxIcon icon,
         IEnumerable<object> options, object? defaultOption, Window? owner = null);
 
-    public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information, TimeSpan? expiration = null);
+    public void ShowNotification(string title, string message, NotificationType type = NotificationType.Information,
+        TimeSpan? expiration = null);
 
     public void ShowNotificationWithButton(string title, string message, string buttonText,
-        Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information, TimeSpan? expiration = null);
-    
+        Action buttonAction, IImage? icon = null, NotificationType type = NotificationType.Information,
+        TimeSpan? expiration = null);
+
     public void ActivateMainWindow();
 }

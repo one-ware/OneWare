@@ -14,21 +14,21 @@
             ToolTip.Tip="{Binding ConnectionState, StringFormat='OneWare Cloud - {0}'}">
         <Button.Flyout>
             <MenuFlyout Placement="Top">
-                <MenuItem Header="Connect" 
+                <MenuItem Header="Connect"
                           Command="{Binding ConnectAsync}"
                           IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Disconnected}}" />
-                <MenuItem Header="Disconnect" 
+                <MenuItem Header="Disconnect"
                           Command="{Binding DisconnectAsync}"
                           IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
             </MenuFlyout>
         </Button.Flyout>
         <Panel>
-            <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="16" Height="16" 
+            <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="16" Height="16"
                    IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Disconnected}}" />
-            
-            <Image Source="{DynamicResource VsImageLib.Connect16X}" Width="16" Height="16" 
+
+            <Image Source="{DynamicResource VsImageLib.Connect16X}" Width="16" Height="16"
                    IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
-            
+
             <controls:Spinner Foreground="White" Height="13"
                               CustomIcon="{DynamicResource VsCode.SyncWhite}"
                               IsIntermediate="True"

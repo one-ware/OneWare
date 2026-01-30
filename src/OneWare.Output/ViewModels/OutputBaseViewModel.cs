@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Media;
-using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
@@ -55,9 +54,9 @@ public abstract class OutputBaseViewModel : ExtendedTool
         set => SetProperty(ref _autoScroll, value);
     }
 
-    public void WriteLine(string text, IBrush? textColor = null)
+    public void WriteLine(string text, IBrush? textColor = null, IProjectRoot? owner = null)
     {
-        Write(text + "\n", textColor);
+        Write(text + "\n", textColor, owner);
     }
 
     public void Write(string text, IBrush? textColor = null, IProjectRoot? owner = null)
@@ -71,7 +70,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
             if (text[i] == '\n')
             {
                 _currentLineNumber++;
-                LineContexts.Add(new LineContext()
+                LineContexts.Add(new LineContext
                 {
                     LineColor = textColor,
                     Owner = owner

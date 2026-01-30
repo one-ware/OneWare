@@ -1,5 +1,5 @@
-﻿using OneWare.Essentials.Enums;
-using OneWare.Essentials.Helpers;
+﻿using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -12,7 +12,8 @@ public class HardwarePackageModel(
     ILogger logger,
     IPaths paths,
     IApplicationStateService applicationStateService)
-    : PackageModel(package, "Hardware", Path.Combine(paths.PackagesDirectory, "Hardware", package.Id!), httpService, logger,
+    : PackageModel(package, "Hardware", Path.Combine(paths.PackagesDirectory, "Hardware", package.Id!), httpService,
+        logger,
         applicationStateService)
 {
     protected override void Install(PackageTarget target)

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using Prism.Ioc;
 
 namespace OneWare.Essentials.Helpers;
 
@@ -57,11 +57,9 @@ public class TextMateSnippetHelper
         [JsonConverter(typeof(PrefixConverter))]
         public string[]? Prefixes { get; init; }
 
-        [JsonPropertyName("body")] 
-        public List<string>? Body { get; init;}
+        [JsonPropertyName("body")] public List<string>? Body { get; init; }
 
-        [JsonPropertyName("description")] 
-        public string? Description { get; init; }
+        [JsonPropertyName("description")] public string? Description { get; init; }
     }
 }
 
@@ -77,9 +75,7 @@ public class PrefixConverter : JsonConverter<string[]?>
         }
 
         if (reader.TokenType == JsonTokenType.StartArray)
-        {
             return JsonDocument.ParseValue(ref reader).RootElement.Deserialize<string[]>();
-        }
 
         throw new JsonException("Unexpected token type");
     }

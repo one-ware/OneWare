@@ -85,7 +85,7 @@
                         <Setter Property="ShowLineNumbers" Value="True" />
                         <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />
                         <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
-                        <Setter Property="IsReadOnly" Value="{Binding IsReadOnly}"/>
+                        <Setter Property="IsReadOnly" Value="{Binding IsReadOnly}" />
                     </Style>
                 </ContentControl.Styles>
             </ContentControl>
@@ -95,14 +95,6 @@
                     <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="3" BorderThickness="1"
                                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                                     Background="{DynamicResource ThemeBackgroundBrush}">
-                        <ContentControl.Styles>
-                            <Style Selector="avaloniaEdit|TextEditor">
-                                <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />
-                                <Setter Property="Background" Value="Transparent" />
-                            </Style>
-                        </ContentControl.Styles>
                     </ContentControl>
                 </Grid>
             </Popup>

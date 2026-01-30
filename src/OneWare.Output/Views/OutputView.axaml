@@ -15,7 +15,6 @@
     -->
         <DockPanel>
             <Border Height="30" DockPanel.Dock="Top" BorderThickness="0,0,0,1"
-                    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                     Background="{DynamicResource ThemeBackgroundBrush}">
                 <DockPanel VerticalAlignment="Center">
                     <Border Height="20" Margin="0,0,3,0" DockPanel.Dock="Right"
@@ -26,11 +25,11 @@
                             Foreground="{DynamicResource DarkBlue}" />-->
                     </Border>
                     <Border Padding="5,0, 3,0" DockPanel.Dock="Left" VerticalAlignment="Bottom">
-                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <StackPanel Classes="ToolBar">
                             <TextBlock Text="AutoScroll" VerticalAlignment="Center" />
-                            <CheckBox Margin="5, 0, 1, 0" IsChecked="{Binding AutoScroll}" />
-                            <Border Classes="SplitterBorder" Margin="5,0,0,0" Height="20" />
-                            <Button Command="{Binding Clear}" Margin="0" ToolTip.Tip="Clear output">
+                            <CheckBox IsChecked="{Binding AutoScroll}" Margin="0 0 5 0" />
+                            <Separator />
+                            <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
                                 <Image Height="18" Source="{DynamicResource VsImageLib.ClearWindowContent16X}" />
                             </Button>
                         </StackPanel>

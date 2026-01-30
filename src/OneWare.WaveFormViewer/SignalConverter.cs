@@ -24,7 +24,7 @@ public static class SignalConverter
                 if (!CanConvert(bits)) return "XXX";
 
                 if (input is float or double) return input.ToString() ?? "error";
-                var resultUnsigned = ConvertToUnsignedInt(bits); 
+                var resultUnsigned = ConvertToUnsignedInt(bits);
                 if (model.FixedPointShift != 0)
                     return PerformFixedPointShift(resultUnsigned, model.FixedPointShift)
                         .ToString(CultureInfo.InvariantCulture);
@@ -147,22 +147,21 @@ public static class SignalConverter
             value <<= 1;
             if (bit == '1') value += 1;
         }
-        
+
         return value;
     }
 
     public static double PerformFixedPointShift(BigInteger value, int shift)
     {
-        return (double) value / Math.Pow(2, shift);
+        return (double)value / Math.Pow(2, shift);
     }
-    
+
 
     private static string ToLiteral(string input)
     {
         var sb = new StringBuilder(input.Length + 2);
 
         foreach (var ch in input)
-        {
             switch (ch)
             {
                 case '\"':
@@ -197,17 +196,12 @@ public static class SignalConverter
                     break;
                 default:
                     if (char.IsControl(ch))
-                    {
                         sb.AppendFormat("\\u{0:X4}", (int)ch);
-                    }
                     else
-                    {
                         sb.Append(ch);
-                    }
                     break;
             }
-        }
-        
+
         return sb.ToString();
     }
 }

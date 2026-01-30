@@ -1,32 +1,31 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using Prism.Ioc;
-using Prism.Modularity;
 
 namespace OneWare.Debugger;
 
-public class DebuggerModule : IModule
+public class DebuggerModule : OneWareModuleBase
 {
-    public void RegisterTypes(IContainerRegistry containerRegistry)
+    public override void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<DebuggerViewModel>();
     }
 
-    public void OnInitialized(IContainerProvider containerProvider)
+    public override void Initialize(IServiceProvider serviceProvider)
     {
-        var dockService = containerProvider.Resolve<IDockService>();
-        //dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
+        var dockService = serviceProvider.Resolve<IMainDockService>();
 
-        containerProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+        serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemViewModel("Debugger")
             {
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
-                    dockService.Show(containerProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
+                    dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
                 IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
             });
     }

@@ -10,72 +10,108 @@ namespace OneWare.ProjectExplorer.Behaviors;
 
 public class ProjectExplorerViewDropHandler : DropHandlerBase
 {
-    private bool Validate<T>(TreeDataGrid treeView, DragEventArgs e, object? sourceContext, object? targetContext,
-        bool bExecute) where T : IProjectExplorerNode
+    private static string[] GetLocalPaths(DragEventArgs e)
     {
-        if (targetContext is not ProjectExplorerViewModel vm
-            || treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
-            return false;
-        
-        var targetParent = targetNode as IProjectFolder ?? targetNode.Parent as IProjectFolder;
+        return e.DataTransfer
+                   .TryGetFiles()?
+                   .Select(f => f.TryGetLocalPath())
+                   .Where(p => !string.IsNullOrWhiteSpace(p))
+                   .Cast<string>()
+                   .ToArray()
+               ?? Array.Empty<string>();
+    }
 
-        if (targetParent == null) return false;
-
-        //Import files or folders from outside
-        if (sourceContext is not IReadOnlyList<T> sourceNodes)
+    private static bool IsSameFolderMove(
+        IProjectFolder targetFolder,
+        IEnumerable<string> sourcePaths)
+    {
+        static string Normalize(string path)
         {
-            if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+            var full = Path.GetFullPath(path);
+
+            // normalize directory paths
+            if (!full.EndsWith(Path.DirectorySeparatorChar))
+                full += Path.DirectorySeparatorChar;
+
+            return full;
+        }
+
+        var targetPath = Normalize(targetFolder.FullPath);
+
+        return sourcePaths.Any(src =>
+        {
+            var fullSrc = Path.GetFullPath(src);
+
+            if (File.Exists(fullSrc))
             {
-                if (bExecute)
-                    _ = vm.DropAsync(targetParent, false, true, files
-                        .Select(x => x.TryGetLocalPath())
-                        .Where(x => x != null)
-                        .Cast<string>()
-                        .ToArray());
-                return true;
+                var sourceDir = Path.GetDirectoryName(fullSrc);
+                return sourceDir != null &&
+                       Normalize(sourceDir) == targetPath;
+            }
+
+            if (Directory.Exists(fullSrc))
+            {
+                var parentDir = Path.GetDirectoryName(
+                    fullSrc.TrimEnd(Path.DirectorySeparatorChar));
+
+                return parentDir != null &&
+                       Normalize(parentDir) == targetPath;
             }
 
             return false;
-        }
+        });
+    }
 
-        if (!sourceNodes.All(x => x is IProjectEntry)) return false;
+    private bool Validate<T>(
+        TreeDataGrid treeView,
+        DragEventArgs e,
+        object? sourceContext,
+        object? targetContext,
+        bool execute)
+        where T : IProjectExplorerNode
+    {
+        if (targetContext is not ProjectExplorerViewModel vm)
+            return false;
 
-        var sourceEntities = sourceNodes.Cast<IProjectEntry>().ToArray();
-        
-        foreach (var sourceNode in sourceEntities)
-        {
-            if (targetParent == sourceNode.Parent) return false;
+        if (treeView.GetVisualAt(e.GetPosition(treeView)) is not Control { DataContext: T targetNode })
+            return false;
 
-            if (sourceNode.FullPath == targetParent.FullPath)
-                return false;
+        var targetFolder =
+            targetNode as IProjectFolder ??
+            targetNode.Parent as IProjectFolder;
 
-            if (sourceNode is IProjectFolder sourceFolder && targetParent.FullPath.StartsWith(sourceFolder.FullPath))
-                return false;
-        }
-        
+        if (targetFolder == null)
+            return false;
+
+        var sourcePaths = GetLocalPaths(e);
+        if (sourcePaths.Length == 0)
+            return false;
+
+        if (e.DragEffects == DragDropEffects.Move &&
+            IsSameFolderMove(targetFolder, sourcePaths))
+            return false;
+
+        if (!execute)
+            return true;
+
         switch (e.DragEffects)
         {
             case DragDropEffects.Copy:
-            {
-                if (bExecute)
-                    _ = vm.DropAsync(targetParent, true, true, sourceEntities.Select(x => x.FullPath).ToArray());
-
+                _ = vm.DropAsync(targetFolder, true, true, sourcePaths);
                 return true;
-            }
+
             case DragDropEffects.Move:
-            {
-                if (bExecute)
-                    _ = vm.DropAsync(targetParent, true, false, sourceEntities.Select(x => x.FullPath).ToArray());
-
+                _ = vm.DropAsync(targetFolder, true, false, sourcePaths);
                 return true;
-            }
-            case DragDropEffects.Link:
-            {
-                return false;
-            }
-        }
 
-        return false;
+            // Happens when a file is dragged from outside
+            case DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link:
+                _ = vm.DropAsync(targetFolder, false, true, sourcePaths);
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     public override bool Validate(object? sender, DragEventArgs e, object? sourceContext, object? targetContext,
@@ -86,7 +122,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
             var status = Validate<IProjectExplorerNode>(treeView, e, sourceContext, targetContext, false);
             return status;
         }
-        
+
         return false;
     }
 

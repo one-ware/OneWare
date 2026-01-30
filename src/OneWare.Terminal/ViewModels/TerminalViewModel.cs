@@ -1,13 +1,16 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
 using OneWare.Terminal.Provider.Win32;
-using Prism.Ioc;
 using VtNetCore.Avalonia;
 using VtNetCore.VirtualTerminal;
 
@@ -16,15 +19,29 @@ namespace OneWare.Terminal.ViewModels;
 public class TerminalViewModel : ObservableObject
 {
     private static readonly IPseudoTerminalProvider SProvider = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? new Win32PseudoTerminalProvider()
+        ? new Win32ConPtyPseudoTerminalProvider()
         : new UnixPseudoTerminalProvider();
 
     private readonly object _createLock = new();
-    
-    public string? StartArguments { get; }
-    public string WorkingDir { get; }
 
     private IConnection? _connection;
+
+    private VirtualTerminalController? _terminal;
+
+    private bool _terminalLoading = true;
+
+    private bool _terminalVisible;
+
+    public TerminalViewModel(string workingDir, string? startArguments = null)
+    {
+        WorkingDir = workingDir;
+        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? BuildWindowsStartArguments(WorkingDir)
+            : null);
+    }
+
+    public string? StartArguments { get; }
+    public string WorkingDir { get; }
 
     public IConnection? Connection
     {
@@ -32,24 +49,18 @@ public class TerminalViewModel : ObservableObject
         set => SetProperty(ref _connection, value);
     }
 
-    private VirtualTerminalController? _terminal;
 
-    
     public VirtualTerminalController? Terminal
     {
         get => _terminal;
         set => SetProperty(ref _terminal, value);
     }
-    
-    private bool _terminalVisible;
-    
+
     public bool TerminalVisible
     {
         get => _terminalVisible;
         set => SetProperty(ref _terminalVisible, value);
     }
-
-    private bool _terminalLoading = true;
 
     public bool TerminalLoading
     {
@@ -58,15 +69,7 @@ public class TerminalViewModel : ObservableObject
     }
 
     public event EventHandler? TerminalReady;
-    
-    public TerminalViewModel(string workingDir, string? startArguments = null)
-    {
-        WorkingDir = workingDir;
-        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? $"powershell.exe -NoExit Set-Location '{WorkingDir}'"
-            : null);
-    }
-    
+
     public void Redraw()
     {
         if (TerminalVisible)
@@ -85,11 +88,11 @@ public class TerminalViewModel : ObservableObject
     {
         if (Connection is { IsConnected: true }) return;
         TerminalLoading = true;
-        
+
         lock (_createLock)
         {
             CloseConnection();
-            
+
             //TODO Fix zsh support
             var shellExecutable = PlatformHelper.Platform switch
             {
@@ -102,7 +105,8 @@ public class TerminalViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, StartArguments);
+                var environment = BuildTerminalEnvironment(shellExecutable);
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, StartArguments);
 
                 if (terminal == null)
                 {
@@ -118,11 +122,11 @@ public class TerminalViewModel : ObservableObject
                 {
                     TerminalVisible = true;
                     Connection.Connect();
-                    
+
                     await Task.Delay(500);
-            
+
                     TerminalLoading = false;
-                    
+
                     TerminalReady?.Invoke(this, EventArgs.Empty);
                 });
             }
@@ -132,6 +136,14 @@ public class TerminalViewModel : ObservableObject
     public void Send(string command)
     {
         if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
+    }
+
+    public void SuppressEcho(byte[] data)
+    {
+        if (Connection is IOutputSuppressor suppressor)
+        {
+            suppressor.SuppressOutput(data);
+        }
     }
 
     public void CloseConnection()
@@ -146,5 +158,65 @@ public class TerminalViewModel : ObservableObject
     public void Close()
     {
         CloseConnection();
+    }
+
+    private static string BuildWindowsStartArguments(string workingDir)
+    {
+        var marker = "$esc=[char]27; $bel=[char]7; " +
+                     "$code = if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) { $LASTEXITCODE } " +
+                     "elseif ($?) { 0 } else { 1 }; " +
+                     "Write-Host \"$esc]9;OW_DONE:$code$bel\" -NoNewline;";
+        var prompt = "function global:prompt { " + marker + " \"PS $PWD> \" }";
+
+        return $"powershell.exe -NoExit Set-Location '{workingDir}'; {prompt}";
+    }
+
+    private static string? BuildTerminalEnvironment(string? shellExecutable)
+    {
+        if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
+
+        var shellName = Path.GetFileName(shellExecutable);
+        if (!shellName.Equals("bash", StringComparison.OrdinalIgnoreCase)) return null;
+
+        var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
+        var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
+        var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
+            ? markerCommand
+            : markerCommand + ";" + existingPromptCommand;
+
+        var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["PROMPT_COMMAND"] = combined
+        };
+
+        return BuildEnvironmentBlock(overrides);
+    }
+
+    private static string BuildEnvironmentBlock(Dictionary<string, string> overrides)
+    {
+        var comparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+
+        var env = new SortedDictionary<string, string>(comparer);
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is not string key || entry.Value is not string value) continue;
+            env[key] = value;
+        }
+
+        foreach (var pair in overrides)
+        {
+            env[pair.Key] = pair.Value;
+        }
+
+        var builder = new StringBuilder();
+        foreach (var pair in env)
+        {
+            builder.Append(pair.Key).Append('=').Append(pair.Value).Append('\0');
+        }
+
+        builder.Append('\0');
+        return builder.ToString();
     }
 }

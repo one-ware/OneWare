@@ -1,6 +1,5 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -12,7 +11,7 @@
                       TargetType="FlyoutPresenter">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
-            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="1" />
@@ -51,135 +50,28 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/Editor.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/AdvancedWindow.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Menu.axaml" />
-    <StyleInclude Source="avares://OneWare.Core/Styles/ToolTip.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/ScrollViewer.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/NotificationCard.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
-
+    <StyleInclude Source="avares://OneWare.Core/Styles/Buttons.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/TextBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/ComboBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/Borders.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/MarkdownViewer.axaml" />
+    
     <Style Selector=":is(Window)">
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
 
-    <Style Selector="Button">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
-    <Style Selector="ComboBox:disabled controls|SearchComboBox">
-        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
-    </Style>
-
-    <Style Selector="ComboBox, controls|SearchComboBox">
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Padding" Value="3 1" />
-    </Style>
-
-    <Style Selector="ComboBox /template/ Popup > Border, controls|SearchComboBox /template/ Popup > Border">
-        <Setter Property="CornerRadius" Value="3" />
-    </Style>
-
-    <Style Selector="CheckBox, ComboBox, TextBox, controls|SearchComboBox">
-        <Setter Property="CornerRadius" Value="3" />
-    </Style>
-
-    <Style Selector="ComboBoxItem">
-        <Setter Property="Height" Value="24" />
-    </Style>
-
-    <Style Selector="StackPanel.HToolBar TextBlock">
-        <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-    <Style Selector="StackPanel.HToolBar">
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Spacing" Value="5" />
-        <Setter Property="Orientation" Value="Horizontal" />
-        <Setter Property="Margin" Value="5 0" />
-    </Style>
-    <Style Selector="StackPanel.HToolBar Button">
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Width" Value="24" />
-    </Style>
-
-    <Style Selector="TextBox">
-        <Setter Property="Padding" Value="3 2" />
-        <Setter Property="Background" Value="Transparent" />
-    </Style>
-    <Style Selector="TextBox.ToolBar">
-        <Setter Property="Height" Value="24" />
-    </Style>
-
-    <!--IconTray-->
-    <Style Selector="Border.SplitterBorder">
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Margin" Value="2 0" />
-        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="Width" Value="1" />
-    </Style>
-
-    <Style Selector="ContentPresenter#PART_MessageContent">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Content" Value="" />
-    </Style>
-
-    <Style Selector="Button.BorderButton">
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-    </Style>
-
-    <Style Selector="StackPanel.WindowButtons > Button, Button.RoundButton">
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Padding" Value="2" />
-        <Setter Property="Height" Value="25" />
-        <Setter Property="MinWidth" Value="60" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
-    </Style>
-
-    <Style Selector="StackPanel.WindowButtons">
-        <Setter Property="Orientation" Value="Horizontal" />
-        <Setter Property="Spacing" Value="10" />
-    </Style>
-
-    <Style Selector="Button:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar">
-        <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="Height" Value="24" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar > StackPanel">
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="Orientation" Value="Horizontal" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar > StackPanel > Separator">
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="Height" Value="24" />
-        <Setter Property="Width" Value="1" />
+    <Style Selector="ContextMenu > Separator, MenuItem > Separator">
         <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
 
-    <Style Selector="Border.RoundToolBar > StackPanel > ComboBox">
-        <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
-    <Style Selector="Border.RoundToolBar Button">
-        <Setter Property="Height" Value="24" />
-        <Setter Property="ClipToBounds" Value="True" />
-        <Setter Property="Width" Value="NaN" />
-        <Setter Property="Padding" Value="5 0" />
-    </Style>
-    
     <Style Selector="ToolTip">
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="3" />
         <Setter Property="MaxWidth" Value="600" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{TemplateBinding Background}"
@@ -192,9 +84,37 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    
+
+    <Style Selector="CheckBox">
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+
     <Style Selector="ToolTip TextBlock">
-        <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+        <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar">
+        <Setter Property="Spacing" Value="5" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar Separator">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar Button">
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Height" Value="24" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
 </Styles>

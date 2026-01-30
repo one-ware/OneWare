@@ -16,9 +16,11 @@
             CornerRadius="{Binding CornerRadius}"
             BoxShadow="{Binding BoxShadow}">
         <TextBlock FontSize="{Binding FontSize}" FontWeight="{Binding FontWeight}" Text="{Binding Text}"
-                   VerticalAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Foreground="{Binding Foreground}" >
+                   VerticalAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                   Foreground="{Binding Foreground}">
             <Interaction.Behaviors>
-                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}" AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
+                <behaviors:ApplyAlternativeBindingIfNullBehavior OriginalValue="{Binding Foreground}"
+                                                                 AlternativeValue="{DynamicResource ThemeForegroundBrush}" />
             </Interaction.Behaviors>
         </TextBlock>
     </Border>
