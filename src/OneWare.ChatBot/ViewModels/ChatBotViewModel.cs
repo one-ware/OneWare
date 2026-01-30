@@ -131,6 +131,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     
     private async Task InitializeChatAsync(IChatService chatService)
     {
+        Messages.Clear();
+        
         var status = await chatService.InitializeAsync();
 
         IsInitialized = status.Success;
