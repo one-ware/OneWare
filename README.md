@@ -9,8 +9,6 @@ Using .NET 10.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
 
 ![image](https://github.com/one-ware/OneWare/assets/25281882/af9fb9c4-ea35-4d28-a8d0-023ce2783258)
 
-
-
 ## About
 
 OneWare Studio is the next generation IDE for electronics development. 
@@ -32,6 +30,14 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/oneware)
 
 [![Get it from Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/com.one_ware.OneWare)
+
+## Try out the One AI Extension now!
+
+With ONE AI, anyone can create custom AI models in minutes without AI expertise. Train powerful models on our cloud servers, then deploy lightweight, optimized models that run efficiently on any device - even resource-limited microcontrollers.
+
+[quick-start.webm](https://github.com/user-attachments/assets/fed578eb-d05a-4ba1-8442-3c7a95ff6829)
+
+More information about One AI [here](https://one-ware.com/docs/one-ai/getting-started)
 
 ## Status
 
