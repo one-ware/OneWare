@@ -9,7 +9,7 @@
              x:Class="OneWare.ChatBot.Views.ChatBotView" Name="ChatBotViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
     <Grid RowDefinitions="Auto, *, Auto, Auto" RowSpacing="4">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" 
+        <Border Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0 0 0 1" Padding="4">
             <DockPanel LastChildFill="False">
                 <StackPanel Spacing="8" Orientation="Horizontal" Margin="4">
@@ -18,33 +18,59 @@
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Right">
-                    <Button Command="{Binding NewChatCommand}">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Button Command="{Binding InitializeCurrentCommand}"
+                            IsVisible="{Binding !IsInitialized}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}"  Height="8" Width="8"
+                                   VerticalAlignment="Center" />
+                            <TextBlock Text="Refresh" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding NewChatCommand}" IsVisible="{Binding IsInitialized}">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8"
                                    VerticalAlignment="Center" />
-                            <TextBlock Text="New Chat" VerticalAlignment="Center"/>
+                            <TextBlock Text="New Chat" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <Interaction.Behaviors>
-                <AutoScrollToBottomBehavior />
-            </Interaction.Behaviors>
+        <Panel Grid.Row="1">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <Interaction.Behaviors>
+                    <AutoScrollToBottomBehavior />
+                </Interaction.Behaviors>
 
-            <Border Padding="8 8 8 0">
-                <ItemsControl ItemsSource="{Binding Messages}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Spacing="8" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
+                <Border Padding="8 8 8 0">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Border>
+            </ScrollViewer>
+
+            <!--
+            <Border VerticalAlignment="Center" HorizontalAlignment="Center"
+                    IsVisible="{Binding NeedsAuthentication}">
+                <Button Command="{Binding AuthenticateCommand}" 
+                        Background="{DynamicResource ThemeBackgroundBrush}"
+                        Padding="5" Classes="RoundButton" Height="30">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock>
+                            <Run Text="Login to " />
+                            <Run Text="{Binding SelectedChatService.Name, FallbackValue={x:Null}}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Button>
             </Border>
-        </ScrollViewer>
+            -->
+        </Panel>
 
         <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ThemeControlMidBrush}"
                 Classes="RoundBorder"
@@ -127,7 +153,7 @@
                     </StackPanel>
 
                     <ContentControl DockPanel.Dock="Right"
-                                    Content="{Binding SelectedChatService.UiExtension, FallbackValue={x:Null}}" />
+                                    Content="{Binding SelectedChatService.BottomUiExtension, FallbackValue={x:Null}}" />
 
                 </DockPanel>
             </Grid>

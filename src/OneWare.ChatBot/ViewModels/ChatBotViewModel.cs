@@ -54,6 +54,12 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         }
     }
 
+    public bool IsInitialized
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
     public bool IsConnected
     {
         get;
@@ -62,6 +68,12 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
                 OnIsConnectedChanged(value);
         }
+    }
+
+    public bool NeedsAuthentication
+    {
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public string StatusText
@@ -82,6 +94,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
             var oldValue = field;
             if (SetProperty(ref field, value))
             {
+                NeedsAuthentication = false;
+
                 if (oldValue != null)
                 {
                     oldValue.MessageReceived -= OnMessageReceived;
@@ -109,9 +123,32 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         SelectedChatService = ChatServices.FirstOrDefault();
     }
 
+    public AsyncRelayCommand InitializeCurrentCommand => new(() =>
+    {
+        if (SelectedChatService == null) return Task.CompletedTask;
+        return InitializeChatAsync(SelectedChatService);
+    });
+    
     private async Task InitializeChatAsync(IChatService chatService)
     {
-        await chatService.InitializeAsync();
+        var status = await chatService.InitializeAsync();
+
+        IsInitialized = status.Success;
+        NeedsAuthentication = status.NeedsAuthentication;
+    }
+    
+    [RelayCommand]
+    private async Task AuthenticateAsync()
+    {
+        if (SelectedChatService == null)
+        {
+            Messages.Add(new ChatMessageViewModel("System", false)
+            {
+                Message = "No ChatService Selected"
+            });
+            return;
+        }
+        NeedsAuthentication = !await SelectedChatService.AuthenticateAsync();
     }
     
     [RelayCommand]

@@ -14,6 +14,12 @@ public sealed class ChatServiceMessageEvent(ChatServiceMessageType type, string?
     public string? Content { get; } = content;
 }
 
+public sealed class ChatInitializationStatus(bool success)
+{
+    public bool Success { get; } = success;
+    public bool NeedsAuthentication { get; init; }
+}
+
 public sealed class ChatServiceStatusEvent(bool isConnected, string statusText)
 {
     public bool IsConnected { get; } = isConnected;

@@ -5,6 +5,7 @@ using DynamicData;
 using GitHub.Copilot.SDK;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.Views;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -29,10 +30,10 @@ public sealed class CopilotChatService(
         get;
         set => SetProperty(ref field, value);
     }
-    
+
     public string Name { get; } = "Copilot";
 
-    public Control UiExtension => new CopilotChatBotExtensionView()
+    public Control BottomUiExtension => new CopilotChatBotExtensionView()
     {
         DataContext = this
     };
@@ -40,20 +41,63 @@ public sealed class CopilotChatService(
     public event EventHandler<ChatServiceMessageEvent>? MessageReceived;
     public event EventHandler<ChatServiceStatusEvent>? StatusChanged;
 
-    public async Task InitializeAsync()
+    public async Task<bool> AuthenticateAsync()
+    {
+        if (_client == null) return false;
+
+        return (await _client.GetAuthStatusAsync()).IsAuthenticated;
+    }
+
+    public async Task<ChatInitializationStatus> InitializeAsync()
     {
         var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-        
+
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
 
+        var isAuthenticated = false;
+
         try
         {
+            if (!PlatformHelper.ExistsOnPath(cliPath))
+            {
+                StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "CLI Not found"));
+                MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error,
+                    """
+                        Copilot CLI not found.
+                        Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
+                        
+                        If it is installed to a custom location, you can set the path for Copilot CLI in Settings -> AI Chat
+                    """));
+                return new ChatInitializationStatus(false)
+                {
+                    NeedsAuthentication = true
+                };
+            }
+            
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 Cwd = paths.ProjectsDirectory,
                 CliPath = cliPath
             });
+
+            var authStatus = await _client.GetAuthStatusAsync();
+
+            isAuthenticated = authStatus.IsAuthenticated;
+
+            if (!isAuthenticated)
+            {
+                StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Not Authenticated"));
+                MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error,
+                    """
+                        Not Authenticated to Copilot CLI.
+                        Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
+                    """));
+                return new ChatInitializationStatus(false)
+                {
+                    NeedsAuthentication = true
+                };
+            }
 
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Starting Copilot..."));
 
@@ -70,13 +114,20 @@ public sealed class CopilotChatService(
                 Name = x.Name,
                 Billing = $"{x.Billing?.Multiplier}x",
             }).ToArray());
-            
+
             SelectedModel = Models.LastOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
+
+            return new ChatInitializationStatus(true);
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Copilot unavailable"));
             MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error, ex.Message));
+
+            return new ChatInitializationStatus(false)
+            {
+                NeedsAuthentication = !isAuthenticated
+            };
         }
         finally
         {
@@ -96,7 +147,7 @@ public sealed class CopilotChatService(
                 new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
             return;
         }
-        
+
         StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
         _session = await _client.CreateSessionAsync(new SessionConfig
@@ -140,7 +191,7 @@ public sealed class CopilotChatService(
                 new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
             return;
         }
-        
+
         if (_session == null || SelectedModel.Id != _initializedModel)
         {
             await InitializeSessionAsync();
