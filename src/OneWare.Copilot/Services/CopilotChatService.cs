@@ -66,8 +66,7 @@ public sealed class CopilotChatService(
                     """
                         Copilot CLI not found.
                         Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
-                        
-                        If it is installed to a custom location, you can set the path for Copilot CLI in Settings -> AI Chat
+                        **If it is installed to a custom location, you can set the path for Copilot CLI in Settings / AI Chat**
                     """));
                 return new ChatInitializationStatus(false)
                 {
