@@ -151,7 +151,7 @@ public sealed class CopilotChatService(
 
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
-            Model = SelectedModel.ToString(),
+            Model = SelectedModel.Id,
             Streaming = true,
             SystemMessage = new SystemMessageConfig
             {
