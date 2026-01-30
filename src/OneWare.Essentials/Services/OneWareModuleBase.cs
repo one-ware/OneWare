@@ -8,7 +8,9 @@ public abstract class OneWareModuleBase : IOneWareModule
 
     public virtual IReadOnlyCollection<string> Dependencies => Array.Empty<string>();
 
-    public abstract void RegisterServices(IServiceCollection services);
+    public virtual void RegisterServices(IServiceCollection services)
+    {
+    }
 
     public virtual void Initialize(IServiceProvider serviceProvider)
     {
