@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <StudioVersion>0.99.1</StudioVersion>
-        <CoreVersion>0.99.1</CoreVersion>
-        <UniversalFpgaProjectSystemVersion>0.99.1</UniversalFpgaProjectSystemVersion>
-        <EssentialsVersion>0.99.1</EssentialsVersion>
+        <StudioVersion>0.99.2</StudioVersion>
+        <CoreVersion>0.99.2</CoreVersion>
+        <UniversalFpgaProjectSystemVersion>0.99.2</UniversalFpgaProjectSystemVersion>
+        <EssentialsVersion>0.99.2</EssentialsVersion>
         <Version>$(CoreVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
