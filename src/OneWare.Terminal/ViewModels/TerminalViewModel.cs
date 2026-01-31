@@ -92,8 +92,7 @@ public class TerminalViewModel : ObservableObject
         lock (_createLock)
         {
             CloseConnection();
-
-            //TODO Fix zsh support
+            
             var shellExecutable = PlatformHelper.Platform switch
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
@@ -106,7 +105,15 @@ public class TerminalViewModel : ObservableObject
             if (!string.IsNullOrEmpty(shellExecutable))
             {
                 var environment = BuildTerminalEnvironment(shellExecutable);
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, StartArguments);
+                var startArguments = StartArguments;
+                if (string.IsNullOrWhiteSpace(startArguments) &&
+                    Path.GetFileName(shellExecutable).Equals("zsh", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Ensure zsh runs interactively so precmd hooks fire.
+                    startArguments = "-i";
+                }
+
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, startArguments);
 
                 if (terminal == null)
                 {
@@ -176,20 +183,95 @@ public class TerminalViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
 
         var shellName = Path.GetFileName(shellExecutable);
-        if (!shellName.Equals("bash", StringComparison.OrdinalIgnoreCase)) return null;
-
-        var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
-        var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
-        var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
-            ? markerCommand
-            : markerCommand + ";" + existingPromptCommand;
-
-        var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+        if (shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
         {
-            ["PROMPT_COMMAND"] = combined
-        };
+            var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
+            var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
+            var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
+                ? markerCommand
+                : markerCommand + ";" + existingPromptCommand;
 
-        return BuildEnvironmentBlock(overrides);
+            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["PROMPT_COMMAND"] = combined
+            };
+
+            return BuildEnvironmentBlock(overrides);
+        }
+
+        if (shellName.Equals("zsh", StringComparison.OrdinalIgnoreCase))
+        {
+            var zshDotDir = EnsureZshDotDir();
+            if (string.IsNullOrWhiteSpace(zshDotDir)) return null;
+
+            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["ZDOTDIR"] = zshDotDir
+            };
+
+            return BuildEnvironmentBlock(overrides);
+        }
+
+        return null;
+    }
+
+    private static string? EnsureZshDotDir()
+    {
+        try
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "oneware", "zsh");
+            Directory.CreateDirectory(tempDir);
+
+            var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var baseZdotdir = Environment.GetEnvironmentVariable("ZDOTDIR");
+            if (string.IsNullOrWhiteSpace(baseZdotdir)) baseZdotdir = userHome;
+
+            if (!string.IsNullOrWhiteSpace(baseZdotdir))
+            {
+                WriteZshFile(Path.Combine(tempDir, ".zshenv"), Path.Combine(baseZdotdir, ".zshenv"),
+                    "# oneware zshenv");
+                WriteZshFile(Path.Combine(tempDir, ".zprofile"), Path.Combine(baseZdotdir, ".zprofile"),
+                    "# oneware zprofile");
+                WriteZshFile(Path.Combine(tempDir, ".zlogin"), Path.Combine(baseZdotdir, ".zlogin"),
+                    "# oneware zlogin");
+            }
+
+            var zshrcPath = Path.Combine(tempDir, ".zshrc");
+            var zshrcBuilder = new StringBuilder();
+            zshrcBuilder.AppendLine("# oneware zshrc");
+
+            var originalZshrc = !string.IsNullOrWhiteSpace(baseZdotdir)
+                ? Path.Combine(baseZdotdir, ".zshrc")
+                : null;
+
+            if (!string.IsNullOrWhiteSpace(originalZshrc) && File.Exists(originalZshrc))
+            {
+                zshrcBuilder.Append("source ").Append('"').Append(originalZshrc).Append('"').AppendLine();
+            }
+
+            zshrcBuilder.AppendLine("autoload -Uz add-zsh-hook");
+            zshrcBuilder.AppendLine("_ow_precmd() { printf '\\033]9;OW_DONE:%s\\007' $?; }");
+            zshrcBuilder.AppendLine("add-zsh-hook precmd _ow_precmd");
+
+            File.WriteAllText(zshrcPath, zshrcBuilder.ToString(), Encoding.ASCII);
+            return tempDir;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void WriteZshFile(string destinationPath, string sourcePath, string header)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(header);
+        if (File.Exists(sourcePath))
+        {
+            builder.Append("source ").Append('"').Append(sourcePath).Append('"').AppendLine();
+        }
+
+        File.WriteAllText(destinationPath, builder.ToString(), Encoding.ASCII);
     }
 
     private static string BuildEnvironmentBlock(Dictionary<string, string> overrides)
