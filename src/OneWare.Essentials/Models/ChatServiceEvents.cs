@@ -8,10 +8,11 @@ public enum ChatServiceMessageType
     Idle
 }
 
-public sealed class ChatServiceMessageEvent(ChatServiceMessageType type, string? content = null)
+public sealed class ChatServiceMessageEvent(ChatServiceMessageType type, string? content = null, string? messageId = null)
 {
     public ChatServiceMessageType Type { get; } = type;
     public string? Content { get; } = content;
+    public string? MessageId { get; } = messageId;
 }
 
 public sealed class ChatInitializationStatus(bool success)

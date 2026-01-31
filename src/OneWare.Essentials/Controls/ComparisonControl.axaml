@@ -41,7 +41,7 @@
                                         <Border Background="Transparent"
                                                 UseLayoutRounding="False">
                                             <Grid RowDefinitions="*">
-                                                <controls:ScrollBarRenderer CodeBox="{Binding #HeadEditor}"
+                                                <controls:ScrollBarRenderer CodeBox="{Binding $parent[avaloniaEdit:TextEditor]}"
                                                                             ScrollInfo="{Binding $parent[controls:ComparisonControl].ScrollInfoLeft}"
                                                                             IsHitTestVisible="False" />
                                                 <Track Minimum="{TemplateBinding Minimum}"
@@ -87,7 +87,7 @@
                                         <Border Background="Transparent"
                                                 UseLayoutRounding="False">
                                             <Grid RowDefinitions="*">
-                                                <controls:ScrollBarRenderer CodeBox="{Binding #DiffEditor}"
+                                                <controls:ScrollBarRenderer CodeBox="{Binding $parent[avaloniaEdit:TextEditor]}"
                                                                             ScrollInfo="{Binding $parent[controls:ComparisonControl].ScrollInfoRight}"
                                                                             IsHitTestVisible="False" />
                                                 <Track Minimum="{TemplateBinding Minimum}"

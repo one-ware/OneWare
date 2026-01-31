@@ -25,7 +25,7 @@ namespace OneWare.Core.Services;
 
 public class MainDockService : Factory, IMainDockService
 {
-    private static readonly IDockSerializer Serializer = new DockSerializer(typeof(ObservableCollection<>));
+    private readonly IDockSerializer _serializer;
     private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
     private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
@@ -40,14 +40,15 @@ public class MainDockService : Factory, IMainDockService
 
     private RootDock? _layout;
 
-    public MainDockService(IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
+    public MainDockService(IServiceProvider serviceProvider, IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
-
+        _serializer = new OneWareDockSerializer(serviceProvider);
+        
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
@@ -327,7 +328,7 @@ public class MainDockService : Factory, IMainDockService
                 if (File.Exists(layoutPath))
                 {
                     using var stream = File.OpenRead(layoutPath);
-                    layout = Serializer.Load<RootDock>(stream);
+                    layout = _serializer.Load<RootDock>(stream);
                 }
             }
             catch (Exception e)
@@ -364,7 +365,7 @@ public class MainDockService : Factory, IMainDockService
 
         Layout.FocusedDockable = null;
 
-        Serializer.Save(stream, Layout);
+        _serializer.Save(stream, Layout);
     }
 
     public void InitializeContent()

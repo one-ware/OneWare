@@ -28,32 +28,6 @@
             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         </Style>
 
-        <Style Selector="ScrollBar:vertical">
-            <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="Transparent"
-                            UseLayoutRounding="False">
-                        <Grid RowDefinitions="*">
-                            <controls:ScrollBarRenderer CodeBox="{Binding Editor}"
-                                                        ScrollInfo="{Binding ScrollInfo}"
-                                                        IsHitTestVisible="False" Grid.Row="0"
-                                                        Name="SimulatorRenderer" VerticalAlignment="Stretch"
-                                                        HorizontalAlignment="Stretch" />
-                            <Track
-                                Minimum="{TemplateBinding Minimum}"
-                                Maximum="{TemplateBinding Maximum}"
-                                Value="{TemplateBinding Value, Mode=TwoWay}"
-                                ViewportSize="{TemplateBinding ViewportSize}"
-                                Orientation="{TemplateBinding Orientation}"
-                                IsDirectionReversed="True">
-                                <Thumb Name="thumb" />
-                            </Track>
-                        </Grid>
-                    </Border>
-                </ControlTemplate>
-            </Setter>
-        </Style>
         <Style Selector="ContextMenu">
             <Setter Property="Cursor" Value="Arrow" />
         </Style>
@@ -81,6 +55,34 @@
         <Grid DockPanel.Dock="Top">
             <ContentControl Name="EditorWrapper" Content="{Binding Editor}">
                 <ContentControl.Styles>
+                    <Style Selector="avaloniaEdit|TextEditor ScrollBar:vertical">
+                        <Setter Property="Cursor" Value="Arrow" />
+                        <Setter Property="Template">
+                            <ControlTemplate>
+                                <Border Background="Transparent"
+                                        UseLayoutRounding="False">
+                                    <Grid RowDefinitions="*">
+                                        <controls:ScrollBarRenderer CodeBox="{Binding Editor}"
+                                                                    ScrollInfo="{Binding ScrollInfo}"
+                                                                    IsHitTestVisible="False" Grid.Row="0"
+                                                                    Name="SimulatorRenderer"
+                                                                    VerticalAlignment="Stretch"
+                                                                    HorizontalAlignment="Stretch" />
+                                        <Track
+                                            Minimum="{TemplateBinding Minimum}"
+                                            Maximum="{TemplateBinding Maximum}"
+                                            Value="{TemplateBinding Value, Mode=TwoWay}"
+                                            ViewportSize="{TemplateBinding ViewportSize}"
+                                            Orientation="{TemplateBinding Orientation}"
+                                            IsDirectionReversed="True">
+                                            <Thumb Name="thumb" />
+                                        </Track>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter>
+                    </Style>
+
                     <Style Selector="avaloniaEdit|TextEditor">
                         <Setter Property="ShowLineNumbers" Value="True" />
                         <Setter Property="Foreground" Value="{DynamicResource ThemeEditorBrush}" />

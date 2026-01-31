@@ -18,6 +18,12 @@ public class ChatMessageViewModel : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    public string? MessageId
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     public ChatMessageViewModel(string author, bool isUser)
     {
         Author = author;

@@ -20,6 +20,7 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     public const string IconKey = "Bootstrap.ChatLeft";
     
     private readonly IMainDockService _mainDockService;
+    private readonly Dictionary<string, ChatMessageViewModel> _assistantMessagesById = new(StringComparer.Ordinal);
     private ChatMessageViewModel? _activeAssistantMessage;
     private bool _initialized;
 
@@ -132,6 +133,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     private async Task InitializeChatAsync(IChatService chatService)
     {
         Messages.Clear();
+        _assistantMessagesById.Clear();
+        _activeAssistantMessage = null;
         
         var status = await chatService.InitializeAsync();
 
@@ -163,6 +166,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         }
         
         Messages.Clear();
+        _assistantMessagesById.Clear();
+        _activeAssistantMessage = null;
     }
     
     [RelayCommand(CanExecute = nameof(CanSend))]
@@ -255,42 +260,69 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         };
     }
 
-    private void AppendAssistantDelta(string? delta)
+    private ChatMessageViewModel GetOrCreateAssistantMessage(string? messageId)
+    {
+        if (!string.IsNullOrWhiteSpace(messageId))
+        {
+            if (_assistantMessagesById.TryGetValue(messageId, out var existing))
+                return existing;
+
+            if (_activeAssistantMessage != null && string.IsNullOrWhiteSpace(_activeAssistantMessage.MessageId))
+            {
+                _activeAssistantMessage.MessageId = messageId;
+                _assistantMessagesById[messageId] = _activeAssistantMessage;
+                return _activeAssistantMessage;
+            }
+
+            var created = CreateAssistantMessage();
+            created.MessageId = messageId;
+            Messages.Add(created);
+            _assistantMessagesById[messageId] = created;
+            _activeAssistantMessage = created;
+            return created;
+        }
+
+        if (_activeAssistantMessage == null)
+        {
+            _activeAssistantMessage = CreateAssistantMessage();
+            Messages.Add(_activeAssistantMessage);
+        }
+
+        return _activeAssistantMessage;
+    }
+
+    private ChatMessageViewModel? FindAssistantMessage(string? messageId)
+    {
+        if (!string.IsNullOrWhiteSpace(messageId) && _assistantMessagesById.TryGetValue(messageId, out var byId))
+            return byId;
+
+        return _activeAssistantMessage;
+    }
+
+    private void AppendAssistantDelta(string? delta, string? messageId)
     {
         if (string.IsNullOrEmpty(delta)) return;
         Dispatcher.UIThread.Post(() =>
         {
-            var message = _activeAssistantMessage;
-            if (message == null)
-            {
-                message = CreateAssistantMessage();
-                Messages.Add(message);
-                _activeAssistantMessage = message;
-            }
-
+            var message = GetOrCreateAssistantMessage(messageId);
+            message.IsStreaming = true;
             message.Message += delta;
         });
     }
 
-    private void FinalizeAssistantMessage(string? content)
+    private void FinalizeAssistantMessage(string? content, string? messageId)
     {
-        if (string.IsNullOrEmpty(content)) return;
+        if (content == null && string.IsNullOrWhiteSpace(messageId)) return;
         Dispatcher.UIThread.Post(() =>
         {
-            var message = _activeAssistantMessage;
-            if (message == null)
-            {
-                message = CreateAssistantMessage();
-                Messages.Add(message);
-                _activeAssistantMessage = message;
-            }
-
-            message.Message = content;
+            var message = GetOrCreateAssistantMessage(messageId);
+            if (content != null)
+                message.Message = content;
             message.IsStreaming = false;
         });
     }
 
-    private void HandleSessionError(string? message)
+    private void HandleSessionError(string? message, string? messageId)
     {
         Dispatcher.UIThread.Post(() =>
         {
@@ -298,7 +330,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
                 ? "An unexpected error occurred."
                 : message;
 
-            if (_activeAssistantMessage == null)
+            var targetMessage = FindAssistantMessage(messageId);
+            if (targetMessage == null)
             {
                 Messages.Add(new ChatMessageViewModel(SelectedChatService?.Name ?? "System", false)
                 {
@@ -307,9 +340,10 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
             }
             else
             {
-                _activeAssistantMessage.IsStreaming = false;
-                _activeAssistantMessage.Message = $"**Error:** {errorMessage}";
-                _activeAssistantMessage = null;
+                targetMessage.IsStreaming = false;
+                targetMessage.Message = $"**Error:** {errorMessage}";
+                if (ReferenceEquals(targetMessage, _activeAssistantMessage))
+                    _activeAssistantMessage = null;
             }
 
             IsBusy = false;
@@ -320,8 +354,8 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (_activeAssistantMessage != null)
-                _activeAssistantMessage.IsStreaming = false;
+            foreach (var message in Messages)
+                message.IsStreaming = false;
 
             _activeAssistantMessage = null;
             IsBusy = false;
@@ -333,13 +367,13 @@ public partial class ChatBotViewModel : ExtendedTool, IChatManagerService
         switch (e.Type)
         {
             case ChatServiceMessageType.AssistantDelta:
-                AppendAssistantDelta(e.Content);
+                AppendAssistantDelta(e.Content, e.MessageId);
                 break;
             case ChatServiceMessageType.AssistantMessage:
-                FinalizeAssistantMessage(e.Content);
+                FinalizeAssistantMessage(e.Content, e.MessageId);
                 break;
             case ChatServiceMessageType.Error:
-                HandleSessionError(e.Content);
+                HandleSessionError(e.Content, e.MessageId);
                 break;
             case ChatServiceMessageType.Idle:
                 FinishTurn();

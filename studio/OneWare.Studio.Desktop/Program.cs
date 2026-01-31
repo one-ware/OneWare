@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Dock.Settings;
 using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
 using OneWare.Core.Views.Windows;

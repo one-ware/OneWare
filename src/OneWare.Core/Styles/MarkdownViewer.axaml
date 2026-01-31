@@ -113,6 +113,7 @@
 
                         <Style Selector=".ToolTip Border.CodeBlock">
                             <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
                         </Style>
 
                     </mdxaml:MarkdownScrollViewer.Styles>

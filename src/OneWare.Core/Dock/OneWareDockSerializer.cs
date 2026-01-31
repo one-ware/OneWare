@@ -1,22 +1,16 @@
-﻿using System.Text;
+﻿using System.Collections.ObjectModel;
+using System.Text;
 using Dock.Model.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace OneWare.Core.Dock;
 
-/// <summary>
-///     A class that implements the <see cref="IDockSerializer" /> interface using JSON serialization.
-/// </summary>
-public sealed class DockSerializer : IDockSerializer
+public sealed class OneWareDockSerializer : IDockSerializer
 {
     private readonly JsonSerializerSettings _settings;
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="DockSerializer" /> class with the specified list type.
-    /// </summary>
-    /// <param name="listType">The type of list to use in the serialization process.</param>
-    public DockSerializer(Type listType)
+    
+    public OneWareDockSerializer(IServiceProvider provider)
     {
         _settings = new JsonSerializerSettings
         {
@@ -24,7 +18,7 @@ public sealed class DockSerializer : IDockSerializer
             TypeNameHandling = TypeNameHandling.Objects,
             PreserveReferencesHandling = PreserveReferencesHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-            ContractResolver = new ListContractResolver(listType),
+            ContractResolver = new OneWareContractResolver(typeof(ObservableCollection<>), provider),
             NullValueHandling = NullValueHandling.Ignore,
             Converters =
             {
