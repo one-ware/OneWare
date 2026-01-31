@@ -21,8 +21,19 @@ public class OneWareContractResolver : DefaultContractResolver
     protected override JsonObjectContract CreateObjectContract(Type objectType)
     {
         var contract = base.CreateObjectContract(objectType);
-        contract.DefaultCreator = () =>
-            _provider.GetService(objectType) ?? Activator.CreateInstance(objectType)!;
+        
+        if (_provider.IsRegistered(objectType))
+            contract.OverrideCreator = parameters =>
+            {
+                var resolveParameters = parameters
+                    .Where(x => x != null)
+                    .Select(x => (x!.GetType(), x))
+                    .ToArray();
+
+                var resolve = _provider.Resolve(objectType, resolveParameters);
+                return resolve;
+            };
+
         return contract;
     }
 

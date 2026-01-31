@@ -83,7 +83,8 @@
         </DataTemplate>
 
     </UserControl.DataTemplates>
-    <Panel Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    
+    <Panel Margin="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" RowDefinitions="Auto,Auto,Auto"
               ColumnDefinitions="Auto,30,Auto">
             <Grid.Styles>

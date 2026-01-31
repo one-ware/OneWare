@@ -48,9 +48,4 @@ public static class ServiceProviderExtensions
 
         return provider.GetService(type) != null;
     }
-
-    public static IServiceProvider GetContainer(this IServiceProvider? provider)
-    {
-        return provider ?? throw new ArgumentNullException(nameof(provider));
-    }
 }

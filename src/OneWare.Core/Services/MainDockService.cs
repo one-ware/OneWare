@@ -40,7 +40,7 @@ public class MainDockService : Factory, IMainDockService
 
     private RootDock? _layout;
 
-    public MainDockService(IServiceProvider serviceProvider, IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
+    public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {

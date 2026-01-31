@@ -1,11 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Core.ModuleLogic;
 
 /// <summary>
-///     This Service Provider provides both integrated aswell as Plugin services
+///     This Service Provider provides both integrated and plugin services
 /// </summary>
-public sealed class CompositeServiceProvider : IServiceProvider, IServiceProviderIsService
+public sealed class CompositeServiceProvider : ICompositeServiceProvider
 {
     private readonly ModuleServiceRegistry _moduleRegistry;
     private readonly IServiceProvider _rootProvider;

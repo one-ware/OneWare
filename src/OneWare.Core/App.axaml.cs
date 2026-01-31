@@ -515,12 +515,16 @@ public class App : Application
         _moduleServiceRegistry.AddServiceTypes(services);
         services.AddSingleton(_moduleServiceRegistry);
 
-        var rootProvider = services.BuildServiceProvider();
-        var compositeProvider = new CompositeServiceProvider(rootProvider, _moduleServiceRegistry);
+        services.AddSingleton<ICompositeServiceProvider>(sp =>
+            new CompositeServiceProvider(
+                sp,
+                sp.GetRequiredService<ModuleServiceRegistry>()));
+        
+        var provider = services.BuildServiceProvider();
+        
+        ContainerLocator.SetContainer(provider.Resolve<ICompositeServiceProvider>());
 
-        ContainerLocator.SetContainer(compositeProvider);
-
-        var logger = compositeProvider.GetRequiredService<ILogger>();
+        var logger = provider.GetRequiredService<ILogger>();
         _moduleManager.SetLogger(logger);
 
         logger.LogInformation(
@@ -536,7 +540,7 @@ public class App : Application
                  shell is Control shellView)
             singleViewLifetime.MainView = shellView;
 
-        _moduleManager.InitializeModules(compositeProvider);
+        _moduleManager.InitializeModules(provider);
 
         Dispatcher.UIThread.UnhandledException += (s, e) => { Console.WriteLine($"Unhandled: {e.Exception}"); };
 
