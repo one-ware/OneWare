@@ -38,12 +38,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ Border">
-            <Setter Property="BorderBrush" Value="Transparent" />
-        </Style>
-        <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
-            <Setter Property="BorderBrush" Value="Transparent" />
-        </Style>
         <Style Selector="Expander ToggleButton">
             <Setter Property="Height" Value="24" />
         </Style>

@@ -9,8 +9,8 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public string Name { get; }
     public Control? BottomUiExtension { get; }
     
-    event EventHandler<ChatServiceMessageEvent>? MessageReceived;
-    event EventHandler<ChatServiceStatusEvent>? StatusChanged;
+    event EventHandler<ChatEvent>? EventReceived;
+    event EventHandler<StatusEvent>? StatusChanged;
     
     Task<bool> AuthenticateAsync();
     Task<ChatInitializationStatus> InitializeAsync();

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Copilot.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Copilot.Views.CopilotChatBotExtensionView" x:DataType="services:CopilotChatService">
+             x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatService">
     <StackPanel Orientation="Horizontal" Spacing="2" Margin="0 0 5 0">
         <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
                    FontSize="11" VerticalAlignment="Center"

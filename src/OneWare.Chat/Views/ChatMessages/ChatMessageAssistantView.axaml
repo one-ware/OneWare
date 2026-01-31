@@ -1,0 +1,26 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageAssistantView"
+             x:DataType="chatMessages:ChatMessageAssistantViewModel">
+
+    <Border>
+        <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5" IsVisible="{Binding IsStreaming}">
+                <controls:Spinner Width="12" Height="12" VerticalAlignment="Center"/>
+                            
+                <TextBlock Grid.Column="1"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                           FontStyle="Italic"
+                           Text="Working…" />
+            </Grid>
+            <controls:MarkdownViewer Markdown="{Binding Content}" />
+        </StackPanel>
+    </Border>
+
+</UserControl>

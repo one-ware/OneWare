@@ -26,14 +26,5 @@ public class CopilotModule : OneWareModuleBase
             });
         
         serviceProvider.Resolve<IChatManagerService>().RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
-        serviceProvider.Resolve<IWindowService>().RegisterUiExtension("ChatBot_BottomExtensions", new OneWareUiExtension(x =>
-        {
-            if(x is CopilotChatService)
-                return new CopilotChatBotExtensionView()
-                {
-                    DataContext = serviceProvider.GetService<CopilotChatService>()
-                };
-            return null;
-        }));
     }
 }

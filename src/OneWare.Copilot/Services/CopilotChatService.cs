@@ -33,13 +33,13 @@ public sealed class CopilotChatService(
 
     public string Name { get; } = "Copilot";
 
-    public Control BottomUiExtension => new CopilotChatBotExtensionView()
+    public Control BottomUiExtension => new CopilotChatExtensionView()
     {
         DataContext = this
     };
 
-    public event EventHandler<ChatServiceMessageEvent>? MessageReceived;
-    public event EventHandler<ChatServiceStatusEvent>? StatusChanged;
+    public event EventHandler<ChatEvent>? EventReceived;
+    public event EventHandler<StatusEvent>? StatusChanged;
 
     public async Task<bool> AuthenticateAsync()
     {
@@ -61,8 +61,8 @@ public sealed class CopilotChatService(
         {
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
-                StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "CLI Not found"));
-                MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error,
+                StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
+                EventReceived?.Invoke(this, new ChatErrorEvent(
                     """
                         Copilot CLI not found.
                         Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
@@ -86,8 +86,8 @@ public sealed class CopilotChatService(
 
             if (!isAuthenticated)
             {
-                StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Not Authenticated"));
-                MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error,
+                StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
+                EventReceived?.Invoke(this, new ChatErrorEvent(
                     """
                         Not Authenticated to Copilot CLI.
                         Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
@@ -98,13 +98,13 @@ public sealed class CopilotChatService(
                 };
             }
 
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, $"Starting Copilot..."));
+            StatusChanged?.Invoke(this, new StatusEvent(false, $"Starting Copilot..."));
 
             await _client.StartAsync();
 
             var models = await _client.ListModelsAsync();
 
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Copilot started"));
+            StatusChanged?.Invoke(this, new StatusEvent(true, $"Copilot started"));
 
             Models.Clear();
             Models.AddRange(models.Select(x => new ModelModel()
@@ -115,13 +115,13 @@ public sealed class CopilotChatService(
             }).ToArray());
 
             SelectedModel = Models.FirstOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
-
+            
             return new ChatInitializationStatus(true);
         }
         catch (Exception ex)
         {
-            StatusChanged?.Invoke(this, new ChatServiceStatusEvent(false, "Copilot unavailable"));
-            MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Error, ex.Message));
+            StatusChanged?.Invoke(this, new StatusEvent(false, "Copilot unavailable"));
+            EventReceived?.Invoke(this, new ChatErrorEvent(ex.Message));
 
             return new ChatInitializationStatus(false)
             {
@@ -142,13 +142,13 @@ public sealed class CopilotChatService(
 
         if (SelectedModel == null)
         {
-            MessageReceived?.Invoke(this,
-                new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
+            EventReceived?.Invoke(this,
+                new ChatErrorEvent("No Model Selected"));
             return;
         }
 
-        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
-
+        StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
+        
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
             Model = SelectedModel.Id,
@@ -176,7 +176,7 @@ public sealed class CopilotChatService(
             Tools = toolProvider.GetTools()
         });
 
-        StatusChanged?.Invoke(this, new ChatServiceStatusEvent(true, $"Connected"));
+        StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
 
         _initializedModel = SelectedModel.Id;
         _subscription = _session.On(HandleSessionEvent);
@@ -186,8 +186,8 @@ public sealed class CopilotChatService(
     {
         if (SelectedModel == null)
         {
-            MessageReceived?.Invoke(this,
-                new ChatServiceMessageEvent(ChatServiceMessageType.Error, "No Model Selected"));
+            EventReceived?.Invoke(this,
+                new ChatErrorEvent("No Model Selected"));
             return;
         }
 
@@ -238,111 +238,48 @@ public sealed class CopilotChatService(
     {
         switch (evt)
         {
-            case AssistantMessageDeltaEvent delta:
-                MessageReceived?.Invoke(this,
-                    new ChatServiceMessageEvent(ChatServiceMessageType.AssistantDelta, delta.Data.DeltaContent,
-                        delta.Data.MessageId));
+            case AssistantMessageDeltaEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId));
                 break;
-            case AssistantMessageEvent message:
-                MessageReceived?.Invoke(this,
-                    new ChatServiceMessageEvent(ChatServiceMessageType.AssistantMessage, message.Data.Content,
-                        message.Data.MessageId));
+            }
+            case AssistantMessageEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatMessageEvent(x.Data.Content, x.Data.MessageId));
                 break;
-            case AssistantIntentEvent:
-            case AssistantReasoningDeltaEvent:
-            case AssistantReasoningEvent:
-                // Intentionally ignored to avoid showing model internals in chat UI.
+            }
+            case AssistantReasoningDeltaEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatReasoningDeltaEvent(x.Data.DeltaContent, x.Data.ReasoningId));
                 break;
-            case AssistantUsageEvent:
-                //UpdateStatus("Assistant usage updated");
+            }
+            case AssistantReasoningEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId));
                 break;
-            case AssistantTurnStartEvent:
-                //UpdateStatus("Assistant turn started");
+            }
+            case UserMessageEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatUserMessageEvent(x.Data.Content));
                 break;
-            case AssistantTurnEndEvent:
-                //UpdateStatus("Assistant turn ended");
+            }
+            case ToolExecutionStartEvent x:
+            {
+                EventReceived?.Invoke(this,
+                    new ChatToolExecutionStartEvent(x.Data.ToolName));
                 break;
-            case UserMessageEvent:
-                // User messages are already displayed by the UI.
-                break;
-            case ToolExecutionStartEvent:
-                //UpdateStatus("Tool execution started");
-                break;
-            case ToolExecutionProgressEvent:
-                //UpdateStatus("Tool execution in progress");
-                break;
-            case ToolExecutionPartialResultEvent:
-                //UpdateStatus("Tool execution returned partial results");
-                break;
-            case ToolExecutionCompleteEvent:
-                //UpdateStatus("Tool execution completed");
-                break;
-            case ToolUserRequestedEvent:
-                //UpdateStatus("Tool requested user input");
-                break;
-            case HookStartEvent:
-                //UpdateStatus("Hook started");
-                break;
-            case HookEndEvent:
-                //UpdateStatus("Hook completed");
-                break;
-            case PendingMessagesModifiedEvent:
-                //UpdateStatus("Pending messages updated");
-                break;
-            case SessionCompactionStartEvent:
-                //UpdateStatus("Session compaction started");
-                break;
-            case SessionCompactionCompleteEvent:
-                //UpdateStatus("Session compaction completed");
-                break;
-            case SessionSnapshotRewindEvent:
-                //UpdateStatus("Session snapshot rewound");
-                break;
-            case SessionTruncationEvent:
-                //UpdateStatus("Session truncation applied");
-                break;
-            case SessionHandoffEvent:
-                //UpdateStatus("Session handoff");
-                break;
-            case SessionModelChangeEvent:
-                //UpdateStatus("Session model changed");
-                break;
-            case SessionInfoEvent:
-                //UpdateStatus("Session info updated");
-                break;
-            case SessionUsageInfoEvent:
-                //UpdateStatus("Session usage updated");
-                break;
-            case SessionStartEvent:
-                //UpdateStatus("Session started");
-                break;
-            case SessionResumeEvent:
-                //UpdateStatus("Session resumed");
-                break;
-            case SystemMessageEvent:
-                //UpdateStatus("System message received");
-                break;
-            case SubagentSelectedEvent:
-                //UpdateStatus("Subagent selected");
-                break;
-            case SubagentStartedEvent:
-                //UpdateStatus("Subagent started");
-                break;
-            case SubagentCompletedEvent:
-                //UpdateStatus("Subagent completed");
-                break;
-            case SubagentFailedEvent:
-                //UpdateStatus("Subagent failed");
-                break;
-            case AbortEvent:
-                //UpdateStatus("Session aborted");
-                break;
+            }
             case SessionErrorEvent error:
-                MessageReceived?.Invoke(this,
-                    new ChatServiceMessageEvent(ChatServiceMessageType.Error, error.Data.Message));
+                EventReceived?.Invoke(this,
+                    new ChatErrorEvent(error.Data.Message));
                 break;
             case SessionIdleEvent:
-                MessageReceived?.Invoke(this, new ChatServiceMessageEvent(ChatServiceMessageType.Idle));
+                EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
         }
     }

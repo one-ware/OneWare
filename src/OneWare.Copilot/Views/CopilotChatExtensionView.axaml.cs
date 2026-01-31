@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace OneWare.Copilot.Views;
 
-public partial class CopilotChatBotExtensionView : UserControl
+public partial class CopilotChatExtensionView : UserControl
 {
-    public CopilotChatBotExtensionView()
+    public CopilotChatExtensionView()
     {
         InitializeComponent();
     }

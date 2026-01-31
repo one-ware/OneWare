@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.AiEditView" x:DataType="viewModels:AiEditViewModel">
+             x:Class="OneWare.Chat.Views.AiEditView" x:DataType="viewModels:AiEditViewModel">
 
     <Panel>
         <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />

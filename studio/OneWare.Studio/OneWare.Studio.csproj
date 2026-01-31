@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.ChatBot\OneWare.ChatBot.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Chat\OneWare.Chat.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Copilot\OneWare.Copilot.csproj" />
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>

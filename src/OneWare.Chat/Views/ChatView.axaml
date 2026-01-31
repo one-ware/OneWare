@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:behaviors="clr-namespace:OneWare.ChatBot.Behaviors"
+             xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatBotView" Name="ChatBotViewView"
-             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
+             x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
+             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
     <Grid RowDefinitions="Auto, *, Auto, Auto" RowSpacing="4">
         <Border Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0 0 0 1" Padding="4">
@@ -40,15 +40,15 @@
 
         <Panel Grid.Row="1">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Interaction.Behaviors>
-                    <AutoScrollToBottomBehavior />
-                </Interaction.Behaviors>
-
+                
                 <Border Padding="8 8 8 0">
                     <ItemsControl ItemsSource="{Binding Messages}">
+                        <Interaction.Behaviors>
+                            <AutoScrollToBottomBehavior />
+                        </Interaction.Behaviors>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Spacing="8" />
+                                <StackPanel Margin="2 0" Spacing="5" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
@@ -80,7 +80,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button
-                                Command="{Binding #ChatBotViewView.((viewModels:ChatBotViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
+                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
                                 HorizontalAlignment="Stretch" Background="Transparent">
                                 <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">

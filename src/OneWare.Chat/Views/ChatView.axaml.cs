@@ -2,11 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace OneWare.ChatBot.Views;
+namespace OneWare.Chat.Views;
 
-public partial class ChatMessageView : UserControl
+public partial class ChatView : UserControl
 {
-    public ChatMessageView()
+    public ChatView()
     {
         InitializeComponent();
     }

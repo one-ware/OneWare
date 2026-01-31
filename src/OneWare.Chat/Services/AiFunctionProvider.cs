@@ -6,7 +6,7 @@ using Microsoft.Extensions.AI;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Services;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Chat.Services;
 
 public class AiFunctionProvider(
     IProjectExplorerService projectExplorerService,
