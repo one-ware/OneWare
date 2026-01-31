@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Runtime.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Chat.ViewModels.ChatMessages;
 
@@ -10,7 +11,11 @@ public class ChatMessageToolViewModel : ObservableObject, IChatMessage
         ToolMessage = toolMessage;
     }
     
+    [DataMember]
     public string ToolMessage { get; }
+    
+    [DataMember]
+    public string? ToolFinishMessage { get; set; }
     
     public DateTimeOffset Timestamp { get; }
 

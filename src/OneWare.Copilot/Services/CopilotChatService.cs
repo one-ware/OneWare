@@ -134,7 +134,7 @@ public sealed class CopilotChatService(
         }
     }
 
-    private async Task InitializeSessionAsync()
+    private async Task InitializeSessionAsync(bool restoreSession)
     {
         if (_client == null) return;
 
@@ -148,10 +148,17 @@ public sealed class CopilotChatService(
         }
 
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
+
+        string? sessionId = null;
+        if (restoreSession)
+        {
+            sessionId = await _client.GetLastSessionIdAsync();
+        }
         
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
             Model = SelectedModel.Id,
+            SessionId = sessionId,
             Streaming = true,
             SystemMessage = new SystemMessageConfig
             {
@@ -193,7 +200,7 @@ public sealed class CopilotChatService(
 
         if (_session == null || SelectedModel.Id != _initializedModel)
         {
-            await InitializeSessionAsync();
+            await InitializeSessionAsync(true);
         }
 
         if (_session == null) return;
@@ -208,7 +215,7 @@ public sealed class CopilotChatService(
 
     public async Task NewChatAsync()
     {
-        await InitializeSessionAsync();
+        await InitializeSessionAsync(false);
     }
 
     public async ValueTask DisposeAsync()

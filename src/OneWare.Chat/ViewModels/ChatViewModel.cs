@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Chat.Services;
@@ -24,10 +25,17 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Id = "AI_Chat";
         Title = "AI Chat";
         
-        _mainDockService = mainDockService;
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
+        
+        _mainDockService = mainDockService;
         AiFileEditService = aiFileEditService;
+        
+        AuthenticateCommand = new AsyncRelayCommand(AuthenticateAsync);
+        NewChatCommand = new AsyncRelayCommand(NewChatAsync);
+        SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
+        AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
+        InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
     }
     
     public string CurrentMessage
@@ -86,7 +94,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         set => SetProperty(ref field, value);
     } = "Starting...";
     
-    public ObservableCollection<IChatMessage> Messages { get; } = new();
+    [DataMember]
+    public ObservableCollection<IChatMessage> Messages { get; set; } = new();
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
 
@@ -119,6 +128,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     public RelayCommand<AiEditViewModel> ShowEditCommand => new(ShowEdit);
 
+    public AsyncRelayCommand AuthenticateCommand { get; }
+
+    public AsyncRelayCommand NewChatCommand { get; }
+
+    public AsyncRelayCommand SendCommand { get; }
+
+    public AsyncRelayCommand AbortCommand { get; }
+
+    public AsyncRelayCommand InitializeCurrentCommand { get; }
+
     public override void InitializeContent()
     {
         if (_initialized) return;
@@ -127,15 +146,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         SelectedChatService = ChatServices.FirstOrDefault();
     }
 
-    public AsyncRelayCommand InitializeCurrentCommand => new(() =>
+    private Task InitializeCurrentAsync()
     {
         if (SelectedChatService == null) return Task.CompletedTask;
         return InitializeChatAsync(SelectedChatService);
-    });
+    }
     
     private async Task InitializeChatAsync(IChatService chatService)
     {
-        Messages.Clear();
+        //Messages.Clear();
         _assistantMessagesById.Clear();
         
         var status = await chatService.InitializeAsync();
@@ -144,7 +163,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         NeedsAuthentication = status.NeedsAuthentication;
     }
     
-    [RelayCommand]
     private async Task AuthenticateAsync()
     {
         if (SelectedChatService == null)
@@ -158,7 +176,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         NeedsAuthentication = !await SelectedChatService.AuthenticateAsync();
     }
     
-    [RelayCommand]
     private async Task NewChatAsync()
     {
         if (SelectedChatService != null)
@@ -171,7 +188,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         _assistantMessagesById.Clear();
     }
     
-    [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
     {
         var prompt = CurrentMessage.Trim();
@@ -219,7 +235,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanAbort))]
     private async Task AbortAsync()
     {
         if (SelectedChatService == null) return;
@@ -310,6 +325,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             case ChatMessageDeltaEvent x:
             {
+                if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
                     var message = GetOrCreateAssistantMessage(x.MessageId);
@@ -320,10 +336,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatMessageEvent x:
             {
+                if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
                     var message = GetOrCreateAssistantMessage(x.MessageId);
-                    message.Content = x.Content ?? string.Empty;
+                    message.Content = x.Content;
                     message.IsStreaming = false;
                 });
                 break;
@@ -343,7 +360,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
-                    message.Content = x.Content ?? string.Empty;
+                    message.Content = x.Content;
                     message.IsStreaming = false;
                 });
                 break;
@@ -403,7 +420,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private void OnFunctionStarted(object? sender, string functionName)
     {
-        var newMessage = new ChatMessageToolViewModel($"> {functionName}")
+        var newMessage = new ChatMessageToolViewModel(functionName)
         {
             IsToolRunning = true
         };
@@ -412,8 +429,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     
     private void OnFunctionCompleted(object? sender, string functionName)
     {
-        var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.ToolMessage == $"> {functionName}");
+        var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.ToolMessage == functionName);
         toolFinished?.IsToolRunning = false;
+        toolFinished.ToolFinishMessage = $"{functionName} finished";
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)

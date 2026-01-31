@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Runtime.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Chat.ViewModels.ChatMessages;
 
@@ -14,6 +15,7 @@ public class ChatMessageAssistantViewModel : ObservableObject, IChatMessage
     
     public DateTimeOffset Timestamp { get; }
     
+    [DataMember]
     public string Content
     {
         get;
