@@ -37,6 +37,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
         InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
     }
+
+    public event EventHandler? ContentAdded;
     
     public string CurrentMessage
     {
@@ -220,6 +222,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         AddMessage(userMessage);
         AddMessage(assistantMessage);
         
+        ContentAdded?.Invoke(this, EventArgs.Empty);
+        
         CurrentMessage = string.Empty;
         IsBusy = true;
 
@@ -331,6 +335,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantMessage(x.MessageId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
@@ -342,6 +347,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantMessage(x.MessageId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
@@ -352,6 +358,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
@@ -362,6 +369,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
@@ -424,14 +432,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             IsToolRunning = true
         };
-        Messages.Add(newMessage);
+        AddMessage(newMessage);
+        ContentAdded?.Invoke(this, EventArgs.Empty);
     }
     
     private void OnFunctionCompleted(object? sender, string functionName)
     {
         var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.ToolMessage == functionName);
         toolFinished?.IsToolRunning = false;
-        toolFinished.ToolFinishMessage = $"{functionName} finished";
+        toolFinished?.ToolFinishMessage = $"{functionName} finished";
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)

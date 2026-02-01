@@ -11,14 +11,6 @@
 
     <Border>
         <StackPanel Spacing="6">
-            <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5" IsVisible="{Binding IsStreaming}">
-                <controls:Spinner Width="12" Height="12" VerticalAlignment="Center"/>
-                            
-                <TextBlock Grid.Column="1"
-                           Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
-                           FontStyle="Italic"
-                           Text="Working…" />
-            </Grid>
             <controls:MarkdownViewer Markdown="{Binding Content}" />
         </StackPanel>
     </Border>
