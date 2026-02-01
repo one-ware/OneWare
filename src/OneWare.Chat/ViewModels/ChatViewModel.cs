@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Chat.Services;
@@ -14,23 +15,39 @@ namespace OneWare.Chat.ViewModels;
 public partial class ChatViewModel : ExtendedTool, IChatManagerService
 {
     public const string IconKey = "Bootstrap.ChatLeft";
-    
-    private readonly IMainDockService _mainDockService;
-    private readonly Dictionary<string, ChatMessageAssistantViewModel> _assistantMessagesById = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, ChatMessageReasoningViewModel> _assistantReasoningById = new(StringComparer.Ordinal);
-    private bool _initialized;
 
-    public ChatViewModel(IAiFunctionProvider aiFunctionProvider, IMainDockService mainDockService, AiFileEditService aiFileEditService) : base(IconKey)
+    private readonly IMainDockService _mainDockService;
+    private readonly string _statePath;
+
+    private readonly Dictionary<string, ChatMessageAssistantViewModel> _assistantMessagesById =
+        new(StringComparer.Ordinal);
+
+    private readonly Dictionary<string, ChatMessageReasoningViewModel> _assistantReasoningById =
+        new(StringComparer.Ordinal);
+
+    private bool _initialized;
+    private string? _pendingChatServiceName;
+
+    private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    public ChatViewModel(IAiFunctionProvider aiFunctionProvider, IMainDockService mainDockService,
+        AiFileEditService aiFileEditService, IPaths paths,
+        IApplicationStateService applicationStateService) : base(IconKey)
     {
         Id = "AI_Chat";
         Title = "AI Chat";
-        
+
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
-        
+
         _mainDockService = mainDockService;
+        _statePath = Path.Combine(paths.AppDataDirectory, "Chat", "ChatState.json");
         AiFileEditService = aiFileEditService;
-        
+
         AuthenticateCommand = new AsyncRelayCommand(AuthenticateAsync);
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
@@ -40,10 +57,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             Messages.Clear();
             return InitializeCurrentAsync();
         });
+
+        applicationStateService.RegisterShutdownAction(SaveState);
     }
 
     public event EventHandler? ContentAdded;
-    
+
     public string CurrentMessage
     {
         get;
@@ -74,7 +93,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         get;
         set => SetProperty(ref field, value);
     }
-    
+
     public bool IsConnected
     {
         get;
@@ -99,8 +118,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         get;
         set => SetProperty(ref field, value);
     } = "Starting...";
-    
-    [DataMember]
+
     public ObservableCollection<IChatMessage> Messages { get; set; } = new();
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
@@ -120,6 +138,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     oldValue.EventReceived -= OnEventReceived;
                     oldValue.StatusChanged -= OnStatusChanged;
                 }
+
                 if (value != null)
                 {
                     value.EventReceived += OnEventReceived;
@@ -129,7 +148,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
         }
     }
-    
+
     public AiFileEditService AiFileEditService { get; }
 
     public RelayCommand<AiEditViewModel> ShowEditCommand => new(ShowEdit);
@@ -148,8 +167,13 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         if (_initialized) return;
         _initialized = true;
-        
-        SelectedChatService = ChatServices.FirstOrDefault();
+
+        LoadState();
+
+        if (SelectedChatService == null && string.IsNullOrWhiteSpace(_pendingChatServiceName))
+        {
+            SelectedChatService = ChatServices.FirstOrDefault();
+        }
     }
 
     private Task InitializeCurrentAsync()
@@ -157,18 +181,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (SelectedChatService == null) return Task.CompletedTask;
         return InitializeChatAsync(SelectedChatService);
     }
-    
+
     private async Task InitializeChatAsync(IChatService chatService)
     {
         //Messages.Clear();
         _assistantMessagesById.Clear();
-        
+
         var status = await chatService.InitializeAsync();
 
         IsInitialized = status.Success;
         NeedsAuthentication = status.NeedsAuthentication;
     }
-    
+
     private async Task AuthenticateAsync()
     {
         if (SelectedChatService == null)
@@ -179,9 +203,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             });
             return;
         }
+
         NeedsAuthentication = !await SelectedChatService.AuthenticateAsync();
     }
-    
+
     private async Task NewChatAsync()
     {
         if (SelectedChatService != null)
@@ -189,11 +214,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             await AbortAsync();
             await SelectedChatService.NewChatAsync();
         }
-        
+
         Messages.Clear();
         _assistantMessagesById.Clear();
     }
-    
+
     private async Task SendAsync()
     {
         var prompt = CurrentMessage.Trim();
@@ -207,7 +232,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             });
             return;
         }
-        
+
         if (!IsConnected)
         {
             Messages.Add(new ChatMessageAssistantViewModel()
@@ -222,12 +247,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             IsStreaming = true
         };
-        
+
         AddMessage(userMessage);
         AddMessage(assistantMessage);
-        
+
         ContentAdded?.Invoke(this, EventArgs.Empty);
-        
+
         CurrentMessage = string.Empty;
         IsBusy = true;
 
@@ -246,7 +271,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private async Task AbortAsync()
     {
         if (SelectedChatService == null) return;
-        
+
         try
         {
             await SelectedChatService.AbortAsync();
@@ -267,9 +292,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             Messages.Remove(initMessage);
         }
+
         Messages.Add(message);
     }
-    
+
     private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId)
     {
         if (!string.IsNullOrWhiteSpace(reasoningId))
@@ -278,7 +304,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 return existing;
 
             var created = new ChatMessageReasoningViewModel(reasoningId);
-             AddMessage(created);
+            AddMessage(created);
             _assistantReasoningById[reasoningId] = created;
             return created;
         }
@@ -295,7 +321,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             Messages.Remove(initMessage);
         }
-        
+
         if (!string.IsNullOrWhiteSpace(messageId))
         {
             if (_assistantMessagesById.TryGetValue(messageId, out var existing))
@@ -319,10 +345,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             foreach (var message in Messages.OfType<ChatMessageAssistantViewModel>())
                 message.IsStreaming = false;
-            
+
             foreach (var message in Messages.OfType<ChatMessageReasoningViewModel>())
                 message.IsStreaming = false;
-            
+
             IsBusy = false;
         });
     }
@@ -428,6 +454,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public void RegisterChatService(IChatService chatService)
     {
         ChatServices.Add(chatService);
+        if (!string.IsNullOrWhiteSpace(_pendingChatServiceName)
+            && string.Equals(chatService.Name, _pendingChatServiceName, StringComparison.Ordinal))
+        {
+            _pendingChatServiceName = null;
+            SelectedChatService = chatService;
+            return;
+        }
+
+        if (SelectedChatService == null)
+        {
+            SelectedChatService = chatService;
+        }
     }
 
     private void OnFunctionStarted(object? sender, AiFunctionStartedEvent function)
@@ -440,20 +478,210 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         AddMessage(newMessage);
         ContentAdded?.Invoke(this, EventArgs.Empty);
     }
-    
+
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
     {
         var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.Id == function.Id);
-        toolFinished?.IsToolRunning = false;
-        toolFinished?.IsSuccessful = function.Result;
-        if(!string.IsNullOrWhiteSpace(function.ToolOutput))
-            toolFinished?.ToolOutput += $"\n{function.ToolOutput}";
+        if (toolFinished == null) return;
+
+        toolFinished.IsToolRunning = false;
+        toolFinished.IsSuccessful = function.Result;
+        if (!string.IsNullOrWhiteSpace(function.ToolOutput))
+        {
+            if (string.IsNullOrWhiteSpace(toolFinished.ToolOutput))
+                toolFinished.ToolOutput += '\n';
+            toolFinished.ToolOutput += function.ToolOutput;
+        }
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)
     {
         if (editViewModel == null) return;
-        
+
         _mainDockService.Show(editViewModel, DockShowLocation.Document);
+    }
+
+    public void SaveState()
+    {
+        var state = BuildChatState();
+
+        try
+        {
+            var directory = Path.GetDirectoryName(_statePath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            using var stream = File.Open(_statePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            JsonSerializer.Serialize(stream, state, ChatStateSerializerOptions);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Error("Saving chat state failed", e);
+        }
+    }
+
+    private void LoadState()
+    {
+        if (!File.Exists(_statePath)) return;
+
+        try
+        {
+            using var stream = File.OpenRead(_statePath);
+            var state = JsonSerializer.Deserialize<ChatState>(stream, ChatStateSerializerOptions);
+            if (state == null) return;
+
+            _pendingChatServiceName = state.SelectedChatServiceName;
+
+            Messages.Clear();
+            _assistantMessagesById.Clear();
+            _assistantReasoningById.Clear();
+
+            foreach (var messageState in state.Messages)
+            {
+                if (TryCreateMessage(messageState, out var message))
+                    Messages.Add(message);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_pendingChatServiceName))
+            {
+                var match = ChatServices.FirstOrDefault(x =>
+                    string.Equals(x.Name, _pendingChatServiceName, StringComparison.Ordinal));
+                if (match != null)
+                {
+                    _pendingChatServiceName = null;
+                    SelectedChatService = match;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning("Loading chat state failed", e);
+        }
+    }
+
+    private ChatState BuildChatState()
+    {
+        var messages = new List<ChatMessageState>(Messages.Count);
+        foreach (var message in Messages)
+        {
+            var state = BuildMessageState(message);
+            if (state != null) messages.Add(state);
+        }
+
+        return new ChatState
+        {
+            SelectedChatServiceName = SelectedChatService?.Name,
+            Messages = messages
+        };
+    }
+
+    private static ChatMessageState? BuildMessageState(IChatMessage message)
+    {
+        switch (message)
+        {
+            case ChatMessageUserViewModel user:
+                return new ChatMessageState(ChatMessageKind.User)
+                {
+                    Message = user.Message
+                };
+            case ChatMessageAssistantViewModel assistant:
+                return new ChatMessageState(ChatMessageKind.Assistant)
+                {
+                    Content = assistant.Content
+                };
+            case ChatMessageReasoningViewModel reasoning:
+                return new ChatMessageState(ChatMessageKind.Reasoning)
+                {
+                    Content = reasoning.Content
+                };
+            case ChatMessageToolViewModel tool:
+                return new ChatMessageState(ChatMessageKind.Tool)
+                {
+                    Id = tool.Id,
+                    ToolName = tool.ToolName,
+                    ToolOutput = tool.ToolOutput,
+                    IsSuccessful = tool.IsSuccessful
+                };
+            default:
+                return null;
+        }
+    }
+
+    private static bool TryCreateMessage(ChatMessageState state, out IChatMessage message)
+    {
+        switch (state.Kind)
+        {
+            case ChatMessageKind.User:
+                message = new ChatMessageUserViewModel(state.Message ?? string.Empty);
+                return true;
+            case ChatMessageKind.Assistant:
+                message = new ChatMessageAssistantViewModel
+                {
+                    Content = state.Content ?? string.Empty,
+                    IsStreaming = false
+                };
+                return true;
+            case ChatMessageKind.Reasoning:
+                message = new ChatMessageReasoningViewModel
+                {
+                    Content = state.Content ?? string.Empty,
+                    IsStreaming = false
+                };
+                return true;
+            case ChatMessageKind.Tool:
+                if (string.IsNullOrWhiteSpace(state.ToolName))
+                {
+                    message = null!;
+                    return false;
+                }
+
+                message = new ChatMessageToolViewModel(state.Id ?? Guid.NewGuid().ToString("N"), state.ToolName)
+                {
+                    ToolOutput = state.ToolOutput,
+                    IsSuccessful = state.IsSuccessful,
+                    IsToolRunning = false
+                };
+                return true;
+            default:
+                message = null!;
+                return false;
+        }
+    }
+
+    private sealed class ChatState
+    {
+        public string? SelectedChatServiceName { get; set; }
+
+        public List<ChatMessageState> Messages { get; set; } = new();
+    }
+
+    private sealed class ChatMessageState
+    {
+        public ChatMessageState()
+        {
+        }
+
+        public ChatMessageState(ChatMessageKind kind)
+        {
+            Kind = kind;
+        }
+
+        public ChatMessageKind Kind { get; set; }
+        public string? Message { get; set; }
+        public string? Content { get; set; }
+        public string? Id { get; set; }
+        public string? ToolName { get; set; }
+        public string? ToolOutput { get; set; }
+        public bool IsSuccessful { get; set; }
+    }
+
+    private enum ChatMessageKind
+    {
+        User,
+        Assistant,
+        Reasoning,
+        Tool
     }
 }

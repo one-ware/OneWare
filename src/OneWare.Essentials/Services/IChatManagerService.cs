@@ -6,4 +6,5 @@ public interface IChatManagerService : IDockable
 {
     IChatService? SelectedChatService { get; set; }
     void RegisterChatService(IChatService chatService);
+    void SaveState();
 }

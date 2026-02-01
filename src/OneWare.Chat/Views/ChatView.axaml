@@ -5,6 +5,7 @@
              xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
+             xmlns:behaviors1="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
@@ -155,13 +156,18 @@
                     </StackPanel>
 
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
-                        <Button VerticalAlignment="Center">
+                        <Button Name="MenuButton" VerticalAlignment="Center">
                             <Button.Flyout>
                                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
                                         Placement="Top">
                                     <ListBox ItemsSource="{Binding ChatServices}"
                                              SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
                                              MinWidth="200">
+                                        <Interaction.Behaviors>
+                                            <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                                <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
+                                            </behaviors1:PointerPressedHandledEventTrigger>
+                                        </Interaction.Behaviors>
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <StackPanel />
