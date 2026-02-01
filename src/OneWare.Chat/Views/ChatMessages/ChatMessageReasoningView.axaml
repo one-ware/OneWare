@@ -8,13 +8,15 @@
              mc:Ignorable="d"
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageReasoningView"
              x:DataType="chatMessages:ChatMessageReasoningViewModel">
-    
+
     <Border>
         <Expander VerticalAlignment="Top" IsExpanded="{Binding IsStreaming, Mode=OneWay}">
             <Expander.Header>
                 <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5" VerticalAlignment="Center">
-                    <TextBlock Grid.Column="0"
-                               Text="Reasoning ✓" IsVisible="{Binding !IsStreaming}" />
+                    <TextBlock Grid.Column="0" IsVisible="{Binding !IsStreaming}">
+                        <Run Text="Reasoning "/>
+                        <Run Text="✓" Foreground="LimeGreen" />
+                    </TextBlock>
                     <TextBlock Grid.Column="0"
                                Text="Reasoning…" IsVisible="{Binding IsStreaming}" />
                     <controls:Spinner Grid.Column="1" Width="12" Height="12" VerticalAlignment="Center"

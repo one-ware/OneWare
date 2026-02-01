@@ -169,6 +169,7 @@ public sealed class CopilotChatService(
                           - THE CWD is not important since this App supports opening multiple projects in different locations. You can ask about the active project location with getActiveProject
                           - You DO NOT have access to files that are not open in the IDE (ask with getOpenFiles).
                           - You MUST NOT assume file contents, directory structure, or command output.
+                          - DO NOT use Emojis
                           - You MUST use the provided tools to:
                             - discover open files
                             - determine the currently focused file

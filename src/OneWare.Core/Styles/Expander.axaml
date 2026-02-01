@@ -6,15 +6,7 @@
                         Orientation="Vertical"
                         Spacing="20">
                 <Expander CornerRadius="25"
-                          ExpandDirection="Up">
-                    <Expander.Header>
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Expand" />
-                            <TextBlock Grid.Column="1"
-                                       Text="Up" />
-                        </Grid>
-                    </Expander.Header>
+                          ExpandDirection="Up" Header="Changes">
                     <StackPanel>
                         <TextBlock Text="Expanded content" />
                     </StackPanel>
@@ -60,6 +52,10 @@
     <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent"></Setter>
+    </Style>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="VerticalAlignment" Value="Center"></Setter>
     </Style>
     <!-- Add Styles Here -->
 </Styles>

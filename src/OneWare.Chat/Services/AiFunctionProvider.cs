@@ -234,7 +234,7 @@ public class AiFunctionProvider(
                 {
                     Id = id,
                     Result = exception == null,
-                    ToolOutput = exception?.ToString()
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
                 });
             }
         });
@@ -271,7 +271,7 @@ public class AiFunctionProvider(
                 {
                     Id = id,
                     Result = exception == null,
-                    ToolOutput = exception?.ToString()
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
                 }));
         }
     }
@@ -309,7 +309,7 @@ public class AiFunctionProvider(
                 {
                     Id = id,
                     Result = exception == null,
-                    ToolOutput = exception?.ToString()
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
                 });
             }
         });
