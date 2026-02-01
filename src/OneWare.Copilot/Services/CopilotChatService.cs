@@ -39,7 +39,7 @@ public sealed class CopilotChatService(
                 {
                     // When a model is changed we reset the session and force a new one on next init
                     SessionReset?.Invoke(this, EventArgs.Empty);
-                    _forceNewSession = true;
+                    _ = NewChatAsync();
                 }
             }
         }
@@ -178,7 +178,6 @@ public sealed class CopilotChatService(
             _session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = SelectedModel.Id,
-                SessionId = sessionId,
                 Streaming = true,
                 SystemMessage = new SystemMessageConfig
                 {

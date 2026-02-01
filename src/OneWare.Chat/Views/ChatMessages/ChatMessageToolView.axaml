@@ -24,7 +24,7 @@
                                   IsVisible="{Binding IsToolRunning}" />
             </Grid>
         </Expander.Header>
-        <Border Margin="1 2 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
             <TextBlock TextWrapping="Wrap" Text="{Binding ToolOutput}" />
         </Border>

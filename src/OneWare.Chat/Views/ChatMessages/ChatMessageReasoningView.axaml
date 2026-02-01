@@ -22,9 +22,9 @@
                                   IsVisible="{Binding IsStreaming}" />
             </Grid>
         </Expander.Header>
-        <Border Margin="1 2 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
-            <controls:MarkdownViewer Markdown="{Binding Content}" />
+            <controls:MarkdownViewer AutoScrollToBottom="True" Markdown="{Binding Content}" />
         </Border>
     </Expander>
 
