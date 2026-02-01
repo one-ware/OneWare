@@ -6,6 +6,8 @@ using Microsoft.Extensions.AI;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Settings.ViewModels;
+using OneWare.Settings.Views;
 
 namespace OneWare.Chat.Services;
 
@@ -14,6 +16,7 @@ public class AiFunctionProvider(
     IMainDockService dockService,
     IErrorService errorService,
     ITerminalManagerService terminalManagerService,
+    IWindowService windowService,
     AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
@@ -190,16 +193,29 @@ public class AiFunctionProvider(
                 }),
             "runTerminalCommand",
             """
-            Executes a command in the user's visible terminal.
-            This is the ONLY way to run commands.
-            Do NOT simulate command execution or output.
+            Executes a command in the terminal. It will return the result
             """
+        );
+        
+        var openSettings = AIFunctionFactory.Create(
+            () => WrapWithNotificationUiThread(
+                "Open Settings",
+                () =>
+                {
+                    _ = windowService.ShowDialogAsync(new ApplicationSettingsView
+                    {
+                        DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+                    });
+                    return true;
+                }),
+            "openIDESettings",
+            "Opens the IDE Setting Dialog"
         );
 
         return
         [
             getActiveProject, getOpenFile, getOpenFiles, searchFiles, readFile, editFile, getErrorsForFile, getErrors,
-            executeInTerminal
+            executeInTerminal, openSettings
         ];
     }
 

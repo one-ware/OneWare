@@ -182,24 +182,7 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 SystemMessage = new SystemMessageConfig
                 {
-                    Content = """
-                              You are running inside an IDE called OneWare Studio. It supports opening multiple projects 
-
-                              IMPORTANT RULES:
-                              - THE CWD is not important since this App supports opening multiple projects in different locations. You can ask about the active project location with getActiveProject
-                              - You DO NOT have access to files that are not open in the IDE (ask with getOpenFiles).
-                              - You MUST NOT assume file contents, directory structure, or command output.
-                              - DO NOT use Emojis
-                              - You MUST use the provided tools to:
-                                - discover open files
-                                - determine the currently focused file
-                                - execute terminal commands
-                              - If a task requires file access or execution, you MUST call the appropriate tool.
-                              - Never simulate terminal output.
-                              - Never invent file paths or command results.
-                              - If the user asks to edit something, start with the currently focused file (ask with getFocusedFile) (if not specified otherwise)
-                              If a required tool is missing, ask the user.
-                              """
+                    Content = CopilotModule.SystemMessage
                 },
                 Tools = toolProvider.GetTools()
             });

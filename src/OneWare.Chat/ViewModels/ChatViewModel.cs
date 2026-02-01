@@ -61,6 +61,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         applicationStateService.RegisterShutdownAction(SaveState);
     }
 
+    // Triggers a scroll to bottom
     public event EventHandler? ContentAdded;
 
     public string CurrentMessage
@@ -251,11 +252,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         AddMessage(userMessage);
         AddMessage(assistantMessage);
-
-        ContentAdded?.Invoke(this, EventArgs.Empty);
-
+        
         CurrentMessage = string.Empty;
         IsBusy = true;
+        
+        ContentAdded?.Invoke(this, EventArgs.Empty);
 
         try
         {
