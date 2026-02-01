@@ -1,18 +1,63 @@
 namespace OneWare.Essentials.Models;
 
-public enum ChatServiceMessageType
+public abstract class ChatEvent()
 {
-    AssistantDelta,
-    AssistantMessage,
-    Error,
-    Idle
+
 }
 
-public sealed class ChatServiceMessageEvent(ChatServiceMessageType type, string? content = null, string? messageId = null)
+public sealed class ChatMessageDeltaEvent(string content, string? messageId = null)
+    : ChatEvent()
 {
-    public ChatServiceMessageType Type { get; } = type;
-    public string? Content { get; } = content;
+    public string Content { get; } = content;
+    
     public string? MessageId { get; } = messageId;
+}
+
+public sealed class ChatMessageEvent(string content, string? messageId = null)
+    : ChatEvent()
+{
+    public string Content { get; } = content;
+    
+    public string? MessageId { get; } = messageId;
+}
+
+public sealed class ChatReasoningDeltaEvent(string content, string? reasoningId = null)
+    : ChatEvent()
+{
+    public string Content { get; } = content;
+    
+    public string? ReasoningId { get; } = reasoningId;
+}
+
+public sealed class ChatReasoningEvent(string content, string? reasoningId = null)
+    : ChatEvent()
+{
+    public string Content { get; } = content;
+    
+    public string? ReasoningId { get; } = reasoningId;
+}
+
+public sealed class ChatUserMessageEvent(string content)
+    : ChatEvent()
+{
+    public string Content { get; } = content;
+}
+
+public sealed class ChatToolExecutionStartEvent(string tool)
+    : ChatEvent()
+{
+    public string Tool { get; } = tool;
+}
+
+public sealed class ChatErrorEvent(string message)
+    : ChatEvent()
+{
+    public string? Message { get; } = message;
+}
+
+public sealed class ChatIdleEvent()
+    : ChatEvent()
+{
 }
 
 public sealed class ChatInitializationStatus(bool success)
@@ -21,7 +66,7 @@ public sealed class ChatInitializationStatus(bool success)
     public bool NeedsAuthentication { get; init; }
 }
 
-public sealed class ChatServiceStatusEvent(bool isConnected, string statusText)
+public sealed class StatusEvent(bool isConnected, string statusText)
 {
     public bool IsConnected { get; } = isConnected;
     public string StatusText { get; } = statusText;

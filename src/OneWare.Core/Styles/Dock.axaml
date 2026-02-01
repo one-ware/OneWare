@@ -239,13 +239,9 @@
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="4 1 4 0" />
     </Style>
-
+    
     <Style Selector="StackPanel#HeaderContainer.LoadingFailed">
         <Setter Property="ToolTip.Tip" Value="Loading failed" />
-    </Style>
-
-    <Style Selector="StackPanel#HeaderContainer.LoadingFailed > TextBlock">
-        <Setter Property="Foreground" Value="#FFBB0000" />
     </Style>
 
     <Style Selector="DocumentControl">
@@ -277,7 +273,7 @@
                                     Height="17" Width="17"
                                     Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}" />
-                                <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Name="Title"
+                                <TextBlock Name="Title"
                                            Margin="3 0 0 0"
                                            Text="{Binding Title}" VerticalAlignment="Center" />
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
@@ -293,7 +289,12 @@
             </DataTemplate>
         </Setter>
     </Style>
-
+    
+    <Style Selector="DocumentTabStripItem:not(:active):selected">
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DockThemeForegroundBrush}" />
+    </Style>
+    
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
             <DataTemplate DataType="viewModels:IExtendedTool">

@@ -1,0 +1,61 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Width="350"
+                        Orientation="Vertical"
+                        Spacing="20">
+                <Expander CornerRadius="25"
+                          ExpandDirection="Up" Header="Changes">
+                    <StackPanel>
+                        <TextBlock Text="Expanded content" />
+                    </StackPanel>
+                </Expander>
+                <Expander CornerRadius="25"
+                          ExpandDirection="Down"
+                          Header="Expand Down">
+                    <StackPanel>
+                        <TextBlock Text="Expanded content" />
+                    </StackPanel>
+                </Expander>
+                <Expander CornerRadius="25"
+                          ExpandDirection="Left"
+                          Header="Expand Left">
+                    <StackPanel>
+                        <TextBlock Text="Expanded content" />
+                    </StackPanel>
+                </Expander>
+                <Expander CornerRadius="25"
+                          ExpandDirection="Right"
+                          Header="Expand Right">
+                    <StackPanel>
+                        <TextBlock Text="Expanded content" />
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+    
+    <Styles.Resources>
+        
+    </Styles.Resources>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ Border">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent"></Setter>
+    </Style>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent"></Setter>
+    </Style>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="VerticalAlignment" Value="Center"></Setter>
+    </Style>
+    <!-- Add Styles Here -->
+</Styles>

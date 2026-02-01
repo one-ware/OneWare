@@ -80,11 +80,11 @@
     <Project Path="demo/OneWare.Demo/OneWare.Demo.csproj" />
   </Folder>
   <Folder Name="/Extensions/">
-    <Project Path="src/OneWare.ChatBot/OneWare.ChatBot.csproj" />
     <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
     <Project Path="src/OneWare.Copilot/OneWare.Copilot.csproj" />
     <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
     <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
+    <Project Path="src\OneWare.Chat\OneWare.Chat.csproj" />
   </Folder>
   <Folder Name="/Extensions/FpgaSupport/">
     <Project Path="src/OneWare.SerialMonitor/OneWare.SerialMonitor.csproj" />

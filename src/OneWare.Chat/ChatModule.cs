@@ -2,22 +2,22 @@ using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using OneWare.ChatBot.Services;
-using OneWare.ChatBot.ViewModels;
+using OneWare.Chat.Services;
+using OneWare.Chat.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.ChatBot;
+namespace OneWare.Chat;
 
-public class ChatBotModule : OneWareModuleBase
+public class ChatModule : OneWareModuleBase
 {
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<AiFunctionProvider>();
         services.AddSingleton<IAiFunctionProvider>(provider => provider.Resolve<AiFunctionProvider>());
-        services.AddSingleton<ChatBotViewModel>();
-        services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatBotViewModel>());
+        services.AddSingleton<ChatViewModel>();
+        services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatViewModel>());
 
         services.AddSingleton<AiFileEditService>();
     }
@@ -36,7 +36,7 @@ public class ChatBotModule : OneWareModuleBase
         {
             Header = "AI Chat",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
-            IconObservable = Application.Current!.GetResourceObservable(ChatBotViewModel.IconKey),
+            IconObservable = Application.Current!.GetResourceObservable(ChatViewModel.IconKey),
         });
     }
 }

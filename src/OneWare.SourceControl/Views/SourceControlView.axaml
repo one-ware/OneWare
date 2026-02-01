@@ -38,22 +38,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ Border">
-            <Setter Property="BorderBrush" Value="Transparent" />
-        </Style>
-        <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
-            <Setter Property="BorderBrush" Value="Transparent" />
-        </Style>
-        <Style Selector="Expander ToggleButton">
-            <Setter Property="Height" Value="24" />
-        </Style>
     </UserControl.Styles>
     <Grid RowDefinitions="26, Auto, *">
         <DockPanel LastChildFill="False">
             <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
                 <MenuItem>
                     <MenuItem.Header>
-                        <Image Width="15" Source="{DynamicResource BoxIcons.RegularDotsHorizontalRounded}" />
+                        <Image VerticalAlignment="Center" Height="10" Width="10" Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" />
                     </MenuItem.Header>
                     <MenuItem Header="Account">
                         <MenuItem Header="Login to Github" Command="{Binding LoginGithubAsync}">
@@ -214,7 +205,7 @@
             </StackPanel>
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
-                <Expander BorderThickness="0" Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
+                <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
                     <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"

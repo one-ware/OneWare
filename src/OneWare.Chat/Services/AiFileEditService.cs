@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using OneWare.ChatBot.ViewModels;
+using OneWare.Chat.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Chat.Services;
 
 public class AiFileEditService(IMainDockService mainDockService)
 {

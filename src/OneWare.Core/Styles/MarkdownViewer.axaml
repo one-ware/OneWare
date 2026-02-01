@@ -14,7 +14,7 @@
     <Style Selector="controls|MarkdownViewer">
         <Setter Property="Template">
             <ControlTemplate>
-                <mdxaml:MarkdownScrollViewer SelectionEnabled="True" Markdown="{TemplateBinding Markdown}">
+                <mdxaml:MarkdownScrollViewer MarkdownStyleName="SimpleTheme" SelectionEnabled="True" Markdown="{TemplateBinding Markdown}">
                     <mdxaml:MarkdownScrollViewer.Plugins>
                         <mdxaml:MdAvPlugins>
                             <mdxaml:ChatAISetup />
@@ -22,6 +22,20 @@
                     </mdxaml:MarkdownScrollViewer.Plugins>
                     <mdxaml:MarkdownScrollViewer.Styles>
 
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CCode">
+                            <Style.Setters>
+                                <Setter Property="Foreground" Value="{extensions:DivideColor HighlightBrush, ThemeForegroundColor, 0.45}" />
+                                <Setter Property="Background" Value="{extensions:Alpha ThemeControlMidColor, 0.9}" />
+                            </Style.Setters>
+                        </Style>
+                        
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CHyperlink">
+                            <Style.Setters>
+                                <Setter Property="IsUnderline" Value="False"/>
+                                <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}"/>
+                            </Style.Setters>
+                        </Style>
+                        
                         <Style Selector="ScrollViewer">
                             <Setter Property="Padding" Value="5" />
                         </Style>
@@ -68,6 +82,7 @@
 
                         <Style Selector="Border.CodeBlock avaloniaEdit|TextEditor">
                             <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="False" />
                         </Style>
 
                         <Style Selector="ctxt|CCode">

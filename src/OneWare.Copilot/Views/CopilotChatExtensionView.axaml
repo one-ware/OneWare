@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:OneWare.Copilot.Services"
+             xmlns:models="clr-namespace:OneWare.Copilot.Models"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatService">
+    <Button Name="MenuButton" VerticalAlignment="Center" Margin="0 0 5 0">
+        <Button.Flyout>
+            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                    Placement="TopEdgeAlignedRight">
+                <ListBox ItemsSource="{Binding Models}"
+                         SelectedItem="{Binding SelectedModel}" BorderThickness="0"
+                         MinWidth="200">
+                    <Interaction.Behaviors>
+                        <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                            <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
+                        </behaviors:PointerPressedHandledEventTrigger>
+                    </Interaction.Behaviors>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                <TextBlock Text="{Binding Name}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+            </Flyout>
+        </Button.Flyout>
+        <StackPanel Orientation="Horizontal" Spacing="5" >
+            <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
+                       FontSize="11" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                   Height="8" />
+        </StackPanel>
+    </Button>
+</UserControl>

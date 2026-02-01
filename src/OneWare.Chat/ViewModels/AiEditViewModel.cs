@@ -1,13 +1,13 @@
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.Logging;
-using OneWare.ChatBot.Services;
+using OneWare.Chat.Services;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
-namespace OneWare.ChatBot.ViewModels;
+namespace OneWare.Chat.ViewModels;
 
 public class AiEditViewModel : Document, INoSerializeLayout
 {

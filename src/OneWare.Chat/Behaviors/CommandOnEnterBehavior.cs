@@ -3,9 +3,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactions.Custom;
 using Avalonia.Xaml.Interactivity;
-using OneWare.ChatBot.ViewModels;
+using OneWare.Chat.ViewModels;
 
-namespace OneWare.ChatBot.Behaviors;
+namespace OneWare.Chat.Behaviors;
 
 public class CommandOnEnterBehavior : ExecuteCommandRoutedEventBehaviorBase
 {

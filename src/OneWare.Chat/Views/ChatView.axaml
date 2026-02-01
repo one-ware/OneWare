@@ -2,12 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.ChatBot.ViewModels"
+             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:behaviors="clr-namespace:OneWare.ChatBot.Behaviors"
+             xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
+             xmlns:behaviors1="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.ChatBot.Views.ChatBotView" Name="ChatBotViewView"
-             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatBotViewModel">
+             x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
+             Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
     <Grid RowDefinitions="Auto, *, Auto, Auto" RowSpacing="4">
         <Border Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0 0 0 1" Padding="4">
@@ -18,11 +19,12 @@
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                            IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Button Command="{Binding InitializeCurrentCommand}"
                             IsVisible="{Binding !IsInitialized}">
                         <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}"  Height="8" Width="8"
+                            <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="8" Width="8"
                                    VerticalAlignment="Center" />
                             <TextBlock Text="Refresh" />
                         </StackPanel>
@@ -39,19 +41,53 @@
         </Border>
 
         <Panel Grid.Row="1">
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
                 <Interaction.Behaviors>
-                    <AutoScrollToBottomBehavior />
+                    <AutoScrollDuringDragBehavior ScrollDelta="4" />
                 </Interaction.Behaviors>
+                <Border Padding="10 10 10 4">
+                    <Grid RowDefinitions="Auto, Auto" RowSpacing="5">
+                        <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}">
+                            <ItemsControl.Styles>
+                                <Style Selector="Expander /template/ ToggleButton">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                                    <Setter Property="CornerRadius" Value="3" />
+                                </Style>
+                                <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                                </Style>
+                                <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border Border">
+                                    <Setter Property="Background" Value="Transparent" />
+                                </Style>
+                                <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
+                                    <Setter Property="CornerRadius" Value="3" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                                <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Grid > Border">
+                                    <Setter Property="Margin" Value="0 2" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </ItemsControl.Styles>
 
-                <Border Padding="8 8 8 0">
-                    <ItemsControl ItemsSource="{Binding Messages}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Spacing="8" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="5" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <!-- Loading Indicator -->
+                        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
+                              IsVisible="{Binding IsBusy}">
+                            <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="1"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                                       FontStyle="Italic"
+                                       Text="Working…" />
+                        </Grid>
+                    </Grid>
                 </Border>
             </ScrollViewer>
 
@@ -80,7 +116,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button
-                                Command="{Binding #ChatBotViewView.((viewModels:ChatBotViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
+                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
                                 HorizontalAlignment="Stretch" Background="Transparent">
                                 <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
@@ -120,36 +156,41 @@
                     </StackPanel>
 
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
-                                       FontSize="11" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                            <Button Height="15" VerticalAlignment="Center">
-                                <Button.Flyout>
-                                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                            Placement="Top">
-                                        <ListBox ItemsSource="{Binding ChatServices}"
-                                                 SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
-                                                 MinWidth="200">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ListBox>
-                                    </Flyout>
-                                </Button.Flyout>
+                        <Button Name="MenuButton" VerticalAlignment="Center">
+                            <Button.Flyout>
+                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                        Placement="Top">
+                                    <ListBox ItemsSource="{Binding ChatServices}"
+                                             SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
+                                             MinWidth="200">
+                                        <Interaction.Behaviors>
+                                            <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                                <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
+                                            </behaviors1:PointerPressedHandledEventTrigger>
+                                        </Interaction.Behaviors>
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                                    <TextBlock Text="{Binding Name}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ListBox>
+                                </Flyout>
+                            </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
+                                           FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                 <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
                                        Height="8" />
-                            </Button>
-                        </StackPanel>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
                     <ContentControl DockPanel.Dock="Right"

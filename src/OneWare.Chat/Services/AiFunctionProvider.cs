@@ -4,20 +4,24 @@ using System.Text.RegularExpressions;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Settings.ViewModels;
+using OneWare.Settings.Views;
 
-namespace OneWare.ChatBot.Services;
+namespace OneWare.Chat.Services;
 
 public class AiFunctionProvider(
     IProjectExplorerService projectExplorerService,
     IMainDockService dockService,
     IErrorService errorService,
     ITerminalManagerService terminalManagerService,
+    IWindowService windowService,
     AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
-    public event EventHandler<string>? FunctionStarted;
+    public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
 
-    public event EventHandler<string>? FunctionCompleted;
+    public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
 
     public ICollection<AIFunction> GetTools()
     {
@@ -61,7 +65,7 @@ public class AiFunctionProvider(
                 [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
                 [Description("number of lines to read from startLine (omit for full file)")] int? lineCount = null) =>
                 WrapWithNotificationTaskUiThread(
-                    $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
+                    $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}", "",
                     async () => new
                     {
                         result = await aiFileEditService.ReadFileAsync(path, startLine, lineCount)
@@ -77,6 +81,7 @@ public class AiFunctionProvider(
                 [Description("number of lines to replace from startLine; 0 inserts before startLine")] int? lineCount = null) =>
             WrapWithNotificationTaskUiThread(
                 $"Edit File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
+                "",
                 async () => new
                 {
                     result = await aiFileEditService.EditFileAsync(path, content, startLine, lineCount)
@@ -171,7 +176,7 @@ public class AiFunctionProvider(
                 [Description("Working directory for execution")]
                 string workDir
             ) => WrapWithNotificationTaskUiThread(
-                $"Execute In Terminal: {command}",
+                $"Execute In Terminal", command,
                 async () =>
                 {
                     var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
@@ -188,31 +193,65 @@ public class AiFunctionProvider(
                 }),
             "runTerminalCommand",
             """
-            Executes a command in the user's visible terminal.
-            This is the ONLY way to run commands.
-            Do NOT simulate command execution or output.
+            Executes a command in the terminal. It will return the result
             """
+        );
+        
+        var openSettings = AIFunctionFactory.Create(
+            () => WrapWithNotificationUiThread(
+                "Open Settings",
+                () =>
+                {
+                    _ = windowService.ShowDialogAsync(new ApplicationSettingsView
+                    {
+                        DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
+                    });
+                    return true;
+                }),
+            "openIDESettings",
+            "Opens the IDE Setting Dialog"
         );
 
         return
         [
             getActiveProject, getOpenFile, getOpenFiles, searchFiles, readFile, editFile, getErrorsForFile, getErrors,
-            executeInTerminal
+            executeInTerminal, openSettings
         ];
     }
 
-    private async Task<T> WrapWithNotificationUiThread<T>(string friendlyName, Func<T> handler)
+    private async Task<T> WrapWithNotificationUiThread<T>(
+        string friendlyName,
+        Func<T> handler)
     {
+        var id = Guid.NewGuid().ToString();
+
         return await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            Exception? exception = null;
+
             try
             {
-                FunctionStarted?.Invoke(this, friendlyName);
+                FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
+                {
+                    Id = id,
+                    FunctionName = friendlyName
+                });
+
                 return handler();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                throw;
             }
             finally
             {
-                FunctionCompleted?.Invoke(this, friendlyName);
+                FunctionCompleted?.Invoke(this, new AiFunctionCompletedEvent
+                {
+                    Id = id,
+                    Result = exception == null,
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
+                });
             }
         });
     }
@@ -221,38 +260,77 @@ public class AiFunctionProvider(
         string friendlyName,
         Func<Task<T>> handler)
     {
+        var id = Guid.NewGuid().ToString();
+
         await Dispatcher.UIThread.InvokeAsync(() =>
-            FunctionStarted?.Invoke(this, friendlyName));
+            FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
+            {
+                Id = id,
+                FunctionName = friendlyName
+            }));
+
+        Exception? exception = null;
 
         try
         {
             return await handler().ConfigureAwait(false);
         }
+        catch (Exception ex)
+        {
+            exception = ex;
+            throw;
+        }
         finally
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
-                FunctionCompleted?.Invoke(this, friendlyName));
+                FunctionCompleted?.Invoke(this, new AiFunctionCompletedEvent
+                {
+                    Id = id,
+                    Result = exception == null,
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
+                }));
         }
     }
     
     private async Task<T> WrapWithNotificationTaskUiThread<T>(
-        string friendlyName,
+        string friendlyName, string detail,
         Func<Task<T>> handler)
     {
+        var id = Guid.NewGuid().ToString();
+
         return await Dispatcher.UIThread.InvokeAsync(async () =>
         {
+            Exception? exception = null;
+
             try
             {
-                FunctionStarted?.Invoke(this, friendlyName);
-                return await handler().ConfigureAwait(false);
+                FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
+                {
+                    Id = id,
+                    FunctionName = friendlyName,
+                    Detail = detail
+                });
+
+                // Handler executes; continuation may leave UI thread
+                return await handler();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                throw;
             }
             finally
             {
-                FunctionCompleted?.Invoke(this, friendlyName);
+                FunctionCompleted?.Invoke(this, new AiFunctionCompletedEvent
+                {
+                    Id = id,
+                    Result = exception == null,
+                    ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
+                });
             }
         });
     }
-
+    
     private static async Task<IReadOnlyList<SearchMatch>> SearchInFilesAsync(
         string rootPath,
         string pattern,

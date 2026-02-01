@@ -69,4 +69,5 @@
     <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
     </Style>
+
 </Styles>
