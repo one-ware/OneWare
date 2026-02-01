@@ -22,7 +22,7 @@ public sealed class CopilotChatService(
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
     private IDisposable? _subscription;
-    private string? _initializedModel;
+    private bool _forceNewSession;
 
     public ObservableCollection<ModelModel> Models { get; } = [];
 
@@ -37,8 +37,9 @@ public sealed class CopilotChatService(
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
                 if (oldValue != null)
                 {
+                    // When a model is changed we reset the session and force a new one on next init
                     SessionReset?.Invoke(this, EventArgs.Empty);
-                    _ = DisposeSessionAsync();
+                    _forceNewSession = true;
                 }
             }
         }
@@ -151,7 +152,7 @@ public sealed class CopilotChatService(
         }
     }
 
-    private async Task InitializeSessionAsync(bool restoreSession)
+    private async Task InitializeSessionAsync()
     {
         if (_client == null) return;
 
@@ -167,43 +168,55 @@ public sealed class CopilotChatService(
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
         string? sessionId = null;
-        if (restoreSession)
+        if (!_forceNewSession)
         {
             sessionId = await _client.GetLastSessionIdAsync();
         }
 
-        _session = await _client.CreateSessionAsync(new SessionConfig
+        if (sessionId == null)
         {
-            Model = SelectedModel.Id,
-            SessionId = sessionId,
-            Streaming = true,
-            SystemMessage = new SystemMessageConfig
+            _session = await _client.CreateSessionAsync(new SessionConfig
             {
-                Content = """
-                          You are running inside an IDE called OneWare Studio. It supports opening multiple projects 
+                Model = SelectedModel.Id,
+                SessionId = sessionId,
+                Streaming = true,
+                SystemMessage = new SystemMessageConfig
+                {
+                    Content = """
+                              You are running inside an IDE called OneWare Studio. It supports opening multiple projects 
 
-                          IMPORTANT RULES:
-                          - THE CWD is not important since this App supports opening multiple projects in different locations. You can ask about the active project location with getActiveProject
-                          - You DO NOT have access to files that are not open in the IDE (ask with getOpenFiles).
-                          - You MUST NOT assume file contents, directory structure, or command output.
-                          - DO NOT use Emojis
-                          - You MUST use the provided tools to:
-                            - discover open files
-                            - determine the currently focused file
-                            - execute terminal commands
-                          - If a task requires file access or execution, you MUST call the appropriate tool.
-                          - Never simulate terminal output.
-                          - Never invent file paths or command results.
-                          - If the user asks to edit something, start with the currently focused file (ask with getFocusedFile) (if not specified otherwise)
-                          If a required tool is missing, ask the user.
-                          """
-            },
-            Tools = toolProvider.GetTools()
-        });
+                              IMPORTANT RULES:
+                              - THE CWD is not important since this App supports opening multiple projects in different locations. You can ask about the active project location with getActiveProject
+                              - You DO NOT have access to files that are not open in the IDE (ask with getOpenFiles).
+                              - You MUST NOT assume file contents, directory structure, or command output.
+                              - DO NOT use Emojis
+                              - You MUST use the provided tools to:
+                                - discover open files
+                                - determine the currently focused file
+                                - execute terminal commands
+                              - If a task requires file access or execution, you MUST call the appropriate tool.
+                              - Never simulate terminal output.
+                              - Never invent file paths or command results.
+                              - If the user asks to edit something, start with the currently focused file (ask with getFocusedFile) (if not specified otherwise)
+                              If a required tool is missing, ask the user.
+                              """
+                },
+                Tools = toolProvider.GetTools()
+            });
 
+            _forceNewSession = false;
+        }
+        else
+        {
+            _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
+            {
+                Streaming = true,
+                Tools = toolProvider.GetTools()
+            });
+        }
+        
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
-
-        _initializedModel = SelectedModel.Id;
+        
         _subscription = _session.On(HandleSessionEvent);
     }
 
@@ -218,7 +231,7 @@ public sealed class CopilotChatService(
 
         if (_session == null)
         {
-            await InitializeSessionAsync(true);
+            await InitializeSessionAsync();
         }
 
         if (_session == null) return;
@@ -233,7 +246,8 @@ public sealed class CopilotChatService(
 
     public async Task NewChatAsync()
     {
-        await InitializeSessionAsync(false);
+        _forceNewSession = true;
+        await InitializeSessionAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -255,7 +269,6 @@ public sealed class CopilotChatService(
         {
             await _session.DisposeAsync();
             _session = null;
-            _initializedModel = null;
         }
     }
 
