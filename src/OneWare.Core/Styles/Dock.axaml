@@ -291,7 +291,7 @@
     </Style>
     
     <Style Selector="DocumentTabStripItem:not(:active):selected">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource DockThemeForegroundBrush}" />
     </Style>
     

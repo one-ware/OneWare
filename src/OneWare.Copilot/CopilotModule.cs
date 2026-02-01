@@ -11,6 +11,8 @@ public class CopilotModule : OneWareModuleBase
 {
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     
+    public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
+    
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<CopilotChatService>();
@@ -24,6 +26,8 @@ public class CopilotModule : OneWareModuleBase
             {
                 HoverDescription = "Path for Copilot CLI"
             });
+
+        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
         
         serviceProvider.Resolve<IChatManagerService>().RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
     }

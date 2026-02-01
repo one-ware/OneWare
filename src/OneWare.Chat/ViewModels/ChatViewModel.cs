@@ -137,12 +137,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 {
                     oldValue.EventReceived -= OnEventReceived;
                     oldValue.StatusChanged -= OnStatusChanged;
+                    oldValue.SessionReset -= OnSessionReset;
                 }
 
                 if (value != null)
                 {
                     value.EventReceived += OnEventReceived;
                     value.StatusChanged += OnStatusChanged;
+                    value.SessionReset += OnSessionReset;
                     _ = InitializeChatAsync(value);
                 }
             }
@@ -184,7 +186,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private async Task InitializeChatAsync(IChatService chatService)
     {
-        //Messages.Clear();
         _assistantMessagesById.Clear();
 
         var status = await chatService.InitializeAsync();
@@ -448,6 +449,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             IsConnected = e.IsConnected;
             StatusText = e.StatusText;
+        });
+    }
+    
+    private void OnSessionReset(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            Messages.Clear();
         });
     }
 

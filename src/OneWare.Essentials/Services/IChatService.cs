@@ -8,7 +8,8 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
 {
     public string Name { get; }
     public Control? BottomUiExtension { get; }
-    
+
+    event EventHandler SessionReset;
     event EventHandler<ChatEvent>? EventReceived;
     event EventHandler<StatusEvent>? StatusChanged;
     

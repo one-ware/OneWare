@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using GitHub.Copilot.SDK;
+using Microsoft.Extensions.Logging;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Helpers;
@@ -28,7 +29,19 @@ public sealed class CopilotChatService(
     public ModelModel? SelectedModel
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            var oldValue = field;
+            if (SetProperty(ref field, value) && value != null)
+            {
+                settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
+                if (oldValue != null)
+                {
+                    SessionReset?.Invoke(this, EventArgs.Empty);
+                    _ = DisposeSessionAsync();
+                }
+            }
+        }
     }
 
     public string Name { get; } = "Copilot";
@@ -38,6 +51,7 @@ public sealed class CopilotChatService(
         DataContext = this
     };
 
+    public event EventHandler? SessionReset;
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
@@ -73,7 +87,7 @@ public sealed class CopilotChatService(
                     NeedsAuthentication = true
                 };
             }
-            
+
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 Cwd = paths.ProjectsDirectory,
@@ -114,8 +128,11 @@ public sealed class CopilotChatService(
                 Billing = $"{x.Billing?.Multiplier}x",
             }).ToArray());
 
-            SelectedModel = Models.FirstOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
-            
+            var selectedModelSetting =
+                settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
+            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ??
+                            Models.FirstOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
+
             return new ChatInitializationStatus(true);
         }
         catch (Exception ex)
@@ -154,7 +171,7 @@ public sealed class CopilotChatService(
         {
             sessionId = await _client.GetLastSessionIdAsync();
         }
-        
+
         _session = await _client.CreateSessionAsync(new SessionConfig
         {
             Model = SelectedModel.Id,
@@ -199,7 +216,7 @@ public sealed class CopilotChatService(
             return;
         }
 
-        if (_session == null || SelectedModel.Id != _initializedModel)
+        if (_session == null)
         {
             await InitializeSessionAsync(true);
         }
