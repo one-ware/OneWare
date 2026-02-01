@@ -5,21 +5,31 @@ namespace OneWare.Chat.ViewModels.ChatMessages;
 
 public class ChatMessageToolViewModel : ObservableObject, IChatMessage
 {
-    public ChatMessageToolViewModel(string toolMessage)
+    public ChatMessageToolViewModel(string id, string toolName)
     {
         Timestamp = DateTimeOffset.Now;
-        ToolMessage = toolMessage;
+        Id = id;
+        ToolName = toolName;
     }
     
-    [DataMember]
-    public string ToolMessage { get; }
+    public string Id { get; init; }
     
     [DataMember]
-    public string? ToolFinishMessage { get; set; }
+    public string ToolName { get; }
+    
+    [DataMember]
+    public string? ToolOutput { get; set; }
     
     public DateTimeOffset Timestamp { get; }
 
     public bool IsToolRunning
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+    
+    [DataMember]
+    public bool IsSuccessful
     {
         get;
         set => SetProperty(ref field, value);

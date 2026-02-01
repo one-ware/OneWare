@@ -35,7 +35,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
-        InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
+        InitializeCurrentCommand = new AsyncRelayCommand(() =>
+        {
+            Messages.Clear();
+            return InitializeCurrentAsync();
+        });
     }
 
     public event EventHandler? ContentAdded;
@@ -426,21 +430,24 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         ChatServices.Add(chatService);
     }
 
-    private void OnFunctionStarted(object? sender, string functionName)
+    private void OnFunctionStarted(object? sender, AiFunctionStartedEvent function)
     {
-        var newMessage = new ChatMessageToolViewModel(functionName)
+        var newMessage = new ChatMessageToolViewModel(function.Id, function.FunctionName)
         {
-            IsToolRunning = true
+            IsToolRunning = true,
+            ToolOutput = $"{function.Detail}"
         };
         AddMessage(newMessage);
         ContentAdded?.Invoke(this, EventArgs.Empty);
     }
     
-    private void OnFunctionCompleted(object? sender, string functionName)
+    private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
     {
-        var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.ToolMessage == functionName);
+        var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.Id == function.Id);
         toolFinished?.IsToolRunning = false;
-        toolFinished?.ToolFinishMessage = $"{functionName} finished";
+        toolFinished?.IsSuccessful = function.Result;
+        if(!string.IsNullOrWhiteSpace(function.ToolOutput))
+            toolFinished?.ToolOutput += $"\n{function.ToolOutput}";
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)

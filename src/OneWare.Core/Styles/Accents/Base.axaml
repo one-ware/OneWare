@@ -19,13 +19,11 @@
 
     <Color x:Key="HighlightColor">#FF007ab8</Color>
     <Color x:Key="ThemeAccentColor">#FF007ab8</Color>
-    <Color x:Key="ThemeForegroundLowColor">#FFb2b2b2</Color>
-    <Color x:Key="HighlightForegroundColor">#FFFFFFFF</Color>
     <Color x:Key="ErrorColor">#FFFF0000</Color>
     <Color x:Key="ErrorLowColor">#10FF0000</Color>
     <Color x:Key="WarningColor">#FFFF00</Color>
+    <Color x:Key="HighlightForegroundColor">#FFFFFFFF</Color>
     <SolidColorBrush x:Key="HighlightForegroundBrush" Color="{StaticResource HighlightForegroundColor}" />
-    <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
     <SolidColorBrush x:Key="ThemeAccentBrush" Color="{DynamicResource ThemeAccentColor}" />
     <SolidColorBrush x:Key="ThemeAccentBrush2" Color="{DynamicResource ThemeAccentColor}" Opacity="0.5" />
     <SolidColorBrush x:Key="ThemeAccentBrush3" Color="{DynamicResource ThemeAccentColor}" Opacity="0.4" />
@@ -33,6 +31,9 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
     <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    
+    <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
+    
     <SolidColorBrush
         x:Key="NotificationCardSuccessBackgroundBrush"
         Opacity="0.9"
@@ -88,6 +89,7 @@
             <Color x:Key="ThemeControlHighlightMidColor">#884c4c4c</Color>
             <Color x:Key="ThemeControlHighlightHighColor">#88505050</Color>
             <Color x:Key="ThemeForegroundColor">#FFd6d2d2</Color>
+            <Color x:Key="ThemeForegroundLowColor">#FFb2b2b2</Color>
             <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
 
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
@@ -107,7 +109,8 @@
             <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
+            <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
+            
             <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
 
             <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.95" Color="#444444" />
@@ -118,6 +121,9 @@
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <!--from fluent theme to prevent markdown crashes-->
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{DynamicResource ThemeAccentColor}" Opacity="0.2" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
@@ -134,6 +140,7 @@
             <Color x:Key="ThemeControlHighlightMidColor">#884c4c4c</Color>
             <Color x:Key="ThemeControlHighlightHighColor">#88505050</Color>
             <Color x:Key="ThemeForegroundColor">#FFd6d2d2</Color>
+            <Color x:Key="ThemeForegroundLowColor">#FFb2b2b2</Color>
             <Color x:Key="ThemeEditorColor">#FFDEDEDE</Color>
 
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
@@ -153,9 +160,8 @@
             <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
-            <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
-
+            <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
+            
             <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
             <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
             <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
@@ -189,7 +195,7 @@
             <Color x:Key="ThemeBorderMidColor">#FF888888</Color>
             <Color x:Key="ThemeBorderHighColor">#FF333333</Color>
             <Color x:Key="ThemeControlLowColor">#FFFFFFFF</Color>
-            <Color x:Key="ThemeControlMidColor">#FFCDCDCD</Color>
+            <Color x:Key="ThemeControlMidColor">#FFDDDDDD</Color>
             <Color x:Key="ThemeControlMidHighColor">#FFC2C3C9</Color>
             <Color x:Key="ThemeControlHighColor">#FF686868</Color>
             <Color x:Key="ThemeControlVeryHighColor">#FF5B5B5B</Color>
@@ -197,6 +203,7 @@
             <Color x:Key="ThemeControlHighlightMidColor">#FFD0D0D0</Color>
             <Color x:Key="ThemeControlHighlightHighColor">#FF808080</Color>
             <Color x:Key="ThemeForegroundColor">#FF000000</Color>
+            <Color x:Key="ThemeForegroundLowColor">#FF222222</Color>
             <Color x:Key="ThemeEditorColor">#FF000000</Color>
 
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
@@ -216,8 +223,7 @@
             <SolidColorBrush x:Key="ThemeControlHighlightHighBrush"
                              Color="{StaticResource ThemeControlHighlightHighColor}" />
             <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
-            <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.7" />
-            <SolidColorBrush x:Key="HighlightBrush2" Color="{DynamicResource ThemeAccentColor}" />
+            <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
 
             <!-- BaseResources for CaptionButtons.xaml -->
             <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
