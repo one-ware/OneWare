@@ -22,15 +22,7 @@ public class TerminalViewModel : ObservableObject
         ? new Win32ConPtyPseudoTerminalProvider()
         : new UnixPseudoTerminalProvider();
 
-    private readonly object _createLock = new();
-
-    private IConnection? _connection;
-
-    private VirtualTerminalController? _terminal;
-
-    private bool _terminalLoading = true;
-
-    private bool _terminalVisible;
+    private readonly Lock _createLock = new();
 
     public TerminalViewModel(string workingDir, string? startArguments = null)
     {
@@ -45,28 +37,28 @@ public class TerminalViewModel : ObservableObject
 
     public IConnection? Connection
     {
-        get => _connection;
-        set => SetProperty(ref _connection, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
 
     public VirtualTerminalController? Terminal
     {
-        get => _terminal;
-        set => SetProperty(ref _terminal, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool TerminalVisible
     {
-        get => _terminalVisible;
-        set => SetProperty(ref _terminalVisible, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool TerminalLoading
     {
-        get => _terminalLoading;
-        set => SetProperty(ref _terminalLoading, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
 
     public event EventHandler? TerminalReady;
 
@@ -169,13 +161,16 @@ public class TerminalViewModel : ObservableObject
 
     private static string BuildWindowsStartArguments(string workingDir)
     {
-        var marker = "$esc=[char]27; $bel=[char]7; " +
-                     "$code = if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) { $LASTEXITCODE } " +
-                     "elseif ($?) { 0 } else { 1 }; " +
-                     "Write-Host \"$esc]9;OW_DONE:$code$bel\" -NoNewline;";
-        var prompt = "function global:prompt { " + marker + " \"PS $PWD> \" }";
-
-        return $"powershell.exe -NoExit Set-Location '{workingDir}'; {prompt}";
+        // The arguments string must include the full command line because 
+        // Win32ConPtyPseudoTerminalProvider.BuildCommandLine returns just the arguments when provided
+        var escapedDir = workingDir.Replace("'", "''");
+        
+        // Use -NoProfile to prevent default profile, then load our profile which:
+        // 1. Loads the user's actual profile
+        // 2. Wraps the prompt with completion markers
+        var profileCmd = "if ($env:ONEWARE_PS_PROFILE) { $owProfile = Join-Path $env:ONEWARE_PS_PROFILE 'Microsoft.PowerShell_profile.ps1'; if (Test-Path $owProfile) { . $owProfile } }";
+        
+        return $"powershell.exe -NoProfile -NoExit -Command \"{profileCmd}; Set-Location '{escapedDir}'\"";
     }
 
     private static string? BuildTerminalEnvironment(string? shellExecutable)
@@ -183,6 +178,22 @@ public class TerminalViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
 
         var shellName = Path.GetFileName(shellExecutable);
+        
+        if (shellName.Equals("powershell.exe", StringComparison.OrdinalIgnoreCase) ||
+            shellName.Equals("pwsh.exe", StringComparison.OrdinalIgnoreCase) ||
+            shellName.Equals("pwsh", StringComparison.OrdinalIgnoreCase))
+        {
+            var psProfileDir = EnsurePowerShellProfileDir();
+            if (string.IsNullOrWhiteSpace(psProfileDir)) return null;
+
+            var overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ONEWARE_PS_PROFILE"] = psProfileDir
+            };
+
+            return BuildEnvironmentBlock(overrides);
+        }
+        
         if (shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
         {
             var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
@@ -213,6 +224,52 @@ public class TerminalViewModel : ObservableObject
         }
 
         return null;
+    }
+    
+    private static string? EnsurePowerShellProfileDir()
+    {
+        try
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "oneware", "pwsh");
+            Directory.CreateDirectory(tempDir);
+
+            var profilePath = Path.Combine(tempDir, "Microsoft.PowerShell_profile.ps1");
+            
+            var profileBuilder = new StringBuilder();
+            profileBuilder.AppendLine("# OneWare PowerShell Profile");
+            profileBuilder.AppendLine();
+            profileBuilder.AppendLine("# Load user's actual profile if it exists");
+            profileBuilder.AppendLine("$userProfile = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'WindowsPowerShell\\Microsoft.PowerShell_profile.ps1'");
+            profileBuilder.AppendLine("if (Test-Path $userProfile) {");
+            profileBuilder.AppendLine("    try { . $userProfile } catch { Write-Warning \"Error loading profile: $_\" }");
+            profileBuilder.AppendLine("}");
+            profileBuilder.AppendLine();
+            profileBuilder.AppendLine("# Store original prompt function");
+            profileBuilder.AppendLine("if (Test-Path function:prompt) {");
+            profileBuilder.AppendLine("    $function:__ow_original_prompt = $function:prompt");
+            profileBuilder.AppendLine("}");
+            profileBuilder.AppendLine();
+            profileBuilder.AppendLine("# Override prompt to add completion marker");
+            profileBuilder.AppendLine("function global:prompt {");
+            profileBuilder.AppendLine("    $esc = [char]27");
+            profileBuilder.AppendLine("    $bel = [char]7");
+            profileBuilder.AppendLine("    $code = if ($global:LASTEXITCODE) { $global:LASTEXITCODE } elseif ($?) { 0 } else { 1 }");
+            profileBuilder.AppendLine("    Write-Host \"$esc]9;OW_DONE:$code$bel\" -NoNewline");
+            profileBuilder.AppendLine("    ");
+            profileBuilder.AppendLine("    if (Test-Path function:__ow_original_prompt) {");
+            profileBuilder.AppendLine("        & __ow_original_prompt");
+            profileBuilder.AppendLine("    } else {");
+            profileBuilder.AppendLine("        \"PS $($executionContext.SessionState.Path.CurrentLocation)$('>' * ($nestedPromptLevel + 1)) \"");
+            profileBuilder.AppendLine("    }");
+            profileBuilder.AppendLine("}");
+
+            File.WriteAllText(profilePath, profileBuilder.ToString(), Encoding.UTF8);
+            return tempDir;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string? EnsureZshDotDir()
