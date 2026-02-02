@@ -40,7 +40,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         Id = "AI_Chat";
         Title = "AI Chat";
-
+        
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
 

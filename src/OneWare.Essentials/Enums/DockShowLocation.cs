@@ -6,5 +6,7 @@ public enum DockShowLocation
     Right,
     Left,
     Document,
-    Window
+    Window,
+    LeftPinned,
+    RightPinned
 }

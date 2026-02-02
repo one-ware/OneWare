@@ -11,13 +11,13 @@ public static class DefaultLayout
 {
     private static IList<IDockable> ConvertRegistration(IEnumerable<Type>? types, IFactory factory)
     {
-        var bottomToolsResolved = types?
+        var toolsResolved = types?
             .Select(x => ContainerLocator.Container.Resolve(x))
             .Cast<IDockable>();
 
-        return bottomToolsResolved == null
+        return toolsResolved == null
             ? factory.CreateList<IDockable>()
-            : factory.CreateList(bottomToolsResolved.ToArray());
+            : factory.CreateList(toolsResolved.ToArray());
     }
 
     public static RootDock GetDefaultLayout(MainDockService mainDockService)
@@ -34,7 +34,7 @@ public static class DefaultLayout
             Id = "LeftPaneTop",
             Title = "LeftPaneTop",
             VisibleDockables = ConvertRegistration(leftTools, mainDockService),
-            Alignment = Alignment.Left
+            Alignment = Alignment.Left,
         };
 
         var left = new ProportionalDock
@@ -46,7 +46,7 @@ public static class DefaultLayout
             VisibleDockables = mainDockService.CreateList<IDockable>
             (
                 leftTool
-            )
+            ),
         };
 
         var bottomTool = new ToolDock
@@ -71,7 +71,7 @@ public static class DefaultLayout
 
         var right = new ProportionalDock
         {
-            Id = "TopRow",
+            Id = "RightPane",
             Title = "TopRow",
             Orientation = Orientation.Vertical,
             ActiveDockable = null,
@@ -94,8 +94,11 @@ public static class DefaultLayout
                 left,
                 new ProportionalDockSplitter(),
                 right
-            )
+            ),
         };
+        
+        mainDockService.LayoutRegistrations.TryGetValue(DockShowLocation.LeftPinned, out var leftPinned);
+        mainDockService.LayoutRegistrations.TryGetValue(DockShowLocation.RightPinned, out var rightPinned);
 
         var root = new RootDock
         {
@@ -105,6 +108,11 @@ public static class DefaultLayout
             VisibleDockables = mainDockService.CreateList<IDockable>(mainLayout),
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout,
+            PinnedDockDisplayMode = PinnedDockDisplayMode.Inline,
+            RightPinnedDockables = ConvertRegistration(rightPinned, mainDockService),
+            LeftPinnedDockables = ConvertRegistration(leftPinned, mainDockService),
+            BottomPinnedDockables = mainDockService.CreateList<IDockable>(),
+            TopPinnedDockables = mainDockService.CreateList<IDockable>()
         };
 
         return root;

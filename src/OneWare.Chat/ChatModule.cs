@@ -27,6 +27,7 @@ public class ChatModule : OneWareModuleBase
         var dockService = serviceProvider.Resolve<IMainDockService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
+        dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.RightPinned);
         
         settingsService.RegisterSettingCategory("AI Chat", 0, "Bootstrap.ChatLeft");
         

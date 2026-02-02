@@ -44,7 +44,6 @@ public class OneWareContractResolver : DefaultContractResolver
         {
             return base.ResolveContract(_listType.MakeGenericType(type.GenericTypeArguments[0]));
         }
-
         return base.ResolveContract(type);
     }
 
@@ -53,9 +52,8 @@ public class OneWareContractResolver : DefaultContractResolver
     {
         return base.CreateProperties(type, memberSerialization)
             .Where(p =>
-                p.AttributeProvider == null ||
-                (p.AttributeProvider.GetAttributes(typeof(DataMemberAttribute), true).Any()
-                 || p.AttributeProvider.GetAttributes(typeof(JsonConverterAttribute), true).Any())
+                p.AttributeProvider != null &&
+                (p.AttributeProvider.GetAttributes(typeof(DataMemberAttribute), true).Any())
             )
             .ToList();
     }

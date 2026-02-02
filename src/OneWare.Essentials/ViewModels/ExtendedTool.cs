@@ -13,6 +13,7 @@ public abstract class ExtendedTool : Tool, IExtendedTool, ICanHaveIcon
     protected ExtendedTool(string iconKey)
     {
         Application.Current?.GetResourceObservable(iconKey).Subscribe(x => { Icon = x as IImage; });
+        KeepPinnedDockableVisible = true;
     }
 
     protected ExtendedTool(IImage icon)
