@@ -21,18 +21,28 @@ public class OneWareContractResolver : DefaultContractResolver
     protected override JsonObjectContract CreateObjectContract(Type objectType)
     {
         var contract = base.CreateObjectContract(objectType);
-        
-        if (_provider.IsRegistered(objectType))
-            contract.OverrideCreator = parameters =>
-            {
-                var resolveParameters = parameters
-                    .Where(x => x != null)
-                    .Select(x => (x!.GetType(), x))
-                    .ToArray();
 
-                var resolve = _provider.Resolve(objectType, resolveParameters);
-                return resolve;
-            };
+        if (_provider.IsRegistered(objectType))
+        {
+            foreach (var parameter in contract.CreatorParameters){
+                if(parameter.PropertyType is not {} targetType || !_provider.IsRegistered(targetType))
+                {
+                    // If the object has a parameter that is not registered (like EditViewModel) we can use OverrideCreator
+                    contract.OverrideCreator = parameters =>
+                    {
+                        var resolveParameters = parameters
+                            .Where(x => x != null)
+                            .Select(x => (x!.GetType(), x))
+                            .ToArray();
+
+                        var resolve = _provider.Resolve(objectType, resolveParameters);
+                        return resolve;
+                    };
+                    return contract;
+                }
+            }
+            contract.DefaultCreator = () => _provider.Resolve(objectType);
+        }
 
         return contract;
     }

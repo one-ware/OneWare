@@ -87,7 +87,7 @@ public class AiFunctionProvider(
                     result = await aiFileEditService.EditFileAsync(path, content, startLine, lineCount)
                 }),
             "editFile",
-            "Replaces file contents with new text (optionally by line range). This is the only way to edit files in the application."
+            "Edit file contents with new text (optionally by line range). This is the only way to edit files in the application."
         );
 
         var getActiveProject = AIFunctionFactory.Create(
