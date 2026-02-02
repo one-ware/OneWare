@@ -7,6 +7,7 @@
                          mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="300" Padding="4"
                          x:Class="OneWare.SourceControl.Views.AuthenticateGitView"
                          x:DataType="viewModels:AuthenticateGitViewModel"
+                         WindowStartupLocation="CenterOwner"
                          CustomIcon="{DynamicResource Bootstrap.Github}"
                          Name="AuthenticateGitViewView" Title="{Binding Title}">
     <DockPanel Margin="4" LastChildFill="False">
