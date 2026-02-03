@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
+    <Import Project="..\..\build\props\Avalonia.Controls.TreeDataGrid.props"/>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
@@ -13,9 +14,5 @@
             <DependentUpon>ProjectExplorerView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.1.1"/>
     </ItemGroup>
 </Project>
