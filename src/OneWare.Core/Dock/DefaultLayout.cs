@@ -9,7 +9,7 @@ namespace OneWare.Core.Dock;
 
 public static class DefaultLayout
 {
-    private static IList<IDockable> ConvertRegistration(IEnumerable<Type>? types, IFactory factory)
+    private static IList<IDockable> ConvertRegistration(IEnumerable<Type>? types, IFactory factory, double proportion = double.NaN)
     {
         var toolsResolved = types?
             .Select(x => ContainerLocator.Container.Resolve(x))
@@ -17,7 +17,11 @@ public static class DefaultLayout
 
         return toolsResolved == null
             ? factory.CreateList<IDockable>()
-            : factory.CreateList(toolsResolved.ToArray());
+            : factory.CreateList(toolsResolved.Select(x =>
+            {
+                x.Proportion = proportion;
+                return x;
+            }).ToArray());
     }
 
     public static RootDock GetDefaultLayout(MainDockService mainDockService)
@@ -109,8 +113,8 @@ public static class DefaultLayout
             ActiveDockable = mainLayout,
             DefaultDockable = mainLayout,
             PinnedDockDisplayMode = PinnedDockDisplayMode.Inline,
-            RightPinnedDockables = ConvertRegistration(rightPinned, mainDockService),
-            LeftPinnedDockables = ConvertRegistration(leftPinned, mainDockService),
+            RightPinnedDockables = ConvertRegistration(rightPinned, mainDockService, 0.3),
+            LeftPinnedDockables = ConvertRegistration(leftPinned, mainDockService, 0.3),
             BottomPinnedDockables = mainDockService.CreateList<IDockable>(),
             TopPinnedDockables = mainDockService.CreateList<IDockable>()
         };
