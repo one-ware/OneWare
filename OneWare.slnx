@@ -18,6 +18,7 @@
     <File Path="build/props/Avalonia.Browser.props" />
     <File Path="build/props/Avalonia.Controls.ColorPicker.props" />
     <File Path="build/props/Avalonia.Controls.DataGrid.props" />
+    <File Path="build/props/Avalonia.Controls.TreeDataGrid.props" />
     <File Path="build/props/Avalonia.Desktop.props" />
     <File Path="build/props/Avalonia.Diagnostics.props" />
     <File Path="build/props/Avalonia.Fonts.Inter.props" />
