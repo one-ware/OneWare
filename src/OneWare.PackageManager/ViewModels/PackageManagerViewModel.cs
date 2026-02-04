@@ -17,14 +17,14 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
-    private readonly IPackageManager _packageService;
+    private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
 
     private bool _showAvailable = true;
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageManager packageService, IHttpService httpService, ILogger logger,
+    public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger,
         IWindowService windowService,
         IApplicationStateService applicationStateService)
     {

@@ -312,7 +312,7 @@ public class VerilogModule : OneWareModuleBase
 
         fpgaService.RegisterLanguage("Verilog", SupportedExtensions);
 
-        serviceProvider.Resolve<IPackageManager>().RegisterPackage(VeriblePackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(VeriblePackage);
 
         var pathSetting = new FilePathSetting("Verible Path", "", null,
             serviceProvider.Resolve<IPaths>().PackagesDirectory,

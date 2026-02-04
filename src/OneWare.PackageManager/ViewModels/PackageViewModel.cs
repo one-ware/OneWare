@@ -19,7 +19,7 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
-    private readonly IPackageManager _packageManager;
+    private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
     private readonly IApplicationStateService _applicationStateService;
 
@@ -31,16 +31,16 @@ public class PackageViewModel : ObservableObject
 
     private bool _resolveTabsStarted;
 
-    public PackageViewModel(IPackageState packageState, IPackageManager packageManager, IHttpService httpService,
+    public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
         IWindowService windowService, IApplicationStateService applicationStateService)
     {
         _packageState = packageState;
-        _packageManager = packageManager;
+        _packageService = packageService;
         _httpService = httpService;
         _windowService = windowService;
         _applicationStateService = applicationStateService;
 
-        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageManager.RemoveAsync(PackageState.Package.Id!),
+        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
             _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
                 or PackageStatus.UpdateAvailablePrerelease);
 
@@ -49,7 +49,7 @@ public class PackageViewModel : ObservableObject
             _ => PackageState.Status is PackageStatus.Available);
 
         UpdateCommand = new AsyncRelayCommand<Control?>(_ =>
-                _packageManager.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
+                _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
             _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
         PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
@@ -242,7 +242,7 @@ public class PackageViewModel : ObservableObject
             if (!result.IsAccepted) return;
         }
 
-        await _packageManager.InstallAsync(model.Package.Id!, version);
+        await _packageService.InstallAsync(model.Package.Id!, version);
     }
 
     private async Task ResolveIconAsync()
@@ -250,7 +250,7 @@ public class PackageViewModel : ObservableObject
         if (_resolveImageStarted) return;
         _resolveImageStarted = true;
 
-        var icon = await _packageManager.DownloadPackageIconAsync(PackageState.Package);
+        var icon = await _packageService.DownloadPackageIconAsync(PackageState.Package);
 
         if (icon == null)
         {
@@ -289,7 +289,7 @@ public class PackageViewModel : ObservableObject
 
         if (SelectedVersionModel.CompatibilityReport == null)
             SelectedVersionModel.CompatibilityReport =
-                await _packageManager.CheckCompatibilityAsync(PackageState.Package.Id!, SelectedVersionModel.Version);
+                await _packageService.CheckCompatibilityAsync(PackageState.Package.Id!, SelectedVersionModel.Version);
     }
 
     private async Task AskForRestartAsync(Control? owner)

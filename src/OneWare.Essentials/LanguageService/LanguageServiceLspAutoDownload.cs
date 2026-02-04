@@ -6,11 +6,11 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class LanguageServiceLspAutoDownload : LanguageServiceLsp
 {
     private readonly Package _package;
-    private readonly IPackageManager _packageService;
+    private readonly IPackageService _packageService;
     private bool _enableAutoDownload;
 
     protected LanguageServiceLspAutoDownload(IObservable<string> executablePath, Package package, string name,
-        string? workspace, IPackageManager packageService, IObservable<bool> enableAutoDownload)
+        string? workspace, IPackageService packageService, IObservable<bool> enableAutoDownload)
         : base(name, workspace)
     {
         _package = package;

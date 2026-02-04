@@ -12,7 +12,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
-public class PackageManagerService : ObservableObject, IPackageManager
+public class PackageService : ObservableObject, IPackageService
 {
     private readonly IPackageCatalog _catalog;
     private readonly IPackageDownloader _downloader;
@@ -29,7 +29,7 @@ public class PackageManagerService : ObservableObject, IPackageManager
 
     private Task<bool>? _currentRefreshTask;
 
-    public PackageManagerService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
+    public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
         IEnumerable<IPackageInstaller> installers, ISettingsService settingsService, ILogger logger,
         IApplicationStateService applicationStateService, IHttpService httpService, IPaths paths)
     {

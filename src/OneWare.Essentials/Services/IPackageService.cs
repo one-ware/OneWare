@@ -6,7 +6,7 @@ using OneWare.Essentials.PackageManager.Compatibility;
 
 namespace OneWare.Essentials.Services;
 
-public interface IPackageManager : INotifyPropertyChanged
+public interface IPackageService : INotifyPropertyChanged
 {
     bool IsUpdating { get; }
 

@@ -330,7 +330,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         
 
         
-        serviceProvider.Resolve<IPackageManager>().RegisterPackage(OssCadPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
         serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
 

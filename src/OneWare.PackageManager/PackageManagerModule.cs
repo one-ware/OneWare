@@ -24,7 +24,7 @@ public class PackageManagerModule : OneWareModuleBase
         services.AddSingleton<IPackageInstaller, NativeToolPackageInstaller>();
         services.AddSingleton<IPackageInstaller, HardwarePackageInstaller>();
         services.AddSingleton<IPackageInstaller, LibraryPackageInstaller>();
-        services.AddSingleton<IPackageManager, PackageManagerService>();
+        services.AddSingleton<IPackageService, PackageService>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<IPackageWindowService>(provider => provider.Resolve<PackageManagerViewModel>());
     }

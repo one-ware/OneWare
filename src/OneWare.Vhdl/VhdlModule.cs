@@ -304,7 +304,7 @@ public class VhdlModule : OneWareModuleBase
 
         var settingsService = serviceProvider.Resolve<ISettingsService>();
 
-        serviceProvider.Resolve<IPackageManager>().RegisterPackage(RustHdlPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(RustHdlPackage);
 
         settingsService.RegisterSetting("Languages", "VHDL", LspPathSetting,
             new FilePathSetting("RustHDL Path", "", "",

@@ -23,7 +23,7 @@ public class UpdaterViewModel : ObservableObject
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
-    private readonly IPackageManager _packageService;
+    private readonly IPackageService _packageService;
     private readonly IPaths _paths;
     private readonly IWindowService _windowService;
 
@@ -32,7 +32,7 @@ public class UpdaterViewModel : ObservableObject
     private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
 
     public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
-        IApplicationStateService applicationStateService, IWindowService windowService, IPackageManager packageService)
+        IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
     {
         _httpService = httpService;
         _paths = paths;

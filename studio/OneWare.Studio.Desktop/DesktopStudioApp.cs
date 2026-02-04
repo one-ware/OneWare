@@ -135,7 +135,7 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        Services.Resolve<IPackageManager>().RegisterPackageRepository(
+        Services.Resolve<IPackageService>().RegisterPackageRepository(
             "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
@@ -155,7 +155,7 @@ public class DesktopStudioApp : StudioApp
         await base.LoadContentAsync();
 
         var settingsService = Services.Resolve<ISettingsService>();
-        var packageService = Services.Resolve<IPackageManager>();
+        var packageService = Services.Resolve<IPackageService>();
         var ideUpdater = Services.Resolve<UpdaterViewModel>();
 
         var versionGotUpdated = false;

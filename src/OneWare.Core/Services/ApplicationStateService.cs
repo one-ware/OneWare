@@ -313,7 +313,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
         try
         {
-            var packageService = ContainerLocator.Container.Resolve<IPackageManager>();
+            var packageService = ContainerLocator.Container.Resolve<IPackageService>();
             await packageService.RefreshAsync();
             
             var package = packageService.Packages.Values

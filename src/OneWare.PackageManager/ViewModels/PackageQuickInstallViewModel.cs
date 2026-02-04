@@ -11,9 +11,9 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 {
-    private readonly IPackageManager _packageService;
+    private readonly IPackageService _packageService;
 
-    public PackageQuickInstallViewModel(IPackageState package, IPackageManager packageService)
+    public PackageQuickInstallViewModel(IPackageState package, IPackageService packageService)
     {
         Package = package;
         _packageService = packageService;

@@ -7,7 +7,7 @@ using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Verilog;
 
-public class LanguageServiceVerilog(string workspace, ISettingsService settingsService, IPackageManager packageService)
+public class LanguageServiceVerilog(string workspace, ISettingsService settingsService, IPackageService packageService)
     : LanguageServiceLspAutoDownload(settingsService.GetSettingObservable<string>(VerilogModule.LspPathSetting),
         VerilogModule.VeriblePackage,
         VerilogModule.LspName, workspace, packageService,
