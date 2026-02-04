@@ -527,10 +527,11 @@ public class App : Application
                 sp.GetRequiredService<ModuleServiceRegistry>()));
         
         var provider = services.BuildServiceProvider();
+        var compositeProvider = provider.Resolve<ICompositeServiceProvider>();
         
-        ContainerLocator.SetContainer(provider.Resolve<ICompositeServiceProvider>());
+        ContainerLocator.SetContainer(compositeProvider);
 
-        var logger = provider.GetRequiredService<ILogger>();
+        var logger = compositeProvider.GetRequiredService<ILogger>();
         _moduleManager.SetLogger(logger);
 
         logger.LogInformation(
@@ -546,7 +547,7 @@ public class App : Application
                  shell is Control shellView)
             singleViewLifetime.MainView = shellView;
 
-        _moduleManager.InitializeModules(provider);
+        _moduleManager.InitializeModules(compositeProvider);
 
         Dispatcher.UIThread.UnhandledException += (s, e) => { Console.WriteLine($"Unhandled: {e.Exception}"); };
 
