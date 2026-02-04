@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -232,50 +233,10 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 case PlatformId.LinuxX64:
                 case PlatformId.LinuxArm64:
                 {
-                    // Linux: Check if running in Flatpak or Snap
-                    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
-                    {
-                        // Running in Flatpak
-                        var flatpakId = Environment.GetEnvironmentVariable("FLATPAK_ID");
-                        var commandArgs = $"--host flatpak run {flatpakId}";
-                        if (args.Length > 0)
-                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = "flatpak-spawn",
-                            Arguments = commandArgs,
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            WorkingDirectory = Environment.CurrentDirectory
-                        };
-                        Process.Start(startInfo);
-                        break;
-                    }
-                    else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
-                    {
-                        // Running in Snap
-                        var snapName = Environment.GetEnvironmentVariable("SNAP_NAME");
-                        var command = "snap";
-                        var commandArgs = $"run {snapName}";
-                        if (args.Length > 0)
-                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-
-                        // Use sh -c with nohup and & to properly detach the process
-                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = "/bin/sh",
-                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            WorkingDirectory = Environment.CurrentDirectory
-                        };
-                        Process.Start(startInfo);
-                        break;
-                    }
-
-                    // Regular Linux binary - use the executable path
-                    {
+                    PlatformHelper.ExecReplace(executablePath, args);
+                    
+                    /*
+                    { // Regular Linux binary - use the executable path
                         var command = executablePath;
                         var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
 
@@ -291,9 +252,9 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                         };
                         Process.Start(startInfo);
                     }
+                    */
                     break;
                 }
-
                 case PlatformId.OsxX64:
                 case PlatformId.OsxArm64:
                 {

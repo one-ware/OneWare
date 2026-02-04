@@ -353,6 +353,12 @@ public class App : Application
                 settingsService.Save(paths.SettingsPath);
             },
             () => settingsService.GetSettingValue<string>("General_SelectedTheme") != "Dark"));
+        
+        applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Restart",
+            () =>
+            {
+                _ = Services.Resolve<IApplicationStateService>().TryRestartAsync();
+            }));
 
         var welcomeScreenService = Services.Resolve<IWelcomeScreenService>();
 
