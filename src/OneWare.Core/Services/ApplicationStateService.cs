@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -232,24 +233,14 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 case PlatformId.LinuxX64:
                 case PlatformId.LinuxArm64:
                 {
+                    ExecReplace(executablePath, args);
+                    
+                    /*
                     // Linux: Check if running in Flatpak or Snap
-                    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
+                    if (true || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
                     {
-                        // Running in Flatpak
-                        var flatpakId = Environment.GetEnvironmentVariable("FLATPAK_ID");
-                        var commandArgs = $"--host flatpak run {flatpakId}";
-                        if (args.Length > 0)
-                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = "flatpak-spawn",
-                            Arguments = commandArgs,
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            WorkingDirectory = Environment.CurrentDirectory
-                        };
-                        Process.Start(startInfo);
-                        break;
+                        // Running in Flatpak: re-exec in place
+ 
                     }
                     else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
                     {
@@ -273,9 +264,7 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                         Process.Start(startInfo);
                         break;
                     }
-
-                    // Regular Linux binary - use the executable path
-                    {
+                    else { // Regular Linux binary - use the executable path
                         var command = executablePath;
                         var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
 
@@ -291,9 +280,9 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                         };
                         Process.Start(startInfo);
                     }
+                    */
                     break;
                 }
-
                 case PlatformId.OsxX64:
                 case PlatformId.OsxArm64:
                 {
@@ -344,6 +333,27 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error($"Failed to restart application: {ex.Message}", ex);
         }
+    }
+
+    private static void ExecReplace(string executablePath, string[] args)
+    {
+        var argv = new string?[args.Length + 2];
+        argv[0] = executablePath;
+        Array.Copy(args, 0, argv, 1, args.Length);
+        argv[^1] = null;
+
+        if (LibC.execv(executablePath, argv) == -1)
+        {
+            var errno = Marshal.GetLastWin32Error();
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Error($"execv failed for restart (errno={errno}).");
+        }
+    }
+
+    private static class LibC
+    {
+        [DllImport("libc", SetLastError = true)]
+        internal static extern int execv(string path, string?[] argv);
     }
 
     private async Task AttemptAutoDownloadExtensionAsync(string autoLaunchId, string? value)

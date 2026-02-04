@@ -33,6 +33,10 @@ public class PluginCompatibilityChecker
         try
         {
             var compatibilityIssues = "";
+            var records = new List<CompatibilityRecord>();
+            var suggestions = new List<string>();
+            var studioUpdateRequired = false;
+            var isCompatible = true;
 
             if (deps == null) return new CompatibilityReport(false, "Error checking compatibility");
 
@@ -60,21 +64,79 @@ public class PluginCompatibilityChecker
 
                 if (!coreDeps.TryGetValue(dependencyName, out var coreDep) || coreDep.Version == null)
                 {
-                    compatibilityIssues += $"Dependency {dependencyName} not found\n";
+                    var message = $"Dependency {dependencyName} not found";
+                    compatibilityIssues += $"{message}\n";
+                    records.Add(new CompatibilityRecord(
+                        dependencyName,
+                        dependencyVersionFull,
+                        null,
+                        CompatibilityRecordKind.MissingDependency,
+                        message));
+                    isCompatible = false;
                     continue;
                 }
 
                 var required = dependencyVersionFull;
-                var provided = coreDep.Version;
+                var provided = NormalizeVersion(coreDep.Version);
+                var comparison = provided.CompareTo(required);
+                var requiresCoreUpdate = comparison < 0;
+                var pluginOutdated = comparison > 0;
 
                 if (provided.Major != required.Major ||
                     provided.Minor != required.Minor ||
                     provided.Build < required.Build)
-                    compatibilityIssues +=
-                        $"Dependency {dependencyName} requires {required}, but provided is {provided}\n";
+                {
+                    var message =
+                        $"Dependency {dependencyName} requires {required}, but provided is {provided}";
+                    compatibilityIssues += $"{message}\n";
+                    if (requiresCoreUpdate)
+                    {
+                        records.Add(new CompatibilityRecord(
+                            dependencyName,
+                            required,
+                            provided,
+                            CompatibilityRecordKind.RequiresCoreUpdate,
+                            message));
+                        suggestions.Add(
+                            $"Update OneWare core to at least {required} for {dependencyName}.");
+                        studioUpdateRequired = true;
+                    }
+                    else if (pluginOutdated)
+                    {
+                        records.Add(new CompatibilityRecord(
+                            dependencyName,
+                            required,
+                            provided,
+                            CompatibilityRecordKind.PluginOutdated,
+                            message));
+                        suggestions.Add(
+                            $"Update the plugin to a version compatible with core {provided} for {dependencyName}.");
+                    }
+                    isCompatible = false;
+                }
+                else if (pluginOutdated)
+                {
+                    var message =
+                        $"Dependency {dependencyName} targets {required}, but core provides {provided}";
+                    records.Add(new CompatibilityRecord(
+                        dependencyName,
+                        required,
+                        provided,
+                        CompatibilityRecordKind.PluginOutdated,
+                        message));
+                    suggestions.Add(
+                        $"Update the plugin to a version compatible with core {provided} for {dependencyName}.");
+                }
             }
 
-            return new CompatibilityReport(compatibilityIssues.Length == 0, compatibilityIssues);
+            return new CompatibilityReport(
+                isCompatible,
+                compatibilityIssues.Length == 0 ? null : compatibilityIssues,
+                records,
+                suggestions)
+            {
+                StudioUpdateRequired = studioUpdateRequired
+            };
         }
         catch (Exception e)
         {
@@ -92,6 +154,16 @@ public class PluginCompatibilityChecker
         }
 
         return string.Join('.', parts);
+    }
+
+    private static Version NormalizeVersion(Version version)
+    {
+        var major = Math.Max(version.Major, 0);
+        var minor = Math.Max(version.Minor, 0);
+        var build = Math.Max(version.Build, 0);
+        var revision = Math.Max(version.Revision, 0);
+
+        return new Version(major, minor, build, revision);
     }
 
     public static Dictionary<string, AssemblyName> GetReferencedAssembliesRecursive(Assembly rootAssembly)
