@@ -17,17 +17,14 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
-    private readonly IPackageService _packageService;
+    private readonly IPackageManager _packageService;
     private readonly IWindowService _windowService;
 
-    private string _filter = string.Empty;
-    private bool _isLoading;
-    private PackageCategoryViewModel? _selectedCategory;
     private bool _showAvailable = true;
     private bool _showInstalled = true;
     private bool _showUpdate = true;
 
-    public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger,
+    public PackageManagerViewModel(IPackageManager packageService, IHttpService httpService, ILogger logger,
         IWindowService windowService,
         IApplicationStateService applicationStateService)
     {
@@ -105,24 +102,24 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public string Filter
     {
-        get => _filter;
+        get;
         set
         {
-            SetProperty(ref _filter, value);
+            SetProperty(ref field, value);
             FilterPackages();
         }
-    }
+    } = string.Empty;
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public PackageCategoryViewModel? SelectedCategory
     {
-        get => _selectedCategory;
-        set => SetProperty(ref _selectedCategory, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
@@ -131,7 +128,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task RefreshPackagesAsync()
     {
-        await _packageService.LoadPackagesAsync();
+        await _packageService.RefreshAsync();
     }
 
     public Control ShowExtensionManager()
@@ -156,7 +153,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId)
     {
         var category =
-            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageModel.Package.Id == packageId));
+            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
 
         if (await FocusPluginAsync(category!.Header, packageId) is not { } pvm)
             return false;
@@ -169,9 +166,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> QuickInstallPackageAsync(string packageId)
     {
-        var packageModel = _packageService.Packages.GetValueOrDefault(packageId);
-
-        if (packageModel == null) return false;
+        if (!_packageService.Packages.TryGetValue(packageId, out var packageModel)) return false;
 
         var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService);
 
@@ -213,7 +208,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
             var packageVm = categoryVm.VisiblePackages
-                .FirstOrDefault(x => x.PackageModel == packageModel);
+                .FirstOrDefault(x => x.PackageState == packageModel);
 
             if (packageVm == null)
                 return null;
@@ -242,7 +237,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             try
             {
                 var viewModel =
-                    new PackageViewModel(packageModel, _httpService, _applicationStateService, _windowService);
+                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService);
 
                 var category = packageModel.Package.Type switch
                 {

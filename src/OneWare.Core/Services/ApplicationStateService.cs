@@ -313,8 +313,9 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
         try
         {
-            var packageService = ContainerLocator.Container.Resolve<IPackageService>();
-            await packageService.LoadPackagesAsync();
+            var packageService = ContainerLocator.Container.Resolve<IPackageManager>();
+            await packageService.RefreshAsync();
+            
             var package = packageService.Packages.Values
                 .Where(x => x.Status != PackageStatus.Installed)
                 .FirstOrDefault(x =>

@@ -47,11 +47,11 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
     {
         var filtered =
             Packages.Where(x =>
-                x.PackageModel.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
+                x.PackageState.Package.Name?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
 
-        if (!showInstalled) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Installed);
-        if (!showAvailable) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.Available);
-        if (!showUpdate) filtered = filtered.Where(x => x.PackageModel.Status != PackageStatus.UpdateAvailable);
+        if (!showInstalled) filtered = filtered.Where(x => x.PackageState.Status != PackageStatus.Installed);
+        if (!showAvailable) filtered = filtered.Where(x => x.PackageState.Status != PackageStatus.Available);
+        if (!showUpdate) filtered = filtered.Where(x => x.PackageState.Status != PackageStatus.UpdateAvailable);
 
         foreach (var subCategory in SubCategories)
         {
@@ -60,6 +60,6 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
         }
 
         VisiblePackages.Clear();
-        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageModel.Package.Name));
+        VisiblePackages.AddRange(filtered.OrderBy(x => x.PackageState.Package.Name));
     }
 }

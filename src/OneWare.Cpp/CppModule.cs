@@ -185,7 +185,7 @@ public class CppModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(ClangdPackage);
+        serviceProvider.Resolve<IPackageManager>().RegisterPackage(ClangdPackage);
 
         serviceProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "C++", LspPathSetting,
             new FilePathSetting("Clangd Path", "", null,

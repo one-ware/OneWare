@@ -13,7 +13,7 @@
 
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="12">
-            <TextBlock Text="{Binding PackageModel.Package.Name}" FontSize="18" FontWeight="Bold" />
+            <TextBlock Text="{Binding PackageState.Package.Name}" FontSize="18" FontWeight="Bold" />
             <ItemsControl ItemsSource="{Binding Links}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -67,10 +67,10 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="10"
-                            IsVisible="{Binding PackageModel.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            IsVisible="{Binding PackageState.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                            Height="12" VerticalAlignment="Center"
-                           ToolTip.Tip="{Binding PackageModel.InstalledVersionWarningText}" />
+                           ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
                     <TextBlock VerticalAlignment="Center" Foreground="DarkOrange"
                                Text="Installed version incompatible!" />
                 </StackPanel>
@@ -136,11 +136,11 @@
                 </StackPanel>
             </Border>
 
-            <ProgressBar IsIndeterminate="{Binding PackageModel.IsIndeterminate}"
-                         Value="{Binding PackageModel.Progress}" ShowProgressText="True"
+            <ProgressBar IsIndeterminate="{Binding PackageState.IsIndeterminate}"
+                         Value="{Binding PackageState.Progress}" ShowProgressText="True"
                          Maximum="1.0"
                          Height="24"
-                         IsVisible="{Binding PackageModel.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
+                         IsVisible="{Binding PackageState.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>
 

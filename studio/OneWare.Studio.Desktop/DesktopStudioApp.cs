@@ -135,7 +135,7 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        Services.Resolve<IPackageService>().RegisterPackageRepository(
+        Services.Resolve<IPackageManager>().RegisterPackageRepository(
             "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
@@ -155,11 +155,11 @@ public class DesktopStudioApp : StudioApp
         await base.LoadContentAsync();
 
         var settingsService = Services.Resolve<ISettingsService>();
-        var packageService = Services.Resolve<IPackageService>();
+        var packageService = Services.Resolve<IPackageManager>();
         var ideUpdater = Services.Resolve<UpdaterViewModel>();
 
         var versionGotUpdated = false;
-        List<PackageModel>? updatePackages = null;
+        List<IPackageState>? updatePackages = null;
         var canUpdate = false;
         var showOneWareAiNotification = false;
 
@@ -176,7 +176,7 @@ public class DesktopStudioApp : StudioApp
             }
 
             //step 2: Load the installed plugins
-            await packageService.LoadPackagesAsync();
+            await packageService.RefreshAsync();
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages

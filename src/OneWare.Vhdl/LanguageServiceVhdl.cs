@@ -7,7 +7,7 @@ using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Vhdl;
 
-public class LanguageServiceVhdl(string workspace, ISettingsService settingsService, IPackageService packageService)
+public class LanguageServiceVhdl(string workspace, ISettingsService settingsService, IPackageManager packageService)
     : LanguageServiceLspAutoDownload(settingsService.GetSettingObservable<string>(VhdlModule.LspPathSetting),
         VhdlModule.RustHdlPackage,
         VhdlModule.LspName, workspace, packageService,

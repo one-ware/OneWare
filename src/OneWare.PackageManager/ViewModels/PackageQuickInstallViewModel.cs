@@ -5,14 +5,15 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
 public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 {
-    private readonly IPackageService _packageService;
+    private readonly IPackageManager _packageService;
 
-    public PackageQuickInstallViewModel(PackageModel package, IPackageService packageService)
+    public PackageQuickInstallViewModel(IPackageState package, IPackageManager packageService)
     {
         Package = package;
         _packageService = packageService;
@@ -22,7 +23,7 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         _ = ResolveAsync();
     }
 
-    public PackageModel Package { get; }
+    public IPackageState Package { get; }
 
     public bool Success { get; private set; }
 

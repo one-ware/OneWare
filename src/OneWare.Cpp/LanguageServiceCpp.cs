@@ -7,7 +7,7 @@ namespace OneWare.Cpp;
 
 public class LanguageServiceCpp : LanguageServiceLspAutoDownload
 {
-    public LanguageServiceCpp(ISettingsService settingsService, IPackageService packageService)
+    public LanguageServiceCpp(ISettingsService settingsService, IPackageManager packageService)
         : base(settingsService.GetSettingObservable<string>(CppModule.LspPathSetting), CppModule.ClangdPackage,
             CppModule.LspName, null, packageService,
             settingsService.GetSettingObservable<bool>("Experimental_AutoDownloadBinaries"))

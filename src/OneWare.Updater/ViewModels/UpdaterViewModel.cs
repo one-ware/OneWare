@@ -23,7 +23,7 @@ public class UpdaterViewModel : ObservableObject
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
-    private readonly IPackageService _packageService;
+    private readonly IPackageManager _packageService;
     private readonly IPaths _paths;
     private readonly IWindowService _windowService;
 
@@ -32,7 +32,7 @@ public class UpdaterViewModel : ObservableObject
     private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
 
     public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
-        IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
+        IApplicationStateService applicationStateService, IWindowService windowService, IPackageManager packageService)
     {
         _httpService = httpService;
         _paths = paths;
@@ -140,7 +140,7 @@ public class UpdaterViewModel : ObservableObject
 
         Status = UpdaterStatus.UpdatingPackages;
 
-        var loadPackages = await _packageService.LoadPackagesAsync();
+        var loadPackages = await _packageService.RefreshAsync();
 
         if (!loadPackages)
         {
@@ -176,7 +176,9 @@ public class UpdaterViewModel : ObservableObject
 
             if (resultContinue == MessageBoxStatus.Yes)
             {
-                var updateTasks = updatablePackages.Select(x => x.UpdateAsync(x.Package.Versions!.Last(), true));
+            var updateTasks = updatablePackages
+                .Select(x => _packageService.UpdateAsync(x.Package.Id!, x.Package.Versions!.Last(),
+                    includePrerelease: true, ignoreCompatibility: true));
 
                 var updateResult = await Task.WhenAll(updateTasks);
 
