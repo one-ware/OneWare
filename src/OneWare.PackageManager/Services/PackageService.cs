@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 
@@ -22,18 +23,15 @@ public partial class PackageService : ObservableObject, IPackageService
         WriteIndented = true
     };
 
-    private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
+    private readonly Dictionary<Package, Task<PackageInstallResult>> _activeInstalls = new();
 
     private readonly IHttpService _httpService;
-
-    private readonly Lock _installLock = new();
+    
     private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
 
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private Task<bool>? _currentLoadTask;
-
-    private bool _isUpdating;
 
     public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
     {
@@ -49,14 +47,14 @@ public partial class PackageService : ObservableObject, IPackageService
 
     private string PackageDataBasePath { get; }
 
-    public List<string> PackageRepositories { get; } = [];
+    private List<string> PackageRepositories { get; } = [];
 
     private List<Package> StandalonePackages { get; } = [];
 
     public bool IsUpdating
     {
-        get => _isUpdating;
-        private set => SetProperty(ref _isUpdating, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public event EventHandler? PackagesUpdated;
@@ -115,34 +113,55 @@ public partial class PackageService : ObservableObject, IPackageService
 
 
     /// <summary>
-    ///     Will install the package if not already installed
+    ///     Will install the package the last stable version if not already installed
     ///     Waits if another thread already started the installation
     /// </summary>
-    public Task<bool> InstallAsync(Package package)
+    public async Task<PackageInstallResult> InstallAsync(Package package)
     {
-        lock (_installLock)
+        if (Packages.TryGetValue(package.Id!, out var model))
         {
-            if (Packages.TryGetValue(package.Id!, out var model))
-            {
-                if (!(model.Package.Versions?.Any() ?? false)) return Task.FromResult(false);
+            var lastVersion = await model.TryGetLastVersionAsync(false);
 
-                switch (model.Status)
+            if (lastVersion == null) return new PackageInstallResult()
+            {
+                Status = PackageInstallResultReason.NotFound
+            };
+            
+            switch (model.Status)
+            {
+                case PackageStatus.Available or PackageStatus.UpdateAvailable:
                 {
-                    case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", true,
-                            Brushes.DarkCyan);
-                        return model.DownloadAsync(model.Package.Versions.Last());
-                    case PackageStatus.Installing:
-                        if (_activeInstalls.TryGetValue(model.Package, out var task)) return task;
-                        return Task.FromResult(model.Status is PackageStatus.Installed
-                            or PackageStatus.UpdateAvailable);
-                    case PackageStatus.Installed:
-                        return Task.FromResult(true);
+                    _logger.Log($"Downloading {model.Package.Name}...", true,
+                        Brushes.DarkCyan);
+                    var status = await model.DownloadAsync(lastVersion.Value.lastVersion);
+                    return new PackageInstallResult()
+                    {
+                        Status = status ? PackageInstallResultReason.Installed : PackageInstallResultReason.ErrorDownloading,
+                        CompatibilityRecord = lastVersion.Value.compatibilityReport
+                    };
+                }
+                case PackageStatus.Installing:
+                {
+                    if (_activeInstalls.TryGetValue(model.Package, out var task))
+                    {
+                        var result = await task;
+                        return result;
+                    }
+                    throw new Exception("Package is installing, but no active install task found");
+                }
+                case PackageStatus.Installed:
+                {
+                    return new PackageInstallResult()
+                    {
+                        Status = PackageInstallResultReason.AlreadyInstalled
+                    };
                 }
             }
         }
-
-        return Task.FromResult(false);
+        return new PackageInstallResult()
+        {
+            
+        };
     }
 
     public async Task<string?> DownloadLicenseAsync(Package package)
@@ -234,7 +253,7 @@ public partial class PackageService : ObservableObject, IPackageService
 
         Packages.Add(package.Id, model);
 
-        Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
+        Observable.FromEventPattern<Task<PackageInstallResult>>(model, nameof(model.Installing))
             .Subscribe(x => ObserveInstall((x.Sender as PackageModel)!.Package, x.EventArgs));
 
         Observable.FromEventPattern(model, nameof(model.Installed))
@@ -246,13 +265,7 @@ public partial class PackageService : ObservableObject, IPackageService
 
     private async Task WaitForInstallsAsync()
     {
-        //Wait until all installs complete
-        Task<bool>[] activeInstallTasks;
-        lock (_installLock)
-        {
-            activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
-        }
-
+        var activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
         if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
     }
 
@@ -386,26 +399,20 @@ public partial class PackageService : ObservableObject, IPackageService
         }
     }
 
-    private void ObserveInstall(Package package, Task<bool> installTask)
+    private void ObserveInstall(Package package, Task<PackageInstallResult> installTask)
     {
-        lock (_installLock)
-        {
-            _activeInstalls.Add(package, installTask);
+        _activeInstalls.Add(package, installTask);
 
-            _ = installTask.ContinueWith(t =>
-            {
-                t.Wait();
-                FinishInstall(package);
-            }, TaskScheduler.Default);
-        }
+        _ = installTask.ContinueWith(t =>
+        {
+            t.Wait();
+            FinishInstall(package);
+        }, TaskScheduler.Default);
     }
 
     private void FinishInstall(Package package)
     {
-        lock (_installLock)
-        {
-            _activeInstalls.Remove(package);
-        }
+        _activeInstalls.Remove(package);
     }
 
     [GeneratedRegex(@"\s+")]

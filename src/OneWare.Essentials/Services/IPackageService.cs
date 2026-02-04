@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 
 namespace OneWare.Essentials.Services;
 
@@ -21,7 +22,7 @@ public interface IPackageService : INotifyPropertyChanged
 
     public Task<bool> LoadPackagesAsync();
 
-    public Task<bool> InstallAsync(Package package);
+    public Task<PackageInstallResult> InstallAsync(Package package);
 
     public Task<string?> DownloadLicenseAsync(Package package);
 

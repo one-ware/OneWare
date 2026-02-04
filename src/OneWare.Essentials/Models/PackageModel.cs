@@ -82,7 +82,7 @@ public abstract class PackageModel : ObservableObject
         }
     }
 
-    public event EventHandler<Task<bool>>? Installing;
+    public event EventHandler<Task<PackageInstallResult>>? Installing;
 
     public event EventHandler? Installed;
 
@@ -114,7 +114,7 @@ public abstract class PackageModel : ObservableObject
     {
         var task = PerformDownloadAsync(version);
 
-        Installing?.Invoke(this, task);
+        //Installing?.Invoke(this, task);
 
         return task;
     }
@@ -263,5 +263,18 @@ public abstract class PackageModel : ObservableObject
     public virtual Task<CompatibilityReport> CheckCompatibilityAsync(PackageVersion version)
     {
         return Task.FromResult(new CompatibilityReport(true));
+    }
+
+    public async Task<(PackageVersion lastVersion, CompatibilityReport compatibilityReport)?> TryGetLastVersionAsync(bool includePrerelease)
+    {
+        var lastVersion = Package.Versions?.LastOrDefault(x => includePrerelease || !x.IsPrerelease);
+
+        if (lastVersion != null)
+        {
+            var report = await CheckCompatibilityAsync(lastVersion);
+            return (lastVersion, report);
+        }
+
+        return null;
     }
 }

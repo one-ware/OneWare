@@ -2,6 +2,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -51,8 +52,12 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 
     public AsyncRelayCommand<FlexibleWindow> InstallCommand => new(async window =>
     {
-        Success = await _packageService.InstallAsync(Package.Package);
-        window?.Close();
+        var result = await _packageService.InstallAsync(Package.Package);
+        
+        Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
+        
+        if(Success)
+            window?.Close();
     });
 
     private async Task ResolveAsync()
