@@ -400,4 +400,26 @@ public static class PlatformHelper
         listener.Stop();
         return port;
     }
+    
+    // Linux method to allow restarting without creating a new PID
+    public static void ExecReplace(string executablePath, string[] args)
+    {
+        var argv = new string?[args.Length + 2];
+        argv[0] = executablePath;
+        Array.Copy(args, 0, argv, 1, args.Length);
+        argv[^1] = null;
+
+        if (LibC.execv(executablePath, argv) == -1)
+        {
+            var errno = Marshal.GetLastWin32Error();
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Error($"execv failed for restart (errno={errno}).");
+        }
+    }
+
+    private static class LibC
+    {
+        [DllImport("libc", SetLastError = true)]
+        internal static extern int execv(string path, string?[] argv);
+    }
 }

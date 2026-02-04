@@ -233,38 +233,10 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
                 case PlatformId.LinuxX64:
                 case PlatformId.LinuxArm64:
                 {
-                    ExecReplace(executablePath, args);
+                    PlatformHelper.ExecReplace(executablePath, args);
                     
                     /*
-                    // Linux: Check if running in Flatpak or Snap
-                    if (true || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FLATPAK_ID")))
-                    {
-                        // Running in Flatpak: re-exec in place
- 
-                    }
-                    else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SNAP")))
-                    {
-                        // Running in Snap
-                        var snapName = Environment.GetEnvironmentVariable("SNAP_NAME");
-                        var command = "snap";
-                        var commandArgs = $"run {snapName}";
-                        if (args.Length > 0)
-                            commandArgs += " " + string.Join(" ", args.Select(arg => $"\"{arg}\""));
-
-                        // Use sh -c with nohup and & to properly detach the process
-                        var fullCommand = $"nohup {command} {commandArgs} > /dev/null 2>&1 &";
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = "/bin/sh",
-                            Arguments = $"-c \"{fullCommand.Replace("\"", "\\\"")}\"",
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            WorkingDirectory = Environment.CurrentDirectory
-                        };
-                        Process.Start(startInfo);
-                        break;
-                    }
-                    else { // Regular Linux binary - use the executable path
+                    { // Regular Linux binary - use the executable path
                         var command = executablePath;
                         var commandArgs = string.Join(" ", args.Select(arg => $"\"{arg}\""));
 
@@ -333,27 +305,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error($"Failed to restart application: {ex.Message}", ex);
         }
-    }
-
-    private static void ExecReplace(string executablePath, string[] args)
-    {
-        var argv = new string?[args.Length + 2];
-        argv[0] = executablePath;
-        Array.Copy(args, 0, argv, 1, args.Length);
-        argv[^1] = null;
-
-        if (LibC.execv(executablePath, argv) == -1)
-        {
-            var errno = Marshal.GetLastWin32Error();
-            ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"execv failed for restart (errno={errno}).");
-        }
-    }
-
-    private static class LibC
-    {
-        [DllImport("libc", SetLastError = true)]
-        internal static extern int execv(string path, string?[] argv);
     }
 
     private async Task AttemptAutoDownloadExtensionAsync(string autoLaunchId, string? value)
