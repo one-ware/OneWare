@@ -70,10 +70,10 @@
                         </StackPanel>
                         <controls:UiExtensionCollection Context="{Binding}" Extensions="{Binding TopRightExtension}"
                                                         HorizontalAlignment="Right" DockPanel.Dock="Right" />
-                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center"
+                        <StackPanel Classes="ToolBar" VerticalAlignment="Center"
                                     HorizontalAlignment="Right" DockPanel.Dock="Right" Margin="0 0 5 0">
                             <Button Command="{Binding SelectedFpgaModel.DisconnectCommand, FallbackValue={x:Null}}"
-                                    IsEnabled="{Binding SelectedFpgaModel.SelectedExtensionModel, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    IsEnabled="{Binding SelectedFpgaModel.SelectedExtensionModel, FallbackValue={x:False}, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     ToolTip.Tip="Disconnect Selected Extension">
                                 <Image Source="{DynamicResource VSImageLib2019.Unplugged_16x}" Height="16" Width="16" />
                             </Button>
@@ -155,7 +155,7 @@
                                                             <TextBlock DockPanel.Dock="Left"
                                                                        VerticalAlignment="Center"
                                                                        Padding="5 0"
-                                                                       Text="{Binding ConnectedNode.Node.Name, FallbackValue={}}" />
+                                                                       Text="{Binding ConnectedNode.Node.Name, FallbackValue=''}" />
                                                         </DockPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
