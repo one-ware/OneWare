@@ -51,9 +51,4 @@ public class GenericFpgaViewModel : FpgaViewModelBase
         _fileWatcher?.Dispose();
         base.Dispose();
     }
-
-    public override Task InitializeAsync()
-    {
-        return LoadGuiAsync();
-    }
 }

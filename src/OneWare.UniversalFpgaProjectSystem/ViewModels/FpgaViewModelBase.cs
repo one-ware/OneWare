@@ -15,6 +15,4 @@ public abstract class FpgaViewModelBase : ObservableObject, IDisposable
     public virtual void Dispose()
     {
     }
-
-    public abstract Task InitializeAsync();
 }
