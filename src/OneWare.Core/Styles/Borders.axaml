@@ -8,4 +8,12 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
+    
+    <Style Selector="Border.ValidBorder">
+        <Setter Property="BorderBrush" Value="#9900FF55" />
+    </Style>
+    
+    <Style Selector="Border.InvalidBorder">
+        <Setter Property="BorderBrush" Value="#99FF0000" />
+    </Style>
 </Styles>

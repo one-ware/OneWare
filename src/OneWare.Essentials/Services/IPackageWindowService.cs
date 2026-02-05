@@ -7,6 +7,7 @@ public interface IPackageWindowService
     Task RefreshPackagesAsync();
     Control ShowExtensionManager();
     Control? ShowExtensionManager(string category, string? subcategory);
+    Task<bool> ShowExtensionManagerAsync(string packageId);
     Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId);
     Task<bool> QuickInstallPackageAsync(string packageId);
 }

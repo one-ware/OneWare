@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.PackageManager.Installers;
 using OneWare.PackageManager.Services;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
@@ -15,6 +16,14 @@ public class PackageManagerModule : OneWareModuleBase
 {
     public override void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<IPackageRepositoryClient, PackageRepositoryClient>();
+        services.AddSingleton<IPackageCatalog, PackageCatalog>();
+        services.AddSingleton<IPackageStateStore, PackageStateStore>();
+        services.AddSingleton<IPackageDownloader, PackageDownloader>();
+        services.AddSingleton<IPackageInstaller, PluginPackageInstaller>();
+        services.AddSingleton<IPackageInstaller, NativeToolPackageInstaller>();
+        services.AddSingleton<IPackageInstaller, HardwarePackageInstaller>();
+        services.AddSingleton<IPackageInstaller, LibraryPackageInstaller>();
         services.AddSingleton<IPackageService, PackageService>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<IPackageWindowService>(provider => provider.Resolve<PackageManagerViewModel>());

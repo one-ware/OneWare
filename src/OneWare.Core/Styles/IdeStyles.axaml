@@ -64,7 +64,7 @@
         <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
     </Style>
 
-    <Style Selector="ContextMenu > Separator, MenuItem > Separator">
+    <Style Selector="Separator">
         <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
     </Style>
 
@@ -102,7 +102,7 @@
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
 
-    <Style Selector="StackPanel.ToolBar Separator">
+    <Style Selector="StackPanel.ToolBar > Separator">
         <Setter Property="Margin" Value="0" />
         <Setter Property="Height" Value="20" />
         <Setter Property="Width" Value="1" />

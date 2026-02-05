@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -53,7 +54,7 @@ public class MainWindowViewModel : ObservableObject
         LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
         RightToolBarExtension = windowService.GetUiExtensions("MainWindow_RightToolBarExtension");
         BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
-
+        
         MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
 
         _title = paths.AppName;
@@ -90,8 +91,16 @@ public class MainWindowViewModel : ObservableObject
         });
 
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
+
+        Observable.FromEventPattern(ApplicationStateService.CurrentNotifications,
+            nameof(ApplicationStateService.CurrentNotifications.CollectionChanged)).Subscribe(_ =>
+        {
+            OnPropertyChanged(nameof(NewNotificationsAvailable));
+        });
     }
 
+    public bool NewNotificationsAvailable => ApplicationStateService.CurrentNotifications.Any(x => !x.IsRead);
+    
     public IMainDockService MainDockService { get; }
     public IApplicationStateService ApplicationStateService { get; }
     public IPaths Paths { get; }
@@ -129,11 +138,21 @@ public class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<OneWareUiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<OneWareUiExtension> LeftToolBarExtension { get; }
-
+    
     public ObservableCollection<OneWareUiExtension> RightToolBarExtension { get; }
     public ObservableCollection<OneWareUiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
 
+    public RelayCommand MarkNotificationsReadCommand => new RelayCommand(() =>
+    {
+        foreach (var notification in ApplicationStateService.CurrentNotifications)
+        {
+            notification.IsRead = true;
+        }
+        
+        OnPropertyChanged(nameof(NewNotificationsAvailable));
+    });
+    
     #region MainWindowButtons
 
     private Control GetMainView()
@@ -177,6 +196,11 @@ public class MainWindowViewModel : ObservableObject
             x is MenuItemApplicationCommand command && command.MenuItem == menuItem);
         _applicationCommandService.ApplicationCommands.RemoveMany(removals);
     }
+    
+    public void OpenCommandManager()
+    {
+        OpenManager(GetMainView(), "All");
+    }
 
     public Task OpenSettingsDialogAsync()
     {
@@ -184,6 +208,12 @@ public class MainWindowViewModel : ObservableObject
         {
             DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
         });
+    }
+
+    public Task OpenPackageManagerAsync()
+    {
+        ContainerLocator.Container.Resolve<IPackageWindowService>()?.ShowExtensionManager();
+        return Task.CompletedTask;
     }
 
     #endregion

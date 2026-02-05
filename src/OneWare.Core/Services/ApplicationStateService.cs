@@ -26,8 +26,6 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     private readonly Dictionary<string, Action<string?>> _urlLaunchActions = new();
     private readonly IWindowService _windowService;
 
-    private ApplicationProcess _activeProcess = new() { State = AppState.Idle, StatusMessage = "Ready" };
-
     public ApplicationStateService(IWindowService windowService, ILogger logger)
     {
         _windowService = windowService;
@@ -51,11 +49,13 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
     public bool ShutdownComplete { get; private set; }
 
+    public ObservableCollection<ApplicationNotification> CurrentNotifications { get; } = new();
+
     public ApplicationProcess ActiveProcess
     {
-        get => _activeProcess;
-        private set => SetProperty(ref _activeProcess, value);
-    }
+        get;
+        private set => SetProperty(ref field, value);
+    } = new() { State = AppState.Idle, StatusMessage = "Ready" };
 
     /// <summary>
     ///     Use the key to remove the added state with RemoveState()
@@ -314,7 +314,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         try
         {
             var packageService = ContainerLocator.Container.Resolve<IPackageService>();
-            await packageService.LoadPackagesAsync();
+            await packageService.RefreshAsync();
+            
             var package = packageService.Packages.Values
                 .Where(x => x.Status != PackageStatus.Installed)
                 .FirstOrDefault(x =>
@@ -365,5 +366,15 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
             desktopApp.Shutdown();
+    }
+    
+    public void AddNotification(ApplicationNotification notification)
+    {
+        CurrentNotifications.Insert(0, notification);
+    }
+
+    public void ClearNotifications()
+    {
+        CurrentNotifications.Clear();
     }
 }

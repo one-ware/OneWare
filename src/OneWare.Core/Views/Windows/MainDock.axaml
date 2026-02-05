@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.Windows.MainDock" x:DataType="windows:MainWindowViewModel">
     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
@@ -42,12 +44,116 @@
 
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
-                <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
-                <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
-                    <Button.Content>
-                        <Image Source="{DynamicResource Material.SettingsOutline}" />
-                    </Button.Content>
+            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Classes="ToolBar">
+                <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}">
+                    <controls:UiExtensionCollection.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Classes="ToolBar" />
+                        </ItemsPanelTemplate>
+                    </controls:UiExtensionCollection.ItemsPanel>
+                </controls:UiExtensionCollection>
+                <Button ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
+                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                </Button>
+                <Button ToolTip.Tip="Notifications" Command="{Binding MarkNotificationsReadCommand}">
+                    <Panel>
+                        <Image Source="{DynamicResource Ionicons.NotificationsOutlineMD}" />
+                        <Ellipse Height="6" Width="6" Fill="#BBFF0000" VerticalAlignment="Top"
+                                 HorizontalAlignment="Right" Margin="1"
+                                 IsVisible="{Binding NewNotificationsAvailable}" />
+                    </Panel>
+
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
+                                Placement="BottomEdgeAlignedRight">
+                            <Border Width="340" MaxHeight="280" Background="{DynamicResource ThemeBackgroundBrush}">
+                                <Grid RowDefinitions="30,*">
+                                    <Panel>
+                                        <TextBlock FontWeight="Bold" Text="Notifications" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Panel>
+
+                                    <Border Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="1"
+                                            BorderThickness="0 1 0 0" Padding="5">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl
+                                                ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Vertical" Spacing="5" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Height="NaN" Command="{Binding Command}"
+                                                                HorizontalContentAlignment="Stretch"
+                                                                VerticalContentAlignment="Stretch">
+                                                            <Border>
+                                                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                                                      ColumnSpacing="10">
+
+                                                                    <!-- Severity indicator -->
+                                                                    <Border Width="3"
+                                                                            Background="{DynamicResource HighlightBrush}"
+                                                                            CornerRadius="2"
+                                                                            Classes.Warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Warning}}"
+                                                                            Classes.Error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Error}}">
+                                                                        <Border.Styles>
+                                                                            <Style Selector="Border.Warning">
+                                                                                <Setter Property="Background" Value="Orange" />
+                                                                            </Style>
+                                                                            <Style Selector="Border.Error">
+                                                                                <Setter Property="Background" Value="Red" />
+                                                                            </Style>
+                                                                        </Border.Styles>
+                                                                    </Border>
+
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding Message}"
+                                                                               TextWrapping="Wrap" />
+
+                                                                    <!-- Timestamp -->
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
+                                                                               FontSize="11"
+                                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                                </Grid>
+                                                            </Border>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+
+                </Button>
+                <Button ToolTip.Tip="Settings">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuItem Header="Run..." Command="{Binding OpenCommandManager}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource VSCodeLight.run}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem Header="Settings" Command="{Binding OpenSettingsDialogAsync}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Extensions" Command="{Binding OpenPackageManagerAsync}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource PackageManager}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+
+                    <Image Source="{DynamicResource Material.SettingsOutline}" />
                 </Button>
             </StackPanel>
         </DockPanel>

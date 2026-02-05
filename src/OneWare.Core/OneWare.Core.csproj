@@ -10,7 +10,7 @@
     <Import Project="..\..\build\props\OpenCvSharp4.runtime.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.DependencyInjection.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.Logging.props"/>
-
+    
     <ItemGroup>
         <AvaloniaResource Include="Assets\**\*.*"/>
     </ItemGroup>

@@ -1,4 +1,6 @@
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.PackageManager.Compatibility;
 
@@ -8,23 +10,20 @@ public class PluginCompatibilityChecker
     {
         try
         {
-            var pluginName = Path.GetFileName(path);
-
             var depFilePath = Path.Combine(path, "compatibility.txt");
-
-            var compatibilityIssues = "";
-
+            
             if (!File.Exists(depFilePath))
             {
-                compatibilityIssues += "compatibility.txt not found in plugin folder\n";
-                return new CompatibilityReport(false, compatibilityIssues);
+                ContainerLocator.Container.Resolve<ILogger>().Error("Compatibility Check failed: compatibility.txt not found in plugin folder");
+                return new CompatibilityReport(false, []);
             }
 
             return CheckCompatibility(File.ReadAllText(depFilePath));
         }
         catch (Exception e)
         {
-            return new CompatibilityReport(false, e.Message);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            return new CompatibilityReport(false, []);
         }
     }
 
@@ -32,13 +31,14 @@ public class PluginCompatibilityChecker
     {
         try
         {
-            var compatibilityIssues = "";
-            var records = new List<CompatibilityRecord>();
-            var suggestions = new List<string>();
-            var studioUpdateRequired = false;
+            var records = new List<CompatibilityIssue>();
             var isCompatible = true;
 
-            if (deps == null) return new CompatibilityReport(false, "Error checking compatibility");
+            if (deps == null)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error("Compatibility Check failed");
+                return new CompatibilityReport(false, records);
+            }
 
             var depsList = deps.Trim().Split('\n');
 
@@ -64,14 +64,11 @@ public class PluginCompatibilityChecker
 
                 if (!coreDeps.TryGetValue(dependencyName, out var coreDep) || coreDep.Version == null)
                 {
-                    var message = $"Dependency {dependencyName} not found";
-                    compatibilityIssues += $"{message}\n";
-                    records.Add(new CompatibilityRecord(
+                    records.Add(new CompatibilityIssue(
                         dependencyName,
                         dependencyVersionFull,
                         null,
-                        CompatibilityRecordKind.MissingDependency,
-                        message));
+                        CompatibilityRecordKind.MissingDependency));
                     isCompatible = false;
                     continue;
                 }
@@ -86,61 +83,40 @@ public class PluginCompatibilityChecker
                     provided.Minor != required.Minor ||
                     provided.Build < required.Build)
                 {
-                    var message =
-                        $"Dependency {dependencyName} requires {required}, but provided is {provided}";
-                    compatibilityIssues += $"{message}\n";
                     if (requiresCoreUpdate)
                     {
-                        records.Add(new CompatibilityRecord(
+                        records.Add(new CompatibilityIssue(
                             dependencyName,
                             required,
                             provided,
-                            CompatibilityRecordKind.RequiresCoreUpdate,
-                            message));
-                        suggestions.Add(
-                            $"Update OneWare core to at least {required} for {dependencyName}.");
-                        studioUpdateRequired = true;
+                            CompatibilityRecordKind.RequiresCoreUpdate));
                     }
                     else if (pluginOutdated)
                     {
-                        records.Add(new CompatibilityRecord(
+                        records.Add(new CompatibilityIssue(
                             dependencyName,
                             required,
                             provided,
-                            CompatibilityRecordKind.PluginOutdated,
-                            message));
-                        suggestions.Add(
-                            $"Update the plugin to a version compatible with core {provided} for {dependencyName}.");
+                            CompatibilityRecordKind.PluginOutdated));
                     }
                     isCompatible = false;
                 }
                 else if (pluginOutdated)
                 {
-                    var message =
-                        $"Dependency {dependencyName} targets {required}, but core provides {provided}";
-                    records.Add(new CompatibilityRecord(
+                    records.Add(new CompatibilityIssue(
                         dependencyName,
                         required,
                         provided,
-                        CompatibilityRecordKind.PluginOutdated,
-                        message));
-                    suggestions.Add(
-                        $"Update the plugin to a version compatible with core {provided} for {dependencyName}.");
+                        CompatibilityRecordKind.PluginOutdated));
                 }
             }
 
-            return new CompatibilityReport(
-                isCompatible,
-                compatibilityIssues.Length == 0 ? null : compatibilityIssues,
-                records,
-                suggestions)
-            {
-                StudioUpdateRequired = studioUpdateRequired
-            };
+            return new CompatibilityReport(isCompatible, records);
         }
         catch (Exception e)
         {
-            return new CompatibilityReport(false, e.Message);
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            return new CompatibilityReport(false, []);
         }
     }
 

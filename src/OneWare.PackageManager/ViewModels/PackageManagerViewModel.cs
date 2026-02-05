@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
@@ -20,9 +21,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
 
-    private string _filter = string.Empty;
-    private bool _isLoading;
-    private PackageCategoryViewModel? _selectedCategory;
     private bool _showAvailable = true;
     private bool _showInstalled = true;
     private bool _showUpdate = true;
@@ -65,9 +63,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
+        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x => x.Value.Status == PackageStatus.UpdateAvailable));
+        
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
             ConstructPackageViewModels();
+            UpdateAllCommand.NotifyCanExecuteChanged();
         });
 
         ConstructPackageViewModels();
@@ -105,33 +106,35 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public string Filter
     {
-        get => _filter;
+        get;
         set
         {
-            SetProperty(ref _filter, value);
+            SetProperty(ref field, value);
             FilterPackages();
         }
-    }
+    } = string.Empty;
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public PackageCategoryViewModel? SelectedCategory
     {
-        get => _selectedCategory;
-        set => SetProperty(ref _selectedCategory, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
 
     public bool AskForRestart { get; set; } = true;
+    
+    public AsyncRelayCommand UpdateAllCommand { get; }
 
     public async Task RefreshPackagesAsync()
     {
-        await _packageService.LoadPackagesAsync();
+        await _packageService.RefreshAsync();
     }
 
     public Control ShowExtensionManager()
@@ -153,12 +156,19 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return ShowExtensionManager();
     }
 
+    public async Task<bool> ShowExtensionManagerAsync(string packageId)
+    {
+        if (await FocusPluginAsync(packageId) is not { } pvm)
+            return false;
+        
+        ShowExtensionManager();
+
+        return true;
+    }
+
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId)
     {
-        var category =
-            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageModel.Package.Id == packageId));
-
-        if (await FocusPluginAsync(category!.Header, packageId) is not { } pvm)
+        if (await FocusPluginAsync(packageId) is not { } pvm)
             return false;
 
         var view = ShowExtensionManager();
@@ -169,9 +179,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> QuickInstallPackageAsync(string packageId)
     {
-        var packageModel = _packageService.Packages.GetValueOrDefault(packageId);
-
-        if (packageModel == null) return false;
+        if (!_packageService.Packages.TryGetValue(packageId, out var packageModel)) return false;
 
         var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService);
 
@@ -204,16 +212,16 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         SelectedCategory.SelectedPackage = null;
         return true;
     }
-
-    private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
+    
+    private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm = PackageCategories
-            .FirstOrDefault(x => x.Header == category);
+        var categoryVm =
+            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
 
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
             var packageVm = categoryVm.VisiblePackages
-                .FirstOrDefault(x => x.PackageModel == packageModel);
+                .FirstOrDefault(x => x.PackageState == packageModel);
 
             if (packageVm == null)
                 return null;
@@ -242,7 +250,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             try
             {
                 var viewModel =
-                    new PackageViewModel(packageModel, _httpService, _applicationStateService, _windowService);
+                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
 
                 var category = packageModel.Package.Type switch
                 {
@@ -318,5 +326,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             AskForRestart = false;
             window?.Close();
         }
+    }
+
+    public async Task<bool> UpdateAllAsync()
+    {
+        var packages = _packageService.Packages.Values.Where(x => x.Status == PackageStatus.UpdateAvailable).ToList();
+        
+        foreach (var package in packages)
+        {
+            await FocusPluginAsync(package.Package!.Id!);
+            await _packageService.InstallAsync(package.Package, package.InstalledVersion, false, true);
+        }
+        
+        UpdateAllCommand.NotifyCanExecuteChanged();
+        
+        return true;
     }
 }

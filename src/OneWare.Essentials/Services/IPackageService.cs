@@ -1,29 +1,41 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 
 namespace OneWare.Essentials.Services;
 
 public interface IPackageService : INotifyPropertyChanged
 {
-    public bool IsUpdating { get; }
+    bool IsUpdating { get; }
 
-    public Dictionary<string, PackageModel> Packages { get; }
+    IReadOnlyDictionary<string, IPackageState> Packages { get; }
 
-    public event EventHandler PackagesUpdated;
+    event EventHandler PackagesUpdated;
 
-    public void RegisterPackage(Package package);
+    event EventHandler<PackageProgressEventArgs> PackageProgress;
 
-    public void RegisterPackageRepository(string url);
+    void RegisterPackage(Package package);
 
-    public PackageModel? GetPackageModel(Package package);
+    void RegisterPackageRepository(string url);
 
-    public Task<bool> LoadPackagesAsync();
+    Task<bool> RefreshAsync();
 
-    public Task<bool> InstallAsync(Package package);
+    Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false);
 
-    public Task<string?> DownloadLicenseAsync(Package package);
+    Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false);
 
-    public Task<IImage?> DownloadPackageIconAsync(Package package);
+    Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false);
+
+    Task<bool> RemoveAsync(string packageId);
+
+    Task<CompatibilityReport> CheckCompatibilityAsync(string packageId, PackageVersion version);
+
+    Task<string?> DownloadLicenseAsync(Package package);
+
+    Task<IImage?> DownloadPackageIconAsync(Package package);
 }

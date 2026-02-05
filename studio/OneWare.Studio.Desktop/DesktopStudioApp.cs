@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -156,11 +157,9 @@ public class DesktopStudioApp : StudioApp
 
         var settingsService = Services.Resolve<ISettingsService>();
         var packageService = Services.Resolve<IPackageService>();
-        var ideUpdater = Services.Resolve<UpdaterViewModel>();
 
         var versionGotUpdated = false;
-        List<PackageModel>? updatePackages = null;
-        var canUpdate = false;
+        List<IPackageState>? updatePackages = null;
         var showOneWareAiNotification = false;
 
         try
@@ -176,16 +175,13 @@ public class DesktopStudioApp : StudioApp
             }
 
             //step 2: Load the installed plugins
-            await packageService.LoadPackagesAsync();
+            await packageService.RefreshAsync();
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages
                 .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
                 .Select(x => x.Value)
                 .ToList();
-
-            //step 4: Check if there is any IDE update
-            canUpdate = await ideUpdater.CheckForUpdateAsync();
 
             //step 5: Check if the OneWare.AI notification should be shown
             //the setting refer to the dialog option "Don't show this again"
@@ -199,44 +195,35 @@ public class DesktopStudioApp : StudioApp
 
         try
         {
-            //step 1: IDE got updated
+            //IDE got updated
             if (versionGotUpdated)
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Services.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                    () =>
-                    {
-                        Services.Resolve<IWindowService>().Show(new ChangelogView
-                        {
-                            DataContext = Services.Resolve<ChangelogViewModel>()
-                        });
-                    },
-                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-
-            //step 2: Ask to update the outdated plugins
-            if (updatePackages?.Count > 0)
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
-                    $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
-                    "Download", () => Services.Resolve<IWindowService>().Show(new PackageManagerView
-                    {
-                        DataContext = Services.Resolve<PackageManagerViewModel>()
-                    }),
-                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-
-            //step 3: Ask to update the IDE
-            if (canUpdate)
             {
-                Dispatcher.UIThread.Post(() =>
+                Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
                 {
-                    Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
-                        $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Services
-                            .Resolve<IWindowService>().Show(new UpdaterView
-                            {
-                                DataContext = Services.Resolve<UpdaterViewModel>()
-                            }),
-                        Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                    Message = "OneWare got updated to " + Global.VersionCode + "!",
+                    Command = new RelayCommand(() => Services.Resolve<IWindowService>().Show(new ChangelogView
+                    {
+                        DataContext = Services.Resolve<ChangelogViewModel>()
+                    }))
                 });
             }
-            //step 4: Ask to install the OneWare.AI extension
+
+            //Add Notifications for all updatable packages
+            if (updatePackages?.Count > 0)
+            {
+                foreach (var updatePackage in updatePackages)
+                {
+                    Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
+                    {
+                        Message =
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                        Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
+                            .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
+                    });
+                }
+            }
+            
+            //Ask to install the OneWare.AI extension
             else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {

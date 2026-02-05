@@ -8,9 +8,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 
@@ -18,39 +20,44 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageViewModel : ObservableObject
 {
-    private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
-
+    private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
-
-    private PackageModel _packageModel;
+    private readonly IApplicationStateService _applicationStateService;
+    private readonly ILogger _logger;
+    
+    private IPackageState _packageState;
 
     private IDisposable? _primaryButtonBrushSubscription;
 
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
+    
 
-    public PackageViewModel(PackageModel packageModel, IHttpService httpService,
-        IApplicationStateService applicationStateService, IWindowService windowService)
+    public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
+        IWindowService windowService, IApplicationStateService applicationStateService, ILogger logger)
     {
-        _packageModel = packageModel;
+        _packageState = packageState;
+        _packageService = packageService;
         _httpService = httpService;
-        _applicationStateService = applicationStateService;
         _windowService = windowService;
+        _applicationStateService = applicationStateService;
+        _logger = logger;
 
-        RemoveCommand = new AsyncRelayCommand<Control?>(x => PackageModel.RemoveAsync(),
-            x => PackageModel.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
+        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
+            _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
                 or PackageStatus.UpdateAvailablePrerelease);
 
         InstallCommand = new AsyncRelayCommand<Control?>(
-            x => ConfirmLicenseAndDownloadAsync(x, PackageModel, SelectedVersionModel!.Version),
-            x => PackageModel.Status is PackageStatus.Available);
+            x => ConfirmLicenseAndDownloadAsync(x, PackageState, SelectedVersionModel!.Version),
+            _ => PackageState.Status is PackageStatus.Available);
 
-        UpdateCommand = new AsyncRelayCommand<Control?>(x => PackageModel.UpdateAsync(SelectedVersionModel!.Version),
-            x => PackageModel.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
+        UpdateCommand = new AsyncRelayCommand<Control?>(_ =>
+                _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
+            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
-        PackageModel.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+        PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
     }
 
@@ -60,12 +67,12 @@ public class PackageViewModel : ObservableObject
         set => SetProperty(ref field, value);
     }
 
-    public PackageModel PackageModel
+    public IPackageState PackageState
     {
-        get => _packageModel;
+        get => _packageState;
         set
         {
-            SetProperty(ref _packageModel, value);
+            SetProperty(ref _packageState, value);
             InitPackage();
         }
     }
@@ -118,12 +125,12 @@ public class PackageViewModel : ObservableObject
     private void InitPackage()
     {
         Links.Clear();
-        if (PackageModel.Package.Links != null)
-            Links.AddRange(PackageModel.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
+        if (PackageState.Package.Links != null)
+            Links.AddRange(PackageState.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
 
         PackageVersionModels.Clear();
-        if (PackageModel.Package.Versions != null)
-            PackageVersionModels.AddRange(PackageModel.Package.Versions
+        if (PackageState.Package.Versions != null)
+            PackageVersionModels.AddRange(PackageState.Package.Versions
                 .OrderByDescending(x =>
                 {
                     if (Version.TryParse(x.Version, out var v)) return v;
@@ -131,7 +138,7 @@ public class PackageViewModel : ObservableObject
                 })
                 .Select(x => new PackageVersionModel(x)));
 
-        var includePrerelease = PackageModel.InstalledVersion?.IsPrerelease ?? false;
+        var includePrerelease = PackageState.InstalledVersion?.IsPrerelease ?? false;
 
         SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
             .FirstOrDefault(x => x.Version.MinStudioVersion == null
@@ -147,11 +154,11 @@ public class PackageViewModel : ObservableObject
     private void UpdateStatus()
     {
         Version.TryParse(SelectedVersionModel?.Version.Version ?? "", out var sV);
-        Version.TryParse(PackageModel.InstalledVersion?.Version ?? "", out var iV);
+        Version.TryParse(PackageState.InstalledVersion?.Version ?? "", out var iV);
 
         MainButtonCommand = null;
         var primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeBorderMidBrush");
-        switch (PackageModel.Status)
+        switch (PackageState.Status)
         {
             case PackageStatus.Available:
                 PrimaryButtonText = "Install";
@@ -194,7 +201,7 @@ public class PackageViewModel : ObservableObject
         UpdateCommand.NotifyCanExecuteChanged();
     }
 
-    private async Task ConfirmLicenseAndDownloadAsync(Control? control, PackageModel model, PackageVersion version)
+    private async Task ConfirmLicenseAndDownloadAsync(Control? control, IPackageState model, PackageVersion version)
     {
         var topLevel = TopLevel.GetTopLevel(control);
 
@@ -212,7 +219,7 @@ public class PackageViewModel : ObservableObject
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
 
-            var result = await ContainerLocator.Container!.Resolve<IWindowService>()
+            var confirmLicenseResult = await ContainerLocator.Container!.Resolve<IWindowService>()
                 .ShowMessageBoxAsync(new MessageBoxRequest
                 {
                     Title = "Confirm License",
@@ -237,10 +244,19 @@ public class PackageViewModel : ObservableObject
                     ]
                 }, topLevel as Window);
 
-            if (!result.IsAccepted) return;
+            if (!confirmLicenseResult.IsAccepted) return;
         }
 
-        await _packageModel.DownloadAsync(version);
+        var installResult = await _packageService.InstallAsync(model.Package.Id!, version);
+
+        if (installResult.Status is PackageInstallResultReason.Incompatible)
+        {
+            if (installResult.CompatibilityRecord != null)
+            {
+                await _windowService.ShowMessageAsync("Installation Failed",
+                    $"Package is incompatible with current version of OneWare\n{installResult.CompatibilityRecord.Report}", MessageBoxIcon.Warning, topLevel as Window);
+            }
+        }
     }
 
     private async Task ResolveIconAsync()
@@ -248,9 +264,7 @@ public class PackageViewModel : ObservableObject
         if (_resolveImageStarted) return;
         _resolveImageStarted = true;
 
-        var icon = PackageModel.Package.IconUrl != null
-            ? await _httpService.DownloadImageAsync(PackageModel.Package.IconUrl)
-            : null;
+        var icon = await _packageService.DownloadPackageIconAsync(PackageState.Package);
 
         if (icon == null)
         {
@@ -270,8 +284,8 @@ public class PackageViewModel : ObservableObject
         IsTabsResolved = false;
         Tabs.Clear();
 
-        if (PackageModel.Package.Tabs != null)
-            foreach (var tab in PackageModel.Package.Tabs)
+        if (PackageState.Package.Tabs != null)
+            foreach (var tab in PackageState.Package.Tabs)
             {
                 if (tab.ContentUrl == null) continue;
                 var content = await _httpService.DownloadTextAsync(tab.ContentUrl);
@@ -285,10 +299,11 @@ public class PackageViewModel : ObservableObject
     private async Task CheckSelectedVersionCompatibilityAsync()
     {
         if (SelectedVersionModel == null) return;
+        if (PackageState.Package.Id == null) return;
 
         if (SelectedVersionModel.CompatibilityReport == null)
             SelectedVersionModel.CompatibilityReport =
-                await PackageModel.CheckCompatibilityAsync(SelectedVersionModel.Version);
+                await _packageService.CheckCompatibilityAsync(PackageState.Package.Id!, SelectedVersionModel.Version);
     }
 
     private async Task AskForRestartAsync(Control? owner)

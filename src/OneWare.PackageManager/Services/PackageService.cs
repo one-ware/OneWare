@@ -1,154 +1,210 @@
-﻿using System.Collections.ObjectModel;
-using System.Reactive.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Collections.ObjectModel;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
-public partial class PackageService : ObservableObject, IPackageService
+public class PackageService : ObservableObject, IPackageService
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-        WriteIndented = true
-    };
-
-    private readonly Dictionary<Package, Task<bool>> _activeInstalls = new();
-
+    private readonly IPackageCatalog _catalog;
+    private readonly IPackageDownloader _downloader;
     private readonly IHttpService _httpService;
-
-    private readonly Lock _installLock = new();
-    private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
-
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
-    private Task<bool>? _currentLoadTask;
+    private readonly IApplicationStateService _applicationStateService;
+    private readonly IPackageStateStore _stateStore;
+    private readonly IReadOnlyDictionary<string, IPackageInstaller> _installersByType;
+    private readonly IPaths _paths;
+    private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
+    private readonly List<string> _repositoryUrls = [];
 
-    private bool _isUpdating;
+    private Task<bool>? _currentRefreshTask;
 
-    public PackageService(IHttpService httpService, ISettingsService settingsService, ILogger logger, IPaths paths)
+    public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
+        IEnumerable<IPackageInstaller> installers, ISettingsService settingsService, ILogger logger,
+        IApplicationStateService applicationStateService, IHttpService httpService, IPaths paths)
     {
-        _httpService = httpService;
+        _catalog = catalog;
+        _downloader = downloader;
+        _stateStore = stateStore;
         _settingsService = settingsService;
         _logger = logger;
-
-        PackageDataBasePath = Path.Combine(paths.PackagesDirectory,
-            $"{paths.AppName.ToLower().Replace(" ", "")}-packages.json");
-
-        LoadInstalledPackagesDatabase();
+        _applicationStateService = applicationStateService;
+        _httpService = httpService;
+        _paths = paths;
+        _installersByType = installers.ToDictionary(x => x.PackageType, x => x);
     }
-
-    private string PackageDataBasePath { get; }
-
-    public List<string> PackageRepositories { get; } = [];
-
-    private List<Package> StandalonePackages { get; } = [];
 
     public bool IsUpdating
     {
-        get => _isUpdating;
-        private set => SetProperty(ref _isUpdating, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
+
+    private readonly Dictionary<string, PackageState> _packages = new();
+    
+    public IReadOnlyDictionary<string, IPackageState> Packages =>
+        _packages.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IPackageState)kvp.Value);
 
     public event EventHandler? PackagesUpdated;
-
-    public Dictionary<string, PackageModel> Packages { get; } = [];
-
-    public void RegisterPackageRepository(string url)
-    {
-        PackageRepositories.Add(url);
-    }
-
-    public PackageModel? GetPackageModel(Package package)
-    {
-        return Packages.GetValueOrDefault(package.Id!);
-    }
+    public event EventHandler<PackageProgressEventArgs>? PackageProgress;
 
     public void RegisterPackage(Package package)
     {
-        StandalonePackages.Add(package);
+        _catalog.RegisterStandalone(package);
+        if (package.Id == null) return;
 
-        if (Packages.TryGetValue(package.Id!, out var pkg))
+        if (_packages.TryGetValue(package.Id, out var state))
         {
-            pkg.Package = package;
-            pkg.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == pkg.InstalledVersion?.Version);
+            state.Package = package;
+            state.InstalledVersion =
+                package.Versions?.FirstOrDefault(x => x.Version == state.InstalledVersion?.Version);
+            UpdateStatus(state);
         }
         else
         {
-            AddPackage(package);
+            _packages[package.Id] = new PackageState(package);
+            UpdateStatus(_packages[package.Id]);
         }
+
+        PackagesUpdated?.Invoke(this, EventArgs.Empty);
     }
 
-    public async Task<bool> LoadPackagesAsync()
+    public void RegisterPackageRepository(string url)
     {
-        // Check if there's already a load in progress
-        await _loadSemaphore.WaitAsync();
+        _repositoryUrls.Add(url);
+    }
+
+    public async Task<bool> RefreshAsync()
+    {
         try
         {
-            // If there's already a load task running, wait for it instead of starting a new one
-            if (_currentLoadTask != null && !_currentLoadTask.IsCompleted)
+            if (_currentRefreshTask is { IsCompleted: false })
             {
-                _loadSemaphore.Release();
-                return await _currentLoadTask;
+                return await _currentRefreshTask;
             }
 
-            // Start a new load task
-            _currentLoadTask = LoadPackagesInternalAsync();
+            _currentRefreshTask = RefreshInternalAsync();
+            return await _currentRefreshTask;
         }
-        finally
+        catch (Exception e)
         {
-            if (_loadSemaphore.CurrentCount == 0)
-                _loadSemaphore.Release();
+            _logger.Error(e.Message, e);
+            return false;
         }
-
-        return await _currentLoadTask;
     }
 
-
-    /// <summary>
-    ///     Will install the package if not already installed
-    ///     Waits if another thread already started the installation
-    /// </summary>
-    public Task<bool> InstallAsync(Package package)
+    public async Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false)
     {
-        lock (_installLock)
+        if (package.Id == null)
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
+
+        if (!_packages.ContainsKey(package.Id)) RegisterPackage(package);
+
+        return await InstallAsync(package.Id, version, includePrerelease, ignoreCompatibility);
+    }
+
+    public async Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false)
+    {
+        if (!_packages.TryGetValue(packageId, out var state))
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
+
+        if (_activeInstalls.TryGetValue(packageId, out var active))
+            return await active;
+
+        var installTask = InstallInternalAsync(state, version, includePrerelease, ignoreCompatibility);
+        _activeInstalls[packageId] = installTask;
+
+        var result = await installTask;
+        _activeInstalls.Remove(packageId);
+        return result;
+    }
+
+    public async Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false)
+    {
+        if (!_packages.TryGetValue(packageId, out var state))
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
+
+        if (_activeInstalls.TryGetValue(packageId, out var active))
+            return await active;
+
+        var updateTask = UpdateInternalAsync(state, version, includePrerelease, ignoreCompatibility);
+        _activeInstalls[packageId] = updateTask;
+
+        var result = await updateTask;
+        _activeInstalls.Remove(packageId);
+        return result;
+    }
+
+    public async Task<bool> RemoveAsync(string packageId)
+    {
+        if (!_packages.TryGetValue(packageId, out var state)) return false;
+
+        if (state.InstalledVersion == null) return true;
+
+        var installer = ResolveInstaller(state.Package);
+        if (installer == null) return false;
+
+        var version = state.InstalledVersion;
+        var target = installer.SelectTarget(state.Package, version);
+        if (target == null) return false;
+
+        var context = new PackageInstallContext(state.Package, version, target, GetExtractionPath(state.Package),
+            new Progress<float>(_ => { }));
+
+        try
         {
-            if (Packages.TryGetValue(package.Id!, out var model))
-            {
-                if (!(model.Package.Versions?.Any() ?? false)) return Task.FromResult(false);
+            await installer.PrepareRemoveAsync(context);
+            if (Directory.Exists(context.ExtractionPath))
+                Directory.Delete(context.ExtractionPath, true);
 
-                switch (model.Status)
-                {
-                    case PackageStatus.Available or PackageStatus.UpdateAvailable:
-                        _logger.Log($"Downloading {model.Package.Name}...", true,
-                            Brushes.DarkCyan);
-                        return model.DownloadAsync(model.Package.Versions.Last());
-                    case PackageStatus.Installing:
-                        if (_activeInstalls.TryGetValue(model.Package, out var task)) return task;
-                        return Task.FromResult(model.Status is PackageStatus.Installed
-                            or PackageStatus.UpdateAvailable);
-                    case PackageStatus.Installed:
-                        return Task.FromResult(true);
-                }
-            }
+            var result = await installer.RemoveAsync(context);
+            state.InstalledVersion = null;
+            state.InstalledVersionWarningText = null;
+            state.Status = result.Status;
+            state.Progress = 0;
+            state.IsIndeterminate = false;
+
+            await SaveInstalledPackagesAsync();
+
+            return true;
         }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            UpdateStatus(state);
+            return false;
+        }
+    }
 
-        return Task.FromResult(false);
+    public Task<CompatibilityReport> CheckCompatibilityAsync(string packageId, PackageVersion version)
+    {
+        if (!_packages.TryGetValue(packageId, out var state))
+            return Task.FromResult(new CompatibilityReport(false));
+
+        var installer = ResolveInstaller(state.Package);
+        if (installer == null)
+            return Task.FromResult(new CompatibilityReport(false));
+
+        return installer.CheckCompatibilityAsync(state.Package, version);
     }
 
     public async Task<string?> DownloadLicenseAsync(Package package)
     {
         var url = package.Tabs?.FirstOrDefault(x => x.Title == "License")?.ContentUrl;
-
         if (url == null) return null;
 
         return await _httpService.DownloadTextAsync(url);
@@ -156,19 +212,16 @@ public partial class PackageService : ObservableObject, IPackageService
 
     public async Task<IImage?> DownloadPackageIconAsync(Package package)
     {
-        var icon = package.IconUrl != null
+        return package.IconUrl != null
             ? await _httpService.DownloadImageAsync(package.IconUrl)
             : null;
-
-        return icon;
     }
 
-    private async Task<bool> LoadPackagesInternalAsync()
+    private async Task<bool> RefreshInternalAsync()
     {
         await WaitForInstallsAsync();
 
         IsUpdating = true;
-
         var result = true;
 
         try
@@ -176,33 +229,57 @@ public partial class PackageService : ObservableObject, IPackageService
             var customRepositories =
                 _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
 
-            var allRepos = PackageRepositories.Concat(customRepositories);
-            var newPackages = new List<Package>();
+            var allRepos = _repositoryUrls.Concat(customRepositories);
+            result = await _catalog.RefreshAsync(allRepos);
 
-            foreach (var repository in allRepos)
+            var installed = await _stateStore.LoadAsync();
+
+            var nextStates = new Dictionary<string, PackageState>();
+
+            foreach (var (id, manifest) in _catalog.Manifests)
+                nextStates[id] = new PackageState(manifest);
+
+            foreach (var installedPackage in installed.Values)
             {
-                var loadedPackages = await LoadPackageRepositoryAsync(repository);
-
-                if (loadedPackages != null)
-                    foreach (var package in loadedPackages)
+                if (!nextStates.TryGetValue(installedPackage.Id, out var state))
+                {
+                    var stub = new Package
                     {
-                        newPackages.Add(package);
+                        Id = installedPackage.Id,
+                        Type = installedPackage.Type,
+                        Name = installedPackage.Name,
+                        Category = installedPackage.Category,
+                        Versions =
+                        [
+                            new PackageVersion
+                            {
+                                Version = installedPackage.InstalledVersion
+                            }
+                        ],
+                        Description = installedPackage.Description,
+                        License = installedPackage.License
+                    };
+                    state = new PackageState(stub);
+                    nextStates[installedPackage.Id] = state;
+                }
 
-                        if (package.Id != null && Packages.TryGetValue(package.Id, out var pkg))
-                            pkg.Package = package;
-                        else
-                            AddPackage(package);
-                    }
-
-                result = result && loadedPackages != null;
+                state.InstalledVersion =
+                    state.Package.Versions?.FirstOrDefault(x => x.Version == installedPackage.InstalledVersion);
             }
 
-            foreach (var removedPackage in Packages.Select(x => x.Value.Package)
-                         .Where(x => !newPackages.Contains(x) && !StandalonePackages.Contains(x))
-                         .ToArray())
-                Packages.Remove(removedPackage.Id!);
+            _packages.Clear();
+            foreach (var (id, state) in nextStates)
+            {
+                UpdateStatus(state);
+                _packages[id] = state;
+            }
 
             PackagesUpdated?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            result = false;
         }
         finally
         {
@@ -212,202 +289,191 @@ public partial class PackageService : ObservableObject, IPackageService
         return result;
     }
 
-    private void AddPackage(Package package, string? installedVersion = null)
-    {
-        if (package.Id == null) throw new Exception("Package ID cannot be empty");
-        if (Packages.ContainsKey(package.Id))
-        {
-            Console.WriteLine(package.Id + " is already installed.");
-            return;
-        }
-
-        PackageModel model = package.Type switch
-        {
-            "Plugin" => ContainerLocator.Container.Resolve<PluginPackageModel>((typeof(Package), package)),
-            "NativeTool" => ContainerLocator.Container.Resolve<NativeToolPackageModel>((typeof(Package), package)),
-            "Hardware" => ContainerLocator.Container.Resolve<HardwarePackageModel>((typeof(Package), package)),
-            "Library" => ContainerLocator.Container.Resolve<LibraryPackageModel>((typeof(Package), package)),
-            _ => throw new Exception($"Package Type invalid/missing for {package.Name}!")
-        };
-
-        model.InstalledVersion = package.Versions?.FirstOrDefault(x => x.Version == installedVersion);
-
-        Packages.Add(package.Id, model);
-
-        Observable.FromEventPattern<Task<bool>>(model, nameof(model.Installing))
-            .Subscribe(x => ObserveInstall((x.Sender as PackageModel)!.Package, x.EventArgs));
-
-        Observable.FromEventPattern(model, nameof(model.Installed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync());
-
-        Observable.FromEventPattern(model, nameof(model.Removed))
-            .Subscribe(x => _ = SaveInstalledPackagesDatabaseAsync());
-    }
-
     private async Task WaitForInstallsAsync()
     {
-        //Wait until all installs complete
-        Task<bool>[] activeInstallTasks;
-        lock (_installLock)
-        {
-            activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
-        }
-
-        if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks.ToArray());
+        var activeInstallTasks = _activeInstalls.Select(x => x.Value).ToArray();
+        if (activeInstallTasks.Length != 0) await Task.WhenAll(activeInstallTasks);
     }
 
-    private async Task<Package[]?> LoadPackageRepositoryAsync(string url)
+    private async Task<PackageInstallResult> InstallInternalAsync(PackageState state, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility)
     {
-        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10));
-        if (repositoryString == null) return null;
+        var selectedVersion = ResolveVersion(state, version, includePrerelease);
+        if (selectedVersion == null)
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
-        var trimmed = MyRegex().Replace(repositoryString, "");
+        if (state.Status is PackageStatus.Installed or PackageStatus.NeedRestart &&
+            state.InstalledVersion?.Version == selectedVersion.Version)
+            return new PackageInstallResult { Status = PackageInstallResultReason.AlreadyInstalled };
 
-        var packages = new List<Package>();
+        var installer = ResolveInstaller(state.Package);
+        if (installer == null)
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
-        if (trimmed.StartsWith("{\"packages\":"))
+        var compatibility = await installer.CheckCompatibilityAsync(state.Package, selectedVersion);
+        if (!compatibility.IsCompatible && !ignoreCompatibility)
         {
-            try
+            _logger.Error(compatibility.Report ?? "Package is incompatible.");
+            return new PackageInstallResult
             {
-                var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
-
-                if (repository is { Packages: not null })
-                    foreach (var manifest in repository.Packages)
-                        try
-                        {
-                            if (manifest.ManifestUrl == null) continue;
-
-                            var downloadManifest =
-                                await _httpService.DownloadTextAsync(manifest.ManifestUrl);
-
-                            var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
-
-                            if (package == null) continue;
-
-                            packages.Add(package);
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.Error(e.Message, e);
-                        }
-                else throw new Exception("Packages empty");
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e.Message, e);
-                return null;
-            }
-        }
-        else
-        {
-            //In case link is a plugin manifest directly
-            var package = JsonSerializer.Deserialize<Package>(repositoryString!, SerializerOptions);
-
-            if (package == null) return null;
-
-            packages.Add(package);
+                Status = PackageInstallResultReason.Incompatible,
+                CompatibilityRecord = compatibility
+            };
         }
 
-        return packages.ToArray();
+        var target = installer.SelectTarget(state.Package, selectedVersion);
+        if (target == null)
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
+
+        return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility);
     }
 
-    private bool LoadInstalledPackagesDatabase()
+    private async Task<PackageInstallResult> UpdateInternalAsync(PackageState state, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility)
+    {
+        var selectedVersion = ResolveVersion(state, version, includePrerelease);
+        if (selectedVersion == null)
+            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
+
+        if (state.InstalledVersion == null)
+            return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility);
+
+        var removed = await RemoveAsync(state.Package.Id!);
+        if (!removed)
+            return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+
+        return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility);
+    }
+
+    private async Task<PackageInstallResult> DownloadAndInstallAsync(PackageState state, PackageVersion version,
+        PackageTarget target, IPackageInstaller installer, CompatibilityReport compatibility)
     {
         try
         {
-            if (File.Exists(PackageDataBasePath))
+            state.Status = PackageStatus.Installing;
+            var stateHandle = _applicationStateService.AddState($"Downloading {state.Package.Id}...", AppState.Loading);
+
+            var progress = new Progress<float>(value =>
             {
-                using var file = File.OpenRead(PackageDataBasePath);
-                var installedPackages = JsonSerializer.Deserialize<InstalledPackage[]>(file, SerializerOptions);
-                if (installedPackages != null)
-                    foreach (var installedPackage in installedPackages)
-                    {
-                        var package = new Package
-                        {
-                            Id = installedPackage.Id,
-                            Type = installedPackage.Type,
-                            Name = installedPackage.Name,
-                            Category = installedPackage.Category,
-                            Versions =
-                            [
-                                new PackageVersion
-                                {
-                                    Version = installedPackage.InstalledVersion
-                                }
-                            ],
-                            Description = installedPackage.Description,
-                            License = installedPackage.License
-                        };
-
-                        AddPackage(package, installedPackage.InstalledVersion);
-                    }
-            }
-
-            foreach (var package in StandalonePackages)
-                if (Packages.TryGetValue(package.Id!, out var pkg))
+                state.Progress = value;
+                if (value < 1)
                 {
-                    pkg.Package = package;
-                    pkg.InstalledVersion =
-                        package.Versions?.FirstOrDefault(x => x.Version == pkg.InstalledVersion?.Version);
+                    stateHandle.StatusMessage = $"Downloading {state.Package.Id} {(int)(value * 100)}%";
+                    state.IsIndeterminate = false;
                 }
                 else
                 {
-                    AddPackage(package);
+                    stateHandle.StatusMessage = $"Extracting {state.Package.Id}...";
+                    state.IsIndeterminate = true;
                 }
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-            return false;
-        }
 
-        return true;
-    }
+                PackageProgress?.Invoke(this,
+                    new PackageProgressEventArgs(state.Package.Id!, state.Status, state.Progress, state.IsIndeterminate));
+            });
 
-    private async Task SaveInstalledPackagesDatabaseAsync()
-    {
-        try
-        {
-            await using var file = File.OpenWrite(PackageDataBasePath);
-            file.SetLength(0);
+            var extractionPath = GetExtractionPath(state.Package);
+            var url = target.Url ??
+                      $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
-            var installedPackages = Packages
-                .Where(x => x.Value.InstalledVersion is not null)
-                .Select(x => new InstalledPackage(x.Value.Package.Id!, x.Value.Package.Type!, x.Value.Package.Name!,
-                    x.Value.Package.Category, x.Value.Package.Description, x.Value.Package.License,
-                    x.Value.InstalledVersion!.Version!))
-                .ToArray();
+            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, progress);
+            _applicationStateService.RemoveState(stateHandle);
+            state.IsIndeterminate = false;
 
-            await JsonSerializer.SerializeAsync(file, installedPackages, SerializerOptions);
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-        }
-    }
-
-    private void ObserveInstall(Package package, Task<bool> installTask)
-    {
-        lock (_installLock)
-        {
-            _activeInstalls.Add(package, installTask);
-
-            _ = installTask.ContinueWith(t =>
+            if (!success)
             {
-                t.Wait();
-                FinishInstall(package);
-            }, TaskScheduler.Default);
-        }
-    }
+                UpdateStatus(state);
+                return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+            }
 
-    private void FinishInstall(Package package)
-    {
-        lock (_installLock)
+            PlatformHelper.ChmodFolder(extractionPath);
+
+            var result = await installer.InstallAsync(new PackageInstallContext(state.Package, version, target,
+                extractionPath, progress));
+
+            state.InstalledVersion = version;
+            state.InstalledVersionWarningText = result.InstalledVersionWarningText;
+            state.Status = result.Status;
+            state.Progress = 0;
+
+            await SaveInstalledPackagesAsync();
+
+            return new PackageInstallResult
+            {
+                Status = result.Status is PackageStatus.Installed or PackageStatus.NeedRestart
+                    ? PackageInstallResultReason.Installed
+                    : PackageInstallResultReason.ErrorDownloading,
+                CompatibilityRecord = compatibility
+            };
+        }
+        catch (Exception e)
         {
-            _activeInstalls.Remove(package);
+            _logger.Error(e.Message, e);
+            UpdateStatus(state);
+            return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
         }
     }
 
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex MyRegex();
+    private void UpdateStatus(PackageState state)
+    {
+        if (state.Status == PackageStatus.NeedRestart) return;
+
+        var lastPrerelease = state.Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
+        var lastStable = state.Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
+
+        var hasStable = Version.TryParse(lastStable?.Version, out var lastVersion);
+        var hasPrerelease = Version.TryParse(lastPrerelease?.Version, out var lastPrereleaseVersion);
+        var hasInstalled = Version.TryParse(state.InstalledVersion?.Version ?? "", out var installedVersion);
+
+        if (hasStable && hasInstalled && lastVersion > installedVersion)
+            state.Status = PackageStatus.UpdateAvailable;
+        else if (hasInstalled && hasPrerelease && lastPrereleaseVersion > installedVersion)
+            state.Status = PackageStatus.UpdateAvailablePrerelease;
+        else if (hasInstalled)
+            state.Status = PackageStatus.Installed;
+        else if (!hasInstalled && hasStable)
+            state.Status = PackageStatus.Available;
+        else
+            state.Status = PackageStatus.Unavailable;
+    }
+
+    private PackageVersion? ResolveVersion(PackageState state, PackageVersion? version, bool includePrerelease)
+    {
+        if (version != null) return version;
+
+        return state.Package.Versions?.LastOrDefault(x => includePrerelease || !x.IsPrerelease);
+    }
+
+    private IPackageInstaller? ResolveInstaller(Package package)
+    {
+        if (package.Type == null) return null;
+        return _installersByType.GetValueOrDefault(package.Type);
+    }
+
+    private string GetExtractionPath(Package package)
+    {
+        if (package.Id == null) throw new InvalidOperationException("Package Id is required.");
+
+        return package.Type switch
+        {
+            "Plugin" => Path.Combine(_paths.PluginsDirectory, package.Id),
+            "NativeTool" => Path.Combine(_paths.NativeToolsDirectory, package.Id),
+            "Hardware" => Path.Combine(_paths.PackagesDirectory, "Hardware",
+                package.Id),
+            "Library" => Path.Combine(_paths.PackagesDirectory, "Libraries",
+                package.Id),
+            _ => Path.Combine(_paths.PackagesDirectory, package.Id)
+        };
+    }
+
+    private async Task SaveInstalledPackagesAsync()
+    {
+        var installedPackages = _packages.Values
+            .Where(x => x.InstalledVersion is not null)
+            .Select(x => new InstalledPackage(x.Package.Id!, x.Package.Type!, x.Package.Name!,
+                x.Package.Category, x.Package.Description, x.Package.License,
+                x.InstalledVersion!.Version!))
+            .ToArray();
+
+        await _stateStore.SaveAsync(installedPackages);
+    }
 }

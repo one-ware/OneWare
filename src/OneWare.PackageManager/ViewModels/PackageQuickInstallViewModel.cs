@@ -1,9 +1,12 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
@@ -11,7 +14,7 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 {
     private readonly IPackageService _packageService;
 
-    public PackageQuickInstallViewModel(PackageModel package, IPackageService packageService)
+    public PackageQuickInstallViewModel(IPackageState package, IPackageService packageService)
     {
         Package = package;
         _packageService = packageService;
@@ -21,7 +24,7 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         _ = ResolveAsync();
     }
 
-    public PackageModel Package { get; }
+    public IPackageState Package { get; }
 
     public bool Success { get; private set; }
 
@@ -51,8 +54,18 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 
     public AsyncRelayCommand<FlexibleWindow> InstallCommand => new(async window =>
     {
-        Success = await _packageService.InstallAsync(Package.Package);
-        window?.Close();
+        var result = await _packageService.InstallAsync(Package.Package);
+        
+        Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
+
+        if (!Success)
+        {
+            await ContainerLocator.Container.Resolve<IWindowService>().ShowMessageAsync("Installation failed",
+                result.CompatibilityRecord?.Report ?? "Please try again later or check for OneWare Studio updates",
+                MessageBoxIcon.Error);
+        }
+        if(Success)
+            window?.Close();
     });
 
     private async Task ResolveAsync()
