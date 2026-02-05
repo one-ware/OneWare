@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 
@@ -6,6 +7,8 @@ namespace OneWare.Essentials.Services;
 public interface IApplicationStateService
 {
     public bool ShutdownComplete { get; }
+    
+    public ObservableCollection<ApplicationNotification> CurrentNotifications { get; }
 
     public ApplicationProcess ActiveProcess { get; }
 
@@ -34,4 +37,8 @@ public interface IApplicationStateService
     public Task<bool> TryShutdownAsync();
 
     public Task<bool> TryRestartAsync();
+    
+    public void AddNotification(ApplicationNotification notification);
+    
+    public void ClearNotifications();
 }

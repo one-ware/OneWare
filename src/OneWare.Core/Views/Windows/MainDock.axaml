@@ -42,12 +42,63 @@
 
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Orientation="Horizontal" Height="24" Spacing="6">
-                <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}" />
-                <Button Command="{Binding OpenSettingsDialogAsync}" ToolTip.Tip="Settings">
-                    <Button.Content>
-                        <Image Source="{DynamicResource Material.SettingsOutline}" />
-                    </Button.Content>
+            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Classes="ToolBar">
+                <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}">
+                    <controls:UiExtensionCollection.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Classes="ToolBar" />
+                        </ItemsPanelTemplate>
+                    </controls:UiExtensionCollection.ItemsPanel>
+                </controls:UiExtensionCollection>
+                <Button ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
+                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                </Button>
+                <Button ToolTip.Tip="Notitications">
+                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}">
+                            <ScrollViewer MaxHeight="200" Width="300">
+                                <ItemsControl ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button ToolTip.Tip="Settings">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuItem Header="Run..." Command="{Binding OpenCommandManager}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource VSCodeLight.run}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <controls:UiExtensionCollection Extensions="{Binding SettingsMenuExtension}">
+                                <controls:UiExtensionCollection.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </controls:UiExtensionCollection.ItemsPanel>
+                            </controls:UiExtensionCollection>
+                            <MenuItem Header="Settings" Command="{Binding OpenSettingsDialogAsync}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Extensions" Command="{Binding OpenPackageManagerAsync}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource PackageManager}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+
+                    <Image Source="{DynamicResource Material.SettingsOutline}" />
                 </Button>
             </StackPanel>
         </DockPanel>

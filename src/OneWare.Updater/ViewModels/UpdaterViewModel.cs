@@ -1,11 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
+using OneWare.Updater.Views;
 
 namespace OneWare.Updater.ViewModels;
 
@@ -27,10 +31,6 @@ public class UpdaterViewModel : ObservableObject
     private readonly IPaths _paths;
     private readonly IWindowService _windowService;
 
-    private int _progress;
-
-    private UpdaterStatus _status = UpdaterStatus.UpdateUnavailable;
-
     public UpdaterViewModel(IHttpService httpService, IPaths paths, ILogger logger,
         IApplicationStateService applicationStateService, IWindowService windowService, IPackageService packageService)
     {
@@ -41,6 +41,7 @@ public class UpdaterViewModel : ObservableObject
         _packageService = packageService;
         _windowService = windowService;
 
+        applicationStateService.RegisterAutoLaunchAction(x => _ = CheckForUpdateAsync());
         applicationStateService.RegisterShutdownAction(OpenUpdaterAction);
     }
 
@@ -53,8 +54,8 @@ public class UpdaterViewModel : ObservableObject
 
     public int Progress
     {
-        get => _progress;
-        set => SetProperty(ref _progress, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsIndeterminate => Status switch
@@ -65,14 +66,17 @@ public class UpdaterViewModel : ObservableObject
 
     public UpdaterStatus Status
     {
-        get => _status;
+        get;
         set
         {
-            SetProperty(ref _status, value);
+            SetProperty(ref field, value);
             OnPropertyChanged(nameof(UpdateMessage));
             OnPropertyChanged(nameof(IsIndeterminate));
+            OnPropertyChanged(nameof(ShowUpdateNotification));
         }
-    }
+    } = UpdaterStatus.UpdateUnavailable;
+    
+    public bool ShowUpdateNotification => Status is UpdaterStatus.UpdateAvailable or UpdaterStatus.Installing;
 
     public string UpdateMessage => Status switch
     {
@@ -94,6 +98,14 @@ public class UpdaterViewModel : ObservableObject
         _ => Path.Combine(_paths.TempDirectory, $"{_paths.AppName}_{NewVersion}.zip")
     };
 
+    public async Task OpenUpdateViewAsync()
+    {
+        await _windowService.ShowDialogAsync(new UpdaterView
+        {
+            DataContext = this
+        });
+    }
+
     public async Task<bool> CheckForUpdateAsync()
     {
         var versionStr = PlatformHelper.Platform switch
@@ -102,6 +114,7 @@ public class UpdaterViewModel : ObservableObject
             PlatformId.WinArm64 => "win-arm64",
             PlatformId.OsxArm64 => "osx-arm64",
             PlatformId.OsxX64 => "osx-x64",
+            PlatformId.LinuxX64 => "win-x64",
             _ => null
         };
 
@@ -122,6 +135,17 @@ public class UpdaterViewModel : ObservableObject
                 {
                     NewVersion = version;
                     Status = UpdaterStatus.UpdateAvailable;
+                    
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _windowService.ShowNotificationWithButton("Update Available",
+                            $"{_paths.AppName} {NewVersion} is available!", "Download", () => _windowService.Show(new UpdaterView
+                                {
+                                    DataContext = this
+                                }),
+                            Application.Current!.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                    });
+                    
                     return true;
                 }
 

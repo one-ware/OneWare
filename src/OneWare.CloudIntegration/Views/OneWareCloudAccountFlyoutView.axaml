@@ -8,7 +8,7 @@
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
 
-    <StackPanel Orientation="Horizontal" Spacing="6">
+    <StackPanel Orientation="Horizontal" Spacing="5">
         <Button Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
             <Button.Content>
@@ -19,7 +19,7 @@
         <Button Padding="1">
             <Button.Content>
                 <DockPanel LastChildFill="True">
-                    <Border Margin="4,0" DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
+                    <Border DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
                         <Panel>
                             <Image Source="{Binding SettingViewModel.Setting.Image}" />
                             <Image

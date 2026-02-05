@@ -51,9 +51,10 @@ public class MainWindowViewModel : ObservableObject
 
         RoundToolBarExtension = windowService.GetUiExtensions("MainWindow_RoundToolBarExtension");
         LeftToolBarExtension = windowService.GetUiExtensions("MainWindow_LeftToolBarExtension");
+        SettingsMenuExtension = windowService.GetUiExtensions("MainWindow_SettingsMenuExtension");
         RightToolBarExtension = windowService.GetUiExtensions("MainWindow_RightToolBarExtension");
         BottomRightExtension = windowService.GetUiExtensions("MainWindow_BottomRightExtension");
-
+        
         MainMenu = windowService.GetMenuItems("MainWindow_MainMenu");
 
         _title = paths.AppName;
@@ -130,6 +131,7 @@ public class MainWindowViewModel : ObservableObject
     public ObservableCollection<OneWareUiExtension> RoundToolBarExtension { get; }
     public ObservableCollection<OneWareUiExtension> LeftToolBarExtension { get; }
 
+    public ObservableCollection<OneWareUiExtension> SettingsMenuExtension { get; }
     public ObservableCollection<OneWareUiExtension> RightToolBarExtension { get; }
     public ObservableCollection<OneWareUiExtension> BottomRightExtension { get; }
     public ObservableCollection<MenuItemViewModel> MainMenu { get; }
@@ -177,6 +179,11 @@ public class MainWindowViewModel : ObservableObject
             x is MenuItemApplicationCommand command && command.MenuItem == menuItem);
         _applicationCommandService.ApplicationCommands.RemoveMany(removals);
     }
+    
+    public void OpenCommandManager()
+    {
+        OpenManager(GetMainView(), "All");
+    }
 
     public Task OpenSettingsDialogAsync()
     {
@@ -184,6 +191,12 @@ public class MainWindowViewModel : ObservableObject
         {
             DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
         });
+    }
+
+    public Task OpenPackageManagerAsync()
+    {
+        ContainerLocator.Container.Resolve<IPackageWindowService>()?.ShowExtensionManager();
+        return Task.CompletedTask;
     }
 
     #endregion

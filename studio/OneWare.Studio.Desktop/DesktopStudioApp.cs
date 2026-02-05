@@ -156,11 +156,9 @@ public class DesktopStudioApp : StudioApp
 
         var settingsService = Services.Resolve<ISettingsService>();
         var packageService = Services.Resolve<IPackageService>();
-        var ideUpdater = Services.Resolve<UpdaterViewModel>();
 
         var versionGotUpdated = false;
         List<IPackageState>? updatePackages = null;
-        var canUpdate = false;
         var showOneWareAiNotification = false;
 
         try
@@ -183,9 +181,6 @@ public class DesktopStudioApp : StudioApp
                 .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
                 .Select(x => x.Value)
                 .ToList();
-
-            //step 4: Check if there is any IDE update
-            canUpdate = await ideUpdater.CheckForUpdateAsync();
 
             //step 5: Check if the OneWare.AI notification should be shown
             //the setting refer to the dialog option "Don't show this again"
@@ -221,21 +216,7 @@ public class DesktopStudioApp : StudioApp
                         DataContext = Services.Resolve<PackageManagerViewModel>()
                     }),
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-
-            //step 3: Ask to update the IDE
-            if (canUpdate)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Available",
-                        $"{Paths.AppName} {ideUpdater.NewVersion} is available!", "Download", () => Services
-                            .Resolve<IWindowService>().Show(new UpdaterView
-                            {
-                                DataContext = Services.Resolve<UpdaterViewModel>()
-                            }),
-                        Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
-                });
-            }
+            
             //step 4: Ask to install the OneWare.AI extension
             else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)

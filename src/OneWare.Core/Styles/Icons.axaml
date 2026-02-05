@@ -934,6 +934,11 @@
                              Geometry="F1M5.483,8L3,5.5 5.483,3 7.483,3 5.483,5 10,5 10,6 5.483,6 7.483,8z" />
         </DrawingGroup>
     </DrawingImage>
+    <DrawingImage x:Key="Remix.Notification2Line">
+        <GeometryDrawing Brush="{StaticResource ThemeControlVeryHighBrush}"
+                         Geometry="M14.88,13.4 L0,13.4 L0,11.91 L0.7442,11.91 L0.7442,6.721 C0.7442,3.009 3.743,0 7.442,0 C11.14,0 14.14,3.009 14.14,6.721 L14.14,11.91 L14.88,11.91 L14.88,13.4 z M2.233,11.91 L12.65,11.91 L12.65,6.721 C12.65,3.831 10.32,1.488 7.442,1.488 C4.565,1.488 2.233,3.831 2.233,6.721 L2.233,11.91 z M5.581,14.14 L9.302,14.14 A1.86,-1.86 0 1 1 5.581,14.14 z" />
+    </DrawingImage>
+
     <DrawingImage x:Key="VsImageLib.Search16XMd">
         <DrawingGroup>
             <GeometryDrawing Brush="#00F6F6F6"
