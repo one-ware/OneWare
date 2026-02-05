@@ -127,10 +127,9 @@
                                            VerticalAlignment="Center" />
                                     <TextBlock Text="Selected Version is incompatible!" FontWeight="Bold" />
                                 </StackPanel>
-                                <TextBlock
-                                    Text="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
+                                <controls:MarkdownViewer Classes="ToolTip"
+                                    Markdown="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
                             </StackPanel>
-
                         </StackPanel>
                     </ScrollViewer>
                 </StackPanel>

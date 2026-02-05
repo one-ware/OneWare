@@ -8,9 +8,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Models;
 
@@ -22,7 +24,8 @@ public class PackageViewModel : ObservableObject
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
     private readonly IApplicationStateService _applicationStateService;
-
+    private readonly ILogger _logger;
+    
     private IPackageState _packageState;
 
     private IDisposable? _primaryButtonBrushSubscription;
@@ -30,15 +33,17 @@ public class PackageViewModel : ObservableObject
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
+    
 
     public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
-        IWindowService windowService, IApplicationStateService applicationStateService)
+        IWindowService windowService, IApplicationStateService applicationStateService, ILogger logger)
     {
         _packageState = packageState;
         _packageService = packageService;
         _httpService = httpService;
         _windowService = windowService;
         _applicationStateService = applicationStateService;
+        _logger = logger;
 
         RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
             _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
@@ -214,7 +219,7 @@ public class PackageViewModel : ObservableObject
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
 
-            var result = await ContainerLocator.Container!.Resolve<IWindowService>()
+            var confirmLicenseResult = await ContainerLocator.Container!.Resolve<IWindowService>()
                 .ShowMessageBoxAsync(new MessageBoxRequest
                 {
                     Title = "Confirm License",
@@ -239,10 +244,19 @@ public class PackageViewModel : ObservableObject
                     ]
                 }, topLevel as Window);
 
-            if (!result.IsAccepted) return;
+            if (!confirmLicenseResult.IsAccepted) return;
         }
 
-        await _packageService.InstallAsync(model.Package.Id!, version);
+        var installResult = await _packageService.InstallAsync(model.Package.Id!, version);
+
+        if (installResult.Status is PackageInstallResultReason.Incompatible)
+        {
+            if (installResult.CompatibilityRecord != null)
+            {
+                await _windowService.ShowMessageAsync("Installation Failed",
+                    $"Package is incompatible with current version of OneWare\n{installResult.CompatibilityRecord.Report}", MessageBoxIcon.Warning, topLevel as Window);
+            }
+        }
     }
 
     private async Task ResolveIconAsync()

@@ -237,7 +237,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             try
             {
                 var viewModel =
-                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService);
+                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
 
                 var category = packageModel.Package.Type switch
                 {

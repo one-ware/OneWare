@@ -198,11 +198,11 @@ public class PackageService : ObservableObject, IPackageService
     public Task<CompatibilityReport> CheckCompatibilityAsync(string packageId, PackageVersion version)
     {
         if (!_packages.TryGetValue(packageId, out var state))
-            return Task.FromResult(new CompatibilityReport(false, "Package not found"));
+            return Task.FromResult(new CompatibilityReport(false));
 
         var installer = ResolveInstaller(state.Package);
         if (installer == null)
-            return Task.FromResult(new CompatibilityReport(false, "Installer not found"));
+            return Task.FromResult(new CompatibilityReport(false));
 
         return installer.CheckCompatibilityAsync(state.Package, version);
     }
@@ -404,7 +404,7 @@ public class PackageService : ObservableObject, IPackageService
 
             return new PackageInstallResult
             {
-                Status = result.Status == PackageStatus.Installed || result.Status == PackageStatus.NeedRestart
+                Status = result.Status is PackageStatus.Installed or PackageStatus.NeedRestart
                     ? PackageInstallResultReason.Installed
                     : PackageInstallResultReason.ErrorDownloading,
                 CompatibilityRecord = compatibility
