@@ -12,4 +12,6 @@ public class ApplicationNotification
     public DateTime Timestamp { get; } = DateTime.Now;
     
     public ICommand? Command { get; init; }
+    
+    public bool IsRead { get; set; } = false;
 }

@@ -53,21 +53,69 @@
                 <Button ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
                     <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
                 </Button>
-                <Button ToolTip.Tip="Notitications">
-                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                <Button ToolTip.Tip="Notifications" Command="{Binding MarkNotificationsReadCommand}">
+                    <Panel>
+                        <Image Source="{DynamicResource Ionicons.NotificationsOutlineMD}" />
+                        <Ellipse Height="6" Width="6" Fill="#BBFF0000" VerticalAlignment="Top"
+                                 HorizontalAlignment="Right" Margin="1"
+                                 IsVisible="{Binding NewNotificationsAvailable}" />
+                    </Panel>
+
                     <Button.Flyout>
-                        <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}">
-                            <ScrollViewer MaxHeight="200" Width="300">
-                                <ItemsControl ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                        <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
+                                Placement="BottomEdgeAlignedRight">
+                            <Border Width="340" MaxHeight="280" Background="{DynamicResource ThemeBackgroundBrush}">
+                                <Grid RowDefinitions="30,*">
+                                    <Panel>
+                                        <TextBlock FontWeight="Bold" Text="Notifications" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Panel>
+
+                                    <Border Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="1" BorderThickness="0 1 0 0" Padding="5" >
+                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl
+                                                ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Vertical" Spacing="5" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Height="NaN" Command="{Binding Command}"
+                                                                HorizontalContentAlignment="Stretch"
+                                                                VerticalContentAlignment="Stretch">
+                                                            <Border>
+                                                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                                                      ColumnSpacing="10">
+
+                                                                    <!-- Severity indicator -->
+                                                                    <Border Width="3"
+                                                                            Background="{DynamicResource HighlightBrush}"
+                                                                            CornerRadius="2" />
+
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding Message}"
+                                                                               TextWrapping="Wrap" />
+
+                                                                    <!-- Timestamp -->
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
+                                                                               FontSize="11"
+                                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                                </Grid>
+                                                            </Border>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Border>
                         </Flyout>
                     </Button.Flyout>
+
                 </Button>
                 <Button ToolTip.Tip="Settings">
                     <Button.Flyout>
@@ -78,13 +126,6 @@
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator />
-                            <controls:UiExtensionCollection Extensions="{Binding SettingsMenuExtension}">
-                                <controls:UiExtensionCollection.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical" />
-                                    </ItemsPanelTemplate>
-                                </controls:UiExtensionCollection.ItemsPanel>
-                            </controls:UiExtensionCollection>
                             <MenuItem Header="Settings" Command="{Binding OpenSettingsDialogAsync}">
                                 <MenuItem.Icon>
                                     <Image Source="{DynamicResource Material.SettingsOutline}" />

@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
@@ -62,9 +63,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
+        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x => x.Value.Status == PackageStatus.UpdateAvailable));
+        
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
             ConstructPackageViewModels();
+            UpdateAllCommand.NotifyCanExecuteChanged();
         });
 
         ConstructPackageViewModels();
@@ -125,6 +129,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
 
     public bool AskForRestart { get; set; } = true;
+    
+    public AsyncRelayCommand UpdateAllCommand { get; }
 
     public async Task RefreshPackagesAsync()
     {
@@ -150,12 +156,19 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return ShowExtensionManager();
     }
 
+    public async Task<bool> ShowExtensionManagerAsync(string packageId)
+    {
+        if (await FocusPluginAsync(packageId) is not { } pvm)
+            return false;
+        
+        ShowExtensionManager();
+
+        return true;
+    }
+
     public async Task<bool> ShowExtensionManagerAndTryInstallAsync(string packageId)
     {
-        var category =
-            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
-
-        if (await FocusPluginAsync(category!.Header, packageId) is not { } pvm)
+        if (await FocusPluginAsync(packageId) is not { } pvm)
             return false;
 
         var view = ShowExtensionManager();
@@ -199,11 +212,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         SelectedCategory.SelectedPackage = null;
         return true;
     }
-
-    private async Task<PackageViewModel?> FocusPluginAsync(string category, string packageId)
+    
+    private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm = PackageCategories
-            .FirstOrDefault(x => x.Header == category);
+        var categoryVm =
+            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
 
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
@@ -313,5 +326,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             AskForRestart = false;
             window?.Close();
         }
+    }
+
+    public async Task<bool> UpdateAllAsync()
+    {
+        var packages = _packageService.Packages.Values.Where(x => x.Status == PackageStatus.UpdateAvailable).ToList();
+        
+        foreach (var package in packages)
+        {
+            await FocusPluginAsync(package.Package!.Id!);
+            await _packageService.InstallAsync(package.Package, package.InstalledVersion, false, true);
+        }
+        
+        UpdateAllCommand.NotifyCanExecuteChanged();
+        
+        return true;
     }
 }

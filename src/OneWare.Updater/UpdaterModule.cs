@@ -38,10 +38,5 @@ public class UpdaterModule : OneWareModuleBase
                 }),
                 IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
             });
-        
-        windowService.RegisterUiExtension("MainWindow_RightToolBarExtension", new OneWareUiExtension(_ => new UpdaterUiExtensionView()
-        {
-            DataContext = vm
-        }));
     }
 }

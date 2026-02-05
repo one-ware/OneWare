@@ -5,9 +5,11 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Updater.Views;
 
@@ -138,12 +140,15 @@ public class UpdaterViewModel : ObservableObject
                     
                     Dispatcher.UIThread.Post(() =>
                     {
-                        _windowService.ShowNotificationWithButton("Update Available",
-                            $"{_paths.AppName} {NewVersion} is available!", "Download", () => _windowService.Show(new UpdaterView
-                                {
-                                    DataContext = this
-                                }),
-                            Application.Current!.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                        _applicationStateService.AddNotification(new ApplicationNotification()
+                        {
+                            Command = new RelayCommand(() => _windowService.Show(new UpdaterView
+                            {
+                                DataContext = this
+                            })),
+                            Kind = ApplicationMessageKind.Info,
+                            Message = $"Update available: {_paths.AppName} {NewVersion}\nClick here to download.",
+                        });
                     });
                     
                     return true;

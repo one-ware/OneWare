@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -194,30 +195,35 @@ public class DesktopStudioApp : StudioApp
 
         try
         {
-            //step 1: IDE got updated
+            //IDE got updated
             if (versionGotUpdated)
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Update Successful!",
-                    $"{Services.Resolve<IPaths>().AppName} got updated to {Global.VersionCode}!", "View Changelog",
-                    () =>
+            {
+                Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
+                {
+                    Message = "OneWare got updated to " + Global.VersionCode + "!",
+                    Command = new RelayCommand(() => Services.Resolve<IWindowService>().Show(new ChangelogView
                     {
-                        Services.Resolve<IWindowService>().Show(new ChangelogView
-                        {
-                            DataContext = Services.Resolve<ChangelogViewModel>()
-                        });
-                    },
-                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                        DataContext = Services.Resolve<ChangelogViewModel>()
+                    }))
+                });
+            }
 
-            //step 2: Ask to update the outdated plugins
+            //Add Notifications for all updatable packages
             if (updatePackages?.Count > 0)
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Package Updates Available",
-                    $"Updates for {string.Join(", ", updatePackages.Select(x => x.Package.Name))} available!",
-                    "Download", () => Services.Resolve<IWindowService>().Show(new PackageManagerView
+            {
+                foreach (var updatePackage in updatePackages)
+                {
+                    Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
                     {
-                        DataContext = Services.Resolve<PackageManagerViewModel>()
-                    }),
-                    Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
+                        Message =
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                        Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
+                            .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
+                    });
+                }
+            }
             
-            //step 4: Ask to install the OneWare.AI extension
+            //Ask to install the OneWare.AI extension
             else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {

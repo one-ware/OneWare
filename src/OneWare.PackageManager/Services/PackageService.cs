@@ -24,7 +24,6 @@ public class PackageService : ObservableObject, IPackageService
     private readonly IReadOnlyDictionary<string, IPackageInstaller> _installersByType;
     private readonly IPaths _paths;
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
-    private readonly SemaphoreSlim _refreshSemaphore = new(1, 1);
     private readonly List<string> _repositoryUrls = [];
 
     private Task<bool>? _currentRefreshTask;
@@ -88,25 +87,21 @@ public class PackageService : ObservableObject, IPackageService
 
     public async Task<bool> RefreshAsync()
     {
-        await _refreshSemaphore.WaitAsync();
-        
         try
         {
             if (_currentRefreshTask is { IsCompleted: false })
             {
-                _refreshSemaphore.Release();
                 return await _currentRefreshTask;
             }
 
             _currentRefreshTask = RefreshInternalAsync();
+            return await _currentRefreshTask;
         }
-        finally
+        catch (Exception e)
         {
-            if (_refreshSemaphore.CurrentCount == 0)
-                _refreshSemaphore.Release();
+            _logger.Error(e.Message, e);
+            return false;
         }
-
-        return await _currentRefreshTask;
     }
 
     public async Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version = null,

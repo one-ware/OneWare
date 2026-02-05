@@ -48,8 +48,8 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
     }
 
     public bool ShutdownComplete { get; private set; }
-    
-    public ObservableCollection<ApplicationNotification> CurrentNotifications { get; }
+
+    public ObservableCollection<ApplicationNotification> CurrentNotifications { get; } = new();
 
     public ApplicationProcess ActiveProcess
     {
