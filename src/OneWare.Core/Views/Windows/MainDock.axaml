@@ -103,7 +103,7 @@
                                                                                 <Setter Property="Background" Value="Orange" />
                                                                             </Style>
                                                                             <Style Selector="Border.Error">
-                                                                                <Setter Property="Background" Value="Red"></Setter>
+                                                                                <Setter Property="Background" Value="Red" />
                                                                             </Style>
                                                                         </Border.Styles>
                                                                     </Border>
