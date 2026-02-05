@@ -5,7 +5,7 @@ namespace OneWare.Essentials.Models;
 
 public class ApplicationNotification
 {
-    public ApplicationMessageKind Kind { get; init; }
+    public ApplicationNotificationKind Kind { get; init; }
         
     public required string Message { get; init; }
     

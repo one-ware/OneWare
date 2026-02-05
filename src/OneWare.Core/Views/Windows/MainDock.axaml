@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:windows="clr-namespace:OneWare.Core.ViewModels.Windows"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+             xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.Windows.MainDock" x:DataType="windows:MainWindowViewModel">
     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
@@ -71,7 +73,8 @@
                                                    VerticalAlignment="Center" />
                                     </Panel>
 
-                                    <Border Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="1" BorderThickness="0 1 0 0" Padding="5" >
+                                    <Border Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="1"
+                                            BorderThickness="0 1 0 0" Padding="5">
                                         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
                                             <ItemsControl
                                                 ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
@@ -92,7 +95,18 @@
                                                                     <!-- Severity indicator -->
                                                                     <Border Width="3"
                                                                             Background="{DynamicResource HighlightBrush}"
-                                                                            CornerRadius="2" />
+                                                                            CornerRadius="2"
+                                                                            Classes.Warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Warning}}"
+                                                                            Classes.Error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Error}}">
+                                                                        <Border.Styles>
+                                                                            <Style Selector="Border.Warning">
+                                                                                <Setter Property="Background" Value="Orange" />
+                                                                            </Style>
+                                                                            <Style Selector="Border.Error">
+                                                                                <Setter Property="Background" Value="Red"></Setter>
+                                                                            </Style>
+                                                                        </Border.Styles>
+                                                                    </Border>
 
                                                                     <TextBlock Grid.Column="1"
                                                                                Text="{Binding Message}"

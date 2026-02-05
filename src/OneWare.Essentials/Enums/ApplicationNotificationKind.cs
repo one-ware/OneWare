@@ -1,6 +1,6 @@
 namespace OneWare.Essentials.Enums;
 
-public enum ApplicationMessageKind
+public enum ApplicationNotificationKind
 {
     Info,
     Warning,

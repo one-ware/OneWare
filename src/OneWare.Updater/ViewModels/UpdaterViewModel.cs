@@ -146,7 +146,7 @@ public class UpdaterViewModel : ObservableObject
                             {
                                 DataContext = this
                             })),
-                            Kind = ApplicationMessageKind.Info,
+                            Kind = ApplicationNotificationKind.Info,
                             Message = $"Update available: {_paths.AppName} {NewVersion}\nClick here to download.",
                         });
                     });
