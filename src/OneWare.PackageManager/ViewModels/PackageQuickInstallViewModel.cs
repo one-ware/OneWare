@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
@@ -56,7 +57,13 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         var result = await _packageService.InstallAsync(Package.Package);
         
         Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
-        
+
+        if (!Success)
+        {
+            await ContainerLocator.Container.Resolve<IWindowService>().ShowMessageAsync("Installation failed",
+                result.CompatibilityRecord?.Report ?? "Please try again later or check for OneWare Studio updates",
+                MessageBoxIcon.Error);
+        }
         if(Success)
             window?.Close();
     });

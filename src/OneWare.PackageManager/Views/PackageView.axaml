@@ -89,9 +89,20 @@
                     </DataTemplate>
                 </ItemsControl.DataTemplates>
             </ItemsControl>
+            
+            <StackPanel
+                IsVisible="{Binding SelectedVersionModel.Version.IsPrerelease, FallbackValue={x:False}}"
+                Orientation="Horizontal" Spacing="5">
+                <Image HorizontalAlignment="Left"
+                       Source="{DynamicResource VsImageLib.StatusWarning16X}" Height="12" Width="12"
+                       VerticalAlignment="Center" />
+                <TextBlock Text="This version is a prerelease. Please report any issues!" />
+            </StackPanel>
 
             <Border Background="{DynamicResource ThemeControlLowBrush}"
-                    Classes="RoundBorder"
+                    Classes="RoundBorder" 
+                    Classes.ValidBorder="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
+                    Classes.InvalidBorder="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
                     Padding="5">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Spacing="5" Orientation="Vertical"
@@ -100,34 +111,12 @@
                         <controls:Spinner Height="20" Width="20" />
                     </StackPanel>
 
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                  MaxHeight="300">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                  MaxHeight="200">
                         <StackPanel Spacing="5" Orientation="Vertical"
                                     IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
-                            <StackPanel
-                                IsVisible="{Binding SelectedVersionModel.Version.IsPrerelease, FallbackValue={x:False}}"
-                                Orientation="Horizontal" Spacing="5">
-                                <Image HorizontalAlignment="Left"
-                                       Source="{DynamicResource VsImageLib.StatusWarning16X}" Height="12" Width="12"
-                                       VerticalAlignment="Center" />
-                                <TextBlock Text="This version is a prerelease. Please report any issues!" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="5"
-                                        IsVisible="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
-                                <Image HorizontalAlignment="Left"
-                                       Source="{DynamicResource BoxIcons.RegularCheck.Green}" Height="12" Width="12"
-                                       VerticalAlignment="Center" />
-                                <TextBlock Text="Selected Version is compatible!" FontWeight="Bold" />
-                            </StackPanel>
-                            <StackPanel Orientation="Vertical" Spacing="5"
-                                        IsVisible="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <Image HorizontalAlignment="Left"
-                                           Source="{DynamicResource MaterialDesign.Close.Red}" Height="12" Width="12"
-                                           VerticalAlignment="Center" />
-                                    <TextBlock Text="Selected Version is incompatible!" FontWeight="Bold" />
-                                </StackPanel>
-                                <controls:MarkdownViewer Classes="ToolTip"
+                            <StackPanel Orientation="Vertical" Spacing="5">
+                                <controls:MarkdownViewer
                                     Markdown="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
                             </StackPanel>
                         </StackPanel>

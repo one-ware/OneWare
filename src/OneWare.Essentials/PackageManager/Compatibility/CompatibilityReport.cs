@@ -18,20 +18,21 @@ public class CompatibilityReport(
     IReadOnlyList<CompatibilityIssue>? issues = null)
 {
     public bool IsCompatible { get; } = isCompatible;
-
+    
     // Compatibility report in Markdown
-// Compatibility report in Markdown
     public string Report
     {
         get
         {
             if (IsCompatible) 
-                return "Package is compatible";
+                return " ✓ Compatible";
 
-            var report = "";
+            var report = "⚠ ";
 
             if (StudioUpdateSuggested)
-                report += "> ⚠️ Please update **OneWare Studio** to the latest version.\n\n";
+                report += "This package requires a newer Version of **OneWare Studio**! \n\n > Please update **OneWare Studio** to the latest version.\n\n";
+            else
+                report += "This package version appears to be outdated and is **not compatible**. \n\n";
 
             report += "| Dependency | Required | Provided |\n";
             report += "|------------|----------|----------|\n";
