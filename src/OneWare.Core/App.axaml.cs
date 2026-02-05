@@ -374,7 +374,7 @@ public class App : Application
             });
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
-            new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with OneAI",
+            new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with ONE AI",
                 null,
                 new RelayCommand(() =>
                 {

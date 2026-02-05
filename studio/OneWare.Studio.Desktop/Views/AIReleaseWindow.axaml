@@ -11,7 +11,7 @@
                          x:DataType="viewModels:AiReleaseWindowViewModel">
     <DockPanel Margin="8">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
-            <TextBlock FontWeight="Bold" FontSize="18">OneAI is now available</TextBlock>
+            <TextBlock FontWeight="Bold" FontSize="18">ONE AI is now available</TextBlock>
             <TextBlock FontWeight="SemiBold" FontSize="14">Enhance your experience with advanced AI capabilities.</TextBlock>
             <StackPanel Orientation="Horizontal" Spacing="4">
                 <Panel Width="100" Height="100">
