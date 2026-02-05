@@ -370,6 +370,11 @@ public class MainDockService : Factory, IMainDockService
 
     public void InitializeContent()
     {
+        if (_mainDocumentDockViewModel.VisibleDockables?.Count == 0)
+        {
+            _mainDocumentDockViewModel.AddDocument(_welcomeScreenViewModel);
+        }
+        
         var extendedDocs = SearchView<IWaitForContent>();
         foreach (var extendedDocument in extendedDocs)
             extendedDocument.InitializeContent();
