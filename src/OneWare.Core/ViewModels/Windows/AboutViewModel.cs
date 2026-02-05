@@ -22,7 +22,7 @@ public class AboutViewModel : FlexibleWindowViewModelBase
 
     public string AppName => _paths.AppName;
 
-    public string VersionInfo => $"{_paths.AppName} {DateTime.Now.Year} Preview\nVersion {Global.VersionCode} " +
+    public string VersionInfo => $"{_paths.AppName} {DateTime.Now.Year}\nVersion {Global.VersionCode} " +
                                  RuntimeInformation.ProcessArchitecture;
 
     public string VersionInfoBase =>
@@ -31,6 +31,6 @@ public class AboutViewModel : FlexibleWindowViewModelBase
 
     public string Platform => "Platform: " + RuntimeInformation.OSDescription;
 
-    public string License => $"{_paths.AppName} Preview\n" +
-                             $"© {DateTime.Now.Year} One Ware\n";
+    public string License => $"{_paths.AppName}\n" +
+                             $"© {DateTime.Now.Year} ONE WARE GmbH\n";
 }
