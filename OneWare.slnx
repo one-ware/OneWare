@@ -91,9 +91,7 @@
     <Project Path="src/OneWare.SerialMonitor/OneWare.SerialMonitor.csproj" />
     <Project Path="src/OneWare.UniversalFpgaProjectSystem/OneWare.UniversalFpgaProjectSystem.csproj" />
   </Folder>
-  <Folder Name="/Extensions/FpgaSupport/Hardware/">
-    <Project Path="src/OneWare.Cyc5000/OneWare.Cyc5000.csproj" />
-  </Folder>
+  <Folder Name="/Extensions/FpgaSupport/Hardware/" />
   <Folder Name="/Extensions/FpgaSupport/Hardware/Extensions/">
     <Project Path="src/OneWare.CruviAdapterExtensions/OneWare.CruviAdapterExtensions.csproj" />
   </Folder>

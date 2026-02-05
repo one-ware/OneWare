@@ -9,7 +9,7 @@
              x:DataType="viewModels:SourceControlViewModel">
 
     <Button Cursor="Hand"
-            IsVisible="{Binding  ActiveRepository.HeadBranch, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}"
+            IsVisible="{Binding  ActiveRepository.HeadBranch, FallbackValue={x:False}, Converter={x:Static ObjectConverters.IsNotNull}}"
             Command="{Binding SyncAsync}"
             ToolTip.Tip="Synchronize Changes">
         <StackPanel Orientation="Horizontal" Spacing="3">
