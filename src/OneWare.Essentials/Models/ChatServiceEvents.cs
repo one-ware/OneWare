@@ -1,3 +1,7 @@
+using System.Windows.Input;
+using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
+
 namespace OneWare.Essentials.Models;
 
 public abstract class ChatEvent()
@@ -55,15 +59,19 @@ public sealed class ChatErrorEvent(string message)
     public string? Message { get; } = message;
 }
 
+public sealed class ChatButtonEvent(string message, string buttonText, IRelayCommand<Control?> command)
+    : ChatEvent()
+{
+    public string? Message { get; } = message;
+    
+    public string ButtonText { get; } = buttonText;
+
+    public IRelayCommand<Control?> OnClickCommand { get; init; } = command;
+}
+
 public sealed class ChatIdleEvent()
     : ChatEvent()
 {
-}
-
-public sealed class ChatInitializationStatus(bool success)
-{
-    public bool Success { get; } = success;
-    public bool NeedsAuthentication { get; init; }
 }
 
 public sealed class StatusEvent(bool isConnected, string statusText)

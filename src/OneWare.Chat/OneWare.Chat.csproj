@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.18" />
+      <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.22" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,6 +29,10 @@
       </Compile>
       <Compile Update="Views\ChatMessages\ChatMessageToolView.axaml.cs">
         <DependentUpon>ChatMessageAssistantToolUsage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\ChatMessages\ChatMessageWithButtonView.axaml.cs">
+        <DependentUpon>ChatMessageWithButtonView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

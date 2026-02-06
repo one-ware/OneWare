@@ -68,8 +68,7 @@
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </StackPanel.Styles>
-
-
+                    
                     <sdkControls:UiExtensionCollection Extensions="{Binding BottomRightExtension}" />
 
                     <Menu Classes="BindMenu">

@@ -6,12 +6,17 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
              mc:Ignorable="d"
-             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageAssistantView"
-             x:DataType="chatMessages:ChatMessageAssistantViewModel">
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageWithButtonView"
+             x:DataType="chatMessages:ChatMessageWithButtonViewModel">
 
     <Border>
         <StackPanel Spacing="6">
-            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Event.Message}" />
+            
+            <Button Height="NaN" Classes="RoundButton PrimaryButton" 
+                    Command="{Binding Event.OnClickCommand}" 
+                    CommandParameter="{Binding $self}" Padding="5"
+                    Content="{Binding Event.ButtonText}" />
         </StackPanel>
     </Border>
 

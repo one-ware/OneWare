@@ -62,7 +62,7 @@
                     Height="35"
                     Padding="20 0">
                 <Panel>
-                    <TextBlock Text="Install Plugin"
+                    <TextBlock Text="Install"
                                IsVisible="{Binding !Package.Package.AcceptLicenseBeforeDownload}" />
                     <TextBlock Text="Accept License and Install"
                                IsVisible="{Binding Package.Package.AcceptLicenseBeforeDownload}" />
