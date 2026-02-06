@@ -37,6 +37,8 @@ Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
 With ONE AI, anyone can create custom AI models in minutes without AI expertise. Train powerful models on our cloud servers, then deploy lightweight, optimized models that run efficiently on any device - even resource-limited microcontrollers.
 
+![image](https://github.com/user-attachments/assets/93c2713d-1ecb-470b-b842-65e9d6b0419f)
+
 [quick-start.webm](https://github.com/user-attachments/assets/fed578eb-d05a-4ba1-8442-3c7a95ff6829)
 
 More information about One AI [here](https://one-ware.com/docs/one-ai/getting-started)
