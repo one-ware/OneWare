@@ -176,6 +176,7 @@
                         <Border Grid.Row="0" Grid.Column="1" Padding="5">
                             <controls:MarkdownViewer VerticalAlignment="Center" MaxWidth="800"
                                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     SelectionEnabled="True"
                                                      Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                                 <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">

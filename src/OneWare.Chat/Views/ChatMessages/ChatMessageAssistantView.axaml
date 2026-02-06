@@ -11,7 +11,7 @@
 
     <Border>
         <StackPanel Spacing="6">
-            <controls:MarkdownViewer Markdown="{Binding Content}" />
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
         </StackPanel>
     </Border>
 

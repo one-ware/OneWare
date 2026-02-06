@@ -45,7 +45,7 @@
                     <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="5" Margin="5"
                                 HorizontalAlignment="Left">
                         <Button Classes="RoundButton" VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                                Command="{Binding UpdateAllAsync}" Padding="5 0">
+                                Command="{Binding UpdateAllAsync}" Padding="8 0">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <TextBlock Text="Update All" />
                                 <Image Height="14" Width="14" Source="{DynamicResource VsImageLib.Download16X}" />
