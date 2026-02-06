@@ -43,7 +43,13 @@ public class ProjectSettingsService : IProjectSettingsService
     /// <inheritdoc />
     public List<ProjectSetting> GetProjectSettingsList(string category)
     {
-        return ProjectSettingsByCategory[category];
+	    List<ProjectSetting> ret = new();
+
+	    foreach (var projectSetting in ProjectSettingsByCategory[category])
+		    ret.Add(new ProjectSetting(projectSetting.Key, projectSetting.Setting.Clone(),
+			    projectSetting.ActivationFunction));
+
+	    return ret;
     }
 
     public string GetDefaultProjectCategory()
