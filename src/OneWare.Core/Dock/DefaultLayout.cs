@@ -14,12 +14,13 @@ public static class DefaultLayout
         var toolsResolved = types?
             .Select(x => ContainerLocator.Container.Resolve(x))
             .Cast<IDockable>();
-
+        
         return toolsResolved == null
             ? factory.CreateList<IDockable>()
             : factory.CreateList(toolsResolved.Select(x =>
             {
                 x.Proportion = proportion;
+                x.PinnedBounds = null;
                 return x;
             }).ToArray());
     }
