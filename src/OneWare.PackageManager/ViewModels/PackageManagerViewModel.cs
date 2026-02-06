@@ -335,7 +335,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         foreach (var package in packages)
         {
             await FocusPluginAsync(package.Package!.Id!);
-            await _packageService.InstallAsync(package.Package, package.InstalledVersion, false, true);
+            await _packageService.UpdateAsync(package.Package.Id!, null, false, true);
         }
         
         UpdateAllCommand.NotifyCanExecuteChanged();
