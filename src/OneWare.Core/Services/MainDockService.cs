@@ -40,7 +40,8 @@ public class MainDockService : Factory, IMainDockService
 
     private RootDock? _layout;
 
-    public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService, IApplicationStateService applicationStateService,
+    public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
+        IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
@@ -48,7 +49,7 @@ public class MainDockService : Factory, IMainDockService
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
         _serializer = new OneWareDockSerializer(serviceProvider);
-        
+
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
@@ -215,19 +216,61 @@ public class MainDockService : Factory, IMainDockService
             foreach (var dockable in dock.VisibleDockables)
             {
                 if (dockable is IDock sub)
-                    foreach (var b in SearchView<T>(sub))
-                        yield return b;
-                if (dockable is T t)
-                    yield return t;
+                    foreach (var bs in SearchView<T>(sub))
+                        yield return bs;
+                if (dockable is T tx)
+                    yield return tx;
             }
 
-        if (layout is not IRootDock { Windows: not null } rootDock) yield break;
-        foreach (var win in rootDock.Windows)
-        {
-            foreach (var c in SearchView<T>(win.Layout)) yield return c;
-            if (win is T t)
-                yield return t;
-        }
+        if (layout is not IRootDock rootDock) yield break;
+
+        if (rootDock.LeftPinnedDockables != null)
+            foreach (var dockable in rootDock.LeftPinnedDockables)
+            {
+                if (dockable is IDock sub)
+                    foreach (var bs in SearchView<T>(sub))
+                        yield return bs;
+                if (dockable is T tx)
+                    yield return tx;
+            }
+
+        if (rootDock.TopPinnedDockables != null)
+            foreach (var dockable in rootDock.TopPinnedDockables)
+            {
+                if (dockable is IDock sub)
+                    foreach (var bs in SearchView<T>(sub))
+                        yield return bs;
+                if (dockable is T tx)
+                    yield return tx;
+            }
+
+        if (rootDock.RightPinnedDockables != null)
+            foreach (var dockable in rootDock.RightPinnedDockables)
+            {
+                if (dockable is IDock sub)
+                    foreach (var bs in SearchView<T>(sub))
+                        yield return bs;
+                if (dockable is T tx)
+                    yield return tx;
+            }
+
+        if (rootDock.BottomPinnedDockables != null)
+            foreach (var dockable in rootDock.BottomPinnedDockables)
+            {
+                if (dockable is IDock sub)
+                    foreach (var bs in SearchView<T>(sub))
+                        yield return bs;
+                if (dockable is T tx)
+                    yield return tx;
+            }
+
+        if (rootDock.Windows != null)
+            foreach (var win in rootDock.Windows)
+            {
+                foreach (var c in SearchView<T>(win.Layout)) yield return c;
+                if (win is T x)
+                    yield return x;
+            }
     }
 
     public override void OnDockableClosed(IDockable? dockable)
@@ -374,7 +417,7 @@ public class MainDockService : Factory, IMainDockService
         {
             _mainDocumentDockViewModel.AddDocument(_welcomeScreenViewModel);
         }
-        
+
         var extendedDocs = SearchView<IWaitForContent>();
         foreach (var extendedDocument in extendedDocs)
             extendedDocument.InitializeContent();

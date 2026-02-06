@@ -14,7 +14,9 @@
     <Style Selector="controls|MarkdownViewer">
         <Setter Property="Template">
             <ControlTemplate>
-                <mdxaml:MarkdownScrollViewer x:Name="PART_MarkdownScrollViewer" MarkdownStyleName="SimpleTheme" SelectionEnabled="{TemplateBinding SelectionEnabled}" Markdown="{TemplateBinding Markdown}">
+                <mdxaml:MarkdownScrollViewer x:Name="PART_MarkdownScrollViewer" MarkdownStyleName="SimpleTheme"
+                                             SelectionEnabled="{TemplateBinding SelectionEnabled}"
+                                             Markdown="{TemplateBinding Markdown}">
                     <mdxaml:MarkdownScrollViewer.Plugins>
                         <mdxaml:MdAvPlugins>
                             <mdxaml:ChatAISetup />
@@ -24,18 +26,19 @@
 
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CCode">
                             <Style.Setters>
-                                <Setter Property="Foreground" Value="{extensions:DivideColor HighlightBrush, ThemeForegroundColor, 0.45}" />
+                                <Setter Property="Foreground"
+                                        Value="{extensions:DivideColor HighlightBrush, ThemeForegroundColor, 0.45}" />
                                 <Setter Property="Background" Value="{extensions:Alpha ThemeControlMidColor, 0.9}" />
                             </Style.Setters>
                         </Style>
-                        
+
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CHyperlink">
                             <Style.Setters>
-                                <Setter Property="IsUnderline" Value="False"/>
-                                <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}"/>
+                                <Setter Property="IsUnderline" Value="False" />
+                                <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
                             </Style.Setters>
                         </Style>
-                        
+
                         <Style Selector="ScrollViewer">
                             <Setter Property="Padding" Value="5" />
                         </Style>
@@ -65,7 +68,8 @@
                             <Setter Property="Cursor" Value="Hand" />
                             <Setter Property="Content">
                                 <Template>
-                                    <Image Margin="2" Source="{DynamicResource BoxIcons.RegularCopy}" Height="12" Width="12" />
+                                    <Image Margin="2" Source="{DynamicResource BoxIcons.RegularCopy}" Height="12"
+                                           Width="12" />
                                 </Template>
                             </Setter>
                         </Style>
