@@ -26,6 +26,7 @@ public class VhdlModule : OneWareModuleBase
         License = "MPL 2.0",
         IconUrl =
             "https://raw.githubusercontent.com/VHDL-LS/rust_hdl/cae4e21054386b74937abfba0fa673a659e9a0ce/logo.svg",
+        AcceptLicenseBeforeDownload = true,
         Links =
         [
             new PackageLink

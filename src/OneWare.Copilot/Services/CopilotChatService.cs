@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ namespace OneWare.Copilot.Services;
 public sealed class CopilotChatService(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
+    IPackageWindowService packageService,
     IPaths paths)
     : ObservableObject, IChatService
 {
@@ -56,37 +58,52 @@ public sealed class CopilotChatService(
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
-    public async Task<bool> AuthenticateAsync()
+    private async Task<bool> InstallCopilotCLiAsync()
+    {
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+        if (PlatformHelper.ExistsOnPath(cliPath)) return true;
+        
+        var autoDownload = settingsService.GetSettingValue<bool>("Experimental_AutoDownloadBinaries");
+
+        if (!autoDownload) return false;
+        
+        var installResult = await packageService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
+
+        if (!installResult) return false;
+        
+        SessionReset?.Invoke(this, EventArgs.Empty);
+        
+        var initResult = await InitializeAsync();
+        
+        return installResult;
+    }
+    
+    private async Task<bool> AuthenticateAsync(Control? owner)
     {
         if (_client == null) return false;
 
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+
+        
+        
         return (await _client.GetAuthStatusAsync()).IsAuthenticated;
     }
 
-    public async Task<ChatInitializationStatus> InitializeAsync()
+    public async Task<bool> InitializeAsync()
     {
         var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
 
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
-
-        var isAuthenticated = false;
-
+        
         try
         {
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
-                EventReceived?.Invoke(this, new ChatErrorEvent(
-                    """
-                        Copilot CLI not found.
-                        Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
-                        **If it is installed to a custom location, you can set the path for Copilot CLI in Settings / AI Chat**
-                    """));
-                return new ChatInitializationStatus(false)
-                {
-                    NeedsAuthentication = true
-                };
+                EventReceived?.Invoke(this, new ChatButtonEvent(
+                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync())));
+                return false;
             }
 
             _client = new CopilotClient(new CopilotClientOptions()
@@ -96,21 +113,13 @@ public sealed class CopilotChatService(
             });
 
             var authStatus = await _client.GetAuthStatusAsync();
-
-            isAuthenticated = authStatus.IsAuthenticated;
-
-            if (!isAuthenticated)
+            
+            if (!authStatus.IsAuthenticated)
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
-                EventReceived?.Invoke(this, new ChatErrorEvent(
-                    """
-                        Not Authenticated to Copilot CLI.
-                        Click [here](https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-how-to-get-started/) to get started.
-                    """));
-                return new ChatInitializationStatus(false)
-                {
-                    NeedsAuthentication = true
-                };
+                EventReceived?.Invoke(this, new ChatButtonEvent(
+                    "Not Authenticated to Copilot CLI.", "Login with GitHub", new AsyncRelayCommand<Control?>(AuthenticateAsync)));
+                return false;
             }
 
             StatusChanged?.Invoke(this, new StatusEvent(false, $"Starting Copilot..."));
@@ -134,17 +143,14 @@ public sealed class CopilotChatService(
             SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ??
                             Models.FirstOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
 
-            return new ChatInitializationStatus(true);
+            return true;
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, new StatusEvent(false, "Copilot unavailable"));
             EventReceived?.Invoke(this, new ChatErrorEvent(ex.Message));
 
-            return new ChatInitializationStatus(false)
-            {
-                NeedsAuthentication = !isAuthenticated
-            };
+            return false;
         }
         finally
         {

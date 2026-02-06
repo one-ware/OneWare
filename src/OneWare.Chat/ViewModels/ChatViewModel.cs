@@ -47,8 +47,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         _mainDockService = mainDockService;
         _statePath = Path.Combine(paths.AppDataDirectory, "Chat", "ChatState.json");
         AiFileEditService = aiFileEditService;
-
-        AuthenticateCommand = new AsyncRelayCommand(AuthenticateAsync);
+        
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
@@ -108,12 +107,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
-    public bool NeedsAuthentication
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
     public string StatusText
     {
         get;
@@ -132,8 +125,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             var oldValue = field;
             if (SetProperty(ref field, value))
             {
-                NeedsAuthentication = false;
-
                 if (oldValue != null)
                 {
                     oldValue.EventReceived -= OnEventReceived;
@@ -146,7 +137,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     value.EventReceived += OnEventReceived;
                     value.StatusChanged += OnStatusChanged;
                     value.SessionReset += OnSessionReset;
-                    _ = InitializeChatAsync(value);
+
+                    InitializeCurrentCommand.Execute(null);
                 }
             }
         }
@@ -155,8 +147,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public AiFileEditService AiFileEditService { get; }
 
     public RelayCommand<AiEditViewModel> ShowEditCommand => new(ShowEdit);
-
-    public AsyncRelayCommand AuthenticateCommand { get; }
 
     public AsyncRelayCommand NewChatCommand { get; }
 
@@ -179,40 +169,28 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
-    private Task InitializeCurrentAsync()
+    private async Task<bool> InitializeCurrentAsync()
     {
-        if (SelectedChatService == null) return Task.CompletedTask;
-        return InitializeChatAsync(SelectedChatService);
-    }
-
-    private async Task InitializeChatAsync(IChatService chatService)
-    {
+        if (SelectedChatService == null) return false;
+        
         _assistantMessagesById.Clear();
 
-        var status = await chatService.InitializeAsync();
+        var status = await SelectedChatService.InitializeAsync();
 
-        IsInitialized = status.Success;
-        NeedsAuthentication = status.NeedsAuthentication;
-    }
+        IsInitialized = status;
 
-    private async Task AuthenticateAsync()
-    {
-        if (SelectedChatService == null)
-        {
-            Messages.Add(new ChatMessageAssistantViewModel()
-            {
-                Content = "No ChatService Selected"
-            });
-            return;
-        }
-
-        NeedsAuthentication = !await SelectedChatService.AuthenticateAsync();
+        return status;
     }
 
     private async Task NewChatAsync()
     {
         if (SelectedChatService != null)
         {
+            if (!IsInitialized)
+            {
+                await InitializeCurrentAsync();
+            }
+            
             await AbortAsync();
             await SelectedChatService.NewChatAsync();
         }
@@ -233,6 +211,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Content = "No ChatService Selected"
             });
             return;
+        }
+        
+        if (!IsInitialized)
+        {
+            await InitializeCurrentAsync();
         }
 
         if (!IsConnected)
@@ -418,6 +401,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     //AddMessage(new ChatMessageUserViewModel(x.Content));
+                });
+                break;
+            }
+            case ChatButtonEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageWithButtonViewModel(x));
                 });
                 break;
             }

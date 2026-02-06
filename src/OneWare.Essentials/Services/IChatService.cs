@@ -13,8 +13,7 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     event EventHandler<ChatEvent>? EventReceived;
     event EventHandler<StatusEvent>? StatusChanged;
     
-    Task<bool> AuthenticateAsync();
-    Task<ChatInitializationStatus> InitializeAsync();
+    Task<bool> InitializeAsync();
     Task SendAsync(string prompt);
     Task AbortAsync();
     Task NewChatAsync();
