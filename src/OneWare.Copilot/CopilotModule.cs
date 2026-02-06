@@ -124,7 +124,7 @@ public class CopilotModule : OneWareModuleBase
         Description = "Used for Copilot Integration",
         License = "GitHub Copilot CLI License",
         IconUrl =
-            "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/githubcopilot.png",
+            "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/githubcopilot.png",
         AcceptLicenseBeforeDownload = true,
         Links =
         [
@@ -161,6 +161,32 @@ public class CopilotModule : OneWareModuleBase
                 [
                     new PackageTarget()
                     {
+                        Target = "windows-x64",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-x64.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "copilot.exe",
+                                SettingKey = CopilotCliSettingKey
+                            }
+                        ]
+                    },
+                    new PackageTarget()
+                    {
+                        Target = "windows-arm64",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-arm64.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "copilot.exe",
+                                SettingKey = CopilotCliSettingKey
+                            }
+                        ]
+                    },
+                    new PackageTarget()
+                    {
                         Target = "linux-x64",
                         Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-linux-x64.tar.gz",
                         AutoSetting =
@@ -171,7 +197,46 @@ public class CopilotModule : OneWareModuleBase
                                 SettingKey = CopilotCliSettingKey
                             }
                         ]
-                    }
+                    },
+                    new PackageTarget()
+                    {
+                        Target = "linux-arm64",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-linux-arm64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "copilot",
+                                SettingKey = CopilotCliSettingKey
+                            }
+                        ]
+                    },
+                    new PackageTarget()
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-darwin-x64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "copilot",
+                                SettingKey = CopilotCliSettingKey
+                            }
+                        ]
+                    },
+                    new PackageTarget()
+                    {
+                        Target = "osx-arm64",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-darwin-arm64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "copilot",
+                                SettingKey = CopilotCliSettingKey
+                            }
+                        ]
+                    },
                 ]
             }
         ]

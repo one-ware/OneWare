@@ -1,0 +1,46 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+                         mc:Ignorable="d" d:DesignWidth="360" SizeToContent="Height" PrefWidth="360" Padding="6"
+                         x:Class="OneWare.Copilot.Views.CopilotDeviceLoginView"
+                         x:DataType="viewModels:CopilotDeviceLoginViewModel"
+                         WindowStartupLocation="CenterOwner"
+                         CustomIcon="{DynamicResource Bootstrap.Github}"
+                         Name="CopilotDeviceLoginViewView" Title="{Binding Title}">
+    <DockPanel Margin="6" LastChildFill="False">
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 8">
+            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+
+            <StackPanel Spacing="4" Orientation="Horizontal">
+                <controls:HyperLink Url="{Binding VerificationUrl}" Label="{Binding VerificationUrl}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Enter code:" />
+                <Border Classes="RoundBorder"
+                        Padding="8" Background="{DynamicResource ThemeControlMidBrush}">
+                    <Panel>
+                        <SelectableTextBlock VerticalAlignment="Center" Text="{Binding UserCode}" FontSize="18"
+                                             FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center" Height="30" Width="30"
+                                Command="{Binding CopyCodeCommand}"
+                                CommandParameter="{Binding $self}">
+                            <Image Source="{DynamicResource BoxIcons.RegularCopy}" Height="15" />
+                        </Button>
+                    </Panel>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusText}" />
+        </StackPanel>
+
+        <StackPanel Margin="0 8 0 0" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="WindowButtons">
+            <Button Command="{Binding Cancel}"
+                    CommandParameter="{Binding #CopilotDeviceLoginViewView}"
+                    Content="Cancel" />
+        </StackPanel>
+    </DockPanel>
+</controls:FlexibleWindow>
