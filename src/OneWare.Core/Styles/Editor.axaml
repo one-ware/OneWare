@@ -177,6 +177,7 @@
                             <controls:MarkdownViewer VerticalAlignment="Center" MaxWidth="800"
                                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      SelectionEnabled="True"
+                                                     Classes="ToolTip"
                                                      Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
                                 <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">

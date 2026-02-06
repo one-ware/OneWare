@@ -230,7 +230,7 @@ internal abstract class Program
     }
 
     [STAThread]
-    public static async Task<int> Main(string[] args)
+    public static int Main(string[] args)
     {
         try
         {
@@ -321,7 +321,7 @@ internal abstract class Program
                 try
                 {
                     var sendTask = TrySendToExistingInstanceAsync(messageToSend ?? "activateWindow");
-                    var sendSuccess = await sendTask.WaitAsync(TimeSpan.FromSeconds(5));
+                    var sendSuccess = sendTask.Wait(TimeSpan.FromSeconds(5));
 
                     if (sendSuccess)
                     {
