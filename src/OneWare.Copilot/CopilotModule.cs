@@ -161,7 +161,7 @@ public class CopilotModule : OneWareModuleBase
                 [
                     new PackageTarget()
                     {
-                        Target = "windows-x64",
+                        Target = "win-x64",
                         Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-x64.zip",
                         AutoSetting =
                         [
@@ -174,7 +174,7 @@ public class CopilotModule : OneWareModuleBase
                     },
                     new PackageTarget()
                     {
-                        Target = "windows-arm64",
+                        Target = "win-arm64",
                         Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-arm64.zip",
                         AutoSetting =
                         [

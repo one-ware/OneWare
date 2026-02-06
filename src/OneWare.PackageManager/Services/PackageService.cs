@@ -50,7 +50,7 @@ public class PackageService : ObservableObject, IPackageService
     }
 
     private readonly Dictionary<string, PackageState> _packages = new();
-    
+
     public IReadOnlyDictionary<string, IPackageState> Packages =>
         _packages.ToDictionary(
             kvp => kvp.Key,
@@ -323,8 +323,13 @@ public class PackageService : ObservableObject, IPackageService
 
         var target = installer.SelectTarget(state.Package, selectedVersion);
         if (target == null)
+        {
+            _logger.Warning(
+                $"No compatible target found for package {state.Package.Id} version {selectedVersion.Version}");
+            
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
-
+        }
+        
         return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility);
     }
 
@@ -368,7 +373,8 @@ public class PackageService : ObservableObject, IPackageService
                 }
 
                 PackageProgress?.Invoke(this,
-                    new PackageProgressEventArgs(state.Package.Id!, state.Status, state.Progress, state.IsIndeterminate));
+                    new PackageProgressEventArgs(state.Package.Id!, state.Status, state.Progress,
+                        state.IsIndeterminate));
             });
 
             var extractionPath = GetExtractionPath(state.Package);
