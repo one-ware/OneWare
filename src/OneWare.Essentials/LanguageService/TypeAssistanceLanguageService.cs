@@ -68,7 +68,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile)
+        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile.FullPath)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
@@ -712,12 +712,13 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
             0,
-            comp, offset, CurrentFile, AfterComplete);
+            comp, offset, CurrentFile.FullPath, AfterComplete);
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
     {
-        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
+        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>()
+                     .GetErrorsForFile(CurrentFile.FullPath))
             if (location.Line >= error.StartLine && location.Column >= error.StartColumn &&
                 (location.Line < error.EndLine ||
                  (location.Line == error.EndLine && location.Column <= error.EndColumn)))

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Core.Services;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
@@ -105,7 +106,8 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         _errorService.ErrorRefresh += (sender, o) =>
         {
-            if (CurrentFile != null && o == CurrentFile) Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+            if (CurrentFile != null && o is string path && path.EqualPaths(CurrentFile.FullPath))
+                Diagnostics = _errorService.GetErrorsForFile(CurrentFile.FullPath);
         };
     }
 
@@ -140,7 +142,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
 
-        Diagnostics = _errorService.GetErrorsForFile(CurrentFile);
+        Diagnostics = _errorService.GetErrorsForFile(CurrentFile.FullPath);
 
         async Task OnInitialized()
         {

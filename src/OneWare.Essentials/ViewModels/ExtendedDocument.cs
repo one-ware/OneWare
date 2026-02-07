@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -77,7 +78,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
             return false;
         }
 
-        if (CurrentFile != null) _mainDockService.OpenFiles.Remove(CurrentFile);
+        if (CurrentFile != null) _mainDockService.OpenFiles.Remove(CurrentFile.FullPath.ToPathKey());
         if (CurrentFile is ExternalFile externalFile)
             _projectExplorerService.RemoveTemporaryFile(externalFile);
 
@@ -118,9 +119,10 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
                       _projectExplorerService.GetTemporaryFile(FullPath);
         Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile.Name;
 
-        if (CurrentFile != oldCurrentFile && oldCurrentFile != null) _mainDockService.OpenFiles.Remove(oldCurrentFile);
+        if (CurrentFile != oldCurrentFile && oldCurrentFile != null)
+            _mainDockService.OpenFiles.Remove(oldCurrentFile.FullPath.ToPathKey());
 
-        _mainDockService.OpenFiles.TryAdd(CurrentFile, this);
+        _mainDockService.OpenFiles.TryAdd(CurrentFile.FullPath.ToPathKey(), this);
 
         UpdateCurrentFile(oldCurrentFile);
     }

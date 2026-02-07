@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.ProjectExplorer.Services;
 
@@ -87,7 +88,7 @@ public class FileWatchInstance : IDisposable
         {
             var lastArg = changes.Last();
 
-            _mainDockService.OpenFiles.TryGetValue(_file, out var tab);
+            _mainDockService.OpenFiles.TryGetValue(_file.FullPath.ToPathKey(), out var tab);
 
             // Can happen naturally if the file is opened in an external tool
             // Also when a temporary file is registered but not opened yet, we can ignore the changes

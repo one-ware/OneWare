@@ -169,8 +169,8 @@ public class ProjectWatchInstance : IDisposable
                         {
                             if (oldEntry is IProjectFile file)
                             {
-                                _mainDockService.OpenFiles.TryGetValue(file, out var tab);
-                                _mainDockService.OpenFiles.Remove(file);
+                                _mainDockService.OpenFiles.TryGetValue(file.FullPath.ToPathKey(), out var tab);
+                                _mainDockService.OpenFiles.Remove(file.FullPath.ToPathKey());
 
                                 await _projectExplorerService.RemoveAsync(oldEntry);
                                 _root.OnExternalEntryAdded(path, attributes);
@@ -181,7 +181,7 @@ public class ProjectWatchInstance : IDisposable
                                     tab.InitializeContent();
 
                                     if (tab.CurrentFile != null)
-                                        _mainDockService.OpenFiles.TryAdd(tab.CurrentFile!, tab);
+                                        _mainDockService.OpenFiles.TryAdd(tab.CurrentFile.FullPath.ToPathKey(), tab);
                                 }
                             }
                             else
@@ -195,8 +195,8 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
-                        var openTab = _mainDockService.OpenFiles.FirstOrDefault(x => x.Key.FullPath.EqualPaths(path));
-                        if (openTab.Key is not null)
+                        var openTab = _mainDockService.OpenFiles.FirstOrDefault(x => x.Key.EqualPaths(path));
+                        if (openTab.Value is not null)
                             openTab.Value.InitializeContent();
                         return;
                     case WatcherChangeTypes.Changed:

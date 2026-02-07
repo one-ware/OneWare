@@ -460,7 +460,7 @@ public partial class EditView : UserControl
             var offset = CodeBox.Document.GetOffset(pos.Value.Location);
             var location = CodeBox.Document.GetLocation(offset);
             foreach (var error in ContainerLocator.Container.Resolve<ErrorListViewModel>()
-                         .GetErrorsForFile(ViewModel.CurrentFile))
+                         .GetErrorsForFile(ViewModel.CurrentFile.FullPath))
                 if (location.Line >= error.StartLine && location.Line <= error.EndLine &&
                     location.Column >= error.StartColumn && location.Column <= error.EndColumn)
                     return error;

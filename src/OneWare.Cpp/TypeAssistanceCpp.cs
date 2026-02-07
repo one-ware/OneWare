@@ -27,7 +27,8 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile!)
+        var error = ContainerLocator.Container.Resolve<IErrorService>()
+            .GetErrorsForFile(Editor.CurrentFile!.FullPath)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine

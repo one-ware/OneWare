@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Avalonia.Collections;
 using DynamicData.Binding;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -63,7 +64,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         };
 
         Observable.FromEventPattern<IFile>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(x => { Clear(x.EventArgs); });
+            nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(x =>
+            {
+                ClearFile(x.EventArgs.FullPath);
+            });
 
         Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
             nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(x => { Clear(x.EventArgs); });
@@ -185,17 +189,17 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         ErrorListVisibleSources.Add(source);
     }
 
-    public void Clear(IFile file)
+    public void ClearFile(string filePath)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.File == file));
-        ErrorRefresh?.Invoke(this, file);
+        ListEx.RemoveMany(_items, _items.Where(x => x.FilePath.EqualPaths(filePath)));
+        ErrorRefresh?.Invoke(this, filePath);
         RefreshCountToggle();
     }
 
     public void Clear(string source)
     {
         var errors = _items.Where(x => x.Source == source).ToList();
-        var files = errors.Select(x => x.File).Distinct();
+        var files = errors.Select(x => x.FilePath).Distinct();
 
         ListEx.RemoveMany(_items, errors);
 
@@ -209,9 +213,9 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         return _items;
     }
 
-    public IEnumerable<ErrorListItem> GetErrorsForFile(IFile file)
+    public IEnumerable<ErrorListItem> GetErrorsForFile(string filePath)
     {
-        foreach (var error in _items.Where(x => x.File == file))
+        foreach (var error in _items.Where(x => x.FilePath.EqualPaths(filePath)))
         {
             if (ErrorEnabled && error.Type == ErrorType.Error) yield return error;
             if (WarningEnabled && error.Type == ErrorType.Warning) yield return error;
@@ -222,13 +226,14 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     /// <summary>
     ///     Adds new Errors and filters old errors out
     /// </summary>
-    public void RefreshErrors(IList<ErrorListItem> errors, string source, IFile entry)
+    public void RefreshErrors(IList<ErrorListItem> errors, string source, string filePath)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.File == entry && x.Source == source && !errors.Contains(x)));
+        ListEx.RemoveMany(_items,
+            _items.Where(x => x.FilePath.EqualPaths(filePath) && x.Source == source && !errors.Contains(x)));
 
         foreach (var e in errors) Add(e);
 
-        ErrorRefresh?.Invoke(this, entry);
+        ErrorRefresh?.Invoke(this, filePath);
         RefreshCountToggle();
     }
 
@@ -248,11 +253,11 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
             case ErrorListFilterMode.All:
                 return true;
             case ErrorListFilterMode.CurrentProject:
-                if (error.File is IProjectFile pf && _projectExplorerExplorerViewModel.ActiveProject == pf.Root)
+                if (error.Root != null && _projectExplorerExplorerViewModel.ActiveProject == error.Root)
                     return true;
                 break;
             case ErrorListFilterMode.CurrentFile:
-                if (_mainDockService.CurrentDocument?.CurrentFile == error.File) return true;
+                if (_mainDockService.CurrentDocument?.FullPath.EqualPaths(error.FilePath) ?? false) return true;
                 break;
         }
 
@@ -261,7 +266,8 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     private bool FilterExternal(ErrorListItem error)
     {
-        return ShowExternalErrors || error.File is IProjectFile || _mainDockService.OpenFiles.ContainsKey(error.File);
+        return ShowExternalErrors || error.Root != null ||
+               _mainDockService.OpenFiles.ContainsKey(error.FilePath.ToPathKey());
     }
 
     private bool FilterEnabledType(ErrorListItem error)
@@ -286,7 +292,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     {
         if (string.IsNullOrWhiteSpace(SearchString)) return true;
         return error.Description.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
-               || error.File.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
+               || error.FileName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)
                || (error.Root?.Name.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false)
                || (error.Code?.Contains(SearchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
@@ -319,7 +325,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     public void Clear(IProjectRoot project)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.File is IProjectFile pf && pf.Root == project));
+        ListEx.RemoveMany(_items, _items.Where(x => x.Root == project));
         ErrorRefresh?.Invoke(this, project);
         RefreshCountToggle();
     }
@@ -327,7 +333,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     public void Clear(IProjectRoot project, string source)
     {
         ListEx.RemoveMany(_items,
-            _items.Where(x => x.File is IProjectFile pf && pf.Root == project && x.Source == source));
+            _items.Where(x => x.Root == project && x.Source == source));
         ErrorRefresh?.Invoke(this, project);
         RefreshCountToggle();
     }
@@ -353,7 +359,9 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     public async Task GoToErrorAsync()
     {
         if (SelectedItem is not { } error) return;
-        var doc = await _mainDockService.OpenFileAsync(error.File);
+        var file = _projectExplorerExplorerViewModel.GetEntryFromFullPath(error.FilePath) as IFile ??
+                   _projectExplorerExplorerViewModel.GetTemporaryFile(error.FilePath);
+        var doc = await _mainDockService.OpenFileAsync(file);
 
         doc?.GoToDiagnostic(error);
     }

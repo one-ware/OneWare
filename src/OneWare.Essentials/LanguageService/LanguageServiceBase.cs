@@ -248,7 +248,7 @@ public abstract class LanguageServiceBase : ILanguageService
     {
         var openDoc =
             ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
-                .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Value as IEditor;
+                .FirstOrDefault(x => x.Key.EqualPaths(path)).Value as IEditor;
 
         try
         {
@@ -300,12 +300,12 @@ public abstract class LanguageServiceBase : ILanguageService
             var path = pdp.Uri.GetFileSystemPath();
 
             var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
-                .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
+                .FirstOrDefault(x => x.Key.EqualPaths(path)).Value?.CurrentFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
             ContainerLocator.Container.Resolve<IErrorService>()
-                .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file);
+                .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file.FullPath);
             //file.Diagnostics = pdp.Diagnostics;
         }, DispatcherPriority.Background);
     }
@@ -323,9 +323,9 @@ public abstract class LanguageServiceBase : ILanguageService
                     _ => ErrorType.Hint
                 };
 
-            yield return new ErrorListItem(p.Message, errorType, file, Name, p.Range.Start.Line + 1,
+            yield return new ErrorListItem(p.Message, errorType, file.FullPath, Name, p.Range.Start.Line + 1,
                 p.Range.Start.Character + 1, p.Range.End.Line + 1, p.Range.End.Character + 1,
-                p.Code?.String ?? p.Code?.Long.ToString() ?? "", p);
+                p.Code?.String ?? p.Code?.Long.ToString() ?? "", p, (file as IProjectFile)?.Root);
         }
     }
 }

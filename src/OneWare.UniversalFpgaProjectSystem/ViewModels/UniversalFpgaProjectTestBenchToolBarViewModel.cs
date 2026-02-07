@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;
@@ -95,7 +96,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
     {
         if (SelectedSimulator == null) return;
         if (TestBenchContext == null) throw new NullReferenceException(nameof(TestBenchContext));
-        if (_mainDockService.OpenFiles.TryGetValue(File, out var fileView))
+        if (_mainDockService.OpenFiles.TryGetValue(File.FullPath.ToPathKey(), out var fileView))
             await fileView.SaveAsync();
         await TestBenchContextManager.SaveContextAsync(TestBenchContext);
         await SelectedSimulator.SimulateAsync(File);

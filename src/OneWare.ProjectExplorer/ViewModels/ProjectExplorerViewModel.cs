@@ -86,16 +86,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public IFile GetTemporaryFile(string path)
     {
-        if (TemporaryFiles.TryGetValue(path, out var file)) return file;
+        var key = path.ToPathKey();
+        if (TemporaryFiles.TryGetValue(key, out var file)) return file;
         var externalFile = new ExternalFile(path);
         _fileWatchService.Register(externalFile);
-        TemporaryFiles.Add(path, externalFile);
-        return TemporaryFiles[path];
+        TemporaryFiles.Add(key, externalFile);
+        return TemporaryFiles[key];
     }
 
     public void RemoveTemporaryFile(IFile file)
     {
-        TemporaryFiles.Remove(file.FullPath);
+        TemporaryFiles.Remove(file.FullPath.ToPathKey());
         _fileWatchService.Unregister(file);
         FileRemoved?.Invoke(this, file);
     }
@@ -434,10 +435,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         if (entry is IProjectRoot proj)
         {
-            var openFiles = _mainDockService.OpenFiles.Where(x => x.Key is IProjectFile pf && pf.Root == proj).ToList();
+            var openFiles = _mainDockService.OpenFiles
+                .Where(x => x.Value.CurrentFile is IProjectFile pf && pf.Root == proj)
+                .ToList();
 
             foreach (var tab in openFiles)
-                if (!await _mainDockService.CloseFileAsync(tab.Key))
+                if (tab.Value.CurrentFile == null || !await _mainDockService.CloseFileAsync(tab.Value.CurrentFile))
                     return;
 
             ProjectRemoved?.Invoke(this, proj);
@@ -680,8 +683,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             //For now we just re-initialize the files that are open from the project and still included
 
             var filesOpenInProject = _mainDockService.OpenFiles
-                .Where(x => x.Key is IProjectFile pf && pf.Root == root)
-                .Select(x => new { File = (x.Key as IProjectFile)!, ViewModel = x.Value })
+                .Where(x => x.Value.CurrentFile is IProjectFile pf && pf.Root == root)
+                .Select(x => new { File = (x.Value.CurrentFile as IProjectFile)!, ViewModel = x.Value })
                 .ToList();
 
             var refreshedFiles = new List<IProjectFile>();
@@ -689,8 +692,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             foreach (var openFile in filesOpenInProject)
                 if (proj.GetFile(openFile.File.RelativePath) is {} newFile)
                 {
-                    _mainDockService.OpenFiles.Remove(openFile.File);
-                    _mainDockService.OpenFiles.Add(newFile, openFile.ViewModel);
+                    _mainDockService.OpenFiles.Remove(openFile.File.FullPath.ToPathKey());
+                    _mainDockService.OpenFiles.Add(newFile.FullPath.ToPathKey(), openFile.ViewModel);
                     refreshedFiles.Add(newFile);
                 }
 
@@ -701,7 +704,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             //Re-initialize the files that didn't get removed after swapping project
             foreach (var refreshed in refreshedFiles)
-                if (_mainDockService.OpenFiles.TryGetValue(refreshed, out var vm))
+                if (_mainDockService.OpenFiles.TryGetValue(refreshed.FullPath.ToPathKey(), out var vm))
                     vm.InitializeContent();
 
             if (active) ActiveProject = proj;
@@ -721,7 +724,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (entry is IProjectFile file)
         {
-            _mainDockService.OpenFiles.TryGetValue(file, out var evm);
+            _mainDockService.OpenFiles.TryGetValue(file.FullPath.ToPathKey(), out var evm);
             if (evm is not null)
             {
                 evm.FullPath = file.FullPath;
@@ -743,7 +746,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
     {
-        var saveTasks = _mainDockService.OpenFiles.Where(x => x.Key is IProjectFile file && file.Root == project)
+        var saveTasks = _mainDockService.OpenFiles
+            .Where(x => x.Value.CurrentFile is IProjectFile file && file.Root == project)
             .Select(x => x.Value.SaveAsync());
 
         var results = await Task.WhenAll(saveTasks);

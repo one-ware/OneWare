@@ -44,7 +44,7 @@ internal class TypeAssistanceVhdl : TypeAssistanceLanguageService
         if (_settingsService.GetSettingValue<bool>(VhdlModule.EnableSnippetsSetting) && _snippets != null)
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
-                CodeBox.CaretOffset, CurrentFile)));
+                CodeBox.CaretOffset, CurrentFile.FullPath)));
 
         return Task.FromResult(items);
     }

@@ -110,7 +110,7 @@ public class BackupService
     private void Save()
     {
         var closedFiles =
-            _backups.Where(x => !_mainDockService.OpenFiles.Any(b => b.Key.FullPath.EqualPaths(x.RealPath)));
+            _backups.Where(x => !_mainDockService.OpenFiles.Any(b => b.Key.EqualPaths(x.RealPath)));
 
         foreach (var closedFile in closedFiles.ToList()) RemoveBackup(closedFile);
 
@@ -120,13 +120,13 @@ public class BackupService
             if (doc.Value is EditViewModel { IsDirty: true } evm)
                 try
                 {
-                    var backup = _backups.FirstOrDefault(x => x.RealPath.EqualPaths(doc.Key.FullPath));
+                    var backup = _backups.FirstOrDefault(x => x.RealPath.EqualPaths(doc.Key));
 
                     if (backup == null)
                     {
-                        backup = new BackupFile(doc.Key.FullPath, Path.Combine(_backupFolder,
+                        backup = new BackupFile(doc.Key, Path.Combine(_backupFolder,
                             Path.Combine(_backupFolder,
-                                Path.GetFileName(doc.Key.FullPath)).CheckNameFile()), DateTime.Now);
+                                Path.GetFileName(doc.Key)).CheckNameFile()), DateTime.Now);
                         _backups.Add(backup);
                     }
 

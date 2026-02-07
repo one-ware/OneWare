@@ -12,7 +12,7 @@ public interface IMainDockService : INotifyPropertyChanged
 {
     public RootDock? Layout { get; }
 
-    public Dictionary<IFile, IExtendedDocument> OpenFiles { get; }
+    public Dictionary<string, IExtendedDocument> OpenFiles { get; }
 
     public IExtendedDocument? CurrentDocument { get; }
 

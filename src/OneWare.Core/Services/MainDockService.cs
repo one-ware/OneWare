@@ -16,6 +16,7 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -81,7 +82,7 @@ public class MainDockService : Factory, IMainDockService
         });
     }
 
-    public Dictionary<IFile, IExtendedDocument> OpenFiles { get; } = new();
+    public Dictionary<string, IExtendedDocument> OpenFiles { get; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public RootDock? Layout
@@ -136,11 +137,12 @@ public class MainDockService : Factory, IMainDockService
             if (overwrite.Invoke(pf))
                 return null;
 
-        if (OpenFiles.ContainsKey(pf))
+        var fileKey = pf.FullPath.ToPathKey();
+        if (OpenFiles.ContainsKey(fileKey))
         {
-            Show(OpenFiles[pf]);
+            Show(OpenFiles[fileKey]);
 
-            return OpenFiles[pf];
+            return OpenFiles[fileKey];
         }
 
         _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
@@ -161,11 +163,12 @@ public class MainDockService : Factory, IMainDockService
 
     public async Task<bool> CloseFileAsync(IFile pf)
     {
-        if (OpenFiles.ContainsKey(pf))
+        var fileKey = pf.FullPath.ToPathKey();
+        if (OpenFiles.ContainsKey(fileKey))
         {
-            var vm = OpenFiles[pf];
+            var vm = OpenFiles[fileKey];
             if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
-            OpenFiles.Remove(pf);
+            OpenFiles.Remove(fileKey);
             CloseDockable(vm);
         }
 

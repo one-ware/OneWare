@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -6,21 +7,24 @@ namespace OneWare.ProjectExplorer.Services;
 
 public class FileWatchService : IFileWatchService
 {
-    private readonly Dictionary<IFile, FileWatchInstance> _fileWatchInstances = new();
+    private readonly Dictionary<string, FileWatchInstance> _fileWatchInstances = new();
     private readonly Dictionary<IProjectRoot, ProjectWatchInstance> _projectFileWatcher = new();
 
     public void Register(IFile file)
     {
         if (RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
 
-        if (_fileWatchInstances.ContainsKey(file)) return;
-        _fileWatchInstances.Add(file, ContainerLocator.Container.Resolve<FileWatchInstance>((file.GetType(), file)));
+        var fileKey = file.FullPath.ToPathKey();
+        if (_fileWatchInstances.ContainsKey(fileKey)) return;
+        _fileWatchInstances.Add(fileKey,
+            ContainerLocator.Container.Resolve<FileWatchInstance>((file.GetType(), file)));
     }
 
     public void Unregister(IFile file)
     {
-        _fileWatchInstances.TryGetValue(file, out var watcher);
-        _fileWatchInstances.Remove(file);
+        var fileKey = file.FullPath.ToPathKey();
+        _fileWatchInstances.TryGetValue(fileKey, out var watcher);
+        _fileWatchInstances.Remove(fileKey);
         watcher?.Dispose();
     }
 
