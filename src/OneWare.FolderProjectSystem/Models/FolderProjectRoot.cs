@@ -106,16 +106,19 @@ public class FolderProjectRoot : ProjectRoot
 
     public override IProjectEntry? GetEntry(string relativePath)
     {
-        throw new NotImplementedException();
+        var visual = SearchRelativePath(relativePath);
+        if (visual != null) return visual;
+        
+        // Create it in the visual tree (minimalistic) and return it.
     }
 
     public override IProjectFile? GetFile(string relativePath)
     {
-        throw new NotImplementedException();
+        return GetEntry(relativePath) as IProjectFile;
     }
 
     public override IEnumerable<IProjectFile> GetFiles(string searchPattern = "*")
     {
-        throw new NotImplementedException();
+        // TODO
     }
 }
