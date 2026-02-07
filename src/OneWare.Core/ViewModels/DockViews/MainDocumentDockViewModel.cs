@@ -15,6 +15,4 @@ public class MainDocumentDockViewModel : DocumentDock
 
         LayoutMode = DocumentLayoutMode.Tabbed;
     }
-
-    public new bool IsEmpty => false;
 }

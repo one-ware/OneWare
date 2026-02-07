@@ -31,8 +31,6 @@
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml" />
         <StyleInclude Source="avares://OneWare.Essentials/Controls/SharedControls.axaml" />
         
-        <DockSimpleTheme />
-        
         <Style Selector="DockControl">
             <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>
