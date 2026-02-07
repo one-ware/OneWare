@@ -11,12 +11,12 @@ public class ProjectFile : ProjectEntry, IProjectFile
     {
         IDisposable? fileSubscription = null;
 
-        this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
-        {
-            fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
-            fileSubscription = observable?.Subscribe(icon => { Icon = icon; }).DisposeWith(Disposables);
-        }).DisposeWith(Disposables);
+        // this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
+        // {
+        //     fileSubscription?.Dispose();
+        //     var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
+        //     fileSubscription = observable?.Subscribe(icon => { Icon = icon; }).DisposeWith(Disposables);
+        // }).DisposeWith(Disposables);
     }
 
     public string Extension => Path.GetExtension(FullPath);

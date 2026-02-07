@@ -115,4 +115,12 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         Properties.Remove(name);
         ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), null));
     }
+
+    public override IProjectEntry? GetLoadedEntry(string relativePath)
+    {
+        if (relativePath.Equals(Path.GetFileName(ProjectFilePath), StringComparison.InvariantCultureIgnoreCase))
+            return this;
+        
+        return base.GetLoadedEntry(relativePath);
+    }
 }

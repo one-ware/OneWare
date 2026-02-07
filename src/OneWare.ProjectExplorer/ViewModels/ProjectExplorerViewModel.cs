@@ -86,7 +86,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
-        project.Initialize();
         _fileWatchService.RegisterProject(project);
     }
 
@@ -157,7 +156,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         
         if (expand)
             project.IsExpanded = true;
-
+        
         Insert(project);
 
         if (setActive) ActiveProject = project;

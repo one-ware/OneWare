@@ -17,13 +17,15 @@ public class FolderProjectManager : IProjectManager
 
     public string Extension => "";
 
-    public Task<IProjectRoot?> LoadProjectAsync(string path)
+    public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        if (!Directory.Exists(path)) return Task.FromResult<IProjectRoot?>(null);
+        if (!Directory.Exists(path)) return null;
 
         var root = new FolderProjectRoot(path);
 
-        return Task.FromResult<IProjectRoot?>(root);
+        await root.InitializeAsync();
+        
+        return root;
     }
 
     public Task<bool> SaveProjectAsync(IProjectRoot root)

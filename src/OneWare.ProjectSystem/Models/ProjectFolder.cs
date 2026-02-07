@@ -24,7 +24,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
             if (x)
             {
-                LoadContent();
+                _ = LoadContentAsync();
 
                 if (defaultFolderAnimation)
                     iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X").Subscribe(y =>
@@ -163,7 +163,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         return pf;
     }
 
-    public IProjectEntry? GetLoadedEntry(string relativePath)
+    public virtual IProjectEntry? GetLoadedEntry(string relativePath)
     {
         var split = relativePath.IndexOf(Path.DirectorySeparatorChar);
 
@@ -297,7 +297,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
-    protected virtual void LoadContent()
+    protected virtual async Task LoadContentAsync()
     {
         Children.Clear();
         Entities.Clear();
@@ -307,23 +307,65 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             LoadingFailed = true;
             return;
         }
-        
-        var directoryMatches = GetDirectories("*", false);
 
-        foreach (var match in directoryMatches)
+        LoadingFailed = false;
+
+        // Batch size (tweakable)
+        const int batchSize = 50;
+
+        // Load folders first
+        await foreach (var folder in EnumerateFoldersAsync(batchSize))
         {
-            var newFolder = new ProjectFolder(Path.GetFileName(match), this);
-            Children.Add(newFolder);
-            Entities.Add(newFolder);
+            Children.Add(folder);
+            Entities.Add(folder);
         }
 
-        var fileMatches = GetFiles("*", false);
-
-        foreach (var match in fileMatches)
+        // Load files after
+        await foreach (var file in EnumerateFilesAsync(batchSize))
         {
-            var newFile = new ProjectFile(Path.GetFileName(match), this);
-            Children.Add(newFile);
-            Entities.Add(newFile);
+            Children.Add(file);
+            Entities.Add(file);
+        }
+    }
+    
+    private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize)
+    {
+        var matches = GetDirectories("*", false);
+
+        int count = 0;
+
+        foreach (var match in matches)
+        {
+            yield return new ProjectFolder(Path.GetFileName(match), this);
+
+            count++;
+
+            // Yield control back to UI every batch
+            if (count % batchSize == 0)
+            {
+                await Task.Yield();
+                await Task.Delay(50);
+            }
+        }
+    }
+    
+    private async IAsyncEnumerable<ProjectFile> EnumerateFilesAsync(int batchSize)
+    {
+        var matches = GetFiles("*", false);
+
+        int count = 0;
+
+        foreach (var match in matches)
+        {
+            yield return new ProjectFile(Path.GetFileName(match), this);
+
+            count++;
+
+            if (count % batchSize == 0)
+            {
+                await Task.Yield();
+                await Task.Delay(50);
+            }
         }
     }
 }

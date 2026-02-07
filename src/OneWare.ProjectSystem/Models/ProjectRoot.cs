@@ -27,10 +27,10 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
             FontWeight = value ? FontWeight.Bold : FontWeight.Regular;
         }
     }
-    
-    public virtual void Initialize()
+
+    public Task InitializeAsync()
     {
-        LoadContent();
+        return LoadContentAsync();
     }
 
     public abstract bool IsPathIncluded(string path);

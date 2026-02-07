@@ -53,6 +53,8 @@ public class UniversalFpgaProjectManager : IProjectManager
                 if (_fpgaService.GetPreCompileStep(preCompileStep) is { } pre)
                     root.RegisterPreCompileStep(pre);
 
+        await root.InitializeAsync();
+        
         return root;
     }
 

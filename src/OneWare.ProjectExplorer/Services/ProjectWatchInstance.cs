@@ -111,8 +111,7 @@ public class ProjectWatchInstance : IDisposable
     private void ProcessChanges()
     {
         foreach (var change in _changes) _ = ProcessAsync(change.Key, change.Value);
-
-        //Task.WhenAll(_changes.Select(x => ProcessAsync(x.Key, x.Value)));
+        
         _changes.Clear();
     }
 

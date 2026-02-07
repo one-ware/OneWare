@@ -322,12 +322,17 @@ public class SourceControlViewModel : ExtendedTool
         if (_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) _ = RefreshAsync();
     }
 
-    public void ViewInProjectExplorer(IProjectEntry entry)
+    public void ViewInProjectExplorer(string fullPath)
     {
         _mainDockService.Show(_projectExplorerService);
-        _projectExplorerService.ExpandToRoot(entry);
+
+        var file = _projectExplorerService.GetEntryFromFullPath(fullPath);
+        
+        if(file == null) return;
+        
+        _projectExplorerService.ExpandToRoot(file);
         _projectExplorerService.ClearSelection();
-        _projectExplorerService.AddToSelection(entry);
+        _projectExplorerService.AddToSelection(file);
     }
 
     #endregion

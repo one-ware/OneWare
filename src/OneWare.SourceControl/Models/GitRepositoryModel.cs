@@ -135,10 +135,7 @@ public class GitRepositoryModel : ObservableObject
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
 
-                var sModel = new SourceControlFileModel(fullPath, item)
-                {
-                    ProjectFile = projectExplorerService.GetEntryFromFullPath(fullPath) as IProjectFile
-                };
+                var sModel = new SourceControlFileModel(fullPath, item);
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||
