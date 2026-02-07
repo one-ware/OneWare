@@ -18,6 +18,7 @@ public class FolderProjectRoot : ProjectRoot
     }
 
     public override string ProjectPath => RootFolderPath;
+    
     public override string ProjectTypeId => ProjectType;
 
     public override void RegisterEntry(IProjectEntry entry)
@@ -101,5 +102,20 @@ public class FolderProjectRoot : ProjectRoot
                 folder.Children.Add(new LoadingDummyNode());
             }
         }
+    }
+
+    public override IProjectEntry? GetEntry(string relativePath)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override IProjectFile? GetFile(string relativePath)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override IEnumerable<IProjectFile> GetFiles(string searchPattern = "*")
+    {
+        throw new NotImplementedException();
     }
 }

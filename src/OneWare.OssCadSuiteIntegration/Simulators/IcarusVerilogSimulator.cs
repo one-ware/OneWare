@@ -45,8 +45,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
                 Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
 
-            var verilogFiles = root.Files
-                .Where(x => x.Extension == ".v")
+            var verilogFiles = root.GetFiles("*.v")
                 .Where(x => !root.CompileExcluded.Contains(x))
                 .Select(x => $"{x.RelativePath.ToUnixPath()}");
 

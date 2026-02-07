@@ -56,7 +56,7 @@ public class WebStudioApp : StudioApp
             Services.Resolve<IProjectExplorerService>().Projects.Add(dummy);
             Services.Resolve<IProjectExplorerService>().ActiveProject = dummy;
 
-            foreach (var file in dummy!.Files)
+            foreach (var file in dummy!.GetFiles())
             {
                 var vm = await Services.Resolve<IMainDockService>().OpenFileAsync(file);
 

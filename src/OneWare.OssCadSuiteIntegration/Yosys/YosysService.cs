@@ -71,7 +71,7 @@ public class YosysService(
 
             var top = project.TopEntity?.Header ?? throw new Exception("TopEntity not set!");
 
-            var includedFiles = project.Files
+            var includedFiles = project.GetFiles()
                 .Where(x => x.Extension is ".v" or ".sv")
                 .Where(x => !project.CompileExcluded.Contains(x))
                 .Where(x => !project.TestBenches.Contains(x))

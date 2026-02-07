@@ -48,6 +48,21 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     }
 
     public override string ProjectTypeId => ProjectType;
+    
+    public override IProjectEntry? GetEntry(string relativePath)
+    {
+        return SearchRelativePath(relativePath);
+    }
+
+    public override IProjectFile? GetFile(string relativePath)
+    {
+        return SearchRelativePath(relativePath) as IProjectFile;
+    }
+
+    public override IEnumerable<IProjectFile> GetFiles(string searchPattern = "*")
+    {
+        throw new NotImplementedException();
+    }
 
     public IProjectEntry? TopEntity
     {

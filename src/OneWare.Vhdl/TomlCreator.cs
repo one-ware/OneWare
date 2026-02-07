@@ -22,7 +22,7 @@ public class TomlCreator
     {
         try
         {
-            var vhdls = project.Files.Where(IsVhdl).ToList();
+            var vhdls = project.GetFiles().Where(IsVhdl).ToList();
 
             var workFiles = "[libraries]\ndefault.files = [\n";
 
