@@ -18,7 +18,7 @@ public static partial class VcdParser
     [GeneratedRegex("(\\d+)\\s?(s|ms|us|ns|ps|fs)")]
     private static partial Regex TimeScaleRegex();
 
-    public static VcdFile ParseVcdDefinition(string path, object? parseLock = null)
+    public static VcdFile ParseVcdDefinition(string path, Lock? parseLock = null)
     {
         using var stream =
             new FileStream(path, FileMode.Open, FileAccess.Read,
@@ -142,7 +142,7 @@ public static partial class VcdParser
         return ParseVcd(stream);
     }
 
-    private static VcdFile ParseVcd(Stream stream, object? parseLock = null)
+    private static VcdFile ParseVcd(Stream stream, Lock? parseLock = null)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
 
@@ -153,7 +153,7 @@ public static partial class VcdParser
         return vcdFile;
     }
 
-    private static VcdFile ReadDefinition(TextReader reader, object? parseLock)
+    private static VcdFile ReadDefinition(TextReader reader, Lock? parseLock)
     {
         var definition = new VcdDefinition();
         IScopeHolder currentScope = definition;
@@ -294,7 +294,7 @@ public static partial class VcdParser
 
     private static async Task ReadSignals(StreamReader reader, IReadOnlyDictionary<string, IVcdSignal> signalRegister,
         ICollection<long> changeTimes, object? parseLock = null,
-        IProgress<int>? progress = null, CancellationToken? cancellationToken = default)
+        IProgress<int>? progress = null, CancellationToken? cancellationToken = null)
     {
         parseLock ??= new object();
 
@@ -321,17 +321,28 @@ public static partial class VcdParser
         var progressC = 0;
         long counter = 0;
 
-        while (!reader.EndOfStream)
+        var buffer = new char[1];
+
+        while (true)
         {
-            if (cancellationToken is { IsCancellationRequested: true }) return;
+            if (cancellationToken is { IsCancellationRequested: true })
+                return;
 
-            var c = (char)reader.Read();
+            int read = await reader.ReadAsync(buffer, 0, 1);
 
-            if (reader.EndOfStream)
-                //Wait for new input from simulator
+            if (read == 0)
+            {
                 if (RuntimeInformation.OSArchitecture is not Architecture.Wasm)
-                    await Task.Delay(50);
+                    await Task.Delay(100, cancellationToken ?? CancellationToken.None);
+                
+                read = await reader.ReadAsync(buffer, 0, 1);
 
+                if (read == 0) return;
+            }
+
+            char c = buffer[0];
+
+            // Progress tracking still works
             if (progress != null)
             {
                 counter++;

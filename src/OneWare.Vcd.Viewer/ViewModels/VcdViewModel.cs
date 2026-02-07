@@ -28,9 +28,6 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     private int _loadingThreads;
 
-    private VcdScopeModel? _selectedScope;
-
-    private IVcdSignal? _selectedSignal;
     private VcdFile? _vcdFile;
     private bool _waitLiveExecution;
 
@@ -43,7 +40,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         _settingsService = settingsService;
 
-        Title = $"Loading {Path.GetFileName(fullPath)}";
+        SetTitle(0);
 
         settingsService.GetSettingObservable<int>("VcdViewer_LoadingThreads").Subscribe(x => { LoadingThreads = x; });
         _ = settingsService.Bind("VcdViewer_LoadingThreads", this.WhenValueChanged(x => x.LoadingThreads));
@@ -63,14 +60,14 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     public VcdScopeModel? SelectedScope
     {
-        get => _selectedScope;
-        set => SetProperty(ref _selectedScope, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public IVcdSignal? SelectedSignal
     {
-        get => _selectedSignal;
-        set => SetProperty(ref _selectedSignal, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public int[] LoadingThreadOptions { get; }
@@ -100,7 +97,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public override void InitializeContent()
     {
         base.InitializeContent();
-        if (_isLiveExecution) Title = $"{Path.GetFileName(FullPath)} - LIVE";
+        SetTitle(0);
     }
 
     protected override void UpdateCurrentFile(IFile? oldFile)
@@ -138,15 +135,15 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             var token = _cancellationTokenSource.Token;
             LoadingFailed = !await LoadInternalAsync(token);
 
-            if (live && token.IsCancellationRequested) LoadingFailed = !await LoadInternalAsync(token);
-
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
-            Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile!.Name;
+            
+            SetTitle(0);
 
             if (live)
             {
-                await Task.Delay(200);
+                await Task.Delay(200, token);
                 _isLiveExecution = false;
+                SetTitle(0);
             }
         }
         catch (Exception e)
@@ -173,7 +170,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
         if (cancellationToken.IsCancellationRequested) return false;
 
-        var parseLock = LoadingThreads > 1 ? new object() : null;
+        var parseLock = LoadingThreads > 1 ? new Lock() : null;
 
         _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
 
@@ -228,7 +225,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 if (cancellationToken.IsCancellationRequested) return false;
 
                 var progressAverage = (int)progressParts.Average();
-                ReportProgress(progressAverage, _isLiveExecution);
+                ReportProgress(progressAverage);
                 return true;
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue)
             .DisposeWith(_compositeDisposable);
@@ -245,11 +242,11 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         return true;
     }
 
-    private void ReportProgress(int progress, bool isLive)
+    private void ReportProgress(int progress)
     {
         if (_vcdFile == null) return;
 
-        Title = isLive ? $"{Path.GetFileName(FullPath)} - LIVE" : $"{Path.GetFileName(FullPath)} {progress}%";
+        SetTitle(progress);
 
         if (_vcdFile.Definition.ChangeTimes.Count != 0)
         {
@@ -262,6 +259,14 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 WaveFormViewer.LoadingMarkerOffset = _vcdFile.Definition.ChangeTimes.Last();
             }
         }
+    }
+
+    private void SetTitle(int progress)
+    {
+        var fileName = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : Path.GetFileName(FullPath);
+        var title = _isLiveExecution ? $"{fileName} - LIVE" : $"{fileName}";
+        if(progress > 0 && !_isLiveExecution) title += $" ({progress}%)";
+        Title = title;
     }
 
     public void AddSignal(IVcdSignal signal)

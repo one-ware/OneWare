@@ -6,18 +6,18 @@ public class VcdSignal<T> : IVcdSignal
 {
     private readonly List<int> _changeTimeOffsets = new();
 
-    private readonly object _parseLock;
+    private readonly Lock _parseLock;
     private readonly List<T> _values = new();
 
     public VcdSignal(List<long> changeTimes, VcdLineType type, int bitWidth, string id, string name,
-        object? parseLock = null)
+        Lock? parseLock = null)
     {
         ChangeTimes = changeTimes;
         Type = type;
         BitWidth = bitWidth;
         Id = id;
         Name = name;
-        _parseLock = parseLock ?? new object();
+        _parseLock = parseLock ?? new Lock();
     }
 
     public List<long> ChangeTimes { get; }
