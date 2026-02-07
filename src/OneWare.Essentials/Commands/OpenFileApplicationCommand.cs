@@ -17,7 +17,9 @@ public class OpenFileApplicationCommand : ApplicationCommandBase
 
     public override bool Execute(ILogical source)
     {
-        _ = ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(_file);
+        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchRelativePath(_file) as IProjectFile;
+        if (file == null) return false;
+        _ = ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
         return true;
     }
 

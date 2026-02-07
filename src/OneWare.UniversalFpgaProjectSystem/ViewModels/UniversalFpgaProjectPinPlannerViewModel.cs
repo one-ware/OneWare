@@ -135,7 +135,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.TopEntity as IProjectFile;
+            var file = Project.GetFile(Project.TopEntity);
             if (file == null) return;
 
             var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);

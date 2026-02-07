@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Context;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -13,14 +14,6 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 {
     private readonly IMainDockService _mainDockService;
 
-    private readonly INotifyCollectionChanged? _testBenchCollection;
-
-    private bool _isVisible;
-
-    private IFpgaSimulator? _selectedSimulator;
-
-    private TestBenchContext? _testBenchContext;
-
     public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IMainDockService mainDockService,
         FpgaService fpgaService)
     {
@@ -30,10 +23,9 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 
         if (file is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
         {
-            IsVisible = fpgaProjectRoot.TestBenches.Contains(fpgaProjectFile);
-
-            _testBenchCollection = fpgaProjectRoot.TestBenches;
-            _testBenchCollection.CollectionChanged += OnCollectionChanged;
+            IsVisible = fpgaProjectRoot.IsTestBench(fpgaProjectFile.RelativePath);
+            
+            fpgaProjectRoot.ProjectPropertyChanged += OnProjectPropertyChanged;
         }
     }
 
@@ -41,28 +33,28 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 
     public bool IsVisible
     {
-        get => _isVisible;
+        get;
         set
         {
-            SetProperty(ref _isVisible, value);
+            SetProperty(ref field, value);
             if (value && TestBenchContext == null) _ = LoadContextAsync();
         }
     }
 
     public TestBenchContext? TestBenchContext
     {
-        get => _testBenchContext;
-        set => SetProperty(ref _testBenchContext, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public ObservableCollection<IFpgaSimulator> Simulators { get; }
 
     public IFpgaSimulator? SelectedSimulator
     {
-        get => _selectedSimulator;
+        get;
         set
         {
-            SetProperty(ref _selectedSimulator, value);
+            SetProperty(ref field, value);
 
             if (TestBenchContext != null)
             {
@@ -76,15 +68,18 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
         }
     }
 
-    private void OnCollectionChanged(object? o, NotifyCollectionChangedEventArgs args)
+    private void OnProjectPropertyChanged(object? o, ProjectPropertyChangedEventArgs args)
     {
         if (File is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
-            IsVisible = fpgaProjectRoot.TestBenches.Contains(fpgaProjectFile);
+            IsVisible = fpgaProjectRoot.IsTestBench(fpgaProjectFile.RelativePath);
     }
 
     public void Detach()
     {
-        if (_testBenchCollection != null) _testBenchCollection.CollectionChanged -= OnCollectionChanged;
+        if (File is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
+        {
+            fpgaProjectRoot.ProjectPropertyChanged -= OnProjectPropertyChanged;
+        }
     }
 
     private async Task LoadContextAsync()

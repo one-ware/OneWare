@@ -42,28 +42,12 @@ public class UniversalFpgaProjectManager : IProjectManager
 
         ProjectHelper.ImportEntries(root.FullPath, root);
 
-        //Load Properties
-        var top = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.TopEntity));
-        if (top != null && root.SearchRelativePath(top.ToPlatformPath()) is { } entity) root.TopEntity = entity;
-
         var toolchain = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Toolchain));
         if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
             root.Toolchain = tc;
 
         var loader = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Loader));
         if (loader != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loader) is { } l) root.Loader = l;
-
-        var testBenches = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.TestBenches));
-        if (testBenches != null)
-            foreach (var testBench in testBenches)
-                if (root.SearchRelativePath(testBench.ToPlatformPath()) is IProjectFile file)
-                    root.RegisterTestBench(file);
-
-        var compileExcluded = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.CompileExcluded));
-        if (compileExcluded != null)
-            foreach (var exclude in compileExcluded)
-                if (root.SearchRelativePath(exclude.ToPlatformPath()) is IProjectFile file)
-                    root.RegisterCompileExcluded(file);
 
         var preCompileSteps = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.PreCompileSteps));
         if (preCompileSteps != null)
@@ -124,7 +108,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     if (file.Extension is ".vhd" or ".vhdl" or ".v" or ".sv")
                     {
                         //Set Top
-                        if (universalFpgaProjectRoot.TopEntity == file)
+                        if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
                             menuItems.Add(new MenuItemViewModel("Unset Top Entity")
                             {
                                 Header = "Unset Top Entity",
@@ -140,19 +124,19 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 Header = "Set Top Entity",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.TopEntity = file;
+                                    universalFpgaProjectRoot.TopEntity = file.RelativePath;
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
 
                         //Exclude from compile
-                        if (!universalFpgaProjectRoot.CompileExcluded.Contains(file))
+                        if (!universalFpgaProjectRoot.IsCompileExcluded(file.RelativePath))
                             menuItems.Add(new MenuItemViewModel("ExcludeCompilation")
                             {
                                 Header = "Exclude from compile",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.RegisterCompileExcluded(file);
+                                    universalFpgaProjectRoot.AddCompileExcluded(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
@@ -162,19 +146,19 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 Header = "Include into compile",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.UnregisterCompileExcluded(file);
+                                    universalFpgaProjectRoot.RemoveCompileExcluded(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
 
                         //Testbenches
-                        if (!universalFpgaProjectRoot.TestBenches.Contains(file))
+                        if (!universalFpgaProjectRoot.IsTestBench(file.RelativePath))
                             menuItems.Add(new MenuItemViewModel("MarkTestBench")
                             {
                                 Header = "Mark as TestBench",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.RegisterTestBench(file);
+                                    universalFpgaProjectRoot.AddTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
                                 IconObservable = Application.Current!.GetResourceObservable("VSImageLib.AddTest_16x")
@@ -185,7 +169,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 Header = "Unmark as TestBench",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.UnregisterTestBench(file);
+                                    universalFpgaProjectRoot.RemoveTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
                                 IconObservable =

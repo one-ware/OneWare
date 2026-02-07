@@ -6,12 +6,11 @@ public interface IProjectRoot : IProjectFolder
     public string ProjectPath { get; }
     public string RootFolderPath { get; }
     public bool IsActive { get; set; }
-    public bool IsPathIncluded(string relativePath);
+    public bool IsPathIncluded(string path);
     public void IncludePath(string path);
     public void OnExternalEntryAdded(string path, FileAttributes attributes);
-    public IProjectEntry? GetEntry(string relativePath);
-    public IProjectFile? GetFile(string relativePath);
-    
+    public IProjectEntry? GetEntry(string? relativePath);
+    public IProjectFile? GetFile(string? relativePath);
     /// <summary>
     /// Returns the relative paths of items included in this root
     /// </summary>

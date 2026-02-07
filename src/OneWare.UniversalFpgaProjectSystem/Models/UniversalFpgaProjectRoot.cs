@@ -16,11 +16,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
 
-    private readonly ObservableCollection<IProjectEntry> _compileExcluded = [];
-
     private readonly ObservableCollection<IFpgaPreCompileStep> _preCompileSteps = [];
-
-    private readonly ObservableCollection<IProjectFile> _testBenches = [];
 
     private readonly IImage _testBenchOverlay;
 
@@ -36,27 +32,15 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         _testBenchOverlay = Application.Current!.FindResource(ThemeVariant.Dark, "TestBenchOverlay") as IImage
                             ?? throw new NullReferenceException(nameof(Application));
 
-        TestBenches = new ReadOnlyObservableCollection<IProjectFile>(_testBenches);
-        CompileExcluded = new ReadOnlyObservableCollection<IProjectEntry>(_compileExcluded);
         PreCompileSteps = new ReadOnlyObservableCollection<IFpgaPreCompileStep>(_preCompileSteps);
     }
 
     public override string ProjectTypeId => ProjectType;
 
-    public IProjectEntry? TopEntity
+    public string? TopEntity
     {
-        get;
-        set
-        {
-            field?.IconOverlays.Remove(_topEntityOverlay);
-            SetProperty(ref field, value);
-            field?.IconOverlays.Add(_topEntityOverlay);
-
-            if (field != null)
-                SetProjectProperty(nameof(TopEntity), field.RelativePath.ToUnixPath());
-            else
-                RemoveProjectProperty(nameof(TopEntity));
-        }
+        get => GetProjectProperty(nameof(TopEntity));
+        set => SetProjectProperty(nameof(TopEntity), value?.ToUnixPath());
     }
 
     public IFpgaToolchain? Toolchain
@@ -85,11 +69,37 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         }
     }
 
-    public ReadOnlyObservableCollection<IProjectFile> TestBenches { get; }
-
-    public ReadOnlyObservableCollection<IProjectEntry> CompileExcluded { get; }
-
     public ReadOnlyObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; }
+
+    public bool IsTestBench(string relativePath)
+    {
+        return IsIncludedPathHelper(relativePath, "testBenches");
+    }
+
+    public void AddTestBench(string relativePath)
+    {
+        AddIncludedPathHelper(relativePath, "testBenches");
+    }
+
+    public void RemoveTestBench(string relativePath)
+    {
+        RemoveIncludedPathHelper(relativePath, "testBenches");
+    }
+
+    public bool IsCompileExcluded(string relativePath)
+    {
+        return IsIncludedPathHelper(relativePath, "compileExcluded");
+    }
+
+    public void AddCompileExcluded(string relativePath)
+    {
+        AddIncludedPathHelper(relativePath, "compileExcluded");
+    }
+
+    public void RemoveCompileExcluded(string relativePath)
+    {
+        RemoveIncludedPathHelper(relativePath, "compileExcluded");
+    }
 
     protected override IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
     {
@@ -99,34 +109,6 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     protected override IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)
     {
         return new FpgaProjectFile(path, topFolder);
-    }
-
-    public void RegisterTestBench(IProjectFile file)
-    {
-        _testBenches.Add(file);
-        file.IconOverlays.Add(_testBenchOverlay);
-        SetProjectPropertyArray(nameof(TestBenches), TestBenches.Select(x => x.RelativePath.ToUnixPath()));
-    }
-
-    public void UnregisterTestBench(IProjectFile file)
-    {
-        _testBenches.Remove(file);
-        file.IconOverlays.Remove(_testBenchOverlay);
-        SetProjectPropertyArray(nameof(TestBenches), TestBenches.Select(x => x.RelativePath.ToUnixPath()));
-    }
-
-    public void RegisterCompileExcluded(IProjectEntry entry)
-    {
-        _compileExcluded.Add(entry);
-        entry.TextOpacity = 0.5f;
-        SetProjectPropertyArray(nameof(CompileExcluded), CompileExcluded.Select(x => x.RelativePath.ToUnixPath()));
-    }
-
-    public void UnregisterCompileExcluded(IProjectEntry entry)
-    {
-        _compileExcluded.Remove(entry);
-        entry.TextOpacity = 1f;
-        SetProjectPropertyArray(nameof(CompileExcluded), CompileExcluded.Select(x => x.RelativePath.ToUnixPath()));
     }
 
     public void RegisterPreCompileStep(IFpgaPreCompileStep step)

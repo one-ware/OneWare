@@ -104,8 +104,10 @@ public class FolderProjectRoot : ProjectRoot
         }
     }
 
-    public override IProjectEntry? GetEntry(string relativePath)
+    public override IProjectEntry? GetEntry(string? relativePath)
     {
+        if(relativePath == null) return null;
+        
         var visual = SearchRelativePath(relativePath);
         if (visual != null) return visual;
         
@@ -125,7 +127,7 @@ public class FolderProjectRoot : ProjectRoot
         }
     }
 
-    public override IProjectFile? GetFile(string relativePath)
+    public override IProjectFile? GetFile(string? relativePath)
     {
         return GetEntry(relativePath) as IProjectFile;
     }

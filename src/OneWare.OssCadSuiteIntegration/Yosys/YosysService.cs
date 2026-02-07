@@ -69,13 +69,11 @@ public class YosysService(
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
 
-            var top = project.TopEntity?.Header ?? throw new Exception("TopEntity not set!");
+            var top = project.TopEntity ?? throw new Exception("TopEntity not set!");
 
-            var includedFiles = project.GetFiles()
-                .Where(x => x.Extension is ".v" or ".sv")
-                .Where(x => !project.CompileExcluded.Contains(x))
-                .Where(x => !project.TestBenches.Contains(x))
-                .Select(x => x.RelativePath);
+            var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
+                .Where(x => !project.IsCompileExcluded(x))
+                .Where(x => !project.IsTestBench(x));
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");

@@ -47,11 +47,9 @@ public static class UniversalFpgaProjectParser
         {
             await Dispatcher.UIThread.Invoke(async () =>
             {
-                await using (var stream = File.OpenWrite(root.ProjectFilePath))
-                {
-                    stream.SetLength(0);
-                    await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
-                }
+                await using var stream = File.OpenWrite(root.ProjectFilePath);
+                stream.SetLength(0);
+                await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
             });
 
             root.LastSaveTime = DateTime.Now;

@@ -46,8 +46,8 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                 Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
 
             var verilogFiles = root.GetFiles("*.v")
-                .Where(x => !root.CompileExcluded.Contains(x))
-                .Select(x => $"{x.RelativePath.ToUnixPath()}");
+                .Where(x => !root.IsCompileExcluded(x))
+                .Select(x => $"{x.ToUnixPath()}");
 
             _mainDockService.Show<IOutputService>();
 

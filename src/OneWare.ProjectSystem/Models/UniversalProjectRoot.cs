@@ -7,6 +7,15 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectSystem.Models;
 
+public class ProjectPropertyChangedEventArgs(string propertyName, object? oldValue, object? newValue) : EventArgs
+{
+    public string PropertyName { get; } = propertyName;
+    
+    public object? OldValue { get; } = oldValue;
+    
+    public object? NewValue { get; } =  newValue;
+}
+
 public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 {
     public UniversalProjectRoot(string projectFilePath, JsonObject properties) : base(
@@ -18,27 +27,44 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         Application.Current!.GetResourceObservable("UniversalProject").Subscribe(x => Icon = x as IImage);
     }
 
+    public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;
     public JsonObject Properties { get; }
     public DateTime LastSaveTime { get; set; }
     public override string ProjectPath => ProjectFilePath;
     public string ProjectFilePath { get; }
 
-    public override bool IsPathIncluded(string relativePath)
+    public override bool IsPathIncluded(string path)
     {
-        var includes = GetProjectPropertyArray("Include");
-        var excludes = GetProjectPropertyArray("Exclude");
-
-        if (includes == null && excludes == null) return true;
-
-        return ProjectHelper.MatchWildCards(relativePath, includes ?? ["*.*"], excludes);
+        return IsIncludedPathHelper(path, "Include", "Exclude");
     }
 
     public override void IncludePath(string path)
     {
-        if (!Properties.ContainsKey("Include"))
-            Properties.Add("Include", new JsonArray());
+        AddIncludedPathHelper(path, "Include");
+    }
 
-        AddToProjectPropertyArray("Include", path);
+    protected bool IsIncludedPathHelper(string relativePath, string includeArrayKey, string? excludeArrayKey = null)
+    {
+        var includes = GetProjectPropertyArray(includeArrayKey);
+        var excludes = excludeArrayKey == null ? null : GetProjectPropertyArray(excludeArrayKey);
+
+        return ProjectHelper.MatchWildCards(relativePath, includes ?? ["*.*"], excludes);
+    }
+    
+    protected void AddIncludedPathHelper(string relativePath, string includeArrayKey)
+    {
+        if (!Properties.ContainsKey(includeArrayKey))
+            Properties.Add(includeArrayKey, new JsonArray());
+
+        AddToProjectPropertyArray(includeArrayKey, relativePath);
+    }
+    
+    protected void RemoveIncludedPathHelper(string relativePath, string includeArrayKey)
+    {
+        if (!Properties.ContainsKey(includeArrayKey))
+            Properties.Add(includeArrayKey, new JsonArray());
+
+        RemoveFromProjectPropertyArray(includeArrayKey, relativePath);
     }
 
     public override void OnExternalEntryAdded(string path, FileAttributes attributes)
@@ -73,33 +99,49 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
             .Select(x => x!.ToString());
     }
 
-    public void SetProjectProperty(string name, string value)
+    public void SetProjectProperty(string name, string? value)
     {
+        Properties.TryGetPropertyValue(name, out var oldValue);
         Properties[name] = value;
+        ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), value));
     }
 
     public void SetProjectPropertyArray(string name, IEnumerable<string> values)
     {
+        Properties.TryGetPropertyValue(name, out var oldValue);
         Properties[name] = new JsonArray(values.Select(x => JsonValue.Create(x)).ToArray());
+        ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), values));
     }
 
     public void AddToProjectPropertyArray(string name, params string[] newItems)
     {
+        Properties.TryGetPropertyValue(name, out var oldValue);
         Properties.TryAdd(name, new JsonArray());
         foreach (var item in newItems) Properties[name]!.AsArray().Add(item);
+        ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), Properties[name]?.GetValue<object?>()));
+    }
+
+    public void RemoveFromProjectPropertyArray(string name, params string[] removeItems)
+    {
+        Properties.TryGetPropertyValue(name, out var oldValue);
+        if (!Properties.ContainsKey(name)) return;
+        foreach (var item in removeItems) Properties[name]!.AsArray().Remove(item);
+        ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), Properties[name]?.GetValue<object?>()));
     }
 
     public void RemoveProjectProperty(string name)
     {
+        Properties.TryGetPropertyValue(name, out var oldValue);
         Properties.Remove(name);
+        ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), null));
     }
-    
-    public override IProjectEntry? GetEntry(string relativePath)
+
+    public override IProjectEntry? GetEntry(string? relativePath)
     {
         return SearchRelativePath(relativePath);
     }
 
-    public override IProjectFile? GetFile(string relativePath)
+    public override IProjectFile? GetFile(string? relativePath)
     {
         return SearchRelativePath(relativePath) as IProjectFile;
     }
