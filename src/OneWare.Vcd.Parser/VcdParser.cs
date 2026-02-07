@@ -42,7 +42,7 @@ public static partial class VcdParser
                 await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                     FileShare.Read | FileShare.ReadWrite);
                 stream.Seek(vcdFile.DefinitionParseEndPosition + 1, SeekOrigin.Begin);
-                var reader = new StreamReader(stream);
+                var reader = new StreamReader(stream, Encoding.UTF8, true, BufferSize);
 
                 await ReadSignals(reader, vcdFile.Definition.SignalRegister, vcdFile.Definition.ChangeTimes, parseLock,
                     new Progress<int>(x => progress.Report((0, x))),
@@ -116,7 +116,7 @@ public static partial class VcdParser
                 new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.ReadWrite);
             stream.Seek(begin, SeekOrigin.Begin);
             await using var limitStream = new StreamReadLimitLengthWrapper(stream, length);
-            var reader = new StreamReader(limitStream);
+            var reader = new StreamReader(limitStream, Encoding.UTF8, true, BufferSize);
 
             var signals = file.Definition.SignalRegister
                 .ToDictionary(f => f.Key, f => f.Value.CloneEmpty());
