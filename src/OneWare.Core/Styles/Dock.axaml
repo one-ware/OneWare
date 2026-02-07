@@ -3,9 +3,16 @@
         xmlns:idc="using:Dock.Avalonia.Controls"
         xmlns:core="using:Dock.Model.Core"
         xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials"
-        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime">
 
     <Styles.Resources>
+        
+        <!--Fixes for simple theme, can be removed once Dock #1026 is merges-->
+        <system:Double x:Key="ScrollBarButtonArrowIconFontSize">10</system:Double>
+        <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{DynamicResource ThemeForegroundColor}" />
+        <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{DynamicResource ThemeAccentColor}" />
+        
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6"

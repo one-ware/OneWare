@@ -1,11 +1,16 @@
 ﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:OneWare.Core"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              x:Class="OneWare.Core.App" x:CompileBindings="False">
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
+    
+    <Application.Resources>
+        <ControlRecycling x:Key="ControlRecyclingKey" TryToUseIdAsKey="True" />
+    </Application.Resources>
     
     <Application.Styles>
         <SimpleTheme>
@@ -17,6 +22,7 @@
                 </ResourceDictionary>
             </SimpleTheme.Resources>
         </SimpleTheme>
+        
         <DockSimpleTheme />
 
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml" />
@@ -24,6 +30,12 @@
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
         <StyleInclude Source="avares://OneWare.Core/Styles/IdeStyles.axaml" />
         <StyleInclude Source="avares://OneWare.Essentials/Controls/SharedControls.axaml" />
+        
+        <DockSimpleTheme />
+        
+        <Style Selector="DockControl">
+            <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+        </Style>
     </Application.Styles>
 
 </Application>
