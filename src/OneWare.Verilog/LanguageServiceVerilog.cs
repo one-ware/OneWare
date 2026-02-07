@@ -16,16 +16,4 @@ public class LanguageServiceVerilog(string workspace, ISettingsService settingsS
     {
         return new TypeAssistanceVerilog(editor, this, settingsService);
     }
-
-    protected override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, string fullPath)
-    {
-        var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-            .GetEntryFromFullPath(fullPath) as IProjectFile;
-
-        if (entry is not null &&
-            entry.TopFolder?.GetFile(Path.GetFileNameWithoutExtension(fullPath) + ".qip") != null)
-            return new List<ErrorListItem>();
-
-        return base.ConvertErrors(pdp, fullPath);
-    }
 }

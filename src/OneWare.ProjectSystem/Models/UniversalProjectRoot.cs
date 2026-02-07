@@ -67,13 +67,6 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         RemoveFromProjectPropertyArray(includeArrayKey, relativePath);
     }
 
-    public override void OnExternalEntryAdded(string path, FileAttributes attributes)
-    {
-        var relativePath = Path.GetRelativePath(FullPath, path);
-
-        //TODO
-    }
-
     public string? GetProjectProperty(string name)
     {
         return Properties[name]?.ToString();

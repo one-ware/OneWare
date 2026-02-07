@@ -123,9 +123,8 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _extensionLinks.TryGetValue(extension, out var extensionLink);
         if (_workspaceServerTypes.TryGetValue(extensionLink ?? extension, out var type2))
         {
-            var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-                .GetEntryFromFullPath(fullPath);
-            var workspace = entry?.Root.RootFolderPath ?? Path.GetDirectoryName(fullPath) ?? "";
+            var root = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetRootFromFile(fullPath);
+            var workspace = root?.RootFolderPath ?? Path.GetDirectoryName(fullPath) ?? "";
 
             if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
             if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not

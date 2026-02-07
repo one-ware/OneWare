@@ -86,6 +86,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
+        project.Initialize();
         _fileWatchService.RegisterProject(project);
     }
 
@@ -153,8 +154,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         
         if (project == null)
             return null;
-        
-        project.Initialize();
         
         if (expand)
             project.IsExpanded = true;
@@ -655,18 +654,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         //For now we just re-initialize the files that are open from the project and still included
         var filesOpenInProject = _mainDockService.OpenFiles
             .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
-            .Select(x => new { File = x.Value.FullPath, ViewModel = x.Value })
+            .Select(x => new { Key = x.Key, ViewModel = x.Value })
             .ToList();
-
-        var refreshedFiles = new List<IProjectFile>();
-
-        foreach (var openFile in filesOpenInProject)
-            if (proj.GetFile(Path.GetRelativePath(project.RootFolderPath, openFile.File)) is { } newFile)
-            {
-                _mainDockService.OpenFiles.Remove(openFile.File.ToPathKey());
-                _mainDockService.OpenFiles.Add(newFile.FullPath.ToPathKey(), openFile.ViewModel);
-                refreshedFiles.Add(newFile);
-            }
 
         var expanded = project.IsExpanded;
         var active = project.IsActive;
@@ -674,8 +663,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         Insert(proj);
 
         //Re-initialize the files that didn't get removed after swapping project
-        foreach (var refreshed in refreshedFiles)
-            if (_mainDockService.OpenFiles.TryGetValue(refreshed.FullPath.ToPathKey(), out var vm))
+        foreach (var refreshed in filesOpenInProject)
+            if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
                 vm.InitializeContent();
 
         if (active) ActiveProject = proj;

@@ -228,6 +228,9 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     public IProjectEntry? GetEntry(string? relativePath)
     {
         if(relativePath == null) return null;
+
+        if (!Root.IsPathIncluded(Path.Combine(RelativePath, relativePath))) 
+            return null;
         
         var visual = SearchEntries(relativePath);
         if (visual != null) return visual;

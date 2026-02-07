@@ -307,9 +307,8 @@ public abstract class LanguageServiceBase : ILanguageService
 
     protected virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, string fullPath)
     {
-        var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-            .GetEntryFromFullPath(fullPath) as IProjectFile;
-        var root = entry?.Root;
+        var root = ContainerLocator.Container.Resolve<IProjectExplorerService>()
+            .GetRootFromFile(fullPath);
 
         foreach (var p in pdp.Diagnostics)
         {

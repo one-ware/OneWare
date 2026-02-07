@@ -124,10 +124,9 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public virtual void InitializeContent()
     {
         var oldPath = _lastFullPath;
-        var entry = _projectExplorerService.GetEntryFromFullPath(FullPath) as IProjectFile;
+        var isExternal = _projectExplorerService.GetRootFromFile(FullPath) == null;
         
-        Title = entry?.Name ?? $"[{Path.GetFileName(FullPath)}]";
-        Icon = entry?.Icon;
+        Title = isExternal ? $"[{Path.GetFileName(FullPath)}]" : Path.GetFileName(FullPath);
         
         if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 

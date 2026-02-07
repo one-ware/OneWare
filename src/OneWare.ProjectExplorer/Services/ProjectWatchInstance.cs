@@ -124,16 +124,15 @@ public class ProjectWatchInstance : IDisposable
 
             if (File.Exists(path) || Directory.Exists(path)) attributes = File.GetAttributes(path);
 
-            var relativePath = Path.GetRelativePath(_root.RootFolderPath, path);
-
-            var entry = _root.GetLoadedEntry(relativePath);
-
             var lastArg = changes.Last();
 
             var openTab = _mainDockService.OpenFiles
                 .FirstOrDefault(x => x.Key.EqualPaths(path));
             
             openTab.Value?.InitializeContent();
+            
+            var relativePath = Path.GetRelativePath(_root.RootFolderPath, path);
+            var entry = _root.GetLoadedEntry(relativePath);
 
             if (entry is not null)
                 switch (lastArg.ChangeType)
@@ -142,7 +141,7 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Renamed:
                     case WatcherChangeTypes.Changed:
                         if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
-                            _root.GetEntry(Path.GetRelativePath(_root.RootFolderPath, rea.OldFullPath)) is { } deleted)
+                            _root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath, rea.OldFullPath)) is { } deleted)
                         {
                             await _projectExplorerService.RemoveAsync(deleted);
                         }
