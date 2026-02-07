@@ -105,11 +105,11 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 
         windowService.RegisterUiExtension("EditView_Top", new OneWareUiExtension(x =>
         {
-            if (x is IFile)
+            if (x is string fullPath)
                 return new UniversalFpgaProjectTestBenchToolBarView
                 {
-                    DataContext =
-                        serviceProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
+                    DataContext = serviceProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>(
+                        (typeof(string), fullPath))
                 };
             return null;
         }));

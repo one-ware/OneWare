@@ -513,7 +513,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 {
                     Header = "Open with GTKWave",
                     Command = new AsyncRelayCommand(async () =>
-                        await serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(wave))
+                        await serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(wave.FullPath))
                 });
             if (x is [IProjectFile { Extension: ".pcf" } pcf])
             {

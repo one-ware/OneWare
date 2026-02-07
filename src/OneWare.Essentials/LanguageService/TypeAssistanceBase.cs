@@ -3,7 +3,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Indentation;
 using OneWare.Essentials.EditorExtensions;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -19,8 +18,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
     protected IEditor Editor { get; }
     protected TextEditor CodeBox => Editor.Editor;
 
-    protected IFile CurrentFile =>
-        Editor.CurrentFile ?? throw new NullReferenceException(nameof(Editor.CurrentFile));
+    protected string CurrentFilePath => Editor.FullPath;
 
     protected IIndentationStrategy? IndentationStrategy { get; init; }
 

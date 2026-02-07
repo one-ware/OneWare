@@ -452,7 +452,7 @@ public partial class EditView : UserControl
 
     private ErrorListItem? GetErrorAtMousePos(PointerEventArgs e)
     {
-        if (ViewModel?.CurrentFile == null) return null;
+        if (ViewModel == null || string.IsNullOrWhiteSpace(ViewModel.FullPath)) return null;
 
         var pos = CodeBox.GetPositionFromPoint(e.GetPosition(CodeBox)); //gets position of mouse
         if (pos.HasValue)
@@ -460,7 +460,7 @@ public partial class EditView : UserControl
             var offset = CodeBox.Document.GetOffset(pos.Value.Location);
             var location = CodeBox.Document.GetLocation(offset);
             foreach (var error in ContainerLocator.Container.Resolve<ErrorListViewModel>()
-                         .GetErrorsForFile(ViewModel.CurrentFile.FullPath))
+                         .GetErrorsForFile(ViewModel.FullPath))
                 if (location.Line >= error.StartLine && location.Line <= error.EndLine &&
                     location.Column >= error.StartColumn && location.Column <= error.EndColumn)
                     return error;

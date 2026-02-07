@@ -126,10 +126,8 @@ public class SearchListViewModel : ExtendedTool
                     _lastCancellationToken.Token);
                 break;
             case 2 when _mainDockService.CurrentDocument is IEditor editor:
-                var currentFile = editor.CurrentFile;
-                if (currentFile != null)
-                    Items.AddRange(await FindAllIndexesAsync(currentFile,
-                        searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
+                Items.AddRange(await FindAllIndexesAsync(editor.FullPath,
+                    searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
                 break;
         }
 
@@ -155,7 +153,7 @@ public class SearchListViewModel : ExtendedTool
                         var dM = searchText;
                         var dR = file.Header[(sI + searchText.Length)..].TrimEnd();
                         Items.Add(new SearchResultModel(file.Header, dL, dM, dR, searchText,
-                            file.Root, file));
+                            file.Root, file.FullPath));
                     }
 
                     Items.AddRange(await FindAllIndexesAsync(file, searchText, CaseSensitive, WholeWord, UseRegex,
@@ -200,7 +198,7 @@ public class SearchListViewModel : ExtendedTool
                     var dM = line[sI..(sI + lineM.Length)];
                     var dR = line[(sI + lineM.Length)..].TrimEnd();
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        file is IProjectFile pf ? pf.Root : null, file.FullPath, lineNr + 1, index, search.Length));
                     lastIndex = index;
                     lastLineNr = lineNr;
                 }
@@ -233,7 +231,78 @@ public class SearchListViewModel : ExtendedTool
                     }
 
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        file is IProjectFile pf ? pf.Root : null, file.FullPath, lineNr + 1, index, search.Length));
+                }
+            }
+
+            return indexes;
+        }, cancellationToken);
+    }
+
+    private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, string search,
+        bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(search) || !File.Exists(fullPath)) return new List<SearchResultModel>();
+
+        var text = await File.ReadAllTextAsync(fullPath, cancellationToken);
+        var lines = text.Split('\n');
+        var lastIndex = 0;
+        var lastLineNr = 0;
+        return await Task.Run(() =>
+        {
+            var indexes = new List<SearchResultModel>();
+            if (regex)
+            {
+                var matches = Regex.Matches(text, search,
+                    caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+                foreach (Match match in matches)
+                {
+                    if (cancellationToken.IsCancellationRequested) return indexes;
+                    var index = match.Index;
+                    if (index == -1) return indexes;
+                    var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
+                    var line = lines[lineNr];
+
+                    var lineM = Regex.Match(line, search,
+                        caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+                    var sI = lineM.Index;
+                    var dL = line[..sI].TrimStart();
+                    var dM = line[sI..(sI + lineM.Length)];
+                    var dR = line[(sI + lineM.Length)..].TrimEnd();
+                    indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
+                        null, fullPath, lineNr + 1, index, search.Length));
+                    lastIndex = index;
+                    lastLineNr = lineNr;
+                }
+            }
+            else
+            {
+                for (var index = 0;; index += search.Length)
+                {
+                    if (cancellationToken.IsCancellationRequested) return indexes;
+                    index = text.IndexOf(search, index,
+                        caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+                    if (index == -1) return indexes;
+                    var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
+                    var line = lines[lineNr];
+
+                    var sI = line.IndexOf(search,
+                        caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+                    var dL = line[..sI].TrimStart();
+                    var dM = search;
+                    var dR = line[(sI + search.Length)..].TrimEnd();
+
+                    lastIndex = index;
+                    lastLineNr = lineNr;
+                    if (words) //Check word boundary
+                    {
+                        if (index > 0 && char.IsLetterOrDigit(text[index - 1])) continue; //before
+                        if (index + search.Length < text.Length &&
+                            char.IsLetterOrDigit(text[index + search.Length])) continue; //before
+                    }
+
+                    indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
+                        null, fullPath, lineNr + 1, index, search.Length));
                 }
             }
 
@@ -249,9 +318,9 @@ public class SearchListViewModel : ExtendedTool
 
     private async Task GoToSearchResultAsync(SearchResultModel resultModel)
     {
-        if (resultModel?.File == null) return;
+        if (string.IsNullOrWhiteSpace(resultModel?.FilePath)) return;
 
-        if (await _mainDockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
+        if (await _mainDockService.OpenFileAsync(resultModel.FilePath) is not IEditor evb) return;
 
         if (_mainDockService.GetWindowOwner(this) is IHostWindow)
             _mainDockService.CloseDockable(this);

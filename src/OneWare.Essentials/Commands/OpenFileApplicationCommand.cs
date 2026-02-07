@@ -19,7 +19,7 @@ public class OpenFileApplicationCommand : ApplicationCommandBase
     {
         var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntry(_file) as IProjectFile;
         if (file == null) return false;
-        _ = ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
+        _ = ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file.FullPath);
         return true;
     }
 

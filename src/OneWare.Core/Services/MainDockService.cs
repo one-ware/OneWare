@@ -29,7 +29,7 @@ public class MainDockService : Factory, IMainDockService
     private readonly IDockSerializer _serializer;
     private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
-    private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
+    private readonly Dictionary<string, Func<string, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
 
     private readonly IPaths _paths;
@@ -118,7 +118,7 @@ public class MainDockService : Factory, IMainDockService
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
     }
 
-    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions)
+    public void RegisterFileOpenOverwrite(Func<string, bool> action, params string[] extensions)
     {
         foreach (var extension in extensions) _fileOpenOverwrites.TryAdd(extension, action);
     }
@@ -129,15 +129,16 @@ public class MainDockService : Factory, IMainDockService
         LayoutRegistrations[location].Add(typeof(T));
     }
 
-    public async Task<IExtendedDocument?> OpenFileAsync(IFile pf)
+    public async Task<IExtendedDocument?> OpenFileAsync(string fullPath)
     {
-        if (_fileOpenOverwrites.TryGetValue(pf.Extension, out var overwrite))
+        var extension = Path.GetExtension(fullPath);
+        if (_fileOpenOverwrites.TryGetValue(extension, out var overwrite))
             // If overwrite executes successfully, return null
             // This means that the file is open in an external program
-            if (overwrite.Invoke(pf))
+            if (overwrite.Invoke(fullPath))
                 return null;
 
-        var fileKey = pf.FullPath.ToPathKey();
+        var fileKey = fullPath.ToPathKey();
         if (OpenFiles.ContainsKey(fileKey))
         {
             Show(OpenFiles[fileKey]);
@@ -145,9 +146,9 @@ public class MainDockService : Factory, IMainDockService
             return OpenFiles[fileKey];
         }
 
-        _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
+        _documentViewRegistrations.TryGetValue(extension, out var type);
         type ??= typeof(EditViewModel);
-        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
+        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), fullPath)) as IExtendedDocument;
 
         if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
 
@@ -161,9 +162,9 @@ public class MainDockService : Factory, IMainDockService
         return viewModel;
     }
 
-    public async Task<bool> CloseFileAsync(IFile pf)
+    public async Task<bool> CloseFileAsync(string fullPath)
     {
-        var fileKey = pf.FullPath.ToPathKey();
+        var fileKey = fullPath.ToPathKey();
         if (OpenFiles.ContainsKey(fileKey))
         {
             var vm = OpenFiles[fileKey];

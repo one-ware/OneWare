@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Helpers;
@@ -109,11 +110,11 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     private async Task PreviewFileAsync(IProjectFile file)
     {
-        var extendedDocument = await _mainDockService.OpenFileAsync(file);
+        var extendedDocument = await _mainDockService.OpenFileAsync(file.FullPath);
         if (extendedDocument != null)
         {
             extendedDocument.IsReadOnly = true;
-            extendedDocument.Title = "PREVIEW: " + extendedDocument.CurrentFile?.Name;
+            extendedDocument.Title = "PREVIEW: " + Path.GetFileName(extendedDocument.FullPath);
         }
     }
 

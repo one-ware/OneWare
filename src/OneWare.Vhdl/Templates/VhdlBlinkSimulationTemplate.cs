@@ -26,8 +26,8 @@ public class VhdlBlinkSimulationTemplate(ILogger logger, IMainDockService mainDo
 
             root.AddTestBench(file2.RelativePath);
 
-            _ = mainDockService.OpenFileAsync(file);
-            _ = mainDockService.OpenFileAsync(file2);
+            _ = mainDockService.OpenFileAsync(file.FullPath);
+            _ = mainDockService.OpenFileAsync(file2.FullPath);
         }
         catch (Exception e)
         {

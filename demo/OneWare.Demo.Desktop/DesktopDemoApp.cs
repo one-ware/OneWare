@@ -64,8 +64,8 @@ public class DesktopDemoApp : DemoApp
             {
                 if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
                 {
-                    var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
+                    //var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
+                    //_ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
                 }
                 else
                 {

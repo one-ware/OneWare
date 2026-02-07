@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.IO;
+using System.Reactive.Linq;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Markdown.Avalonia.SyntaxHigh;
@@ -11,7 +12,6 @@ using OneWare.Essentials.ViewModels;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
-using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Core.Services;
 
@@ -116,13 +116,16 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         }
     }
 
-    public ILanguageService? GetLanguageService(IFile file)
+    public ILanguageService? GetLanguageService(string fullPath)
     {
-        _extensionLinks.TryGetValue(file.Extension, out var extensionLink);
-        if (_workspaceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type2))
+        if (string.IsNullOrWhiteSpace(fullPath)) return null;
+        var extension = Path.GetExtension(fullPath);
+        _extensionLinks.TryGetValue(extension, out var extensionLink);
+        if (_workspaceServerTypes.TryGetValue(extensionLink ?? extension, out var type2))
         {
-            var workspace = (file is IProjectFile pf ? pf.Root.RootFolderPath : Path.GetDirectoryName(file.FullPath)) ??
-                            "";
+            var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>()
+                .GetEntryFromFullPath(fullPath);
+            var workspace = entry?.Root.RootFolderPath ?? Path.GetDirectoryName(fullPath) ?? "";
 
             if (_workspaceServers[type2].TryGetValue(workspace, out var service2)) return service2;
             if (ContainerLocator.Container.Resolve(type2, (typeof(string), workspace)) is not
@@ -133,7 +136,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
             return newInstance;
         }
 
-        if (_singleInstanceServerTypes.TryGetValue(extensionLink ?? file.Extension, out var type))
+        if (_singleInstanceServerTypes.TryGetValue(extensionLink ?? extension, out var type))
         {
             if (_singleInstanceServers.TryGetValue(type, out var service)) return service;
             if (ContainerLocator.Container.Resolve(type) is not ILanguageService newInstance)
@@ -148,13 +151,13 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
     public ITypeAssistance? GetTypeAssistance(IEditor editor)
     {
-        if (editor.CurrentFile == null) throw new NullReferenceException(nameof(editor.CurrentFile));
-        var service = GetLanguageService(editor.CurrentFile);
+        var service = GetLanguageService(editor.FullPath);
 
         if (service == null)
         {
-            _extensionLinks.TryGetValue(editor.CurrentFile.Extension, out var extensionLink);
-            if (!_standAloneTypeAssistance.TryGetValue(extensionLink ?? editor.CurrentFile.Extension, out var type))
+            var extension = Path.GetExtension(editor.FullPath);
+            _extensionLinks.TryGetValue(extension, out var extensionLink);
+            if (!_standAloneTypeAssistance.TryGetValue(extensionLink ?? extension, out var type))
                 return null;
             if (ContainerLocator.Container.Resolve(type, (typeof(IEditor), editor)) is not ITypeAssistance newInstance)
                 throw new TypeLoadException(nameof(type) + " is not " + nameof(ITypeAssistance));

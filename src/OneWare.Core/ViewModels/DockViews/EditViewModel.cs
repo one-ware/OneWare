@@ -22,7 +22,6 @@ namespace OneWare.Core.ViewModels.DockViews;
 
 public class EditViewModel : ExtendedDocument, IEditor
 {
-    private static readonly IBrush ErrorBrushText = new SolidColorBrush(Color.FromArgb(255, 175, 50, 50));
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromArgb(150, 175, 50, 50));
     private static readonly IBrush WarningBrush = new SolidColorBrush(Color.FromArgb(150, 155, 155, 0));
     private readonly BackupService _backupService;
@@ -37,8 +36,6 @@ public class EditViewModel : ExtendedDocument, IEditor
     private CompositeDisposable _composite = new();
 
     private IEnumerable<ErrorListItem>? _diagnostics;
-
-    private ITypeAssistance? _typeAssistance;
 
     public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
         IMainDockService mainDockService, ILanguageManager languageManager, IWindowService windowService,
@@ -65,8 +62,8 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         _languageManager.LanguageSupportAdded += (_, s) =>
         {
-            if (CurrentFile?.Extension == s)
-                Dispatcher.UIThread.Post(() => UpdateCurrentFile(CurrentFile));
+            if (Path.GetExtension(FullPath) == s)
+                Dispatcher.UIThread.Post(() => UpdateCurrentFile(FullPath));
         };
 
         this.WhenValueChanged(x => x.Diagnostics).Subscribe(x =>
@@ -106,8 +103,8 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         _errorService.ErrorRefresh += (sender, o) =>
         {
-            if (CurrentFile != null && o is string path && path.EqualPaths(CurrentFile.FullPath))
-                Diagnostics = _errorService.GetErrorsForFile(CurrentFile.FullPath);
+            if (o is string path && path.EqualPaths(FullPath))
+                Diagnostics = _errorService.GetErrorsForFile(FullPath);
         };
     }
 
@@ -115,8 +112,8 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     public ITypeAssistance? TypeAssistance
     {
-        get => _typeAssistance;
-        private set => SetProperty(ref _typeAssistance, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public ScrollInfoContext ScrollInfo { get; } = new();
@@ -136,13 +133,13 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     public event EventHandler? FileSaved;
 
-    protected override void UpdateCurrentFile(IFile? oldFile)
+    protected override void UpdateCurrentFile(string? oldPath)
     {
         Reset();
 
-        if (CurrentFile == null) throw new NullReferenceException(nameof(CurrentFile));
+        if (string.IsNullOrWhiteSpace(FullPath)) throw new NullReferenceException(nameof(FullPath));
 
-        Diagnostics = _errorService.GetErrorsForFile(CurrentFile.FullPath);
+        Diagnostics = _errorService.GetErrorsForFile(FullPath);
 
         async Task OnInitialized()
         {
@@ -158,7 +155,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             }
             else
             {
-                var scope = _languageManager.GetTextMateScopeByExtension(CurrentFile.Extension);
+                var scope = _languageManager.GetTextMateScopeByExtension(Path.GetExtension(FullPath));
                 if (scope != null)
                 {
                     if (Editor.TextMateInstallation == null) Editor.InitTextmate(_languageManager.RegistryOptions);
@@ -187,13 +184,13 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     private void InitTypeAssistance()
     {
-        if (CurrentFile == null) return;
+        if (string.IsNullOrWhiteSpace(FullPath)) return;
 
         TypeAssistance = _languageManager.GetTypeAssistance(this);
 
         if (TypeAssistance != null)
         {
-            Editor.SetEnableBreakpoints(TypeAssistance.CanAddBreakPoints, CurrentFile);
+            Editor.SetEnableBreakpoints(TypeAssistance.CanAddBreakPoints, FullPath);
 
             if (TypeAssistance.FoldingStrategy != null)
             {
@@ -330,11 +327,11 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     public override async Task<bool> SaveAsync()
     {
-        if (IsReadOnly || CurrentFile == null) return true;
+        if (IsReadOnly || string.IsNullOrWhiteSpace(FullPath)) return true;
 
         try
         {
-            await PlatformHelper.WriteTextFileAsync(CurrentFile.FullPath, CurrentDocument.Text);
+            await PlatformHelper.WriteTextFileAsync(FullPath, CurrentDocument.Text);
         }
         catch (Exception e)
         {
@@ -343,11 +340,13 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
 
         ContainerLocator.Container.Resolve<ILogger>()
-            ?.Log($"Saved {CurrentFile.Name}!");
+            ?.Log($"Saved {Path.GetFileName(FullPath)}!");
 
         IsDirty = false;
-        CurrentFile.LastSaveTime = DateTime.Now;
-        CurrentFile.LoadingFailed = false;
+        var savable = ResolveSavableEntry();
+        if (savable != null) savable.LastSaveTime = DateTime.Now;
+        var pathEntry = ResolvePathEntry();
+        if (pathEntry != null) pathEntry.LoadingFailed = false;
         LoadingFailed = false;
 
         FileSaved?.Invoke(this, EventArgs.Empty);
@@ -357,14 +356,14 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     private async Task<bool> LoadAsync()
     {
-        if (CurrentFile == null) return false;
+        if (string.IsNullOrWhiteSpace(FullPath)) return false;
 
         IsLoading = true;
 
         var success = true;
         try
         {
-            await using var stream = File.OpenRead(CurrentFile.FullPath);
+            await using var stream = File.OpenRead(FullPath);
             using var reader = new StreamReader(stream);
 
             var doc = await Task.Run(() =>
@@ -378,26 +377,40 @@ public class EditViewModel : ExtendedDocument, IEditor
 
             Editor.Document = doc;
 
-            CurrentFile.LastSaveTime = File.GetLastWriteTime(CurrentFile.FullPath);
+            var savable = ResolveSavableEntry();
+            if (savable != null) savable.LastSaveTime = File.GetLastWriteTime(FullPath);
 
             CurrentDocument.UndoStack.ClearAll();
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()
-                ?.Error($"Failed loading file {CurrentFile.FullPath}", e, false);
+                ?.Error($"Failed loading file {FullPath}", e, false);
 
             success = false;
         }
 
         IsLoading = false;
-        CurrentFile.LoadingFailed = !success;
+        var pathEntry = ResolvePathEntry();
+        if (pathEntry != null) pathEntry.LoadingFailed = !success;
         LoadingFailed = !success;
         IsDirty = false;
 
-        if (success) _ = _backupService.SearchForBackupAsync(CurrentFile);
+        if (success) _ = _backupService.SearchForBackupAsync(FullPath);
 
         return success;
+    }
+
+    private ISavable? ResolveSavableEntry()
+    {
+        return _projectExplorerService.GetEntryFromFullPath(FullPath) as ISavable
+               ?? _projectExplorerService.GetTemporaryFile(FullPath);
+    }
+
+    private IHasPath? ResolvePathEntry()
+    {
+        return _projectExplorerService.GetEntryFromFullPath(FullPath) as IHasPath
+               ?? _projectExplorerService.GetTemporaryFile(FullPath);
     }
 
     #endregion

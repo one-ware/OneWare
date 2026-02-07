@@ -960,17 +960,13 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Open & Compare
 
-    public async Task<IFile?> OpenFileAsync(string path)
+    public async Task<string?> OpenFileAsync(string path)
     {
         if (ActiveRepository?.Repository is not { } repository) return null;
 
         if (!Path.IsPathRooted(path)) path = Path.Combine(repository.Info.WorkingDirectory, path);
-
-        if (_projectExplorerService.ActiveProject?.GetFile(Path.GetRelativePath(_projectExplorerService.ActiveProject.RootFolderPath, path)) is not IFile file)
-            file = _projectExplorerService.GetTemporaryFile(path);
-
-        await _mainDockService.OpenFileAsync(file);
-        return file;
+        await _mainDockService.OpenFileAsync(path);
+        return path;
     }
 
     public async Task OpenHeadFileAsync(string path)
@@ -987,9 +983,7 @@ public class SourceControlViewModel : ExtendedTool
             commitContent = await content.ReadToEndAsync();
         }
 
-        var file = _projectExplorerService.GetTemporaryFile(path);
-
-        var evm = await _mainDockService.OpenFileAsync(file);
+        var evm = await _mainDockService.OpenFileAsync(path);
 
         if (evm is IEditor editor)
         {
@@ -1067,10 +1061,10 @@ public class SourceControlViewModel : ExtendedTool
 
     private async Task MergeAllAsync(string path, MergeMode mode)
     {
-        var file = await OpenFileAsync(path);
-        if (file == null) return;
+        var fullPath = await OpenFileAsync(path);
+        if (fullPath == null) return;
 
-        var evm = await _mainDockService.OpenFileAsync(file);
+        var evm = await _mainDockService.OpenFileAsync(fullPath);
         if (evm is IEditor editor)
         {
             var merges = MergeService.GetMerges(editor.CurrentDocument);

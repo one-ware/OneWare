@@ -5,13 +5,12 @@ using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
 using OneWare.Essentials.Extensions;
-using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.EditorExtensions;
 
 public class BreakPointMargin : AbstractMargin
 {
-    private readonly IFile _currentFile;
+    private readonly string _filePath;
     private readonly TextEditor _editor;
     private readonly BreakpointStore _manager;
 
@@ -23,11 +22,11 @@ public class BreakPointMargin : AbstractMargin
         FocusableProperty.OverrideDefaultValue(typeof(BreakPointMargin), true);
     }
 
-    public BreakPointMargin(TextEditor editor, IFile currentFile, BreakpointStore manager)
+    public BreakPointMargin(TextEditor editor, string filePath, BreakpointStore manager)
     {
         _manager = manager;
         _editor = editor;
-        _currentFile = currentFile;
+        _filePath = filePath;
 
         _manager.Breakpoints.CollectionChanged += (o, i) => { InvalidateVisual(); };
     }
@@ -45,7 +44,7 @@ public class BreakPointMargin : AbstractMargin
                 if (firstLine == null) return;
 
                 foreach (var breakPoint in _manager.Breakpoints)
-                    if (breakPoint.File == _currentFile.FullPath)
+                    if (breakPoint.File == _filePath)
                     {
                         var visualLine = TextView.VisualLines.FirstOrDefault(vl =>
                             vl.FirstDocumentLine.LineNumber == breakPoint.Line);
@@ -114,7 +113,7 @@ public class BreakPointMargin : AbstractMargin
 
             var currentBreakPoint =
                 _manager.Breakpoints.FirstOrDefault(bp =>
-                    bp.File == _currentFile.FullPath && bp.Line == lineClicked);
+                    bp.File == _filePath && bp.Line == lineClicked);
 
             if (currentBreakPoint != null)
             {
@@ -122,8 +121,8 @@ public class BreakPointMargin : AbstractMargin
             }
             else
             {
-                if (!string.IsNullOrEmpty(_currentFile.FullPath))
-                    _manager.Add(new BreakPoint { File = _currentFile.FullPath, Line = lineClicked });
+                if (!string.IsNullOrWhiteSpace(_filePath))
+                    _manager.Add(new BreakPoint { File = _filePath, Line = lineClicked });
             }
         }
 

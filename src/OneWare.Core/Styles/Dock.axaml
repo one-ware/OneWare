@@ -278,7 +278,7 @@
 
                                 <Image
                                     Height="17" Width="17"
-                                    Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
+                                    Source="{Binding Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}" />
                                 <TextBlock Name="Title"
                                            Margin="3 0 0 0"

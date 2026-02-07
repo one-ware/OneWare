@@ -287,10 +287,7 @@ public abstract class GdbSession(
         if (!int.TryParse(frame.GetValue("line"), out var lineNr)) return;
         if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
         {
-            var file = projectExplorerService.GetEntryFromFullPath(fullPath) as IFile ??
-                       projectExplorerService.GetTemporaryFile(fullPath);
-
-            var evm = await mainDockService.OpenFileAsync(file) as IEditor;
+            var evm = await mainDockService.OpenFileAsync(fullPath) as IEditor;
 
             evm?.JumpToLine(lineNr);
 

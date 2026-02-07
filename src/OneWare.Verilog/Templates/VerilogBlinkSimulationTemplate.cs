@@ -21,8 +21,8 @@ public class VerilogBlinkSimulationTemplate(ILogger logger, IMainDockService mai
             var file = root.AddFile(name + ".v");
             var file2 = root.AddFile(name + "_tb.v");
             
-            _ = mainDockService.OpenFileAsync(file);
-            _ = mainDockService.OpenFileAsync(file2);
+            _ = mainDockService.OpenFileAsync(file.FullPath);
+            _ = mainDockService.OpenFileAsync(file2.FullPath);
         }
         catch (Exception e)
         {

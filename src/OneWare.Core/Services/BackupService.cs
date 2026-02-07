@@ -163,19 +163,21 @@ public class BackupService
     /// <summary>
     ///     ONLY CALL AFTER FILES LOADED!
     /// </summary>
-    public async Task SearchForBackupAsync(IFile file)
+    public async Task SearchForBackupAsync(string fullPath)
     {
         foreach (var backup in _backups)
-            if (backup.RealPath.EqualPaths(file.FullPath))
+            if (backup.RealPath.EqualPaths(fullPath))
             {
-                if (backup.SaveTime > file.LastSaveTime)
+                var lastSaveTime = File.Exists(fullPath) ? File.GetLastWriteTime(fullPath) : DateTime.MinValue;
+                if (backup.SaveTime > lastSaveTime)
                 {
-                    var dockable = await _mainDockService.OpenFileAsync(file);
+                    var dockable = await _mainDockService.OpenFileAsync(fullPath);
 
                     if (dockable is not EditViewModel evm) continue;
 
+                    var fileName = Path.GetFileName(fullPath);
                     var result = await _windowService.ShowYesNoAsync("Warning",
-                        $"There is a more recent version of {file.Name} stored in backups! Do you  want to restore it?",
+                        $"There is a more recent version of {fileName} stored in backups! Do you  want to restore it?",
                         MessageBoxIcon.Warning, _mainDockService.GetWindowOwner(dockable));
 
                     if (result == MessageBoxStatus.Yes)
@@ -186,12 +188,12 @@ public class BackupService
 
                             evm.CurrentDocument.Text = backupText;
 
-                            _logger.Log("File " + file.Name + " restored from backup!", true, Brushes.Green);
+                            _logger.Log("File " + fileName + " restored from backup!", true, Brushes.Green);
                         }
                         catch (Exception e)
                         {
                             _logger.Error(
-                                "Restoring file " + file.Name +
+                                "Restoring file " + fileName +
                                 " failed! More information can be found in the program log", e, true, true);
                         }
 

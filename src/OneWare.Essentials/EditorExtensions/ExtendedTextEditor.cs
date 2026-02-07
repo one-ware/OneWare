@@ -5,7 +5,6 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using DynamicData;
-using OneWare.Essentials.Models;
 using TextMateSharp.Registry;
 
 namespace OneWare.Essentials.EditorExtensions;
@@ -85,10 +84,11 @@ public class ExtendedTextEditor : TextEditor
         TextMateInstallation = null;
     }
 
-    public void SetEnableBreakpoints(bool enable, IFile? file = null)
+    public void SetEnableBreakpoints(bool enable, string? filePath = null)
     {
         TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
-        if (enable && file != null) TextArea.LeftMargins.Add(new BreakPointMargin(this, file, new BreakpointStore()));
+        if (enable && !string.IsNullOrWhiteSpace(filePath))
+            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, new BreakpointStore()));
     }
 
     public void SetEnableFolding(bool enable)

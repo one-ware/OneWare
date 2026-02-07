@@ -180,8 +180,7 @@ public class ProjectWatchInstance : IDisposable
                                     tab.FullPath = path;
                                     tab.InitializeContent();
 
-                                    if (tab.CurrentFile != null)
-                                        _mainDockService.OpenFiles.TryAdd(tab.CurrentFile.FullPath.ToPathKey(), tab);
+                                    _mainDockService.OpenFiles.TryAdd(tab.FullPath.ToPathKey(), tab);
                                 }
                             }
                             else

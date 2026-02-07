@@ -97,7 +97,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
-                            _mainDockService.OpenFileAsync(_projectExplorerService.GetTemporaryFile(root.ProjectFilePath)))
+                            _mainDockService.OpenFileAsync(root.ProjectFilePath))
                     });
                     break;
                 case FpgaProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:

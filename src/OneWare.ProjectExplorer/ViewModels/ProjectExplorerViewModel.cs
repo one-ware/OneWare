@@ -94,9 +94,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return TemporaryFiles[key];
     }
 
-    public void RemoveTemporaryFile(IFile file)
+    public void RemoveTemporaryFile(string fullPath)
     {
-        TemporaryFiles.Remove(file.FullPath.ToPathKey());
+        var key = fullPath.ToPathKey();
+        if (!TemporaryFiles.TryGetValue(key, out var file)) return;
+        TemporaryFiles.Remove(key);
         _fileWatchService.Unregister(file);
         FileRemoved?.Invoke(this, file);
     }
@@ -105,7 +107,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     {
         base.Insert(project);
         _fileWatchService.Register(project);
-        _languageManager.AddProject(project);
     }
 
     public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
@@ -186,7 +187,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public void DoubleTab(IProjectEntry entry)
     {
         if (entry is IProjectFile file)
-            _ = _mainDockService.OpenFileAsync(file);
+            _ = _mainDockService.OpenFileAsync(file.FullPath);
         else
             entry.IsExpanded = !entry.IsExpanded;
     }
@@ -203,7 +204,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     menuItems.Add(new MenuItemViewModel("Open")
                     {
                         Header = "Open",
-                        Command = new AsyncRelayCommand(() => _mainDockService.OpenFileAsync(file))
+                        Command = new AsyncRelayCommand(() => _mainDockService.OpenFileAsync(file.FullPath))
                     });
                     break;
                 case IProjectFolder folder:
@@ -353,7 +354,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         var file = await StorageProviderHelper.SelectFileAsync(_mainDockService.GetWindowOwner(this)!, "Select File",
             null);
 
-        if (file != null) await _mainDockService.OpenFileAsync(GetTemporaryFile(file));
+        if (file != null) await _mainDockService.OpenFileAsync(file);
     }
 
     private async Task<bool> AskForIncludeDialogAsync(IProjectRoot root, string relativePath)
@@ -396,7 +397,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
             var f = parent.AddFile(newFile, true);
             parent.IsExpanded = true;
-            await _mainDockService.OpenFileAsync(f);
+            await _mainDockService.OpenFileAsync(f.FullPath);
         }
     }
 
@@ -436,16 +437,15 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (entry is IProjectRoot proj)
         {
             var openFiles = _mainDockService.OpenFiles
-                .Where(x => x.Value.CurrentFile is IProjectFile pf && pf.Root == proj)
+                .Where(x => IsUnderRoot(proj.RootFolderPath, x.Value.FullPath))
                 .ToList();
 
             foreach (var tab in openFiles)
-                if (tab.Value.CurrentFile == null || !await _mainDockService.CloseFileAsync(tab.Value.CurrentFile))
+                if (!await _mainDockService.CloseFileAsync(tab.Value.FullPath))
                     return;
 
             ProjectRemoved?.Invoke(this, proj);
             _fileWatchService.Unregister(proj);
-            _languageManager.RemoveProject(proj);
 
             var activeProj = proj == ActiveProject;
 
@@ -471,7 +471,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
         else if (entry is IProjectFile file)
         {
-            if (!await _mainDockService.CloseFileAsync(file)) return;
+            if (!await _mainDockService.CloseFileAsync(file.FullPath)) return;
             FileRemoved?.Invoke(this, file);
         }
 
@@ -683,16 +683,16 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             //For now we just re-initialize the files that are open from the project and still included
 
             var filesOpenInProject = _mainDockService.OpenFiles
-                .Where(x => x.Value.CurrentFile is IProjectFile pf && pf.Root == root)
-                .Select(x => new { File = (x.Value.CurrentFile as IProjectFile)!, ViewModel = x.Value })
+                .Where(x => IsUnderRoot(root.RootFolderPath, x.Value.FullPath))
+                .Select(x => new { File = x.Value.FullPath, ViewModel = x.Value })
                 .ToList();
 
             var refreshedFiles = new List<IProjectFile>();
 
             foreach (var openFile in filesOpenInProject)
-                if (proj.GetFile(openFile.File.RelativePath) is {} newFile)
+                if (proj.GetFile(Path.GetRelativePath(root.RootFolderPath, openFile.File)) is { } newFile)
                 {
-                    _mainDockService.OpenFiles.Remove(openFile.File.FullPath.ToPathKey());
+                    _mainDockService.OpenFiles.Remove(openFile.File.ToPathKey());
                     _mainDockService.OpenFiles.Add(newFile.FullPath.ToPathKey(), openFile.ViewModel);
                     refreshedFiles.Add(newFile);
                 }
@@ -747,12 +747,19 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public async Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project)
     {
         var saveTasks = _mainDockService.OpenFiles
-            .Where(x => x.Value.CurrentFile is IProjectFile file && file.Root == project)
+            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
             .Select(x => x.Value.SaveAsync());
 
         var results = await Task.WhenAll(saveTasks);
 
         return results.All(x => x);
+    }
+
+    private static bool IsUnderRoot(string rootPath, string filePath)
+    {
+        var relative = Path.GetRelativePath(rootPath, filePath);
+        return !relative.StartsWith("..", StringComparison.Ordinal)
+               && !Path.IsPathRooted(relative);
     }
 
     #endregion

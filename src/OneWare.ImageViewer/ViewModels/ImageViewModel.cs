@@ -25,13 +25,11 @@ public class ImageViewModel : ExtendedDocument
         set => SetProperty(ref _image, value);
     }
 
-    protected override void UpdateCurrentFile(IFile? oldFile)
+    protected override void UpdateCurrentFile(string? oldPath)
     {
-        if (CurrentFile is null) throw new NullReferenceException(nameof(CurrentFile));
-
         try
         {
-            switch (CurrentFile.Extension.ToLower())
+            switch (Path.GetExtension(FullPath).ToLower())
             {
                 case ".svg":
                     var svg = SvgSource.Load(FullPath);

@@ -23,7 +23,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
-using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
 using Location = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -68,7 +67,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile.FullPath)
+        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFilePath)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
@@ -78,7 +77,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         if (error != null) info += error.Description + "\n";
 
-        var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
+        var hover = await Service.RequestHoverAsync(CurrentFilePath,
             new Position(pos.Line - 1, pos.Column - 1));
         if (hover != null)
         {
@@ -101,7 +100,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var error = GetErrorAtLocation(location);
         if (error != null && error.Diagnostic != null)
         {
-            var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
+            var codeactions = await Service.RequestCodeActionAsync(CurrentFilePath,
                 new Range
                 {
                     Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
@@ -140,7 +139,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
 
         //Refactorings
-        var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
+        var prepareRefactor = await Service.PrepareRenameAsync(CurrentFilePath, pos);
         if (prepareRefactor != null)
             menuItems.Add(new MenuItemViewModel("Rename")
             {
@@ -150,7 +149,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 IconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
             });
 
-        var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
+        var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (definition != null && IsOpen)
             foreach (var i in definition)
@@ -168,7 +167,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         Command = new RelayCommand<LocationLink>(GoToLocation),
                         CommandParameter = i.Location
                     });
-        var declaration = await Service.RequestDeclarationAsync(CurrentFile.FullPath,
+        var declaration = await Service.RequestDeclarationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (declaration != null && IsOpen)
             foreach (var i in declaration)
@@ -186,7 +185,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         Command = new RelayCommand<LocationLink>(GoToLocation),
                         CommandParameter = i.Location
                     });
-        var implementation = await Service.RequestImplementationAsync(CurrentFile.FullPath,
+        var implementation = await Service.RequestImplementationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (implementation != null && IsOpen)
             foreach (var i in implementation)
@@ -204,7 +203,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                         Command = new RelayCommand<LocationLink>(GoToLocation),
                         CommandParameter = i.Location
                     });
-        var typeDefinition = await Service.RequestImplementationAsync(CurrentFile.FullPath,
+        var typeDefinition = await Service.RequestImplementationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (typeDefinition != null && IsOpen)
             foreach (var i in typeDefinition)
@@ -264,7 +263,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         if (range.IsRange && range.Range != null)
         {
-            var workspaceEdit = await Service.RequestRenameAsync(CurrentFile.FullPath, range.Range.Start, newName);
+            var workspaceEdit = await Service.RequestRenameAsync(CurrentFilePath, range.Range.Start, newName);
             if (workspaceEdit != null && IsOpen)
                 await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
                     { Edit = workspaceEdit, Label = "Rename" });
@@ -280,7 +279,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return null;
         var location = CodeBox.Document.GetLocation(offset);
 
-        var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
+        var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (definition != null && IsOpen)
             if (definition.FirstOrDefault() is { } loc)
@@ -297,10 +296,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (location == null) return;
 
         var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile;
-        file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
-
-        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
+        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>()
+            .OpenFileAsync(path);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
@@ -411,7 +408,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     private async Task GetDocumentHighlightAsync()
     {
-        var result = await Service.RequestDocumentHighlightAsync(CurrentFile.FullPath,
+        var result = await Service.RequestDocumentHighlightAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
 
         if (result is not null)
@@ -429,7 +426,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual async Task UpdateSemanticTokensAsync()
     {
-        var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFile.FullPath);
+        var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFilePath);
 
         var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
 
@@ -464,7 +461,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (CodeBox.Document.LineCount == 0) return;
 
         var inlayHintContainer =
-            await Service.RequestInlayHintsAsync(CurrentFile.FullPath,
+            await Service.RequestInlayHintsAsync(CurrentFilePath,
                 new Range(0, 0, CodeBox.Document.LineCount,
                     CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
 
@@ -483,7 +480,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar,
         bool retrigger, SignatureHelp? activeSignatureHelp)
     {
-        var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
+        var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerKind,
             triggerChar, retrigger, activeSignatureHelp);
         if (signatureHelp != null && IsOpen)
@@ -510,7 +507,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var completionOffset = CodeBox.CaretOffset;
         if (triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
 
-        var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
+        var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
             triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
 
@@ -712,13 +709,13 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
             0,
-            comp, offset, CurrentFile.FullPath, AfterComplete);
+            comp, offset, CurrentFilePath, AfterComplete);
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
     {
         foreach (var error in ContainerLocator.Container.Resolve<IErrorService>()
-                     .GetErrorsForFile(CurrentFile.FullPath))
+                     .GetErrorsForFile(CurrentFilePath))
             if (location.Line >= error.StartLine && location.Column >= error.StartColumn &&
                 (location.Line < error.EndLine ||
                  (location.Line == error.EndLine && location.Column <= error.EndColumn)))
@@ -829,7 +826,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual void CodeUpdated()
     {
-        Service.RefreshTextDocument(CurrentFile.FullPath, CodeBox.Text);
+        Service.RefreshTextDocument(CurrentFilePath, CodeBox.Text);
         _ = UpdateSemanticTokensAsync();
     }
 
@@ -848,7 +845,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (!IsOpen) return;
 
         base.OnAssistanceActivated();
-        Service.DidOpenTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
+        Service.DidOpenTextDocument(CurrentFilePath, Editor.CurrentDocument.Text);
 
         _ = UpdateSemanticTokensAsync();
         _ = UpdateInlayHintsAsync();
@@ -869,7 +866,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var c = ConvertChanges(e);
         var changes = new Container<TextDocumentContentChangeEvent>(c);
-        Service.RefreshTextDocument(CurrentFile.FullPath, changes);
+        Service.RefreshTextDocument(CurrentFilePath, changes);
 
         _lastEditTime = DateTime.Now.TimeOfDay;
     }
@@ -877,7 +874,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private void FileSaved(object? sender, EventArgs e)
     {
         if (Service.IsLanguageServiceReady)
-            Service.DidSaveTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
+            Service.DidSaveTextDocument(CurrentFilePath, Editor.CurrentDocument.Text);
     }
 
     public override void Close()
@@ -892,7 +889,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
 
         base.Close();
-        if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(CurrentFile.FullPath);
+        if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(CurrentFilePath);
     }
 
     #endregion

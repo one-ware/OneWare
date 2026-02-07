@@ -26,9 +26,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
 
     public Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true,
         bool setActive = true);
-
-    public IFile GetTemporaryFile(string path);
-    public void RemoveTemporaryFile(IFile file);
+    
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectExplorerNode node);
     public Task ImportFolderDialogAsync(IProjectFolder? destination = null);

@@ -106,11 +106,11 @@
                     </DataGridTemplateColumn.Header>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="File.Header">
+                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="FileName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
                             <TextBlock Padding="5 0" VerticalAlignment="Center"
-                                       Text="{Binding File.Name, FallbackValue={x:Null}}" />
+                                       Text="{Binding FileName, FallbackValue={x:Null}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>

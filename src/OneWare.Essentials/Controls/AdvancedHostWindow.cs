@@ -73,8 +73,7 @@ public class AdvancedHostWindow : HostWindow
                 else
                 {
                     foreach (var i in docs)
-                        if (i.Value.CurrentFile != null)
-                            _ = _mainDockService.CloseFileAsync(i.Value.CurrentFile);
+                        _ = _mainDockService.CloseFileAsync(i.Value.FullPath);
                 }
             }
     }
@@ -86,8 +85,7 @@ public class AdvancedHostWindow : HostWindow
         {
             _cancelClose = false;
             foreach (var file in unsavedFiles)
-                if (file.CurrentFile != null)
-                    _mainDockService.OpenFiles.Remove(file.CurrentFile.FullPath.ToPathKey());
+                _mainDockService.OpenFiles.Remove(file.FullPath.ToPathKey());
 
             Dispatcher.UIThread.Post(Close);
         }

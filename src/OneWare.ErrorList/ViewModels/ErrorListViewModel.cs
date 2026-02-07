@@ -359,9 +359,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     public async Task GoToErrorAsync()
     {
         if (SelectedItem is not { } error) return;
-        var file = _projectExplorerExplorerViewModel.GetEntryFromFullPath(error.FilePath) as IFile ??
-                   _projectExplorerExplorerViewModel.GetTemporaryFile(error.FilePath);
-        var doc = await _mainDockService.OpenFileAsync(file);
+        var doc = await _mainDockService.OpenFileAsync(error.FilePath);
 
         doc?.GoToDiagnostic(error);
     }

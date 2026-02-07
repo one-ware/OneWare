@@ -20,7 +20,7 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         _settingsService = settingsService;
 
         CodeBox.TextArea.IndentationStrategy =
-            IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFile);
+            IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFilePath);
         FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
 
         LineCommentSequence = "//";
@@ -37,7 +37,7 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         if (_settingsService.GetSettingValue<bool>(VerilogModule.EnableSnippetsSetting) && _snippets != null)
             items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
-                CodeBox.CaretOffset, CurrentFile.FullPath)));
+                CodeBox.CaretOffset, CurrentFilePath)));
 
         return Task.FromResult(items);
     }

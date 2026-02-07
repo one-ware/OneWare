@@ -299,10 +299,8 @@ public abstract class LanguageServiceBase : ILanguageService
         {
             var path = pdp.Uri.GetFileSystemPath();
 
-            var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
-                .FirstOrDefault(x => x.Key.EqualPaths(path)).Value?.CurrentFile;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile
+                       ?? ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
             ContainerLocator.Container.Resolve<IErrorService>()
                 .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file.FullPath);
@@ -310,7 +308,7 @@ public abstract class LanguageServiceBase : ILanguageService
         }, DispatcherPriority.Background);
     }
 
-    protected virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
+    protected virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, string fullPath)
     {
         foreach (var p in pdp.Diagnostics)
         {
