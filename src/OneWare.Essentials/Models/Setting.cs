@@ -117,7 +117,10 @@ public class CheckBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new CheckBoxSetting(Title, (bool)DefaultValue);
+        return new CheckBoxSetting(Title, (bool)DefaultValue)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -138,7 +141,10 @@ public class TextBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new TextBoxSetting(Title, DefaultValue, Watermark);
+        return new TextBoxSetting(Title, DefaultValue, Watermark)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -165,7 +171,10 @@ public class ComboBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ComboBoxSetting(Title, DefaultValue, Options);
+        return new ComboBoxSetting(Title, DefaultValue, Options)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -174,7 +183,10 @@ public class AdvancedComboBoxSearchSetting(string title, object defaultValue, Ad
 {
     public override TitledSetting Clone()
     {
-        return new AdvancedComboBoxSearchSetting(Title, DefaultValue, Options);
+        return new AdvancedComboBoxSearchSetting(Title, DefaultValue, Options)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -205,7 +217,10 @@ public class AdvancedComboBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new AdvancedComboBoxSetting(Title, DefaultValue, Options);
+        return new AdvancedComboBoxSetting(Title, DefaultValue, Options)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -244,7 +259,10 @@ public class ListBoxSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ListBoxSetting(Title, ((ObservableCollection<string>)DefaultValue).ToArray());
+        return new ListBoxSetting(Title, ((ObservableCollection<string>)DefaultValue).ToArray())
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -286,7 +304,10 @@ public class SliderSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new SliderSetting(Title, (double)DefaultValue, Min, Max, Step);
+        return new SliderSetting(Title, (double)DefaultValue, Min, Max, Step)
+        {
+	        Validator = Validator
+        };
     }
 }
 
@@ -362,7 +383,10 @@ public class ColorSetting : TitledSetting
 
     public override TitledSetting Clone()
     {
-        return new ColorSetting(Title, (Color)DefaultValue);
+        return new ColorSetting(Title, (Color)DefaultValue)
+        {
+	        Validator = Validator
+        };
     }
 }
 

@@ -81,53 +81,80 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 {
                     case "CheckBoxSetting":
                         localCopy = new CheckBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString() == "True" ? true : false);
+                            _root.Properties[setting.Key]!.ToString() == "True" ? true : false)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "TextBoxSetting":
                         localCopy = new TextBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
-                            ((TextBoxSetting)localCopy).Watermark);
+                            ((TextBoxSetting)localCopy).Watermark)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "ComboBoxSetting":
                         localCopy = new ComboBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
-                            ((ComboBoxSetting)localCopy).Options);
+                            ((ComboBoxSetting)localCopy).Options)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "ListBoxSetting":
                         localCopy = new ListBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray());
+                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray())
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "ComboBoxSearchSetting":
                         localCopy = new ComboBoxSearchSetting(localCopy.Title,
                             _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray(),
-                            ((ComboBoxSearchSetting)localCopy).Options);
+                            ((ComboBoxSearchSetting)localCopy).Options)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "SliderSetting":
                         localCopy = new SliderSetting(localCopy.Title,
                             double.Parse(_root.Properties[setting.Key]!.ToString(), CultureInfo.InvariantCulture),
                             ((SliderSetting)localCopy).Min,
-                            ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step);
+                            ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "FolderPathSetting":
                         localCopy = new FolderPathSetting(localCopy.Title,
                             _root.Properties[setting.Key]!.ToString(), ((FolderPathSetting)localCopy).Watermark,
-                            ((FolderPathSetting)localCopy).StartDirectory, ((FolderPathSetting)localCopy).CheckPath);
+                            ((FolderPathSetting)localCopy).StartDirectory, ((FolderPathSetting)localCopy).CheckPath)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "FilePathSetting":
                         localCopy = new FilePathSetting(localCopy.Title,
                             _root.Properties[setting.Key]!.ToString(),
                             ((FilePathSetting)localCopy).Watermark, ((FilePathSetting)localCopy).StartDirectory,
-                            ((FilePathSetting)localCopy).CheckPath);
+                            ((FilePathSetting)localCopy).CheckPath)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     case "ColorSetting":
                         Color.TryParse(_root.Properties[setting.Key]!.ToString(), out var color);
-                        localCopy = new ColorSetting(localCopy.Title, color);
+                        localCopy = new ColorSetting(localCopy.Title, color)
+                        {
+	                        Validator = localCopy.Validator
+                        };
                         break;
 
                     default:
