@@ -12,7 +12,7 @@ public static partial class VcdParser
 {
     private const int ThreadFixOffset = 1000;
 
-    private const int MaxDefinitionSize = 50000;
+    private const int MaxDefinitionSize = int.MaxValue;
     private const int BufferSize = 1024;
 
     [GeneratedRegex("(\\d+)\\s?(s|ms|us|ns|ps|fs)")]
