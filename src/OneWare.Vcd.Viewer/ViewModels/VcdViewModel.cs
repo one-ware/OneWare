@@ -169,7 +169,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             ? await VcdContextManager.LoadContextAsync(GetSaveFilePath(FullPath))
             : null;
 
-        if (context != null) _lastContext = context;
+        _lastContext = context ?? new VcdContext(new List<VcdContextSignal>());
 
         if (cancellationToken.IsCancellationRequested) return false;
 
