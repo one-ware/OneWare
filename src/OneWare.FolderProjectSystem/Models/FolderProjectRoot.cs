@@ -10,67 +10,14 @@ public class FolderProjectRoot : ProjectRoot
 {
     public const string ProjectType = "Folder";
 
-    private readonly Dictionary<IProjectFolder, IDisposable> _registeredFolders = new();
-
     public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
     {
-        WatchDirectory(this);
+        
     }
 
     public override string ProjectPath => RootFolderPath;
     
     public override string ProjectTypeId => ProjectType;
-
-    public override void RegisterEntry(IProjectEntry entry)
-    {
-        if (entry is IProjectFolder folder) WatchDirectory(folder);
-        base.RegisterEntry(entry);
-    }
-
-    public override void UnregisterEntry(IProjectEntry entry)
-    {
-        if (entry is IProjectFolder folder) UnwatchDirectory(folder);
-        base.UnregisterEntry(entry);
-    }
-
-    private void WatchDirectory(IProjectFolder folder)
-    {
-        try
-        {
-            var subscription = folder.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
-            {
-                if (x)
-                {
-                    if (folder.Children.FirstOrDefault() is LoadingDummyNode) folder.Children.RemoveAt(0);
-                    FolderProjectManager.LoadFolder(folder);
-                }
-                else
-                {
-                    if (folder.Entities.Count > 0)
-                        foreach (var subEntity in folder.Entities.ToArray())
-                            folder.Remove(subEntity);
-                    if (Directory.Exists(folder.FullPath) &&
-                        Directory.EnumerateFileSystemEntries(folder.FullPath).Any())
-                        folder.Children.Add(new LoadingDummyNode());
-                }
-            });
-
-            _registeredFolders.Add(folder, subscription);
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-        }
-    }
-
-    private void UnwatchDirectory(IProjectFolder folder)
-    {
-        if (_registeredFolders.TryGetValue(folder, out var subscription))
-        {
-            subscription.Dispose();
-            _registeredFolders.Remove(folder);
-        }
-    }
 
     public override bool IsPathIncluded(string path)
     {
@@ -82,16 +29,13 @@ public class FolderProjectRoot : ProjectRoot
         //Not needed
     }
 
-    public override void OnExternalEntryAdded(string path, FileAttributes attributes)
+    public override void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
     {
-        var parentPath = Path.GetDirectoryName(path);
-
-        if (parentPath != null && SearchFullPath(parentPath) is IProjectFolder folder)
+        var parentPath = Path.GetDirectoryName(relativePath);
+        if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
         {
             if (folder.IsExpanded)
             {
-                var relativePath = Path.GetRelativePath(FullPath, path);
-
                 if (attributes.HasFlag(FileAttributes.Directory))
                     AddFolder(relativePath);
                 else
@@ -102,38 +46,5 @@ public class FolderProjectRoot : ProjectRoot
                 folder.Children.Add(new LoadingDummyNode());
             }
         }
-    }
-
-    public override IProjectEntry? GetEntry(string? relativePath)
-    {
-        if(relativePath == null) return null;
-        
-        var visual = SearchRelativePath(relativePath);
-        if (visual != null) return visual;
-        
-        // Create it in the visual tree and return it.
-        var fullPath = Path.Combine(RootFolderPath, relativePath);
-        if (!File.Exists(fullPath)) return null;
-        
-        var fileInfo = new FileInfo(fullPath);
-
-        if (fileInfo.Attributes.HasFlag(FileAttributes.Directory))
-        {
-            return AddFolder(relativePath);
-        }
-        else
-        {
-            return AddFile(relativePath);
-        }
-    }
-
-    public override IProjectFile? GetFile(string? relativePath)
-    {
-        return GetEntry(relativePath) as IProjectFile;
-    }
-
-    public override IEnumerable<string> GetFiles(string searchPattern = "*")
-    {
-        return Directory.EnumerateFiles(RootFolderPath, searchPattern, SearchOption.AllDirectories);
     }
 }

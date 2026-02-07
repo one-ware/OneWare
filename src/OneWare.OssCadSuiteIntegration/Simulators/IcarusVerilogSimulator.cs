@@ -73,7 +73,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
                 var vcdFileRelativePath = match.Groups[1].Value;
                 var vcdFileFullPath = Path.Combine(projectFile.Root!.FullPath, vcdFileRelativePath);
 
-                var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
+                var vcdFile = projectFile.Root.GetFile(vcdFileRelativePath.ToPlatformPath()) as IFile ??
                               _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
 
                 var doc = await _mainDockService.OpenFileAsync(vcdFile);

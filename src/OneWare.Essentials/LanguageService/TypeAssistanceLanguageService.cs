@@ -297,7 +297,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (location == null) return;
 
         var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
+        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile;
         file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
         var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);

@@ -8,11 +8,5 @@ public interface IProjectRoot : IProjectFolder
     public bool IsActive { get; set; }
     public bool IsPathIncluded(string path);
     public void IncludePath(string path);
-    public void OnExternalEntryAdded(string path, FileAttributes attributes);
-    public IProjectEntry? GetEntry(string? relativePath);
-    public IProjectFile? GetFile(string? relativePath);
-    /// <summary>
-    /// Returns the relative paths of items included in this root
-    /// </summary>
-    public IEnumerable<string> GetFiles(string searchPattern = "*");
+    public void OnExternalEntryAdded(string relativePath, FileAttributes attributes);
 }

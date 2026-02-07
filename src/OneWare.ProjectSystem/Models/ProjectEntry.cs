@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -8,22 +9,13 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectSystem.Models;
 
-public abstract class ProjectEntry : ObservableObject, IProjectEntry
+public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposable
 {
     private readonly IImage _loadingFailedOverlay;
-    private IBrush _background = Brushes.Transparent;
-
-    private FontWeight _fontWeight = FontWeight.Regular;
-
-    private IImage? _icon;
-
-    private bool _isExpanded;
-
-    private bool _loadingFailed;
 
     private string _name;
-
-    private float _textOpacity = 1f;
+    
+    protected CompositeDisposable Disposables = new();
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
@@ -37,6 +29,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     }
 
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
+    
     public ObservableCollection<IProjectEntry> Entities { get; } = new();
 
     public IProjectExplorerNode? Parent => TopFolder;
@@ -49,26 +42,26 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public IBrush Background
     {
-        get => _background;
-        set => SetProperty(ref _background, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = Brushes.Transparent;
 
     public FontWeight FontWeight
     {
-        get => _fontWeight;
-        set => SetProperty(ref _fontWeight, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = FontWeight.Regular;
 
     public float TextOpacity
     {
-        get => _textOpacity;
-        set => SetProperty(ref _textOpacity, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1f;
 
     public IImage? Icon
     {
-        get => _icon;
-        protected set => SetProperty(ref _icon, value);
+        get;
+        protected set => SetProperty(ref field, value);
     }
 
     public string Header => Name;
@@ -87,10 +80,10 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public bool LoadingFailed
     {
-        get => _loadingFailed;
+        get;
         set
         {
-            SetProperty(ref _loadingFailed, value);
+            SetProperty(ref field, value);
             if (value)
             {
                 IconOverlays.Add(_loadingFailedOverlay);
@@ -105,11 +98,11 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public bool IsExpanded
     {
-        get => _isExpanded;
+        get;
         set
         {
             if (this is IProjectFolder { Children.Count: 0 }) value = false;
-            if (value != _isExpanded) SetProperty(ref _isExpanded, value);
+            if (value != field) SetProperty(ref field, value);
         }
     }
 
@@ -153,5 +146,10 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
     public bool IsValid()
     {
         return true;
+    }
+
+    public void Dispose()
+    {
+        Disposables.Dispose();
     }
 }

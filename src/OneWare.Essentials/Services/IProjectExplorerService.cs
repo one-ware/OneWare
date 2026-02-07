@@ -17,14 +17,16 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public void Insert(IProjectRoot project);
     public Task RemoveAsync(params IProjectEntry[] entries);
     public Task DeleteAsync(params IProjectEntry[] entries);
-    public IProjectEntry? SearchRelativePath(string relativePath, bool recursive = true);
-    public IProjectEntry? SearchFullPath(string path, bool recursive = true);
+    public IProjectEntry? GetEntry(string relativePath);
+    public IProjectEntry? GetEntryFromFullPath(string path);
     public Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager);
+
     public Task<IProjectRoot?>
         LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters);
 
     public Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true,
         bool setActive = true);
+
     public IFile GetTemporaryFile(string path);
     public void RemoveTemporaryFile(IFile file);
     public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
@@ -37,8 +39,10 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);
+
     public void RegisterConstructContextMenu(
         Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct);
+
     public void ClearSelection();
     public void AddToSelection(IProjectExplorerNode node);
     public IEnumerable<string> LoadRecentProjects();

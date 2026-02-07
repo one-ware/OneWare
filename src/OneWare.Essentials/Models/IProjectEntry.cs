@@ -5,7 +5,7 @@ namespace OneWare.Essentials.Models;
 /// <summary>
 ///     Can be a file or a folder
 /// </summary>
-public interface IProjectEntry : IProjectExplorerNode, IHasPath
+public interface IProjectEntry : IProjectExplorerNode, IHasPath, IDisposable
 {
     public ObservableCollection<IProjectEntry> Entities { get; }
 

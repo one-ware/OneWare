@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Reactive.Disposables;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData.Binding;
@@ -12,25 +13,39 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header,
+    protected ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header,
         topFolder)
     {
-        if (defaultFolderAnimation)
+        IDisposable? iconDisposable = null;
+
+        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
         {
-            IDisposable? iconDisposable = null;
-            this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+            iconDisposable?.Dispose();
+
+            if (x)
             {
-                iconDisposable?.Dispose();
-                if (!x)
+                LoadContent();
+
+                if (defaultFolderAnimation)
                     iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X").Subscribe(y =>
                     {
                         Icon = y as IImage;
-                    });
-                else
+                    }).DisposeWith(Disposables);
+            }
+            else
+            {
+                foreach (var subEntity in Entities.ToArray())
+                    Remove(subEntity);
+
+                if (Directory.Exists(FullPath) &&
+                    Directory.EnumerateFileSystemEntries(FullPath).Any())
+                    Children.Add(new LoadingDummyNode());
+
+                if (defaultFolderAnimation)
                     iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X")
-                        .Subscribe(y => { Icon = y as IImage; });
-            });
-        }
+                        .Subscribe(y => { Icon = y as IImage; }).DisposeWith(Disposables);
+            }
+        }).DisposeWith(Disposables);
     }
 
     public void Add(IProjectEntry entry)
@@ -51,6 +66,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         (entry.Root as ProjectRoot)?.UnregisterEntry(entry);
         Children.Remove(entry);
         Entities.Remove(entry);
+        
+        entry.Dispose();
 
         //Collapse folder if empty
         if (Children.Count == 0) IsExpanded = false;
@@ -72,7 +89,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             return pf.AddFile(relativePath.Substring(split + 1, relativePath.Length - split - 1), createNew);
         }
 
-        if (!createNew && SearchRelativePath(relativePath) is ProjectFile file) return file;
+        if (!createNew && SearchEntries(relativePath) is ProjectFile file) return file;
 
         var fullPath = Path.Combine(FullPath, relativePath);
 
@@ -87,6 +104,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (!File.Exists(fullPath))
         {
             if (createNew)
+            {
                 try
                 {
                     PlatformHelper.CreateFile(fullPath);
@@ -95,8 +113,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 {
                     ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
                 }
+            }
             else
+            {
                 projFile.LoadingFailed = true;
+            }
         }
 
         Insert(projFile);
@@ -109,14 +130,14 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (split >= 1)
         {
             var folderName = relativePath[..split];
-            if (SearchRelativePath(folderName) is ProjectFolder existing)
+            if (SearchEntries(folderName) is ProjectFolder existing)
                 return existing.AddFolder(relativePath.Remove(0, folderName.Length + 1), createNew);
 
             var created = AddFolder(folderName, createNew);
             return created.AddFolder(relativePath.Remove(0, folderName.Length + 1), createNew);
         }
 
-        if (!createNew && SearchRelativePath(relativePath) is ProjectFolder existingFolder) return existingFolder;
+        if (!createNew && SearchEntries(relativePath) is ProjectFolder existingFolder) return existingFolder;
 
         var fullPath = Path.Combine(FullPath, relativePath);
         if (createNew)
@@ -126,6 +147,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
 
         if (!Directory.Exists(fullPath))
+        {
             try
             {
                 Directory.CreateDirectory(fullPath);
@@ -134,30 +156,36 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
-
+        }
+        
         var pf = ConstructNewProjectFolder(relativePath, this);
 
         Insert(pf);
         return pf;
     }
 
-    public IProjectEntry? SearchRelativePath(string path)
+    public IProjectEntry? GetLoadedEntry(string relativePath)
     {
-        var split = path.IndexOf(Path.DirectorySeparatorChar);
+        var split = relativePath.IndexOf(Path.DirectorySeparatorChar);
 
         if (split > -1)
         {
-            var subFolder = SearchRelativePath(path[..split]) as IProjectFolder;
-            return subFolder?.SearchRelativePath(path.Remove(0, split + 1));
+            var subFolder = SearchEntries(relativePath[..split]) as IProjectFolder;
+            return subFolder?.GetLoadedEntry(relativePath.Remove(0, split + 1));
         }
 
-        return SearchRelativePath(path);
+        return SearchEntries(relativePath);
     }
 
-    public IProjectEntry? SearchFullPath(string path)
+    private IProjectEntry? SearchEntries(string relativePath)
     {
-        var relativePath = Path.GetRelativePath(FullPath, path);
-        return SearchRelativePath(relativePath);
+        if (relativePath is "" or ".") return this;
+
+        foreach (var i in Entities)
+            if (relativePath.Equals(i.Name, StringComparison.OrdinalIgnoreCase))
+                return i;
+
+        return null;
     }
 
     private void Insert(IProjectEntry entry)
@@ -165,6 +193,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         //Insert in correct posiion
         var inserted = false;
         for (var i = 0; i < Children.Count; i++)
+        {
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
                                                   string.Compare(entry.Header, Children[i].Header,
@@ -179,37 +208,13 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 inserted = true;
                 break;
             }
-
+        }
+        
         if (!inserted) Children.Add(entry);
         entry.TopFolder = this;
 
         Entities.Add(entry);
         (entry.Root as ProjectRoot)?.RegisterEntry(entry);
-    }
-
-    public IProjectFile? ImportFile(string path, bool overwrite)
-    {
-        var destination = Path.Combine(FullPath, Path.GetFileName(path));
-
-        //Check if File exists
-        if (!File.Exists(path))
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Warning($"Cannot import {path}. File does not exist");
-            return null;
-        }
-
-        try
-        {
-            if (!path.EqualPaths(destination))
-                PlatformHelper.CopyFile(path, destination, overwrite);
-
-            return AddFile(Path.GetFileName(destination));
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            return null;
-        }
     }
 
     protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
@@ -220,5 +225,80 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     protected virtual IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)
     {
         return new ProjectFile(path, topFolder);
+    }
+
+    public IProjectEntry? GetEntry(string? relativePath)
+    {
+        if(relativePath == null) return null;
+        
+        var visual = SearchEntries(relativePath);
+        if (visual != null) return visual;
+        
+        // Create it in the visual tree and return it.
+        var fullPath = Path.Combine(FullPath, relativePath);
+        if (!File.Exists(fullPath)) return null;
+        
+        var fileInfo = new FileInfo(fullPath);
+
+        if (fileInfo.Attributes.HasFlag(FileAttributes.Directory))
+        {
+            return AddFolder(relativePath);
+        }
+        else
+        {
+            return AddFile(relativePath);
+        }
+    }
+
+    public virtual IProjectFile? GetFile(string? relativePath)
+    {
+        return GetEntry(relativePath) as IProjectFile;
+    }
+
+    public virtual IProjectFile? GetFolder(string? relativePath)
+    {
+        return GetEntry(relativePath) as IProjectFile;
+    }
+
+    public virtual IEnumerable<string> GetFiles(string searchPattern = "*")
+    {
+        return Directory.EnumerateFiles(FullPath, searchPattern, SearchOption.AllDirectories);
+    }
+    
+    public void LoadContent()
+    {
+        Children.Clear();
+        Entities.Clear();
+
+        if (!Directory.Exists(FullPath))
+        {
+            LoadingFailed = true;
+            return;
+        }
+
+        var options = new EnumerationOptions
+        {
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = false
+        };
+
+        var directoryMatches = Directory.EnumerateDirectories(FullPath, "*", options);
+
+        foreach (var match in directoryMatches)
+        {
+            var newFolder = new ProjectFolder(Path.GetFileName(match), this);
+            Children.Add(newFolder);
+            Entities.Add(newFolder);
+        }
+
+        var fileMatches = Directory.EnumerateFiles(FullPath, "*.*", options);
+
+        foreach (var match in fileMatches)
+        {
+            var newFile = new ProjectFile(Path.GetFileName(match), this);
+            Children.Add(newFile);
+            Entities.Add(newFile);
+        }
     }
 }

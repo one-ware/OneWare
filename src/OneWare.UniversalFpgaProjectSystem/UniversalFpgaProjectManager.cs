@@ -40,8 +40,6 @@ public class UniversalFpgaProjectManager : IProjectManager
 
         if (root == null) return root;
 
-        ProjectHelper.ImportEntries(root.FullPath, root);
-
         var toolchain = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Toolchain));
         if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
             root.Toolchain = tc;
@@ -99,9 +97,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
-                            _mainDockService.OpenFileAsync(root.SearchFullPath(root.ProjectFilePath) as IProjectFile ??
-                                                           _projectExplorerService.GetTemporaryFile(
-                                                               root.ProjectFilePath)))
+                            _mainDockService.OpenFileAsync(_projectExplorerService.GetTemporaryFile(root.ProjectFilePath)))
                     });
                     break;
                 case FpgaProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:

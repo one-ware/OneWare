@@ -687,7 +687,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             var refreshedFiles = new List<IProjectFile>();
 
             foreach (var openFile in filesOpenInProject)
-                if (proj.SearchRelativePath(openFile.File.RelativePath) is IProjectFile newFile)
+                if (proj.GetFile(openFile.File.RelativePath) is {} newFile)
                 {
                     _mainDockService.OpenFiles.Remove(openFile.File);
                     _mainDockService.OpenFiles.Add(newFile, openFile.ViewModel);

@@ -12,7 +12,16 @@ public interface IProjectFolder : IProjectEntry
 
     public IProjectFolder AddFolder(string relativePath, bool createNew = false);
 
-    public IProjectEntry? SearchRelativePath(string path);
-
-    public IProjectEntry? SearchFullPath(string path);
+    public IProjectEntry? GetLoadedEntry(string relativePath);
+    
+    public IProjectEntry? GetEntry(string? relativePath);
+    
+    public IProjectFile? GetFile(string? relativePath);
+    
+    public IProjectFile? GetFolder(string? relativePath);
+    
+    /// <summary>
+    /// Returns the relative paths of items included in this root
+    /// </summary>
+    public IEnumerable<string> GetFiles(string searchPattern = "*");
 }

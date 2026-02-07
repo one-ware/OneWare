@@ -31,13 +31,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     
     public abstract void IncludePath(string path);
     
-    public abstract void OnExternalEntryAdded(string path, FileAttributes attributes);
-    
-    public abstract IProjectEntry? GetEntry(string? relativePath);
-
-    public abstract IProjectFile? GetFile(string? relativePath);
-
-    public abstract IEnumerable<string> GetFiles(string searchPattern = "*");
+    public abstract void OnExternalEntryAdded(string relativePath, FileAttributes attributes);
 
     public virtual void RegisterEntry(IProjectEntry entry)
     {

@@ -21,7 +21,7 @@ public class LanguageServiceVhdl(string workspace, ISettingsService settingsServ
     protected override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
     {
         if (file is IProjectFile pf &&
-            pf.TopFolder?.SearchRelativePath(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip") != null)
+            pf.TopFolder?.GetFile(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip") != null)
             return new List<ErrorListItem>();
 
         return base.ConvertErrors(pdp, file);

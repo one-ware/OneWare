@@ -906,10 +906,6 @@ public class SourceControlViewModel : ExtendedTool
                 try
                 {
                     File.Delete(path);
-                    if (_projectExplorerService.ActiveProject?.SearchFullPath(Path.Combine(
-                            repository.Info.WorkingDirectory,
-                            path)) is IProjectFile file)
-                        _ = _projectExplorerService.RemoveAsync(file);
                 }
                 catch (Exception e)
                 {
@@ -947,9 +943,7 @@ public class SourceControlViewModel : ExtendedTool
                     if (result is MessageBoxStatus.Yes)
                         foreach (var f in deleteFiles)
                         {
-                            var projFile = _projectExplorerService.SearchFullPath(f);
-                            if (projFile != null) await _projectExplorerService.DeleteAsync(projFile);
-                            else File.Delete(f);
+                            File.Delete(f);
                         }
                 }
             }
@@ -972,7 +966,7 @@ public class SourceControlViewModel : ExtendedTool
 
         if (!Path.IsPathRooted(path)) path = Path.Combine(repository.Info.WorkingDirectory, path);
 
-        if (_projectExplorerService.ActiveProject?.SearchFullPath(path) is not IFile file)
+        if (_projectExplorerService.ActiveProject?.GetFile(Path.GetRelativePath(_projectExplorerService.ActiveProject.RootFolderPath, path)) is not IFile file)
             file = _projectExplorerService.GetTemporaryFile(path);
 
         await _mainDockService.OpenFileAsync(file);

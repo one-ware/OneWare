@@ -137,7 +137,7 @@ public class GitRepositoryModel : ObservableObject
 
                 var sModel = new SourceControlFileModel(fullPath, item)
                 {
-                    ProjectFile = projectExplorerService.SearchFullPath(fullPath) as IProjectFile
+                    ProjectFile = projectExplorerService.GetEntryFromFullPath(fullPath) as IProjectFile
                 };
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||

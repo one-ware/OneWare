@@ -138,28 +138,47 @@ public abstract class ProjectViewModelBase : ExtendedTool
         ExpandToRoot(node.Parent);
     }
     
-    public IProjectEntry? SearchRelativePath(string relativePath, bool recursive = true)
+    public IProjectEntry? GetEntry(string relativePath)
     {
-        var root = Path.GetPathRoot(relativePath);
+        if (string.IsNullOrWhiteSpace(relativePath))
+            return null;
+        
+        relativePath = relativePath.Replace('\\', '/');
+        
+        var parts = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return null;
 
-        var project = Projects.FirstOrDefault(x => Path.GetFileName(x.RootFolderPath) == root);
+        var projectRootName = parts[0];
+        
+        var project = Projects.FirstOrDefault(p =>
+            Path.GetFileName(p.RootFolderPath)
+                .Equals(projectRootName, StringComparison.OrdinalIgnoreCase));
 
-        if (project == null) return null;
-
-        return project.SearchRelativePath(relativePath);
+        return project?.GetEntry(relativePath.ToPlatformPath());
     }
 
-    public IProjectEntry? SearchFullPath(string path, bool recursive = true)
+    public IProjectEntry? GetEntryFromFullPath(string fullPath)
     {
-        foreach (var i in Projects)
+        if (string.IsNullOrWhiteSpace(fullPath))
+            return null;
+
+        fullPath = Path.GetFullPath(fullPath);
+
+        foreach (var project in Projects)
         {
-            if (path.EqualPaths(i.FullPath)) //Search for name equality
-                return i;
-            if (recursive && i is IProjectFolder folder)
-            {
-                var pe = folder.SearchFullPath(path);
-                if (pe != null) return pe;
-            }
+            var projectRoot = Path.GetFullPath(project.RootFolderPath);
+            
+            if (!fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+                continue;
+            
+            var relative = Path.GetRelativePath(projectRoot, fullPath);
+            
+            var projectName = Path.GetFileName(projectRoot);
+
+            var relativePath = Path.Combine(projectName, relative);
+
+            return GetEntry(relativePath);
         }
 
         return null;

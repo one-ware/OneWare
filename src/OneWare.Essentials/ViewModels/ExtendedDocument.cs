@@ -124,7 +124,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     {
         var oldCurrentFile = CurrentFile;
 
-        CurrentFile = _projectExplorerService.SearchFullPath(FullPath) as IFile ??
+        CurrentFile = _projectExplorerService.GetEntryFromFullPath(FullPath) as IFile ??
                       _projectExplorerService.GetTemporaryFile(FullPath);
         Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile.Name;
 

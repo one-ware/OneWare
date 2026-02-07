@@ -71,20 +71,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         var relativePath = Path.GetRelativePath(FullPath, path);
 
-        if (attributes.HasFlag(FileAttributes.Directory))
-        {
-            var relativePathParent = Path.GetDirectoryName(relativePath);
-            while (relativePathParent != null)
-            {
-                if (SearchRelativePath(relativePathParent) is ProjectFolder existingFolder)
-                    ProjectHelper.ImportEntries(path, existingFolder);
-                relativePathParent = Path.GetDirectoryName(relativePathParent);
-            }
-
-            return;
-        }
-
-        if (IsPathIncluded(relativePath)) AddFile(relativePath);
+        //TODO
     }
 
     public string? GetProjectProperty(string name)
@@ -134,21 +121,5 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         Properties.TryGetPropertyValue(name, out var oldValue);
         Properties.Remove(name);
         ProjectPropertyChanged?.Invoke(this, new ProjectPropertyChangedEventArgs(name, oldValue?.GetValue<object?>(), null));
-    }
-
-    public override IProjectEntry? GetEntry(string? relativePath)
-    {
-        return SearchRelativePath(relativePath);
-    }
-
-    public override IProjectFile? GetFile(string? relativePath)
-    {
-        return SearchRelativePath(relativePath) as IProjectFile;
-    }
-
-    public override IEnumerable<string> GetFiles(string searchPattern = "*")
-    {
-        return Directory.EnumerateFiles(RootFolderPath, searchPattern, SearchOption.AllDirectories)
-            .Where(x => IsPathIncluded(Path.GetRelativePath(RootFolderPath, x)));
     }
 }

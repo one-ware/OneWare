@@ -124,7 +124,8 @@ public class ProjectWatchInstance : IDisposable
 
             if (File.Exists(path) || Directory.Exists(path)) attributes = File.GetAttributes(path);
 
-            var entry = _root.SearchFullPath(path);
+            var relativePath = Path.GetRelativePath(_root.RootFolderPath, path);
+            var entry = _root.GetLoadedEntry(relativePath);
 
             var lastArg = changes.Last();
 
@@ -135,7 +136,7 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Renamed:
                     case WatcherChangeTypes.Changed:
                         if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
-                            _root.SearchFullPath(rea.OldFullPath) is { } deleted)
+                            _root.GetEntry(Path.GetRelativePath(_root.RootFolderPath, rea.OldFullPath)) is { } deleted)
                             await _projectExplorerService.RemoveAsync(deleted);
                         if (entry is ISavable savable)
                         {
@@ -164,7 +165,7 @@ public class ProjectWatchInstance : IDisposable
                 {
                     case WatcherChangeTypes.Renamed:
                         if (lastArg is RenamedEventArgs { Name: not null, OldFullPath: not null } renamedEventArgs &&
-                            _root.SearchFullPath(renamedEventArgs.OldFullPath) is { } oldEntry)
+                            _root.GetEntry(Path.GetRelativePath(_root.RootFolderPath, renamedEventArgs.OldFullPath)) is { } oldEntry)
                         {
                             if (oldEntry is IProjectFile file)
                             {

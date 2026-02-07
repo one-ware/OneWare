@@ -301,7 +301,7 @@ public abstract class LanguageServiceBase : ILanguageService
 
             var file = ContainerLocator.Container.Resolve<IMainDockService>().OpenFiles
                 .FirstOrDefault(x => x.Key.FullPath.EqualPaths(path)).Key;
-            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
+            file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile;
             file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
 
             ContainerLocator.Container.Resolve<IErrorService>()
