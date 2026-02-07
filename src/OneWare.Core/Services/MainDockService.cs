@@ -21,6 +21,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.ProjectExplorer.Services;
 
 namespace OneWare.Core.Services;
 
@@ -31,7 +32,8 @@ public class MainDockService : Factory, IMainDockService
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
     private readonly Dictionary<string, Func<string, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
-
+    
+    private readonly IFileWatchService _fileWatchService;
     private readonly IPaths _paths;
     private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
 
@@ -41,12 +43,13 @@ public class MainDockService : Factory, IMainDockService
 
     public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
         IApplicationStateService applicationStateService,
-        WelcomeScreenViewModel welcomeScreenViewModel,
+        WelcomeScreenViewModel welcomeScreenViewModel, IFileWatchService fileWatchService,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
+        _fileWatchService = fileWatchService;
         _serializer = new OneWareDockSerializer(serviceProvider);
 
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
@@ -171,9 +174,15 @@ public class MainDockService : Factory, IMainDockService
             if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
             OpenFiles.Remove(fileKey);
             CloseDockable(vm);
+            _fileWatchService.UnregisterSingleFile(fullPath);
         }
 
         return true;
+    }
+
+    public void UnregisterOpenFile(string fullPath)
+    {
+        _fileWatchService.UnregisterSingleFile(fullPath);
     }
 
     public Window? GetWindowOwner(IDockable? dockable)

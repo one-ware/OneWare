@@ -6,7 +6,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
-using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 
 namespace OneWare.LibraryExplorer.ViewModels;
@@ -15,19 +14,17 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 {
     public const string IconKey = "BoxIcons.RegularLibrary";
 
-    private readonly IFileWatchService _fileWatchService;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
     private readonly string _libraryFolderPath;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IMainDockService mainDockService,
+    public LibraryExplorerViewModel(IPaths paths, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
 
-        _fileWatchService = fileWatchService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
@@ -39,7 +36,6 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
-        _fileWatchService.Register(project);
     }
 
     public void DoubleTab(IProjectEntry entry)

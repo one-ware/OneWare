@@ -125,9 +125,15 @@ public class ProjectWatchInstance : IDisposable
             if (File.Exists(path) || Directory.Exists(path)) attributes = File.GetAttributes(path);
 
             var relativePath = Path.GetRelativePath(_root.RootFolderPath, path);
+
             var entry = _root.GetLoadedEntry(relativePath);
 
             var lastArg = changes.Last();
+
+            var openTab = _mainDockService.OpenFiles
+                .FirstOrDefault(x => x.Key.EqualPaths(path));
+            
+            openTab.Value?.InitializeContent();
 
             if (entry is not null)
                 switch (lastArg.ChangeType)
@@ -137,21 +143,14 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Changed:
                         if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
                             _root.GetEntry(Path.GetRelativePath(_root.RootFolderPath, rea.OldFullPath)) is { } deleted)
+                        {
                             await _projectExplorerService.RemoveAsync(deleted);
-                        if (entry is ISavable savable)
-                        {
-                            var lastWriteTime = File.GetLastWriteTime(savable.FullPath);
-                            if (lastWriteTime > savable.LastSaveTime)
-                                await _projectExplorerService.ReloadAsync(entry);
-
-                            if (savable is IProjectFile { Root: IProjectRootWithFile rootWithFile } &&
-                                rootWithFile.ProjectFilePath == savable.FullPath &&
-                                lastWriteTime > rootWithFile.LastSaveTime)
-                                await _projectExplorerService.ReloadAsync(rootWithFile);
                         }
-                        else
+                        else if (entry is IProjectRootWithFile project)
                         {
-                            await _projectExplorerService.ReloadAsync(entry);
+                            var lastWriteTime = File.GetLastWriteTime(project.FullPath);
+                            if (lastWriteTime > project.LastSaveTime)
+                                await _projectExplorerService.ReloadProjectAsync(project);
                         }
 
                         return;
@@ -164,8 +163,9 @@ public class ProjectWatchInstance : IDisposable
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Renamed:
-                        if (lastArg is RenamedEventArgs { Name: not null, OldFullPath: not null } renamedEventArgs &&
-                            _root.GetEntry(Path.GetRelativePath(_root.RootFolderPath, renamedEventArgs.OldFullPath)) is { } oldEntry)
+                        if (lastArg is RenamedEventArgs { Name: not null } renamedEventArgs &&
+                            _root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath,
+                                renamedEventArgs.OldFullPath)) is { } oldEntry)
                         {
                             if (oldEntry is IProjectFile file)
                             {
@@ -194,14 +194,6 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
                         _root.OnExternalEntryAdded(path, attributes);
-                        var openTab = _mainDockService.OpenFiles.FirstOrDefault(x => x.Key.EqualPaths(path));
-                        if (openTab.Value is not null)
-                            openTab.Value.InitializeContent();
-                        return;
-                    case WatcherChangeTypes.Changed:
-                        if (_root is ISavable savable && _root.ProjectPath.EqualPaths(path))
-                            if (File.GetLastWriteTime(_root.FullPath) > savable.LastSaveTime)
-                                await _projectExplorerService.ReloadAsync(_root);
                         return;
                     case WatcherChangeTypes.Deleted:
                         if (_root.ProjectPath.EqualPaths(path)) _root.LoadingFailed = true;

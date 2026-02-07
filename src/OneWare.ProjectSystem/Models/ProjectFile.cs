@@ -19,6 +19,5 @@ public class ProjectFile : ProjectEntry, IProjectFile
         }).DisposeWith(Disposables);
     }
 
-    public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
     public string Extension => Path.GetExtension(FullPath);
 }

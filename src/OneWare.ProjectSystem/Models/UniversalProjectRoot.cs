@@ -29,8 +29,8 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
     public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;
     public JsonObject Properties { get; }
-    public DateTime LastSaveTime { get; set; }
     public override string ProjectPath => ProjectFilePath;
+    public DateTime LastSaveTime { get; set; }
     public string ProjectFilePath { get; }
 
     public override bool IsPathIncluded(string path)

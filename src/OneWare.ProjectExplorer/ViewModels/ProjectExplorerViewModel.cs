@@ -20,6 +20,7 @@ namespace OneWare.ProjectExplorer.ViewModels;
 public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerService
 {
     public const string IconKey = "EvaIcons.FolderOutline";
+    
     private readonly IFileWatchService _fileWatchService;
     private readonly ILanguageManager _languageManager;
 
@@ -68,8 +69,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public IApplicationStateService ApplicationStateService { get; }
 
-    private Dictionary<string, IFile> TemporaryFiles { get; } = new();
-
     public IProjectRoot? ActiveProject
     {
         get => _activeProject;
@@ -81,32 +80,13 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         }
     }
 
-    public event EventHandler<IFile>? FileRemoved;
+    public event EventHandler<string>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
-
-    public IFile GetTemporaryFile(string path)
-    {
-        var key = path.ToPathKey();
-        if (TemporaryFiles.TryGetValue(key, out var file)) return file;
-        var externalFile = new ExternalFile(path);
-        _fileWatchService.Register(externalFile);
-        TemporaryFiles.Add(key, externalFile);
-        return TemporaryFiles[key];
-    }
-
-    public void RemoveTemporaryFile(string fullPath)
-    {
-        var key = fullPath.ToPathKey();
-        if (!TemporaryFiles.TryGetValue(key, out var file)) return;
-        TemporaryFiles.Remove(key);
-        _fileWatchService.Unregister(file);
-        FileRemoved?.Invoke(this, file);
-    }
 
     public override void Insert(IProjectRoot project)
     {
         base.Insert(project);
-        _fileWatchService.Register(project);
+        _fileWatchService.RegisterProject(project);
     }
 
     public async Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager)
@@ -170,10 +150,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         bool setActive = true)
     {
         var project = await manager.LoadProjectAsync(path);
-
+        
         if (project == null)
             return null;
-
+        
+        project.Initialize();
+        
         if (expand)
             project.IsExpanded = true;
 
@@ -445,7 +427,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     return;
 
             ProjectRemoved?.Invoke(this, proj);
-            _fileWatchService.Unregister(proj);
+            _fileWatchService.UnregisterProject(proj);
 
             var activeProj = proj == ActiveProject;
 
@@ -472,7 +454,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         else if (entry is IProjectFile file)
         {
             if (!await _mainDockService.CloseFileAsync(file.FullPath)) return;
-            FileRemoved?.Invoke(this, file);
+            FileRemoved?.Invoke(this, file.FullPath);
         }
 
         if (entry.TopFolder == null) throw new NullReferenceException(entry.Header + " has no TopFolder");
@@ -632,7 +614,6 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             {
                 if (File.Exists(newPath)) throw new Exception($"File {newPath} does already exist!");
                 File.Move(oldPath, newPath);
-                file.LastSaveTime = DateTime.Now;
                 //file.Name = newName;
                 //DO NOT Rename here manually, let the FileWatcher handle it
             }
@@ -652,89 +633,58 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return entry;
     }
 
-    public async Task<IProjectEntry> ReloadAsync(IProjectEntry entry)
+    public async Task<IProjectEntry> ReloadProjectAsync(IProjectRoot project)
     {
-        if (!entry.IsValid())
+        var manager = _projectManagerService.GetManager(project.ProjectTypeId);
+
+        if (manager == null)
         {
+            project.LoadingFailed = true;
             ContainerLocator.Container.Resolve<ILogger>()
-                .Error("Tried to reload invalid entry (no root) " + entry.Header);
-            return entry;
+                .Error($"Cannot reload {project.Header}. Manager not found!");
         }
 
-        if (entry is IProjectRoot root)
+        var proj = manager != null ? await manager.LoadProjectAsync(project.ProjectPath) : null;
+        if (proj == null)
         {
-            var manager = _projectManagerService.GetManager(root.ProjectTypeId);
-
-            if (manager == null)
-            {
-                entry.LoadingFailed = true;
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"Cannot reload {entry.Header}. Manager not found!");
-            }
-
-            var proj = manager != null ? await manager.LoadProjectAsync(root.ProjectPath) : null;
-            if (proj == null)
-            {
-                entry.LoadingFailed = true;
-                return entry;
-            }
-
-            //TODO make reload working without fully replacing the project
-            //For now we just re-initialize the files that are open from the project and still included
-
-            var filesOpenInProject = _mainDockService.OpenFiles
-                .Where(x => IsUnderRoot(root.RootFolderPath, x.Value.FullPath))
-                .Select(x => new { File = x.Value.FullPath, ViewModel = x.Value })
-                .ToList();
-
-            var refreshedFiles = new List<IProjectFile>();
-
-            foreach (var openFile in filesOpenInProject)
-                if (proj.GetFile(Path.GetRelativePath(root.RootFolderPath, openFile.File)) is { } newFile)
-                {
-                    _mainDockService.OpenFiles.Remove(openFile.File.ToPathKey());
-                    _mainDockService.OpenFiles.Add(newFile.FullPath.ToPathKey(), openFile.ViewModel);
-                    refreshedFiles.Add(newFile);
-                }
-
-            var expanded = root.IsExpanded;
-            var active = root.IsActive;
-            await RemoveAsync(root);
-            Insert(proj);
-
-            //Re-initialize the files that didn't get removed after swapping project
-            foreach (var refreshed in refreshedFiles)
-                if (_mainDockService.OpenFiles.TryGetValue(refreshed.FullPath.ToPathKey(), out var vm))
-                    vm.InitializeContent();
-
-            if (active) ActiveProject = proj;
-
-            //TODO: This delay is currently needed to make TreeDataGrid work. Check back later if still needed
-            await Task.Delay(10);
-            proj.IsExpanded = expanded;
-
-            return proj;
+            project.LoadingFailed = true;
+            return project;
         }
 
-        if (entry.TopFolder == null) return entry;
+        //TODO make reload working without fully replacing the project
+        //For now we just re-initialize the files that are open from the project and still included
+        var filesOpenInProject = _mainDockService.OpenFiles
+            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
+            .Select(x => new { File = x.Value.FullPath, ViewModel = x.Value })
+            .ToList();
 
-        if (entry is IProjectFolder folder)
-            //TODO
-            return entry;
+        var refreshedFiles = new List<IProjectFile>();
 
-        if (entry is IProjectFile file)
-        {
-            _mainDockService.OpenFiles.TryGetValue(file.FullPath.ToPathKey(), out var evm);
-            if (evm is not null)
+        foreach (var openFile in filesOpenInProject)
+            if (proj.GetFile(Path.GetRelativePath(project.RootFolderPath, openFile.File)) is { } newFile)
             {
-                evm.FullPath = file.FullPath;
-                evm.InitializeContent();
+                _mainDockService.OpenFiles.Remove(openFile.File.ToPathKey());
+                _mainDockService.OpenFiles.Add(newFile.FullPath.ToPathKey(), openFile.ViewModel);
+                refreshedFiles.Add(newFile);
             }
 
-            return file;
-        }
+        var expanded = project.IsExpanded;
+        var active = project.IsActive;
+        await RemoveAsync(project);
+        Insert(proj);
 
-        throw new Exception("Unknown filetype");
+        //Re-initialize the files that didn't get removed after swapping project
+        foreach (var refreshed in refreshedFiles)
+            if (_mainDockService.OpenFiles.TryGetValue(refreshed.FullPath.ToPathKey(), out var vm))
+                vm.InitializeContent();
+
+        if (active) ActiveProject = proj;
+
+        //TODO: This delay is currently needed to make TreeDataGrid work. Check back later if still needed
+        await Task.Delay(10);
+        proj.IsExpanded = expanded;
+
+        return proj;
     }
 
     public Task SaveProjectAsync(IProjectRoot project)

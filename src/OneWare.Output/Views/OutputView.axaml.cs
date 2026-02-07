@@ -69,7 +69,7 @@ public partial class OutputView : OutputBaseView
         var result = ContainerLocator.Container.Resolve<IProjectExplorerService>()
             .ActiveProject?.GetFile(_searchResult.Path);
 
-        if (result is IFile file)
+        if (result is IProjectFile file)
         {
             var doc = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file.FullPath);
             if (doc is not IEditor evb) return;

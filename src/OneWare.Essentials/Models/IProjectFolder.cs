@@ -21,7 +21,12 @@ public interface IProjectFolder : IProjectEntry
     public IProjectFile? GetFolder(string? relativePath);
     
     /// <summary>
-    /// Returns the relative paths of items included in this root
+    /// Returns the relative paths of files (included in the project) for this folder
     /// </summary>
-    public IEnumerable<string> GetFiles(string searchPattern = "*");
+    public IEnumerable<string> GetFiles(string searchPattern = "*", bool recursive = true);
+    
+    /// <summary>
+    /// Returns the relative paths of directories (included in the project) for this folder
+    /// </summary>
+    public IEnumerable<string> GetDirectories(string searchPattern = "*", bool recursive = true);
 }

@@ -10,25 +10,25 @@ public class FileWatchService : IFileWatchService
     private readonly Dictionary<string, FileWatchInstance> _fileWatchInstances = new();
     private readonly Dictionary<IProjectRoot, ProjectWatchInstance> _projectFileWatcher = new();
 
-    public void Register(IFile file)
+    public void RegisterSingleFile(string file)
     {
         if (RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
 
-        var fileKey = file.FullPath.ToPathKey();
+        var fileKey = file.ToPathKey();
         if (_fileWatchInstances.ContainsKey(fileKey)) return;
         _fileWatchInstances.Add(fileKey,
             ContainerLocator.Container.Resolve<FileWatchInstance>((file.GetType(), file)));
     }
 
-    public void Unregister(IFile file)
+    public void UnregisterSingleFile(string file)
     {
-        var fileKey = file.FullPath.ToPathKey();
+        var fileKey = file.ToPathKey();
         _fileWatchInstances.TryGetValue(fileKey, out var watcher);
         _fileWatchInstances.Remove(fileKey);
         watcher?.Dispose();
     }
 
-    public void Register(IProjectRoot project)
+    public void RegisterProject(IProjectRoot project)
     {
         if (RuntimeInformation.ProcessArchitecture is Architecture.Wasm) return;
 
@@ -37,7 +37,7 @@ public class FileWatchService : IFileWatchService
             ContainerLocator.Container.Resolve<ProjectWatchInstance>((project.GetType(), project)));
     }
 
-    public void Unregister(IProjectRoot project)
+    public void UnregisterProject(IProjectRoot project)
     {
         _projectFileWatcher.TryGetValue(project, out var watcher);
         _projectFileWatcher.Remove(project);

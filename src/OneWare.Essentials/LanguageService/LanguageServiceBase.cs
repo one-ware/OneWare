@@ -7,7 +7,6 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
@@ -298,18 +297,20 @@ public abstract class LanguageServiceBase : ILanguageService
         Dispatcher.UIThread.Post(() =>
         {
             var path = pdp.Uri.GetFileSystemPath();
-
-            var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().GetEntryFromFullPath(path) as IFile
-                       ?? ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
+            if (string.IsNullOrWhiteSpace(path)) return;
 
             ContainerLocator.Container.Resolve<IErrorService>()
-                .RefreshErrors(ConvertErrors(pdp, file).ToList(), Name, file.FullPath);
+                .RefreshErrors(ConvertErrors(pdp, path).ToList(), Name, path);
             //file.Diagnostics = pdp.Diagnostics;
         }, DispatcherPriority.Background);
     }
 
     protected virtual IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, string fullPath)
     {
+        var entry = ContainerLocator.Container.Resolve<IProjectExplorerService>()
+            .GetEntryFromFullPath(fullPath) as IProjectFile;
+        var root = entry?.Root;
+
         foreach (var p in pdp.Diagnostics)
         {
             var errorType = ErrorType.Hint;
@@ -321,9 +322,9 @@ public abstract class LanguageServiceBase : ILanguageService
                     _ => ErrorType.Hint
                 };
 
-            yield return new ErrorListItem(p.Message, errorType, file.FullPath, Name, p.Range.Start.Line + 1,
+            yield return new ErrorListItem(p.Message, errorType, fullPath, Name, p.Range.Start.Line + 1,
                 p.Range.Start.Character + 1, p.Range.End.Line + 1, p.Range.End.Character + 1,
-                p.Code?.String ?? p.Code?.Long.ToString() ?? "", p, (file as IProjectFile)?.Root);
+                p.Code?.String ?? p.Code?.Long.ToString() ?? "", p, root);
         }
     }
 }

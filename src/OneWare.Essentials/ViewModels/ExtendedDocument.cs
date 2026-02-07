@@ -75,6 +75,12 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         set => SetProperty(ref field, value);
     }
 
+    public DateTime LastSaveTime
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     public override bool OnClose()
     {
         if (IsDirty)
@@ -84,6 +90,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         }
 
         _mainDockService.OpenFiles.Remove(FullPath.ToPathKey());
+        _mainDockService.UnregisterOpenFile(FullPath);
         
         Reset();
         return true;
@@ -117,10 +124,12 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public virtual void InitializeContent()
     {
         var oldPath = _lastFullPath;
-        var entry = _projectExplorerService.GetEntryFromFullPath(FullPath) as IHasPath
-                    ?? _projectExplorerService.GetTemporaryFile(FullPath);
-        Title = entry is ExternalFile ? $"[{entry.Name}]" : entry.Name;
-        Icon = (entry as ICanHaveIcon)?.Icon;
+        var entry = _projectExplorerService.GetEntryFromFullPath(FullPath) as IProjectFile;
+        
+        Title = entry?.Name ?? $"[{Path.GetFileName(FullPath)}]";
+        Icon = entry?.Icon;
+        
+        if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 
         if (!string.IsNullOrWhiteSpace(oldPath) && !oldPath.EqualPaths(FullPath))
             _mainDockService.OpenFiles.Remove(oldPath.ToPathKey());

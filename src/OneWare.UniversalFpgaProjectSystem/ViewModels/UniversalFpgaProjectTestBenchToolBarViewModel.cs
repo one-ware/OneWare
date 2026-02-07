@@ -103,9 +103,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
         if (_mainDockService.OpenFiles.TryGetValue(_filePath.ToPathKey(), out var fileView))
             await fileView.SaveAsync();
         await TestBenchContextManager.SaveContextAsync(TestBenchContext);
-        var file = _projectExplorerService.GetEntryFromFullPath(_filePath) as IFile;
-        if (file == null) return;
-        await SelectedSimulator.SimulateAsync(file);
+        await SelectedSimulator.SimulateAsync(_filePath);
     }
 
     private FpgaProjectFile? ResolveFpgaProjectFile()

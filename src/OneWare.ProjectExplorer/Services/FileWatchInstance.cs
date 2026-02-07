@@ -1,37 +1,32 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Models;
-using OneWare.Essentials.Services;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ProjectExplorer.Services;
 
 public class FileWatchInstance : IDisposable
 {
     private readonly List<FileSystemEventArgs> _changes = new();
-    private readonly IFile _file;
+    private readonly IExtendedDocument _document;
     private readonly FileSystemWatcher? _fileSystemWatcher;
-    private readonly object _lock = new();
-    private readonly IMainDockService _mainDockService;
-    private readonly IWindowService _windowService;
+    private readonly Lock _lock = new();
     private DispatcherTimer? _timer;
 
-    public FileWatchInstance(IFile file, IMainDockService mainDockService, ISettingsService settingsService,
-        IWindowService windowService, ILogger logger)
+    public FileWatchInstance(IExtendedDocument document, ISettingsService settingsService, ILogger logger)
     {
-        _file = file;
-        _mainDockService = mainDockService;
-        _windowService = windowService;
+        _document = document;
 
-        if (!File.Exists(file.FullPath)) return;
+        if (!File.Exists(document.FullPath)) return;
 
         try
         {
-            _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(file.FullPath)!)
+            _fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(document.FullPath)!)
             {
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
                 IncludeSubdirectories = false,
-                Filter = Path.GetFileName(file.FullPath)
+                Filter = Path.GetFileName(document.FullPath)
             };
 
             _fileSystemWatcher.Changed += File_Changed;
@@ -69,7 +64,7 @@ public class FileWatchInstance : IDisposable
 
     private void File_Changed(object source, FileSystemEventArgs e)
     {
-        if (e.Name == null || e.FullPath != _file.FullPath) return;
+        if (e.Name == null || !e.FullPath.EqualPaths(_document.FullPath)) return;
         lock (_lock)
         {
             _changes.Add(e);
@@ -88,24 +83,16 @@ public class FileWatchInstance : IDisposable
         {
             var lastArg = changes.Last();
 
-            _mainDockService.OpenFiles.TryGetValue(_file.FullPath.ToPathKey(), out var tab);
-
-            // Can happen naturally if the file is opened in an external tool
-            // Also when a temporary file is registered but not opened yet, we can ignore the changes
-            if (tab == null)
-                //Dispose();
-                //throw new NullReferenceException(nameof(tab));
-                return;
-
             switch (lastArg.ChangeType)
             {
                 case WatcherChangeTypes.Created:
                 case WatcherChangeTypes.Renamed:
                 case WatcherChangeTypes.Changed:
-                    if (File.GetLastWriteTime(_file.FullPath) > _file.LastSaveTime) tab.InitializeContent();
+                    if (File.GetLastWriteTime(_document.FullPath) > _document.LastSaveTime)
+                        _document.InitializeContent();
                     return;
                 case WatcherChangeTypes.Deleted:
-                    tab.InitializeContent();
+                    _document.InitializeContent();
                     return;
             }
         }

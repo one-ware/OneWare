@@ -137,20 +137,33 @@ public abstract class ProjectViewModelBase : ExtendedTool
         node.Parent.IsExpanded = true;
         ExpandToRoot(node.Parent);
     }
-    
+
+    public IProjectRoot? GetRootFromFile(string fullPath)
+    {
+        if (string.IsNullOrWhiteSpace(fullPath))
+            return null;
+
+        fullPath = Path.GetFullPath(fullPath);
+
+        return (from project in Projects
+            let projectRoot = Path.GetFullPath(project.RootFolderPath)
+            where fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase)
+            select project).FirstOrDefault();
+    }
+
     public IProjectEntry? GetEntry(string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath))
             return null;
-        
+
         relativePath = relativePath.Replace('\\', '/');
-        
+
         var parts = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0)
             return null;
 
         var projectRootName = parts[0];
-        
+
         var project = Projects.FirstOrDefault(p =>
             Path.GetFileName(p.RootFolderPath)
                 .Equals(projectRootName, StringComparison.OrdinalIgnoreCase));
@@ -168,12 +181,12 @@ public abstract class ProjectViewModelBase : ExtendedTool
         foreach (var project in Projects)
         {
             var projectRoot = Path.GetFullPath(project.RootFolderPath);
-            
+
             if (!fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
                 continue;
-            
+
             var relative = Path.GetRelativePath(projectRoot, fullPath);
-            
+
             return project.GetEntry(relative);
         }
 

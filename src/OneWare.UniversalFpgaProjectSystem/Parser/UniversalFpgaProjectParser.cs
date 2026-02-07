@@ -52,7 +52,6 @@ public static class UniversalFpgaProjectParser
                 await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
             });
 
-            root.LastSaveTime = DateTime.Now;
 
             return true;
         }

@@ -258,12 +258,43 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         return GetEntry(relativePath) as IProjectFile;
     }
 
-    public virtual IEnumerable<string> GetFiles(string searchPattern = "*")
+    public virtual IEnumerable<string> GetFiles(string searchPattern = "*", bool recursive = true)
     {
-        return Directory.EnumerateFiles(FullPath, searchPattern, SearchOption.AllDirectories);
+        var path = FullPath;
+
+        var options = new EnumerationOptions
+        {
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = recursive,
+        };
+        
+        foreach (var file in Directory.EnumerateFiles(path, searchPattern, options))
+        {
+            var relativeToRoot = Path.GetRelativePath(path, file);
+            if(Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
+        }
     }
-    
-    public virtual void LoadContent()
+
+    public IEnumerable<string> GetDirectories(string searchPattern = "*", bool recursive = true)
+    {
+        var path = FullPath;
+
+        var options = new EnumerationOptions
+        {
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = recursive,
+        };
+        
+        foreach (var file in Directory.EnumerateDirectories(path, searchPattern, options))
+        {
+            var relativeToRoot = Path.GetRelativePath(path, file);
+            if(Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
+        }
+    }
+
+    protected virtual void LoadContent()
     {
         Children.Clear();
         Entities.Clear();
@@ -273,15 +304,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             LoadingFailed = true;
             return;
         }
-
-        var options = new EnumerationOptions
-        {
-            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
-            IgnoreInaccessible = true,
-            RecurseSubdirectories = false
-        };
-
-        var directoryMatches = Root.GetFiles();
+        
+        var directoryMatches = GetDirectories("*", false);
 
         foreach (var match in directoryMatches)
         {
@@ -290,7 +314,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             Entities.Add(newFolder);
         }
 
-        var fileMatches = Directory.EnumerateFiles(FullPath, "*.*", options);
+        var fileMatches = GetFiles("*", false);
 
         foreach (var match in fileMatches)
         {

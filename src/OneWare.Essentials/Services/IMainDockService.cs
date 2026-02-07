@@ -32,6 +32,8 @@ public interface IMainDockService : INotifyPropertyChanged
 
     public Task<bool> CloseFileAsync(string fullPath);
 
+    public void UnregisterOpenFile(string fullPath);
+
     public Window? GetWindowOwner(IDockable dockable);
 
     public IDockable? SearchView(IDockable instance, IDockable? layout = null);

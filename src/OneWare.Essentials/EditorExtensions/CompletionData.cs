@@ -5,7 +5,6 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Snippets;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Essentials.EditorExtensions;
 

@@ -84,7 +84,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     menuItems.Add(new MenuItemViewModel("Reload")
                     {
                         Header = "Reload",
-                        Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
+                        Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadProjectAsync(root)),
                         IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
                     });
                     menuItems.Add(new MenuItemViewModel("ProjectSettings")

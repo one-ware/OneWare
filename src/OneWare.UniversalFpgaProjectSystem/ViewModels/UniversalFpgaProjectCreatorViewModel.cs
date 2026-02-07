@@ -144,8 +144,6 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             root.IsExpanded = true;
 
             Close(window);
-
-            _ = _projectExplorerService.SaveLastProjectsFileAsync();
         }
         catch (Exception e)
         {

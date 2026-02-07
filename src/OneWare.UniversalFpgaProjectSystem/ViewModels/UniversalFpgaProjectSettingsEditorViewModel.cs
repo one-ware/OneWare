@@ -305,7 +305,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         }
 
         await _projectExplorerService.SaveProjectAsync(_root);
-        await _projectExplorerService.ReloadAsync(_root);
+        await _projectExplorerService.ReloadProjectAsync(_root);
     }
 
     public async Task SaveAndCloseAsync(FlexibleWindow window)

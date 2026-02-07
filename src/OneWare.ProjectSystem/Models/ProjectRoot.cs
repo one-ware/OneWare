@@ -10,11 +10,10 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
-        
-        LoadContent();
     }
 
     public abstract string ProjectPath { get; }
+
     public abstract string ProjectTypeId { get; }
     public string RootFolderPath { get; }
     public override string FullPath => RootFolderPath;
@@ -27,6 +26,11 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
             SetProperty(ref field, value);
             FontWeight = value ? FontWeight.Bold : FontWeight.Regular;
         }
+    }
+    
+    public virtual void Initialize()
+    {
+        LoadContent();
     }
 
     public abstract bool IsPathIncluded(string path);

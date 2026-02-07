@@ -29,7 +29,6 @@ public class EditViewModel : ExtendedDocument, IEditor
     private readonly ILanguageManager _languageManager;
 
     private readonly IMainDockService _mainDockService;
-    private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
 
@@ -45,7 +44,6 @@ public class EditViewModel : ExtendedDocument, IEditor
         _settingsService = settingsService;
         _mainDockService = mainDockService;
         _windowService = windowService;
-        _projectExplorerService = projectExplorerService;
         _languageManager = languageManager;
         _errorService = errorService;
         _backupService = backupService;
@@ -343,10 +341,7 @@ public class EditViewModel : ExtendedDocument, IEditor
             ?.Log($"Saved {Path.GetFileName(FullPath)}!");
 
         IsDirty = false;
-        var savable = ResolveSavableEntry();
-        if (savable != null) savable.LastSaveTime = DateTime.Now;
-        var pathEntry = ResolvePathEntry();
-        if (pathEntry != null) pathEntry.LoadingFailed = false;
+        LastSaveTime = DateTime.Now;
         LoadingFailed = false;
 
         FileSaved?.Invoke(this, EventArgs.Empty);
@@ -377,8 +372,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
             Editor.Document = doc;
 
-            var savable = ResolveSavableEntry();
-            if (savable != null) savable.LastSaveTime = File.GetLastWriteTime(FullPath);
+            LastSaveTime = File.GetLastWriteTime(FullPath);
 
             CurrentDocument.UndoStack.ClearAll();
         }
@@ -391,8 +385,6 @@ public class EditViewModel : ExtendedDocument, IEditor
         }
 
         IsLoading = false;
-        var pathEntry = ResolvePathEntry();
-        if (pathEntry != null) pathEntry.LoadingFailed = !success;
         LoadingFailed = !success;
         IsDirty = false;
 
@@ -401,17 +393,6 @@ public class EditViewModel : ExtendedDocument, IEditor
         return success;
     }
 
-    private ISavable? ResolveSavableEntry()
-    {
-        return _projectExplorerService.GetEntryFromFullPath(FullPath) as ISavable
-               ?? _projectExplorerService.GetTemporaryFile(FullPath);
-    }
-
-    private IHasPath? ResolvePathEntry()
-    {
-        return _projectExplorerService.GetEntryFromFullPath(FullPath) as IHasPath
-               ?? _projectExplorerService.GetTemporaryFile(FullPath);
-    }
 
     #endregion
 }

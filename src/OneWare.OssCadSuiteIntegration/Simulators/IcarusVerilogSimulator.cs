@@ -38,12 +38,13 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
-    public async Task<bool> SimulateAsync(IFile file)
+    public async Task<bool> SimulateAsync(string fullPath)
     {
-        if (file is IProjectFile { Root: UniversalFpgaProjectRoot root } projectFile)
+        var projectFile = _projectExplorerService.GetEntryFromFullPath(fullPath) as IProjectFile;
+        if (projectFile is { Root: UniversalFpgaProjectRoot root })
         {
             var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
-                Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
+                Path.GetFileNameWithoutExtension(fullPath) + ".vvp").ToUnixPath();
 
             var verilogFiles = root.GetFiles("*.v")
                 .Where(x => !root.IsCompileExcluded(x))

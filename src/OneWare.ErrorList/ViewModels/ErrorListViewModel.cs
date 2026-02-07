@@ -63,11 +63,11 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
             Filter = Filter
         };
 
-        Observable.FromEventPattern<IFile>(projectExplorerExplorerViewModel,
+        Observable.FromEventPattern<string>(projectExplorerExplorerViewModel,
             nameof(projectExplorerExplorerViewModel.FileRemoved)).Subscribe(x =>
-            {
-                ClearFile(x.EventArgs.FullPath);
-            });
+        {
+            ClearFile(x.EventArgs);
+        });
 
         Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
             nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(x => { Clear(x.EventArgs); });
