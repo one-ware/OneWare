@@ -89,7 +89,11 @@ public abstract class OutputBaseView : UserControl
         _viewModel!.OutputDocument.WhenValueChanged(x => x.LineCount)
             .Throttle(TimeSpan.FromMilliseconds(20))
             .ObserveOn(AvaloniaScheduler.Instance)
-            .Subscribe(_ => UpdateLineColors())
+            .Subscribe(_ =>
+            {
+                UpdateLineColors();
+                ScrollToEnd();
+            })
             .DisposeWith(_subscriptions);
 
         _viewModel.LineContexts.CollectionChanged += OnLineContextsChanged;
@@ -133,8 +137,7 @@ public abstract class OutputBaseView : UserControl
         if (!_viewModel.AutoScroll || _stopScroll || !IsEffectivelyVisible)
             return;
 
-        _output.CaretOffset = _output.Text.Length;
-        _output.TextArea.Caret.BringCaretToView(5);
+        _output.ScrollToEnd();
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
