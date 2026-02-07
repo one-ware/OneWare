@@ -27,7 +27,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 LoadContent();
 
                 if (defaultFolderAnimation)
-                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X").Subscribe(y =>
+                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X").Subscribe(y =>
                     {
                         Icon = y as IImage;
                     }).DisposeWith(Disposables);
@@ -42,7 +42,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                     Children.Add(new LoadingDummyNode());
 
                 if (defaultFolderAnimation)
-                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X")
+                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
                         .Subscribe(y => { Icon = y as IImage; }).DisposeWith(Disposables);
             }
         }).DisposeWith(Disposables);
@@ -62,8 +62,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 folder.Remove(folder.Entities[i]);
                 i--;
             }
-
-        (entry.Root as ProjectRoot)?.UnregisterEntry(entry);
+        
         Children.Remove(entry);
         Entities.Remove(entry);
         
@@ -214,7 +213,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         entry.TopFolder = this;
 
         Entities.Add(entry);
-        (entry.Root as ProjectRoot)?.RegisterEntry(entry);
     }
 
     protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
@@ -265,7 +263,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         return Directory.EnumerateFiles(FullPath, searchPattern, SearchOption.AllDirectories);
     }
     
-    public void LoadContent()
+    public virtual void LoadContent()
     {
         Children.Clear();
         Entities.Clear();
@@ -283,7 +281,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             RecurseSubdirectories = false
         };
 
-        var directoryMatches = Directory.EnumerateDirectories(FullPath, "*", options);
+        var directoryMatches = Root.GetFiles();
 
         foreach (var match in directoryMatches)
         {

@@ -10,6 +10,8 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
+        
+        LoadContent();
     }
 
     public abstract string ProjectPath { get; }
@@ -30,16 +32,23 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     public abstract bool IsPathIncluded(string path);
     
     public abstract void IncludePath(string path);
-    
-    public abstract void OnExternalEntryAdded(string relativePath, FileAttributes attributes);
 
-    public virtual void RegisterEntry(IProjectEntry entry)
+    public virtual void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
     {
-        
-    }
-
-    public virtual void UnregisterEntry(IProjectEntry entry)
-    {
-        
+        var parentPath = Path.GetDirectoryName(relativePath);
+        if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
+        {
+            if (folder.IsExpanded)
+            {
+                if (attributes.HasFlag(FileAttributes.Directory))
+                    AddFolder(relativePath);
+                else
+                    AddFile(relativePath);
+            }
+            else if (folder.Children.Count == 0)
+            {
+                folder.Children.Add(new LoadingDummyNode());
+            }
+        }
     }
 }

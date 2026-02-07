@@ -38,8 +38,6 @@ public class MainDockService : Factory, IMainDockService
 
     private IDisposable? _lastSub;
 
-    private RootDock? _layout;
-
     public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
         IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel,
@@ -88,17 +86,17 @@ public class MainDockService : Factory, IMainDockService
 
     public RootDock? Layout
     {
-        get => _layout;
+        get;
         set
         {
-            if (value == _layout) return;
-            _layout = value;
+            if (value == field) return;
+            field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Layout)));
 
             _lastSub?.Dispose();
-            _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
+            _lastSub = field?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
             {
-                if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
+                if (field.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
             });
         }
     }

@@ -13,17 +13,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
 
-    private IFile? _currentFile;
-
     private string _fullPath;
-
-    private bool _isDirty;
-
-    private bool _isLoading = true;
-
-    private bool _isReadOnly;
-
-    private bool _loadingFailed;
 
     protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService,
         IMainDockService mainDockService, IWindowService windowService)
@@ -51,32 +41,32 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
     public IFile? CurrentFile
     {
-        get => _currentFile;
-        private set => SetProperty(ref _currentFile, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
 
     public bool LoadingFailed
     {
-        get => _loadingFailed;
-        set => SetProperty(ref _loadingFailed, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsReadOnly
     {
-        get => _isReadOnly;
-        set => SetProperty(ref _isReadOnly, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsDirty
     {
-        get => _isDirty;
-        set => SetProperty(ref _isDirty, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public override bool OnClose()

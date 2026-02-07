@@ -11,21 +11,14 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposable
 {
-    private readonly IImage _loadingFailedOverlay;
-
     private string _name;
     
-    protected CompositeDisposable Disposables = new();
+    protected readonly CompositeDisposable Disposables = new();
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
         _name = name;
         TopFolder = topFolder;
-
-        _loadingFailedOverlay =
-            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.StatusCriticalErrorOverlayExp16X") as
-                IImage
-            ?? throw new NullReferenceException(nameof(Application));
     }
 
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
@@ -86,12 +79,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
             SetProperty(ref field, value);
             if (value)
             {
-                IconOverlays.Add(_loadingFailedOverlay);
+                //IconOverlays.Add(_loadingFailedOverlay);
                 IsExpanded = false;
             }
             else
             {
-                IconOverlays.Remove(_loadingFailedOverlay);
+                //IconOverlays.Remove(_loadingFailedOverlay);
             }
         }
     }

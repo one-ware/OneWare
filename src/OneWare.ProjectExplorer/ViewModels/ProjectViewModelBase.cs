@@ -174,11 +174,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
             
             var relative = Path.GetRelativePath(projectRoot, fullPath);
             
-            var projectName = Path.GetFileName(projectRoot);
-
-            var relativePath = Path.Combine(projectName, relative);
-
-            return GetEntry(relativePath);
+            return project.GetEntry(relative);
         }
 
         return null;

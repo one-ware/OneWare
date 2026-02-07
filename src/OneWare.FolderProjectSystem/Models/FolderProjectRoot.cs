@@ -28,23 +28,4 @@ public class FolderProjectRoot : ProjectRoot
     {
         //Not needed
     }
-
-    public override void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
-    {
-        var parentPath = Path.GetDirectoryName(relativePath);
-        if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
-        {
-            if (folder.IsExpanded)
-            {
-                if (attributes.HasFlag(FileAttributes.Directory))
-                    AddFolder(relativePath);
-                else
-                    AddFile(relativePath);
-            }
-            else if (folder.Children.Count == 0)
-            {
-                folder.Children.Add(new LoadingDummyNode());
-            }
-        }
-    }
 }
