@@ -56,33 +56,33 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (Children.Count == 0) IsExpanded = false;
     }
 
-    public void SetIsExpandedFromView(bool newValue)
+    public void SetIsExpanded(bool newValue)
     {
         IsExpanded = newValue;
     }
 
-    public IProjectFile AddFile(string path, bool createNew = false)
+    public IProjectFile AddFile(string relativePath, bool createNew = false)
     {
-        var split = path.LastIndexOf(Path.DirectorySeparatorChar);
+        var split = relativePath.LastIndexOf(Path.DirectorySeparatorChar);
 
         if (split > 0)
         {
-            var folderPath = path[..split];
+            var folderPath = relativePath[..split];
             var pf = AddFolder(folderPath);
-            return pf.AddFile(path.Substring(split + 1, path.Length - split - 1), createNew);
+            return pf.AddFile(relativePath.Substring(split + 1, relativePath.Length - split - 1), createNew);
         }
 
-        if (!createNew && SearchName(path) is ProjectFile file) return file;
+        if (!createNew && SearchRelativePath(relativePath) is ProjectFile file) return file;
 
-        var fullPath = Path.Combine(FullPath, path);
+        var fullPath = Path.Combine(FullPath, relativePath);
 
         if (createNew)
         {
             fullPath = fullPath.CheckNameFile();
-            path = Path.GetFileName(fullPath);
+            relativePath = Path.GetFileName(fullPath);
         }
 
-        var projFile = ConstructNewProjectFile(path, this);
+        var projFile = ConstructNewProjectFile(relativePath, this);
 
         if (!File.Exists(fullPath))
         {
@@ -103,26 +103,26 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         return projFile;
     }
 
-    public IProjectFolder AddFolder(string path, bool createNew = false)
+    public IProjectFolder AddFolder(string relativePath, bool createNew = false)
     {
-        var split = path.IndexOf(Path.DirectorySeparatorChar);
+        var split = relativePath.IndexOf(Path.DirectorySeparatorChar);
         if (split >= 1)
         {
-            var folderName = path[..split];
-            if (SearchName(folderName) is ProjectFolder existing)
-                return existing.AddFolder(path.Remove(0, folderName.Length + 1), createNew);
+            var folderName = relativePath[..split];
+            if (SearchRelativePath(folderName) is ProjectFolder existing)
+                return existing.AddFolder(relativePath.Remove(0, folderName.Length + 1), createNew);
 
             var created = AddFolder(folderName, createNew);
-            return created.AddFolder(path.Remove(0, folderName.Length + 1), createNew);
+            return created.AddFolder(relativePath.Remove(0, folderName.Length + 1), createNew);
         }
 
-        if (!createNew && SearchName(path) is ProjectFolder existingFolder) return existingFolder;
+        if (!createNew && SearchRelativePath(relativePath) is ProjectFolder existingFolder) return existingFolder;
 
-        var fullPath = Path.Combine(FullPath, path);
+        var fullPath = Path.Combine(FullPath, relativePath);
         if (createNew)
         {
             fullPath = fullPath.CheckNameDirectory();
-            path = Path.GetFileName(fullPath);
+            relativePath = Path.GetFileName(fullPath);
         }
 
         if (!Directory.Exists(fullPath))
@@ -135,21 +135,10 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
 
-        var pf = ConstructNewProjectFolder(path, this);
+        var pf = ConstructNewProjectFolder(relativePath, this);
 
         Insert(pf);
         return pf;
-    }
-
-    public IProjectEntry? SearchName(string path)
-    {
-        if (path is "" or ".") return this;
-
-        foreach (var i in Entities)
-            if (path.Equals(i.Name, StringComparison.OrdinalIgnoreCase))
-                return i;
-
-        return null;
     }
 
     public IProjectEntry? SearchRelativePath(string path)
@@ -158,11 +147,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         if (split > -1)
         {
-            var subFolder = SearchName(path[..split]) as IProjectFolder;
+            var subFolder = SearchRelativePath(path[..split]) as IProjectFolder;
             return subFolder?.SearchRelativePath(path.Remove(0, split + 1));
         }
 
-        return SearchName(path);
+        return SearchRelativePath(path);
     }
 
     public IProjectEntry? SearchFullPath(string path)

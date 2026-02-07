@@ -21,7 +21,7 @@ public class LanguageServiceVerilog(string workspace, ISettingsService settingsS
     protected override IEnumerable<ErrorListItem> ConvertErrors(PublishDiagnosticsParams pdp, IFile file)
     {
         if (file is IProjectFile pf &&
-            pf.TopFolder?.SearchName(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip") != null)
+            pf.TopFolder?.SearchRelativePath(Path.GetFileNameWithoutExtension(file.FullPath) + ".qip") != null)
             return new List<ErrorListItem>();
 
         return base.ConvertErrors(pdp, file);

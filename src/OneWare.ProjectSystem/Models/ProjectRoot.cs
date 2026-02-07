@@ -37,7 +37,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 
     public abstract IProjectFile? GetFile(string relativePath);
 
-    public abstract IEnumerable<IProjectFile> GetFiles(string searchPattern = "*");
+    public abstract IEnumerable<string> GetFiles(string searchPattern = "*");
 
     public virtual void RegisterEntry(IProjectEntry entry)
     {

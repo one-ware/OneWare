@@ -109,7 +109,20 @@ public class FolderProjectRoot : ProjectRoot
         var visual = SearchRelativePath(relativePath);
         if (visual != null) return visual;
         
-        // Create it in the visual tree (minimalistic) and return it.
+        // Create it in the visual tree and return it.
+        var fullPath = Path.Combine(RootFolderPath, relativePath);
+        if (!File.Exists(fullPath)) return null;
+        
+        var fileInfo = new FileInfo(fullPath);
+
+        if (fileInfo.Attributes.HasFlag(FileAttributes.Directory))
+        {
+            return AddFolder(relativePath);
+        }
+        else
+        {
+            return AddFile(relativePath);
+        }
     }
 
     public override IProjectFile? GetFile(string relativePath)
@@ -117,8 +130,8 @@ public class FolderProjectRoot : ProjectRoot
         return GetEntry(relativePath) as IProjectFile;
     }
 
-    public override IEnumerable<IProjectFile> GetFiles(string searchPattern = "*")
+    public override IEnumerable<string> GetFiles(string searchPattern = "*")
     {
-        // TODO
+        return Directory.EnumerateFiles(RootFolderPath, searchPattern, SearchOption.AllDirectories);
     }
 }

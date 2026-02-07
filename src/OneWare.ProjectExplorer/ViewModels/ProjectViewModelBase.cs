@@ -137,20 +137,16 @@ public abstract class ProjectViewModelBase : ExtendedTool
         node.Parent.IsExpanded = true;
         ExpandToRoot(node.Parent);
     }
-
-    public IProjectEntry? SearchName(string path, bool recursive = true)
+    
+    public IProjectEntry? SearchRelativePath(string relativePath, bool recursive = true)
     {
-        foreach (var i in Projects)
-        {
-            if (path.Equals(Path.GetFullPath(i.Header), StringComparison.OrdinalIgnoreCase)) return i;
-            if (recursive && i is IProjectFolder folder)
-            {
-                var pe = folder.SearchName(path);
-                if (pe != null) return pe;
-            }
-        }
+        var root = Path.GetPathRoot(relativePath);
 
-        return null;
+        var project = Projects.FirstOrDefault(x => Path.GetFileName(x.RootFolderPath) == root);
+
+        if (project == null) return null;
+
+        return project.SearchRelativePath(relativePath);
     }
 
     public IProjectEntry? SearchFullPath(string path, bool recursive = true)

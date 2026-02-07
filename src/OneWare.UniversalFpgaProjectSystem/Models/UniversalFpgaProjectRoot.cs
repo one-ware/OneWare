@@ -26,12 +26,6 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     private readonly IImage _topEntityOverlay;
 
-    private IFpgaLoader? _loader;
-
-    private IFpgaToolchain? _toolchain;
-
-    private IProjectEntry? _topEntity;
-
     public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties)
         : base(projectFilePath, properties)
     {
@@ -48,33 +42,18 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     }
 
     public override string ProjectTypeId => ProjectType;
-    
-    public override IProjectEntry? GetEntry(string relativePath)
-    {
-        return SearchRelativePath(relativePath);
-    }
-
-    public override IProjectFile? GetFile(string relativePath)
-    {
-        return SearchRelativePath(relativePath) as IProjectFile;
-    }
-
-    public override IEnumerable<IProjectFile> GetFiles(string searchPattern = "*")
-    {
-        throw new NotImplementedException();
-    }
 
     public IProjectEntry? TopEntity
     {
-        get => _topEntity;
+        get;
         set
         {
-            _topEntity?.IconOverlays.Remove(_topEntityOverlay);
-            SetProperty(ref _topEntity, value);
-            _topEntity?.IconOverlays.Add(_topEntityOverlay);
+            field?.IconOverlays.Remove(_topEntityOverlay);
+            SetProperty(ref field, value);
+            field?.IconOverlays.Add(_topEntityOverlay);
 
-            if (_topEntity != null)
-                SetProjectProperty(nameof(TopEntity), _topEntity.RelativePath.ToUnixPath());
+            if (field != null)
+                SetProjectProperty(nameof(TopEntity), field.RelativePath.ToUnixPath());
             else
                 RemoveProjectProperty(nameof(TopEntity));
         }
@@ -82,12 +61,12 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public IFpgaToolchain? Toolchain
     {
-        get => _toolchain;
+        get;
         set
         {
-            SetProperty(ref _toolchain, value);
-            if (_toolchain != null)
-                SetProjectProperty(nameof(Toolchain), _toolchain.Name);
+            SetProperty(ref field, value);
+            if (field != null)
+                SetProjectProperty(nameof(Toolchain), field.Name);
             else
                 RemoveProjectProperty(nameof(Toolchain));
         }
@@ -95,12 +74,12 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public IFpgaLoader? Loader
     {
-        get => _loader;
+        get;
         set
         {
-            SetProperty(ref _loader, value);
-            if (_loader != null)
-                SetProjectProperty(nameof(Loader), _loader.Name);
+            SetProperty(ref field, value);
+            if (field != null)
+                SetProjectProperty(nameof(Loader), field.Name);
             else
                 RemoveProjectProperty(nameof(Loader));
         }

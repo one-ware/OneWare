@@ -93,4 +93,20 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         Properties.Remove(name);
     }
+    
+    public override IProjectEntry? GetEntry(string relativePath)
+    {
+        return SearchRelativePath(relativePath);
+    }
+
+    public override IProjectFile? GetFile(string relativePath)
+    {
+        return SearchRelativePath(relativePath) as IProjectFile;
+    }
+
+    public override IEnumerable<string> GetFiles(string searchPattern = "*")
+    {
+        return Directory.EnumerateFiles(RootFolderPath, searchPattern, SearchOption.AllDirectories)
+            .Where(x => IsPathIncluded(Path.GetRelativePath(RootFolderPath, x)));
+    }
 }

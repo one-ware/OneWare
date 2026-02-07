@@ -11,5 +11,9 @@ public interface IProjectRoot : IProjectFolder
     public void OnExternalEntryAdded(string path, FileAttributes attributes);
     public IProjectEntry? GetEntry(string relativePath);
     public IProjectFile? GetFile(string relativePath);
-    public IEnumerable<IProjectFile> GetFiles(string searchPattern = "*");
+    
+    /// <summary>
+    /// Returns the relative paths of items included in this root
+    /// </summary>
+    public IEnumerable<string> GetFiles(string searchPattern = "*");
 }

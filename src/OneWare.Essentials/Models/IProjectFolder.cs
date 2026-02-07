@@ -6,13 +6,11 @@ public interface IProjectFolder : IProjectEntry
 
     public void Remove(IProjectEntry entry);
 
-    public void SetIsExpandedFromView(bool newValue);
+    public void SetIsExpanded(bool newValue);
 
-    public IProjectFile AddFile(string path, bool createNew = false);
+    public IProjectFile AddFile(string relativePath, bool createNew = false);
 
-    public IProjectFolder AddFolder(string path, bool createNew = false);
-
-    public IProjectEntry? SearchName(string path);
+    public IProjectFolder AddFolder(string relativePath, bool createNew = false);
 
     public IProjectEntry? SearchRelativePath(string path);
 
