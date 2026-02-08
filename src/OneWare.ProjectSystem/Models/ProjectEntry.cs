@@ -9,11 +9,9 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectSystem.Models;
 
-public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposable
+public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
     private string _name;
-    
-    protected readonly CompositeDisposable Disposables = new();
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
@@ -45,8 +43,12 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
         set => SetProperty(ref field, value);
     } = 1f;
 
-    public abstract IconModel? IconModel { get; }
-    
+    public IconModel? IconModel
+    {
+        get;
+        protected set => SetProperty(ref field, value);
+    }
+
     public string Header => Name;
 
     public string Name
@@ -85,7 +87,10 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
         set
         {
             if (this is IProjectFolder { Children.Count: 0 }) value = false;
-            if (value != field) SetProperty(ref field, value);
+            if (SetProperty(ref field, value))
+            {
+                OnIsExpandedChanged(value);
+            }
         }
     }
 
@@ -124,15 +129,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
         }
     }
 
-    public Action<Action<string>>? RequestRename { get; set; }
-
-    public bool IsValid()
+    public virtual void OnIsExpandedChanged(bool isExpanded)
     {
-        return true;
-    }
-
-    public void Dispose()
-    {
-        Disposables.Dispose();
     }
 }

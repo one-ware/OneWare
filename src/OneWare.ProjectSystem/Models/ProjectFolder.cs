@@ -13,39 +13,17 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
+    public static IconModel DefaultFolderClosedIconModel = new IconModel("VsImageLib.Folder16X");
+    
+    public static IconModel DefaultFolderOpenIconModel = new IconModel("VsImageLib.FolderOpen16X");
+    
     private CancellationTokenSource? _loadCancellation;
-    private bool _isLoaded;
-    private bool _isLoading;
 
     protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
         topFolder)
     {
-        this.WhenValueChanged(x => x.IsExpanded).Subscribe(isExpanded =>
-        {
-            if (isExpanded)
-            {
-                StartLoad();
-            }
-            else
-            {
-                CancelLoad();
-                _isLoaded = false;
-
-                if (Children != null)
-                    foreach (var subEntity in Children.OfType<IProjectEntry>().ToArray())
-                        Remove(subEntity);
-
-                if (Directory.Exists(FullPath) &&
-                    Directory.EnumerateFileSystemEntries(FullPath).Any())
-                {
-                    if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
-                    Children.Add(new LoadingDummyNode());
-                }
-            }
-        }).DisposeWith(Disposables);
+        OnIsExpandedChanged(false);
     }
-
-    public override IconModel? IconModel { get; } = null;
 
     public void Add(IProjectEntry entry)
     {
@@ -55,21 +33,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public void Remove(IProjectEntry entry)
     {
-        if (entry is ProjectFolder {Children: not null} folder)
-        {
-            for (var i = 0; i < folder.Children.Count; i++)
-            {
-                if (folder.Children[i] is IProjectEntry subEntry)
-                {
-                    folder.Remove(subEntry);
-                    i--;
-                }
-            }
-        }
-
         Children?.Remove(entry);
-
-        entry.Dispose();
 
         //Collapse folder if empty
         if (Children?.Count == 0) IsExpanded = false;
@@ -302,18 +266,43 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
-    protected virtual async Task LoadContentAsync(CancellationToken cancellationToken, bool forceReload = false)
+    public override void OnIsExpandedChanged(bool isExpanded)
     {
-        if (_isLoading) return;
-        if (_isLoaded && !forceReload) return;
+        base.OnIsExpandedChanged(isExpanded);
+        
+        if (isExpanded)
+        {
+            if(this is not IProjectRootWithFile) IconModel = DefaultFolderOpenIconModel;
+            _ = LoadContentAsync();
+        }
+        else
+        {
+            if(this is not IProjectRootWithFile) IconModel = DefaultFolderClosedIconModel;
+            
+            CancelLoad();
 
-        _isLoading = true;
+            Children?.Clear();
+
+            if (Directory.Exists(FullPath) &&
+                Directory.EnumerateFileSystemEntries(FullPath).Any())
+            {
+                if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+                Children.Add(new LoadingDummyNode());
+            }
+        }
+    }
+
+    protected async Task LoadContentAsync()
+    {
+        CancelLoad();
+        _loadCancellation = new CancellationTokenSource();
+        var cancellationToken = _loadCancellation.Token;
+        
         Children?.Clear();
 
         if (!Directory.Exists(FullPath))
         {
             LoadingFailed = true;
-            _isLoading = false;
             return;
         }
 
@@ -337,11 +326,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             if (cancellationToken.IsCancellationRequested) break;
             Children.Add(file);
         }
-
-        if (!cancellationToken.IsCancellationRequested)
-            _isLoaded = true;
-
-        _isLoading = false;
     }
 
     private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize,
@@ -389,18 +373,10 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
-    private void StartLoad(bool forceReload = false)
-    {
-        CancelLoad();
-        _loadCancellation = new CancellationTokenSource();
-        _ = LoadContentAsync(_loadCancellation.Token, forceReload);
-    }
-
     private void CancelLoad()
     {
         _loadCancellation?.Cancel();
         _loadCancellation?.Dispose();
         _loadCancellation = null;
-        _isLoaded = false;
     }
 }

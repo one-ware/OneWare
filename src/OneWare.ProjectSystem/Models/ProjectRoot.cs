@@ -31,7 +31,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 
     public Task InitializeAsync()
     {
-        return LoadContentAsync(CancellationToken.None, true);
+        return LoadContentAsync();
     }
 
     public abstract bool IsPathIncluded(string path);

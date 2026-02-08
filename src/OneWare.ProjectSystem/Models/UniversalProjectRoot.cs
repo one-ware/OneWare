@@ -26,8 +26,6 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         IconModel = new IconModel("UniversalProject");
     }
 
-    public override IconModel? IconModel { get; }
-
     public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;
 
     protected void RaisePropertyChanged(

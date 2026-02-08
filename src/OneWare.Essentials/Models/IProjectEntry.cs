@@ -5,7 +5,7 @@ namespace OneWare.Essentials.Models;
 /// <summary>
 ///     Can be a file or a folder
 /// </summary>
-public interface IProjectEntry : IProjectExplorerNode, IDisposable
+public interface IProjectEntry : IProjectExplorerNode
 {
     public string FullPath { get; }
     
@@ -18,6 +18,4 @@ public interface IProjectEntry : IProjectExplorerNode, IDisposable
     public IProjectRoot Root { get; }
 
     public IProjectFolder? TopFolder { get; set; }
-
-    public bool IsValid();
 }
