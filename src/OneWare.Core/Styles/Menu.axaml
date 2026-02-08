@@ -1,7 +1,8 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime">
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
@@ -134,7 +135,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <controls:LayeredIconPresenter Value="{Binding IconModel}" />
                 </Template>
             </Setter.Value>
         </Setter>
@@ -152,7 +153,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <controls:LayeredIconPresenter Value="{Binding IconModel}" />
                 </Template>
             </Setter.Value>
         </Setter>

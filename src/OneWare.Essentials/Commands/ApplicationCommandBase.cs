@@ -15,15 +15,7 @@ public abstract class ApplicationCommandBase(string name) : ObservableObject, IA
     private IImage? _icon;
 
     private IDisposable? _subscription;
-
-    public IObservable<object?>? IconObservable
-    {
-        set
-        {
-            _subscription?.Dispose();
-            _subscription = value?.Subscribe(x => Icon = x as IImage);
-        }
-    }
+    private IconModel? _iconModel;
 
     public string Name { get; } = name;
 
@@ -47,6 +39,18 @@ public abstract class ApplicationCommandBase(string name) : ObservableObject, IA
     {
         get => _icon;
         set => SetProperty(ref _icon, value);
+    }
+
+    public IconModel? IconModel
+    {
+        get => _iconModel;
+        set
+        {
+            if (!SetProperty(ref _iconModel, value)) return;
+            _subscription?.Dispose();
+            _subscription = value?.IconObservable?.Subscribe(x => Icon = x as IImage);
+            if (value?.Icon != null) Icon = value.Icon;
+        }
     }
 
     public abstract bool Execute(ILogical source);

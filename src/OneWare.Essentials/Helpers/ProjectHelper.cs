@@ -6,20 +6,6 @@ namespace OneWare.Essentials.Helpers;
 
 public static class ProjectHelper
 {
-    public static void ImportEntries(string source, IProjectFolder destination)
-    {
-        var matches = GetFileMatches(source,
-            x => destination.Root.IsPathIncluded(Path.GetRelativePath(destination.Root.FullPath, x)));
-
-        foreach (var match in matches)
-        {
-            var relativePath = Path.GetRelativePath(destination.FullPath, match.path);
-            if (match.attributes.HasFlag(FileAttributes.Directory))
-                destination.AddFolder(relativePath);
-            else destination.AddFile(relativePath);
-        }
-    }
-
     private static IEnumerable<(string path, FileAttributes attributes)> GetFileMatches(string source,
         Func<string, bool>? valid = null)
     {

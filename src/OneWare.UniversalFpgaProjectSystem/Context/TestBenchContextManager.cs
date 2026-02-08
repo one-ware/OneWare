@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.UniversalFpgaProjectSystem.Context;
@@ -18,9 +17,9 @@ public static class TestBenchContextManager
         return Path.Combine(Path.GetDirectoryName(tbPath) ?? "", Path.GetFileNameWithoutExtension(tbPath) + ".tbconf");
     }
 
-    public static async Task<TestBenchContext> LoadContextAsync(IFile file)
+    public static async Task<TestBenchContext> LoadContextAsync(string filePath)
     {
-        var path = GetSaveFilePath(file.FullPath);
+        var path = GetSaveFilePath(filePath);
 
         if (File.Exists(path))
             try
@@ -29,21 +28,21 @@ public static class TestBenchContextManager
 
                 var properties = await JsonNode.ParseAsync(stream);
 
-                return new TestBenchContext(file, properties as JsonObject ?? new JsonObject());
+                return new TestBenchContext(filePath, properties as JsonObject ?? new JsonObject());
             }
             catch (Exception e)
             {
                 ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
             }
 
-        return new TestBenchContext(file, new JsonObject());
+        return new TestBenchContext(filePath, new JsonObject());
     }
 
     public static async Task<bool> SaveContextAsync(TestBenchContext context)
     {
         try
         {
-            var path = GetSaveFilePath(context.File.FullPath);
+            var path = GetSaveFilePath(context.FilePath);
 
             if (!File.Exists(path) && context.Properties.Count == 0) return false;
 

@@ -19,12 +19,10 @@ public class VerilogBlinkSimulationTemplate(ILogger logger, IMainDockService mai
             var name = root.Header.Replace(" ", "");
             TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
             var file = root.AddFile(name + ".v");
-            root.TopEntity = file;
             var file2 = root.AddFile(name + "_tb.v");
-            root.RegisterTestBench(file2);
-
-            _ = mainDockService.OpenFileAsync(file);
-            _ = mainDockService.OpenFileAsync(file2);
+            
+            _ = mainDockService.OpenFileAsync(file.FullPath);
+            _ = mainDockService.OpenFileAsync(file2.FullPath);
         }
         catch (Exception e)
         {

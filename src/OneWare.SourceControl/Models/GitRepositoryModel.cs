@@ -87,7 +87,7 @@ public class GitRepositoryModel : ObservableObject
                 };
                 if (branch.IsCurrentRepositoryHead)
                 {
-                    menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept");
+                    menuItem.IconModel = new IconModel("PicolIcons.Accept");
                     menuItem.IsEnabled = false;
                 }
 
@@ -97,7 +97,7 @@ public class GitRepositoryModel : ObservableObject
             branchesMenu.Add(new MenuItemViewModel("NewBranch")
             {
                 Header = "New Branch...",
-                IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch"),
+                IconModel = new IconModel("BoxIcons.RegularGitBranch"),
                 Command = sourceControlViewModel.CreateBranchDialogAsyncCommand
             });
 
@@ -107,7 +107,7 @@ public class GitRepositoryModel : ObservableObject
 
                     if (equal)
                     {
-                        a.IconObservable = b.IconObservable;
+                        a.IconModel = b.IconModel;
                         a.IsEnabled = b.IsEnabled;
                         a.Command = b.Command;
                         a.CommandParameter = b.CommandParameter;
@@ -135,10 +135,7 @@ public class GitRepositoryModel : ObservableObject
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
 
-                var sModel = new SourceControlFileModel(fullPath, item)
-                {
-                    ProjectFile = projectExplorerService.SearchFullPath(fullPath) as IProjectFile
-                };
+                var sModel = new SourceControlFileModel(fullPath, item);
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||

@@ -57,7 +57,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
             new MenuItemViewModel("Feedback")
             {
                 Header = "Send Feedback",
-                IconObservable = Application.Current!.GetResourceObservable("Unicons.CommentMessage"),
+                IconModel = new IconModel("Unicons.CommentMessage"),
                 Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
             });
     }

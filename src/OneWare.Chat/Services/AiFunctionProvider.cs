@@ -106,7 +106,7 @@ public class AiFunctionProvider(
                 "Get Open Files",
                 () => new
                 {
-                    openFiles = dockService.OpenFiles.Select(x => x.Key.FullPath).ToArray()
+                    openFiles = dockService.OpenFiles.Select(x => x.Key).ToArray()
                 }),
             "getOpenFiles",
             """
@@ -137,7 +137,7 @@ public class AiFunctionProvider(
                 {
                     var errors = errorService.GetErrors();
                     var errorStrings = errors
-                        .Where(x => x.File.FullPath.EqualPaths(path))
+                        .Where(x => x.FilePath.EqualPaths(path))
                         .Select(x => x.ToString()).ToArray();
 
                     return new

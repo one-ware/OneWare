@@ -4,6 +4,7 @@ using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
@@ -31,7 +32,7 @@ public class SearchListModule : OneWareModuleBase
                 vm.SearchString = string.Empty;
                 dockService.Show(vm);
             }),
-            IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
+            IconModel = new IconModel(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }

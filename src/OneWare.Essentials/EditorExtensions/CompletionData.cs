@@ -5,7 +5,6 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Snippets;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Essentials.EditorExtensions;
 
@@ -15,7 +14,7 @@ public partial class CompletionData : ICompletionData
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
         double priority,
-        CompletionItem completionItem, int offset, IFile? file, Action? afterCompletion = null)
+        CompletionItem completionItem, int offset, string? fullPath, Action? afterCompletion = null)
     {
         InsertText = insertText;
         Label = label;
@@ -25,12 +24,12 @@ public partial class CompletionData : ICompletionData
         Priority = priority;
         CompletionItemLsp = completionItem;
         AfterCompletion = afterCompletion;
-        File = file;
+        FullPath = fullPath;
         CompletionOffset = offset;
     }
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
-        double priority, int offset, IFile? file, Action? afterCompletion = null)
+        double priority, int offset, string fullPath, Action? afterCompletion = null)
     {
         InsertText = insertText;
         Label = label;
@@ -38,7 +37,7 @@ public partial class CompletionData : ICompletionData
         Description = description;
         Image = icon;
         Priority = priority;
-        File = file;
+        FullPath = fullPath;
         AfterCompletion = afterCompletion;
         CompletionOffset = offset;
     }
@@ -49,7 +48,7 @@ public partial class CompletionData : ICompletionData
 
     public string? Detail { get; }
 
-    public IFile? File { get; set; }
+    public string? FullPath { get; set; }
 
     public IImage? Image { get; }
 
@@ -146,6 +145,6 @@ public partial class CompletionData : ICompletionData
 
     private string ReplaceVariables(string input)
     {
-        return input.Replace("$TM_FILENAME_BASE", Path.GetFileNameWithoutExtension(File?.FullPath));
+        return input.Replace("$TM_FILENAME_BASE", Path.GetFileNameWithoutExtension(FullPath));
     }
 }

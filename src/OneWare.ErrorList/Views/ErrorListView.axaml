@@ -143,8 +143,8 @@
                 <DataGridTemplateColumn Width="4*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate x:DataType="models:ErrorListItem">
-                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding File.FullPath}"
-                                       Text="{Binding File.Name}" />
+                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding FilePath}"
+                                       Text="{Binding FileName}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>

@@ -15,7 +15,7 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
         CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
         FoldingStrategy =
             new RegexFoldingStrategy(FoldingRegexCpp.FoldingStart,
-                FoldingRegexCpp.FoldingEnd); //new LspFoldingStrategy(ls, editor.CurrentFile);
+                FoldingRegexCpp.FoldingEnd); //new LspFoldingStrategy(ls, editor.FullPath);
         LineCommentSequence = "//";
     }
 
@@ -27,7 +27,8 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(Editor.CurrentFile!)
+        var error = ContainerLocator.Container.Resolve<IErrorService>()
+            .GetErrorsForFile(Editor.FullPath)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
@@ -37,7 +38,7 @@ internal class TypeAssistanceCpp : TypeAssistanceLanguageService
 
         if (error != null) info += error.Description + "\n";
 
-        var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
+        var hover = await Service.RequestHoverAsync(CurrentFilePath,
             new Position(pos.Line - 1, pos.Column - 1));
         if (hover != null)
         {

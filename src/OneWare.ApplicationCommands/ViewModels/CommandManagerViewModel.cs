@@ -58,7 +58,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     {
         var collection = new ObservableCollection<IApplicationCommand>();
         foreach (var project in _projectExplorerService.Projects)
-            collection.AddRange(project.Files.Select(x => new OpenFileApplicationCommand(x)));
+            collection.AddRange(project.GetFiles().Take(50).Select(x => new OpenFileApplicationCommand(x)));
         return collection;
     }
 

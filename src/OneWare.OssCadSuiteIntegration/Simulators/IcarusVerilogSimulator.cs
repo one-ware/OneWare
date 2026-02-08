@@ -38,51 +38,47 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
     public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
-    public async Task<bool> SimulateAsync(IFile file)
+    public async Task<bool> SimulateAsync(string fullPath)
     {
-        if (file is IProjectFile { Root: UniversalFpgaProjectRoot root } projectFile)
+        if (_projectExplorerService.GetRootFromFile(fullPath) is not UniversalFpgaProjectRoot root) return false;
+        var folderPath = Path.GetDirectoryName(fullPath);
+        if (!Directory.Exists(folderPath)) return false;
+        
+        var relativeFolderPath = Path.GetRelativePath(root.FullPath, folderPath);
+        
+        var vvpPath = Path.Combine(relativeFolderPath, Path.GetFileNameWithoutExtension(fullPath) + ".vvp").ToUnixPath();
+
+        var verilogFiles = root.GetFiles("*.v")
+            .Where(x => !root.IsCompileExcluded(x))
+            .Select(x => $"{x.ToUnixPath()}");
+
+        _mainDockService.Show<IOutputService>();
+
+        List<string> icarusVerilogArguments = ["-o", vvpPath];
+        icarusVerilogArguments.AddRange(verilogFiles);
+
+        var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
+            root.FullPath, "Running IVerilog...", AppState.Loading, true);
+
+        if (!result) return false;
+
+        var (success2, output) = await _childProcessService.ExecuteShellAsync("vvp", [vvpPath],
+            root.FullPath, "Running VVP Simulation...", AppState.Loading, true);
+
+        if (!success2) return false;
+
+        var vcdFileRegex = new Regex(@"VCD info: dumpfile\s+(.+\.vcd)\s+opened for output.");
+
+        var match = vcdFileRegex.Match(output);
+
+        if (match.Success)
         {
-            var vvpPath = Path.Combine(projectFile.TopFolder!.RelativePath,
-                Path.GetFileNameWithoutExtension(file.Name) + ".vvp").ToUnixPath();
+            var vcdFileRelativePath = match.Groups[1].Value;
+            var vcdFileFullPath = Path.Combine(root.FullPath, vcdFileRelativePath);
 
-            var verilogFiles = root.Files
-                .Where(x => x.Extension == ".v")
-                .Where(x => !root.CompileExcluded.Contains(x))
-                .Select(x => $"{x.RelativePath.ToUnixPath()}");
-
-            _mainDockService.Show<IOutputService>();
-
-            List<string> icarusVerilogArguments = ["-o", vvpPath];
-            icarusVerilogArguments.AddRange(verilogFiles);
-
-            var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
-                projectFile.Root.FullPath, "Running IVerilog...", AppState.Loading, true);
-
-            if (!result) return false;
-
-            var (success2, output) = await _childProcessService.ExecuteShellAsync("vvp", [vvpPath],
-                projectFile.Root.FullPath, "Running VVP Simulation...", AppState.Loading, true);
-
-            if (!success2) return false;
-
-            var vcdFileRegex = new Regex(@"VCD info: dumpfile\s+(.+\.vcd)\s+opened for output.");
-
-            var match = vcdFileRegex.Match(output);
-
-            if (match.Success)
-            {
-                var vcdFileRelativePath = match.Groups[1].Value;
-                var vcdFileFullPath = Path.Combine(projectFile.Root!.FullPath, vcdFileRelativePath);
-
-                var vcdFile = projectFile.Root.SearchRelativePath(vcdFileRelativePath.ToPlatformPath()) as IFile ??
-                              _projectExplorerService.GetTemporaryFile(vcdFileFullPath);
-
-                var doc = await _mainDockService.OpenFileAsync(vcdFile);
-            }
-
-            return true;
+            var doc = await _mainDockService.OpenFileAsync(vcdFileFullPath);
         }
 
-        return false;
+        return true;
     }
 }

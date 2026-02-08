@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Helpers;
@@ -5,7 +6,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
-using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 
 namespace OneWare.LibraryExplorer.ViewModels;
@@ -14,19 +14,17 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 {
     public const string IconKey = "BoxIcons.RegularLibrary";
 
-    private readonly IFileWatchService _fileWatchService;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
     private readonly string _libraryFolderPath;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IMainDockService mainDockService,
+    public LibraryExplorerViewModel(IPaths paths, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
 
-        _fileWatchService = fileWatchService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
@@ -35,10 +33,9 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         _ = LoadAsync();
     }
 
-    public override void Insert(IProjectRoot project)
+    public override void AddProject(IProjectRoot project)
     {
-        base.Insert(project);
-        _fileWatchService.Register(project);
+        base.AddProject(project);
     }
 
     public void DoubleTab(IProjectEntry entry)
@@ -61,7 +58,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         foreach (var dir in directories)
         {
             var root = await manager.LoadProjectAsync(dir);
-            Insert(root!);
+            AddProject(root!);
         }
     }
 
@@ -109,11 +106,11 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     private async Task PreviewFileAsync(IProjectFile file)
     {
-        var extendedDocument = await _mainDockService.OpenFileAsync(file);
+        var extendedDocument = await _mainDockService.OpenFileAsync(file.FullPath);
         if (extendedDocument != null)
         {
             extendedDocument.IsReadOnly = true;
-            extendedDocument.Title = "PREVIEW: " + extendedDocument.CurrentFile?.Name;
+            extendedDocument.Title = "PREVIEW: " + Path.GetFileName(extendedDocument.FullPath);
         }
     }
 

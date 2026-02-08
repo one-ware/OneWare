@@ -1,46 +1,61 @@
-﻿using Avalonia.Media;
+﻿using System.Threading;
+using Avalonia.Media;
 using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
-    private bool _isActive;
-
-    protected ProjectRoot(string rootFolderPath, bool defaultFolderAnimation) : base(Path.GetFileName(rootFolderPath),
-        null, defaultFolderAnimation)
+    protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath),
+        null)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
     }
 
     public abstract string ProjectPath { get; }
+
     public abstract string ProjectTypeId { get; }
     public string RootFolderPath { get; }
-    public List<IProjectFile> Files { get; } = new();
     public override string FullPath => RootFolderPath;
 
     public bool IsActive
     {
-        get => _isActive;
+        get;
         set
         {
-            SetProperty(ref _isActive, value);
+            SetProperty(ref field, value);
             FontWeight = value ? FontWeight.Bold : FontWeight.Regular;
         }
     }
 
-    public abstract bool IsPathIncluded(string path);
-    public abstract void IncludePath(string path);
-    public abstract void OnExternalEntryAdded(string path, FileAttributes attributes);
-
-    public virtual void RegisterEntry(IProjectEntry entry)
+    public Task InitializeAsync()
     {
-        if (entry is ProjectFile file) Files.Add(file);
+        return LoadContentAsync();
     }
 
-    public virtual void UnregisterEntry(IProjectEntry entry)
+    public abstract bool IsPathIncluded(string path);
+    
+    public abstract void IncludePath(string path);
+
+    public virtual void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
     {
-        if (entry is ProjectFile file) Files.Remove(file);
+        if (!IsPathIncluded(relativePath)) return;
+        
+        var parentPath = Path.GetDirectoryName(relativePath);
+        if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
+        {
+            if (folder.IsExpanded)
+            {
+                if (attributes.HasFlag(FileAttributes.Directory))
+                    AddFolder(relativePath);
+                else
+                    AddFile(relativePath);
+            }
+            else if (folder.Children.Count == 0)
+            {
+                folder.Children.Add(new LoadingDummyNode());
+            }
+        }
     }
 }

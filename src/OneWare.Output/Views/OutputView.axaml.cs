@@ -67,11 +67,11 @@ public partial class OutputView : OutputBaseView
         if (_searchResult == null) return;
 
         var result = ContainerLocator.Container.Resolve<IProjectExplorerService>()
-            .ActiveProject?.SearchRelativePath(_searchResult.Path);
+            .ActiveProject?.GetFile(_searchResult.Path);
 
-        if (result is IFile file)
+        if (result is { } file)
         {
-            var doc = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
+            var doc = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file.FullPath);
             if (doc is not IEditor evb) return;
 
             var offset = evb.CurrentDocument.GetOffset(_searchResult.Line, _searchResult.Column);
@@ -114,7 +114,7 @@ public partial class OutputView : OutputBaseView
 
         var lineContext = (DataContext as OutputBaseViewModel)?.LineContexts[line.LineNumber - 1];
 
-        var result = lineContext?.Owner?.SearchRelativePath(_searchResult.Path);
+        var result = lineContext?.Owner?.GetFile(_searchResult.Path);
 
         if (result == null) return;
 

@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Mvvm.Controls;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -71,7 +72,8 @@ public class AdvancedHostWindow : HostWindow
                 }
                 else
                 {
-                    foreach (var i in docs) _ = _mainDockService.CloseFileAsync(i.Key);
+                    foreach (var i in docs)
+                        _ = _mainDockService.CloseFileAsync(i.Value.FullPath);
                 }
             }
     }
@@ -83,8 +85,7 @@ public class AdvancedHostWindow : HostWindow
         {
             _cancelClose = false;
             foreach (var file in unsavedFiles)
-                if (file.CurrentFile != null)
-                    _mainDockService.OpenFiles.Remove(file.CurrentFile);
+                _mainDockService.OpenFiles.Remove(file.FullPath.ToPathKey());
 
             Dispatcher.UIThread.Post(Close);
         }

@@ -6,7 +6,7 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.ViewModels;
 
-public abstract class ExtendedTool : Tool, IExtendedTool, ICanHaveIcon
+public abstract class ExtendedTool : Tool, IExtendedTool
 {
     private IImage? _icon;
 

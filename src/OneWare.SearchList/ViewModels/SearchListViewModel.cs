@@ -22,21 +22,7 @@ public class SearchListViewModel : ExtendedTool
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    private bool _caseSensitive;
-
-    private bool _isLoading;
-
     private CancellationTokenSource? _lastCancellationToken;
-
-    private int _searchListFilterMode = 1;
-
-    private string _searchString = string.Empty;
-
-    private SearchResultModel? _selectedItem;
-
-    private bool _useRegex;
-
-    private bool _wholeWord;
 
     public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) :
         base(IconKey)
@@ -55,51 +41,51 @@ public class SearchListViewModel : ExtendedTool
 
     public string SearchString
     {
-        get => _searchString;
-        set => SetProperty(ref _searchString, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public ObservableCollection<SearchResultModel> Items { get; } = new();
 
     public SearchResultModel? SelectedItem
     {
-        get => _selectedItem;
-        set => SetProperty(ref _selectedItem, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool CaseSensitive
     {
-        get => _caseSensitive;
-        set => SetProperty(ref _caseSensitive, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool WholeWord
     {
-        get => _wholeWord;
-        set => SetProperty(ref _wholeWord, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool UseRegex
     {
-        get => _useRegex;
-        set => SetProperty(ref _useRegex, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public int SearchListFilterMode
     {
-        get => _searchListFilterMode;
-        set => SetProperty(ref _searchListFilterMode, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1;
 
     private void Search(string searchText)
     {
@@ -118,66 +104,60 @@ public class SearchListViewModel : ExtendedTool
         switch (SearchListFilterMode)
         {
             case 0:
-                await SearchFolderRecursiveAsync(_projectExplorerService.Projects, searchText,
-                    _lastCancellationToken.Token);
+                foreach (var project in _projectExplorerService.Projects)
+                {
+                    await SearchProjectFilesAsync(project, searchText, _lastCancellationToken.Token);
+                }
                 break;
             case 1 when _projectExplorerService.ActiveProject != null:
-                await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
-                    _lastCancellationToken.Token);
+                await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, _lastCancellationToken.Token);
                 break;
             case 2 when _mainDockService.CurrentDocument is IEditor editor:
-                var currentFile = editor.CurrentFile;
-                if (currentFile != null)
-                    Items.AddRange(await FindAllIndexesAsync(currentFile,
-                        searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
+                Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
+                    WholeWord, _lastCancellationToken.Token));
                 break;
         }
 
         IsLoading = false;
     }
 
-    private async Task SearchFolderRecursiveAsync(IEnumerable<IProjectEntry> folderItems, string searchText,
-        CancellationToken cancel)
+    private async Task SearchProjectFilesAsync(IProjectFolder folder, string searchText, CancellationToken cancel)
     {
-        var result = new List<SearchResultModel>();
         if (cancel.IsCancellationRequested) return;
-        foreach (var i in folderItems)
-            switch (i)
-            {
-                case IProjectFile file:
-                {
-                    if (file.Header.Contains(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
-                    {
-                        var sI = file.Header.IndexOf(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                        var dL = file.Header[..sI].TrimStart();
-                        var dM = searchText;
-                        var dR = file.Header[(sI + searchText.Length)..].TrimEnd();
-                        Items.Add(new SearchResultModel(file.Header, dL, dM, dR, searchText,
-                            file.Root, file));
-                    }
 
-                    Items.AddRange(await FindAllIndexesAsync(file, searchText, CaseSensitive, WholeWord, UseRegex,
-                        cancel));
-                    break;
-                }
-                case IProjectFolder folder:
-                    await SearchFolderRecursiveAsync(folder.Entities, searchText, cancel);
-                    break;
+        var comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        foreach (var relativePath in folder.GetFiles("*", true))
+        {
+            if (cancel.IsCancellationRequested) return;
+
+            var displayPath = relativePath;
+            var fullPath = Path.Combine(folder.FullPath, relativePath);
+
+            if (displayPath.Contains(searchText, comparison))
+            {
+                var sI = displayPath.IndexOf(searchText, comparison);
+                var dL = displayPath[..sI].TrimStart();
+                var dM = searchText;
+                var dR = displayPath[(sI + searchText.Length)..].TrimEnd();
+                Items.Add(new SearchResultModel(displayPath, dL, dM, dR, searchText,
+                    folder.Root, fullPath));
             }
+
+            Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
+                UseRegex, WholeWord, cancel));
+        }
     }
 
-    private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(IFile file, string search,
-        bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
+    private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, IProjectRoot? root,
+        string search, bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(search) || !File.Exists(file.FullPath)) return new List<SearchResultModel>();
+        if (string.IsNullOrEmpty(search) || !File.Exists(fullPath)) return new List<SearchResultModel>();
 
-        var text = await File.ReadAllTextAsync(file.FullPath, cancellationToken);
+        var text = await File.ReadAllTextAsync(fullPath, cancellationToken);
         var lines = text.Split('\n');
         var lastIndex = 0;
         var lastLineNr = 0;
-
         return await Task.Run(() =>
         {
             var indexes = new List<SearchResultModel>();
@@ -200,7 +180,7 @@ public class SearchListViewModel : ExtendedTool
                     var dM = line[sI..(sI + lineM.Length)];
                     var dR = line[(sI + lineM.Length)..].TrimEnd();
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        root, fullPath, lineNr + 1, index, search.Length));
                     lastIndex = index;
                     lastLineNr = lineNr;
                 }
@@ -215,7 +195,6 @@ public class SearchListViewModel : ExtendedTool
                     if (index == -1) return indexes;
                     var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
                     var line = lines[lineNr];
-
 
                     var sI = line.IndexOf(search,
                         caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
@@ -233,7 +212,7 @@ public class SearchListViewModel : ExtendedTool
                     }
 
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        root, fullPath, lineNr + 1, index, search.Length));
                 }
             }
 
@@ -249,9 +228,9 @@ public class SearchListViewModel : ExtendedTool
 
     private async Task GoToSearchResultAsync(SearchResultModel resultModel)
     {
-        if (resultModel?.File == null) return;
+        if (string.IsNullOrWhiteSpace(resultModel?.FilePath)) return;
 
-        if (await _mainDockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
+        if (await _mainDockService.OpenFileAsync(resultModel.FilePath) is not IEditor evb) return;
 
         if (_mainDockService.GetWindowOwner(this) is IHostWindow)
             _mainDockService.CloseDockable(this);

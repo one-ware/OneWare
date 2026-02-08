@@ -116,7 +116,7 @@ public partial class MainWindow : AdvancedWindow
                     Gesture = mi.InputGesture
                 };
 
-                if (mi.Icon is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
+                if (mi.IconModel?.IconObservable is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
 
                 nmi.Bind(NativeMenuItem.CommandProperty, mi.WhenValueChanged(x => x.Command));
                 nmi.Bind(NativeMenuItem.IsEnabledProperty, mi.WhenValueChanged(x => x.IsEnabled));

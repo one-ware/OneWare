@@ -19,6 +19,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
+using OneWare.CSharp;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -53,6 +54,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<CSharpModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<ToolEngineModule>();
@@ -86,9 +88,9 @@ public class DesktopStudioApp : StudioApp
 
     private async Task PathOpenTaskAsync(string? path)
     {
-        var fileName = path;
+        var filePath = path;
         //Check file exists
-        if (File.Exists(fileName))
+        if (File.Exists(filePath))
         {
             var dockService = Services.Resolve<IMainDockService>();
 
@@ -98,22 +100,21 @@ public class DesktopStudioApp : StudioApp
                 if (view is IDockable dockable)
                     dockService.CloseDockable(dockable);
 
-            var extension = Path.GetExtension(fileName);
+            var extension = Path.GetExtension(filePath);
 
             var manager = Services.Resolve<IProjectManagerService>().GetManagerByExtension(extension);
 
             if (manager != null)
             {
-                await Services.Resolve<IProjectExplorerService>().LoadProjectAsync(fileName, manager);
+                await Services.Resolve<IProjectExplorerService>().LoadProjectAsync(filePath, manager);
             }
             else if (extension.StartsWith(".", StringComparison.OrdinalIgnoreCase))
             {
-                var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                _ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
+                _ = Services.Resolve<IMainDockService>().OpenFileAsync(filePath);
             }
             else
             {
-                Services.Resolve<ILogger>()?.Warning("Could not load file/directory " + fileName);
+                Services.Resolve<ILogger>()?.Warning("Could not load file/directory " + filePath);
             }
         }
     }

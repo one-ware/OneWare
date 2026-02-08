@@ -4,10 +4,11 @@ namespace OneWare.ProjectExplorer.Services;
 
 public interface IFileWatchService
 {
-    public void Register(IFile file);
-    public void Unregister(IFile file);
+    public void RegisterSingleFile(string file);
+    
+    public void UnregisterSingleFile(string file);
 
-    public void Register(IProjectRoot project);
+    public void RegisterProject(IProjectRoot project);
 
-    public void Unregister(IProjectRoot project);
+    public void UnregisterProject(IProjectRoot project);
 }

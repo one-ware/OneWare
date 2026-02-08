@@ -9,7 +9,8 @@ public class MenuItemApplicationCommand : ApplicationCommandBase
     public MenuItemApplicationCommand(MenuItemViewModel menuItem, string path) : base($"{path}{menuItem.Header}")
     {
         MenuItem = menuItem;
-        IconObservable = menuItem.WhenValueChanged(x => x.Icon);
+        IconModel = menuItem.IconModel;
+        menuItem.WhenValueChanged(x => x.IconModel).Subscribe(x => IconModel = x);
 
         DefaultGesture = menuItem.InputGesture;
 

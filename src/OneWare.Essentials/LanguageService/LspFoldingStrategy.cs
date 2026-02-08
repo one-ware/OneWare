@@ -1,7 +1,6 @@
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using OneWare.Essentials.EditorExtensions;
-using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.LanguageService;
 
@@ -10,16 +9,16 @@ public class LspFoldingStrategy : IFoldingStrategy
     private readonly List<FoldingEntry> _foldings = new();
     private readonly LanguageServiceLsp _languageService;
 
-    private readonly IFile _projectfile;
+    private readonly string _filePath;
 
     /// <summary>
     ///     Logic how code collapsing should work
     ///     Works but could be better ;)
     /// </summary>
-    public LspFoldingStrategy(LanguageServiceLsp ls, IFile file)
+    public LspFoldingStrategy(LanguageServiceLsp ls, string filePath)
     {
         _languageService = ls;
-        _projectfile = file;
+        _filePath = filePath;
     }
 
     public void UpdateFoldings(FoldingManager manager, TextDocument document)
@@ -46,7 +45,7 @@ public class LspFoldingStrategy : IFoldingStrategy
     {
         var l = new List<NewFolding>();
         if (!_languageService.IsLanguageServiceReady) return l;
-        var f = await _languageService.RequestFoldingsAsync(_projectfile.FullPath);
+        var f = await _languageService.RequestFoldingsAsync(_filePath);
         if (f is not null)
             foreach (var folding in f)
             {

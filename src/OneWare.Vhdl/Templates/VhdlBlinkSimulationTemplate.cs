@@ -20,14 +20,14 @@ public class VhdlBlinkSimulationTemplate(ILogger logger, IMainDockService mainDo
             TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
             var file = root.AddFile(name + ".vhd");
 
-            root.TopEntity = file;
+            root.TopEntity = file.RelativePath;
 
             var file2 = root.AddFile(name + "_tb.vhd");
 
-            root.RegisterTestBench(file2);
+            root.AddTestBench(file2.RelativePath);
 
-            _ = mainDockService.OpenFileAsync(file);
-            _ = mainDockService.OpenFileAsync(file2);
+            _ = mainDockService.OpenFileAsync(file.FullPath);
+            _ = mainDockService.OpenFileAsync(file2.FullPath);
         }
         catch (Exception e)
         {

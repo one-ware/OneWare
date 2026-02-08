@@ -15,7 +15,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
 {
     public static readonly StyledProperty<double> HorizontalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(HorizontalDragThreshold), 3);
-
+    
     public static readonly StyledProperty<double> VerticalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(VerticalDragThreshold), 3);
 
@@ -23,13 +23,13 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
     private Point _dragStartPoint;
     private bool _lock;
     private PointerEventArgs? _triggerEvent;
-
+    
     public double HorizontalDragThreshold
     {
         get => GetValue(HorizontalDragThresholdProperty);
         set => SetValue(HorizontalDragThresholdProperty, value);
     }
-
+    
     public double VerticalDragThreshold
     {
         get => GetValue(VerticalDragThresholdProperty);
@@ -141,20 +141,22 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
                 else
                     return;
 
-                var selectedItems = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection
-                    ?.SelectedItems.OfType<IProjectEntry>();
+                var selectedItems = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection?.SelectedItems.OfType<IProjectEntry>();
 
                 if (selectedItems == null) return;
-
+                
                 var transfer = new DataTransfer();
-
+                
                 foreach (var selectedItem in selectedItems)
                 {
                     var storageItem = await CreateStorageItemAsync(selectedItem);
 
-                    if (storageItem is not null) transfer.Add(DataTransferItem.CreateFile(storageItem));
+                    if (storageItem is not null)
+                    {
+                        transfer.Add(DataTransferItem.CreateFile(storageItem));
+                    }
                 }
-
+                
                 await DoDragDropAsync(_triggerEvent, transfer);
 
                 _triggerEvent = null;
@@ -166,10 +168,15 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
     {
         var storageProvider = TopLevel.GetTopLevel(AssociatedObject)?.StorageProvider;
         if (storageProvider == null) return null;
-
-        if (entry is IProjectFile file) return await storageProvider.TryGetFileFromPathAsync(file.FullPath);
-
-        if (entry is IProjectFolder folder) return await storageProvider.TryGetFolderFromPathAsync(folder.FullPath);
+        
+        if (entry is IProjectFile file)
+        {
+            return await storageProvider.TryGetFileFromPathAsync(file.FullPath);
+        }
+        else if (entry is IProjectFolder folder)
+        {
+            return await storageProvider.TryGetFolderFromPathAsync(folder.FullPath);
+        }
         return null;
     }
 

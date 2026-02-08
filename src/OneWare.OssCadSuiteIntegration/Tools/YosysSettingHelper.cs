@@ -20,13 +20,14 @@ public class YosysSettingHelper
             return Task.CompletedTask;
 
         var path = GetConstraintFile(universalFpgaProjectRoot);
-        foreach (var projectFile in file.Root.Files)
-        {
-            if (_icon != null) projectFile.IconOverlays.Remove(_icon);
-        }
+        //TODO
+        // foreach (var projectFile in file.Root.GetFiles())
+        // {
+        //     if (_icon != null) projectFile.IconOverlays.Remove(_icon);
+        // }
 
-        if (_icon != null && !file.IconOverlays.Contains(_icon))
-            file.IconOverlays.Add(_icon);
+        // if (_icon != null && !file.IconOverlays.Contains(_icon))
+        //     file.IconOverlays.Add(_icon);
 
         if (file.RelativePath == path)
             return Task.CompletedTask;
@@ -42,19 +43,19 @@ public class YosysSettingHelper
             return;
         
         var path = GetConstraintFile(universalFpgaProjectRoot);
-        foreach (var projectFile in universalFpgaProjectRoot.Files)
-        {
-            if (_icon != null) projectFile.IconOverlays.Remove(_icon);
-        }
-        
-        foreach (var projectFile in universalFpgaProjectRoot.Files)
-        {
-            if (projectFile.RelativePath.Equals(path) && projectFile.Extension.Equals(".pcf"))
-            {
-                projectFile.IconOverlays.Add(_icon!);
-                return;
-            }
-        }
+        // foreach (var projectFile in universalFpgaProjectRoot.GetFiles())
+        // {
+        //     if (_icon != null) projectFile.IconOverlays.Remove(_icon);
+        // }
+        //
+        // foreach (var projectFile in universalFpgaProjectRoot.GetFiles())
+        // {
+        //     if (projectFile.RelativePath.Equals(path) && projectFile.Extension.Equals(".pcf"))
+        //     {
+        //         projectFile.IconOverlays.Add(_icon!);
+        //         return;
+        //     }
+        // }
     }
 
     public static string GetConstraintFile(UniversalFpgaProjectRoot project)

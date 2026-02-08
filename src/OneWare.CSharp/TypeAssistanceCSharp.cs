@@ -1,0 +1,48 @@
+﻿using AvaloniaEdit.Indentation.CSharp;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.LanguageService;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
+
+namespace OneWare.CSharp;
+
+internal class TypeAssistanceCSharp : TypeAssistanceLanguageService
+{
+    public TypeAssistanceCSharp(IEditor editor, LanguageServiceCSharp ls) : base(editor, ls)
+    {
+        CodeBox.TextArea.IndentationStrategy = IndentationStrategy = new CSharpIndentationStrategy(CodeBox.Options);
+        LineCommentSequence = "//";
+    }
+
+    public override bool CanAddBreakPoints => true;
+
+    public override async Task<string?> GetHoverInfoAsync(int offset)
+    {
+        if (!Service.IsLanguageServiceReady) return null;
+
+        var pos = CodeBox.Document.GetLocation(offset);
+
+        var error = ContainerLocator.Container.Resolve<IErrorService>()
+            .GetErrorsForFile(Editor.FullPath)
+            .OrderBy(x => x.Type)
+            .FirstOrDefault(error => pos.Line >= error.StartLine
+                                     && pos.Line <= error.EndLine
+                                     && pos.Column >= error.StartColumn
+                                     && pos.Column <= error.EndColumn);
+        var info = "";
+
+        if (error != null) info += error.Description + "\n";
+
+        var hover = await Service.RequestHoverAsync(CurrentFilePath,
+            new Position(pos.Line - 1, pos.Column - 1));
+        if (hover != null)
+        {
+            if (hover.Contents.HasMarkedStrings)
+                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
+            if (hover.Contents.HasMarkupContent) info += $"```csharp\n{hover.Contents.MarkupContent?.Value}\n```";
+        }
+
+        return string.IsNullOrWhiteSpace(info) ? null : info;
+    }
+}

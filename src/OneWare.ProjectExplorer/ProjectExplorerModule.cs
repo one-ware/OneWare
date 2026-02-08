@@ -47,7 +47,7 @@ public class ProjectExplorerModule : OneWareModuleBase
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
+                IconModel = new IconModel("VsImageLib.NewFileCollection16X")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
@@ -56,7 +56,7 @@ public class ProjectExplorerModule : OneWareModuleBase
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
                 Priority = 10,
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.NewFileCollection16X")
+                IconModel = new IconModel("VsImageLib.NewFileCollection16X")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
@@ -64,7 +64,7 @@ public class ProjectExplorerModule : OneWareModuleBase
             {
                 Header = "Project Explorer",
                 Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>())),
-                IconObservable = Application.Current!.GetResourceObservable(ProjectExplorerViewModel.IconKey)
+                IconModel = new IconModel(ProjectExplorerViewModel.IconKey)
             });
     }
 }

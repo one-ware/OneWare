@@ -4,10 +4,6 @@ namespace OneWare.Essentials.Services;
 
 public interface IProjectSettingsService
 {
-    [Obsolete("Use AddProjectSetting(ProjectSetting projectSetting) instead.")]
-    public void AddProjectSetting(string key, TitledSetting projectSetting,
-        Func<IProjectRootWithFile, bool> activationFunction);
-
     /// <summary>
     ///     Adds an existing <see cref="ProjectSetting" /> instance.
     /// </summary>
@@ -15,10 +11,6 @@ public interface IProjectSettingsService
     public void AddProjectSetting(ProjectSetting projectSetting);
 
     public void AddProjectSettingIfNotExists(ProjectSetting projectSetting);
-
-    public void Load(string path);
-
-    public void Save(string path);
 
     public List<ProjectSetting> GetProjectSettingsList();
 

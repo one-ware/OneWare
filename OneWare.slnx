@@ -60,6 +60,7 @@
     <Project Path="src/OneWare.ApplicationCommands/OneWare.ApplicationCommands.csproj" />
     <Project Path="src/OneWare.Debugger/OneWare.Debugger.csproj" />
     <Project Path="src/OneWare.ErrorList/OneWare.ErrorList.csproj" />
+    <Project Path="src/OneWare.FolderProjectSystem/OneWare.FolderProjectSystem.csproj" />
     <Project Path="src/OneWare.LibraryExplorer/OneWare.LibraryExplorer.csproj" />
     <Project Path="src/OneWare.Output/OneWare.Output.csproj" />
     <Project Path="src/OneWare.ProjectExplorer/OneWare.ProjectExplorer.csproj" />
@@ -100,15 +101,14 @@
   </Folder>
   <Folder Name="/Extensions/LanguageSupport/">
     <Project Path="src/OneWare.Cpp/OneWare.Cpp.csproj" />
+    <Project Path="src/OneWare.CSharp/OneWare.CSharp.csproj" />
     <Project Path="src/OneWare.Json/OneWare.Json.csproj" />
     <Project Path="src/OneWare.Python/OneWare.Python.csproj" />
     <Project Path="src/OneWare.Toml/OneWare.Toml.csproj" />
     <Project Path="src/OneWare.Verilog/OneWare.Verilog.csproj" />
     <Project Path="src/OneWare.Vhdl/OneWare.Vhdl.csproj" />
   </Folder>
-  <Folder Name="/Extensions/ProjectSystem/">
-    <Project Path="src/OneWare.FolderProjectSystem/OneWare.FolderProjectSystem.csproj" />
-  </Folder>
+  <Folder Name="/Extensions/ProjectSystem/" />
   <Folder Name="/Extensions/Wave/">
     <Project Path="src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj" />
     <Project Path="src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj" />

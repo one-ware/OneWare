@@ -27,7 +27,7 @@ public sealed class WelcomeScreenWalkthroughItem(string id, string name, string?
 
 public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
 {
-    private IObservable<object?>? _iconObservable;
+    private IconModel? _iconModel;
     private IDisposable? _subscription;
 
     public WelcomeScreenItem(string id, string name, ICommand? command)
@@ -39,15 +39,16 @@ public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
 
     public string Id { get; set; }
 
-    public IObservable<object?>? IconObservable
+    public IconModel? IconModel
     {
-        get => _iconObservable;
+        get => _iconModel;
         set
         {
-            _iconObservable = value;
+            _iconModel = value;
             if (value == null) Icon = null;
             _subscription?.Dispose();
-            _subscription = value?.Subscribe(x => Icon = x as IImage);
+            _subscription = value?.IconObservable?.Subscribe(x => Icon = x as IImage);
+            if (value?.Icon != null) Icon = value.Icon;
         }
     }
 

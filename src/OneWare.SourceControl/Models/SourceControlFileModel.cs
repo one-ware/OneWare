@@ -13,8 +13,6 @@ public class SourceControlFileModel
 
     public string FullPath { get; }
 
-    public IProjectFile? ProjectFile { get; init; }
-
     public StatusEntry Status { get; set; }
 
     public string Name => Path.GetFileName(FullPath);

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Output.ViewModels;
@@ -31,7 +32,7 @@ public class OutputModule : OneWareModuleBase
         {
             Header = "Output",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IOutputService>())),
-            IconObservable = Application.Current!.GetResourceObservable(OutputViewModel.IconKey)
+            IconModel = new IconModel(OutputViewModel.IconKey)
         });
     }
 }

@@ -44,6 +44,12 @@ public static class StringExtensions
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
+    public static string ToPathKey(this string path)
+    {
+        var normalized = path.NormalizePath();
+        return OperatingSystem.IsWindows() ? normalized.ToLowerInvariant() : normalized;
+    }
+
     public static bool IsValidFileName(this string name)
     {
         if (string.IsNullOrEmpty(name)) return false;
