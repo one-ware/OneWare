@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SerialMonitor.ViewModels;
@@ -33,7 +34,7 @@ public class SerialMonitorModule : OneWareModuleBase
         {
             Header = "Serial Monitor",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<ISerialMonitorService>())),
-            IconObservable = Application.Current!.GetResourceObservable(SerialMonitorViewModel.IconKey)
+            IconModel = new IconModel(SerialMonitorViewModel.IconKey)
         });
     }
 }

@@ -12,11 +12,9 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public ObservableCollection<IProjectRoot> Projects { get; }
     public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
-    public event EventHandler<string>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
-    public void Insert(IProjectRoot project);
-    public Task RemoveAsync(params IProjectEntry[] entries);
-    public Task DeleteAsync(params IProjectEntry[] entries);
+    public void AddProject(IProjectRoot project);
+    public Task TryCloseProjectAsync(IProjectRoot project);
     public IProjectRoot? GetRootFromFile(string filePath);
     public IProjectEntry? GetEntry(string relativePath);
     public IProjectEntry? GetEntryFromFullPath(string path);

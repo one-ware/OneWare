@@ -36,7 +36,7 @@ public class UpdaterModule : OneWareModuleBase
                     });
                     if (vm.Status == UpdaterStatus.UpdateUnavailable) _ = vm.CheckForUpdateAsync();
                 }),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
+                IconModel = new IconModel("VsImageLib.DownloadDefault16X")
             });
     }
 }

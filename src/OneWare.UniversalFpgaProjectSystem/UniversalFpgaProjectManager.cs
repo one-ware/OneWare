@@ -118,19 +118,19 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         Header = "Save",
                         Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd")
+                        IconModel = new IconModel("VsImageLib.Save16XMd")
                     });
                     menuItems.Add(new MenuItemViewModel("Reload")
                     {
                         Header = "Reload",
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadProjectAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+                        IconModel = new IconModel("VsImageLib.RefreshGrey16X")
                     });
                     menuItems.Add(new MenuItemViewModel("ProjectSettings")
                     {
                         Header = "Project Settings",
                         Command = new RelayCommand(() => _ = OpenProjectSettingsDialogAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("Material.SettingsOutline")
+                        IconModel = new IconModel("Material.SettingsOutline")
                     });
                     menuItems.Add(new MenuItemViewModel("Edit")
                     {
@@ -196,7 +196,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                     universalFpgaProjectRoot.AddTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconObservable = Application.Current!.GetResourceObservable("VSImageLib.AddTest_16x")
+                                IconModel = new IconModel("VSImageLib.AddTest_16x")
                             });
                         else
                             menuItems.Add(new MenuItemViewModel("UnmarkTestBench")
@@ -207,8 +207,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                     universalFpgaProjectRoot.RemoveTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconObservable =
-                                    Application.Current!.GetResourceObservable("VSImageLib.RemoveSingleDriverTest_16x")
+                                IconModel = new IconModel("VSImageLib.RemoveSingleDriverTest_16x")
                             });
                     }
 

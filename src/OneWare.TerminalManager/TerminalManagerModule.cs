@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.TerminalManager.ViewModels;
@@ -28,7 +29,7 @@ public class TerminalManagerModule : OneWareModuleBase
                 Command = new RelayCommand(() =>
                     serviceProvider.Resolve<IMainDockService>()
                         .Show(serviceProvider.Resolve<ITerminalManagerService>())),
-                IconObservable = Application.Current!.GetResourceObservable(TerminalManagerViewModel.IconKey)
+                IconModel = new IconModel(TerminalManagerViewModel.IconKey)
             });
     }
 }

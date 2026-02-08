@@ -19,16 +19,14 @@ public class ProjectPropertyChangedEventArgs(
 
 public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 {
-    protected UniversalProjectRoot(string projectFilePath) : base(Path.GetDirectoryName(projectFilePath)
-                                                                  ?? throw new NullReferenceException("Invalid Project Path"), false)
+    protected UniversalProjectRoot(string projectFilePath) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;
 
-        // Default icon
-        Application.Current!
-            .GetResourceObservable("UniversalProject")
-            .Subscribe(x => Icon = x as IImage);
+        IconModel = new IconModel("UniversalProject");
     }
+
+    public override IconModel? IconModel { get; }
 
     public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;
 

@@ -21,17 +21,11 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
         TopFolder = topFolder;
     }
 
-    public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
-    
-    public ObservableCollection<IProjectEntry> Entities { get; } = new();
+    public ObservableCollection<IProjectExplorerNode>? Children { get; protected set; } = new();
 
     public IProjectExplorerNode? Parent => TopFolder;
 
     public IProjectFolder? TopFolder { get; set; }
-
-    public ObservableCollection<IImage> IconOverlays { get; } = new();
-
-    public ObservableCollection<IImage> RightIcons { get; } = new();
 
     public IBrush Background
     {
@@ -51,12 +45,8 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry, IDisposabl
         set => SetProperty(ref field, value);
     } = 1f;
 
-    public IImage? Icon
-    {
-        get;
-        protected set => SetProperty(ref field, value);
-    }
-
+    public abstract IconModel? IconModel { get; }
+    
     public string Header => Name;
 
     public string Name

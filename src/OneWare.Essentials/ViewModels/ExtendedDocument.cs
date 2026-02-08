@@ -131,7 +131,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         var isExternal = _projectExplorerService.GetRootFromFile(FullPath) == null;
         
         Title = isExternal ? $"[{Path.GetFileName(FullPath)}]" : Path.GetFileName(FullPath);
-        Icon = _fileIconService.GetFileIcon(Path.GetExtension(FullPath));
+        //Icon = _fileIconService.GetFileIcon(Path.GetExtension(FullPath));
         
         if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 

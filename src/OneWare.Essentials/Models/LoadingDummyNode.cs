@@ -6,9 +6,10 @@ namespace OneWare.Essentials.Models;
 
 public class LoadingDummyNode : IProjectExplorerNode
 {
-    public IImage? Icon { get; } = null;
-
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public IconModel? IconModel { get; } = null;
+    
     public string Header => "Loading...";
     public IProjectExplorerNode? Parent { get; } = null;
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();

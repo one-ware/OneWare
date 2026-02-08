@@ -69,9 +69,9 @@
                                           ItemsSource="{Binding SubCategories}">
                             <Grid ColumnDefinitions="Auto, Auto, *" Margin="2 5">
                                 <Image
-                                    IsVisible="{Binding IconObservable, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    IsVisible="{Binding IconModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     VerticalAlignment="Center" Width="18" HorizontalAlignment="Center"
-                                    Source="{Binding IconObservable^, FallbackValue={x:Null}}" />
+                                    Source="{Binding IconModel.IconObservable^, FallbackValue={x:Null}}" />
                                 <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}"
                                            TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="2" Margin="3 0" HorizontalAlignment="Right"

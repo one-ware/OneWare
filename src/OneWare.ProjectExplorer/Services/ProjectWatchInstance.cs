@@ -127,8 +127,23 @@ public class ProjectWatchInstance : IDisposable
 
             var openTab = _mainDockService.OpenFiles
                 .FirstOrDefault(x => x.Key.EqualPaths(path));
-            
-            openTab.Value?.InitializeContent();
+
+            if (openTab.Value != null)
+            {
+                switch (lastArg.ChangeType)
+                {
+                    case WatcherChangeTypes.Changed:
+                    {
+                        var lastWriteTime = File.GetLastWriteTime(path);
+
+                        if (openTab.Value.LastSaveTime > lastWriteTime)
+                        {
+                            openTab.Value.InitializeContent();
+                        }
+                        break;
+                    }
+                }
+            }
             
             var relativePath = Path.GetRelativePath(_root.RootFolderPath, path);
             var entry = _root.GetLoadedEntry(relativePath);
@@ -142,7 +157,7 @@ public class ProjectWatchInstance : IDisposable
                         if (lastArg is RenamedEventArgs rea && !File.Exists(rea.OldFullPath) &&
                             _root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath, rea.OldFullPath)) is { } deleted)
                         {
-                            await _projectExplorerService.RemoveAsync(deleted);
+                            deleted.TopFolder?.Remove(deleted);
                         }
                         else if (entry is IProjectRootWithFile project)
                         {
@@ -153,7 +168,7 @@ public class ProjectWatchInstance : IDisposable
 
                         return;
                     case WatcherChangeTypes.Deleted:
-                        await _projectExplorerService.RemoveAsync(entry);
+                        entry.TopFolder?.Remove(entry);
                         return;
                 }
 
@@ -165,27 +180,8 @@ public class ProjectWatchInstance : IDisposable
                             _root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath,
                                 renamedEventArgs.OldFullPath)) is { } oldEntry)
                         {
-                            if (oldEntry is IProjectFile file)
-                            {
-                                _mainDockService.OpenFiles.TryGetValue(file.FullPath.ToPathKey(), out var tab);
-                                _mainDockService.OpenFiles.Remove(file.FullPath.ToPathKey());
-
-                                await _projectExplorerService.RemoveAsync(oldEntry);
-                                _root.OnExternalEntryAdded(path, attributes);
-
-                                if (tab is not null)
-                                {
-                                    tab.FullPath = path;
-                                    tab.InitializeContent();
-
-                                    _mainDockService.OpenFiles.TryAdd(tab.FullPath.ToPathKey(), tab);
-                                }
-                            }
-                            else
-                            {
-                                await _projectExplorerService.RemoveAsync(oldEntry);
-                                _root.OnExternalEntryAdded(path, attributes);
-                            }
+                            oldEntry.TopFolder?.Remove(oldEntry);
+                            _root.OnExternalEntryAdded(path, attributes);
                         }
 
                         return;

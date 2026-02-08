@@ -40,7 +40,7 @@ public class PackageManagerModule : OneWareModuleBase
             {
                 DataContext = serviceProvider.Resolve<PackageManagerViewModel>()
             })),
-            IconObservable = Application.Current!.GetResourceObservable("PackageManager")
+            IconModel = new IconModel("PackageManager")
         });
 
         serviceProvider.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");

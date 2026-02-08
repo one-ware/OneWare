@@ -10,7 +10,7 @@ public class FolderProjectRoot : ProjectRoot
 {
     public const string ProjectType = "Folder";
 
-    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath, true)
+    public FolderProjectRoot(string rootFolderPath) : base(rootFolderPath)
     {
         
     }

@@ -7,8 +7,6 @@ namespace OneWare.Essentials.Models;
 /// </summary>
 public interface IProjectEntry : IProjectExplorerNode, IDisposable
 {
-    public ObservableCollection<IProjectEntry> Entities { get; }
-    
     public string FullPath { get; }
     
     public string Name { get; set; }
@@ -20,8 +18,6 @@ public interface IProjectEntry : IProjectExplorerNode, IDisposable
     public IProjectRoot Root { get; }
 
     public IProjectFolder? TopFolder { get; set; }
-
-    public Action<Action<string>>? RequestRename { get; set; }
 
     public bool IsValid();
 }

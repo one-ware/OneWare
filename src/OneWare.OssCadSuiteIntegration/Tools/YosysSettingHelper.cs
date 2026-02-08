@@ -26,8 +26,8 @@ public class YosysSettingHelper
         //     if (_icon != null) projectFile.IconOverlays.Remove(_icon);
         // }
 
-        if (_icon != null && !file.IconOverlays.Contains(_icon))
-            file.IconOverlays.Add(_icon);
+        // if (_icon != null && !file.IconOverlays.Contains(_icon))
+        //     file.IconOverlays.Add(_icon);
 
         if (file.RelativePath == path)
             return Task.CompletedTask;

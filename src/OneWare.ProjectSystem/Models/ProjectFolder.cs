@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -13,39 +14,39 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    protected ProjectFolder(string header, IProjectFolder? topFolder, bool defaultFolderAnimation = true) : base(header,
+    protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
         topFolder)
     {
-        IDisposable? iconDisposable = null;
-
-        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
-        {
-            iconDisposable?.Dispose();
-
-            if (x)
-            {
-                _ = LoadContentAsync();
-
-                if (defaultFolderAnimation)
-                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X").Subscribe(y =>
-                    {
-                        Icon = y as IImage;
-                    }).DisposeWith(Disposables);
-            }
-            else
-            {
-                foreach (var subEntity in Entities.ToArray())
-                    Remove(subEntity);
-
-                if (Directory.Exists(FullPath) &&
-                    Directory.EnumerateFileSystemEntries(FullPath).Any())
-                    Children.Add(new LoadingDummyNode());
-
-                if (defaultFolderAnimation)
-                    iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
-                        .Subscribe(y => { Icon = y as IImage; }).DisposeWith(Disposables);
-            }
-        }).DisposeWith(Disposables);
+        // this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+        // {
+        //     iconDisposable?.Dispose();
+        //
+        //     if (x)
+        //     {
+        //         _ = LoadContentAsync();
+        //
+        //         if (defaultFolderAnimation)
+        //             iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X")
+        //                 .Subscribe(y =>
+        //                 {
+        //                     IconModel. = y as IImage;
+        //                 }).DisposeWith(Disposables);
+        //     }
+        //     else
+        //     {
+        //         if (Children != null)
+        //             foreach (var subEntity in Children.OfType<IProjectEntry>().ToArray())
+        //                 Remove(subEntity);
+        //
+        //         if (Directory.Exists(FullPath) &&
+        //             Directory.EnumerateFileSystemEntries(FullPath).Any())
+        //             Children.Add(new LoadingDummyNode());
+        //
+        //         if (defaultFolderAnimation)
+        //             iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
+        //                 .Subscribe(y => { Icon = y as IImage; }).DisposeWith(Disposables);
+        //     }
+        // }).DisposeWith(Disposables);
     }
 
     public void Add(IProjectEntry entry)
@@ -56,16 +57,18 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public void Remove(IProjectEntry entry)
     {
-        if (entry is ProjectFolder folder)
-            for (var i = 0; i < folder.Entities.Count; i++)
+        if (entry is ProjectFolder {Children: not null} folder)
+        {
+            for (var i = 0; i < folder.Children.Count; i++)
             {
-                folder.Remove(folder.Entities[i]);
+                if(folder.Children[i] is IProjectEntry subEntry)
+                    folder.Remove(subEntry);
                 i--;
             }
-        
-        Children.Remove(entry);
-        Entities.Remove(entry);
-        
+        }
+
+        Children?.Remove(entry);
+
         entry.Dispose();
 
         //Collapse folder if empty
@@ -156,7 +159,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             }
         }
-        
+
         var pf = ConstructNewProjectFolder(relativePath, this);
 
         Insert(pf);
@@ -180,7 +183,9 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         if (relativePath is "" or ".") return this;
 
-        foreach (var i in Entities)
+        if(Children == null) return null;
+        
+        foreach (var i in Children.OfType<IProjectEntry>())
             if (relativePath.Equals(i.Name, StringComparison.OrdinalIgnoreCase))
                 return i;
 
@@ -189,6 +194,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     private void Insert(IProjectEntry entry)
     {
+        if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+        
         //Insert in correct posiion
         var inserted = false;
         for (var i = 0; i < Children.Count; i++)
@@ -208,11 +215,9 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                 break;
             }
         }
-        
+
         if (!inserted) Children.Add(entry);
         entry.TopFolder = this;
-
-        Entities.Add(entry);
     }
 
     protected virtual IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)
@@ -227,18 +232,18 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     public IProjectEntry? GetEntry(string? relativePath)
     {
-        if(relativePath == null) return null;
+        if (relativePath == null) return null;
 
-        if (!Root.IsPathIncluded(Path.Combine(RelativePath, relativePath))) 
+        if (!Root.IsPathIncluded(Path.Combine(RelativePath, relativePath)))
             return null;
-        
+
         var visual = SearchEntries(relativePath);
         if (visual != null) return visual;
-        
+
         // Create it in the visual tree and return it.
         var fullPath = Path.Combine(FullPath, relativePath);
         if (!File.Exists(fullPath)) return null;
-        
+
         var fileInfo = new FileInfo(fullPath);
 
         if (fileInfo.Attributes.HasFlag(FileAttributes.Directory))
@@ -271,11 +276,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             IgnoreInaccessible = true,
             RecurseSubdirectories = recursive,
         };
-        
+
         foreach (var file in Directory.EnumerateFiles(path, searchPattern, options))
         {
             var relativeToRoot = Path.GetRelativePath(path, file);
-            if(Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
+            if (Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
         }
     }
 
@@ -289,18 +294,17 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             IgnoreInaccessible = true,
             RecurseSubdirectories = recursive,
         };
-        
+
         foreach (var file in Directory.EnumerateDirectories(path, searchPattern, options))
         {
             var relativeToRoot = Path.GetRelativePath(path, file);
-            if(Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
+            if (Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
         }
     }
 
     protected virtual async Task LoadContentAsync()
     {
-        Children.Clear();
-        Entities.Clear();
+        Children?.Clear();
 
         if (!Directory.Exists(FullPath))
         {
@@ -313,21 +317,21 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         // Batch size (tweakable)
         const int batchSize = 50;
 
+        if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+
         // Load folders first
         await foreach (var folder in EnumerateFoldersAsync(batchSize))
         {
             Children.Add(folder);
-            Entities.Add(folder);
         }
 
         // Load files after
         await foreach (var file in EnumerateFilesAsync(batchSize))
         {
             Children.Add(file);
-            Entities.Add(file);
         }
     }
-    
+
     private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize)
     {
         var matches = GetDirectories("*", false);
@@ -348,7 +352,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
         }
     }
-    
+
     private async IAsyncEnumerable<ProjectFile> EnumerateFilesAsync(int batchSize)
     {
         var matches = GetFiles("*", false);
@@ -368,4 +372,6 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
         }
     }
+
+    public override IconModel? IconModel { get; }
 }

@@ -11,7 +11,7 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectExplorer.Behaviors;
 
-public class ProjectExplorerViewDragBehavior : Behavior<Control>
+public class ProjectExplorerViewDragBehavior : Behavior<TreeDataGrid>
 {
     public static readonly StyledProperty<double> HorizontalDragThresholdProperty =
         AvaloniaProperty.Register<ContextDragBehavior, double>(nameof(HorizontalDragThreshold), 3);
@@ -141,7 +141,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
                 else
                     return;
 
-                var selectedItems = AssociatedObject.FindLogicalAncestorOfType<TreeDataGrid>()?.RowSelection
+                var selectedItems = AssociatedObject?.RowSelection
                     ?.SelectedItems.OfType<IProjectEntry>();
 
                 if (selectedItems == null) return;

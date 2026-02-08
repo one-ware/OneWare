@@ -7,17 +7,15 @@ namespace OneWare.Essentials.Models;
 /// <summary>
 ///     Node displayed in the project explorer
 /// </summary>
-public interface IProjectExplorerNode : ICanHaveIcon, INotifyPropertyChanged
+public interface IProjectExplorerNode : INotifyPropertyChanged
 {
+    public IconModel? IconModel { get; }
+    
     public string Header { get; }
 
     public IProjectExplorerNode? Parent { get; }
 
-    public ObservableCollection<IProjectExplorerNode> Children { get; }
-
-    public ObservableCollection<IImage> IconOverlays { get; }
-
-    public ObservableCollection<IImage> RightIcons { get; }
+    public ObservableCollection<IProjectExplorerNode>? Children { get; }
 
     public bool IsExpanded { get; set; }
 

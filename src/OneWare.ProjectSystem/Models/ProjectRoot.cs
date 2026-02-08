@@ -5,8 +5,8 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
-    protected ProjectRoot(string rootFolderPath, bool defaultFolderAnimation) : base(Path.GetFileName(rootFolderPath),
-        null, defaultFolderAnimation)
+    protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath),
+        null)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;

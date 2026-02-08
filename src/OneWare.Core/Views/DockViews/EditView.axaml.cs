@@ -391,19 +391,19 @@ public partial class EditView : UserControl
             contextMenuList.Add(new MenuItemViewModel("Cut")
             {
                 Header = "Cut",
-                IconObservable = this.GetResourceObservable("BoxIcons.RegularCut"),
+                IconModel = new IconModel("BoxIcons.RegularCut"),
                 Command = new RelayCommand(CodeBox.Cut)
             });
             contextMenuList.Add(new MenuItemViewModel("Copy")
             {
                 Header = "Copy",
-                IconObservable = this.GetResourceObservable("BoxIcons.RegularCopy"),
+                IconModel = new IconModel("BoxIcons.RegularCopy"),
                 Command = new RelayCommand(CodeBox.Copy)
             });
             contextMenuList.Add(new MenuItemViewModel("Paste")
             {
                 Header = "Paste",
-                IconObservable = this.GetResourceObservable("BoxIcons.RegularPaste"),
+                IconModel = new IconModel("BoxIcons.RegularPaste"),
                 Command = new RelayCommand(CodeBox.Paste)
             });
             if (_typeAssistance != null)
@@ -412,13 +412,13 @@ public partial class EditView : UserControl
                 contextMenuList.Add(new MenuItemViewModel("Comment")
                 {
                     Header = "Comment",
-                    IconObservable = this.GetResourceObservable("VsImageLib.CommentCode16X"),
+                    IconModel = new IconModel("VsImageLib.CommentCode16X"),
                     Command = new RelayCommand(_typeAssistance.Comment)
                 });
                 contextMenuList.Add(new MenuItemViewModel("Uncomment")
                 {
                     Header = "Uncomment",
-                    IconObservable = this.GetResourceObservable("VsImageLib.UncommentCode16X"),
+                    IconModel = new IconModel("VsImageLib.UncommentCode16X"),
                     Command = new RelayCommand(_typeAssistance.Uncomment)
                 });
             }
@@ -434,7 +434,7 @@ public partial class EditView : UserControl
                     contextMenuList.Add(new MenuItemViewModel("IndentSelection")
                     {
                         Header = "Auto-Indent Selection",
-                        IconObservable = this.GetResourceObservable("BoxIcons.RegularCode"),
+                        IconModel = new IconModel("BoxIcons.RegularCode"),
                         Command = new RelayCommand(() => _typeAssistance.AutoIndent(startLine, endLine))
                     });
                 }

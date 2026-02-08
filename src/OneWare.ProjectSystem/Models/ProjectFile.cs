@@ -20,4 +20,6 @@ public class ProjectFile : ProjectEntry, IProjectFile
     }
 
     public string Extension => Path.GetExtension(FullPath);
+    
+    public override IconModel? IconModel { get; }
 }

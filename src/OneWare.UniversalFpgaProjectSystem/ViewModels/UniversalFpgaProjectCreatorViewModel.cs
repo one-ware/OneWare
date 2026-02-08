@@ -134,7 +134,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
             await _manager.SaveProjectAsync(root);
 
-            _projectExplorerService.Insert(root);
+            _projectExplorerService.AddProject(root);
 
             _projectExplorerService.ActiveProject = root;
 

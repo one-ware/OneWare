@@ -36,10 +36,10 @@ public class EditViewModel : ExtendedDocument, IEditor
 
     private IEnumerable<ErrorListItem>? _diagnostics;
 
-    public EditViewModel(string fullPath, ILogger logger, ISettingsService settingsService,
+    public EditViewModel(string fullPath, ILogger logger, IFileIconService fileIconService, ISettingsService settingsService,
         IMainDockService mainDockService, ILanguageManager languageManager, IWindowService windowService,
         IProjectExplorerService projectExplorerService, IErrorService errorService,
-        BackupService backupService) : base(fullPath, projectExplorerService, mainDockService, windowService)
+        BackupService backupService) : base(fullPath, fileIconService, projectExplorerService, mainDockService, windowService)
     {
         _settingsService = settingsService;
         _mainDockService = mainDockService;

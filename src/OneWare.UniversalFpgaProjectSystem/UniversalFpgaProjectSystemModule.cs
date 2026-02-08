@@ -32,7 +32,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("new_file", "New FPGA Project...",
                 new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()))
             {
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         welcomeScreenService.RegisterItemToOpen("open_project",
@@ -45,7 +45,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })))
             {
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
@@ -62,7 +62,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
                 Priority = 1,
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
@@ -76,7 +76,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         var toolBarViewModel = serviceProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
@@ -92,12 +92,12 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
         {
             Header = "Download",
             Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
+            IconModel = new IconModel("VsImageLib.Download16X")
         }, new MenuItemViewModel("Compile")
         {
             Header = "Compile",
             Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-            IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+            IconModel = new IconModel("CreateIcon")
         });
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",

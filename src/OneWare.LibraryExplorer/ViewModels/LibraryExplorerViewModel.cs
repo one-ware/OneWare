@@ -33,9 +33,9 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         _ = LoadAsync();
     }
 
-    public override void Insert(IProjectRoot project)
+    public override void AddProject(IProjectRoot project)
     {
-        base.Insert(project);
+        base.AddProject(project);
     }
 
     public void DoubleTab(IProjectEntry entry)
@@ -58,7 +58,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         foreach (var dir in directories)
         {
             var root = await manager.LoadProjectAsync(dir);
-            Insert(root!);
+            AddProject(root!);
         }
     }
 

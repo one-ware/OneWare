@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.LibraryExplorer.ViewModels;
@@ -28,7 +29,7 @@ public class LibraryExplorerModule : OneWareModuleBase
             {
                 Header = "Library Explorer",
                 Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<LibraryExplorerViewModel>())),
-                IconObservable = Application.Current!.GetResourceObservable(LibraryExplorerViewModel.IconKey)
+                IconModel = new IconModel(LibraryExplorerViewModel.IconKey)
             });
     }
 }

@@ -63,7 +63,7 @@ public class SourceControlModule : OneWareModuleBase
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<SourceControlViewModel>())),
-            IconObservable = Application.Current!.GetResourceObservable(SourceControlViewModel.IconKey)
+            IconModel = new IconModel(SourceControlViewModel.IconKey)
         });
 
         if (serviceProvider.Resolve<SourceControlViewModel>() is not { } vm) return;

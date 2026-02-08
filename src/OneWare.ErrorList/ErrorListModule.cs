@@ -42,7 +42,7 @@ public class ErrorListModule : OneWareModuleBase
         {
             Header = "Problems",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IErrorService>())),
-            IconObservable = Application.Current!.GetResourceObservable(ErrorListViewModel.IconKey)
+            IconModel = new IconModel(ErrorListViewModel.IconKey)
         });
     }
 }

@@ -31,9 +31,9 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private bool _waitLiveExecution;
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService,
-        IMainDockService mainDockService,
+        IMainDockService mainDockService, IFileIconService fileIconService,
         ISettingsService settingsService, IWindowService windowService)
-        : base(fullPath, projectExplorerService, mainDockService, windowService)
+        : base(fullPath, fileIconService, projectExplorerService, mainDockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
 

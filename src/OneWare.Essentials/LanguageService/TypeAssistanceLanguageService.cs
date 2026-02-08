@@ -146,7 +146,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 Header = "Rename...",
                 Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
                 CommandParameter = prepareRefactor,
-                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
+                IconModel = new IconModel("VsImageLib.Rename16X")
             });
 
         var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
@@ -610,7 +610,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             {
                 Header = "Restart Language Server",
                 Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+                IconModel = new IconModel("VsImageLib.RefreshGrey16X")
             }
         };
     }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OneWare.Chat.Services;
 using OneWare.Chat.ViewModels;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -37,7 +38,7 @@ public class ChatModule : OneWareModuleBase
         {
             Header = "AI Chat",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
-            IconObservable = Application.Current!.GetResourceObservable(ChatViewModel.IconKey),
+            IconModel = new IconModel(ChatViewModel.IconKey),
         });
     }
 }

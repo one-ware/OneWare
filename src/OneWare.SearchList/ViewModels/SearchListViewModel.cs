@@ -22,21 +22,7 @@ public class SearchListViewModel : ExtendedTool
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    private bool _caseSensitive;
-
-    private bool _isLoading;
-
     private CancellationTokenSource? _lastCancellationToken;
-
-    private int _searchListFilterMode = 1;
-
-    private string _searchString = string.Empty;
-
-    private SearchResultModel? _selectedItem;
-
-    private bool _useRegex;
-
-    private bool _wholeWord;
 
     public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) :
         base(IconKey)
@@ -55,51 +41,51 @@ public class SearchListViewModel : ExtendedTool
 
     public string SearchString
     {
-        get => _searchString;
-        set => SetProperty(ref _searchString, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public ObservableCollection<SearchResultModel> Items { get; } = new();
 
     public SearchResultModel? SelectedItem
     {
-        get => _selectedItem;
-        set => SetProperty(ref _selectedItem, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool CaseSensitive
     {
-        get => _caseSensitive;
-        set => SetProperty(ref _caseSensitive, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool WholeWord
     {
-        get => _wholeWord;
-        set => SetProperty(ref _wholeWord, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool UseRegex
     {
-        get => _useRegex;
-        set => SetProperty(ref _useRegex, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public int SearchListFilterMode
     {
-        get => _searchListFilterMode;
-        set => SetProperty(ref _searchListFilterMode, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1;
 
     private void Search(string searchText)
     {
@@ -122,7 +108,7 @@ public class SearchListViewModel : ExtendedTool
                     _lastCancellationToken.Token);
                 break;
             case 1 when _projectExplorerService.ActiveProject != null:
-                await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
+                await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject, searchText,
                     _lastCancellationToken.Token);
                 break;
             case 2 when _mainDockService.CurrentDocument is IEditor editor:
@@ -161,7 +147,7 @@ public class SearchListViewModel : ExtendedTool
                     break;
                 }
                 case IProjectFolder folder:
-                    await SearchFolderRecursiveAsync(folder.Entities, searchText, cancel);
+                    await SearchFolderRecursiveAsync(folder.Children, searchText, cancel);
                     break;
             }
     }

@@ -55,7 +55,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
 
 
-    public virtual void Insert(IProjectRoot entry)
+    public virtual void AddProject(IProjectRoot entry)
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
@@ -124,7 +124,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         SearchResult.Clear();
         if (SearchString.Length < 3) return;
 
-        SearchResult.AddRange(DeepSearchName(SearchString));
+        //SearchResult.AddRange(DeepSearchName(SearchString));
 
         foreach (var r in SearchResult)
             r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
@@ -191,28 +191,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
         }
 
         return null;
-    }
-
-    public List<IProjectEntry> DeepSearchName(string name)
-    {
-        var results = new List<IProjectEntry>();
-        foreach (var entry in Projects)
-        {
-            if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
-        }
-
-        return results;
-    }
-
-    private void DeepSearchName(IProjectFolder pf, string name, List<IProjectEntry> results)
-    {
-        var folderItems = pf.Entities;
-        foreach (var entry in folderItems)
-        {
-            if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
-        }
     }
 
     public void CollapseAll(IEnumerable<IProjectExplorerNode> list)
