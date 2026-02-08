@@ -73,22 +73,24 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
             if (!setting.ActivationFunction(_root)) continue;
 
-            if (_root.Properties.AsObject().ContainsKey(setting.Key))
+            if (_root.HasProjectProperty(setting.Key))
             {
                 // load stored value
+                var node = _root.GetProjectPropertyNode(setting.Key);
+                if (node == null) continue;
 
                 switch (localCopy.GetType().Name)
                 {
                     case "CheckBoxSetting":
                         localCopy = new CheckBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString() == "True" ? true : false)
+                            node.ToString() == "True" ? true : false)
                         {
 	                        Validator = localCopy.Validator
                         };
                         break;
 
                     case "TextBoxSetting":
-                        localCopy = new TextBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
+                        localCopy = new TextBoxSetting(localCopy.Title, node.ToString(),
                             ((TextBoxSetting)localCopy).Watermark)
                         {
 	                        Validator = localCopy.Validator
@@ -96,7 +98,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         break;
 
                     case "ComboBoxSetting":
-                        localCopy = new ComboBoxSetting(localCopy.Title, _root.Properties[setting.Key]!.ToString(),
+                        localCopy = new ComboBoxSetting(localCopy.Title, node.ToString(),
                             ((ComboBoxSetting)localCopy).Options)
                         {
 	                        Validator = localCopy.Validator
@@ -105,7 +107,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "ListBoxSetting":
                         localCopy = new ListBoxSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray())
+                            node.AsArray().Select(arrayNode => arrayNode!.ToString()).ToArray())
                         {
 	                        Validator = localCopy.Validator
                         };
@@ -113,7 +115,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "ComboBoxSearchSetting":
                         localCopy = new ComboBoxSearchSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()).ToArray(),
+                            node.AsArray().Select(arrayNode => arrayNode!.ToString()).ToArray(),
                             ((ComboBoxSearchSetting)localCopy).Options)
                         {
 	                        Validator = localCopy.Validator
@@ -122,7 +124,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "SliderSetting":
                         localCopy = new SliderSetting(localCopy.Title,
-                            double.Parse(_root.Properties[setting.Key]!.ToString(), CultureInfo.InvariantCulture),
+                            double.Parse(node.ToString(), CultureInfo.InvariantCulture),
                             ((SliderSetting)localCopy).Min,
                             ((SliderSetting)localCopy).Max, ((SliderSetting)localCopy).Step)
                         {
@@ -132,7 +134,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "FolderPathSetting":
                         localCopy = new FolderPathSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString(), ((FolderPathSetting)localCopy).Watermark,
+                            node.ToString(), ((FolderPathSetting)localCopy).Watermark,
                             ((FolderPathSetting)localCopy).StartDirectory, ((FolderPathSetting)localCopy).CheckPath)
                         {
 	                        Validator = localCopy.Validator
@@ -141,7 +143,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
                     case "FilePathSetting":
                         localCopy = new FilePathSetting(localCopy.Title,
-                            _root.Properties[setting.Key]!.ToString(),
+                            node.ToString(),
                             ((FilePathSetting)localCopy).Watermark, ((FilePathSetting)localCopy).StartDirectory,
                             ((FilePathSetting)localCopy).CheckPath)
                         {
@@ -150,7 +152,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         break;
 
                     case "ColorSetting":
-                        Color.TryParse(_root.Properties[setting.Key]!.ToString(), out var color);
+                        Color.TryParse(node.ToString(), out var color);
                         localCopy = new ColorSetting(localCopy.Title, color)
                         {
 	                        Validator = localCopy.Validator
@@ -175,22 +177,22 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private void SetupMenu()
     {
-        var value = _root.Properties["VHDL_Standard"] == null ? "" : _root.Properties["VHDL_Standard"]!.ToString();
+        var value = _root.GetProjectProperty("VHDL_Standard") ?? "";
         var vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
 
-        var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
-        var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
+        var includes = _root.GetProjectPropertyArray("Include")?.ToArray() ?? [];
+        var exclude = _root.GetProjectPropertyArray("Exclude")?.ToArray() ?? [];
 
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
             .Select(toolchain => toolchain.Name)
             .ToArray();
-        var currentToolchain = _root.Properties["Toolchain"]!.ToString();
+        var currentToolchain = _root.GetProjectProperty("Toolchain") ?? "";
         var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
         var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
             .Select(loader => loader.Name)
             .ToArray();
-        var currentLoader = _root.Properties["Loader"]!.ToString();
+        var currentLoader = _root.GetProjectProperty("Loader") ?? "";
         var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
         var includesSettings = new ListBoxSetting("Files to Include", includes);

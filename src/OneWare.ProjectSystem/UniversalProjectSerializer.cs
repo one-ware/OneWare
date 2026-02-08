@@ -1,8 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Avalonia.Threading;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;
@@ -15,9 +13,7 @@ public static class UniversalProjectSerializer
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
+        AllowTrailingCommas = true
     };
 
     public static async Task<UniversalProjectProperties?> DeserializePropertiesAsync(string path)
@@ -26,10 +22,15 @@ public static class UniversalProjectSerializer
         {
             await using var stream = File.OpenRead(path);
 
-            var properties =
-                await JsonSerializer.DeserializeAsync<UniversalProjectProperties>(stream, SerializerOptions);
-            
-            return properties;
+            var node = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true
+            });
+
+            if (node is not JsonObject obj)
+                return new UniversalProjectProperties();
+
+            return new UniversalProjectProperties(obj);
         }
         catch (Exception e)
         {
@@ -44,7 +45,7 @@ public static class UniversalProjectSerializer
         {
             await using var stream = File.OpenWrite(root.ProjectFilePath);
             stream.SetLength(0);
-            await JsonSerializer.SerializeAsync(stream, root.Properties, SerializerOptions);
+            await JsonSerializer.SerializeAsync(stream, root.Properties.AsObject(), SerializerOptions);
             
             return true;
         }

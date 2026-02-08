@@ -4,6 +4,7 @@ using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.ProjectSystem;
 using OneWare.Settings.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -116,12 +117,11 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
             var defaultProperties = new JsonObject
             {
-                ["Include"] = new JsonArray("*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"),
-                ["Exclude"] = new JsonArray("build")
+                ["include"] = new JsonArray("*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"),
+                ["exclude"] = new JsonArray("build")
             };
             var root = new UniversalFpgaProjectRoot(projectFile);
-            
-            root.LoadProperties(defaultProperties);
+            root.LoadProperties(new UniversalProjectProperties(defaultProperties));
 
             if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
                 root.Loader = loader;

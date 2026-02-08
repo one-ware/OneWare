@@ -57,10 +57,10 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     
     public void LoadProperties(UniversalProjectProperties properties)
     {
-        var normalized = NormalizeJsonKeys(properties);
+        var normalized = NormalizeJsonKeys(properties.AsObject());
         var oldProperties = Properties;
-        Properties = normalized;
-        RaisePropertyChanged("*", oldProperties, Properties);
+        Properties = new UniversalProjectProperties(normalized);
+        RaisePropertyChanged("*", oldProperties.AsObject(), Properties.AsObject());
     }
 
     private static string NormalizeKey(string key)
@@ -68,7 +68,22 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         if (string.IsNullOrWhiteSpace(key))
             return key;
 
-        return char.ToLowerInvariant(key[0]) + key[1..];
+        var separators = new[] { '_', '-', ' ' };
+
+        if (key.IndexOfAny(separators) < 0)
+            return char.ToUpperInvariant(key[0]) + key[1..];
+
+        var parts = key.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return char.ToUpperInvariant(key[0]) + key[1..];
+
+        return string.Concat(parts.Select(part =>
+        {
+            if (string.IsNullOrEmpty(part)) return part;
+            if (part.All(char.IsUpper)) return part;
+            var lower = part.ToLowerInvariant();
+            return char.ToUpperInvariant(lower[0]) + lower[1..];
+        }));
     }
 
     private static JsonObject NormalizeJsonKeys(JsonObject input)
@@ -79,20 +94,45 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         {
             var normalizedKey = NormalizeKey(key);
 
-            if (value is JsonObject nestedObj)
-                result[normalizedKey] = NormalizeJsonKeys(nestedObj);
-            else
-                result[normalizedKey] = value?.DeepClone();
+            result[normalizedKey] = NormalizeJsonNode(value);
         }
 
         return result;
     }
-    
+
+    private static JsonNode? NormalizeJsonNode(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonObject nestedObj:
+                return NormalizeJsonKeys(nestedObj);
+            case JsonArray array:
+                var normalizedArray = new JsonArray();
+                foreach (var item in array)
+                    normalizedArray.Add(NormalizeJsonNode(item));
+                return normalizedArray;
+            default:
+                return node?.DeepClone();
+        }
+    }
+
 
     public string? GetProjectProperty(string name)
     {
         name = NormalizeKey(name);
         return Properties[name]?.ToString();
+    }
+
+    public JsonNode? GetProjectPropertyNode(string name)
+    {
+        name = NormalizeKey(name);
+        return Properties[name];
+    }
+
+    public bool HasProjectProperty(string name)
+    {
+        name = NormalizeKey(name);
+        return Properties.ContainsKey(name);
     }
 
     public IEnumerable<string>? GetProjectPropertyArray(string name)
@@ -109,7 +149,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         name = NormalizeKey(name);
 
         Properties.TryGetPropertyValue(name, out var oldValue);
-        Properties[name] = value;
+        Properties[name] = value == null ? null : JsonValue.Create(value);
 
         RaisePropertyChanged(name, oldValue, value);
     }

@@ -15,16 +15,18 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-
+    private readonly IFileIconService _fileIconService;
+    
     private string _fullPath;
     private string? _lastFullPath;
 
-    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService,
+    protected ExtendedDocument(string fullPath, IFileIconService fileIconService, IProjectExplorerService projectExplorerService,
         IMainDockService mainDockService, IWindowService windowService)
     {
         _fullPath = fullPath;
         _lastFullPath = fullPath;
         _projectExplorerService = projectExplorerService;
+        _fileIconService = fileIconService;
         _mainDockService = mainDockService;
         _windowService = windowService;
     }
@@ -33,11 +35,13 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         $"Do you want to save changes to the file {Path.GetFileName(FullPath)}?";
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
+    
     public IImage? Icon
     {
         get;
         private set => SetProperty(ref field, value);
     }
+    
     public string Extension => Path.GetExtension(FullPath);
 
     [DataMember]
@@ -127,6 +131,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         var isExternal = _projectExplorerService.GetRootFromFile(FullPath) == null;
         
         Title = isExternal ? $"[{Path.GetFileName(FullPath)}]" : Path.GetFileName(FullPath);
+        Icon = _fileIconService.GetFileIcon(Path.GetExtension(FullPath));
         
         if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 

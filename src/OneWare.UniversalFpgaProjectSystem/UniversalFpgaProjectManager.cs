@@ -8,7 +8,6 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.ProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
@@ -66,7 +65,7 @@ public class UniversalFpgaProjectManager : IProjectManager
     {
         if (project is not UniversalFpgaProjectRoot root) return;
         
-        var newSettings = await UniversalProjectSettingsParser.DeserializeAsync<UniversalFpgaProjectRoot>(root.ProjectFilePath);
+        var newSettings = await UniversalProjectSerializer.DeserializePropertiesAsync(root.ProjectFilePath);
 
         if (newSettings == null)
         {
@@ -74,7 +73,7 @@ public class UniversalFpgaProjectManager : IProjectManager
             return;
         }
         
-        root.LoadProperties(newSettings.Properties);
+        root.LoadProperties(newSettings);
         await root.InitializeAsync();
         
         //TODO reload open files
@@ -98,7 +97,7 @@ public class UniversalFpgaProjectManager : IProjectManager
 
     public async Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return root is UniversalFpgaProjectRoot uFpga && await UniversalProjectSettingsParser.SerializeAsync(uFpga);
+        return root is UniversalFpgaProjectRoot uFpga && await UniversalProjectSerializer.SerializeAsync(uFpga);
     }
 
     public async Task NewProjectDialogAsync()
