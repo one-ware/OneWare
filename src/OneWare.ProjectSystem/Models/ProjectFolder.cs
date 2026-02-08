@@ -1,5 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using DynamicData;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -13,6 +16,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     private static readonly IconModel DefaultFolderClosedIconModel = new("VsImageLib.Folder16X");
 
     private static readonly IconModel DefaultFolderOpenIconModel = new("VsImageLib.FolderOpen16X");
+
+    private static readonly ExplorerNameComparer ExplorerNameComparer = ExplorerNameComparer.Instance;
     
     private CancellationTokenSource? _loadCancellation;
 
@@ -155,7 +160,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
     private void Insert(IProjectEntry entry)
     {
-        if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+        Children ??= new ObservableCollection<IProjectExplorerNode>();
         
         //Insert in correct posiion
         var inserted = false;
@@ -163,13 +168,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         {
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
-                                                  string.Compare(entry.Header, Children[i].Header,
-                                                      StringComparison.OrdinalIgnoreCase) <=
-                                                  0) || //Insert if both are folders
+                                                  ExplorerNameComparer.Compare(entry.Header, Children[i].Header) <= 0) ||
+                                                 //Insert if both are folders
                                                  (entry is not ProjectFolder && Children[i] is not ProjectFolder &&
-                                                  string.Compare(entry.Header, Children[i].Header,
-                                                      StringComparison.OrdinalIgnoreCase) <=
-                                                  0))) //Insert if both are files
+                                                  ExplorerNameComparer.Compare(entry.Header, Children[i].Header) <= 0)))
+                //Insert if both are files
             {
                 Children.Insert(i, entry);
                 inserted = true;
@@ -328,6 +331,9 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             if (cancellationToken.IsCancellationRequested) break;
             Children.Add(file);
         }
+
+        if (!cancellationToken.IsCancellationRequested)
+            SortChildren();
     }
 
     private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize,
@@ -375,10 +381,27 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
+
     private void CancelLoad()
     {
         _loadCancellation?.Cancel();
         _loadCancellation?.Dispose();
         _loadCancellation = null;
+    }
+
+    private void SortChildren()
+    {
+        if (Children == null) return;
+
+        var ordered = Children
+            .OfType<IProjectEntry>()
+            .OrderBy(entry => entry is ProjectFolder ? 0 : 1)
+            .ThenBy(entry => entry.Header, ExplorerNameComparer)
+            .ToList();
+
+        if (ordered.Count == 0) return;
+
+        Children.Clear();
+        Children.AddRange(ordered);
     }
 }
