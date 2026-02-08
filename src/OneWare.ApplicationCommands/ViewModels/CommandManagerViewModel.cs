@@ -104,7 +104,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         var results = await Task.Run(() => FindFileCommands(searchText, token), token);
         IsSearching = false;
         if (token.IsCancellationRequested) return;
-
+        
         await Dispatcher.UIThread.InvokeAsync(() => ApplyFileCommands(tab, results));
     }
 
@@ -134,19 +134,20 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 
         foreach (var project in _projectExplorerService.Projects)
         {
-            if (project is not IProjectFolder folder) continue;
-
-            foreach (var relativePath in folder.GetFiles("*", true))
+            foreach (var relativePath in project.GetFiles())
             {
                 if (token.IsCancellationRequested) return Array.Empty<IApplicationCommand>();
+                
+                var relativePathWithProject = Path.Combine(project.Name, relativePath);
+                
+                if (!relativePathWithProject.Contains(searchText, searchComparison)) continue;
+                
+                var score = ScoreFileMatch(relativePathWithProject, searchText);
 
-                if (!relativePath.Contains(searchText, searchComparison)) continue;
-
-                var score = ScoreFileMatch(relativePath, searchText);
                 if (score <= 0) continue;
 
-                var fullPath = Path.Combine(folder.FullPath, relativePath);
-                results.Add((score, fullPath, Path.Combine(project.Name, relativePath)));
+                var fullPath = Path.Combine(project.FullPath, relativePath);
+                results.Add((score, fullPath, relativePathWithProject));
             }
         }
 
