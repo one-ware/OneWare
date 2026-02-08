@@ -23,9 +23,9 @@ public class SearchListModule : OneWareModuleBase
         var windowService = serviceProvider.Resolve<IWindowService>();
         var dockService = serviceProvider.Resolve<IMainDockService>();
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Search")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Find")
         {
-            Header = "Search",
+            Header = "Find",
             Command = new RelayCommand(() =>
             {
                 var vm = serviceProvider.Resolve<SearchListViewModel>();
@@ -34,6 +34,20 @@ public class SearchListModule : OneWareModuleBase
             }),
             Icon = new IconModel(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
+        });
+        
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Find and Replace")
+        {
+            Header = "Find and Replace",
+            Command = new RelayCommand(() =>
+            {
+                var vm = serviceProvider.Resolve<SearchListViewModel>();
+                vm.IsReplaceVisible = true;
+                vm.SearchString = string.Empty;
+                dockService.Show(vm);
+            }),
+            Icon = new IconModel(SearchListViewModel.IconKey),
+            InputGesture = new KeyGesture(Key.H, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }
 }

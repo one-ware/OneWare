@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using DynamicData;
@@ -15,7 +16,7 @@ using ReactiveUI;
 
 namespace OneWare.SearchList.ViewModels;
 
-public class SearchListViewModel : ExtendedTool
+public partial class SearchListViewModel : ExtendedTool
 {
     public const string IconKey = "VsImageLib.Search16XMd";
     private const long MaxTextFileBytes = 2 * 1024 * 1024;
@@ -31,7 +32,7 @@ public class SearchListViewModel : ExtendedTool
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
-        Title = "Search";
+        Title = "Find in files";
         Id = "Search";
 
         this.WhenAnyValue(x => x.SearchString)
@@ -59,6 +60,24 @@ public class SearchListViewModel : ExtendedTool
         get;
         set => SetProperty(ref field, value);
     }
+
+    [DataMember]
+    public bool IsReplaceVisible
+    {
+        get;
+        set
+        {
+            SetProperty(ref field, value);
+            Title = value ? "Replace" : "Find";
+        }
+    }
+
+    [DataMember]
+    public string ReplaceString
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     [DataMember]
     public bool CaseSensitive
@@ -144,16 +163,6 @@ public class SearchListViewModel : ExtendedTool
 
             var displayPath = relativePath;
             var fullPath = Path.Combine(folder.FullPath, relativePath);
-
-            if (displayPath.Contains(searchText, comparison))
-            {
-                var sI = displayPath.IndexOf(searchText, comparison);
-                var dL = displayPath[..sI].TrimStart();
-                var dM = searchText;
-                var dR = displayPath[(sI + searchText.Length)..].TrimEnd();
-                Items.Add(new SearchResultModel(displayPath, dL, dM, dR, searchText,
-                    folder.Root, fullPath));
-            }
 
             if (!IsBinaryFile(fullPath) && !IsTooLarge(fullPath))
             {
@@ -317,10 +326,78 @@ public class SearchListViewModel : ExtendedTool
         }, cancellationToken);
     }
 
+    private string BuildSearchPattern(string searchText)
+    {
+        var pattern = UseRegex ? searchText : Regex.Escape(searchText);
+        if (WholeWord) pattern = $@"\b(?:{pattern})\b";
+        return pattern;
+    }
+
     public void OpenSelectedResult()
     {
         if (SelectedItem == null) return;
         _ = GoToSearchResultAsync(SelectedItem);
+    }
+
+    [RelayCommand]
+    private async Task ReplaceSelectedAsync()
+    {
+        var result = SelectedItem;
+        if (result == null) return;
+        if (string.IsNullOrWhiteSpace(result.FilePath)) return;
+        if (result.EndOffset <= result.StartOffset) return;
+        if (IsBinaryFile(result.FilePath) || IsTooLarge(result.FilePath)) return;
+
+        var text = await File.ReadAllTextAsync(result.FilePath);
+        if (result.StartOffset < 0 || result.EndOffset > text.Length) return;
+
+        var replacement = ReplaceString ?? string.Empty;
+        var newText = text.Remove(result.StartOffset, result.EndOffset - result.StartOffset)
+            .Insert(result.StartOffset, replacement);
+
+        await File.WriteAllTextAsync(result.FilePath, newText);
+        Search(SearchString);
+    }
+
+    [RelayCommand]
+    private async Task ReplaceAllAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SearchString)) return;
+        if (Items.Count == 0) return;
+
+        var files = Items
+            .Select(x => x.FilePath)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        if (files.Count == 0) return;
+
+        var pattern = BuildSearchPattern(SearchString);
+        var options = CaseSensitive ? RegexOptions.Multiline : RegexOptions.Multiline | RegexOptions.IgnoreCase;
+        var replacement = ReplaceString ?? string.Empty;
+        Regex regex;
+        try
+        {
+            regex = new Regex(pattern, options);
+        }
+        catch
+        {
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            if (file == null) continue;
+            if (IsBinaryFile(file) || IsTooLarge(file)) continue;
+
+            var text = await File.ReadAllTextAsync(file);
+            var replaced = regex.Replace(text, replacement);
+            if (!ReferenceEquals(text, replaced) && text != replaced)
+                await File.WriteAllTextAsync(file, replaced);
+        }
+
+        Search(SearchString);
     }
 
     private async Task GoToSearchResultAsync(SearchResultModel resultModel)
