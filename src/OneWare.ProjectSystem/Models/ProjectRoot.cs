@@ -1,4 +1,5 @@
-﻿using Avalonia.Media;
+﻿using System.Threading;
+using Avalonia.Media;
 using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectSystem.Models;
@@ -30,7 +31,7 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 
     public Task InitializeAsync()
     {
-        return LoadContentAsync();
+        return LoadContentAsync(CancellationToken.None, true);
     }
 
     public abstract bool IsPathIncluded(string path);

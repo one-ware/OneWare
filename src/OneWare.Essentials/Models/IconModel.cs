@@ -15,7 +15,7 @@ public class IconModel
     
     public IconModel(string resourceKey)
     {
-        IconObservable = Application.Current!.GetResourceObservable(resourceKey).Cast<IImage>();
+        IconObservable = Application.Current!.GetResourceObservable(resourceKey)!.Cast<IImage>();
     }
     
     public IImage? Icon { get; init; }

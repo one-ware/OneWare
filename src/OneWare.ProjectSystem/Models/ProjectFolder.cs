@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.Threading;
 using System.Reactive.Disposables;
+using System.Runtime.CompilerServices;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
@@ -11,17 +13,24 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
+    private CancellationTokenSource? _loadCancellation;
+    private bool _isLoaded;
+    private bool _isLoading;
+
     protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
         topFolder)
     {
-        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+        this.WhenValueChanged(x => x.IsExpanded).Subscribe(isExpanded =>
         {
-            if (x)
+            if (isExpanded)
             {
-                _ = LoadContentAsync();
+                StartLoad();
             }
             else
             {
+                CancelLoad();
+                _isLoaded = false;
+
                 if (Children != null)
                     foreach (var subEntity in Children.OfType<IProjectEntry>().ToArray())
                         Remove(subEntity);
@@ -30,7 +39,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
                     Directory.EnumerateFileSystemEntries(FullPath).Any())
                 {
                     if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
-                     Children.Add(new LoadingDummyNode());
+                    Children.Add(new LoadingDummyNode());
                 }
             }
         }).DisposeWith(Disposables);
@@ -293,13 +302,18 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
-    protected virtual async Task LoadContentAsync()
+    protected virtual async Task LoadContentAsync(CancellationToken cancellationToken, bool forceReload = false)
     {
+        if (_isLoading) return;
+        if (_isLoaded && !forceReload) return;
+
+        _isLoading = true;
         Children?.Clear();
 
         if (!Directory.Exists(FullPath))
         {
             LoadingFailed = true;
+            _isLoading = false;
             return;
         }
 
@@ -311,19 +325,27 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
 
         // Load folders first
-        await foreach (var folder in EnumerateFoldersAsync(batchSize))
+        await foreach (var folder in EnumerateFoldersAsync(batchSize, cancellationToken))
         {
+            if (cancellationToken.IsCancellationRequested) break;
             Children.Add(folder);
         }
 
         // Load files after
-        await foreach (var file in EnumerateFilesAsync(batchSize))
+        await foreach (var file in EnumerateFilesAsync(batchSize, cancellationToken))
         {
+            if (cancellationToken.IsCancellationRequested) break;
             Children.Add(file);
         }
+
+        if (!cancellationToken.IsCancellationRequested)
+            _isLoaded = true;
+
+        _isLoading = false;
     }
 
-    private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize)
+    private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var matches = GetDirectories("*", false);
 
@@ -331,6 +353,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         foreach (var match in matches)
         {
+            if (cancellationToken.IsCancellationRequested) yield break;
             yield return new ProjectFolder(Path.GetFileName(match), this);
 
             count++;
@@ -339,12 +362,13 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             if (count % batchSize == 0)
             {
                 await Task.Yield();
-                await Task.Delay(50);
+                await Task.Delay(10, cancellationToken);
             }
         }
     }
 
-    private async IAsyncEnumerable<ProjectFile> EnumerateFilesAsync(int batchSize)
+    private async IAsyncEnumerable<ProjectFile> EnumerateFilesAsync(int batchSize,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var matches = GetFiles("*", false);
 
@@ -352,6 +376,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         foreach (var match in matches)
         {
+            if (cancellationToken.IsCancellationRequested) yield break;
             yield return new ProjectFile(Path.GetFileName(match), this);
 
             count++;
@@ -359,8 +384,23 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             if (count % batchSize == 0)
             {
                 await Task.Yield();
-                await Task.Delay(50);
+                await Task.Delay(10, cancellationToken);
             }
         }
+    }
+
+    private void StartLoad(bool forceReload = false)
+    {
+        CancelLoad();
+        _loadCancellation = new CancellationTokenSource();
+        _ = LoadContentAsync(_loadCancellation.Token, forceReload);
+    }
+
+    private void CancelLoad()
+    {
+        _loadCancellation?.Cancel();
+        _loadCancellation?.Dispose();
+        _loadCancellation = null;
+        _isLoaded = false;
     }
 }

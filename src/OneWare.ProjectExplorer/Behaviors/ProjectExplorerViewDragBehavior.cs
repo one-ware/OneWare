@@ -40,7 +40,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<TreeDataGrid>
     protected override void OnAttachedToVisualTree()
     {
         AssociatedObject?.AddHandler(InputElement.PointerPressedEvent, AssociatedObject_PointerPressed,
-            RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+            RoutingStrategies.Bubble);
         AssociatedObject?.AddHandler(InputElement.PointerReleasedEvent, AssociatedObject_PointerReleased,
             RoutingStrategies.Direct | RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         AssociatedObject?.AddHandler(InputElement.PointerMovedEvent, AssociatedObject_PointerMovedAsync,
