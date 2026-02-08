@@ -1,8 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Threading;
-using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
-using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
@@ -13,16 +10,16 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    public static IconModel DefaultFolderClosedIconModel = new IconModel("VsImageLib.Folder16X");
-    
-    public static IconModel DefaultFolderOpenIconModel = new IconModel("VsImageLib.FolderOpen16X");
+    private static readonly IconModel DefaultFolderClosedIconModel = new("VsImageLib.Folder16X");
+
+    private static readonly IconModel DefaultFolderOpenIconModel = new("VsImageLib.FolderOpen16X");
     
     private CancellationTokenSource? _loadCancellation;
 
     protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
         topFolder)
     {
-        OnIsExpandedChanged(false);
+        InitFolder();
     }
 
     public void Add(IProjectEntry entry)
@@ -264,6 +261,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             var relativeToRoot = Path.GetRelativePath(path, file);
             if (Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
         }
+    }
+
+    private void InitFolder()
+    {
+        OnIsExpandedChanged(false);
     }
 
     public override void OnIsExpandedChanged(bool isExpanded)
