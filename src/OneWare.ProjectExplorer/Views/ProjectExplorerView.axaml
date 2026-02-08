@@ -72,14 +72,13 @@
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <Grid ColumnDefinitions="20, *">
-                        <controls:LayeredIconPresenter Grid.Column="0" Value="{Binding }" Height="16" Width="16" />
+                        <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
+                                                       Value="{Binding IconModel}" Height="16" Width="16" />
 
-                        <TextBlock Grid.Column="1"
-                                   FontWeight="{Binding FontWeight}"
-                                   VerticalAlignment="Center"
-                                   IsEnabled="False" x:Name="RenamingTextBox"
-                                   Text="{Binding Header, Mode=OneWay}"
-                                   Opacity="{Binding TextOpacity}" />
+                        <TextPresenter Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Header, Mode=OneWay}"
+                                       Opacity="{Binding TextOpacity}" />
                     </Grid>
                 </DataTemplate>
             </TreeDataGrid.Resources>

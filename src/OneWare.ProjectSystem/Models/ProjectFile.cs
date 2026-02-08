@@ -9,14 +9,10 @@ public class ProjectFile : ProjectEntry, IProjectFile
 {
     public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
     {
-        IDisposable? fileSubscription = null;
-
-        this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
+        IconModel = new IconModel()
         {
-            fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
-            fileSubscription = observable?.Subscribe(icon => { Icon = icon; }).DisposeWith(Disposables);
-        }).DisposeWith(Disposables);
+            IconObservable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension)
+        };
     }
 
     public string Extension => Path.GetExtension(FullPath);

@@ -1,8 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
@@ -17,37 +14,29 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
         topFolder)
     {
-        // this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
-        // {
-        //     iconDisposable?.Dispose();
-        //
-        //     if (x)
-        //     {
-        //         _ = LoadContentAsync();
-        //
-        //         if (defaultFolderAnimation)
-        //             iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.FolderOpen16X")
-        //                 .Subscribe(y =>
-        //                 {
-        //                     IconModel. = y as IImage;
-        //                 }).DisposeWith(Disposables);
-        //     }
-        //     else
-        //     {
-        //         if (Children != null)
-        //             foreach (var subEntity in Children.OfType<IProjectEntry>().ToArray())
-        //                 Remove(subEntity);
-        //
-        //         if (Directory.Exists(FullPath) &&
-        //             Directory.EnumerateFileSystemEntries(FullPath).Any())
-        //             Children.Add(new LoadingDummyNode());
-        //
-        //         if (defaultFolderAnimation)
-        //             iconDisposable = Application.Current?.GetResourceObservable("VsImageLib.Folder16X")
-        //                 .Subscribe(y => { Icon = y as IImage; }).DisposeWith(Disposables);
-        //     }
-        // }).DisposeWith(Disposables);
+        this.WhenValueChanged(x => x.IsExpanded).Subscribe(x =>
+        {
+            if (x)
+            {
+                _ = LoadContentAsync();
+            }
+            else
+            {
+                if (Children != null)
+                    foreach (var subEntity in Children.OfType<IProjectEntry>().ToArray())
+                        Remove(subEntity);
+
+                if (Directory.Exists(FullPath) &&
+                    Directory.EnumerateFileSystemEntries(FullPath).Any())
+                {
+                    if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+                     Children.Add(new LoadingDummyNode());
+                }
+            }
+        }).DisposeWith(Disposables);
     }
+
+    public override IconModel? IconModel { get; } = null;
 
     public void Add(IProjectEntry entry)
     {
@@ -61,9 +50,11 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         {
             for (var i = 0; i < folder.Children.Count; i++)
             {
-                if(folder.Children[i] is IProjectEntry subEntry)
+                if (folder.Children[i] is IProjectEntry subEntry)
+                {
                     folder.Remove(subEntry);
-                i--;
+                    i--;
+                }
             }
         }
 
@@ -72,7 +63,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         entry.Dispose();
 
         //Collapse folder if empty
-        if (Children.Count == 0) IsExpanded = false;
+        if (Children?.Count == 0) IsExpanded = false;
     }
 
     public void SetIsExpanded(bool newValue)
@@ -372,6 +363,4 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             }
         }
     }
-
-    public override IconModel? IconModel { get; }
 }

@@ -104,12 +104,13 @@ public class SearchListViewModel : ExtendedTool
         switch (SearchListFilterMode)
         {
             case 0:
-                await SearchFolderRecursiveAsync(_projectExplorerService.Projects, searchText,
-                    _lastCancellationToken.Token);
+                foreach (var project in _projectExplorerService.Projects)
+                {
+                    await SearchProjectFilesAsync(project, searchText, _lastCancellationToken.Token);
+                }
                 break;
             case 1 when _projectExplorerService.ActiveProject != null:
-                await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject, searchText,
-                    _lastCancellationToken.Token);
+                await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, _lastCancellationToken.Token);
                 break;
             case 2 when _mainDockService.CurrentDocument is IEditor editor:
                 Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
@@ -120,36 +121,32 @@ public class SearchListViewModel : ExtendedTool
         IsLoading = false;
     }
 
-    private async Task SearchFolderRecursiveAsync(IEnumerable<IProjectEntry> folderItems, string searchText,
-        CancellationToken cancel)
+    private async Task SearchProjectFilesAsync(IProjectFolder folder, string searchText, CancellationToken cancel)
     {
-        var result = new List<SearchResultModel>();
         if (cancel.IsCancellationRequested) return;
-        foreach (var i in folderItems)
-            switch (i)
-            {
-                case IProjectFile file:
-                {
-                    if (file.Header.Contains(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
-                    {
-                        var sI = file.Header.IndexOf(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                        var dL = file.Header[..sI].TrimStart();
-                        var dM = searchText;
-                        var dR = file.Header[(sI + searchText.Length)..].TrimEnd();
-                        Items.Add(new SearchResultModel(file.Header, dL, dM, dR, searchText,
-                            file.Root, file.FullPath));
-                    }
 
-                    Items.AddRange(await FindAllIndexesAsync(file.FullPath, file.Root, searchText, CaseSensitive,
-                        UseRegex, WholeWord, cancel));
-                    break;
-                }
-                case IProjectFolder folder:
-                    await SearchFolderRecursiveAsync(folder.Children, searchText, cancel);
-                    break;
+        var comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        foreach (var relativePath in folder.GetFiles("*", true))
+        {
+            if (cancel.IsCancellationRequested) return;
+
+            var displayPath = relativePath;
+            var fullPath = Path.Combine(folder.FullPath, relativePath);
+
+            if (displayPath.Contains(searchText, comparison))
+            {
+                var sI = displayPath.IndexOf(searchText, comparison);
+                var dL = displayPath[..sI].TrimStart();
+                var dM = searchText;
+                var dR = displayPath[(sI + searchText.Length)..].TrimEnd();
+                Items.Add(new SearchResultModel(displayPath, dL, dM, dR, searchText,
+                    folder.Root, fullPath));
             }
+
+            Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
+                UseRegex, WholeWord, cancel));
+        }
     }
 
     private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, IProjectRoot? root,

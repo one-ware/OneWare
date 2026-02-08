@@ -8,6 +8,11 @@ namespace OneWare.Essentials.Models;
 
 public class IconModel
 {
+    public IconModel()
+    {
+        
+    }
+    
     public IconModel(string resourceKey)
     {
         IconObservable = Application.Current!.GetResourceObservable(resourceKey).Cast<IImage>();
