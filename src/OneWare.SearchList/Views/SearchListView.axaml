@@ -66,6 +66,7 @@
             </DockPanel>
         </Border>
 
+        
         <DataGrid Padding="2, 0, 2, 2" BorderThickness="0" VerticalGridLinesBrush="Transparent"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   Grid.Row="1" Background="Transparent"
@@ -81,10 +82,10 @@
                 <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
-                            <TextBlock ToolTip.Tip="{Binding Description}">
-                                <Run Text="{Binding DescriptionLeft}" />
-                                <Run Text="{Binding DescriptionMid}" FontWeight="Bold" Background="{DynamicResource ThemeAccentBrush2}" />
-                                <Run Text="{Binding DescriptionRight}" />
+                            <TextBlock Padding="5 0" ToolTip.Tip="{Binding Description}">
+                                <Run Text="{Binding DescriptionLeft}" /><!--
+                                --><Run Text="{Binding DescriptionMid}" FontWeight="Bold" Background="{DynamicResource ThemeAccentBrush2}" /><!--
+                                --><Run Text="{Binding DescriptionRight}" />
                             </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
