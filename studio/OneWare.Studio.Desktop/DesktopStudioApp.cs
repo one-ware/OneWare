@@ -19,6 +19,7 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
+using OneWare.CSharp;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -53,6 +54,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<CSharpModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<ToolEngineModule>();
