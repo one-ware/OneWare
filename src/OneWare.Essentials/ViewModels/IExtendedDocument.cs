@@ -7,7 +7,7 @@ namespace OneWare.Essentials.ViewModels;
 
 public interface IExtendedDocument : IDocument, IWaitForContent
 {
-    public IImage? Icon { get; }
+    public IconModel? Icon { get; }
     public string Extension { get; }
     public string FullPath { get; set; }
     public bool IsLoading { get; }

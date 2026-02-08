@@ -36,7 +36,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
     
-    public IImage? Icon
+    public IconModel? Icon
     {
         get;
         private set => SetProperty(ref field, value);
@@ -131,7 +131,10 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         var isExternal = _projectExplorerService.GetRootFromFile(FullPath) == null;
         
         Title = isExternal ? $"[{Path.GetFileName(FullPath)}]" : Path.GetFileName(FullPath);
-        //Icon = _fileIconService.GetFileIcon(Path.GetExtension(FullPath));
+        Icon = new IconModel()
+        {
+            IconObservable = _fileIconService.GetFileIcon(Path.GetExtension(FullPath))
+        };
         
         if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 

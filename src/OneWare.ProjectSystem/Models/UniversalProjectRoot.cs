@@ -30,14 +30,14 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
     protected void RaisePropertyChanged(
         string name,
-        JsonNode? oldValue,
+        object? oldValue,
         object? newValue)
     {
         ProjectPropertyChanged?.Invoke(
             this,
             new ProjectPropertyChangedEventArgs(
                 name,
-                oldValue?.GetValue<object?>(),
+                oldValue,
                 newValue
             )
         );

@@ -135,8 +135,7 @@ public class ProjectWatchInstance : IDisposable
                     case WatcherChangeTypes.Changed:
                     {
                         var lastWriteTime = File.GetLastWriteTime(path);
-
-                        if (openTab.Value.LastSaveTime > lastWriteTime)
+                        if (lastWriteTime > openTab.Value.LastSaveTime)
                         {
                             openTab.Value.InitializeContent();
                         }
