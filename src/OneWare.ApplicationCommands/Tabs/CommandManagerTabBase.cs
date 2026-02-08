@@ -37,7 +37,8 @@ public abstract partial class CommandManagerTabBase : ObservableObject
         List<CommandManagerItemModel> newList = [];
 
         if (!string.IsNullOrWhiteSpace(query))
-            newList = Items.Where(i => i.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            newList = Items.Where(i => i.Name.Contains(query, StringComparison.OrdinalIgnoreCase) 
+                                       || (i.Detail?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
                 .Select(c => new CommandManagerItemModel(c, c.CanExecute(_logical)))
                 .OrderByDescending(c => c.IsEnabled)
                 .ThenByDescending(c => c.Command.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase))

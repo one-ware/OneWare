@@ -10,7 +10,7 @@ public class OpenFileApplicationCommand : ApplicationCommandBase
 {
     private readonly string _file;
 
-    public OpenFileApplicationCommand(string file) : base(Path.GetFileNameWithoutExtension(file))
+    public OpenFileApplicationCommand(string file) : base(Path.GetFileName(file))
     {
         _file = file;
         Icon = new IconModel()
