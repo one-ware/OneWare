@@ -6,6 +6,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.ProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -36,9 +37,12 @@ public class UniversalFpgaProjectManager : IProjectManager
 
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
+        var properties = await UniversalProjectSerializer.DeserializePropertiesAsync(path);
 
-        if (root == null) return root;
+        if (properties == null) return null;
+
+        var root = new UniversalFpgaProjectRoot(path);
+        root.LoadProperties(properties);
 
         var toolchain = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Toolchain));
         if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
@@ -58,9 +62,43 @@ public class UniversalFpgaProjectManager : IProjectManager
         return root;
     }
 
+    public async Task ReloadProjectAsync(IProjectRoot project)
+    {
+        if (project is not UniversalFpgaProjectRoot root) return;
+        
+        var newSettings = await UniversalProjectSettingsParser.DeserializeAsync<UniversalFpgaProjectRoot>(root.ProjectFilePath);
+
+        if (newSettings == null)
+        {
+            project.LoadingFailed = true;
+            return;
+        }
+        
+        root.LoadProperties(newSettings.Properties);
+        await root.InitializeAsync();
+        
+        //TODO reload open files
+        
+        var filesOpenInProject = _mainDockService.OpenFiles
+            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
+            .Select(x => new { Key = x.Key, ViewModel = x.Value })
+            .ToList();
+        
+        // foreach (var refreshed in filesOpenInProject)
+        //     if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
+        //         vm.InitializeContent();
+    }
+    
+    private static bool IsUnderRoot(string rootPath, string filePath)
+    {
+        var relative = Path.GetRelativePath(rootPath, filePath);
+        return !relative.StartsWith("..", StringComparison.Ordinal)
+               && !Path.IsPathRooted(relative);
+    }
+
     public async Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return root is UniversalFpgaProjectRoot uFpga && await UniversalFpgaProjectParser.SerializeAsync(uFpga);
+        return root is UniversalFpgaProjectRoot uFpga && await UniversalProjectSettingsParser.SerializeAsync(uFpga);
     }
 
     public async Task NewProjectDialogAsync()

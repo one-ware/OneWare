@@ -631,7 +631,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         return entry;
     }
 
-    public async Task<IProjectEntry> ReloadProjectAsync(IProjectRoot project)
+    public async Task ReloadProjectAsync(IProjectRoot project)
     {
         var manager = _projectManagerService.GetManager(project.ProjectTypeId);
 
@@ -640,39 +640,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             project.LoadingFailed = true;
             ContainerLocator.Container.Resolve<ILogger>()
                 .Error($"Cannot reload {project.Header}. Manager not found!");
-        }
-
-        var proj = manager != null ? await manager.LoadProjectAsync(project.ProjectPath) : null;
-        if (proj == null)
-        {
+            
             project.LoadingFailed = true;
-            return project;
+            return;
         }
-
-        //TODO make reload working without fully replacing the project
-        //For now we just re-initialize the files that are open from the project and still included
-        var filesOpenInProject = _mainDockService.OpenFiles
-            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
-            .Select(x => new { Key = x.Key, ViewModel = x.Value })
-            .ToList();
-
-        var expanded = project.IsExpanded;
-        var active = project.IsActive;
-        await RemoveAsync(project);
-        Insert(proj);
-
-        //Re-initialize the files that didn't get removed after swapping project
-        foreach (var refreshed in filesOpenInProject)
-            if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
-                vm.InitializeContent();
-
-        if (active) ActiveProject = proj;
-
-        //TODO: This delay is currently needed to make TreeDataGrid work. Check back later if still needed
-        await Task.Delay(10);
-        proj.IsExpanded = expanded;
-
-        return proj;
+        
+        await manager.ReloadProjectAsync(project);
     }
 
     public Task SaveProjectAsync(IProjectRoot project)

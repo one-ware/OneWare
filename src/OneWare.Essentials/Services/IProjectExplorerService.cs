@@ -26,7 +26,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
         bool setActive = true);
     public void ExpandToRoot(IProjectExplorerNode node);
     public Task ImportAsync(IProjectFolder destination, bool copy, bool askForInclude, params string[] paths);
-    public Task<IProjectEntry> ReloadProjectAsync(IProjectRoot entry);
+    public Task ReloadProjectAsync(IProjectRoot entry);
     public Task SaveProjectAsync(IProjectRoot project);
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);

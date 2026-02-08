@@ -28,6 +28,11 @@ public class FolderProjectManager : IProjectManager
         return root;
     }
 
+    public Task ReloadProjectAsync(IProjectRoot project)
+    {
+        return Task.FromResult(true);
+    }
+
     public Task<bool> SaveProjectAsync(IProjectRoot root)
     {
         return Task.FromResult(true);

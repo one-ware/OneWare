@@ -22,8 +22,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     private readonly IImage _topEntityOverlay;
 
-    public UniversalFpgaProjectRoot(string projectFilePath, JsonObject properties)
-        : base(projectFilePath, properties)
+    public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
         _topEntityOverlay =
             Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib2019.DownloadOverlay16X") as IImage

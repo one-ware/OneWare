@@ -6,5 +6,7 @@ public interface IProjectManager
 
     public Task<IProjectRoot?> LoadProjectAsync(string path);
 
+    public Task ReloadProjectAsync(IProjectRoot project);
+
     public Task<bool> SaveProjectAsync(IProjectRoot root);
 }
