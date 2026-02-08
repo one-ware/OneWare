@@ -101,6 +101,7 @@
   </Folder>
   <Folder Name="/Extensions/LanguageSupport/">
     <Project Path="src/OneWare.Cpp/OneWare.Cpp.csproj" />
+    <Project Path="src/OneWare.CSharp/OneWare.CSharp.csproj" />
     <Project Path="src/OneWare.Json/OneWare.Json.csproj" />
     <Project Path="src/OneWare.Python/OneWare.Python.csproj" />
     <Project Path="src/OneWare.Toml/OneWare.Toml.csproj" />

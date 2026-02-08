@@ -35,6 +35,11 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     protected string? Arguments { get; set; }
     protected string? ExecutablePath { get; set; }
 
+    public virtual IReadOnlyCollection<KeyValuePair<string, string>> GetExtraEnvironmentVariables()
+    {
+        return new List<KeyValuePair<string, string>>();
+    }
+    
     public override async Task ActivateAsync()
     {
         if (IsActivated) return;
@@ -86,7 +91,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         {
             StdOutputRedirection = OutputRedirection.OutputPipe,
             StdInputRedirection = InputRedirection.InputPipe,
-            StdErrorRedirection = OutputRedirection.ErrorPipe
+            StdErrorRedirection = OutputRedirection.ErrorPipe,
+            ExtraEnvironmentVariables = GetExtraEnvironmentVariables()
         };
 
         //_process.ErrorDataReceived +=
