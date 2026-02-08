@@ -36,35 +36,35 @@ public class ProjectExplorerModule : OneWareModuleBase
                 DataContext = vm
             }));
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("File")
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("File")
         {
             Priority = -10,
             Header = "File"
         });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("File")
+            new MenuItemModel("File")
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
-                IconModel = new IconModel("VsImageLib.NewFileCollection16X")
+                Icon = new IconModel("VsImageLib.NewFileCollection16X")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemViewModel("File")
+            new MenuItemModel("File")
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.ImportFileDialogAsync()),
                 Priority = 10,
-                IconModel = new IconModel("VsImageLib.NewFileCollection16X")
+                Icon = new IconModel("VsImageLib.NewFileCollection16X")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Project Explorer")
+            new MenuItemModel("Project Explorer")
             {
                 Header = "Project Explorer",
                 Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>())),
-                IconModel = new IconModel(ProjectExplorerViewModel.IconKey)
+                Icon = new IconModel(ProjectExplorerViewModel.IconKey)
             });
     }
 }

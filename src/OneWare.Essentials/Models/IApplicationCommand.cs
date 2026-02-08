@@ -7,12 +7,14 @@ namespace OneWare.Essentials.Models;
 public interface IApplicationCommand
 {
     public string Name { get; }
+    
+    public string? Detail { get; }
 
     public KeyGesture? ActiveGesture { get; set; }
 
     public KeyGesture? DefaultGesture { get; }
 
-    public IImage? Icon { get; }
+    public IconModel? Icon { get; }
 
     public bool Execute(ILogical source);
 

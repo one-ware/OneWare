@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -47,7 +48,7 @@ public class HardwareInterfaceModel : ObservableObject
 
     public HardwareInterface Interface { get; }
 
-    public ObservableCollection<MenuItemViewModel> InterfaceMenu { get; } = new();
+    public ObservableCollection<MenuItemModel> InterfaceMenu { get; } = new();
 
     public ExtensionModel? ConnectedExtension
     {
@@ -87,7 +88,7 @@ public class HardwareInterfaceModel : ObservableObject
 
         if (ConnectedExtension != null)
         {
-            InterfaceMenu.Add(new MenuItemViewModel("Disconnect")
+            InterfaceMenu.Add(new MenuItemModel("Disconnect")
             {
                 Header = "Disconnect",
                 Command = new RelayCommand<IFpgaExtensionPackage?>(SetExtension),
@@ -100,7 +101,7 @@ public class HardwareInterfaceModel : ObservableObject
         {
             if (ext.Connector != Interface.Connector) continue;
 
-            InterfaceMenu.Add(new MenuItemViewModel($"Connect {ext.Name}")
+            InterfaceMenu.Add(new MenuItemModel($"Connect {ext.Name}")
             {
                 Header = $"Connect {ext.Name}",
                 Command = new RelayCommand<IFpgaExtensionPackage>(SetExtension),

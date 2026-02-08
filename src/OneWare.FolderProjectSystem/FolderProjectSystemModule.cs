@@ -34,12 +34,12 @@ public class FolderProjectSystemModule : OneWareModuleBase
             });
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("Folder")
+            new MenuItemModel("Folder")
             {
                 Header = "Folder",
                 Command = new RelayCommand(() =>
                     _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
-                IconModel = new IconModel("VsImageLib.OpenFolder16X")
+                Icon = new IconModel("VsImageLib.OpenFolder16X")
             });
     }
 }

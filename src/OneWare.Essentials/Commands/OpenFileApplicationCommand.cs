@@ -10,9 +10,14 @@ public class OpenFileApplicationCommand : ApplicationCommandBase
 {
     private readonly string _file;
 
-    public OpenFileApplicationCommand(string file) : base(file)
+    public OpenFileApplicationCommand(string file) : base(Path.GetFileNameWithoutExtension(file))
     {
         _file = file;
+        Icon = new IconModel()
+        {
+            IconObservable = ContainerLocator.Container.Resolve<IFileIconService>()
+                .GetFileIcon(Path.GetExtension(file))
+        };
     }
 
     public override bool Execute(ILogical source)

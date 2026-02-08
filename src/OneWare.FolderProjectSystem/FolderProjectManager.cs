@@ -38,8 +38,8 @@ public class FolderProjectManager : IProjectManager
         return Task.FromResult(true);
     }
 
-    public IEnumerable<MenuItemViewModel> ConstructContextMenu(IProjectEntry entry)
+    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
     {
-        return Array.Empty<MenuItemViewModel>();
+        return Array.Empty<MenuItemModel>();
     }
 }

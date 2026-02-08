@@ -28,11 +28,11 @@ public class OutputModule : OneWareModuleBase
 
         settingsService.Register("Output_Autoscroll", true);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Output")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Output")
         {
             Header = "Output",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IOutputService>())),
-            IconModel = new IconModel(OutputViewModel.IconKey)
+            Icon = new IconModel(OutputViewModel.IconKey)
         });
     }
 }

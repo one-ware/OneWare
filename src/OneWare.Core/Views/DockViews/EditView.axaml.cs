@@ -388,37 +388,37 @@ public partial class EditView : UserControl
 
             HoverBox.IsVisible = false;
 
-            contextMenuList.Add(new MenuItemViewModel("Cut")
+            contextMenuList.Add(new MenuItemModel("Cut")
             {
                 Header = "Cut",
-                IconModel = new IconModel("BoxIcons.RegularCut"),
+                Icon = new IconModel("BoxIcons.RegularCut"),
                 Command = new RelayCommand(CodeBox.Cut)
             });
-            contextMenuList.Add(new MenuItemViewModel("Copy")
+            contextMenuList.Add(new MenuItemModel("Copy")
             {
                 Header = "Copy",
-                IconModel = new IconModel("BoxIcons.RegularCopy"),
+                Icon = new IconModel("BoxIcons.RegularCopy"),
                 Command = new RelayCommand(CodeBox.Copy)
             });
-            contextMenuList.Add(new MenuItemViewModel("Paste")
+            contextMenuList.Add(new MenuItemModel("Paste")
             {
                 Header = "Paste",
-                IconModel = new IconModel("BoxIcons.RegularPaste"),
+                Icon = new IconModel("BoxIcons.RegularPaste"),
                 Command = new RelayCommand(CodeBox.Paste)
             });
             if (_typeAssistance != null)
             {
                 contextMenuList.Add(new Separator());
-                contextMenuList.Add(new MenuItemViewModel("Comment")
+                contextMenuList.Add(new MenuItemModel("Comment")
                 {
                     Header = "Comment",
-                    IconModel = new IconModel("VsImageLib.CommentCode16X"),
+                    Icon = new IconModel("VsImageLib.CommentCode16X"),
                     Command = new RelayCommand(_typeAssistance.Comment)
                 });
-                contextMenuList.Add(new MenuItemViewModel("Uncomment")
+                contextMenuList.Add(new MenuItemModel("Uncomment")
                 {
                     Header = "Uncomment",
-                    IconModel = new IconModel("VsImageLib.UncommentCode16X"),
+                    Icon = new IconModel("VsImageLib.UncommentCode16X"),
                     Command = new RelayCommand(_typeAssistance.Uncomment)
                 });
             }
@@ -431,10 +431,10 @@ public partial class EditView : UserControl
                     if (startLine > endLine) (startLine, endLine) = (endLine, startLine);
 
                     contextMenuList.Add(new Separator());
-                    contextMenuList.Add(new MenuItemViewModel("IndentSelection")
+                    contextMenuList.Add(new MenuItemModel("IndentSelection")
                     {
                         Header = "Auto-Indent Selection",
-                        IconModel = new IconModel("BoxIcons.RegularCode"),
+                        Icon = new IconModel("BoxIcons.RegularCode"),
                         Command = new RelayCommand(() => _typeAssistance.AutoIndent(startLine, endLine))
                     });
                 }

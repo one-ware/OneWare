@@ -3,6 +3,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Indentation;
 using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -74,9 +75,9 @@ public abstract class TypeAssistanceBase : ITypeAssistance
     {
     }
 
-    public virtual Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
+    public virtual Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
     {
-        return Task.FromResult<List<MenuItemViewModel>?>(null);
+        return Task.FromResult<List<MenuItemModel>?>(null);
     }
 
     public virtual Task<string?> GetHoverInfoAsync(int offset)
@@ -89,7 +90,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
         return Task.FromResult<Action?>(null);
     }
 
-    public virtual IEnumerable<MenuItemViewModel>? GetTypeAssistanceQuickOptions()
+    public virtual IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions()
     {
         return null;
     }

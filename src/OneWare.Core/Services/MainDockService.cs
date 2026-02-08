@@ -55,7 +55,7 @@ public class MainDockService : Factory, IMainDockService
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
-            new MenuItemViewModel("ResetLayout")
+            new MenuItemModel("ResetLayout")
             {
                 Header = "Reset Layout",
                 Command = new RelayCommand(ResetLayout)

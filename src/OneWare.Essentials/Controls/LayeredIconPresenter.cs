@@ -11,7 +11,6 @@ public class LayeredIconPresenter : Control
 {
     private IDisposable? _baseSubscription;
     private IImage? _currentBaseIcon;
-    private INotifyCollectionChanged? _currentOverlays;
 
     public static readonly StyledProperty<IconModel?> ValueProperty =
         AvaloniaProperty.Register<LayeredIconPresenter, IconModel?>(nameof(Value));
@@ -53,18 +52,8 @@ public class LayeredIconPresenter : Control
             _currentBaseIcon = model.Icon;
         }
 
-        // 3. Handle Overlays (Listen for Add/Remove)
-        if (model.IconOverlays != null)
-        {
-            _currentOverlays = model.IconOverlays;
-            _currentOverlays.CollectionChanged += OnOverlaysChanged;
-        }
-
         InvalidateVisual();
     }
-
-    private void OnOverlaysChanged(object? sender, NotifyCollectionChangedEventArgs e) 
-        => Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
 
     public override void Render(DrawingContext context)
     {
@@ -76,25 +65,12 @@ public class LayeredIconPresenter : Control
         {
             context.DrawImage(_currentBaseIcon, rect);
         }
-        
-        if (Value.IconOverlays != null)
-        {
-            foreach (var overlay in Value.IconOverlays)
-            {
-                context.DrawImage(overlay, rect);
-            }
-        }
     }
 
     private void Cleanup()
     {
         _baseSubscription?.Dispose();
         _baseSubscription = null;
-        if (_currentOverlays != null)
-        {
-            _currentOverlays.CollectionChanged -= OnOverlaysChanged;
-            _currentOverlays = null;
-        }
         _currentBaseIcon = null;
     }
 

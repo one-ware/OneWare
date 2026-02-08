@@ -1,23 +1,24 @@
 ﻿using Avalonia.LogicalTree;
 using DynamicData.Binding;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.Commands;
 
 public class MenuItemApplicationCommand : ApplicationCommandBase
 {
-    public MenuItemApplicationCommand(MenuItemViewModel menuItem, string path) : base($"{path}{menuItem.Header}")
+    public MenuItemApplicationCommand(MenuItemModel menuItem, string path) : base($"{path}{menuItem.Header}")
     {
         MenuItem = menuItem;
-        IconModel = menuItem.IconModel;
-        menuItem.WhenValueChanged(x => x.IconModel).Subscribe(x => IconModel = x);
+        Icon = menuItem.Icon;
+        menuItem.WhenValueChanged(x => x.Icon).Subscribe(x => Icon = x);
 
         DefaultGesture = menuItem.InputGesture;
 
         this.WhenValueChanged(x => x.ActiveGesture).Subscribe(x => { MenuItem.InputGesture = x; });
     }
 
-    public MenuItemViewModel MenuItem { get; }
+    public MenuItemModel MenuItem { get; }
 
     public override bool Execute(ILogical source)
     {

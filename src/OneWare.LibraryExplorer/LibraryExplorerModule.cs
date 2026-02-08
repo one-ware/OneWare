@@ -25,11 +25,11 @@ public class LibraryExplorerModule : OneWareModuleBase
         dockService.RegisterLayoutExtension<LibraryExplorerViewModel>(DockShowLocation.Left);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Library Explorer")
+            new MenuItemModel("Library Explorer")
             {
                 Header = "Library Explorer",
                 Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<LibraryExplorerViewModel>())),
-                IconModel = new IconModel(LibraryExplorerViewModel.IconKey)
+                Icon = new IconModel(LibraryExplorerViewModel.IconKey)
             });
     }
 }

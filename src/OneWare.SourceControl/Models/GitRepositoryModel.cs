@@ -62,7 +62,7 @@ public class GitRepositoryModel : ObservableObject
         set => SetProperty(ref _pushCommits, value);
     }
 
-    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
+    public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
 
     public void Refresh(SourceControlViewModel sourceControlViewModel)
     {
@@ -76,28 +76,28 @@ public class GitRepositoryModel : ObservableObject
         {
             HeadBranch = Repository.Head;
 
-            var branchesMenu = new List<MenuItemViewModel>();
+            var branchesMenu = new List<MenuItemModel>();
 
             foreach (var branch in Repository.Branches)
             {
-                var menuItem = new MenuItemViewModel("BranchName")
+                var menuItem = new MenuItemModel("BranchName")
                 {
                     Header = branch.FriendlyName,
                     Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch))
                 };
                 if (branch.IsCurrentRepositoryHead)
                 {
-                    menuItem.IconModel = new IconModel("PicolIcons.Accept");
+                    menuItem.Icon = new IconModel("PicolIcons.Accept");
                     menuItem.IsEnabled = false;
                 }
 
                 branchesMenu.Add(menuItem);
             }
 
-            branchesMenu.Add(new MenuItemViewModel("NewBranch")
+            branchesMenu.Add(new MenuItemModel("NewBranch")
             {
                 Header = "New Branch...",
-                IconModel = new IconModel("BoxIcons.RegularGitBranch"),
+                Icon = new IconModel("BoxIcons.RegularGitBranch"),
                 Command = sourceControlViewModel.CreateBranchDialogAsyncCommand
             });
 
@@ -107,7 +107,7 @@ public class GitRepositoryModel : ObservableObject
 
                     if (equal)
                     {
-                        a.IconModel = b.IconModel;
+                        a.Icon = b.Icon;
                         a.IsEnabled = b.IsEnabled;
                         a.Command = b.Command;
                         a.CommandParameter = b.CommandParameter;

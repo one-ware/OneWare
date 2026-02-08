@@ -238,26 +238,26 @@ public class App : Application
         var windowService = Services.Resolve<IWindowService>();
         var commandService = Services.Resolve<IApplicationCommandService>();
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Help")
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Help")
         {
             Header = "Help",
             Priority = 1000
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Code")
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Code")
         {
             Header = "Code",
             Priority = 100
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Changelog")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Changelog")
         {
             Header = "Changelog",
-            IconModel = new IconModel("VsImageLib2019.StatusUpdateGrey16X"),
+            Icon = new IconModel("VsImageLib2019.StatusUpdateGrey16X"),
             Command = new RelayCommand(() => windowService.Show(new ChangelogView
             {
                 DataContext = Services.Resolve<ChangelogViewModel>()
             }))
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("About")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("About")
         {
             Header = $"About {paths.AppName}",
             Command = new RelayCommand(() => windowService.Show(new AboutView
@@ -265,33 +265,33 @@ public class App : Application
                 DataContext = Services.Resolve<AboutViewModel>()
             }))
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemViewModel("Extras")
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
         {
             Header = "Extras",
             Priority = 900
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Settings")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Settings")
         {
             Header = "Settings",
-            IconModel = new IconModel("Material.SettingsOutline"),
+            Icon = new IconModel("Material.SettingsOutline"),
             Command = new AsyncRelayCommand(() => windowService.ShowDialogAsync(new ApplicationSettingsView
             {
                 DataContext = Services.Resolve<ApplicationSettingsViewModel>()
             }))
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Format")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Format")
         {
             Header = "Format",
-            IconModel = new IconModel("BoxIcons.RegularCode"),
+            Icon = new IconModel("BoxIcons.RegularCode"),
             Command = new RelayCommand(
                 () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.Format(),
                 () => Services.Resolve<IMainDockService>().CurrentDocument is EditViewModel),
             InputGesture = new KeyGesture(Key.Enter, KeyModifiers.Control | KeyModifiers.Alt)
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Comment Selection")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Comment Selection")
         {
             Header = "Comment Selection",
-            IconModel = new IconModel("VsImageLib.CommentCode16X"),
+            Icon = new IconModel("VsImageLib.CommentCode16X"),
             Command = new RelayCommand(
                 () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance
                     ?.Comment(),
@@ -301,10 +301,10 @@ public class App : Application
                 }),
             InputGesture = new KeyGesture(Key.K, KeyModifiers.Control | KeyModifiers.Shift)
         });
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemViewModel("Uncomment Selection")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Code", new MenuItemModel("Uncomment Selection")
         {
             Header = "Uncomment Selection",
-            IconModel = new IconModel("VsImageLib.UncommentCode16X"),
+            Icon = new IconModel("VsImageLib.UncommentCode16X"),
             Command = new RelayCommand(
                 () => (Services.Resolve<IMainDockService>().CurrentDocument as EditViewModel)?.TypeAssistance
                     ?.Uncomment(),
@@ -315,17 +315,17 @@ public class App : Application
             InputGesture = new KeyGesture(Key.L, KeyModifiers.Control | KeyModifiers.Shift)
         });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("Save")
         {
             Command = new AsyncRelayCommand(
                 () => Services.Resolve<IMainDockService>().CurrentDocument!.SaveAsync(),
                 () => Services.Resolve<IMainDockService>().CurrentDocument is not null),
             Header = "Save Current",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey),
-            IconModel = new IconModel("VsImageLib.Save16XMd")
+            Icon = new IconModel("VsImageLib.Save16XMd")
         });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemViewModel("Save All")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("Save All")
         {
             Command = new RelayCommand(() =>
             {
@@ -333,7 +333,7 @@ public class App : Application
             }),
             Header = "Save All",
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
-            IconModel = new IconModel("VsImageLib.SaveAll16X")
+            Icon = new IconModel("VsImageLib.SaveAll16X")
         });
 
         var applicationCommandService = Services.Resolve<IApplicationCommandService>();

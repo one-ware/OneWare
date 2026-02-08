@@ -57,16 +57,16 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemViewModel("FpgaProject")
+            new MenuItemModel("FpgaProject")
             {
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
                 Priority = 1,
-                IconModel = new IconModel("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("FpgaProject")
+            new MenuItemModel("FpgaProject")
             {
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => serviceProvider.Resolve<IProjectExplorerService>()
@@ -76,28 +76,28 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
-                IconModel = new IconModel("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         var toolBarViewModel = serviceProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu",
-            new MenuItemViewModel("FPGA")
+            new MenuItemModel("FPGA")
             {
                 Header = "FPGA",
                 Priority = 200
             });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemViewModel("Download")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemModel("Download")
         {
             Header = "Download",
             Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-            IconModel = new IconModel("VsImageLib.Download16X")
-        }, new MenuItemViewModel("Compile")
+            Icon = new IconModel("VsImageLib.Download16X")
+        }, new MenuItemModel("Compile")
         {
             Header = "Compile",
             Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-            IconModel = new IconModel("CreateIcon")
+            Icon = new IconModel("CreateIcon")
         });
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",

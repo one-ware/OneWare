@@ -43,7 +43,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         set => SetProperty(ref field, value);
     } = 1f;
 
-    public IconModel? IconModel
+    public IconModel? Icon
     {
         get;
         protected set => SetProperty(ref field, value);

@@ -64,13 +64,13 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     public void ConstructContextMenu(TopLevel topLevel)
     {
-        var menuItems = new List<MenuItemViewModel>();
+        var menuItems = new List<MenuItemModel>();
 
         if (SelectedItems is [{ } item])
             switch (item)
             {
                 case IProjectFile file:
-                    menuItems.Add(new MenuItemViewModel("Open")
+                    menuItems.Add(new MenuItemModel("Open")
                     {
                         Header = "Open",
                         Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
@@ -80,7 +80,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
         if (SelectedItems.Count > 0)
         {
-            menuItems.Add(new MenuItemViewModel("Copy to Project")
+            menuItems.Add(new MenuItemModel("Copy to Project")
             {
                 Header = "Copy to Active Project",
                 Command = new AsyncRelayCommand(() => CopyLibraryAsync(SelectedItems.Cast<IProjectEntry>()
@@ -89,12 +89,12 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         }
         else
         {
-            menuItems.Add(new MenuItemViewModel("Refresh")
+            menuItems.Add(new MenuItemModel("Refresh")
             {
                 Header = "Refresh",
                 Command = new AsyncRelayCommand(async () => await LoadAsync())
             });
-            menuItems.Add(new MenuItemViewModel("Open Library Folder")
+            menuItems.Add(new MenuItemModel("Open Library Folder")
             {
                 Header = "Open Library Folder",
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))

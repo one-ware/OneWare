@@ -21,6 +21,4 @@ public class IconModel
     public IImage? Icon { get; init; }
     
     public IObservable<IImage?>? IconObservable { get; init; }
-    
-    public ObservableCollection<IImage>? IconOverlays { get; init; }
 }

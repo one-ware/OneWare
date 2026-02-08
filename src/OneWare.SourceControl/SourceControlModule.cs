@@ -59,11 +59,11 @@ public class SourceControlModule : OneWareModuleBase
         var dockService = serviceProvider.Resolve<IMainDockService>();
         dockService.RegisterLayoutExtension<SourceControlViewModel>(DockShowLocation.Left);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SourceControl")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SourceControl")
         {
             Header = "Source Control",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<SourceControlViewModel>())),
-            IconModel = new IconModel(SourceControlViewModel.IconKey)
+            Icon = new IconModel(SourceControlViewModel.IconKey)
         });
 
         if (serviceProvider.Resolve<SourceControlViewModel>() is not { } vm) return;

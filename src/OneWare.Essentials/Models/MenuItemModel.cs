@@ -1,14 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Avalonia.Input;
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OneWare.Essentials.Models;
+using OneWare.Essentials.ViewModels;
 
-namespace OneWare.Essentials.ViewModels;
+namespace OneWare.Essentials.Models;
 
-public class MenuItemViewModel(string partId)
-    : ObservableObject, ICanHaveObservableItems<MenuItemViewModel>
+public class MenuItemModel(string partId)
+    : ObservableObject, ICanHaveObservableItems<MenuItemModel>
 {
     public string PartId { get; } = partId;
     public int Priority { get; init; }
@@ -37,7 +36,7 @@ public class MenuItemViewModel(string partId)
         set => SetProperty(ref field, value);
     }
 
-    public IconModel? IconModel
+    public IconModel? Icon
     {
         get;
         set => SetProperty(ref field, value);
@@ -49,7 +48,7 @@ public class MenuItemViewModel(string partId)
         set => SetProperty(ref field, value);
     }
 
-    public ObservableCollection<MenuItemViewModel>? Items
+    public ObservableCollection<MenuItemModel>? Items
     {
         get;
         set => SetProperty(ref field, value);

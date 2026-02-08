@@ -76,7 +76,7 @@
                         </Interaction.Behaviors>
 
                         <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
-                                                       Value="{Binding IconModel}" Height="16" Width="16" />
+                                                       Value="{Binding Icon}" Height="16" Width="16" />
 
                         <TextBlock Grid.Column="1"
                                    VerticalAlignment="Center"

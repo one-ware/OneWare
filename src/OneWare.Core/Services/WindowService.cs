@@ -17,7 +17,7 @@ namespace OneWare.Core.Services;
 
 public class WindowService : IWindowService
 {
-    private readonly Dictionary<string, ObservableCollection<MenuItemViewModel>> _menuItems = new();
+    private readonly Dictionary<string, ObservableCollection<MenuItemModel>> _menuItems = new();
     private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _uiExtensions = new();
 
     public void RegisterUiExtension(string key, OneWareUiExtension extension)
@@ -32,7 +32,7 @@ public class WindowService : IWindowService
         return _uiExtensions[key];
     }
 
-    public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems)
+    public void RegisterMenuItem(string key, params MenuItemModel[] menuItems)
     {
         var parts = key.Split('/');
         _menuItems.TryAdd(parts[0], []);
@@ -42,13 +42,13 @@ public class WindowService : IWindowService
             foreach (var part in parts.Skip(1))
                 if (activeCollection.FirstOrDefault(x => x.PartId == part) is { } mi)
                 {
-                    activeCollection = mi.Items ?? new ObservableCollection<MenuItemViewModel>();
+                    activeCollection = mi.Items ?? new ObservableCollection<MenuItemModel>();
                     mi.Items = activeCollection;
                 }
                 else
                 {
-                    var newItems = new ObservableCollection<MenuItemViewModel>();
-                    var newPart = new MenuItemViewModel(part)
+                    var newItems = new ObservableCollection<MenuItemModel>();
+                    var newPart = new MenuItemModel(part)
                     {
                         Header = part,
                         Items = newItems
@@ -74,7 +74,7 @@ public class WindowService : IWindowService
             {
                 activeCollection.Remove(duplicate);
 
-                var newList = new ObservableCollection<MenuItemViewModel>();
+                var newList = new ObservableCollection<MenuItemModel>();
                 if (duplicate.Items != null) Insert(newList, duplicate.Items.ToArray());
                 if (a.Items != null) Insert(newList, a.Items.ToArray());
                 a.Items = newList;
@@ -84,9 +84,9 @@ public class WindowService : IWindowService
         }
     }
 
-    public ObservableCollection<MenuItemViewModel> GetMenuItems(string key)
+    public ObservableCollection<MenuItemModel> GetMenuItems(string key)
     {
-        _menuItems.TryAdd(key, new ObservableCollection<MenuItemViewModel>());
+        _menuItems.TryAdd(key, new ObservableCollection<MenuItemModel>());
         return _menuItems[key];
     }
 
@@ -340,7 +340,7 @@ public class WindowService : IWindowService
         ContainerLocator.Container.Resolve<MainWindow>().Activate();
     }
 
-    private static void Insert(IList<MenuItemViewModel> collection, params MenuItemViewModel[] items)
+    private static void Insert(IList<MenuItemModel> collection, params MenuItemModel[] items)
     {
         foreach (var item in items)
         {

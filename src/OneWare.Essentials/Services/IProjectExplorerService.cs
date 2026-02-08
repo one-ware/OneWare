@@ -33,7 +33,7 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);
     public void RegisterConstructContextMenu(
-        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct);
+        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemModel>> construct);
     public void ClearSelection();
     public void AddToSelection(IProjectExplorerNode node);
     public IEnumerable<string> LoadRecentProjects();

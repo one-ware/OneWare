@@ -108,31 +108,31 @@ public class UniversalFpgaProjectManager : IProjectManager
         });
     }
 
-    private void ConstructContextMenu(IReadOnlyList<IProjectExplorerNode> selected, IList<MenuItemViewModel> menuItems)
+    private void ConstructContextMenu(IReadOnlyList<IProjectExplorerNode> selected, IList<MenuItemModel> menuItems)
     {
         if (selected.Count == 1)
             switch (selected.First())
             {
                 case UniversalFpgaProjectRoot root:
-                    menuItems.Add(new MenuItemViewModel("Save")
+                    menuItems.Add(new MenuItemModel("Save")
                     {
                         Header = "Save",
                         Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
-                        IconModel = new IconModel("VsImageLib.Save16XMd")
+                        Icon = new IconModel("VsImageLib.Save16XMd")
                     });
-                    menuItems.Add(new MenuItemViewModel("Reload")
+                    menuItems.Add(new MenuItemModel("Reload")
                     {
                         Header = "Reload",
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadProjectAsync(root)),
-                        IconModel = new IconModel("VsImageLib.RefreshGrey16X")
+                        Icon = new IconModel("VsImageLib.RefreshGrey16X")
                     });
-                    menuItems.Add(new MenuItemViewModel("ProjectSettings")
+                    menuItems.Add(new MenuItemModel("ProjectSettings")
                     {
                         Header = "Project Settings",
                         Command = new RelayCommand(() => _ = OpenProjectSettingsDialogAsync(root)),
-                        IconModel = new IconModel("Material.SettingsOutline")
+                        Icon = new IconModel("Material.SettingsOutline")
                     });
-                    menuItems.Add(new MenuItemViewModel("Edit")
+                    menuItems.Add(new MenuItemModel("Edit")
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
@@ -144,7 +144,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                     {
                         //Set Top
                         if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
-                            menuItems.Add(new MenuItemViewModel("Unset Top Entity")
+                            menuItems.Add(new MenuItemModel("Unset Top Entity")
                             {
                                 Header = "Unset Top Entity",
                                 Command = new RelayCommand(() =>
@@ -154,7 +154,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 })
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("Set Top Entity")
+                            menuItems.Add(new MenuItemModel("Set Top Entity")
                             {
                                 Header = "Set Top Entity",
                                 Command = new RelayCommand(() =>
@@ -166,7 +166,7 @@ public class UniversalFpgaProjectManager : IProjectManager
 
                         //Exclude from compile
                         if (!universalFpgaProjectRoot.IsCompileExcluded(file.RelativePath))
-                            menuItems.Add(new MenuItemViewModel("ExcludeCompilation")
+                            menuItems.Add(new MenuItemModel("ExcludeCompilation")
                             {
                                 Header = "Exclude from compile",
                                 Command = new RelayCommand(() =>
@@ -176,7 +176,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 })
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("IncludeCompilation")
+                            menuItems.Add(new MenuItemModel("IncludeCompilation")
                             {
                                 Header = "Include into compile",
                                 Command = new RelayCommand(() =>
@@ -188,7 +188,7 @@ public class UniversalFpgaProjectManager : IProjectManager
 
                         //Testbenches
                         if (!universalFpgaProjectRoot.IsTestBench(file.RelativePath))
-                            menuItems.Add(new MenuItemViewModel("MarkTestBench")
+                            menuItems.Add(new MenuItemModel("MarkTestBench")
                             {
                                 Header = "Mark as TestBench",
                                 Command = new RelayCommand(() =>
@@ -196,10 +196,10 @@ public class UniversalFpgaProjectManager : IProjectManager
                                     universalFpgaProjectRoot.AddTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconModel = new IconModel("VSImageLib.AddTest_16x")
+                                Icon = new IconModel("VSImageLib.AddTest_16x")
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("UnmarkTestBench")
+                            menuItems.Add(new MenuItemModel("UnmarkTestBench")
                             {
                                 Header = "Unmark as TestBench",
                                 Command = new RelayCommand(() =>
@@ -207,7 +207,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                                     universalFpgaProjectRoot.RemoveTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconModel = new IconModel("VSImageLib.RemoveSingleDriverTest_16x")
+                                Icon = new IconModel("VSImageLib.RemoveSingleDriverTest_16x")
                             });
                     }
 

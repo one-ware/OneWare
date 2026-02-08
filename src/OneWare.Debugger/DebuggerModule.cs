@@ -22,12 +22,12 @@ public class DebuggerModule : OneWareModuleBase
         var dockService = serviceProvider.Resolve<IMainDockService>();
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Debugger")
+            new MenuItemModel("Debugger")
             {
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
-                IconModel = new IconModel(DebuggerViewModel.IconKey)
+                Icon = new IconModel(DebuggerViewModel.IconKey)
             });
     }
 }

@@ -38,11 +38,11 @@ public class ErrorListModule : OneWareModuleBase
             });
         settingsService.Register(KeyErrorListVisibleSource, 0);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Problems")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Problems")
         {
             Header = "Problems",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IErrorService>())),
-            IconModel = new IconModel(ErrorListViewModel.IconKey)
+            Icon = new IconModel(ErrorListViewModel.IconKey)
         });
     }
 }

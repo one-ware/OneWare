@@ -277,12 +277,12 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         
         if (isExpanded)
         {
-            if(this is not IProjectRootWithFile) IconModel = DefaultFolderOpenIconModel;
+            if(this is not IProjectRootWithFile) Icon = DefaultFolderOpenIconModel;
             _ = LoadContentAsync();
         }
         else
         {
-            if(this is not IProjectRootWithFile) IconModel = DefaultFolderClosedIconModel;
+            if(this is not IProjectRootWithFile) Icon = DefaultFolderClosedIconModel;
             
             CancelLoad();
 

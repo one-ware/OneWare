@@ -8,11 +8,12 @@ namespace OneWare.Essentials.Commands;
 public class DummyApplicationCommand : IApplicationCommand
 {
     public string Name { get; } = "";
+    public string? Detail { get; } = null;
 
     public KeyGesture? ActiveGesture { get; set; } = null;
     public KeyGesture? DefaultGesture { get; } = null;
 
-    public IImage? Icon { get; } = null;
+    public IconModel? Icon { get; } = null;
 
     public bool Execute(ILogical source)
     {

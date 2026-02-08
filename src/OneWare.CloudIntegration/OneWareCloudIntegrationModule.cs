@@ -54,10 +54,10 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
                 }));
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/Help",
-            new MenuItemViewModel("Feedback")
+            new MenuItemModel("Feedback")
             {
                 Header = "Send Feedback",
-                IconModel = new IconModel("Unicons.CommentMessage"),
+                Icon = new IconModel("Unicons.CommentMessage"),
                 Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
             });
     }

@@ -23,7 +23,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     {
         ProjectFilePath = projectFilePath;
 
-        IconModel = new IconModel("UniversalProject");
+        Icon = new IconModel("UniversalProject");
     }
 
     public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;

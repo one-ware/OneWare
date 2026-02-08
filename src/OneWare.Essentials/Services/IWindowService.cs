@@ -13,8 +13,8 @@ public interface IWindowService
 {
     public void RegisterUiExtension(string key, OneWareUiExtension extension);
     public ObservableCollection<OneWareUiExtension> GetUiExtensions(string key);
-    public void RegisterMenuItem(string key, params MenuItemViewModel[] menuItems);
-    public ObservableCollection<MenuItemViewModel> GetMenuItems(string key);
+    public void RegisterMenuItem(string key, params MenuItemModel[] menuItems);
+    public ObservableCollection<MenuItemModel> GetMenuItems(string key);
     public void Show(FlexibleWindow window, Window? owner = null);
     public Task ShowDialogAsync(FlexibleWindow window, Window? owner = null);
     public Task<MessageBoxResult> ShowMessageBoxAsync(MessageBoxRequest request, Window? owner = null);

@@ -34,7 +34,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     private readonly int _recentProjectsCapacity = 4;
     private readonly string _recentProjectsFile;
 
-    private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>>> _registerContextMenu =
+    private readonly List<Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemModel>>> _registerContextMenu =
         new();
 
     private readonly ISettingsService _settingsService;
@@ -202,14 +202,14 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public void ConstructContextMenu(TopLevel topLevel)
     {
-        var menuItems = new List<MenuItemViewModel>();
+        var menuItems = new List<MenuItemModel>();
 
         if (SelectedItems is [{ } item])
         {
             switch (item)
             {
                 case IProjectFile file:
-                    menuItems.Add(new MenuItemViewModel("Open")
+                    menuItems.Add(new MenuItemModel("Open")
                     {
                         Header = "Open",
                         Command = new AsyncRelayCommand(() => _mainDockService.OpenFileAsync(file.FullPath))
@@ -218,41 +218,41 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                 case IProjectFolder folder:
 
                     if (folder is IProjectRoot { IsActive: false } inactiveRoot)
-                        menuItems.Add(new MenuItemViewModel("SetActive")
+                        menuItems.Add(new MenuItemModel("SetActive")
                         {
                             Header = "Set as Active Project",
                             Command = new RelayCommand(() => ActiveProject = inactiveRoot),
-                            IconModel = new IconModel("VsCodeLight.Debug-Start")
+                            Icon = new IconModel("VsCodeLight.Debug-Start")
                         });
 
-                    menuItems.Add(new MenuItemViewModel("Add")
+                    menuItems.Add(new MenuItemModel("Add")
                     {
                         Header = "Add",
-                        Items = new ObservableCollection<MenuItemViewModel>
+                        Items = new ObservableCollection<MenuItemModel>
                         {
                             new("NewFolder")
                             {
                                 Header = "New Folder",
                                 Command = new RelayCommand(() => _ = CreateFolderDialogAsync(folder)),
-                                IconModel = new IconModel("VsImageLib.OpenFolder16X")
+                                Icon = new IconModel("VsImageLib.OpenFolder16X")
                             },
                             new("NewFile")
                             {
                                 Header = "New File",
                                 Command = new RelayCommand(() => _ = CreateFileDialogAsync(folder)),
-                                IconModel = new IconModel("VsImageLib.NewFile16X")
+                                Icon = new IconModel("VsImageLib.NewFile16X")
                             },
                             new("ExistingFolder")
                             {
                                 Header = "Import Folder",
                                 Command = new RelayCommand(() => _ = ImportFolderDialogAsync(folder)),
-                                IconModel = new IconModel("VsImageLib.Folder16X")
+                                Icon = new IconModel("VsImageLib.Folder16X")
                             },
                             new("ExistingFile")
                             {
                                 Header = "Import File",
                                 Command = new RelayCommand(() => _ = ImportFileDialogAsync(folder)),
-                                IconModel = new IconModel("VsImageLib.File16X")
+                                Icon = new IconModel("VsImageLib.File16X")
                             }
                         }
                     });
@@ -262,7 +262,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             foreach (var reg in _registerContextMenu) reg.Invoke(SelectedItems, menuItems);
 
             if (item is IProjectRoot root)
-                menuItems.Add(new MenuItemViewModel("Close")
+                menuItems.Add(new MenuItemModel("Close")
                 {
                     Header = "Close",
                     Command = new AsyncRelayCommand(() => TryCloseProjectAsync(root))
@@ -271,10 +271,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             if (item is IProjectEntry entry)
             {
                 if (item is not IProjectRoot)
-                    menuItems.Add(new MenuItemViewModel("Edit")
+                    menuItems.Add(new MenuItemModel("Edit")
                     {
                         Header = "Edit",
-                        Items = new ObservableCollection<MenuItemViewModel>
+                        Items = new ObservableCollection<MenuItemModel>
                         {
                             // new MenuItemModel("Cut")
                             // {
@@ -286,46 +286,46 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                             {
                                 Header = "Copy",
                                 Command = new RelayCommand(() => _ = CopyAsync(topLevel)),
-                                IconModel = new IconModel("BoxIcons.RegularCopy"),
+                                Icon = new IconModel("BoxIcons.RegularCopy"),
                                 InputGesture = new KeyGesture(Key.C, KeyModifiers.Control)
                             },
                             new("Paste")
                             {
                                 Header = "Paste",
                                 Command = new RelayCommand(() => _ = PasteAsync(topLevel)),
-                                IconModel = new IconModel("BoxIcons.RegularPaste"),
+                                Icon = new IconModel("BoxIcons.RegularPaste"),
                                 InputGesture = new KeyGesture(Key.V, KeyModifiers.Control)
                             },
                             new("Delete")
                             {
                                 Header = "Delete",
                                 Command = new RelayCommand(() => _ = DeleteDialogAsync(entry)),
-                                IconModel = new IconModel("MaterialDesign.DeleteForever")
+                                Icon = new IconModel("MaterialDesign.DeleteForever")
                             },
                             new("Rename")
                             {
                                 Header = "Rename",
                                 Command = new RelayCommand(() => _ = RenameDialogAsync(entry)),
-                                IconModel = new IconModel("VsImageLib.Rename16X")
+                                Icon = new IconModel("VsImageLib.Rename16X")
                             }
                         }
                     });
 
-                menuItems.Add(new MenuItemViewModel("OpenFileViewer")
+                menuItems.Add(new MenuItemModel("OpenFileViewer")
                 {
                     Header = "Open in File Manager",
                     Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
-                    IconModel = new IconModel("VsImageLib.OpenFolder16Xc")
+                    Icon = new IconModel("VsImageLib.OpenFolder16Xc")
                 });
             }
         }
         else if (SelectedItems.Count > 1)
         {
             if (SelectedItems.All(x => x is IProjectEntry and not IProjectRoot))
-                menuItems.Add(new MenuItemViewModel("Edit")
+                menuItems.Add(new MenuItemModel("Edit")
                 {
                     Header = "Edit",
-                    Items = new ObservableCollection<MenuItemViewModel>
+                    Items = new ObservableCollection<MenuItemModel>
                     {
                         // new MenuItemModel("Cut")
                         // {
@@ -338,7 +338,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                             Header = "Delete",
                             Command = new RelayCommand(() =>
                                 _ = DeleteDialogAsync(SelectedItems.Cast<IProjectEntry>().ToArray())),
-                            IconModel = new IconModel("MaterialDesign.DeleteForever")
+                            Icon = new IconModel("MaterialDesign.DeleteForever")
                         }
                     }
                 });
@@ -833,7 +833,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     }
 
     public void RegisterConstructContextMenu(
-        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct)
+        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemModel>> construct)
     {
         _registerContextMenu.Add(construct);
     }

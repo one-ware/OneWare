@@ -30,11 +30,11 @@ public class SerialMonitorModule : OneWareModuleBase
 
         dockService.RegisterLayoutExtension<ISerialMonitorService>(DockShowLocation.Bottom);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("SerialMonitor")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SerialMonitor")
         {
             Header = "Serial Monitor",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<ISerialMonitorService>())),
-            IconModel = new IconModel(SerialMonitorViewModel.IconKey)
+            Icon = new IconModel(SerialMonitorViewModel.IconKey)
         });
     }
 }

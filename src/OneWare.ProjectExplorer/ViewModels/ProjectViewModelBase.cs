@@ -16,7 +16,7 @@ namespace OneWare.ProjectExplorer.ViewModels;
 public abstract class ProjectViewModelBase : ExtendedTool
 {
     private string _searchString = "";
-    private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
+    private IEnumerable<MenuItemModel>? _treeViewContextMenu;
 
     public ProjectViewModelBase(string iconKey) : base(iconKey)
     {
@@ -34,7 +34,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         SelectedItems = Source.RowSelection.SelectedItems!;
     }
 
-    public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
+    public IEnumerable<MenuItemModel>? TreeViewContextMenu
     {
         get => _treeViewContextMenu;
         set => SetProperty(ref _treeViewContextMenu, value);

@@ -9,7 +9,7 @@ namespace OneWare.Essentials.Models;
 /// </summary>
 public interface IProjectExplorerNode : INotifyPropertyChanged
 {
-    public IconModel? IconModel { get; }
+    public IconModel? Icon { get; }
     
     public string Header { get; }
 

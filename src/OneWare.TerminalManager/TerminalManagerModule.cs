@@ -23,13 +23,13 @@ public class TerminalManagerModule : OneWareModuleBase
         serviceProvider.Resolve<IMainDockService>()
             .RegisterLayoutExtension<ITerminalManagerService>(DockShowLocation.Bottom);
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Terminal")
+            new MenuItemModel("Terminal")
             {
                 Header = "Terminal",
                 Command = new RelayCommand(() =>
                     serviceProvider.Resolve<IMainDockService>()
                         .Show(serviceProvider.Resolve<ITerminalManagerService>())),
-                IconModel = new IconModel(TerminalManagerViewModel.IconKey)
+                Icon = new IconModel(TerminalManagerViewModel.IconKey)
             });
     }
 }

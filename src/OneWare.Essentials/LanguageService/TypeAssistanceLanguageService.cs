@@ -89,9 +89,9 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         return string.IsNullOrWhiteSpace(info) ? null : info;
     }
 
-    public override async Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
+    public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
     {
-        var menuItems = new List<MenuItemViewModel>();
+        var menuItems = new List<MenuItemModel>();
         if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
         var location = CodeBox.Document.GetLocation(offset);
         var pos = CodeBox.Document.GetPositionFromOffset(offset);
@@ -109,19 +109,19 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
             if (codeactions is not null && IsOpen)
             {
-                var quickfixes = new ObservableCollection<MenuItemViewModel>();
+                var quickfixes = new ObservableCollection<MenuItemModel>();
                 foreach (var ca in codeactions)
                     if (ca.IsCodeAction && ca.CodeAction != null)
                     {
                         if (ca.CodeAction.Command != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new RelayCommand<Command>(ExecuteCommand),
                                 CommandParameter = ca.CodeAction.Command
                             });
                         else if (ca.CodeAction.Edit != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
@@ -130,7 +130,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                     }
 
                 if (quickfixes.Count > 0)
-                    menuItems.Add(new MenuItemViewModel("Quick fix")
+                    menuItems.Add(new MenuItemModel("Quick fix")
                     {
                         Header = "Quick fix...",
                         Items = quickfixes
@@ -141,12 +141,12 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         //Refactorings
         var prepareRefactor = await Service.PrepareRenameAsync(CurrentFilePath, pos);
         if (prepareRefactor != null)
-            menuItems.Add(new MenuItemViewModel("Rename")
+            menuItems.Add(new MenuItemModel("Rename")
             {
                 Header = "Rename...",
                 Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
                 CommandParameter = prepareRefactor,
-                IconModel = new IconModel("VsImageLib.Rename16X")
+                Icon = new IconModel("VsImageLib.Rename16X")
             });
 
         var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
@@ -154,14 +154,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (definition != null && IsOpen)
             foreach (var i in definition)
                 if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
+                    menuItems.Add(new MenuItemModel("GoToDefinition")
                     {
                         Header = "Go to Definition",
                         Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                         CommandParameter = i.Location
                     });
                 else
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
+                    menuItems.Add(new MenuItemModel("GoToDefinition")
                     {
                         Header = "Go to Definition",
                         Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -172,14 +172,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (declaration != null && IsOpen)
             foreach (var i in declaration)
                 if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDeclaration")
+                    menuItems.Add(new MenuItemModel("GoToDeclaration")
                     {
                         Header = "Go to Declaration",
                         Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                         CommandParameter = i.Location
                     });
                 else
-                    menuItems.Add(new MenuItemViewModel("GoToDeclaration")
+                    menuItems.Add(new MenuItemModel("GoToDeclaration")
                     {
                         Header = "Go to Declaration",
                         Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -190,14 +190,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (implementation != null && IsOpen)
             foreach (var i in implementation)
                 if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToImplementation")
+                    menuItems.Add(new MenuItemModel("GoToImplementation")
                     {
                         Header = "Go to Implementation",
                         Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                         CommandParameter = i.Location
                     });
                 else
-                    menuItems.Add(new MenuItemViewModel("GoToImplementation")
+                    menuItems.Add(new MenuItemModel("GoToImplementation")
                     {
                         Header = "Go to Implementation",
                         Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -208,14 +208,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (typeDefinition != null && IsOpen)
             foreach (var i in typeDefinition)
                 if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
+                    menuItems.Add(new MenuItemModel("GoToDefinition")
                     {
                         Header = "Go to Type Definition",
                         Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
                         CommandParameter = i.Location
                     });
                 else
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
+                    menuItems.Add(new MenuItemModel("GoToDefinition")
                     {
                         Header = "Go to Type Definition",
                         Command = new RelayCommand<LocationLink>(GoToLocation),
@@ -602,15 +602,15 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         return Task.FromResult(new List<CompletionData>());
     }
 
-    public override IEnumerable<MenuItemViewModel> GetTypeAssistanceQuickOptions()
+    public override IEnumerable<MenuItemModel> GetTypeAssistanceQuickOptions()
     {
-        return new List<MenuItemViewModel>
+        return new List<MenuItemModel>
         {
             new("RestartLs")
             {
                 Header = "Restart Language Server",
                 Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                IconModel = new IconModel("VsImageLib.RefreshGrey16X")
+                Icon = new IconModel("VsImageLib.RefreshGrey16X")
             }
         };
     }

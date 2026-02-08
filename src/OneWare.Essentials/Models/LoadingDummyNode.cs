@@ -8,7 +8,7 @@ public class LoadingDummyNode : IProjectExplorerNode
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public IconModel? IconModel { get; } = null;
+    public IconModel? Icon { get; } = null;
     
     public string Header => "Loading...";
     public IProjectExplorerNode? Parent { get; } = null;

@@ -23,7 +23,7 @@ public class SearchListModule : OneWareModuleBase
         var windowService = serviceProvider.Resolve<IWindowService>();
         var dockService = serviceProvider.Resolve<IMainDockService>();
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Search")
         {
             Header = "Search",
             Command = new RelayCommand(() =>
@@ -32,7 +32,7 @@ public class SearchListModule : OneWareModuleBase
                 vm.SearchString = string.Empty;
                 dockService.Show(vm);
             }),
-            IconModel = new IconModel(SearchListViewModel.IconKey),
+            Icon = new IconModel(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }

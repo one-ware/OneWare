@@ -502,14 +502,14 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
         {
             if (x is [IProjectFile { Extension: ".v" } verilog])
-                l.Add(new MenuItemViewModel("YosysNetList")
+                l.Add(new MenuItemModel("YosysNetList")
                 {
                     Header = "Generate Json Netlist",
                     Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
                 });
             if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting)))
-                l.Add(new MenuItemViewModel("GtkWaveOpen")
+                l.Add(new MenuItemModel("GtkWaveOpen")
                 {
                     Header = "Open with GTKWave",
                     Command = new AsyncRelayCommand(async () =>
@@ -521,7 +521,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 {
                     if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath)
                     {
-                        l.Add(new MenuItemViewModel("pcf")
+                        l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
                             Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
@@ -529,7 +529,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                     }
                     else
                     {
-                        l.Add(new MenuItemViewModel("pcf")
+                        l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
                             Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),

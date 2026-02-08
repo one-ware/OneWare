@@ -99,23 +99,23 @@ public class SourceControlViewModel : ExtendedTool
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Sync", SyncAsyncCommand)
         {
-            IconModel = new IconModel("VsImageLib.RefreshGrey16X")
+            Icon = new IconModel("VsImageLib.RefreshGrey16X")
         });
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Pull", PullAsyncCommand)
         {
-            IconModel = new IconModel("Entypo+.ArrowLongDownWhite")
+            Icon = new IconModel("Entypo+.ArrowLongDownWhite")
         });
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Push", PushAsyncCommand)
         {
-            IconModel = new IconModel("Entypo+.ArrowLongUpWhite")
+            Icon = new IconModel("Entypo+.ArrowLongUpWhite")
         });
 
         applicationCommandService.RegisterCommand(
             new CommandApplicationCommand("GIT Create Branch", CreateBranchDialogAsyncCommand)
             {
-                IconModel = new IconModel("BoxIcons.RegularGitBranch")
+                Icon = new IconModel("BoxIcons.RegularGitBranch")
             });
     }
 
