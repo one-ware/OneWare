@@ -16,7 +16,11 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public void AddProject(IProjectRoot project);
     public Task TryCloseProjectAsync(IProjectRoot project);
     public IProjectRoot? GetRootFromFile(string filePath);
-    public IProjectEntry? GetEntry(string relativePath);
+    
+    /// <summary>
+    /// Shows or constructs the file (if included in the project)
+    /// Should not be used except for Show file in Explorer scenarios
+    /// </summary>
     public IProjectEntry? GetEntryFromFullPath(string path);
     public Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager);
     public Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters);

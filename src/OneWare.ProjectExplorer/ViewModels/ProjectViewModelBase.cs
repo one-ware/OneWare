@@ -151,26 +151,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
             select project).FirstOrDefault();
     }
 
-    public IProjectEntry? GetEntry(string relativePath)
-    {
-        if (string.IsNullOrWhiteSpace(relativePath))
-            return null;
-
-        relativePath = relativePath.Replace('\\', '/');
-
-        var parts = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-            return null;
-
-        var projectRootName = parts[0];
-
-        var project = Projects.FirstOrDefault(p =>
-            Path.GetFileName(p.RootFolderPath)
-                .Equals(projectRootName, StringComparison.OrdinalIgnoreCase));
-
-        return project?.GetEntry(relativePath.ToPlatformPath());
-    }
-
     public IProjectEntry? GetEntryFromFullPath(string fullPath)
     {
         if (string.IsNullOrWhiteSpace(fullPath))
