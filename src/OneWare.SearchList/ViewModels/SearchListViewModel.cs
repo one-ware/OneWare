@@ -18,6 +18,7 @@ namespace OneWare.SearchList.ViewModels;
 public class SearchListViewModel : ExtendedTool
 {
     public const string IconKey = "VsImageLib.Search16XMd";
+    private const long MaxTextFileBytes = 2 * 1024 * 1024;
 
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
@@ -91,34 +92,44 @@ public class SearchListViewModel : ExtendedTool
     {
         Items.Clear();
         _lastCancellationToken?.Cancel();
-        if (searchText.Length < 3) return;
+        if (searchText.Length < 3)
+        {
+            IsLoading = false;
+            return;
+        }
         _ = SearchAsync(searchText);
     }
 
     private async Task SearchAsync(string searchText)
     {
         IsLoading = true;
-
         _lastCancellationToken = new CancellationTokenSource();
+        var token = _lastCancellationToken.Token;
 
-        switch (SearchListFilterMode)
+        try
         {
-            case 0:
-                foreach (var project in _projectExplorerService.Projects)
-                {
-                    await SearchProjectFilesAsync(project, searchText, _lastCancellationToken.Token);
-                }
-                break;
-            case 1 when _projectExplorerService.ActiveProject != null:
-                await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, _lastCancellationToken.Token);
-                break;
-            case 2 when _mainDockService.CurrentDocument is IEditor editor:
-                Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
-                    WholeWord, _lastCancellationToken.Token));
-                break;
+            switch (SearchListFilterMode)
+            {
+                case 0:
+                    foreach (var project in _projectExplorerService.Projects)
+                    {
+                        await SearchProjectFilesAsync(project, searchText, token);
+                        if (token.IsCancellationRequested) return;
+                    }
+                    break;
+                case 1 when _projectExplorerService.ActiveProject != null:
+                    await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, token);
+                    break;
+                case 2 when _mainDockService.CurrentDocument is IEditor editor:
+                    Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
+                        WholeWord, token));
+                    break;
+            }
         }
-
-        IsLoading = false;
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task SearchProjectFilesAsync(IProjectFolder folder, string searchText, CancellationToken cancel)
@@ -144,9 +155,95 @@ public class SearchListViewModel : ExtendedTool
                     folder.Root, fullPath));
             }
 
-            Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
-                UseRegex, WholeWord, cancel));
+            if (!IsBinaryFile(fullPath) && !IsTooLarge(fullPath))
+            {
+                Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
+                    UseRegex, WholeWord, cancel));
+            }
         }
+    }
+
+    private static bool IsTooLarge(string fullPath)
+    {
+        try
+        {
+            return new FileInfo(fullPath).Length > MaxTextFileBytes;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private static bool IsBinaryFile(string fullPath)
+    {
+        var extension = Path.GetExtension(fullPath);
+        if (!string.IsNullOrEmpty(extension))
+        {
+            switch (extension.ToLowerInvariant())
+            {
+                case ".png":
+                case ".jpg":
+                case ".jpeg":
+                case ".gif":
+                case ".bmp":
+                case ".tiff":
+                case ".ico":
+                case ".svg":
+                case ".webp":
+                case ".mp3":
+                case ".wav":
+                case ".flac":
+                case ".ogg":
+                case ".mp4":
+                case ".mkv":
+                case ".mov":
+                case ".avi":
+                case ".wmv":
+                case ".zip":
+                case ".7z":
+                case ".rar":
+                case ".gz":
+                case ".tar":
+                case ".tgz":
+                case ".pdf":
+                case ".exe":
+                case ".dll":
+                case ".so":
+                case ".dylib":
+                case ".bin":
+                case ".dat":
+                case ".class":
+                case ".jar":
+                case ".pdb":
+                case ".o":
+                case ".obj":
+                case ".a":
+                case ".lib":
+                case ".woff":
+                case ".woff2":
+                case ".ttf":
+                case ".otf":
+                    return true;
+            }
+        }
+
+        try
+        {
+            using var stream = File.OpenRead(fullPath);
+            var buffer = new byte[1024];
+            var read = stream.Read(buffer, 0, buffer.Length);
+            for (var i = 0; i < read; i++)
+            {
+                if (buffer[i] == 0) return true;
+            }
+        }
+        catch
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, IProjectRoot? root,

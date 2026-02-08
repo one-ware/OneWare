@@ -46,18 +46,22 @@
                     </ComboBox>
 
                 </StackPanel>
-
+                
                 <Border DockPanel.Dock="Left" Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}"
                         Height="24" Margin="0 0 5 0">
-                    <controls:SearchBox SearchText="{Binding SearchString}"
-                                        HorizontalAlignment="Stretch">
-                        <Interaction.Behaviors>
-                            <FocusOnAttachedToVisualTreeBehavior />
-                            <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
-                            <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
-                                                                   Command="{Binding OpenSelectedResult}" />
-                        </Interaction.Behaviors>
-                    </controls:SearchBox>
+                    <Panel>
+                        <controls:SearchBox SearchText="{Binding SearchString}"
+                                            HorizontalAlignment="Stretch">
+                            <Interaction.Behaviors>
+                                <FocusOnAttachedToVisualTreeBehavior />
+                                <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
+                                <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
+                                                                       Command="{Binding OpenSelectedResult}" />
+                            </Interaction.Behaviors>
+                        </controls:SearchBox>
+                        <controls:Spinner HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 50 0" Height="12" Width="12" IsVisible="{Binding IsLoading}" />
+                    </Panel>
+                   
                 </Border>
             </DockPanel>
         </Border>
@@ -77,16 +81,11 @@
                 <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
-                            <Border Padding="5 0">
-                                <StackPanel Orientation="Horizontal" Height="18">
-                                    <TextBlock Text="{Binding DescriptionLeft}"
-                                               ToolTip.Tip="{Binding Description}" />
-                                    <TextBlock Background="{DynamicResource ThemeAccentBrush2}"
-                                               Text="{Binding DescriptionMid}"
-                                               ToolTip.Tip="{Binding Description}" />
-                                    <TextBlock Text="{Binding DescriptionRight}" ToolTip.Tip="{Binding Description}" />
-                                </StackPanel>
-                            </Border>
+                            <TextBlock ToolTip.Tip="{Binding Description}">
+                                <Run Text="{Binding DescriptionLeft}" />
+                                <Run Text="{Binding DescriptionMid}" FontWeight="Bold" Background="{DynamicResource ThemeAccentBrush2}" />
+                                <Run Text="{Binding DescriptionRight}" />
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -131,12 +130,5 @@
 
             </DataGrid.Columns>
         </DataGrid>
-
-        <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Right"
-                    VerticalAlignment="Top">
-            <controls:Spinner Height="14" Width="14" Margin="0, 8, 295, 0"
-                              IsVisible="{Binding IsLoading}"
-                              Foreground="{DynamicResource DarkBlue}" />
-        </StackPanel>
     </Grid>
 </UserControl>

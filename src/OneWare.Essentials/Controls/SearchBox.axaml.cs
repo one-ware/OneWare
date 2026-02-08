@@ -4,6 +4,7 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using DynamicData.Binding;
 
 namespace OneWare.Essentials.Controls;
@@ -14,7 +15,7 @@ namespace OneWare.Essentials.Controls;
 public partial class SearchBox : UserControl
 {
     public static readonly StyledProperty<bool> SearchButtonVisibleProperty =
-        AvaloniaProperty.Register<SearchBox, bool>(nameof(Label), true, false, BindingMode.TwoWay);
+        AvaloniaProperty.Register<SearchBox, bool>(nameof(SearchButtonVisible), true, false, BindingMode.TwoWay);
 
     public static readonly StyledProperty<string> LabelProperty =
         AvaloniaProperty.Register<SearchBox, string>(nameof(Label), "Search...", false, BindingMode.TwoWay);
@@ -36,7 +37,7 @@ public partial class SearchBox : UserControl
 
         SearchTextBox.WhenValueChanged(x => x.Text).Subscribe(_ => OnTextAddedEvent());
 
-        KeyDown += SearchTextBox_KeyDown;
+        SearchTextBox.KeyDown += SearchTextBox_KeyDown;
     }
 
     public string SearchText
@@ -61,12 +62,21 @@ public partial class SearchBox : UserControl
 
     protected override void OnGotFocus(GotFocusEventArgs e)
     {
+        if (SearchTextBox.IsFocused) return;
+
+        if (e.Source is Control source)
+        {
+            if (source == ResetButton || source == SearchButton) return;
+            if (ResetButton.IsVisualAncestorOf(source) || SearchButton.IsVisualAncestorOf(source)) return;
+            if (source == SearchTextBox || SearchTextBox.IsVisualAncestorOf(source)) return;
+        }
+        
         Dispatcher.UIThread.Post(() =>
         {
-            //if (!SearchTextBox.IsFocused) SearchTextBox.Focus();
+            if (SearchTextBox.IsFocused) return;
+            SearchTextBox.Focus();
+            SearchTextBox.SelectAll();
         });
-
-        //SearchTextBox.SelectAll();
     }
 
     public void Reset()
@@ -97,7 +107,7 @@ public partial class SearchBox : UserControl
     {
         if (e.Key.Equals(Key.Enter)) OnSearchEvent();
     }
-
+    
     private void OnSearchEvent()
     {
         var newEventArgs = new RoutedEventArgs(SearchEvent);
