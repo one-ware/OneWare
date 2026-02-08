@@ -63,7 +63,6 @@
                                                        TriggerKey="Delete" />
                 <behaviors:CommandOnDoubleTapBehavior
                     Command="{Binding DoubleTab}" />
-                <behaviors1:ProjectExplorerViewDragBehavior />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
@@ -72,6 +71,10 @@
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <Grid ColumnDefinitions="20, *">
+                        <Interaction.Behaviors>
+                            <behaviors1:ProjectExplorerViewDragBehavior />
+                        </Interaction.Behaviors>
+
                         <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
                                                        Value="{Binding IconModel}" Height="16" Width="16" />
 
