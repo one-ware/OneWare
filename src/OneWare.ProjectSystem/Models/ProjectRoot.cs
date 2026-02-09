@@ -38,28 +38,4 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     public abstract bool IsPathIncluded(string path);
 
     public abstract void IncludePath(string path);
-
-    public virtual void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
-    {
-        if (!IsPathIncluded(relativePath)) return;
-
-        var parentPath = Path.GetDirectoryName(relativePath);
-        
-        if(parentPath == null) return;
-        
-        if (GetLoadedEntry(parentPath) is IProjectFolder folder)
-        {
-            if (folder.IsExpanded)
-            {
-                if (attributes.HasFlag(FileAttributes.Directory))
-                    AddFolder(relativePath);
-                else
-                    AddFile(relativePath);
-            }
-        }
-        else
-        {
-            Add(ConstructNewProjectFolder(parentPath, this));
-        }
-    }
 }

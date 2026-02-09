@@ -18,7 +18,7 @@ public class ProjectExplorerViewDropHandler : DropHandlerBase
                    .Where(p => !string.IsNullOrWhiteSpace(p))
                    .Cast<string>()
                    .ToArray()
-               ?? Array.Empty<string>();
+               ?? [];
     }
 
     private static bool IsSameFolderMove(

@@ -70,10 +70,10 @@
             </TreeDataGrid.ContextMenu>
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
-                    <Grid ColumnDefinitions="20, *">
+                    <Grid ColumnDefinitions="20, *" Background="Transparent">
                         <Interaction.Behaviors>
-                            <behaviors1:ProjectExplorerViewDragBehavior />
                             <behaviors1:ProjectExplorerEntryModificationBehavior />
+                            <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 
                         <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
@@ -90,6 +90,13 @@
             <TreeDataGrid.Styles>
                 <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="Background" Value="{Binding Background}" />
+                    <Setter Property="Interaction.Behaviors">
+                        <BehaviorCollectionTemplate>
+                            <BehaviorCollection>
+                                <behaviors1:ProjectExplorerViewDragBehavior />
+                            </BehaviorCollection>
+                        </BehaviorCollectionTemplate>
+                    </Setter>
                 </Style>
                 <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
                     <Setter Property="Opacity" Value="1" />
