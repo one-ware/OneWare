@@ -97,7 +97,6 @@
                         </Style>
 
                         <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer">
-                            <Setter Property="Margin" Value="-1" />
                             <Setter Property="MaxWidth" Value="500" />
                             <Setter Property="MaxHeight" Value="300" />
                         </Style>

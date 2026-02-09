@@ -1,4 +1,3 @@
-﻿using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
@@ -163,13 +162,11 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.OnLogMessage(WriteLog);
                 options.OnWorkDoneProgressCreate(CreateWorkDoneProgress);
                 options.OnProgress(OnProgress);
-                options.OnLogTrace(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Warning(x.Message));
+                options.OnLogTrace(LogTrace);
                 options.OnPublishDiagnostics(PublishDiag);
                 options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
-                options.OnShowMessage(x =>
-                    ContainerLocator.Container.Resolve<ILogger>()?.Log(x.Message));
-                options.OnTelemetryEvent(x => { ContainerLocator.Container.Resolve<ILogger>()?.Log(x); });
+                options.OnShowMessage(ShowMessage);
+                options.OnTelemetryEvent(TelemetryEvent);
 
                 options.WithCapability(new TextSynchronizationCapability
                 {
@@ -367,9 +364,49 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
     private void WriteLog(LogMessageParams log)
     {
-        //ContainerLocator.Container.Resolve<ILogger>()?.Log("LS: " + log.Message);
-        //MainDock.Output.WriteLine(Path.GetFileName(LanguageServerPath) + ": " + log.Type.ToString() + " " + log.Message);
-        Debug.WriteLine(log.Message);
+        var level = MapMessageType(log.Type);
+        LogLspEvent("logMessage", log.Message ?? string.Empty, level);
+    }
+
+    private void LogTrace(LogTraceParams trace)
+    {
+        var verbose = string.IsNullOrWhiteSpace(trace.Verbose) ? null : trace.Verbose;
+        LogLspEvent("trace", trace.Message ?? string.Empty, LogLevel.Trace, verbose);
+    }
+
+    private void ShowMessage(ShowMessageParams message)
+    {
+        var level = MapMessageType(message.Type);
+        LogLspEvent("showMessage", message.Message ?? string.Empty, level);
+    }
+
+    private void TelemetryEvent(object telemetry)
+    {
+        LogLspEvent("telemetry", "event", LogLevel.Debug, telemetry);
+    }
+
+    private void LogLspEvent(string eventName, string message, LogLevel level, object? payload = null)
+    {
+        var logger = ContainerLocator.Container.Resolve<ILogger>();
+        if (logger == null) return;
+
+        var text = $"LSP[{Name}] {eventName}: {message}";
+        if (payload != null)
+            text += $" | {payload}";
+
+        logger.Log(level, text);
+    }
+
+    private static LogLevel MapMessageType(MessageType type)
+    {
+        return type switch
+        {
+            MessageType.Error => LogLevel.Error,
+            MessageType.Warning => LogLevel.Warning,
+            MessageType.Info => LogLevel.Information,
+            MessageType.Log => LogLevel.Debug,
+            _ => LogLevel.Information
+        };
     }
 
     public void ReloadConfiguration()

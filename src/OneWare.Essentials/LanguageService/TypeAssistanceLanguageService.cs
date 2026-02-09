@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
@@ -35,7 +36,7 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 {
     private readonly IBrush _highlightBackground = SolidColorBrush.Parse("#3300c8ff");
-    private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
+    private TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
 
     private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(100);
 
@@ -73,20 +74,41 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                                      && pos.Line <= error.EndLine
                                      && pos.Column >= error.StartColumn
                                      && pos.Column <= error.EndColumn);
-        var info = "";
-
-        if (error != null) info += error.Description + "\n";
+        var parts = new List<string>();
+        if (error != null) parts.Add(error.Description);
 
         var hover = await Service.RequestHoverAsync(CurrentFilePath,
             new Position(pos.Line - 1, pos.Column - 1));
         if (hover != null)
         {
-            if (hover.Contents.HasMarkedStrings)
-                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-            if (hover.Contents.HasMarkupContent) info += hover.Contents.MarkupContent?.Value;
+            var hoverText = BuildHoverText(hover);
+            if (!string.IsNullOrWhiteSpace(hoverText)) parts.Add(hoverText);
         }
 
+        var info = string.Join("\n\n", parts);
         return string.IsNullOrWhiteSpace(info) ? null : info;
+    }
+
+    private static string? BuildHoverText(Hover hover)
+    {
+        if (hover.Contents.HasMarkupContent)
+            return hover.Contents.MarkupContent?.Value;
+
+        if (hover.Contents.HasMarkedStrings && hover.Contents.MarkedStrings != null)
+        {
+            var segments = new List<string>();
+            foreach (var marked in hover.Contents.MarkedStrings)
+            {
+                if (!string.IsNullOrWhiteSpace(marked.Language))
+                    segments.Add($"```{marked.Language}\n{marked.Value}\n```");
+                else
+                    segments.Add(marked.Value);
+            }
+
+            return segments.Count > 0 ? string.Join("\n\n", segments) : null;
+        }
+
+        return null;
     }
 
     public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
@@ -103,8 +125,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             var codeactions = await Service.RequestCodeActionAsync(CurrentFilePath,
                 new Range
                 {
-                    Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
-                    End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
+                    Start = new Position(Math.Max(error.StartLine - 1, 0), Math.Max(error.StartColumn - 1 ?? 0, 0)),
+                    End = new Position(Math.Max(error.EndLine - 1 ?? 0, 0), Math.Max(error.EndColumn - 1 ?? 0, 0))
                 }, error.Diagnostic);
 
             if (codeactions is not null && IsOpen)
@@ -151,76 +173,24 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (definition != null && IsOpen)
-            foreach (var i in definition)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemModel("GoToDefinition")
-                    {
-                        Header = "Go to Definition",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemModel("GoToDefinition")
-                    {
-                        Header = "Go to Definition",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
+        var definitionMenuItem = CreateLocationMenuItem("GoToDefinition", "Go to Definition", definition);
+        if (definitionMenuItem != null && IsOpen) menuItems.Add(definitionMenuItem);
+
         var declaration = await Service.RequestDeclarationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (declaration != null && IsOpen)
-            foreach (var i in declaration)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemModel("GoToDeclaration")
-                    {
-                        Header = "Go to Declaration",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemModel("GoToDeclaration")
-                    {
-                        Header = "Go to Declaration",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
+        var declarationMenuItem = CreateLocationMenuItem("GoToDeclaration", "Go to Declaration", declaration);
+        if (declarationMenuItem != null && IsOpen) menuItems.Add(declarationMenuItem);
+
         var implementation = await Service.RequestImplementationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (implementation != null && IsOpen)
-            foreach (var i in implementation)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemModel("GoToImplementation")
-                    {
-                        Header = "Go to Implementation",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemModel("GoToImplementation")
-                    {
-                        Header = "Go to Implementation",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
-        var typeDefinition = await Service.RequestImplementationAsync(CurrentFilePath,
+        var implementationMenuItem = CreateLocationMenuItem("GoToImplementation", "Go to Implementation", implementation);
+        if (implementationMenuItem != null && IsOpen) menuItems.Add(implementationMenuItem);
+
+        var typeDefinition = await Service.RequestTypeDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (typeDefinition != null && IsOpen)
-            foreach (var i in typeDefinition)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemModel("GoToDefinition")
-                    {
-                        Header = "Go to Type Definition",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemModel("GoToDefinition")
-                    {
-                        Header = "Go to Type Definition",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
+        var typeDefinitionMenuItem =
+            CreateLocationMenuItem("GoToTypeDefinition", "Go to Type Definition", typeDefinition);
+        if (typeDefinitionMenuItem != null && IsOpen) menuItems.Add(typeDefinitionMenuItem);
         return menuItems;
     }
 
@@ -282,11 +252,11 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (definition != null && IsOpen)
-            if (definition.FirstOrDefault() is { } loc)
-            {
-                if (loc.IsLocation && loc.Location != null) return () => _ = GoToLocationAsync(loc.Location);
-                if (loc.IsLocationLink && loc.LocationLink != null) return () => GoToLocation(loc.LocationLink);
-            }
+        {
+            var normalized = NormalizeLocations(definition);
+            if (normalized.Count > 0)
+                return () => _ = GoToLocationAsync(normalized[0]);
+        }
 
         return null;
     }
@@ -308,8 +278,114 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
+        if (location == null) return;
+
+        var targetUri = location.TargetUri;
+        var targetRange = location.TargetSelectionRange ?? location.TargetRange;
+        if (targetUri == null || targetRange == null) return;
+
+        _ = GoToLocationAsync(new Location
+        {
+            Uri = targetUri,
+            Range = targetRange
+        });
     }
+
+    private MenuItemModel? CreateLocationMenuItem(string id, string header,
+        IEnumerable<LocationOrLocationLink>? locations)
+    {
+        if (locations == null) return null;
+
+        var normalized = NormalizeLocations(locations);
+        if (normalized.Count == 0) return null;
+
+        if (normalized.Count == 1)
+            return new MenuItemModel(id)
+            {
+                Header = header,
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = normalized[0]
+            };
+
+        var items = new ObservableCollection<MenuItemModel>();
+        var index = 1;
+        foreach (var location in normalized)
+        {
+            items.Add(new MenuItemModel(id + "Item")
+            {
+                Header = FormatLocationHeader(location, index++),
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = location
+            });
+        }
+
+        return new MenuItemModel(id)
+        {
+            Header = header,
+            Items = items
+        };
+    }
+
+    private List<Location> NormalizeLocations(IEnumerable<LocationOrLocationLink> locations)
+    {
+        var result = new List<Location>();
+        var seen = new HashSet<LocationKey>();
+
+        foreach (var entry in locations)
+        {
+            if (!TryGetLocation(entry, out var location, out var key)) continue;
+            if (seen.Add(key)) result.Add(location);
+        }
+
+        return result;
+    }
+
+    private static bool TryGetLocation(LocationOrLocationLink entry, out Location location, out LocationKey key)
+    {
+        location = null!;
+        key = default;
+
+        if (entry.IsLocation && entry.Location != null)
+        {
+            location = entry.Location;
+        }
+        else if (entry.IsLocationLink && entry.LocationLink != null)
+        {
+            var targetRange = entry.LocationLink.TargetSelectionRange ?? entry.LocationLink.TargetRange;
+            if (entry.LocationLink.TargetUri == null || targetRange == null) return false;
+
+            location = new Location
+            {
+                Uri = entry.LocationLink.TargetUri,
+                Range = targetRange
+            };
+        }
+        else
+        {
+            return false;
+        }
+
+        if (location.Uri == null) return false;
+
+        var path = location.Uri.GetFileSystemPath();
+        var keyPath = string.IsNullOrWhiteSpace(path) ? location.Uri.ToString() : path.ToPathKey();
+        var range = location.Range;
+
+        key = new LocationKey(keyPath, range.Start.Line, range.Start.Character, range.End.Line, range.End.Character);
+        return true;
+    }
+
+    private static string FormatLocationHeader(Location location, int index)
+    {
+        var path = location.Uri?.GetFileSystemPath();
+        var fileName = string.IsNullOrWhiteSpace(path) ? location.Uri?.ToString() ?? "Unknown" : Path.GetFileName(path);
+        var line = location.Range.Start.Line + 1;
+        var column = location.Range.Start.Character + 1;
+        return $"{index}. {fileName}:{line}:{column}";
+    }
+
+    private readonly record struct LocationKey(string PathKey, int StartLine, int StartCharacter, int EndLine,
+        int EndCharacter);
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
     {
@@ -505,7 +581,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
 
         var completionOffset = CodeBox.CaretOffset;
-        if (triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
+        if (triggerKind is CompletionTriggerKind.Invoked)
+            completionOffset = Math.Max(0, completionOffset - 1);
 
         var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
@@ -536,6 +613,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             Completion.CompletionList.ListBox.WhenValueChanged(x => x.ItemsSource).Subscribe(x =>
             {
                 if (Completion.CompletionList.ListBox.Items.Count == 0) Completion.Close();
+            }).DisposeWith(_completionDisposable);
+            Completion.CompletionList.ListBox.WhenValueChanged(x => x.SelectedItem).Subscribe(_ =>
+            {
+                _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
             }).DisposeWith(_completionDisposable);
 
             if (lspCompletionItems is not null)
@@ -660,12 +741,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             for (var i = 0; i < s.Parameters.Count(); i++)
             {
                 var p = s.Parameters.ElementAt(i);
-                if (s.ActiveParameter.HasValue && s.ActiveParameter.Value == i)
-                {
-                    m1 += p.Label.Label;
-                    if (i < s.Parameters.Count() - 1) m1 += ", ";
-                }
-
                 m1 += p.Label.Label;
                 if (i < s.Parameters.Count() - 1) m1 += ", ";
             }
@@ -882,6 +957,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         CodeBox.Document.Changed -= DocumentChanged;
         Editor.FileSaved -= FileSaved;
         Service.LanguageServiceActivated -= Server_Activated;
+        Service.LanguageServiceDeactivated -= Server_Deactivated;
         if (_dispatcherTimer != null)
         {
             _dispatcherTimer.Tick -= Timer_Tick;
