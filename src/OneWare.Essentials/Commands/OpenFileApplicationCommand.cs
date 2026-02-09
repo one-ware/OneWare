@@ -13,11 +13,7 @@ public class OpenFileApplicationCommand : ApplicationCommandBase
     public OpenFileApplicationCommand(string file) : base(Path.GetFileName(file))
     {
         _file = file;
-        Icon = new IconModel()
-        {
-            IconObservable = ContainerLocator.Container.Resolve<IFileIconService>()
-                .GetFileIcon(Path.GetExtension(file))
-        };
+        Icon = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIconModel(Path.GetExtension(file));
     }
 
     public override bool Execute(ILogical source)

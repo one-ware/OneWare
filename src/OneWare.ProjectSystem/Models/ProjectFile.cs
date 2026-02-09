@@ -9,10 +9,7 @@ public class ProjectFile : ProjectEntry, IProjectFile
 {
     public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
     {
-        Icon = new IconModel()
-        {
-            IconObservable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension)
-        };
+        Icon = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIconModel(Extension);
     }
 
     public string Extension => Path.GetExtension(FullPath);
