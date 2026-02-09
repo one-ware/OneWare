@@ -20,14 +20,6 @@ public class YosysSettingHelper
             return Task.CompletedTask;
 
         var path = GetConstraintFile(universalFpgaProjectRoot);
-        //TODO
-        // foreach (var projectFile in file.Root.GetFiles())
-        // {
-        //     if (_icon != null) projectFile.IconOverlays.Remove(_icon);
-        // }
-
-        // if (_icon != null && !file.IconOverlays.Contains(_icon))
-        //     file.IconOverlays.Add(_icon);
 
         if (file.RelativePath == path)
             return Task.CompletedTask;
@@ -35,27 +27,6 @@ public class YosysSettingHelper
         UpdateProjectProperties(universalFpgaProjectRoot, file.RelativePath);
         return ContainerLocator.Container.Resolve<UniversalFpgaProjectManager>()
             .SaveProjectAsync(universalFpgaProjectRoot);
-    }
-
-    public static void SetConstraintOverlay(IProjectRoot project)
-    {
-        if (project is not UniversalFpgaProjectRoot  universalFpgaProjectRoot) 
-            return;
-        
-        var path = GetConstraintFile(universalFpgaProjectRoot);
-        // foreach (var projectFile in universalFpgaProjectRoot.GetFiles())
-        // {
-        //     if (_icon != null) projectFile.IconOverlays.Remove(_icon);
-        // }
-        //
-        // foreach (var projectFile in universalFpgaProjectRoot.GetFiles())
-        // {
-        //     if (projectFile.RelativePath.Equals(path) && projectFile.Extension.Equals(".pcf"))
-        //     {
-        //         projectFile.IconOverlays.Add(_icon!);
-        //         return;
-        //     }
-        // }
     }
 
     public static string GetConstraintFile(UniversalFpgaProjectRoot project)

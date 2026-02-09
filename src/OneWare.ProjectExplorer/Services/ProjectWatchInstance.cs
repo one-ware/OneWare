@@ -175,22 +175,22 @@ public class ProjectWatchInstance : IDisposable
                 switch (lastArg.ChangeType)
                 {
                     case WatcherChangeTypes.Renamed:
-                        if (lastArg is RenamedEventArgs { Name: not null } renamedEventArgs &&
-                            _root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath,
-                                renamedEventArgs.OldFullPath)) is { } oldEntry)
+                        if (lastArg is RenamedEventArgs { Name: not null } renamedEventArgs)
                         {
-                            oldEntry.TopFolder?.Remove(oldEntry);
-                            _root.OnExternalEntryAdded(path, attributes);
+                            if(_root.GetLoadedEntry(Path.GetRelativePath(_root.RootFolderPath,
+                                renamedEventArgs.OldFullPath)) is { } oldEntry)
+                                oldEntry.TopFolder?.Remove(oldEntry);
+                            _root.OnExternalEntryAdded(relativePath, attributes);
                         }
 
                         return;
                     case WatcherChangeTypes.Created:
                     case WatcherChangeTypes.Changed when changes.Any(x => x.ChangeType is WatcherChangeTypes.Created):
-                        _root.OnExternalEntryAdded(path, attributes);
+                        _root.OnExternalEntryAdded(relativePath, attributes);
                         return;
                     case WatcherChangeTypes.Deleted:
                         if (_root.ProjectPath.EqualPaths(path)) _root.LoadingFailed = true;
-
+                        
                         return;
                 }
         }

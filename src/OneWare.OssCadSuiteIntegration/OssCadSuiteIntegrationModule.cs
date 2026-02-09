@@ -291,20 +291,6 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         var fpgaService = serviceProvider.Resolve<FpgaService>();
 
         fpgaService.RegisterNodeProvider<YosysNodeProvider>();
-
-        projectExplorerService.Projects.CollectionChanged += (sender, e) =>
-        {
-            if (sender is ObservableCollection<IProjectRoot> collection)
-            {
-                if (e.Action == NotifyCollectionChangedAction.Add)
-                {
-                    foreach (var project in collection)
-                    {
-                        YosysSettingHelper.SetConstraintOverlay(project);
-                    }
-                }
-            }
-        };
         
         var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
@@ -325,9 +311,6 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         toolService.Register(new ToolContext("gmupack", "Packing", "gmupack"), new NativeStrategy());
         
         toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
-        
-        
-        
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);

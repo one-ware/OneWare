@@ -44,7 +44,10 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
         if (!IsPathIncluded(relativePath)) return;
 
         var parentPath = Path.GetDirectoryName(relativePath);
-        if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
+        
+        if(parentPath == null) return;
+        
+        if (GetLoadedEntry(parentPath) is IProjectFolder folder)
         {
             if (folder.IsExpanded)
             {
@@ -53,6 +56,10 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
                 else
                     AddFile(relativePath);
             }
+        }
+        else
+        {
+            Add(ConstructNewProjectFolder(parentPath, this));
         }
     }
 }

@@ -18,7 +18,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     private static readonly IconModel DefaultFolderOpenIconModel = new("VsImageLib.FolderOpen16X");
 
     private static readonly ExplorerNameComparer ExplorerNameComparer = ExplorerNameComparer.Instance;
-    
+
     private CancellationTokenSource? _loadCancellation;
 
     protected ProjectFolder(string header, IProjectFolder? topFolder) : base(header,
@@ -38,7 +38,15 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         Children?.Remove(entry);
 
         //Collapse folder if empty
-        if (Children?.Count == 0) IsExpanded = false;
+        if (Children?.Count == 0)
+        {
+            IsExpanded = false;
+
+            if (!Root.IsPathIncluded(FullPath))
+            {
+                TopFolder?.Remove(this);
+            }
+        }
     }
 
     public void SetIsExpanded(bool newValue)
@@ -149,8 +157,8 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     {
         if (relativePath is "" or ".") return this;
 
-        if(Children == null) return null;
-        
+        if (Children == null) return null;
+
         foreach (var i in Children.OfType<IProjectEntry>())
             if (relativePath.Equals(i.Name, StringComparison.OrdinalIgnoreCase))
                 return i;
@@ -161,14 +169,15 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     private void Insert(IProjectEntry entry)
     {
         Children ??= new ObservableCollection<IProjectExplorerNode>();
-        
+
         //Insert in correct posiion
         var inserted = false;
         for (var i = 0; i < Children.Count; i++)
         {
             if (Children[i] is IProjectEntry && ((entry is ProjectFolder && Children[i] is not ProjectFolder) ||
                                                  (entry is ProjectFolder && Children[i] is ProjectFolder &&
-                                                  ExplorerNameComparer.Compare(entry.Header, Children[i].Header) <= 0) ||
+                                                  ExplorerNameComparer.Compare(entry.Header, Children[i].Header) <=
+                                                  0) ||
                                                  //Insert if both are folders
                                                  (entry is not ProjectFolder && Children[i] is not ProjectFolder &&
                                                   ExplorerNameComparer.Compare(entry.Header, Children[i].Header) <= 0)))
@@ -259,10 +268,13 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             RecurseSubdirectories = recursive,
         };
 
-        foreach (var file in Directory.EnumerateDirectories(path, searchPattern, options))
+        foreach (var directory in Directory.EnumerateDirectories(path, searchPattern, options))
         {
-            var relativeToRoot = Path.GetRelativePath(path, file);
-            if (Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
+            // Check if there is any included file
+            if (!Root.IsPathIncluded(directory) && !Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
+                    .Any(x => Root.IsPathIncluded(Path.GetRelativePath(Root.RootFolderPath, x)))) continue;
+
+            yield return Path.GetRelativePath(FullPath, directory);
         }
     }
 
@@ -274,16 +286,16 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
     public override void OnIsExpandedChanged(bool isExpanded)
     {
         base.OnIsExpandedChanged(isExpanded);
-        
+
         if (isExpanded)
         {
-            if(this is not IProjectRootWithFile) Icon = DefaultFolderOpenIconModel;
+            if (this is not IProjectRootWithFile) Icon = DefaultFolderOpenIconModel;
             _ = LoadContentAsync();
         }
         else
         {
-            if(this is not IProjectRootWithFile) Icon = DefaultFolderClosedIconModel;
-            
+            if (this is not IProjectRootWithFile) Icon = DefaultFolderClosedIconModel;
+
             CancelLoad();
 
             Children?.Clear();
@@ -302,7 +314,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         CancelLoad();
         _loadCancellation = new CancellationTokenSource();
         var cancellationToken = _loadCancellation.Token;
-        
+
         Children?.Clear();
 
         if (!Directory.Exists(FullPath))

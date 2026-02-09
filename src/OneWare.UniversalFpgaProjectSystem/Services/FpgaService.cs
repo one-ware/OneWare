@@ -48,6 +48,13 @@ public class FpgaService
     public ObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; } = new();
 
     public ObservableCollection<INodeProvider> NodeProviders { get; } = new();
+    
+    public ObservableCollection<Action<IProjectEntry>> EntryModificationHandlers { get; } = new();
+    
+    public void RegisterEntryModification(Action<IProjectEntry> modificationAction)
+    {
+        EntryModificationHandlers.Add(modificationAction);
+    }
 
     public void RegisterLanguage(string language, string[] extensions)
     {
@@ -129,7 +136,7 @@ public class FpgaService
             _settingsService.RegisterSetting("Languages", language, settingKey, nodeProviderComboSetting);
         }
     }
-
+    
     public void RegisterPreCompileStep<T>() where T : IFpgaPreCompileStep
     {
         PreCompileSteps.Add(ContainerLocator.Container.Resolve<T>());

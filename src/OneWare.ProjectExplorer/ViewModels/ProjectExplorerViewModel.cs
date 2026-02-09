@@ -397,6 +397,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             }
 
             var f = parent.AddFile(newFile, true);
+            await Task.Delay(10);
             parent.IsExpanded = true;
             await _mainDockService.OpenFileAsync(f.FullPath);
         }
@@ -410,8 +411,9 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
         if (!string.IsNullOrWhiteSpace(newFolder))
         {
-            parent.IsExpanded = true;
             parent.AddFolder(newFolder, true);
+            await Task.Delay(10);
+            parent.IsExpanded = true;
         }
     }
 
@@ -449,7 +451,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         foreach (var entry in entries) await DeleteAsync(entry);
     }
 
-    private async Task DeleteAsync(IProjectEntry entry)
+    private Task DeleteAsync(IProjectEntry entry)
     {
         try
         {
@@ -463,8 +465,8 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
             ContainerLocator.Container.Resolve<ILogger>()
                 ?.Error("File / Directory could not be deleted from storage!" + e);
         }
-
-        entry.TopFolder?.Remove(entry);
+        
+        return Task.CompletedTask;
     }
 
     public async Task RenameDialogAsync(IProjectEntry entry)

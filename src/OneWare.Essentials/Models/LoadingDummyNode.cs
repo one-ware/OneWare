@@ -13,8 +13,6 @@ public class LoadingDummyNode : IProjectExplorerNode
     public string Header => "Loading...";
     public IProjectExplorerNode? Parent { get; } = null;
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
-    public ObservableCollection<IImage> IconOverlays { get; } = new();
-    public ObservableCollection<IImage> RightIcons { get; } = new();
 
     public bool IsExpanded
     {

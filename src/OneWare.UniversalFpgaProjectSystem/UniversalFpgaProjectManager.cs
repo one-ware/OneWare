@@ -56,6 +56,11 @@ public class UniversalFpgaProjectManager : IProjectManager
                 if (_fpgaService.GetPreCompileStep(preCompileStep) is { } pre)
                     root.RegisterPreCompileStep(pre);
 
+        foreach (var entryModification in _fpgaService.EntryModificationHandlers)
+        {
+            root.RegisterEntryModification(entryModification);
+        }
+
         await root.InitializeAsync();
         
         return root;
