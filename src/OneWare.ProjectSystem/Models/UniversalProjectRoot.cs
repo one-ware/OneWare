@@ -5,18 +5,10 @@ using OneWare.ProjectSystem;
 
 namespace OneWare.ProjectSystem.Models;
 
-public class ProjectPropertyChangedEventArgs(
-    string propertyName,
-    object? oldValue,
-    object? newValue) : EventArgs
-{
-    public string PropertyName { get; } = propertyName;
-    public object? OldValue { get; } = oldValue;
-    public object? NewValue { get; } = newValue;
-}
-
 public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 {
+    private readonly List<Action<IProjectEntry>> _entryModificationHandlers = [];
+    
     protected UniversalProjectRoot(string projectFilePath) : base(Path.GetDirectoryName(projectFilePath) ?? throw new NullReferenceException("Invalid Project Path"))
     {
         ProjectFilePath = projectFilePath;
@@ -151,5 +143,15 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
             return this;
 
         return base.GetLoadedEntry(relativePath);
+    }
+    
+    public void RegisterEntryModification(Action<IProjectEntry> modificationAction)
+    {
+        _entryModificationHandlers.Add(modificationAction);
+    }
+
+    public void InvalidateModifications(IProjectEntry entry)
+    {
+        _entryModificationHandlers.ForEach(handler => handler(entry));
     }
 }

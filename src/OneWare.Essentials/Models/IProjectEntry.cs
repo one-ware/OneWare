@@ -18,6 +18,4 @@ public interface IProjectEntry : IProjectExplorerNode
     public IProjectRoot Root { get; }
 
     public IProjectFolder? TopFolder { get; set; }
-
-    public IReadOnlyList<IconLayer> GetIconOverlays();
 }

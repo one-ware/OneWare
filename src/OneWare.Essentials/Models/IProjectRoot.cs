@@ -10,9 +10,4 @@ public interface IProjectRoot : IProjectFolder
     public bool IsPathIncluded(string path);
     public void IncludePath(string path);
     public void OnExternalEntryAdded(string relativePath, FileAttributes attributes);
-    public event EventHandler<ProjectEntryOverlayChangedEventArgs>? EntryOverlaysChanged;
-    public IReadOnlyList<IconLayer> GetEntryOverlays(IProjectEntry entry);
-    public void NotifyEntryOverlayChanged(IProjectEntry entry);
-    public void RegisterOverlayProvider(IProjectEntryOverlayProvider provider);
-    public void UnregisterOverlayProvider(IProjectEntryOverlayProvider provider);
 }

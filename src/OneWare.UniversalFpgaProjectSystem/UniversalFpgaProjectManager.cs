@@ -97,7 +97,14 @@ public class UniversalFpgaProjectManager : IProjectManager
 
     public async Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return root is UniversalFpgaProjectRoot uFpga && await UniversalProjectSerializer.SerializeAsync(uFpga);
+        if (root is not UniversalFpgaProjectRoot fpgaProject) return false;
+        
+        var result = await UniversalProjectSerializer.SerializeAsync(fpgaProject);
+
+        if(result)
+            fpgaProject.LastSaveTime = DateTime.Now;
+        
+        return result;
     }
 
     public async Task NewProjectDialogAsync()

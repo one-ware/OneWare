@@ -68,17 +68,18 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get;
         set
         {
-            SetProperty(ref field, value);
-            if (value)
+            if (SetProperty(ref field, value))
             {
-                //IconOverlays.Add(_loadingFailedOverlay);
-                IsExpanded = false;
+                if (value)
+                {
+                    IsExpanded = false;
+                    Icon?.AddOverlay("LoadingFailed", "VsImageLib.StatusCriticalErrorOverlayExp16X");
+                }
+                else
+                {
+                    Icon?.RemoveOverlay("LoadingFailed");
+                }
             }
-            else
-            {
-                //IconOverlays.Remove(_loadingFailedOverlay);
-            }
-            Root.NotifyEntryOverlayChanged(this);
         }
     }
 
@@ -132,10 +133,5 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public virtual void OnIsExpandedChanged(bool isExpanded)
     {
-    }
-
-    public IReadOnlyList<IconLayer> GetIconOverlays()
-    {
-        return Root.GetEntryOverlays(this);
     }
 }

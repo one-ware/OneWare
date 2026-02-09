@@ -18,25 +18,34 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     public const string ProjectType = "UniversalFPGAProject";
 
     private readonly ObservableCollection<IFpgaPreCompileStep> _preCompileSteps = [];
-
-    private readonly IImage _testBenchOverlay;
-
-    private readonly IImage _topEntityOverlay;
-    private readonly IProjectEntryOverlayProvider _testBenchOverlayProvider;
-
+    
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
-        _topEntityOverlay =
-            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib2019.DownloadOverlay16X") as IImage
-            ?? throw new NullReferenceException(nameof(Application));
-
-        _testBenchOverlay = Application.Current!.FindResource(ThemeVariant.Dark, "TestBenchOverlay") as IImage
-                            ?? throw new NullReferenceException(nameof(Application));
+        RegisterEntryModification(x =>
+        {
+            if (x is IProjectFile file && IsTestBench(file.RelativePath))
+            {
+                x.Icon?.AddOverlay("TestBench", "TestBenchOverlay");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("TestBench");
+            }
+        });
+        
+        RegisterEntryModification(x =>
+        {
+            if (x is IProjectFile file && TopEntity == file.RelativePath)
+            {
+                x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("TopEntity");
+            }
+        });
 
         PreCompileSteps = new ReadOnlyObservableCollection<IFpgaPreCompileStep>(_preCompileSteps);
-
-        _testBenchOverlayProvider = new TestBenchOverlayProvider(this, _testBenchOverlay);
-        RegisterOverlayProvider(_testBenchOverlayProvider);
     }
 
     public override string ProjectTypeId => ProjectType;
@@ -83,15 +92,11 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     public void AddTestBench(string relativePath)
     {
         AddIncludedPathHelper(relativePath, "testBenches");
-        var entry = GetLoadedEntry(relativePath);
-        if (entry != null) NotifyEntryOverlayChanged(entry);
     }
 
     public void RemoveTestBench(string relativePath)
     {
         RemoveIncludedPathHelper(relativePath, "testBenches");
-        var entry = GetLoadedEntry(relativePath);
-        if (entry != null) NotifyEntryOverlayChanged(entry);
     }
 
     public bool IsCompileExcluded(string relativePath)
@@ -141,24 +146,24 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         await Toolchain.CompileAsync(this, fpga);
     }
 
-    private sealed class TestBenchOverlayProvider(UniversalFpgaProjectRoot root, IImage overlayImage)
-        : IProjectEntryOverlayProvider
-    {
-        public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
-        {
-            if (entry is IProjectRoot) return Array.Empty<IconLayer>();
-            if (!root.IsTestBench(entry.RelativePath)) return Array.Empty<IconLayer>();
-
-            return
-            [
-                new IconLayer
-                {
-                    Icon = overlayImage,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Bottom,
-                    SizeRatio = 1
-                }
-            ];
-        }
-    }
+    // private sealed class TestBenchOverlayProvider(UniversalFpgaProjectRoot root, IImage overlayImage)
+    //     : IProjectEntryOverlayProvider
+    // {
+    //     public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
+    //     {
+    //         if (entry is IProjectRoot) return Array.Empty<IconLayer>();
+    //         if (!root.IsTestBench(entry.RelativePath)) return Array.Empty<IconLayer>();
+    //
+    //         return
+    //         [
+    //             new IconLayer
+    //             {
+    //                 Icon = overlayImage,
+    //                 HorizontalAlignment = HorizontalAlignment.Right,
+    //                 VerticalAlignment = VerticalAlignment.Bottom,
+    //                 SizeRatio = 1
+    //             }
+    //         ];
+    //     }
+    // }
 }

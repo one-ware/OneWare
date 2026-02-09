@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using DynamicData.Binding;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Controls;
@@ -10,16 +11,12 @@ namespace OneWare.Essentials.Controls;
 public class LayeredIconPresenter : Control
 {
     private IDisposable? _baseSubscription;
+    private IDisposable? _overlaySubscription;
     private IImage? _currentBaseIcon;
     private readonly List<OverlayState> _overlayStates = new();
-    private IProjectEntry? _overlayEntry;
-    private IProjectRoot? _overlayRoot;
 
     public static readonly StyledProperty<IconModel?> ValueProperty =
         AvaloniaProperty.Register<LayeredIconPresenter, IconModel?>(nameof(Value));
-
-    public static readonly StyledProperty<IProjectExplorerNode?> OverlaySourceProperty =
-        AvaloniaProperty.Register<LayeredIconPresenter, IProjectExplorerNode?>(nameof(OverlaySource));
 
     public IconModel? Value
     {
@@ -27,16 +24,10 @@ public class LayeredIconPresenter : Control
         set => SetValue(ValueProperty, value);
     }
 
-    public IProjectExplorerNode? OverlaySource
-    {
-        get => GetValue(OverlaySourceProperty);
-        set => SetValue(OverlaySourceProperty, value);
-    }
-
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == ValueProperty || change.Property == OverlaySourceProperty)
+        if (change.Property == ValueProperty)
         {
             // Reset and resubscribe when the bound Model changes (row recycling)
             UpdateSubscriptions();
@@ -48,26 +39,26 @@ public class LayeredIconPresenter : Control
         Cleanup();
 
         var model = Value;
-        if (model?.IconObservable != null)
+
+        if (model != null)
         {
-            _baseSubscription = model.IconObservable.Subscribe(img =>
+            if (model?.IconObservable != null)
             {
-                _currentBaseIcon = (IImage?)img;
-                Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
-            });
+                _baseSubscription = model.IconObservable.Subscribe(img =>
+                {
+                    _currentBaseIcon = (IImage?)img;
+                    Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
+                });
+            }
+            else
+            {
+                _currentBaseIcon = model?.Icon;
+            }
+        
+            _overlaySubscription = model!.WhenValueChanged(x => x.Overlays)
+                .Subscribe(_ => UpdateOverlays());
         }
-        else
-        {
-            _currentBaseIcon = model?.Icon;
-        }
-
-        _overlayEntry = OverlaySource as IProjectEntry;
-        _overlayRoot = _overlayEntry?.Root;
-
-        if (_overlayRoot != null)
-            _overlayRoot.EntryOverlaysChanged += OnEntryOverlaysChanged;
-
-        UpdateOverlays();
+        
         InvalidateVisual();
     }
 
@@ -139,14 +130,11 @@ public class LayeredIconPresenter : Control
 
     private void Cleanup()
     {
+        _overlaySubscription?.Dispose();
         _baseSubscription?.Dispose();
         _baseSubscription = null;
         _currentBaseIcon = null;
         ClearOverlayStates();
-        if (_overlayRoot != null)
-            _overlayRoot.EntryOverlaysChanged -= OnEntryOverlaysChanged;
-        _overlayEntry = null;
-        _overlayRoot = null;
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -158,23 +146,16 @@ public class LayeredIconPresenter : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        if (Value != null || OverlaySource != null) UpdateSubscriptions();
-    }
-
-    private void OnEntryOverlaysChanged(object? sender, ProjectEntryOverlayChangedEventArgs e)
-    {
-        if (_overlayEntry == null || !ReferenceEquals(e.Entry, _overlayEntry)) return;
-        UpdateOverlays();
+        if (Value != null) UpdateSubscriptions();
     }
 
     private void UpdateOverlays()
     {
         ClearOverlayStates();
+        
+        if (Value == null) return;
 
-        var overlays = new List<IconLayer>();
-        if (_overlayEntry != null) overlays.AddRange(_overlayEntry.GetIconOverlays());
-
-        foreach (var overlay in overlays)
+        foreach (var overlay in Value.Overlays)
         {
             if (overlay.IconObservable != null)
             {

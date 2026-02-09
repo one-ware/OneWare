@@ -7,14 +7,11 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
-    private readonly List<IProjectEntryOverlayProvider> _overlayProviders = new();
-
     protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath),
         null)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
-        RegisterOverlayProvider(new LoadingFailedOverlayProvider());
     }
 
     public abstract string ProjectPath { get; }
@@ -39,13 +36,13 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
     }
 
     public abstract bool IsPathIncluded(string path);
-    
+
     public abstract void IncludePath(string path);
 
     public virtual void OnExternalEntryAdded(string relativePath, FileAttributes attributes)
     {
         if (!IsPathIncluded(relativePath)) return;
-        
+
         var parentPath = Path.GetDirectoryName(relativePath);
         if (parentPath != null && GetLoadedEntry(parentPath) is IProjectFolder folder)
         {
@@ -56,53 +53,6 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
                 else
                     AddFile(relativePath);
             }
-        }
-    }
-
-    public event EventHandler<ProjectEntryOverlayChangedEventArgs>? EntryOverlaysChanged;
-
-    public IReadOnlyList<IconLayer> GetEntryOverlays(IProjectEntry entry)
-    {
-        if (_overlayProviders.Count == 0) return Array.Empty<IconLayer>();
-
-        var overlays = new List<IconLayer>();
-        foreach (var provider in _overlayProviders)
-            overlays.AddRange(provider.GetOverlays(entry));
-
-        return overlays;
-    }
-
-    public void NotifyEntryOverlayChanged(IProjectEntry entry)
-    {
-        EntryOverlaysChanged?.Invoke(this, new ProjectEntryOverlayChangedEventArgs(entry));
-    }
-
-    public void RegisterOverlayProvider(IProjectEntryOverlayProvider provider)
-    {
-        if (!_overlayProviders.Contains(provider))
-            _overlayProviders.Add(provider);
-    }
-
-    public void UnregisterOverlayProvider(IProjectEntryOverlayProvider provider)
-    {
-        _overlayProviders.Remove(provider);
-    }
-
-    private sealed class LoadingFailedOverlayProvider : IProjectEntryOverlayProvider
-    {
-        public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
-        {
-            if (!entry.LoadingFailed) return [];
-
-            return
-            [
-                new IconLayer("VsImageLib.StatusCriticalErrorOverlayExp16X")
-                {
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch,
-                    SizeRatio = 1
-                }
-            ];
         }
     }
 }
