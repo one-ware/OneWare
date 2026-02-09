@@ -69,12 +69,6 @@ public class ProjectSettingsService : IProjectSettingsService
 
     public List<ProjectSetting> GetProjectSettingsList()
     {
-        List<ProjectSetting> ret = new();
-
-        foreach (var projectSetting in ProjectSettings)
-            ret.Add(new ProjectSetting(projectSetting.Key, projectSetting.Setting.Clone(),
-                projectSetting.ActivationFunction));
-
-        return ret;
+        return ProjectSettings;
     }
 }
