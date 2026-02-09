@@ -70,4 +70,5 @@ public interface ILanguageService
     public Task ExecuteCommandAsync(Command cmd);
     public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param);
     public Task ApplyWorkspaceEditAsync(WorkspaceEdit? param);
+    public void ApplyContainer(string path, IEnumerable<TextEdit> con);
 }

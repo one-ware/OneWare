@@ -94,7 +94,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (hover.Contents.HasMarkupContent)
             return hover.Contents.MarkupContent?.Value;
 
-        if (hover.Contents.HasMarkedStrings && hover.Contents.MarkedStrings != null)
+        if (hover.Contents is { HasMarkedStrings: true, MarkedStrings: not null })
         {
             var segments = new List<string>();
             foreach (var marked in hover.Contents.MarkedStrings)
@@ -365,8 +365,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             return false;
         }
 
-        if (location.Uri == null) return false;
-
         var path = location.Uri.GetFileSystemPath();
         var keyPath = string.IsNullOrWhiteSpace(path) ? location.Uri.ToString() : path.ToPathKey();
         var range = location.Range;
@@ -572,6 +570,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
             OverloadInsight.SetValue(TextBlock.FontSizeProperty,
                 SettingsService.GetSettingValue<int>("Editor_FontSize"));
+            
             if (overloadProvider.Count > 0) OverloadInsight.Show();
         }
     }
@@ -736,21 +735,21 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var overloadOptions = new List<(string, string?)>();
         foreach (var s in signatureHelp.Signatures)
         {
-            if (s.Parameters is null) continue;
-            var m1 = "```cpp\n" + s.Label + "(";
-            for (var i = 0; i < s.Parameters.Count(); i++)
+            var signature = FormatSignatureLabel(s);
+            var docs = ExtractDocumentation(s.Documentation);
+
+            if (s.Parameters is not null && s.ActiveParameter.HasValue)
             {
-                var p = s.Parameters.ElementAt(i);
-                m1 += p.Label.Label;
-                if (i < s.Parameters.Count() - 1) m1 += ", ";
+                var index = s.ActiveParameter.Value;
+                if (index >= 0 && index < s.Parameters.Count())
+                {
+                    var paramDoc = ExtractDocumentation(s.Parameters.ElementAt(index).Documentation);
+                    if (!string.IsNullOrWhiteSpace(paramDoc))
+                        docs = string.IsNullOrWhiteSpace(docs) ? paramDoc : docs + "\n\n" + paramDoc;
+                }
             }
 
-            m1 += ")\n```";
-            var m2 = string.Empty;
-            if (s.Documentation != null && s.Documentation.HasMarkupContent)
-                m2 += s.Documentation.MarkupContent?.Value;
-            if (s.Documentation != null && s.Documentation.HasString) m2 += s.Documentation.String;
-            overloadOptions.Add((m1, m2.Length > 0 ? m2 : null));
+            overloadOptions.Add((signature, string.IsNullOrWhiteSpace(docs) ? null : docs));
         }
 
         return new OverloadProvider(overloadOptions)
@@ -761,11 +760,17 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list, int offset)
     {
-        //Parse completionitem
-        foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, offset);
+        var items = list.Items.ToList();
+        if (items.Any(x => !string.IsNullOrWhiteSpace(x.SortText)))
+            items = items.OrderBy(x => string.IsNullOrWhiteSpace(x.SortText) ? x.Label : x.SortText,
+                StringComparer.Ordinal).ToList();
+
+        var priority = items.Count;
+        foreach (var comp in items)
+            yield return ConvertCompletionItem(comp, offset, priority--);
     }
 
-    protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+    protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset, double priority = 0)
     {
         var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
             ? instanceIcon
@@ -773,18 +778,77 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         void AfterComplete()
         {
+            if (comp.AdditionalTextEdits is not null && comp.AdditionalTextEdits.Any())
+                Service.ApplyContainer(CurrentFilePath, comp.AdditionalTextEdits);
+            if (comp.Command != null)
+                _ = Service.ExecuteCommandAsync(comp.Command);
             _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
         }
 
-        var description = comp.Documentation != null
-            ? comp.Documentation.MarkupContent != null
-                ? comp.Documentation.MarkupContent.Value
-                : comp.Documentation.String
-            : null;
+        var description = ExtractDocumentation(comp.Documentation);
+        var insertText = comp.InsertText ?? comp.Label;
+        var isSnippet = comp.InsertTextFormat == InsertTextFormat.Snippet;
+        int? replaceStart = null;
+        int? replaceEnd = null;
 
-        return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
-            0,
-            comp, offset, CurrentFilePath, AfterComplete);
+        if (comp.TextEdit != null)
+        {
+            if (comp.TextEdit.IsTextEdit && comp.TextEdit.TextEdit != null)
+            {
+                insertText = comp.TextEdit.TextEdit.NewText;
+                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
+                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+            }
+            else if (comp.TextEdit.IsInsertReplaceEdit && comp.TextEdit.InsertReplaceEdit != null)
+            {
+                insertText = comp.TextEdit.InsertReplaceEdit.NewText;
+                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.Start) - 1;
+                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.End) - 1;
+            }
+        }
+
+        return new CompletionData(insertText, comp.Label, comp.Detail, description, icon,
+            priority,
+            comp, offset, CurrentFilePath, AfterComplete, isSnippet)
+        {
+            FilterText = comp.FilterText,
+            SortText = comp.SortText,
+            ReplaceStartOffset = replaceStart,
+            ReplaceEndOffset = replaceEnd
+        };
+    }
+
+    private static string? ExtractDocumentation(StringOrMarkupContent? documentation)
+    {
+        if (documentation == null) return null;
+        if (documentation.HasMarkupContent) return documentation.MarkupContent?.Value;
+        if (documentation.HasString) return documentation.String;
+        return null;
+    }
+
+    private static string FormatSignatureLabel(SignatureInformation signature)
+    {
+        var label = signature.Label ?? string.Empty;
+        if (signature.Parameters is null || !signature.ActiveParameter.HasValue) return label;
+
+        var index = signature.ActiveParameter.Value;
+        if (index < 0 || index >= signature.Parameters.Count()) return label;
+
+        var paramLabel = GetParameterLabelText(signature.Parameters.ElementAt(index).Label);
+        if (string.IsNullOrWhiteSpace(paramLabel)) return label;
+
+        var paramIndex = label.IndexOf(paramLabel, StringComparison.Ordinal);
+        if (paramIndex < 0) return label;
+
+        return label.Remove(paramIndex, paramLabel.Length).Insert(paramIndex, $"**{paramLabel}**");
+    }
+
+    private static string? GetParameterLabelText(object? label)
+    {
+        if (label == null) return null;
+        if (label is string text) return text;
+        var asString = label.ToString();
+        return string.IsNullOrWhiteSpace(asString) ? null : asString;
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
