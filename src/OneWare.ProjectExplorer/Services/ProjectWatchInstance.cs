@@ -136,6 +136,8 @@ public class ProjectWatchInstance : IDisposable
         var upsertEntries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var touchEntries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var reconcileParents = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var renames = new List<RenameChange>();
+        var renameKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var e in events.OfType<RenamedEventArgs>())
         {
@@ -152,6 +154,14 @@ public class ProjectWatchInstance : IDisposable
             {
                 MarkUpsert(newPath, upsertTrees, upsertEntries, reconcileParents);
                 MarkParent(newPath, reconcileParents);
+            }
+
+            if (!string.IsNullOrWhiteSpace(oldPath) && !string.IsNullOrWhiteSpace(newPath) &&
+                !oldPath.Equals(newPath, StringComparison.OrdinalIgnoreCase))
+            {
+                var key = $"{oldPath}\0{newPath}";
+                if (renameKeys.Add(key))
+                    renames.Add(new RenameChange(oldPath, newPath));
             }
         }
 
@@ -182,11 +192,15 @@ public class ProjectWatchInstance : IDisposable
         touchEntries.ExceptWith(removeEntries);
         touchEntries.ExceptWith(removeTrees);
 
-        return new FsPlan(removeTrees, removeEntries, upsertTrees, upsertEntries, touchEntries, reconcileParents);
+        return new FsPlan(removeTrees, removeEntries, upsertTrees, upsertEntries, touchEntries, reconcileParents,
+            renames);
     }
 
     private async Task ApplyPlanAsync(FsPlan plan)
     {
+        foreach (var rename in plan.Renames)
+            await HandleRenameForOpenFileAsync(rename.OldPath, rename.NewPath);
+
         foreach (var path in plan.TouchEntries.Concat(plan.UpsertEntries))
             await HandleFileTouchAsync(path);
 
@@ -236,6 +250,29 @@ public class ProjectWatchInstance : IDisposable
 
             if (_root.ProjectPath.EqualPaths(path) && !File.Exists(path))
                 await Dispatcher.UIThread.InvokeAsync(() => _root.LoadingFailed = true);
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task HandleRenameForOpenFileAsync(string oldPath, string newPath)
+    {
+        try
+        {
+            var openTab = _mainDockService.OpenFiles
+                .FirstOrDefault(x => x.Key.EqualPaths(oldPath));
+
+            if (openTab.Value == null) return;
+            if (!File.Exists(newPath) && !Directory.Exists(newPath)) return;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _mainDockService.OpenFiles.Remove(openTab.Key);
+                _mainDockService.OpenFiles[newPath] = openTab.Value;
+                openTab.Value.FullPath = newPath;
+                openTab.Value.InitializeContent();
+            });
         }
         catch
         {
@@ -432,6 +469,9 @@ public class ProjectWatchInstance : IDisposable
         HashSet<string> UpsertTrees,
         HashSet<string> UpsertEntries,
         HashSet<string> TouchEntries,
-        HashSet<string> ReconcileParents
+        HashSet<string> ReconcileParents,
+        List<RenameChange> Renames
     );
+
+    private sealed record RenameChange(string OldPath, string NewPath);
 }
