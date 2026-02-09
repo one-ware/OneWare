@@ -13,7 +13,9 @@ public static class UniversalProjectSerializer
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowTrailingCommas = true
+        AllowTrailingCommas = true,
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
     public static async Task<UniversalProjectProperties?> DeserializePropertiesAsync(string path)

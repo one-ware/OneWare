@@ -78,6 +78,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
             {
                 //IconOverlays.Remove(_loadingFailedOverlay);
             }
+            Root.NotifyEntryOverlayChanged(this);
         }
     }
 
@@ -131,5 +132,10 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public virtual void OnIsExpandedChanged(bool isExpanded)
     {
+    }
+
+    public IReadOnlyList<IconLayer> GetIconOverlays()
+    {
+        return Root.GetEntryOverlays(this);
     }
 }

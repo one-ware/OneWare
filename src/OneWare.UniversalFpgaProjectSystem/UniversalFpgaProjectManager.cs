@@ -202,10 +202,10 @@ public class UniversalFpgaProjectManager : IProjectManager
                             menuItems.Add(new MenuItemModel("UnmarkTestBench")
                             {
                                 Header = "Unmark as TestBench",
-                                Command = new RelayCommand(() =>
+                                Command = new AsyncRelayCommand(() =>
                                 {
                                     universalFpgaProjectRoot.RemoveTestBench(file.RelativePath);
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
+                                    return SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
                                 Icon = new IconModel("VSImageLib.RemoveSingleDriverTest_16x")
                             });

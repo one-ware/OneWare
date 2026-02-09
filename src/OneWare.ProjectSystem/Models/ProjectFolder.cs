@@ -336,7 +336,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
             SortChildren();
     }
 
-    private async IAsyncEnumerable<ProjectFolder> EnumerateFoldersAsync(int batchSize,
+    private async IAsyncEnumerable<IProjectFolder> EnumerateFoldersAsync(int batchSize,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var matches = GetDirectories("*", false);
@@ -346,7 +346,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         foreach (var match in matches)
         {
             if (cancellationToken.IsCancellationRequested) yield break;
-            yield return new ProjectFolder(Path.GetFileName(match), this);
+            yield return ConstructNewProjectFolder(Path.GetFileName(match), this);
 
             count++;
 
@@ -359,7 +359,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         }
     }
 
-    private async IAsyncEnumerable<ProjectFile> EnumerateFilesAsync(int batchSize,
+    private async IAsyncEnumerable<IProjectFile> EnumerateFilesAsync(int batchSize,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var matches = GetFiles("*", false);
@@ -369,7 +369,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         foreach (var match in matches)
         {
             if (cancellationToken.IsCancellationRequested) yield break;
-            yield return new ProjectFile(Path.GetFileName(match), this);
+            yield return ConstructNewProjectFile(Path.GetFileName(match), this);
 
             count++;
 

@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using OneWare.Essentials.Extensions;
@@ -21,6 +22,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     private readonly IImage _testBenchOverlay;
 
     private readonly IImage _topEntityOverlay;
+    private readonly IProjectEntryOverlayProvider _testBenchOverlayProvider;
 
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
@@ -32,6 +34,9 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                             ?? throw new NullReferenceException(nameof(Application));
 
         PreCompileSteps = new ReadOnlyObservableCollection<IFpgaPreCompileStep>(_preCompileSteps);
+
+        _testBenchOverlayProvider = new TestBenchOverlayProvider(this, _testBenchOverlay);
+        RegisterOverlayProvider(_testBenchOverlayProvider);
     }
 
     public override string ProjectTypeId => ProjectType;
@@ -78,11 +83,15 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     public void AddTestBench(string relativePath)
     {
         AddIncludedPathHelper(relativePath, "testBenches");
+        var entry = GetLoadedEntry(relativePath);
+        if (entry != null) NotifyEntryOverlayChanged(entry);
     }
 
     public void RemoveTestBench(string relativePath)
     {
         RemoveIncludedPathHelper(relativePath, "testBenches");
+        var entry = GetLoadedEntry(relativePath);
+        if (entry != null) NotifyEntryOverlayChanged(entry);
     }
 
     public bool IsCompileExcluded(string relativePath)
@@ -130,5 +139,26 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
             if (!await step.PerformPreCompileStepAsync(this, fpga))
                 return;
         await Toolchain.CompileAsync(this, fpga);
+    }
+
+    private sealed class TestBenchOverlayProvider(UniversalFpgaProjectRoot root, IImage overlayImage)
+        : IProjectEntryOverlayProvider
+    {
+        public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
+        {
+            if (entry is IProjectRoot) return Array.Empty<IconLayer>();
+            if (!root.IsTestBench(entry.RelativePath)) return Array.Empty<IconLayer>();
+
+            return
+            [
+                new IconLayer
+                {
+                    Icon = overlayImage,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    SizeRatio = 1
+                }
+            ];
+        }
     }
 }

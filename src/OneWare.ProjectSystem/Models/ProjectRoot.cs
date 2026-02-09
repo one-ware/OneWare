@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Avalonia.Layout;
 using Avalonia.Media;
 using OneWare.Essentials.Models;
 
@@ -6,11 +7,14 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectRoot : ProjectFolder, IProjectRoot
 {
+    private readonly List<IProjectEntryOverlayProvider> _overlayProviders = new();
+
     protected ProjectRoot(string rootFolderPath) : base(Path.GetFileName(rootFolderPath),
         null)
     {
         RootFolderPath = rootFolderPath;
         TopFolder = this;
+        RegisterOverlayProvider(new LoadingFailedOverlayProvider());
     }
 
     public abstract string ProjectPath { get; }
@@ -52,10 +56,53 @@ public abstract class ProjectRoot : ProjectFolder, IProjectRoot
                 else
                     AddFile(relativePath);
             }
-            else if (folder.Children.Count == 0)
-            {
-                folder.Children.Add(new LoadingDummyNode());
-            }
+        }
+    }
+
+    public event EventHandler<ProjectEntryOverlayChangedEventArgs>? EntryOverlaysChanged;
+
+    public IReadOnlyList<IconLayer> GetEntryOverlays(IProjectEntry entry)
+    {
+        if (_overlayProviders.Count == 0) return Array.Empty<IconLayer>();
+
+        var overlays = new List<IconLayer>();
+        foreach (var provider in _overlayProviders)
+            overlays.AddRange(provider.GetOverlays(entry));
+
+        return overlays;
+    }
+
+    public void NotifyEntryOverlayChanged(IProjectEntry entry)
+    {
+        EntryOverlaysChanged?.Invoke(this, new ProjectEntryOverlayChangedEventArgs(entry));
+    }
+
+    public void RegisterOverlayProvider(IProjectEntryOverlayProvider provider)
+    {
+        if (!_overlayProviders.Contains(provider))
+            _overlayProviders.Add(provider);
+    }
+
+    public void UnregisterOverlayProvider(IProjectEntryOverlayProvider provider)
+    {
+        _overlayProviders.Remove(provider);
+    }
+
+    private sealed class LoadingFailedOverlayProvider : IProjectEntryOverlayProvider
+    {
+        public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
+        {
+            if (!entry.LoadingFailed) return [];
+
+            return
+            [
+                new IconLayer("VsImageLib.StatusCriticalErrorOverlayExp16X")
+                {
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch,
+                    SizeRatio = 1
+                }
+            ];
         }
     }
 }

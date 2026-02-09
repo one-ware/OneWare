@@ -1,9 +1,7 @@
 using System.Text.Json.Nodes;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.ProjectSystem;
 
 namespace OneWare.ProjectSystem.Models;
 
@@ -53,159 +51,60 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     
     public void LoadProperties(UniversalProjectProperties properties)
     {
-        var normalized = NormalizeJsonKeys(properties.AsObject());
         var oldProperties = Properties;
-        Properties = new UniversalProjectProperties(normalized);
+        Properties = UniversalProjectProperties.FromJson(properties.AsObject());
         RaisePropertyChanged("*", oldProperties.AsObject(), Properties.AsObject());
-    }
-
-    private static string NormalizeKey(string key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-            return key;
-
-        var separators = new[] { '_', '-', ' ' };
-
-        if (key.IndexOfAny(separators) < 0)
-            return char.ToUpperInvariant(key[0]) + key[1..];
-
-        var parts = key.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-            return char.ToUpperInvariant(key[0]) + key[1..];
-
-        return string.Concat(parts.Select(part =>
-        {
-            if (string.IsNullOrEmpty(part)) return part;
-            if (part.All(char.IsUpper)) return part;
-            var lower = part.ToLowerInvariant();
-            return char.ToUpperInvariant(lower[0]) + lower[1..];
-        }));
-    }
-
-    private static JsonObject NormalizeJsonKeys(JsonObject input)
-    {
-        var result = new JsonObject();
-
-        foreach (var (key, value) in input)
-        {
-            var normalizedKey = NormalizeKey(key);
-
-            result[normalizedKey] = NormalizeJsonNode(value);
-        }
-
-        return result;
-    }
-
-    private static JsonNode? NormalizeJsonNode(JsonNode? node)
-    {
-        switch (node)
-        {
-            case JsonObject nestedObj:
-                return NormalizeJsonKeys(nestedObj);
-            case JsonArray array:
-                var normalizedArray = new JsonArray();
-                foreach (var item in array)
-                    normalizedArray.Add(NormalizeJsonNode(item));
-                return normalizedArray;
-            default:
-                return node?.DeepClone();
-        }
     }
 
 
     public string? GetProjectProperty(string name)
     {
-        name = NormalizeKey(name);
-        return Properties[name]?.ToString();
+        return Properties.GetString(name);
     }
 
     public JsonNode? GetProjectPropertyNode(string name)
     {
-        name = NormalizeKey(name);
-        return Properties[name];
+        return Properties.GetNode(name);
     }
 
     public bool HasProjectProperty(string name)
     {
-        name = NormalizeKey(name);
         return Properties.ContainsKey(name);
     }
 
     public IEnumerable<string>? GetProjectPropertyArray(string name)
     {
-        name = NormalizeKey(name);
-
-        return Properties[name]?.AsArray()
-            .Where(x => x is not null)
-            .Select(x => x!.ToString());
+        return Properties.GetStringArray(name);
     }
 
     public void SetProjectProperty(string name, string? value)
     {
-        name = NormalizeKey(name);
-
-        Properties.TryGetPropertyValue(name, out var oldValue);
-        Properties[name] = value == null ? null : JsonValue.Create(value);
-
-        RaisePropertyChanged(name, oldValue, value);
+        var normalized = Properties.SetString(name, value, out var oldValue);
+        RaisePropertyChanged(normalized, oldValue, value);
     }
 
     public void RemoveProjectProperty(string name)
     {
-        name = NormalizeKey(name);
-
-        Properties.TryGetPropertyValue(name, out var oldValue);
-        Properties.Remove(name);
-
-        RaisePropertyChanged(name, oldValue, null);
-    }
-    
-    private JsonArray GetOrCreateArray(string name)
-    {
-        name = NormalizeKey(name);
-
-        if (Properties[name] is not JsonArray arr)
-        {
-            arr = new JsonArray();
-            Properties[name] = arr;
-        }
-
-        return arr;
+        var normalized = Properties.RemoveValue(name, out var oldValue);
+        RaisePropertyChanged(normalized, oldValue, null);
     }
 
     public void SetProjectPropertyArray(string name, IEnumerable<string> values)
     {
-        name = NormalizeKey(name);
-
-        Properties.TryGetPropertyValue(name, out var oldValue);
-
-        var array = new JsonArray(values.Select(x => JsonValue.Create(x)).ToArray());
-        Properties[name] = array;
-
-        RaisePropertyChanged(name, oldValue, values);
+        var normalized = Properties.SetStringArray(name, values, out var oldValue);
+        RaisePropertyChanged(normalized, oldValue, values);
     }
 
     public void AddToProjectPropertyArray(string name, params string[] newItems)
     {
-        var array = GetOrCreateArray(name);
-
-        foreach (var item in newItems)
-            array.Add(item);
-
-        RaisePropertyChanged(name, null, array);
+        var normalized = Properties.AddToStringArray(name, newItems);
+        RaisePropertyChanged(normalized, null, Properties.GetNode(normalized));
     }
 
     public void RemoveFromProjectPropertyArray(string name, params string[] removeItems)
     {
-        name = NormalizeKey(name);
-
-        if (Properties[name] is not JsonArray array)
-            return;
-
-        foreach (var item in removeItems)
-            array.Remove(item);
-
-        RaisePropertyChanged(name, null, array);
+        var normalized = Properties.RemoveFromStringArray(name, removeItems);
+        RaisePropertyChanged(normalized, null, Properties.GetNode(normalized));
     }
 
     public override bool IsPathIncluded(string path)
