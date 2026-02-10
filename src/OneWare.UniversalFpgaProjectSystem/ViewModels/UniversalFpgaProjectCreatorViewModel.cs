@@ -114,14 +114,10 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             }
 
             var projectFile = Path.Combine(folder, name + UniversalFpgaProjectRoot.ProjectFileExtension);
-
-            var defaultProperties = new JsonObject
-            {
-                ["include"] = new JsonArray("*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"),
-                ["exclude"] = new JsonArray("build")
-            };
+            
             var root = new UniversalFpgaProjectRoot(projectFile);
-            root.LoadProperties(new UniversalProjectProperties(defaultProperties));
+            root.Properties.AddToStringArray("include", ["*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"]);
+            root.Properties.AddToStringArray("exclude", ["build"]);
 
             if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
                 root.Loader = loader;

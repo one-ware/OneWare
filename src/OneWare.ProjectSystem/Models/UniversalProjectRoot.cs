@@ -16,20 +16,13 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         Icon = new IconModel("UniversalProject");
     }
     
-    public UniversalProjectProperties Properties { get; private set; } = new();
+    public UniversalProjectProperties Properties { get; } = new();
 
     public override string ProjectPath => ProjectFilePath;
 
     public string ProjectFilePath { get; }
 
     public DateTime LastSaveTime { get; set; }
-    
-    public void LoadProperties(UniversalProjectProperties properties)
-    {
-        var oldProperties = Properties;
-        Properties = UniversalProjectProperties.FromJson(properties.AsObject());
-        RaisePropertyChanged("*", oldProperties.AsObject(), Properties.AsObject());
-    }
 
     public override bool IsPathIncluded(string path)
     {
@@ -85,5 +78,20 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
     public void InvalidateModifications(IProjectEntry entry)
     {
         _entryModificationHandlers.ForEach(handler => handler(entry));
+    }
+
+    public Task<bool> LoadAsync()
+    {
+        return Properties.LoadAsync(ProjectFilePath);
+    }
+    
+    public async Task<bool> SaveAsync()
+    {
+        if (await Properties.SaveAsync(ProjectFilePath))
+        {
+            LastSaveTime = DateTime.Now;
+            return true;
+        }
+        return false;
     }
 }

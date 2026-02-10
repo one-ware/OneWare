@@ -86,7 +86,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
             return (null, null);
         }
 
-        var name = project.GetProjectProperty("Fpga");
+        var name = project.Properties.GetString("fpga");
         var fpgaPackage = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
         if (fpgaPackage == null)
         {

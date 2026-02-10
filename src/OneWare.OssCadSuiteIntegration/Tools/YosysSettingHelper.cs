@@ -29,17 +29,12 @@ public class YosysSettingHelper
 
     public static string GetConstraintFile(UniversalFpgaProjectRoot project)
     {
-        if (!HasProjectProperties(project))
-            return "project.pcf";
-
-        var ossCad = project.Get("ossCad") as JsonObject;
-        var path = ossCad?["constraintFile"]?.ToString();
-        return path ?? "project.pcf";
+        return project.Properties.GetString("ossCad/constraintFile") ?? "project.pcf";
     }
     
     public static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? constraintFile)
     {
-        var include = project.GetProjectPropertyArray("include");
+        var include = project.Properties.GetStringArray("include");
         var hasPcfInclude = false;
         if (include != null)
         {
@@ -54,10 +49,8 @@ public class YosysSettingHelper
         }
 
         if (!hasPcfInclude)
-            project.AddToProjectPropertyArray("include", "*.pcf");
+            project.Properties.AddToStringArray("include", "*.pcf");
 
-        var ossCad = project.GetProjectPropertyNode("ossCad") as JsonObject ?? new JsonObject();
-        ossCad["constraintFile"] = constraintFile ?? "project.pcf";
-        project.Properties["ossCad"] = ossCad;
+        project.Properties.SetString("ossCad/constraintFile", constraintFile);
     }
 }

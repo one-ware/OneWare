@@ -6,7 +6,6 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.ProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -36,25 +35,15 @@ public class UniversalFpgaProjectManager : IProjectManager
 
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        var properties = await UniversalProjectSerializer.DeserializePropertiesAsync(path);
-
-        if (properties == null) return null;
-
         var root = new UniversalFpgaProjectRoot(path);
-        root.LoadProperties(properties);
+        await root.LoadAsync();
 
-        var toolchain = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Toolchain));
+        var toolchain = root.Properties.GetString("toolchain");
         if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
             root.Toolchain = tc;
 
-        var loader = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Loader));
+        var loader = root.Properties.GetString("loader");
         if (loader != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loader) is { } l) root.Loader = l;
-
-        var preCompileSteps = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.PreCompileSteps));
-        if (preCompileSteps != null)
-            foreach (var preCompileStep in preCompileSteps)
-                if (_fpgaService.GetPreCompileStep(preCompileStep) is { } pre)
-                    root.RegisterPreCompileStep(pre);
 
         foreach (var entryModification in _fpgaService.EntryModificationHandlers)
         {
@@ -70,19 +59,10 @@ public class UniversalFpgaProjectManager : IProjectManager
     {
         if (project is not UniversalFpgaProjectRoot root) return;
         
-        var newSettings = await UniversalProjectSerializer.DeserializePropertiesAsync(root.ProjectFilePath);
-
-        if (newSettings == null)
-        {
-            project.LoadingFailed = true;
-            return;
-        }
-        
-        root.LoadProperties(newSettings);
+        await root.LoadAsync();
         await root.InitializeAsync();
         
         //TODO reload open files
-        
         var filesOpenInProject = _mainDockService.OpenFiles
             .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
             .Select(x => new { Key = x.Key, ViewModel = x.Value })
@@ -104,7 +84,7 @@ public class UniversalFpgaProjectManager : IProjectManager
     {
         if (root is not UniversalFpgaProjectRoot fpgaProject) return false;
         
-        var result = await UniversalProjectSerializer.SerializeAsync(fpgaProject);
+        var result = await fpgaProject.SaveAsync();
 
         if(result)
             fpgaProject.LastSaveTime = DateTime.Now;

@@ -16,8 +16,6 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 {
     public const string ProjectFileExtension = ".fpgaproj";
     public const string ProjectType = "UniversalFPGAProject";
-
-    private readonly ObservableCollection<IFpgaPreCompileStep> _preCompileSteps = [];
     
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
@@ -44,8 +42,6 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                 x.Icon?.RemoveOverlay("TopEntity");
             }
         });
-
-        PreCompileSteps = new ReadOnlyObservableCollection<IFpgaPreCompileStep>(_preCompileSteps);
     }
 
     public override string ProjectTypeId => ProjectType;
@@ -63,9 +59,9 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         {
             SetProperty(ref field, value);
             if (field != null)
-                SetProjectProperty(nameof(Toolchain), field.Name);
+                Properties.SetString(nameof(Toolchain), field.Name);
             else
-                RemoveProjectProperty(nameof(Toolchain));
+                Properties.Remove(nameof(Toolchain));
         }
     }
 
@@ -76,9 +72,9 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         {
             SetProperty(ref field, value);
             if (field != null)
-                SetProjectProperty(nameof(Loader), field.Name);
+                Properties.SetString(nameof(Loader), field.Name);
             else
-                RemoveProjectProperty(nameof(Loader));
+                Properties.Remove(nameof(Loader));
         }
     }
 
@@ -124,18 +120,6 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         return new FpgaProjectFile(path, topFolder);
     }
 
-    public void RegisterPreCompileStep(IFpgaPreCompileStep step)
-    {
-        _preCompileSteps.Add(step);
-        SetProjectPropertyArray(nameof(PreCompileSteps), PreCompileSteps.Select(x => x.Name));
-    }
-
-    public void UnregisterPreCompileStep(IFpgaPreCompileStep step)
-    {
-        _preCompileSteps.Remove(step);
-        SetProjectPropertyArray(nameof(PreCompileSteps), PreCompileSteps.Select(x => x.Name));
-    }
-
     public async Task RunToolchainAsync(FpgaModel fpga)
     {
         if (Toolchain == null) return;
@@ -145,25 +129,4 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                 return;
         await Toolchain.CompileAsync(this, fpga);
     }
-
-    // private sealed class TestBenchOverlayProvider(UniversalFpgaProjectRoot root, IImage overlayImage)
-    //     : IProjectEntryOverlayProvider
-    // {
-    //     public IEnumerable<IconLayer> GetOverlays(IProjectEntry entry)
-    //     {
-    //         if (entry is IProjectRoot) return Array.Empty<IconLayer>();
-    //         if (!root.IsTestBench(entry.RelativePath)) return Array.Empty<IconLayer>();
-    //
-    //         return
-    //         [
-    //             new IconLayer
-    //             {
-    //                 Icon = overlayImage,
-    //                 HorizontalAlignment = HorizontalAlignment.Right,
-    //                 VerticalAlignment = VerticalAlignment.Bottom,
-    //                 SizeRatio = 1
-    //             }
-    //         ];
-    //     }
-    // }
 }

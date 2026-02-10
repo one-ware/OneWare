@@ -33,7 +33,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
             _projectRoot = fpgaProjectRoot;
             IsVisible = fpgaProjectRoot.IsTestBench(Path.GetRelativePath(root.RootFolderPath, filePath));
             
-            fpgaProjectRoot.ProjectPropertyChanged += OnProjectPropertyChanged;
+            fpgaProjectRoot.Properties.ProjectPropertyChanged += OnProjectPropertyChanged;
         }
     }
 
@@ -83,7 +83,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
     public void Detach()
     {
         if (_projectRoot != null)
-            _projectRoot.ProjectPropertyChanged -= OnProjectPropertyChanged;
+            _projectRoot.Properties.ProjectPropertyChanged -= OnProjectPropertyChanged;
     }
 
     private async Task LoadContextAsync()

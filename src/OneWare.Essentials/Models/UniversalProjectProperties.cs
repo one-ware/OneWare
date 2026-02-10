@@ -1,6 +1,10 @@
 using System;
 using System.Collections;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Models;
 
@@ -16,7 +20,15 @@ public class ProjectPropertyChangedEventArgs(
 
 public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonNode?>>
 {
-    private readonly JsonObject _data;
+    private JsonObject _data;
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        AllowTrailingCommas = true,
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
 
     public UniversalProjectProperties()
         : this(new JsonObject())
@@ -58,6 +70,46 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
         return RemoveNodeInternal(key, out _);
     }
 
+    public async Task<bool> LoadAsync(string path)
+    {
+        try
+        {
+            await using var stream = File.OpenRead(path);
+
+            var node = await JsonNode.ParseAsync(stream, null, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true
+            });
+
+            if (node == null) return false;
+            
+            _data = node.AsObject();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            return false;
+        }
+    }
+
+    public async Task<bool> SaveAsync(string path)
+    {
+        try
+        {
+            await using var stream = File.OpenWrite(path);
+            stream.SetLength(0);
+            await JsonSerializer.SerializeAsync(stream, _data, SerializerOptions);
+            return true;
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            return false;
+        }
+    }
+
     public static UniversalProjectProperties FromJson(JsonObject data)
     {
         return new UniversalProjectProperties(data);
@@ -85,16 +137,6 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
         }
     }
 
-    public JsonObject? GetObject(string key)
-    {
-        return GetNode(key) as JsonObject;
-    }
-
-    public JsonArray? GetArray(string key)
-    {
-        return GetNode(key) as JsonArray;
-    }
-
     public bool TryGetNode(string key, out JsonNode? value)
     {
         return TryGetNodeByPath(key, out value);
@@ -105,25 +147,14 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
         SetNodeInternal(key, value);
     }
 
-    public string SetString(string key, string? value, out JsonNode? oldValue)
+    public void SetString(string key, string? value)
     {
-        oldValue = SetNodeInternal(key, value == null ? null : JsonValue.Create(value));
-        return key;
+        SetNodeInternal(key, value == null ? null : JsonValue.Create(value));
     }
 
     public string RemoveValue(string key, out JsonNode? oldValue)
     {
         RemoveNodeInternal(key, out oldValue);
-        return key;
-    }
-
-    public string SetStringArray(string key, IEnumerable<string> values, out JsonNode? oldValue)
-    {
-        var array = new JsonArray();
-        foreach (var value in values)
-            array.Add(JsonValue.Create(value));
-
-        oldValue = SetNodeInternal(key, array);
         return key;
     }
 
