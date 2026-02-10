@@ -33,7 +33,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         
         RegisterProjectEntryModification(x =>
         {
-            if (x is IProjectFile file && TopEntity == file.RelativePath)
+            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntity))
             {
                 x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
             }
