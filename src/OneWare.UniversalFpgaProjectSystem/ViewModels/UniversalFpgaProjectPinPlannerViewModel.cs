@@ -25,17 +25,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     private CompositeDisposable? _compositeDisposable;
 
-    private bool _hideExtensions;
-
-    private bool _isLoading;
-
     private FpgaNode[]? _nodes;
-
-    private FpgaModel? _selectedModel;
-
-    private IFpgaPackage? _selectedPackage;
-
-    private FpgaViewModelBase? _selectedViewModel;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
@@ -60,8 +50,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public bool IsLoading
     {
-        get => _isLoading;
-        private set => SetProperty(ref _isLoading, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
@@ -74,12 +64,12 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public IFpgaPackage? SelectedFpgaPackage
     {
-        get => _selectedPackage;
+        get;
         set
         {
-            if (_selectedPackage?.Name != value?.Name) IsDirty = true;
+            if (field?.Name != value?.Name) IsDirty = true;
 
-            SetProperty(ref _selectedPackage, value);
+            SetProperty(ref field, value);
 
             if (value != null)
             {
@@ -96,10 +86,10 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public FpgaModel? SelectedFpgaModel
     {
-        get => _selectedModel;
+        get;
         private set
         {
-            SetProperty(ref _selectedModel, value);
+            SetProperty(ref field, value);
 
             _compositeDisposable?.Dispose();
             _compositeDisposable = new CompositeDisposable();
@@ -122,14 +112,14 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
-        get => _selectedViewModel;
-        private set => SetProperty(ref _selectedViewModel, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public bool HideExtensions
     {
-        get => _hideExtensions;
-        set => SetProperty(ref _hideExtensions, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     private async Task InitializeAsync()
@@ -263,7 +253,9 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public void SaveAndCompile(FlexibleWindow window)
     {
-        if (SelectedFpgaModel != null) _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
+        if (SelectedFpgaModel == null) return;
+        
         SaveAndClose(window);
+        _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
     }
 }

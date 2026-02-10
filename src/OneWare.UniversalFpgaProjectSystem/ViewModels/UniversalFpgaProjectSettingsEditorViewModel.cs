@@ -143,13 +143,13 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
 
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Name)
+            .Select(toolchain => toolchain.Id)
             .ToArray();
         var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
         var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
         var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
-            .Select(loader => loader.Name)
+            .Select(loader => loader.Id)
             .ToArray();
         var currentLoader = _root.Properties.GetString("loader") ?? "";
         var loader = new ComboBoxSetting("Loader", currentLoader, loaders);

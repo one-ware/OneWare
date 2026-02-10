@@ -7,6 +7,7 @@
                          xmlns:models="clr-namespace:OneWare.UniversalFpgaProjectSystem.Models"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
                          xmlns:converters1="clr-namespace:OneWare.UniversalFpgaProjectSystem.Converters"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                          PrefHeight="750" PrefWidth="900" Padding="4"
                          WindowBackground="{DynamicResource ThemeBackgroundBrush}"
@@ -31,13 +32,14 @@
             Command="{Binding Save}" />
     </Interaction.Behaviors>
 
-    <Grid>
+    <Panel>
         <ProgressBar IsVisible="{Binding IsLoading}"
                      IsIndeterminate="True"
                      HorizontalAlignment="Center"
                      VerticalAlignment="Center"
                      Width="100" Height="100" />
-        <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}">
+        <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}" IsEnabled="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
+              Opacity="{Binding $self.IsEnabled, Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}, ConverterParameter=0.5}">
             <Border Padding="4">
                 <Grid RowDefinitions="Auto, *">
                     <DockPanel DockPanel.Dock="Top">
@@ -262,5 +264,8 @@
             </StackPanel>
 
         </Grid>
-    </Grid>
+        
+        <TextBlock Background="Black" Padding="10" Text="Toolchain not found. Please check project settings" FontSize="18" FontWeight="Bold" Foreground="Orange" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   IsVisible="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNull}}" />
+    </Panel>
 </controls:FlexibleWindow>

@@ -230,7 +230,7 @@ public class FpgaService
 
             if (toolchain == null)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+                ContainerLocator.Container.Resolve<ILogger>().Warning($"Toolchain {project.Toolchain} not found");
                 return false;
             }
 
@@ -240,7 +240,7 @@ public class FpgaService
                 var fpgaPackage = FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 if (fpgaPackage == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+                    ContainerLocator.Container.Resolve<ILogger>().Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
                     return false;
                 }
                 fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());

@@ -57,17 +57,17 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         };
 
         _toolchainSetting = new ComboBoxSetting("Toolchain",
-            fpgaService.Toolchains.FirstOrDefault()?.Name ?? "Unset",
+            fpgaService.Toolchains.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Toolchains
-                .Select(x => x.Name)).ToArray())
+                .Select(x => x.Id)).ToArray())
         {
             HoverDescription = "Set the toolchain to use for the project (can be changed later)"
         };
 
         _loaderSetting = new ComboBoxSetting("Loader",
-            fpgaService.Loaders.FirstOrDefault()?.Name ?? "Unset",
+            fpgaService.Loaders.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Loaders
-                .Select(x => x.Name)).ToArray())
+                .Select(x => x.Id)).ToArray())
         {
             HoverDescription = "Set the loader to use for the project (can be changed later)"
         };
@@ -119,10 +119,10 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             root.Properties.AddToStringArray("include", ["*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"]);
             root.Properties.AddToStringArray("exclude", ["build"]);
 
-            if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
+            if (_fpgaService.Loaders.FirstOrDefault(x => x.Id == _loaderSetting.Value.ToString()) is { } loader)
                 root.Loader = loader.Id;
 
-            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc)
+            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Id == _toolchainSetting.Value.ToString()) is { } tc)
             {
                 root.Toolchain = tc.Id;
                 tc.OnProjectCreated(root);
