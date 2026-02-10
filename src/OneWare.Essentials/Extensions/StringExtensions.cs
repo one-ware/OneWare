@@ -9,8 +9,9 @@ public static class StringExtensions
             .ToArray());
     }
 
-    public static bool EqualPaths(this string input, string otherPath)
+    public static bool EqualPaths(this string input, string? otherPath)
     {
+        if (otherPath == null) return false;
         if (input == otherPath) return true;
 
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
