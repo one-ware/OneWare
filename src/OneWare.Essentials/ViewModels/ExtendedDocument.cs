@@ -55,6 +55,12 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         }
     }
 
+    public string? UiExtensionContext
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     public bool IsLoading
     {
         get;
@@ -142,6 +148,9 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
         _lastFullPath = FullPath;
         UpdateCurrentFile(oldPath);
+
+        UiExtensionContext = null;
+        UiExtensionContext = FullPath;
     }
 
     public virtual void GoToDiagnostic(ErrorListItem item)

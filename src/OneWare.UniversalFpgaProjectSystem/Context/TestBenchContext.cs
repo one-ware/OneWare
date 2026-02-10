@@ -8,8 +8,8 @@ public class TestBenchContext(string filePath, JsonObject properties)
 
     public string? Simulator
     {
-        get => Properties["Simulator"]?.ToString();
-        set => Properties["Simulator"] = value;
+        get => Properties["simulator"]?.ToString();
+        set => Properties["simulator"] = value;
     }
 
     public JsonObject Properties { get; } = properties;

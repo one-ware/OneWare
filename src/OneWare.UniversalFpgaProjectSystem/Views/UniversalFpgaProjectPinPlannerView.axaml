@@ -82,6 +82,7 @@
                             <Separator />
                             <TextBlock Text="Hide Extensions" VerticalAlignment="Center" />
                             <CheckBox IsChecked="{Binding HideExtensions}" />
+                            <Separator />
                         </StackPanel>
                     </DockPanel>
 

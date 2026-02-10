@@ -65,9 +65,9 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
             if (TestBenchContext != null)
             {
                 if (value != null)
-                    TestBenchContext.SetBenchProperty("Simulator", value.Name);
+                    TestBenchContext.SetBenchProperty("simulator", value.Name);
                 else
-                    TestBenchContext.RemoveBenchProperty("Simulator");
+                    TestBenchContext.RemoveBenchProperty("simulator");
 
                 _ = TestBenchContextManager.SaveContextAsync(TestBenchContext);
             }
@@ -90,7 +90,7 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
     {
         TestBenchContext = await TestBenchContextManager.LoadContextAsync(_filePath);
 
-        var simulator = TestBenchContext.GetBenchProperty("Simulator");
+        var simulator = TestBenchContext.GetBenchProperty("simulator");
 
         SelectedSimulator = Simulators.FirstOrDefault(x => x.Name == simulator);
     }

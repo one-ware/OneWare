@@ -36,7 +36,7 @@
     <DockPanel>
 
         <controls:UiExtensionCollection DockPanel.Dock="Top" Extensions="{Binding TopExtensions}"
-                                        Context="{Binding FullPath}">
+                                        Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
                     <DockPanel />
@@ -44,7 +44,7 @@
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
         <controls:UiExtensionCollection DockPanel.Dock="Bottom" Extensions="{Binding BottomExtensions}"
-                                        Context="{Binding FullPath}">
+                                        Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
                     <DockPanel />
