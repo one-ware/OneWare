@@ -148,8 +148,7 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
         _lastFullPath = FullPath;
         UpdateCurrentFile(oldPath);
-
-        UiExtensionContext = null;
+        
         UiExtensionContext = FullPath;
     }
 
