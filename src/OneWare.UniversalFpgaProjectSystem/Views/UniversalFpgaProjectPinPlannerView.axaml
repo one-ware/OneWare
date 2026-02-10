@@ -255,7 +255,7 @@
                         <TextBlock Text="Save And Compile" />
                         <StackPanel Spacing="2" Orientation="Horizontal" IsVisible="{Binding #CompileButton.IsEnabled}">
                             <TextBlock Text="with" />
-                            <TextBlock Text="{Binding Project.Toolchain.Name, FallbackValue={x:Null}}" />
+                            <TextBlock Text="{Binding Project.Toolchain, FallbackValue={x:Null}}" />
                         </StackPanel>
                     </StackPanel>
                 </Button>

@@ -4,6 +4,8 @@ namespace OneWare.UniversalFpgaProjectSystem.Services;
 
 public interface IFpgaToolchain
 {
+    public string Id { get; }
+    
     public string Name { get; }
 
     public void OnProjectCreated(UniversalFpgaProjectRoot project);

@@ -8,6 +8,10 @@ namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 {
+    public const string ToolChainId = "yosys";
+
+    public string Id => ToolChainId;
+    
     public virtual string Name => "Yosys";
 
     public virtual void OnProjectCreated(UniversalFpgaProjectRoot project)

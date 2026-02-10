@@ -52,8 +52,11 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
+        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
         _ = InitializeAsync();
     }
+
+    public IFpgaToolchain? Toolchain { get; }
 
     public bool IsLoading
     {
@@ -107,7 +110,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     foreach (var nodeModel in _nodes)
                         value.AddNode(nodeModel);
 
-                Project.Toolchain?.LoadConnections(Project, value);
+                Toolchain?.LoadConnections(Project, value);
 
                 Observable.FromEventPattern(value, nameof(value.NodeConnected)).Subscribe(_ => { IsDirty = true; })
                     .DisposeWith(_compositeDisposable);
@@ -245,7 +248,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             FpgaSettingsParser.WriteDefaultSettingsIfEmpty(Project, SelectedFpgaModel.Fpga);
             Project.Properties.SetString("fpga", SelectedFpgaModel.Fpga.Name);
-            Project.Toolchain?.SaveConnections(Project, SelectedFpgaModel);
+            Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
 
             IsDirty = false;
@@ -260,7 +263,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public void SaveAndCompile(FlexibleWindow window)
     {
-        if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
+        if (SelectedFpgaModel != null) _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
         SaveAndClose(window);
     }
 }

@@ -333,7 +333,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new OneWareUiExtension(x =>
             {
-                if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
+                if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain.ToolChainId } root) return null;
 
                 var name = root.Properties["Fpga"]?.ToString();
                 var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);

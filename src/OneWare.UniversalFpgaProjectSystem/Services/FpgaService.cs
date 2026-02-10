@@ -4,6 +4,7 @@ using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
+using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.Services;
 
@@ -11,11 +12,13 @@ public class FpgaService
 {
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
+    private readonly IWindowService _windowService;
 
-    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService)
+    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService, IWindowService windowService)
     {
         _logger = logger;
         _settingsService = settingsService;
+        _windowService = windowService;
 
         HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
         Directory.CreateDirectory(HardwareDirectory);
@@ -48,9 +51,9 @@ public class FpgaService
     public ObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; } = new();
 
     public ObservableCollection<INodeProvider> NodeProviders { get; } = new();
-    
+
     public ObservableCollection<Action<IProjectEntry>> EntryModificationHandlers { get; } = new();
-    
+
     public void RegisterEntryModification(Action<IProjectEntry> modificationAction)
     {
         EntryModificationHandlers.Add(modificationAction);
@@ -136,7 +139,7 @@ public class FpgaService
             _settingsService.RegisterSetting("Languages", language, settingKey, nodeProviderComboSetting);
         }
     }
-    
+
     public void RegisterPreCompileStep<T>() where T : IFpgaPreCompileStep
     {
         PreCompileSteps.Add(ContainerLocator.Container.Resolve<T>());
@@ -216,6 +219,44 @@ public class FpgaService
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+        }
+    }
+
+    public async Task<bool> RunToolchainAsync(UniversalFpgaProjectRoot project, FpgaModel? fpgaModel = null)
+    {
+        try
+        {
+            var toolchain = Toolchains.FirstOrDefault(x => x.Id == project.Toolchain);
+
+            if (toolchain == null)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+                return false;
+            }
+
+            if (fpgaModel == null)
+            {
+                var name = project.Properties.GetString("fpga");
+                var fpgaPackage = FpgaPackages.FirstOrDefault(obj => obj.Name == name);
+                if (fpgaPackage == null)
+                {
+                    ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
+                    return false;
+                }
+                fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());
+            }
+
+            foreach (var step in PreCompileSteps)
+                if (!await step.PerformPreCompileStepAsync(project, fpgaModel))
+                    return false;
+            
+            await toolchain.CompileAsync(project, fpgaModel);
+            return true;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return false;
         }
     }
 }

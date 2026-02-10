@@ -120,11 +120,11 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             root.Properties.AddToStringArray("exclude", ["build"]);
 
             if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
-                root.Loader = loader;
+                root.Loader = loader.Id;
 
             if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc)
             {
-                root.Toolchain = tc;
+                root.Toolchain = tc.Id;
                 tc.OnProjectCreated(root);
             }
 

@@ -36,14 +36,8 @@ public class UniversalFpgaProjectManager : IProjectManager
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
         var root = new UniversalFpgaProjectRoot(path);
+        
         await root.LoadAsync();
-
-        var toolchain = root.Properties.GetString("toolchain");
-        if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
-            root.Toolchain = tc;
-
-        var loader = root.Properties.GetString("loader");
-        if (loader != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loader) is { } l) root.Loader = l;
 
         foreach (var entryModification in _fpgaService.EntryModificationHandlers)
         {

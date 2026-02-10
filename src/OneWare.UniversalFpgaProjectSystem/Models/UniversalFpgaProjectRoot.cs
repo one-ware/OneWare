@@ -48,37 +48,21 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public string? TopEntity
     {
-        get => Properties.GetString(nameof(TopEntity));
-        set => Properties.SetString(nameof(TopEntity), value?.ToUnixPath());
+        get => Properties.GetString("topEntity");
+        set => Properties.SetString("topEntity", value?.ToUnixPath());
     }
 
-    public IFpgaToolchain? Toolchain
+    public string? Toolchain
     {
-        get;
-        set
-        {
-            SetProperty(ref field, value);
-            if (field != null)
-                Properties.SetString(nameof(Toolchain), field.Name);
-            else
-                Properties.Remove(nameof(Toolchain));
-        }
+        get => Properties.GetString("toolchain");
+        set => Properties.SetString("toolchain", value);
     }
 
-    public IFpgaLoader? Loader
+    public string? Loader
     {
-        get;
-        set
-        {
-            SetProperty(ref field, value);
-            if (field != null)
-                Properties.SetString(nameof(Loader), field.Name);
-            else
-                Properties.Remove(nameof(Loader));
-        }
+        get => Properties.GetString("loader");
+        set => Properties.SetString("loader", value);
     }
-
-    public ReadOnlyObservableCollection<IFpgaPreCompileStep> PreCompileSteps { get; }
 
     public bool IsTestBench(string relativePath)
     {
@@ -118,15 +102,5 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     protected override IProjectFile ConstructNewProjectFile(string path, IProjectFolder topFolder)
     {
         return new FpgaProjectFile(path, topFolder);
-    }
-
-    public async Task RunToolchainAsync(FpgaModel fpga)
-    {
-        if (Toolchain == null) return;
-
-        foreach (var step in PreCompileSteps)
-            if (!await step.PerformPreCompileStepAsync(this, fpga))
-                return;
-        await Toolchain.CompileAsync(this, fpga);
     }
 }
