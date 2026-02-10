@@ -17,16 +17,7 @@
                 <HyperlinkButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <Panel Width="18" Height="18" Margin="0,2,6,2">
-                            <Image Source="{Binding Icon}">
-                                <Image.Styles>
-                                    <Style Selector="Image">
-                                        <Setter Property="IsVisible" Value="True" />
-                                    </Style>
-                                    <Style Selector="Image.Hidden">
-                                        <Setter Property="IsVisible" Value="False" />
-                                    </Style>
-                                </Image.Styles>
-                            </Image>
+                            <controls:LayeredIconPresenter Value="{Binding Icon}" />
                         </Panel>
                         <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}" />
                     </StackPanel>
@@ -75,7 +66,7 @@
                         </TextBlock>
                         <Panel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Width="18" Height="18"
                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image Source="{Binding Icon}" />
+                            <controls:LayeredIconPresenter Value="{Binding Icon}" />
                         </Panel>
                     </Grid>
                 </Panel>

@@ -68,8 +68,8 @@
                             <Setter Property="Cursor" Value="Hand" />
                             <Setter Property="Content">
                                 <Template>
-                                    <Image Margin="2" Source="{DynamicResource BoxIcons.RegularCopy}" Height="12"
-                                           Width="12" />
+                                    <Image Margin="0 2 2 0" Source="{DynamicResource BoxIcons.RegularCopy}" Height="10"
+                                           Width="10" />
                                 </Template>
                             </Setter>
                         </Style>
@@ -129,9 +129,14 @@
                             </Style.Setters>
                         </Style>
 
+                        <Style Selector=".ToolTip Border.CodeBlock Button.CopyButton ContentPresenter">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                        
                         <Style Selector=".ToolTip Border.CodeBlock">
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="2" />
                         </Style>
 
                     </mdxaml:MarkdownScrollViewer.Styles>

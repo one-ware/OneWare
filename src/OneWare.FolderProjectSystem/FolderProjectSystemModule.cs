@@ -30,7 +30,7 @@ public class FolderProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("open_folder", "Open folder...", new RelayCommand(() =>
                 _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)))
             {
-                IconModel = new IconModel("VsImageLib.Folder16X")
+                Icon = new IconModel("VsImageLib.Folder16X")
             });
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/File/Open",

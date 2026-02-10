@@ -39,25 +39,12 @@ public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
 
     public string Id { get; set; }
 
-    public IconModel? IconModel
+    public IconModel? Icon
     {
-        get => _iconModel;
-        set
-        {
-            _iconModel = value;
-            if (value == null) Icon = null;
-            _subscription?.Dispose();
-            _subscription = value?.IconObservable?.Subscribe(x => Icon = x as IImage);
-            if (value?.Icon != null) Icon = value.Icon;
-        }
+        get;
+        set => SetProperty(ref _iconModel, value);
     }
 
     public string Name { get; }
     public ICommand? Command { get; }
-
-    public IImage? Icon
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
 }

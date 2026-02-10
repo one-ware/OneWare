@@ -32,7 +32,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("new_file", "New FPGA Project...",
                 new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()))
             {
-                IconModel = new IconModel("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         welcomeScreenService.RegisterItemToOpen("open_project",
@@ -45,7 +45,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })))
             {
-                IconModel = new IconModel("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);

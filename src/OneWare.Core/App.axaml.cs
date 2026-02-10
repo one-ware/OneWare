@@ -370,7 +370,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
                 }))
             {
-                IconModel = new IconModel("FluentIconsFilled.LightbulbFilled")
+                Icon = new IconModel("FluentIconsFilled.LightbulbFilled")
             });
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
@@ -381,7 +381,7 @@ public class App : Application
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
                 }))
             {
-                IconModel = new IconModel("AI_Img")
+                Icon = new IconModel("AI_Img")
             });
 
         //AvaloniaEdit Hyperlink support

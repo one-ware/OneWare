@@ -8,7 +8,7 @@ namespace OneWare.Essentials.Services;
 public interface IWelcomeScreenItem : INotifyPropertyChanged
 {
     string Name { get; }
-    IImage Icon { get; }
+    IconModel Icon { get; }
     ICommand? Command { get; }
 }
 

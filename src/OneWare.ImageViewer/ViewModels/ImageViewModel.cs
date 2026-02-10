@@ -41,6 +41,7 @@ public class ImageViewModel : ExtendedDocument
                 case ".jpg":
                 case ".jpeg":
                 case ".png":
+                case ".bmp":
                     Image = new Bitmap(FullPath);
                     break;
             }
