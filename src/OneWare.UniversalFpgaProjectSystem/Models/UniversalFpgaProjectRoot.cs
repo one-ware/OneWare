@@ -19,7 +19,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
-        RegisterEntryModification(x =>
+        RegisterProjectEntryModification(x =>
         {
             if (x is IProjectFile file && IsTestBench(file.RelativePath))
             {
@@ -31,7 +31,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
             }
         });
         
-        RegisterEntryModification(x =>
+        RegisterProjectEntryModification(x =>
         {
             if (x is IProjectFile file && TopEntity == file.RelativePath)
             {
@@ -66,32 +66,32 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public bool IsTestBench(string relativePath)
     {
-        return IsIncludedPathHelper(relativePath, "testBenches");
+        return Properties.IsIncludedPathHelper(relativePath, "testBenches");
     }
 
     public void AddTestBench(string relativePath)
     {
-        AddIncludedPathHelper(relativePath, "testBenches");
+        Properties.AddIncludedPathHelper(relativePath, "testBenches");
     }
 
     public void RemoveTestBench(string relativePath)
     {
-        RemoveIncludedPathHelper(relativePath, "testBenches");
+        Properties.RemoveIncludedPathHelper(relativePath, "testBenches");
     }
 
     public bool IsCompileExcluded(string relativePath)
     {
-        return IsIncludedPathHelper(relativePath, "compileExcluded");
+        return Properties.IsIncludedPathHelper(relativePath, "compileExcluded");
     }
 
     public void AddCompileExcluded(string relativePath)
     {
-        AddIncludedPathHelper(relativePath, "compileExcluded");
+        Properties.AddIncludedPathHelper(relativePath, "compileExcluded");
     }
 
     public void RemoveCompileExcluded(string relativePath)
     {
-        RemoveIncludedPathHelper(relativePath, "compileExcluded");
+        Properties.RemoveIncludedPathHelper(relativePath, "compileExcluded");
     }
 
     protected override IProjectFolder ConstructNewProjectFolder(string path, IProjectFolder topFolder)

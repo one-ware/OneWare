@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.Models;
@@ -21,6 +22,7 @@ public class ProjectPropertyChangedEventArgs(
 public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonNode?>>
 {
     private JsonObject _data;
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -82,7 +84,7 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
             });
 
             if (node == null) return false;
-            
+
             _data = node.AsObject();
 
             return true;
@@ -370,6 +372,35 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
         }
 
         return array;
+    }
+
+    public bool IsIncludedPathHelper(
+        string relativePath,
+        string? includeArrayKey,
+        string? excludeArrayKey = null)
+    {
+        var includes = includeArrayKey == null 
+            ? null 
+            : GetStringArray(includeArrayKey);
+        
+        var excludes = excludeArrayKey == null
+            ? null
+            : GetStringArray(excludeArrayKey);
+
+        if (includes is null)
+            return false;
+
+        return ProjectHelper.MatchWildCards(relativePath, includes, excludes);
+    }
+
+    public void AddIncludedPathHelper(string relativePath, string includeArrayKey)
+    {
+        AddToStringArray(includeArrayKey, relativePath);
+    }
+
+    public void RemoveIncludedPathHelper(string relativePath, string includeArrayKey)
+    {
+        RemoveFromStringArray(includeArrayKey, relativePath);
     }
 
     public IEnumerator<KeyValuePair<string, JsonNode?>> GetEnumerator()

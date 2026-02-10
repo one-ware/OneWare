@@ -7,7 +7,7 @@ using OneWare.Essentials.Models;
 
 namespace OneWare.ProjectExplorer.Behaviors;
 
-public class ProjectExplorerEntryModificationBehavior : AttachedToVisualTreeBehavior<Control>
+public class ProjectExplorerProjectEntryModificationBehavior : AttachedToVisualTreeBehavior<Control>
 {
     protected override IDisposable OnAttachedToVisualTreeOverride()
     {

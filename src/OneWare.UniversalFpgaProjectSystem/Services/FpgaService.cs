@@ -52,11 +52,11 @@ public class FpgaService
 
     public ObservableCollection<INodeProvider> NodeProviders { get; } = new();
 
-    public ObservableCollection<Action<IProjectEntry>> EntryModificationHandlers { get; } = new();
+    public ObservableCollection<Action<IProjectEntry>> ProjectEntryModificationHandlers { get; } = new();
 
-    public void RegisterEntryModification(Action<IProjectEntry> modificationAction)
+    public void RegisterProjectEntryModification(Action<IProjectEntry> modificationAction)
     {
-        EntryModificationHandlers.Add(modificationAction);
+        ProjectEntryModificationHandlers.Add(modificationAction);
     }
 
     public void RegisterLanguage(string language, string[] extensions)

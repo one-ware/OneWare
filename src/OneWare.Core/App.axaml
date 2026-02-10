@@ -18,7 +18,6 @@
                 <ResourceDictionary>
                     <ResourceDictionary.MergedDictionaries>
                         <ResourceInclude Source="avares://OneWare.Core/Styles/Accents/Base.axaml" />
-                        <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
                     </ResourceDictionary.MergedDictionaries>
                 </ResourceDictionary>
             </SimpleTheme.Resources>

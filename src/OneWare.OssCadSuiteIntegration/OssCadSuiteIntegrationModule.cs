@@ -529,7 +529,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             return true;
         }, ".ghw", ".fst");
         
-        fpgaService.RegisterEntryModification(x =>
+        fpgaService.RegisterProjectEntryModification(x =>
         {
             if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
             

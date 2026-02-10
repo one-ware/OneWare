@@ -39,9 +39,9 @@ public class UniversalFpgaProjectManager : IProjectManager
         
         await root.LoadAsync();
 
-        foreach (var entryModification in _fpgaService.EntryModificationHandlers)
+        foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
         {
-            root.RegisterEntryModification(entryModification);
+            root.RegisterProjectEntryModification(entryModification);
         }
 
         await root.InitializeAsync();

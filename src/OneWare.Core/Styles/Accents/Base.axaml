@@ -179,6 +179,10 @@
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
+            
+            <ResourceDictionary.MergedDictionaries>
+                <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
 
         </ResourceDictionary>
 
@@ -239,6 +243,10 @@
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
+            
+            <ResourceDictionary.MergedDictionaries>
+                <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
             
         </ResourceDictionary>
 

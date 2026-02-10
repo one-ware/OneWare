@@ -38,12 +38,12 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         base.AddProject(project);
     }
 
-    public void DoubleTab(IProjectEntry entry)
+    public void DoubleTab()
     {
-        if (entry is IProjectFile file)
+        if (SelectedItems is [IProjectFile file])
             _ = PreviewFileAsync(file);
-        else
-            entry.IsExpanded = !entry.IsExpanded;
+        else if (SelectedItems is [IProjectFolder folder])
+            folder.IsExpanded = !folder.IsExpanded;
     }
 
     public async Task LoadAsync()

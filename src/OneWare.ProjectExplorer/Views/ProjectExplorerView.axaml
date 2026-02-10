@@ -72,7 +72,7 @@
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
                     <Grid ColumnDefinitions="20, *" Background="Transparent">
                         <Interaction.Behaviors>
-                            <behaviors1:ProjectExplorerEntryModificationBehavior />
+                            <behaviors1:ProjectExplorerProjectEntryModificationBehavior />
                             <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 

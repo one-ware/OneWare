@@ -26,38 +26,12 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
     public override bool IsPathIncluded(string path)
     {
-        return IsIncludedPathHelper(path, "include", "exclude");
+        return Properties.IsIncludedPathHelper(path, "include", "exclude");
     }
 
     public override void IncludePath(string path)
     {
-        AddIncludedPathHelper(path, "include");
-    }
-
-    protected bool IsIncludedPathHelper(
-        string relativePath,
-        string includeArrayKey,
-        string? excludeArrayKey = null)
-    {
-        var includes = Properties.GetStringArray(includeArrayKey);
-        var excludes = excludeArrayKey == null
-            ? null
-            : Properties.GetStringArray(excludeArrayKey);
-
-        if (includes is null)
-            return false;
-
-        return ProjectHelper.MatchWildCards(relativePath, includes, excludes);
-    }
-
-    protected void AddIncludedPathHelper(string relativePath, string includeArrayKey)
-    {
-        Properties.AddToStringArray(includeArrayKey, relativePath);
-    }
-
-    protected void RemoveIncludedPathHelper(string relativePath, string includeArrayKey)
-    {
-        Properties.RemoveFromStringArray(includeArrayKey, relativePath);
+        Properties.AddIncludedPathHelper(path, "include");
     }
 
     public override IProjectEntry? GetLoadedEntry(string relativePath)
@@ -70,7 +44,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         return base.GetLoadedEntry(relativePath);
     }
     
-    public void RegisterEntryModification(Action<IProjectEntry> modificationAction)
+    public void RegisterProjectEntryModification(Action<IProjectEntry> modificationAction)
     {
         _entryModificationHandlers.Add(modificationAction);
     }
