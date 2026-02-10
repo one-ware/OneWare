@@ -52,8 +52,8 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public string? TopEntity
     {
-        get => GetProjectProperty(nameof(TopEntity));
-        set => SetProjectProperty(nameof(TopEntity), value?.ToUnixPath());
+        get => Properties.GetString(nameof(TopEntity));
+        set => Properties.SetString(nameof(TopEntity), value?.ToUnixPath());
     }
 
     public IFpgaToolchain? Toolchain

@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Logging;
 using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -507,7 +508,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf.Root, null)),
                         });
                     }
                     else
@@ -515,7 +516,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf.Root, pcf)),
                         });
                     }
                 }
@@ -527,6 +528,20 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
         }, ".ghw", ".fst");
+        
+        fpgaService.RegisterEntryModification(x =>
+        {
+            if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
+            
+            if (x is IProjectFile file && YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
+            {
+                x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("ConstraintFile");
+            }
+        });
     }
 
     private static bool IsOssPathValid(string path)

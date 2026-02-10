@@ -15,7 +15,7 @@ public class ProjectExplorerEntryModificationBehavior : AttachedToVisualTreeBeha
 
         if (DataContext is IProjectEntry { Root: IProjectRootWithFile root } entry)
         {
-            Observable.FromEventPattern(root, nameof(IProjectRootWithFile.ProjectPropertyChanged)).Subscribe(x =>
+            Observable.FromEventPattern(root.Properties, nameof(UniversalProjectProperties.ProjectPropertyChanged)).Subscribe(x =>
             {
                 root.InvalidateModifications(entry);
             }).DisposeWith(compositeDisposable);

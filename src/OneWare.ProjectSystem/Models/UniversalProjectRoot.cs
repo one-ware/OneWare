@@ -15,24 +15,7 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
         Icon = new IconModel("UniversalProject");
     }
-
-    public event EventHandler<ProjectPropertyChangedEventArgs>? ProjectPropertyChanged;
-
-    protected void RaisePropertyChanged(
-        string name,
-        object? oldValue,
-        object? newValue)
-    {
-        ProjectPropertyChanged?.Invoke(
-            this,
-            new ProjectPropertyChangedEventArgs(
-                name,
-                oldValue,
-                newValue
-            )
-        );
-    }
-
+    
     public UniversalProjectProperties Properties { get; private set; } = new();
 
     public override string ProjectPath => ProjectFilePath;
@@ -46,57 +29,6 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         var oldProperties = Properties;
         Properties = UniversalProjectProperties.FromJson(properties.AsObject());
         RaisePropertyChanged("*", oldProperties.AsObject(), Properties.AsObject());
-    }
-
-
-    public string? GetProjectProperty(string name)
-    {
-        return Properties.GetString(name);
-    }
-
-    public JsonNode? GetProjectPropertyNode(string name)
-    {
-        return Properties.GetNode(name);
-    }
-
-    public bool HasProjectProperty(string name)
-    {
-        return Properties.ContainsKey(name);
-    }
-
-    public IEnumerable<string>? GetProjectPropertyArray(string name)
-    {
-        return Properties.GetStringArray(name);
-    }
-
-    public void SetProjectProperty(string name, string? value)
-    {
-        var normalized = Properties.SetString(name, value, out var oldValue);
-        RaisePropertyChanged(normalized, oldValue, value);
-    }
-
-    public void RemoveProjectProperty(string name)
-    {
-        var normalized = Properties.RemoveValue(name, out var oldValue);
-        RaisePropertyChanged(normalized, oldValue, null);
-    }
-
-    public void SetProjectPropertyArray(string name, IEnumerable<string> values)
-    {
-        var normalized = Properties.SetStringArray(name, values, out var oldValue);
-        RaisePropertyChanged(normalized, oldValue, values);
-    }
-
-    public void AddToProjectPropertyArray(string name, params string[] newItems)
-    {
-        var normalized = Properties.AddToStringArray(name, newItems);
-        RaisePropertyChanged(normalized, null, Properties.GetNode(normalized));
-    }
-
-    public void RemoveFromProjectPropertyArray(string name, params string[] removeItems)
-    {
-        var normalized = Properties.RemoveFromStringArray(name, removeItems);
-        RaisePropertyChanged(normalized, null, Properties.GetNode(normalized));
     }
 
     public override bool IsPathIncluded(string path)
@@ -114,10 +46,10 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         string includeArrayKey,
         string? excludeArrayKey = null)
     {
-        var includes = GetProjectPropertyArray(includeArrayKey);
+        var includes = Properties.GetStringArray(includeArrayKey);
         var excludes = excludeArrayKey == null
             ? null
-            : GetProjectPropertyArray(excludeArrayKey);
+            : Properties.GetStringArray(excludeArrayKey);
 
         if (includes is null)
             return false;
@@ -127,12 +59,12 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
 
     protected void AddIncludedPathHelper(string relativePath, string includeArrayKey)
     {
-        AddToProjectPropertyArray(includeArrayKey, relativePath);
+        Properties.AddToStringArray(includeArrayKey, relativePath);
     }
 
     protected void RemoveIncludedPathHelper(string relativePath, string includeArrayKey)
     {
-        RemoveFromProjectPropertyArray(includeArrayKey, relativePath);
+        Properties.RemoveFromStringArray(includeArrayKey, relativePath);
     }
 
     public override IProjectEntry? GetLoadedEntry(string relativePath)

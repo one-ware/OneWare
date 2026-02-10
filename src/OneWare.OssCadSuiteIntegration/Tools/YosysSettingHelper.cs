@@ -12,67 +12,52 @@ namespace OneWare.OssCadSuiteIntegration.Tools;
 
 public class YosysSettingHelper
 {
-    private static readonly IImage? _icon = Application.Current!.FindResource(ThemeVariant.Dark, "ForkAwesome.Check") as IImage;
-    
-    public static Task UpdateProjectPcFileAsync(IProjectFile file)
+    public static Task UpdateProjectPcFileAsync(IProjectRoot root, IProjectFile? file)
     {
-        if (file.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot)
+        if (root is not UniversalFpgaProjectRoot universalFpgaProjectRoot)
             return Task.CompletedTask;
 
         var path = GetConstraintFile(universalFpgaProjectRoot);
 
-        if (file.RelativePath == path)
+        if (file?.RelativePath == path)
             return Task.CompletedTask;
 
-        UpdateProjectProperties(universalFpgaProjectRoot, file.RelativePath);
+        UpdateProjectProperties(universalFpgaProjectRoot, file?.RelativePath);
         return ContainerLocator.Container.Resolve<UniversalFpgaProjectManager>()
             .SaveProjectAsync(universalFpgaProjectRoot);
     }
 
     public static string GetConstraintFile(UniversalFpgaProjectRoot project)
     {
-        if (!HasProjectProperties(project)) return "project.pcf";
+        if (!HasProjectProperties(project))
+            return "project.pcf";
 
-        var path = project.Properties["OSS_CAD"]?.AsObject()?["ConstraintFile"]?.ToString();
+        var ossCad = project.Get("ossCad") as JsonObject;
+        var path = ossCad?["constraintFile"]?.ToString();
         return path ?? "project.pcf";
     }
     
     public static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? constraintFile)
     {
-        bool ccfInclude = true;
-        var test = project.Properties["Include"]?.AsArray()!;
-        foreach (var t in test)
+        var include = project.GetProjectPropertyArray("include");
+        var hasPcfInclude = false;
+        if (include != null)
         {
-            if (t.ToString() == "*.pcf")
-                ccfInclude = false;
-        }
-
-        if (ccfInclude)
-        {
-            project.Properties["Include"]?.AsArray().Add("*.pcf");
-        }
-
-        JsonNode js = new JsonObject();
-        if (constraintFile != null)
-        {
-            js["ConstraintFile"] = constraintFile;
-        }
-        else
-            js["ConstraintFile"] = "project.pcf";
-
-        project.Properties["OSS_CAD"] = js;
-    }
-    
-    public static bool HasProjectProperties(UniversalFpgaProjectRoot project)
-    {
-        if (project.Properties.ContainsKey("OSS_CAD"))
-        {
-            if (project.Properties["OSS_CAD"]?.AsObject().ContainsKey("ConstraintFile") ?? false)
+            foreach (var entry in include)
             {
-                return true;
+                if (entry == "*.pcf")
+                {
+                    hasPcfInclude = true;
+                    break;
+                }
             }
         }
 
-        return false;
+        if (!hasPcfInclude)
+            project.AddToProjectPropertyArray("include", "*.pcf");
+
+        var ossCad = project.GetProjectPropertyNode("ossCad") as JsonObject ?? new JsonObject();
+        ossCad["constraintFile"] = constraintFile ?? "project.pcf";
+        project.Properties["ossCad"] = ossCad;
     }
 }
