@@ -42,6 +42,18 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                 x.Icon?.RemoveOverlay("TopEntity");
             }
         });
+        
+        RegisterProjectEntryModification(x =>
+        {
+            if (x is IProjectFile file && IsCompileExcluded(file.RelativePath))
+            {
+                x.TextOpacity = 0.5f;
+            }
+            else
+            {
+                x.TextOpacity = 1.0f;
+            }
+        });
     }
 
     public override string ProjectTypeId => ProjectType;
