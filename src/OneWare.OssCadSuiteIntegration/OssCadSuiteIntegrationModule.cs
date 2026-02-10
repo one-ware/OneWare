@@ -542,8 +542,6 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
         });
-        
-        fpgaService.RegisterProjectPropertyMigration("VHDL_Standard", "vhdlStandard");
     }
 
     private static bool IsOssPathValid(string path)

@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -116,5 +117,35 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 
         serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".tbconf", ".json");
         serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
+
+        var fpgaService = serviceProvider.Resolve<FpgaService>();
+        
+        fpgaService.RegisterProjectPropertyMigration("VHDL_Standard", "vhdlStandard");
+        fpgaService.RegisterProjectPropertyMigration("Toolchain", "toolchain", NormalizeToolchain);
+        fpgaService.RegisterProjectPropertyMigration("Loader", "loader", NormalizeLoader);
+    }
+
+    private static JsonNode? NormalizeToolchain(JsonNode? node)
+    {
+        if (node == null)
+            return null;
+
+        var value = node.ToString();
+        if (string.Equals(value, "Yosys", StringComparison.OrdinalIgnoreCase))
+            return JsonValue.Create("yosys");
+
+        return node;
+    }
+
+    private static JsonNode? NormalizeLoader(JsonNode? node)
+    {
+        if (node == null)
+            return null;
+
+        var value = node.ToString();
+        if (string.Equals(value, "OpenFpgaLoader", StringComparison.OrdinalIgnoreCase))
+            return JsonValue.Create("openFpgaLoader");
+
+        return node;
     }
 }
