@@ -20,14 +20,29 @@ public static class ProjectHelper
         }
     }
 
-    public static bool MatchWildCards(string path, IEnumerable<string> include, IEnumerable<string>? exclude)
+    public static bool MatchWildCards(
+        string path,
+        IEnumerable<string> include,
+        IEnumerable<string>? exclude)
     {
-        return include.Any(includePattern => FileSystemName.MatchesSimpleExpression(includePattern, path))
-               && (exclude is null || !exclude.Any(excludePattern =>
-                   FileSystemName.MatchesSimpleExpression(excludePattern, path)
-                   || path.ToUnixPath()
+        var normalizedPath = path.ToUnixPath();
+
+        var normalizedInclude = include
+            .Select(x => x.ToUnixPath())
+            .ToArray();
+
+        var normalizedExclude = exclude?
+            .Select(x => x.ToUnixPath())
+            .ToArray();
+
+        return normalizedInclude.Any(pattern =>
+                   FileSystemName.MatchesSimpleExpression(pattern, normalizedPath))
+               && (normalizedExclude is null || !normalizedExclude.Any(pattern =>
+                   FileSystemName.MatchesSimpleExpression(pattern, normalizedPath)
+                   || normalizedPath
                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
                        .SkipLast(1)
-                       .Any(x => FileSystemName.MatchesSimpleExpression(excludePattern, x))));
+                       .Any(dir =>
+                           FileSystemName.MatchesSimpleExpression(pattern, dir))));
     }
 }

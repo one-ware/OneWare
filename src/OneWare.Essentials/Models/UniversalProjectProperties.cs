@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
@@ -395,12 +396,12 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
 
     public void AddIncludedPathHelper(string relativePath, string includeArrayKey)
     {
-        AddToStringArray(includeArrayKey, relativePath);
+        AddToStringArray(includeArrayKey, relativePath.ToUnixPath());
     }
 
     public void RemoveIncludedPathHelper(string relativePath, string includeArrayKey)
     {
-        RemoveFromStringArray(includeArrayKey, relativePath);
+        RemoveFromStringArray(includeArrayKey, relativePath.ToUnixPath());
     }
 
     public IEnumerator<KeyValuePair<string, JsonNode?>> GetEnumerator()
